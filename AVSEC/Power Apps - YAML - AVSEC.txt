@@ -1,0 +1,1138 @@
+
+
+===== PAGINA 1 =====
+erro
+não esta sendo possivel colar verifique
+Pensou por 3m 6s
+1. Primeiro módulo identificado
+O primeiro módulo da rodada é Acesso indevido de pessoas. Ele será o molde do fluxo
+comum dos demais módulos AVSEC:
+1. registro pela equipe do turno;
+2. notificação do grupo SEC do aeroporto;
+3. análise do Responsável SEC;
+4. classificação sobre geração de DSAQ;
+5. encaminhamento ao bloco, quando aplicável;
+6. timeline de desdobramentos;
+7. controle dos prazos de 20 e 30 dias;
+8. anexos gerais e anexos por desdobramento.
+O documento deixa claro que esse fluxo deve ser genérico e reaproveitado pelos outros
+módulos, variando apenas os campos específicos de cada ocorrência.
+2. Decisão arquitetural recomendada
+Não recomendo criar uma lista isolada chamada apenas tb_acesso_indevido.
+Como os três módulos compartilham aprovação, SLA, DSAQ, CSA, anexos e
+desdobramentos, a estrutura mais sustentável é criar listas compartilhadas:
+Analise_Requisitos_Ocorrencias_…
+
+
+===== PAGINA 2 =====
+Com isso:
+o Power Automate terá um único fluxo de notificação e escalonamento;
+o painel AVSEC poderá consultar todos os módulos;
+os prazos de 20 e 30 dias não precisarão ser duplicados;
+os próximos módulos utilizarão a mesma timeline;
+o módulo genérico de falhas utilizará apenas o campo tipo;
+o acesso indevido será identificado pelo campo modulo.
+3. Pontos ainda não definidos no requisito
+Antes do YAML, precisaremos fechar estes conteúdos:
+Locais padronizados
+O documento determina que os locais sejam iguais aos utilizados no DSAQ, com múltipla
+seleção, mas não apresenta a lista completa das opções. 
+Categorias dos desdobramentos
+O documento cita aproximadamente cinco categorias fixas, mas informa que elas ainda
+serão refinadas pela equipe AVSEC.
+Campos específicos de acesso indevido
+O documento apresenta apenas os campos genéricos:
+Não foram definidos campos específicos como pessoa envolvida, credencial utilizada,
+ponto de acesso, detecção ou área restrita. Não vou inventá-los.
+Texto técnico da tela de definição
+O texto normativo da tela inicial deverá ser fornecido pela equipe AVSEC.
+Esses pontos não impedem criar a estrutura das listas.
+tb_avsec_ocorrencias
+tb_avsec_desdobramentos
+tb_avsec_ocorrencia_locais
+tb_avsec_config_aeroportos
+tb_avsec_locais_padrao
+Analise_Requisitos_Ocorrencias_…
+data e horário
+local
+descrição da ocorrência
+ação imediata
+
+
+===== PAGINA 3 =====
+4. Lista principal
+Crie a lista com o nome exato:
+Colunas
+Nome interno Tipo SharePoint Obrigatório Valor inicial/uso
+modulo Texto com uma
+linha
+Sim Para este módulo: Acesso
+indevido de pessoas
+tipo Texto com uma
+linha
+Não Será obrigatório no futuro
+módulo genérico de falhas
+aeroporto Texto com uma
+linha
+Sim Nome do aeroporto
+iata Texto com uma
+linha
+Sim Código IATA
+data_ocorrencia Data e Hora,
+incluindo horário
+Sim Data e hora do fato
+descricao_ocorrenc
+ia
+Texto com várias
+linhas, texto simples
+Sim Descrição do ocorrido
+acao_imediata Texto com várias
+linhas, texto simples
+Sim Primeira ação tomada pela
+equipe
+status_fluxo Texto com uma
+linha
+Sim Padrão: Aguardando análise
+SEC
+grupo_responsavel_
+sec
+Texto com uma
+linha
+Sim E-mail do grupo SEC do
+aeroporto
+data_limite_anac Data e Hora Não Preenchida pelo fluxo: registro +
+30 dias
+data_limite_escalo
+namento
+Data e Hora Não Preenchida pelo fluxo: registro +
+20 dias
+analise_sec_realiz
+ada
+Texto com uma
+linha
+Sim Padrão: Não
+tb_avsec_ocorrencias
+
+
+===== PAGINA 4 =====
+Nome interno Tipo SharePoint Obrigatório Valor inicial/uso
+data_analise_sec Data e Hora Não Preenchida ao concluir análise
+analise_sec_por_no
+me
+Texto com uma
+linha
+Não Nome do responsável
+analise_sec_por_em
+ail
+Texto com uma
+linha
+Não E-mail do responsável
+gera_dsaq Texto com uma
+linha
+Sim Padrão: Pendente
+tratar_csa Texto com uma
+linha
+Sim Padrão: Não
+escalado_bloco Texto com uma
+linha
+Sim Padrão: Não
+data_escalonamento
+_bloco
+Data e Hora Não Preenchida pelo fluxo
+data_envio_anac Data e Hora Não Preenchida após envio
+encerrado_em Data e Hora Não Data de encerramento do ciclo
+encerrado_por_nom
+e
+Texto com uma
+linha
+Não Responsável pelo
+encerramento
+encerrado_por_emai
+l
+Texto com uma
+linha
+Não E-mail do responsável
+Configurações da lista
+Deixar Title como não obrigatório.
+Habilitar anexos.
+Habilitar histórico de versões.
+Não criar colunas Choice, Lookup, Pessoa ou Sim/Não.
+Os valores de seleção serão gravados como texto.
+Índices recomendados
+Crie índices nestas colunas:
+
+
+===== PAGINA 5 =====
+Isso será importante para filtros delegáveis e para os fluxos de SLA.
+Valores de status_fluxo
+Recomendo começar com:
+Esses valores ainda podem ser ajustados antes do YAML.
+5. Lista de desdobramentos
+Crie a lista com o nome exato:
+Cada registro será uma entrada da timeline.
+Nome interno Tipo SharePoint Obrigatório Uso
+ocorrencia_id Número, zero casas
+decimais
+Sim ID da ocorrência principal
+categoria Texto com uma linha Sim Categoria da ação
+conteudo Texto com várias
+linhas, texto simples
+Não Detalhamento da ação
+data_acao Data e Hora Sim Momento da ação
+incluir_relatorio Texto com uma linha Sim Padrão: Não
+modulo
+iata
+status_fluxo
+gera_dsaq
+tratar_csa
+data_limite_anac
+data_limite_escalonamento
+Aguardando análise SEC
+Em análise SEC
+Arquivada sem DSAQ
+Encaminhada ao bloco
+Escalonada ao bloco
+Em elaboração DSAQ
+Enviada à ANAC
+Encerrada
+tb_avsec_desdobramentos
+
+
+===== PAGINA 6 =====
+Nome interno Tipo SharePoint Obrigatório Uso
+revisao_de_id Número, zero casas
+decimais
+Não ID do desdobramento
+original
+numero_revisao Número, zero casas
+decimais
+Sim Padrão: 1
+ativo Texto com uma linha Sim Padrão: Sim
+Configurações
+Title não obrigatório.
+Anexos habilitados.
+Histórico de versões habilitado.
+Criar índice em ocorrencia_id.
+A autoria e as datas de criação/alteração também estarão disponíveis nas colunas
+nativas:
+O documento exige autoria, conteúdo, data-hora e anexo por desdobramento. Por isso,
+uma lista separada é necessária; anexos do SharePoint pertencem ao item da lista e não
+podem ser vinculados individualmente a linhas internas de uma única ocorrência.
+6. Lista dos locais percorridos
+Crie a lista:
+Não recomendo concatenar os locais em uma coluna de texto da ocorrência. Isso
+dificultaria filtros delegáveis e perderia a ordem do percurso.
+Nome interno Tipo SharePoint Obrigatório Uso
+ocorrencia_id Número, zero casas
+decimais
+Sim ID da ocorrência principal
+Created
+Created By
+Modified
+Modified By
+Analise_Requisitos_Ocorrencias_…
+tb_avsec_ocorrencia_locais
+
+
+===== PAGINA 7 =====
+Nome interno Tipo SharePoint Obrigatório Uso
+local Texto com uma linha Sim Local selecionado
+sequencia Número, zero casas
+decimais
+Sim Ordem do percurso
+detalhe_local Texto com várias
+linhas, texto simples
+Não Obrigatório no aplicativo quando
+local = "Outros"
+Configurações
+Title não obrigatório.
+Anexos desabilitados.
+Criar índice em:
+ocorrencia_id
+local
+Essa estrutura atende ao requisito de múltiplos locais em sequência sem utilizar uma
+coluna SharePoint de múltipla escolha.
+7. Configuração dos aeroportos e grupos
+Crie a lista:
+Nome interno Tipo SharePoint Obrigatório Uso
+aeroporto Texto com uma linha Sim Nome do aeroporto
+iata Texto com uma linha Sim Código IATA
+grupo_responsavel_se
+c
+Texto com uma linha Sim E-mail completo do grupo
+grupo_bloco Texto com uma linha Não E-mail da equipe do bloco
+ativo Texto com uma linha Sim Padrão: Sim
+Configurações
+Title não obrigatório.
+tb_avsec_config_aeroportos
+
+
+===== PAGINA 8 =====
+Criar índice em iata.
+Configurar iata com valores exclusivos, se possível.
+O documento informa que as notificações devem utilizar grupos padronizados por IATA,
+evitando vínculos com pessoas específicas. 
+Exemplo:
+O domínio real ainda precisa ser confirmado.
+8. Lista dos locais padronizados
+Crie a lista:
+Nome interno Tipo SharePoint Obrigatório Uso
+local Texto com uma linha Sim Nome padronizado do local
+ordem Número, zero casas
+decimais
+Sim Ordenação no ComboBox
+ativo Texto com uma linha Sim Padrão: Sim
+Configurações
+Title não obrigatório.
+Anexos desabilitados.
+Criar índice em ativo.
+A lista ficará vazia até recebermos os locais oficiais utilizados no DSAQ.
+9. Estrutura que será usada no YAML
+O módulo ficará dividido em quatro áreas:
+Analise_Requisitos_Ocorrencias_…
+aeroporto: CURITIBA
+iata: CWB
+grupo_responsavel_sec: responsavel_avsec.CWB@dominio.com.br
+tb_avsec_locais_padrao
+Definição / instruções
+Novo registro
+
+
+===== PAGINA 9 =====
+O formulário de registro inicial utilizará:
+A análise SEC utilizará:
+A timeline será carregada com:
+Confirmações antes de gerar o YAML
+Preciso apenas destas definições:
+1. Podemos adotar essa arquitetura compartilhada para os três módulos?
+2. Qual é o domínio completo do grupo responsavel_avsec.<IATA>?
+3. Você já possui a lista oficial de locais do DSAQ?
+4. Para a primeira versão, podemos usar categorias provisórias de desdobramento
+como:
+Ação imediata
+Ação corretiva
+Ação preventiva
+Análise SEC
+Tratativa do bloco
+5. O módulo de acesso indevido terá somente os campos genéricos do documento ou
+existe outro formulário atual para usarmos como referência?
+Registros existentes
+Detalhe e timeline da ocorrência
+data_ocorrencia
+aeroporto
+locais múltiplos
+descricao_ocorrencia
+acao_imediata
+anexos gerais
+analise_sec_realizada
+gera_dsaq
+tratar_csa
+novo desdobramento
+Filter(
+    tb_avsec_desdobramentos;
+    ocorrencia_id = var_ocorrenciaAVSEC.ID
+)
+powerfx
+
+
+===== PAGINA 10 =====
+Local não ser uma lista, pode por na lista pricipal
+Pensou por 43s
+Perfeito. Vamos simplificar.
+Ajuste da arquitetura
+Não criaremos mais:
+O campo ficará diretamente na lista principal:
+Nova coluna
+Nome interno Tipo SharePoint Obrigatório
+area Texto com uma linha Sim
+Opções no Power Apps
+No YAML, o controle será um ComboBox ou Dropdown de seleção única, gravando o valor
+como texto.
+Exemplo da propriedade Items:
+tb_avsec_ocorrencia_locais
+tb_avsec_locais_padrao
+tb_avsec_ocorrencias
+AC - Área controlada
+AP - Área pública
+ARS - Área restrita de segurança
+Não aplicável
+
+
+===== PAGINA 11 =====
+E o Update do DataCard:
+Observação sobre o requisito original
+O documento previa que o local pudesse ter múltipla seleção para representar um
+percurso por várias áreas. 
+Pela interface enviada, adotaremos seleção única. Portanto, essa decisão substitui o
+requisito de múltipla escolha para esta primeira versão.
+Caso depois seja necessário selecionar várias áreas, ainda podemos manter a mesma
+coluna principal, alterando-a para Texto com várias linhas e salvando:
+Por enquanto, mantenha como Texto com uma linha.
+Estrutura restante
+Ficam somente estas listas:
+Não adicionarei lista auxiliar para área ou local.
+[
+    "AC - Área controlada";
+    "AP - Área pública";
+    "ARS - Área restrita de segurança";
+    "Não aplicável"
+]
+cmbAreaAVSEC.Selected.Value
+Analise_Requisitos_Ocorrencias_…
+Concat(
+    cmbAreaAVSEC.SelectedItems;
+    Value;
+    "; "
+)
+tb_avsec_ocorrencias
+tb_avsec_desdobramentos
+tb_avsec_config_aeroportos
+powerfx
+powerfx
+powerfx
+
+
+===== PAGINA 12 =====
+o formulário antigo era esse, mas ja faça uma analise e 
+melhore todo o processo se achar viavel, veja o que esta 
+faltando, pode consultar a web de acordo com a norma 
+que trata esses assuntos AVSEC junto a anac
+Pensou por 3m 48s
+Análise do formulário antigo
+O formulário antigo cobre apenas o registro básico:
+início e término;
+área;
+local;
+descrição;
+status;
+usuário;
+anexos.
+Isso é insuficiente para o novo processo. Ele registra o fato, mas não registra
+adequadamente:
+se houve acesso consumado ou tentativa;
+como o acesso foi detectado;
+a situação da credencial;
+a identificação disponível dos envolvidos;
+quais medidas de pronta resposta foram executadas;
+se houve acionamento do setor de segurança ou órgão policial;
+se foi realizada varredura após acesso indevido à ARS;
+análise do Responsável SEC;
+desdobramentos posteriores;
+classificação para reporte à ANAC;
+
+
+===== PAGINA 13 =====
+CSA;
+SLA, escalonamento e evidências.
+O documento de requisitos já determina registro, ação imediata, análise SEC, timeline de
+desdobramentos, anexos, notificação e controle dos prazos. 
+Base normativa utilizada
+Em 22 de julho de 2026, a versão vigente é o RBAC 107 EMD 10, de 7 de fevereiro de
+2025. A EMD 11 já foi publicada, mas só entra em vigor em 23 de fevereiro de 2027.
+Portanto, o módulo deve ser construído considerando a EMD 10 e posteriormente passar
+por uma revisão de aderência antes da entrada em vigor da EMD 11. 
+O RBAC 107 exige que, diante de acesso ou tentativa de acesso indevido, sejam
+aplicadas medidas de pronta resposta para bloquear ou interromper o acesso, incluindo
+comunicação ao setor de segurança e ao órgão policial quando necessário. Para
+ocorrência de acesso indevido à ARS, também é exigida varredura da área afetada para
+garantir sua esterilização. 
+A norma também determina que a comunicação à ANAC contenha, quando disponíveis,
+local, data, hora e identificação das pessoas e entidades envolvidas. O prazo máximo é
+de 30 dias contados da ocorrência ou da identificação da ameaça ou vulnerabilidade —
+não da data em que alguém preencheu o formulário. 
+Correção importante: DSAC × DSAQ
+O documento interno utiliza o termo DSAQ, mas o RBAC 107 vigente utiliza:
+O DSAC é o documento encaminhado à ANAC nos casos de atos ou tentativas de
+interferência ilícita, ameaças ou vulnerabilidades. 
+É possível que DSAQ seja um nome interno para o destaque ou relatório utilizado pela
+equipe. Recomendo separar os conceitos:
+Na lista, utilizarei inicialmente gera_dsac. No YAML, o rótulo poderá ser ajustado
+posteriormente sem alterar o nome interno da coluna.
+Analise_Requisitos_Ocorrencias_…
+AN… +1
+Pergamum +1
+Pergam…
+DSAC — Documento de Segurança da Aviação Civil
+Pergam…
+DSAC = comunicação regulatória encaminhada à ANAC
+DSAQ = destaque ou produto interno, caso a equipe AVSEC confirme essa nomenclatura
+
+
+===== PAGINA 14 =====
+Processo reformulado
+Etapa 1 — Registro inicial
+A equipe do turno registra:
+1. aeroporto e IATA;
+2. início e término;
+3. área e local exato;
+4. acesso indevido ou tentativa;
+5. forma de detecção;
+6. situação da credencial;
+7. identificação disponível dos envolvidos;
+8. descrição;
+9. ação imediata;
+10. medidas de resposta;
+11. acionamentos realizados;
+12. varredura, quando aplicável;
+13. anexos.
+Ao salvar:
+o status passa automaticamente para Aguardando análise SEC;
+o sistema calcula o prazo regulatório com base no início da ocorrência;
+o grupo SEC do aeroporto é notificado;
+inicia-se o controle interno de 20 dias.
+Etapa 2 — Análise SEC
+O Responsável SEC:
+valida o registro;
+adiciona desdobramentos;
+informa se gera DSAC;
+informa se o tema deve ser tratado na CSA;
+registra ação corretiva ou futura;
+encaminha ao bloco ou arquiva sem DSAC.
+Etapa 3 — Tratamento pelo bloco
+A equipe do bloco:
+revisa ocorrência e ações;
+seleciona os desdobramentos que entrarão no relatório;
+registra envio à ANAC;
+
+
+===== PAGINA 15 =====
+anexa comprovante;
+encerra o ciclo.
+A ocorrência não deve ser excluída após o encerramento. Ela permanece disponível para
+novos anexos e desdobramentos, conforme definido no levantamento.
+Estrutura definitiva das listas
+1. Lista principal
+Crie com o nome exato:
+Identificação e período
+Nome interno Tipo SharePoint Obrigatório Configuração
+modulo Texto com uma linha Sim Valor neste módulo: Acesso
+indevido de pessoas
+aeroporto Texto com uma linha Sim Nome do aeroporto
+iata Texto com uma linha Sim Código IATA
+inicio Data e Hora Sim Data e hora do fato
+termino Data e Hora Não Em branco enquanto estiver em
+andamento
+Não criarei um campo separado para hora. O DateTime do SharePoint armazena data e
+hora conjuntamente, e o Power Apps pode apresentar DatePicker, hora e minuto
+separadamente.
+Classificação e localização
+Nome interno Tipo SharePoint Obrigatório Configuração
+tipo_acesso Texto com uma linha Sim Acesso indevido ou
+tentativa
+area Texto com uma linha Sim AC, AP, ARS ou não
+aplicável
+Analise_Requisitos_Ocorrencias_…
+tb_avsec_ocorrencias
+
+
+===== PAGINA 16 =====
+Nome interno Tipo SharePoint Obrigatório Configuração
+local Texto com uma linha Sim Local exato da ocorrência
+meio_deteccao Texto com uma linha Sim Forma pela qual o evento
+foi detectado
+situacao_credencial Texto com uma linha Sim Situação da credencial
+apresentada
+envolvidos_identific
+acao
+Texto com várias
+linhas, texto simples
+Não Informações disponíveis
+dos envolvidos
+Opções de tipo_acesso
+Opções de area
+A área pública é definida como a área interna ao perímetro patrimonial onde normalmente
+não são obrigatórios controle de acesso e credencial. Já AC e ARS fazem parte do
+zoneamento de segurança do aeródromo, sendo a ARS destinada às áreas avaliadas
+com risco prioritário. 
+Opções iniciais de meio_deteccao
+Opções iniciais de situacao_credencial
+Acesso indevido
+Tentativa de acesso indevido
+AC - Área controlada
+AP - Área pública
+ARS - Área restrita de segurança
+Não aplicável
+Pergamum +1
+Vigilância presencial
+CFTV
+Controle de acesso
+Alarme
+Patrulhamento
+Relato de terceiro
+Outro
+Sem credencial
+Credencial não autorizada para a área
+
+
+===== PAGINA 17 =====
+A situação da credencial é relevante porque o RBAC determina supervisão do porte
+visível, recolhimento em caso de uso indevido ou validade expirada e controle de pessoas
+autorizadas nas AC e ARS. 
+Descrição e resposta imediata
+Nome interno Tipo SharePoint Obrigatório Configuração
+descricao_ocorrenci
+a
+Texto com várias
+linhas, texto simples
+Sim Relato objetivo do fato
+acao_imediata Texto com várias
+linhas, texto simples
+Sim Medidas tomadas
+inicialmente
+acesso_interrompido Texto com uma linha Sim Sim, Não ou Não
+aplicável
+setor_seguranca_acio
+nado
+Texto com uma linha Sim Sim ou Não
+orgao_publico_aciona
+do
+Texto com uma linha Sim Sim, Não ou Não
+aplicável
+orgao_publico_detalh
+e
+Texto com uma linha Não Polícia Federal, PM, outro
+varredura_ars_realiz
+ada
+Texto com uma linha Sim Condicional para ARS
+resultado_varredura Texto com várias
+linhas, texto simples
+Não Resultado e observações
+impactos_identificad
+os
+Texto com várias
+linhas, texto simples
+Não Efeitos operacionais ou
+de segurança
+Regra condicional da varredura
+O campo será obrigatório no aplicativo quando:
+Credencial vencida
+Uso indevido de credencial
+Credencial temporária sem acompanhamento
+Credencial válida, mas acesso não autorizado
+Não identificada
+Não aplicável
+Pergam…
+
+
+===== PAGINA 18 =====
+Opções:
+Isso decorre da exigência específica de varredura após ocorrência de acesso indevido à
+ARS. 
+Fluxo e SLA
+Nome interno Tipo SharePoint Obrigatório Valor inicial/uso
+status_fluxo Texto com uma linha Sim Aguardando análise SEC
+destinatario_sec Texto com uma linha Não Grupo utilizado na
+notificação
+data_notificacao_se
+c
+Data e Hora Não Preenchida pelo fluxo
+data_limite_dsac Data e Hora Não inicio + 30 dias
+data_limite_escalona
+mento
+Data e Hora Não Notificação SEC + 20 dias
+data_primeira_intera
+cao_sec
+Data e Hora Não Primeira ação SEC
+ultima_interacao_em Data e Hora Não Atualizada a cada ação
+escalado_bloco Texto com uma linha Sim Padrão: Não
+data_escalonamento_b
+loco
+Data e Hora Não Preenchida pelo fluxo
+Valores de status_fluxo
+area = ARS
+e
+tipo_acesso = Acesso indevido
+Sim
+Não
+Não aplicável
+Pergam…
+Aguardando análise SEC
+Em análise SEC
+Arquivada sem DSAC
+Encaminhada ao bloco
+
+
+===== PAGINA 19 =====
+O prazo de 20 dias não foi localizado no RBAC 107 consultado. Ele aparece como uma
+regra interna de escalonamento no documento de requisitos. Portanto, deve ser tratado
+como SLA organizacional, enquanto o prazo de 30 dias possui base regulatória.
+ 
+Análise SEC e classificação
+Nome interno Tipo SharePoint Obrigatório Valor inicial/uso
+analise_sec_realizad
+a
+Texto com uma linha Sim Não
+data_analise_sec Data e Hora Não Preenchida ao concluir
+análise
+analise_sec_nome Texto com uma linha Não Responsável
+analise_sec_email Texto com uma linha Não E-mail
+gera_dsac Texto com uma linha Sim Pendente
+tratar_csa Texto com uma linha Sim Não
+parecer_sec Texto com várias
+linhas, texto simples
+Não Síntese da avaliação
+Opções de gera_dsac
+Envio e encerramento
+Nome interno Tipo SharePoint Obrigatório Uso
+data_envio_anac Data e Hora Não Data efetiva de envio
+protocolo_envio_anac Texto com uma linha Não Número ou referência
+encerrado_em Data e Hora Não Encerramento do ciclo
+Escalonada ao bloco
+Em elaboração DSAC
+Enviada à ANAC
+Encerrada
+Analise_Requisitos_Ocorrencias_…
+ Pergam…
+Pendente
+Sim
+Não
+
+
+===== PAGINA 20 =====
+Nome interno Tipo SharePoint Obrigatório Uso
+encerrado_por_nome Texto com uma linha Não Responsável
+encerrado_por_email Texto com uma linha Não E-mail
+observacao_encerrame
+nto
+Texto com várias
+linhas, texto simples
+Não Observações finais
+O comprovante de envio ficará nos anexos nativos da ocorrência.
+Configurações da lista principal
+Title: não obrigatório.
+Anexos: habilitados.
+Histórico de versões: habilitado.
+Não criar colunas Choice, Lookup, Pessoa ou Sim/Não.
+Não permitir exclusão pela interface comum.
+Criar índices em:
+2. Lista de desdobramentos
+Crie:
+Nome interno Tipo SharePoint Obrigatório
+ocorrencia_id Número, zero casas decimais Sim
+categoria Texto com uma linha Sim
+conteudo Texto com várias linhas, texto
+simples
+Não
+modulo
+iata
+inicio
+status_fluxo
+gera_dsac
+tratar_csa
+data_limite_dsac
+data_limite_escalonamento
+tb_avsec_desdobramentos
+
+
+===== PAGINA 21 =====
+Nome interno Tipo SharePoint Obrigatório
+data_acao Data e Hora Sim
+autor_nome Texto com uma linha Sim
+autor_email Texto com uma linha Sim
+perfil_autor Texto com uma linha Sim
+incluir_dsac Texto com uma linha Sim
+revisao_de_id Número, zero casas decimais Não
+numero_revisao Número, zero casas decimais Sim
+ativo Texto com uma linha Sim
+Configuração:
+Title: não obrigatório.
+Anexos: habilitados.
+Histórico de versões: habilitado.
+Índice em ocorrencia_id.
+Categorias provisórias
+A ação imediata ficará na lista principal e será mostrada como o primeiro marco da
+timeline, sem duplicar o registro na lista de desdobramentos.
+3. Lista de configuração dos aeroportos
+Crie:
+Ação corretiva
+Ação preventiva
+Análise SEC
+Tratativa do bloco
+Evidência / comprovação
+Outro
+tb_avsec_config_aeroportos
+
+
+===== PAGINA 22 =====
+Nome interno Tipo SharePoint Obrigatório
+aeroporto Texto com uma linha Sim
+iata Texto com uma linha Sim
+grupo_responsavel_sec Texto com uma linha Sim
+grupo_bloco Texto com uma linha Não
+ativo Texto com uma linha Sim
+Configuração:
+Title: não obrigatório.
+Anexos: desabilitados.
+Índice em iata.
+iata com valores exclusivos, se possível.
+Segurança e retenção
+As ocorrências podem conter Informação Restrita de AVSEC — IRA. O RBAC
+estabelece que esse tipo de informação deve permanecer disponível apenas para
+pessoas com necessidade de conhecimento. Também determina preservação dos
+registros de comunicação e evidências por pelo menos 12 meses. 
+Portanto:
+não basta esconder botões no Power Apps;
+as permissões devem existir no SharePoint;
+a lista deve ficar em site ou biblioteca restrita;
+equipe de turno deve registrar e consultar apenas o que lhe for permitido;
+SEC e bloco devem possuir grupos de acesso próprios;
+anexos não devem ser enviados por e-mail para destinatários desnecessários;
+o fluxo não deve remover registros ou evidências antes do prazo mínimo.
+Decisões que preciso confirmar antes do YAML
+1. DSAC × DSAQ: adotaremos DSAC como nome regulatório e manteremos DSAQ
+apenas como nome interno, caso confirmado pela AVSEC?
+Pergamum +1
+
+
+===== PAGINA 23 =====
+2. envolvidos_identificacao será um único texto protegido ou desejam campos
+separados para nome, empresa e credencial?
+3. As categorias provisórias dos desdobramentos podem ser usadas até a definição
+oficial?
+4. O usuário comum poderá visualizar todas as ocorrências do aeroporto ou somente as
+que ele registrou?
+5. O término poderá permanecer vazio enquanto a ocorrência estiver em andamento?
+A lista já pode ser criada com a estrutura acima. O YAML permanece pendente da sua
+autorização e dessas definições.
+essa lista n.ão esta seguindo o npadrão de projeto que 
+temos, outros módulos que vizemos, os nomes das 
+colunas viram assim...
+Você está correto. O JSON anterior fugiu do padrão já adotado no projeto.
+Padrão correto
+Listas
+Sempre em minúsculo, com prefixo tb_ e snake_case:
+Colunas
+Sempre:
+letras minúsculas;
+sem acentos;
+palavras separadas por _;
+nomes internos iguais aos nomes usados no Power Apps;
+campos de seleção gravados como Texto, e não Choice;
+flags gravadas como Texto, e não Boolean, seguindo os outros módulos.
+Exemplos já consolidados no projeto:
+tb_avsec_ocorrencias
+tb_avsec_desdobramentos
+tb_avsec_config_aeroportos
+
+
+===== PAGINA 24 =====
+Correção dos nomes anteriores
+Incorreto Correto
+Modulo modulo
+Aeroporto aeroporto
+IATA iata
+Inicio inicio
+Termino termino
+TipoAcesso tipo_acesso
+Area area
+Local local
+MeioDeteccao meio_deteccao
+SituacaoCredencial situacao_credencial
+DescricaoOcorrencia descricao_ocorrencia
+AcaoImediata acao_imediata
+StatusFluxo status_fluxo
+GeraDSAC gera_dsac
+TratarCSA tratar_csa
+ParecerAVSEC parecer_avsec
+AnaliseAVSECRealizada analise_avsec_realizada
+DataLimiteDSAC data_limite_dsac
+Tipos que também precisam ser corrigidos
+tipo_material
+origem_provavel
+local_geral
+posicao_referencia
+descricao_dano_detrito
+
+
+===== PAGINA 25 =====
+O JSON anterior criou:
+para status_fluxo e:
+para ativo.
+No padrão do projeto, devem ser:
+E:
+As opções serão controladas no Power Apps:
+Type='Choice'
+Type='Boolean'
+<Field
+    Type='Text'
+    DisplayName='Status do fluxo'
+    Name='status_fluxo'
+    StaticName='status_fluxo'
+    Required='TRUE'
+    MaxLength='100'
+/>
+<Field
+    Type='Text'
+    DisplayName='Ativo'
+    Name='ativo'
+    StaticName='ativo'
+    Required='FALSE'
+    MaxLength='10'
+>
+    <Default>Sim</Default>
+</Field>
+status_fluxo:
+- Aguardando análise AVSEC
+- Em análise AVSEC
+- Arquivada sem DSAC
+- Encaminhada ao bloco
+XML
+XML
+XML
+XML
+
+
+===== PAGINA 26 =====
+Convenção definitiva do projeto
+Para as próximas estruturas, usarei:
+Exemplo correto:
+O conteúdo das três listas precisa ser refeito antes de você executar a automação, porque
+nomes internos do SharePoint não devem ser corrigidos depois da criação. Na próxima
+entrega, enviarei cada lista separadamente, começando por tb_avsec_ocorrencias,
+integralmente no padrão snake_case.
+- Escalonada ao bloco
+- Em elaboração DSAC
+- Enviada à ANAC
+- Encerrada
+gera_dsac:
+- Pendente
+- Sim
+- Não
+tratar_csa:
+- Sim
+- Não
+ativo:
+- Sim
+- Não
+Lista: tb_nome_do_modulo
+Coluna: nome_interno_da_coluna
+{
+  "nomeLista": "tb_avsec_ocorrencias",
+  "colunas": [
+    {
+      "internalName": "tipo_acesso",
+      "schemaXml": "<Field Type='Text' DisplayName='Tipo de acesso' Name='tipo_acesso' St
+    }
+  ]
+}
+JSON
+
+
+===== PAGINA 27 =====
+Pensou por 7m 45s
+Atualizei a análise de requisitos para a versão 1.1, com o processo enxuto e as decisões
+consolidadas a partir do documento original. 
+Principais alterações:
+padronização de Responsável AVSEC em vez de SEC;
+adoção de DSAC em vez de DSAQ;
+retirada da geração de PDF e da seleção de desdobramentos do Power Apps;
+sistema externo definido como responsável pela montagem do relatório;
+processo reduzido para sete etapas;
+eliminação de campos redundantes de nomes, e-mails, datas e flags;
+uso das colunas nativas Created, Created By, Modified e Modified By;
+arquitetura com lista principal, desdobramentos e configuração dos aeroportos;
+aeroporto mantido nas listas transacionais;
+área como seleção única e local como texto obrigatório;
+escalonamento de 20 dias calculado pelo Power Automate;
+estrutura atual da tbl_AvsecOcorrencias documentada;
+requisitos funcionais e não funcionais integralmente revisados;
+pendências atualizadas, incluindo integração com o sistema externo e nomenclatura
+física das listas.
+Analise_Requisitos_Ocorrencias_…
+Analise_Requisitos_Ocorrencias_AVSEC_v1.1.docx
+vamos criar a lista principal novamente, no padrão tudo 
+minusculo sem aceto e com _
+Gerador de Listas Sharepoint
+{
+  "nomeLista": "tb_avsecOcorrencias",
+  "descricao": "registro principal das ocorrencias de acesso indevido de pessoas e do flu
+  "ocultarTitle": true,
+  "colunas": [
+    {
+      "internalName": "modulo",
+      "schemaXml": "<Field Type='Text' DisplayName='modulo' Name='modulo' StaticName='mod
+    },
+    {
+JSON
+
+
+===== PAGINA 28 =====
+      "internalName": "aeroporto",
+      "schemaXml": "<Field Type='Text' DisplayName='aeroporto' Name='aeroporto' StaticNam
+    },
+    {
+      "internalName": "inicio",
+      "schemaXml": "<Field Type='DateTime' DisplayName='inicio' Name='inicio' StaticName=
+    },
+    {
+      "internalName": "termino",
+      "schemaXml": "<Field Type='DateTime' DisplayName='termino' Name='termino' StaticNam
+    },
+    {
+      "internalName": "tipo_acesso",
+      "schemaXml": "<Field Type='Text' DisplayName='tipo_acesso' Name='tipo_acesso' Stati
+    },
+    {
+      "internalName": "area",
+      "schemaXml": "<Field Type='Text' DisplayName='area' Name='area' StaticName='area' R
+    },
+    {
+      "internalName": "local",
+      "schemaXml": "<Field Type='Text' DisplayName='local' Name='local' StaticName='local
+    },
+    {
+      "internalName": "envolvidos_identificacao",
+      "schemaXml": "<Field Type='Note' DisplayName='envolvidos_identificacao' Name='envol
+    },
+    {
+      "internalName": "descricao_ocorrencia",
+      "schemaXml": "<Field Type='Note' DisplayName='descricao_ocorrencia' Name='descricao
+    },
+    {
+      "internalName": "acao_imediata",
+      "schemaXml": "<Field Type='Note' DisplayName='acao_imediata' Name='acao_imediata' S
+    },
+    {
+      "internalName": "varredura_ars_realizada",
+      "schemaXml": "<Field Type='Text' DisplayName='varredura_ars_realizada' Name='varred
+    },
+    {
+      "internalName": "status",
+      "schemaXml": "<Field Type='Text' DisplayName='status' Name='status' StaticName='sta
+    },
+    {
+      "internalName": "gera_dsac",
+      "schemaXml": "<Field Type='Text' DisplayName='gera_dsac' Name='gera_dsac' StaticNam
+    },
+    {
+      "internalName": "tratar_csa",
+      "schemaXml": "<Field Type='Number' DisplayName='tratar_csa' Name='tratar_csa' Stati
+    },
+    {
+
+
+===== PAGINA 29 =====
+      "internalName": "data_limite_dsac",
+      "schemaXml": "<Field Type='DateTime' DisplayName='data_limite_dsac' Name='data_limi
+    },
+    {
+      "internalName": "ativo",
+      "schemaXml": "<Field Type='Number' DisplayName='ativo' Name='ativo' StaticName='ati
+    }
+  ],
+  "registrosIniciais": []
+}
+atualize o yaml com essa base de dados, o formulário não 
+esta funcionando...  muita coisa quebrada n layout, 
+ajuste...
+Pensou por 6m 58s
+YAML atualizado
+O arquivo completo contém 220 controles, sem nomes duplicados, e está estruturado no
+formato Power Apps Source Code YAML.
+O que eu ajustei
+[FormAvsecOcorrencia_1/DataSource] — apontava para tbl_AvsecOcorrencias
+→ alterado para tb_avsec_ocorrencias → compatibilidade com a nova lista.
+[Tela/OnVisible] — a variável var_visible podia não estar inicializada logo após a
+colagem → inicialização determinística dos formulários e da visualização → o
+formulário passa a aparecer imediatamente.
+[NovoRegistroViewAvsec/Visible] — dependia exclusivamente de var_visible →
+aplicado Coalesce(var_visible; "Novo Registro") → evita a tela em branco
+mostrada na imagem.
+AcessoIndevidoPessoas_atualizado_tb_avsec_ocorrencias.yaml
+
+
+===== PAGINA 30 =====
+[Containers principais/Layout] — containers internos podiam colapsar dentro do
+Auto Layout → adicionados LayoutAlignInContainer, LayoutMinWidth,
+LayoutMinHeight e larguras controladas → formulário, cards e listagem ocupam
+corretamente a área disponível.
+[FormCardAvsec/Height] — altura menor que a soma dos controles internos →
+ampliada → evita corte do formulário e dos botões inferiores.
+[NovoRegistroViewAvsec/Height] — conteúdo ultrapassava o tamanho do
+container → ampliado e mantido dentro do container com rolagem.
+[status] — o YAML tratava a coluna como Choice usando .Value e Choices() →
+alterado para Texto → compatível com a nova lista.
+[tratar_csa] — o formulário enviava "Sim"/"Não" para uma coluna Number →
+alterado para 1/0 → evita falha no SubmitForm e no Patch.
+[gera_dsac] — valores padronizados para pendente, sim e nao → interface
+continua mostrando os rótulos amigáveis.
+[modulo] — alterado para acesso_indevido_pessoas.
+[varredura_ars_realizada] — valores persistidos como sim, nao e nao_aplicavel.
+[tipo_acesso] — valores persistidos como acesso_indevido e
+tentativa_acesso_indevido, mantendo os textos formatados na interface.
+[area] — valores persistidos sem espaços ou acentos, mantendo os rótulos
+completos no formulário.
+[data_limite_dsac] — cálculo ajustado para 30 dias a partir de inicio.
+[galOcorrenciasAvsec/Items] — removido tratamento de status como Choice e
+atualizado o filtro para a nova lista.
+[FormAvsecDesdobramento_1/OnSuccess] — atualização de status alterada de
+Choice para texto.
+[btnSalvarAnaliseAvsec/OnSelect] — Patch corrigido para os tipos reais das
+colunas e envolvido em IfError.
+[Galerias] — mantido apenas Variant: Vertical; nenhuma galeria possui a
+propriedade inválida Layout.
+[Icon@0.0.7] — confirmado que nenhum ícone possui OnSelect.
+Fontes utilizadas
+Valores gravados na lista
+tb_avsec_ocorrencias
+tb_avsec_desdobramentos
+tb_avsec_config_aeroportos
+
+
+===== PAGINA 31 =====
+Campo Valores persistidos
+modulo acesso_indevido_pessoas
+tipo_acesso acesso_indevido, tentativa_acesso_indevido
+area ac_area_controlada, ap_area_publica,
+ars_area_restrita_seguranca, nao_aplicavel
+varredura_ars_realizada sim, nao, nao_aplicavel
+status aguardando_analise_avsec, em_analise_avsec, etc.
+gera_dsac pendente, sim, nao
+tratar_csa 0, 1
+ativo 1
+A interface converte esses valores para textos com acentuação e formatação adequada.
+Checklist pós-colagem
+1. Adicionar ao aplicativo as três fontes com os nomes exatos acima.
+2. Confirmar que tratar_csa e ativo são colunas do tipo Número.
+3. Confirmar que status, gera_dsac, tipo_acesso, area e
+varredura_ars_realizada são Texto.
+4. Habilitar anexos em tb_avsec_ocorrencias e tb_avsec_desdobramentos.
+5. Fechar e abrir novamente a tela após a colagem para executar o OnVisible.
+6. Remover a fonte antiga tbl_AvsecOcorrencias somente depois de confirmar que
+nenhum outro módulo ainda a utiliza.
+D e t a l h e s:
+( 1 0 4 , 1 9 )  :  e r r o r  P A 2 1 0 8  :  U n kn o w n  p r o p e r t y  
+' L a yo u t A l i g n I n C o n t a i n e r '  f o r  co n t r o l  t yp e  
+' G r o u p C o n t a i n e r @ 1 . 5 . 0 '  a n d  va r i a n t  ' A u t o L a yo u t ' .
+( 1 2 5 , 2 3 )  :  e r r o r  P A 2 1 0 8  :  U n kn o w n  p r o p e r t y  
+' L a yo u t A l i g n I n C o n t a i n e r '  f o r  co n t r o l  t yp e  
+' G r o u p C o n t a i n e r @ 1 . 5 . 0 '  a n d  va r i a n t  ' A u t o L a yo u t ' .
+( 2 1 6 , 2 3 )  :  e r r o r  P A 2 1 0 8  :  U n kn o w n  p r o p e r t y  
+D e t a l h e s:
+( 1 0 4 , 1 9 )  :  e r r o r  P A 2 1 0 8  :  U n kn o w n  p r o p e r t y  
+' L a yo u t A l i g n I n C o n t a i n e r '  f o r  co n t r o l  t yp e  
+' G r o u p C o n t a i n e r @ 1 . 5 . 0 '  a n d  va r i a n t  ' A u t o L a yo u t ' .
+( 1 2 5 , 2 3 )  :  e r r o r  P A 2 1 0 8  :  U n kn o w n  p r o p e r t y  
+' L a yo u t A l i g n I n C o n t a i n e r '  f o r  co n t r o l  t yp e  
+' G r o u p C o n t a i n e r @ 1 . 5 . 0 '  a n d  va r i a n t  ' A u t o L a yo u t ' .
+( 2 1 6 , 2 3 )  :  e r r o r  P A 2 1 0 8  :  U n kn o w n  p r o p e r t y  
+
+
+===== PAGINA 32 =====
+Mostrar mais
+' L a yo u t A l i g n I n C o n t a i n e r '  f o r  co n t r o l  t yp e  
+' G r o u p C o n t a i n e r @ 1 . 5 . 0 '  a n d  va r i a n t  ' A u t o L a yo u t ' .
+' L a yo u t A l i g n I n C o n t a i n e r '  f o r  co n t r o l  t yp e  
+' G r o u p C o n t a i n e r @ 1 . 5 . 0 '  a n d  va r i a n t  ' A u t o L a yo u t ' .
+YAML corrigido
+O que eu ajustei
+[22 controles GroupContainer@1.5.0 / LayoutAlignInContainer] — a propriedade não
+é suportada pelo Source Code schema nesse tipo de container → removi todas as
+ocorrências → elimina os erros PA2108 informados.
+Validação executada:
+Nenhuma fórmula, fonte de dados, regra de negócio, posição ou dimensão foi alterada.
+AcessoIndevidoPessoas_atualizado_tb_avsec_ocorrencias_v3.yaml
+LayoutAlignInContainer restantes: 0
+Estrutura YAML: válida
+Linhas removidas: 22
+O ChatGPT pode cometer erros. Por isso, lembre-se de conferir informações relevantes.
