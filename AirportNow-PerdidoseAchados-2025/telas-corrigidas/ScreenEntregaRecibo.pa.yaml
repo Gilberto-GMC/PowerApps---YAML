@@ -1,0 +1,1052 @@
+# ************************************************************************************************
+# Warning: YAML source code for Canvas Apps should only be used to review changes made within Power Apps Studio and for minor edits (Preview).
+# Use the maker portal to create and edit your Power Apps.
+# 
+# The schema file for Canvas Apps is available at https://go.microsoft.com/fwlink/?linkid=2304907
+# 
+# For more information, visit https://go.microsoft.com/fwlink/?linkid=2292623
+# ************************************************************************************************
+Screens:
+  ScreenEntregaRecibo:
+    Properties:
+      Height: =760
+      LoadingSpinnerColor: =RGBA(38, 36, 123, 1)
+      OnHidden: |-
+        =Reset(TextInputNomeCliente);
+        Reset(ComboboxCanvasDoc);
+        Reset(TextInputNumDoc);
+        Reset(TextInputEndereco);
+        Reset(TextInputDataEntrega)
+      OnVisible: |-
+        =UpdateContext(
+            {
+                VAR_DADOS_ENTREGA: LookUp(
+                    tbl_perdidosAchados,
+                    ID = VAR_DADOS_ENTREGA_ID
+                )
+            }
+        );
+        ClearCollect(
+            colItensEntregaReciboBase,
+            FirstN(
+                SortByColumns(
+                    tbl_perdidosAchadosItens,
+                    "ID",
+                    SortOrder.Descending
+                ),
+                1500
+            )
+        );
+        ClearCollect(
+            colItensEntregaRecibo,
+            Filter(
+                colItensEntregaReciboBase,
+                ID_fk = VAR_DADOS_ENTREGA.ID
+                    And arquivar = 0
+            )
+        );
+        Set(varUltimaAtividade, Now())
+      Width: =1025
+    Children:
+      - Container18:
+          Control: GroupContainer@1.5.0
+          Variant: ManualLayout
+          Properties:
+            BorderColor: =RGBA(0, 18, 107, 1)
+            BorderThickness: =2
+            DropShadow: =DropShadow.None
+            Height: =734
+            RadiusBottomLeft: =0
+            RadiusBottomRight: =0
+            RadiusTopLeft: =0
+            RadiusTopRight: =0
+            Width: =1005
+            X: =10
+            Y: =10
+          Children:
+            - Container19:
+                Control: GroupContainer@1.5.0
+                Variant: ManualLayout
+                Properties:
+                  BorderColor: =RGBA(0, 18, 107, 1)
+                  BorderThickness: =1
+                  DropShadow: =DropShadow.None
+                  Height: =Parent.Height - 20
+                  RadiusBottomLeft: =0
+                  RadiusBottomRight: =0
+                  RadiusTopLeft: =0
+                  RadiusTopRight: =0
+                  Width: =537
+                  X: =7
+                  Y: =12
+                Children:
+                  - Rectangle16_9:
+                      Control: Rectangle@2.3.0
+                      Group: Group1
+                      Properties:
+                        BorderColor: =RGBA(0, 0, 0, 1)
+                        BorderThickness: =1
+                        Fill: =RGBA(0, 0, 0, 0)
+                        Height: =40
+                        Width: =508
+                        X: =15
+                        Y: =177
+                  - Label20_75:
+                      Control: Label@2.5.1
+                      Group: Group1
+                      Properties:
+                        AutoHeight: =true
+                        BorderColor: =RGBA(0, 18, 107, 1)
+                        Color: =RGBA(38, 36, 123, 1)
+                        Fill: =RGBA(255, 255, 255, 1)
+                        Font: =Font.'Open Sans'
+                        Height: =27
+                        Italic: =true
+                        Size: =10
+                        Text: ="Cliente"
+                        Width: =51
+                        X: =20
+                        Y: =162
+                  - Rectangle16:
+                      Control: Rectangle@2.3.0
+                      Group: Group31
+                      Properties:
+                        BorderColor: =RGBA(0, 0, 0, 1)
+                        BorderThickness: =1
+                        Fill: =RGBA(0, 0, 0, 0)
+                        Height: =40
+                        Width: =235
+                        X: =15
+                        Y: =116
+                  - Label20_66:
+                      Control: Label@2.5.1
+                      Group: Group31
+                      Properties:
+                        BorderColor: =RGBA(0, 18, 107, 1)
+                        Color: =RGBA(38, 36, 123, 1)
+                        Fill: =RGBA(255, 255, 255, 1)
+                        Font: =Font.'Open Sans'
+                        Height: =20
+                        Italic: =true
+                        Size: =10
+                        Text: ="Data\Hora do Recebimento"
+                        Width: =170
+                        X: =20
+                        Y: =102
+                  - Label35:
+                      Control: Label@2.5.1
+                      Properties:
+                        Align: =Align.Center
+                        AutoHeight: =true
+                        BorderColor: =RGBA(0, 18, 107, 1)
+                        Font: =Font.'Open Sans'
+                        FontWeight: =FontWeight.Semibold
+                        Italic: =true
+                        Text: ="Registro de Perdidos e Achados"
+                        Width: =530
+                        Y: =5
+                  - Label35_1:
+                      Control: Label@2.5.1
+                      Properties:
+                        Align: =Align.Center
+                        AutoHeight: =true
+                        BorderColor: =RGBA(0, 18, 107, 1)
+                        Font: =Font.'Open Sans'
+                        Italic: =true
+                        Size: =10
+                        Text: |-
+                          ="Aeroporto: " & VAR_DADOS_ENTREGA.aeroporto
+                        Width: =530
+                        Y: =37
+                  - Label35_2:
+                      Control: Label@2.5.1
+                      Properties:
+                        Align: =Align.Right
+                        AutoHeight: =true
+                        BorderColor: =RGBA(0, 18, 107, 1)
+                        Font: =Font.'Open Sans'
+                        Size: =10
+                        Text: |-
+                          ="Protocolo: " & VAR_DADOS_ENTREGA.iata&"-ANPA-"&VAR_DADOS_ENTREGA.ID
+                        Width: =187
+                        X: =345
+                        Y: =64
+                  - Image18:
+                      Control: Image@2.2.3
+                      Properties:
+                        BorderColor: =RGBA(0, 18, 107, 1)
+                        Height: =64
+                        Image: =MOTIVA_RGB_Logo_VersaoPositiva_Anil
+                        Width: =117
+                        X: =7
+                        Y: =18
+                  - Label36_1:
+                      Control: Label@2.5.1
+                      Group: Group31
+                      Properties:
+                        Align: =Align.Center
+                        BorderColor: =RGBA(0, 18, 107, 1)
+                        Font: =Font.'Open Sans'
+                        Height: =30
+                        Size: =10
+                        Text: =VAR_DADOS_ENTREGA.data
+                        Width: =235
+                        X: =15
+                        Y: =123
+                  - Rectangle15:
+                      Control: Rectangle@2.3.0
+                      Properties:
+                        BorderColor: =RGBA(0, 18, 107, 1)
+                        Fill: =RGBA(38, 36, 123, 1)
+                        Height: =1
+                        Width: =Parent.Width
+                        Y: =98
+                  - Rectangle16_1:
+                      Control: Rectangle@2.3.0
+                      Group: Group31_1
+                      Properties:
+                        BorderColor: =RGBA(0, 0, 0, 1)
+                        BorderThickness: =1
+                        Fill: =RGBA(0, 0, 0, 0)
+                        Height: =40
+                        Width: =264
+                        X: =260
+                        Y: =116
+                  - Label20_67:
+                      Control: Label@2.5.1
+                      Group: Group31_1
+                      Properties:
+                        BorderColor: =RGBA(0, 18, 107, 1)
+                        Color: =RGBA(38, 36, 123, 1)
+                        Fill: =RGBA(255, 255, 255, 1)
+                        Font: =Font.'Open Sans'
+                        Height: =20
+                        Italic: =true
+                        Size: =10
+                        Text: ="Local encontrado"
+                        Width: =120
+                        X: =269
+                        Y: =102
+                  - Label36_2:
+                      Control: Label@2.5.1
+                      Group: Group31_1
+                      Properties:
+                        Align: =Align.Center
+                        AutoHeight: =true
+                        BorderColor: =RGBA(0, 18, 107, 1)
+                        Font: =Font.'Open Sans'
+                        Height: =30
+                        Size: =10
+                        Text: |
+                          =VAR_DADOS_ENTREGA.local
+                        Width: =274
+                        X: =254
+                        Y: =123
+                  - Label14_1:
+                      Control: Label@2.5.1
+                      Properties:
+                        Align: =LayoutAlignItems.Center
+                        BorderColor: =RGBA(0, 0, 0, 0)
+                        BorderStyle: =BorderStyle.None
+                        BorderThickness: =2
+                        Color: =RGBA(51, 51, 51, 1)
+                        DisabledBorderColor: =RGBA(0, 0, 0, 0)
+                        FocusedBorderThickness: =4
+                        Font: =Font.Lato
+                        Height: =28
+                        OnSelect: =
+                        Size: =10
+                        Text: ="_____________________________, ________ de __________________________ de _________"
+                        Visible: =false
+                        Width: =489
+                        X: =22
+                        Y: =546
+                  - Label10_11:
+                      Control: Label@2.5.1
+                      Properties:
+                        Align: =LayoutAlignItems.Center
+                        BorderColor: =RGBA(0, 0, 0, 0)
+                        BorderStyle: =BorderStyle.None
+                        BorderThickness: =2
+                        Color: =RGBA(53, 61, 63, 1)
+                        DisabledBorderColor: =RGBA(0, 0, 0, 0)
+                        FocusedBorderThickness: =4
+                        Font: =Font.Lato
+                        Height: =20
+                        OnSelect: =
+                        Size: =12
+                        Text: ="Responsável pela Entrega"
+                        Width: =250
+                        X: =21
+                        Y: =640
+                  - Label10_12:
+                      Control: Label@2.5.1
+                      Properties:
+                        Align: =LayoutAlignItems.Center
+                        BorderColor: =RGBA(0, 0, 0, 0)
+                        BorderStyle: =BorderStyle.None
+                        BorderThickness: =2
+                        Color: =RGBA(51, 51, 51, 1)
+                        DisabledBorderColor: =RGBA(0, 0, 0, 0)
+                        FocusedBorderThickness: =4
+                        Font: =Font.Lato
+                        FontWeight: =FontWeight.Bold
+                        Height: =30
+                        OnSelect: =
+                        Size: =10
+                        Text: ="___________________________________________"
+                        Width: =250
+                        X: =21
+                        Y: =617
+                  - Label10_13:
+                      Control: Label@2.5.1
+                      Properties:
+                        Align: =LayoutAlignItems.Center
+                        BorderColor: =RGBA(0, 0, 0, 0)
+                        BorderStyle: =BorderStyle.None
+                        BorderThickness: =2
+                        Color: =RGBA(53, 61, 63, 1)
+                        DisabledBorderColor: =RGBA(0, 0, 0, 0)
+                        FocusedBorderThickness: =4
+                        Font: =Font.Lato
+                        Height: =20
+                        OnSelect: =
+                        Size: =12
+                        Text: ="Recebedor"
+                        Width: =250
+                        X: =266
+                        Y: =640
+                  - Label10_14:
+                      Control: Label@2.5.1
+                      Properties:
+                        Align: =LayoutAlignItems.Center
+                        BorderColor: =RGBA(0, 0, 0, 0)
+                        BorderStyle: =BorderStyle.None
+                        BorderThickness: =2
+                        Color: =RGBA(51, 51, 51, 1)
+                        DisabledBorderColor: =RGBA(0, 0, 0, 0)
+                        FocusedBorderThickness: =4
+                        Font: =Font.Lato
+                        FontWeight: =FontWeight.Bold
+                        Height: =30
+                        OnSelect: =
+                        Size: =10
+                        Text: ="___________________________________________"
+                        Width: =250
+                        X: =261
+                        Y: =617
+                  - Rectangle16_10:
+                      Control: Rectangle@2.3.0
+                      Group: Group4
+                      Properties:
+                        BorderColor: =RGBA(0, 0, 0, 1)
+                        BorderThickness: =1
+                        Fill: =RGBA(0, 0, 0, 0)
+                        Height: =40
+                        Width: =165
+                        X: =358
+                        Y: =243
+                  - Label20_76:
+                      Control: Label@2.5.1
+                      Group: Group4
+                      Properties:
+                        AutoHeight: =true
+                        BorderColor: =RGBA(0, 18, 107, 1)
+                        Color: =RGBA(38, 36, 123, 1)
+                        Fill: =RGBA(255, 255, 255, 1)
+                        Font: =Font.'Open Sans'
+                        Height: =27
+                        Italic: =true
+                        Size: =10
+                        Text: ="Telefone"
+                        Width: =60
+                        X: =363
+                        Y: =228
+                  - Rectangle16_11:
+                      Control: Rectangle@2.3.0
+                      Group: Group3
+                      Properties:
+                        BorderColor: =RGBA(0, 0, 0, 1)
+                        BorderThickness: =1
+                        Fill: =RGBA(0, 0, 0, 0)
+                        Height: =40
+                        Width: =332
+                        X: =15
+                        Y: =243
+                  - Label20_77:
+                      Control: Label@2.5.1
+                      Group: Group3
+                      Properties:
+                        AutoHeight: =true
+                        BorderColor: =RGBA(0, 18, 107, 1)
+                        Color: =RGBA(38, 36, 123, 1)
+                        Fill: =RGBA(255, 255, 255, 1)
+                        Font: =Font.'Open Sans'
+                        Height: =27
+                        Italic: =true
+                        Size: =10
+                        Text: ="Documento"
+                        Width: =82
+                        X: =20
+                        Y: =228
+                  - Rectangle16_12:
+                      Control: Rectangle@2.3.0
+                      Group: Group5
+                      Properties:
+                        BorderColor: =RGBA(0, 0, 0, 1)
+                        BorderThickness: =1
+                        Fill: =RGBA(0, 0, 0, 0)
+                        Height: =65
+                        Width: =508
+                        X: =15
+                        Y: =371
+                  - Label20_78:
+                      Control: Label@2.5.1
+                      Group: Group5
+                      Properties:
+                        AutoHeight: =true
+                        BorderColor: =RGBA(0, 18, 107, 1)
+                        Color: =RGBA(38, 36, 123, 1)
+                        Fill: =RGBA(255, 255, 255, 1)
+                        Font: =Font.'Open Sans'
+                        Height: =27
+                        Italic: =true
+                        Size: =10
+                        Text: ="Endereço"
+                        Width: =72
+                        X: =20
+                        Y: =357
+                  - Rectangle16_14:
+                      Control: Rectangle@2.3.0
+                      Group: Group33_1
+                      Properties:
+                        BorderColor: =RGBA(0, 0, 0, 1)
+                        BorderThickness: =1
+                        Fill: =RGBA(0, 0, 0, 0)
+                        Height: =40
+                        Width: =508
+                        X: =15
+                        Y: =459
+                  - Label20_80:
+                      Control: Label@2.5.1
+                      Group: Group33_1
+                      Properties:
+                        AutoHeight: =true
+                        BorderColor: =RGBA(0, 18, 107, 1)
+                        Color: =RGBA(38, 36, 123, 1)
+                        Fill: =RGBA(255, 255, 255, 1)
+                        Font: =Font.'Open Sans'
+                        Height: =27
+                        Italic: =true
+                        Size: =10
+                        Text: ="Devolvido por"
+                        Width: =97
+                        X: =20
+                        Y: =445
+                  - Label36_14:
+                      Control: Label@2.5.1
+                      Group: Group33_1
+                      Properties:
+                        BorderColor: =RGBA(0, 18, 107, 1)
+                        Font: =Font.'Open Sans'
+                        Height: =30
+                        PaddingLeft: =10
+                        Size: =10
+                        Text: =Coalesce(VAR_DADOS_ENTREGA.devolvido_por,varNomeUser)
+                        Width: =501
+                        X: =15
+                        Y: =466
+                  - TextInputNomeCliente:
+                      Control: Classic/TextInput@2.3.2
+                      Group: Group1
+                      Properties:
+                        BorderStyle: =BorderStyle.None
+                        Default: =Coalesce(VAR_DADOS_ENTREGA.cliente,"")
+                        DisplayMode: =If(VAR_DADOS_ENTREGA.status = "Em andamento", DisplayMode.Edit,DisplayMode.View)
+                        Fill: =RGBA(245, 245, 245, 1)
+                        Height: =30
+                        HintText: ="Nome completo do cliente..."
+                        HoverFill: =RGBA(245, 245, 245, 1)
+                        RadiusBottomLeft: =0
+                        RadiusBottomRight: =0
+                        RadiusTopLeft: =0
+                        RadiusTopRight: =0
+                        Size: =10
+                        Width: =496
+                        X: =20
+                        Y: =182
+                  - ComboboxCanvasDoc:
+                      Control: ComboBox@0.0.51
+                      Group: Group3
+                      Properties:
+                        BorderRadius: =0
+                        DefaultSelectedItems: =[VAR_DADOS_ENTREGA.documento]
+                        DisplayMode: =TextInputNomeCliente.DisplayMode
+                        Height: =30
+                        InputTextPlaceholder: =
+                        Items: |-
+                          =[
+                              "CPF",
+                              "RG",
+                              "PASSAPORTE"
+                          ]
+                        PaddingLeft: =12
+                        PaddingRight: =2
+                        Width: =130
+                        X: =20
+                        Y: =248
+                  - TextInputNumDoc:
+                      Control: Classic/TextInput@2.3.2
+                      Group: Group3
+                      Properties:
+                        BorderStyle: =BorderStyle.None
+                        Default: =Coalesce(VAR_DADOS_ENTREGA.numeroDocumento,"")
+                        DisplayMode: =TextInputNomeCliente.DisplayMode
+                        Fill: =RGBA(245, 245, 245, 1)
+                        Height: =30
+                        HintText: ="Nº do documento..."
+                        HoverFill: =RGBA(245, 245, 245, 1)
+                        RadiusBottomLeft: =0
+                        RadiusBottomRight: =0
+                        RadiusTopLeft: =0
+                        RadiusTopRight: =0
+                        Size: =10
+                        Width: =180
+                        X: =160
+                        Y: =248
+                  - TextInput1_2:
+                      Control: Classic/TextInput@2.3.2
+                      Group: Group4
+                      Properties:
+                        BorderStyle: =BorderStyle.None
+                        Default: =Coalesce(VAR_DADOS_ENTREGA.telefone,"")
+                        DisplayMode: =TextInputNomeCliente.DisplayMode
+                        Fill: =RGBA(245, 245, 245, 1)
+                        Format: =TextFormat.Number
+                        Height: =30
+                        HintText: ="Nº do tell..."
+                        HoverFill: =RGBA(245, 245, 245, 1)
+                        RadiusBottomLeft: =0
+                        RadiusBottomRight: =0
+                        RadiusTopLeft: =0
+                        RadiusTopRight: =0
+                        Size: =10
+                        Width: =152
+                        X: =364
+                        Y: =248
+                  - TextInputEndereco:
+                      Control: Classic/TextInput@2.3.2
+                      Group: Group5
+                      Properties:
+                        BorderStyle: =BorderStyle.None
+                        Default: =Coalesce(VAR_DADOS_ENTREGA.endereco,"")
+                        DisplayMode: =TextInputNomeCliente.DisplayMode
+                        Fill: =RGBA(245, 245, 245, 1)
+                        Height: =50
+                        HintText: |-
+                          ="Endereço completo ex: Logradouro, Número, Bairro, Cidade, UF..."
+                        HoverFill: =RGBA(245, 245, 245, 1)
+                        Mode: =TextMode.MultiLine
+                        RadiusBottomLeft: =0
+                        RadiusBottomRight: =0
+                        RadiusTopLeft: =0
+                        RadiusTopRight: =0
+                        Size: =10
+                        Width: =496
+                        X: =20
+                        Y: =380
+                  - TextInputDataEntrega:
+                      Control: Classic/TextInput@2.3.2
+                      Properties:
+                        Align: =Align.Center
+                        BorderStyle: =BorderStyle.None
+                        Color: =RGBA(53, 61, 63, 1)
+                        Default: =Text( Coalesce(VAR_DADOS_ENTREGA.devolucao,Now()), DateTimeFormat.LongDateTime)
+                        DisabledColor: =RGBA(53, 61, 63, 1)
+                        DisabledFill: =RGBA(0, 0, 0, 0)
+                        DisplayMode: =DisplayMode.Disabled
+                        Fill: =RGBA(245, 245, 245, 1)
+                        Font: =Font.Lato
+                        HintText: =
+                        HoverFill: =RGBA(245, 245, 245, 1)
+                        RadiusBottomLeft: =0
+                        RadiusBottomRight: =0
+                        RadiusTopLeft: =0
+                        RadiusTopRight: =0
+                        Size: =12
+                        Width: =400
+                        X: =56
+                        Y: =519
+                  - Image13_2:
+                      Control: Image@2.2.3
+                      Properties:
+                        BorderColor: =RGBA(0, 18, 107, 1)
+                        Height: =74
+                        Image: =Coalesce(VAR_DADOS_ENTREGA.ass_responsavel.Large,varAssResp)
+                        ImagePosition: =ImagePosition.Fill
+                        Width: =227
+                        X: =33
+                        Y: =570
+                  - Image13_3:
+                      Control: Image@2.2.3
+                      Properties:
+                        BorderColor: =RGBA(0, 18, 107, 1)
+                        Height: =74
+                        Image: |-
+                          =Coalesce(VAR_DADOS_ENTREGA.ass_recebedor.Large,varAssReceb)
+                        ImagePosition: =ImagePosition.Fill
+                        Width: =227
+                        X: =273
+                        Y: =570
+                  - ButtonCanvas8:
+                      Control: Button@0.0.45
+                      Properties:
+                        Icon: ="Edit"
+                        IconStyle: ='ButtonCanvas.IconStyle'.Outline
+                        Layout: ='ButtonCanvas.Layout'.IconOnly
+                        OnSelect: |
+                          =Reset(PenInput);
+                          UpdateContext(
+                              {
+                                  varAddAss: true,
+                                  varAssRespExec: true,
+                                  varAssRecebExec: false
+                              }
+                          );
+                        Text: ="Assinar"
+                        Visible: =ButtonCanvas6.Visible
+                        Width: =40
+                        X: =33
+                        Y: =603
+                  - ButtonCanvas8_1:
+                      Control: Button@0.0.45
+                      Properties:
+                        Icon: ="Edit"
+                        IconStyle: ='ButtonCanvas.IconStyle'.Outline
+                        Layout: ='ButtonCanvas.Layout'.IconOnly
+                        OnSelect: |-
+                          =Reset(PenInput);
+                          UpdateContext(
+                              {
+                                  varAddAss: true,
+                                  varAssRecebExec: true,
+                                  varAssRespExec: false
+                              }
+                          )
+                        Text: ="Assinar"
+                        Visible: =ButtonCanvas6.Visible
+                        Width: =40
+                        X: =273
+                        Y: =603
+                  - Rectangle16_13:
+                      Control: Rectangle@2.3.0
+                      Group: Group1_1
+                      Properties:
+                        BorderColor: =RGBA(0, 0, 0, 1)
+                        BorderThickness: =1
+                        Fill: =RGBA(0, 0, 0, 0)
+                        Height: =40
+                        Width: =508
+                        X: =16
+                        Y: =309
+                  - Label20_79:
+                      Control: Label@2.5.1
+                      Group: Group1_1
+                      Properties:
+                        AutoHeight: =true
+                        BorderColor: =RGBA(0, 18, 107, 1)
+                        Color: =RGBA(38, 36, 123, 1)
+                        Fill: =RGBA(255, 255, 255, 1)
+                        Font: =Font.'Open Sans'
+                        Height: =27
+                        Italic: =true
+                        Size: =10
+                        Text: ="E-mail"
+                        Width: =51
+                        X: =21
+                        Y: =294
+                  - TextInputEmailCliente:
+                      Control: Classic/TextInput@2.3.2
+                      Group: Group1_1
+                      Properties:
+                        BorderStyle: =BorderStyle.None
+                        Default: =Coalesce(VAR_DADOS_ENTREGA.email,"")
+                        DisplayMode: =TextInputNomeCliente.DisplayMode
+                        Fill: =RGBA(245, 245, 245, 1)
+                        Height: =30
+                        HintText: ="Principal e-mail do cliente..."
+                        HoverFill: =RGBA(245, 245, 245, 1)
+                        RadiusBottomLeft: =0
+                        RadiusBottomRight: =0
+                        RadiusTopLeft: =0
+                        RadiusTopRight: =0
+                        Size: =10
+                        Width: =496
+                        X: =21
+                        Y: =314
+            - Container19_1:
+                Control: GroupContainer@1.5.0
+                Variant: ManualLayout
+                Properties:
+                  BorderColor: =RGBA(0, 18, 107, 1)
+                  BorderThickness: =1
+                  DropShadow: =DropShadow.None
+                  Height: =Parent.Height - 20
+                  RadiusBottomLeft: =0
+                  RadiusBottomRight: =0
+                  RadiusTopLeft: =0
+                  RadiusTopRight: =0
+                  Width: =438
+                  X: =558
+                  Y: =12
+                Children:
+                  - GalleryEntregaItens:
+                      Control: Gallery@2.15.0
+                      Variant: VariableHeight
+                      Properties:
+                        Height: =608
+                        Items: |-
+                          =colItensEntregaRecibo
+                        TemplateSize: =100
+                        Width: =Parent.Width - 20
+                        X: =10
+                        Y: =35
+                      Children:
+                        - Container5_2:
+                            Control: GroupContainer@1.5.0
+                            Variant: AutoLayout
+                            Properties:
+                              DropShadow: =DropShadow.None
+                              Fill: =RGBA(247, 247, 247, 1)
+                              Height: =If(HtmlText2_3.Height < 100, 100, HtmlText2_3.Height + 10)// Parent.TemplateHeight
+                              LayoutAlignItems: =LayoutAlignItems.Center
+                              LayoutDirection: =LayoutDirection.Horizontal
+                              LayoutGap: =5
+                              PaddingBottom: =5
+                              PaddingLeft: =5
+                              PaddingRight: =5
+                              PaddingTop: =5
+                              RadiusBottomLeft: =10
+                              RadiusBottomRight: =10
+                              RadiusTopLeft: =10
+                              RadiusTopRight: =10
+                              Width: =408
+                            Children:
+                              - Image2_1:
+                                  Control: Image@2.2.3
+                                  Properties:
+                                    AlignInContainer: =AlignInContainer.Stretch
+                                    Image: |-
+                                      =If(
+                                          IsBlank(ThisItem.foto),
+                                          'sem-foto',
+                                          ThisItem.foto
+                                      )
+                                    LayoutMaxHeight: =
+                                    LayoutMaxWidth: =
+                                    LayoutMinHeight: =0
+                              - HtmlText2_3:
+                                  Control: HtmlViewer@2.1.0
+                                  Properties:
+                                    AutoHeight: =true
+                                    Height: =30
+                                    HtmlText: |-
+                                      ="<div style='
+                                          font-family: Arial, sans-serif;
+                                          font-size: 11pt;
+                                          text-align: justify;
+                                          margin-bottom: 10px;
+                                          padding: 8px;
+                                          border-radius: 6px;
+                                      '>
+                                          🔹 <strong>" & ThisItem.categoria & "</strong> - <em>" & ThisItem.subCategoria & "</em> | 
+                                          " & ThisItem.descricao & " | 
+                                          " & If(
+                                          ThisItem.status <> "Recebido",
+                                          "<span style='color: #FFA500; font-weight: bold;'>" & ThisItem.status & "</span>",
+                                          "<span style='color: green; font-weight: bold;'>" & ThisItem.status & "</span>"
+                                      ) & "
+                                      </div>"
+                                    LayoutMaxHeight: =
+                                    LayoutMaxWidth: =
+                                    OnSelect: =
+                                    PaddingBottom: =0
+                                    PaddingTop: =0
+                                    Size: =10
+                                    Width: =290
+                                    Y: =10
+                  - Label20_68:
+                      Control: Label@2.5.1
+                      Properties:
+                        Align: =Align.Center
+                        BorderColor: =RGBA(0, 18, 107, 1)
+                        Fill: =RGBA(180, 214, 250, 0.3)
+                        Font: =Font.'Open Sans'
+                        FontWeight: =FontWeight.Semibold
+                        Height: =36
+                        Italic: =true
+                        Text: ="Objetos encontrados:"
+                        Width: '=Parent.Width '
+            - Container10:
+                Control: GroupContainer@1.5.0
+                Variant: AutoLayout
+                Properties:
+                  DropShadow: =DropShadow.None
+                  Height: =40
+                  LayoutAlignItems: =LayoutAlignItems.Center
+                  LayoutDirection: =LayoutDirection.Horizontal
+                  LayoutGap: =10
+                  LayoutJustifyContent: =LayoutJustifyContent.End
+                  PaddingLeft: =10
+                  PaddingRight: =10
+                  RadiusBottomLeft: =0
+                  RadiusBottomRight: =0
+                  RadiusTopLeft: =0
+                  RadiusTopRight: =0
+                  Width: =250
+                  X: =742
+                  Y: =Parent.Height - 70
+                Children:
+                  - ButtonCanvas6_1:
+                      Control: Button@0.0.45
+                      Properties:
+                        Appearance: ='ButtonCanvas.Appearance'.Secondary
+                        Icon: ="ChevronLeft"
+                        LayoutMaxHeight: =
+                        LayoutMaxWidth: =
+                        OnSelect: |-
+                          =Set(varUltimaAtividade, Now());
+                          Reset(TextInputNomeCliente);
+                          Reset(ComboboxCanvasDoc);
+                          Reset(TextInputNumDoc);
+                          Reset(TextInput1_2);
+                          Reset(TextInputEmailCliente);
+                          Reset(TextInputEndereco);
+                          Set(
+                              varAssResp,
+                              Blank()
+                          );
+                          Set(
+                              varAssReceb,
+                              Blank()
+                          );
+                          Back()
+                        PaddingBottom: =0
+                        PaddingLeft: =0
+                        PaddingRight: =5
+                        PaddingTop: =0
+                        Text: ="Voltar"
+                        Visible: =!ScreenEntregaRecibo.Printing
+                        X: =860
+                        Y: =Parent.Height - 60
+                  - ButtonCanvas6:
+                      Control: Button@0.0.45
+                      Properties:
+                        DisplayMode: |-
+                          =If(
+                              IsBlank(TextInputNomeCliente.Text) Or IsBlank(ComboboxCanvasDoc.Selected.Value) Or IsBlank(TextInputNumDoc.Text) Or IsBlank(TextInput1_2.Text) Or IsBlank(TextInputEmailCliente.Text) Or IsBlank(TextInputEndereco.Text) Or IsBlank(varAssResp) Or IsBlank(varAssReceb),
+                              DisplayMode.Disabled,
+                              DisplayMode.Edit
+                          )
+                        Icon: ="Save"
+                        LayoutMaxHeight: =
+                        LayoutMaxWidth: =
+                        OnSelect: |-
+                          =Set(varUltimaAtividade, Now());
+                          UpdateContext({varEntregaSalva: false});
+                          IfError(
+                              Patch(
+                                  tbl_perdidosAchadosItens,
+                                  ForAll(
+                                      Filter(
+                                          colItensEntregaRecibo,
+                                          status = "Recebido"
+                                      ) As itemEntrega,
+                                      {
+                                          ID: itemEntrega.ID,
+                                          status: "Entregue"
+                                      }
+                                  )
+                              );
+                              Patch(
+                                  tbl_perdidosAchados,
+                                  VAR_DADOS_ENTREGA,
+                                  {
+                                      cliente: Trim(TextInputNomeCliente.Text),
+                                      documento: ComboboxCanvasDoc.Selected.Value,
+                                      numeroDocumento: Trim(TextInputNumDoc.Text),
+                                      telefone: Value(TextInput1_2.Text),
+                                      endereco: Trim(TextInputEndereco.Text),
+                                      email: Lower(Trim(TextInputEmailCliente.Text)),
+                                      devolvido_por: varNomeUser,
+                                      devolucao: Now(),
+                                      ass_responsavel: Image13_2.Image,
+                                      ass_recebedor: Image13_3.Image,
+                                      status: "Finalizado"
+                                  }
+                              );
+                              UpdateContext({varEntregaSalva: true}),
+                              Notify(
+                                  "Não foi possível concluir a entrega: " & Coalesce(FirstError.Message, "erro não informado."),
+                                  NotificationType.Error,
+                                  10000
+                              )
+                          );
+                          If(
+                              varEntregaSalva,
+                              Navigate(
+                                  ScreenHome,
+                                  ScreenTransition.Fade
+                              )
+                          )
+                        Text: ="Salvar"
+                        Visible: |-
+                          =If(
+                              !ScreenEntregaRecibo.Printing,
+                              If(
+                                  IsBlank(VAR_DADOS_ENTREGA.devolucao) And IsBlank(VAR_DADOS_ENTREGA.devolvido_por),
+                                  true
+                              ),
+                              false
+                          )
+                        X: =112
+                        Y: =Parent.Height - 60
+                  - ButtonCanvas6_2:
+                      Control: Button@0.0.45
+                      Properties:
+                        Appearance: ='ButtonCanvas.Appearance'.Primary
+                        Icon: ="Print"
+                        LayoutMaxHeight: =
+                        LayoutMaxWidth: =
+                        OnSelect: =Print()
+                        PaddingBottom: =0
+                        PaddingLeft: =0
+                        PaddingRight: =0
+                        PaddingTop: =0
+                        Text: =
+                        Visible: =!ScreenEntregaRecibo.Printing And VAR_DADOS_ENTREGA.status = "Finalizado"
+                        Width: =50
+                        X: =860
+                        Y: =Parent.Height - 60
+      - Container31_4:
+          Control: GroupContainer@1.5.0
+          Variant: ManualLayout
+          Properties:
+            DropShadow: =DropShadow.None
+            Fill: =RGBA(255, 255, 255, 1)
+            Height: =Parent.Height// Max(App.Height; App.MinScreenHeight)
+            Visible: =varAddAss = true
+            Width: =Parent.Width// Max(App.Width; App.MinScreenWidth)
+          Children:
+            - Rectangle21_2:
+                Control: Rectangle@2.3.0
+                Properties:
+                  BorderColor: =RGBA(0, 18, 107, 1)
+                  Fill: =RGBA(237, 237, 237, 1)
+                  Height: =500
+                  Width: =Parent.Width
+                  Y: =Rectangle19_4.Height
+            - PenInput:
+                Control: PenInput@2.3.0
+                Properties:
+                  BorderColor: =RGBA(0, 18, 107, 1)
+                  Height: =Parent.Height
+                  Reset: =true
+                  Width: =Parent.Width
+            - Rectangle19_11:
+                Control: Rectangle@2.3.0
+                Properties:
+                  BorderColor: =RGBA(0, 18, 107, 1)
+                  BorderThickness: =2
+                  Fill: =Color.Black
+                  Height: =Parent.Height / 3 - 100
+                  Width: =Parent.Width
+                  Y: =Parent.Height - Self.Height - 60
+            - Rectangle19_4:
+                Control: Rectangle@2.3.0
+                Properties:
+                  BorderColor: =RGBA(0, 18, 107, 1)
+                  BorderThickness: =2
+                  Fill: =Color.Black
+                  Height: =Parent.Height / 3 - 100
+                  Width: =Parent.Width
+            - ButtonCanvas20_3:
+                Control: Button@0.0.45
+                Properties:
+                  Appearance: ='ButtonCanvas.Appearance'.Secondary
+                  FontSize: =18
+                  Height: =40
+                  Icon: ="DismissCircle"
+                  IconStyle: ='ButtonCanvas.IconStyle'.Filled
+                  OnSelect: |-
+                    =UpdateContext({varAddAss: false});
+                    Reset(PenInput)
+                  Text: ="Cancelar"
+                  Width: =120
+                  X: =40
+                  Y: =Parent.Height - 50
+            - ButtonCanvas20_5:
+                Control: Button@0.0.45
+                Properties:
+                  Appearance: ='ButtonCanvas.Appearance'.Secondary
+                  FontSize: =18
+                  Height: =40
+                  Icon: ="Checkmark"
+                  IconStyle: ='ButtonCanvas.IconStyle'.Filled
+                  OnSelect: |-
+                    =UpdateContext(
+                        {
+                            varAddAss: false,
+                            varEditAss: true
+                        }
+                    );
+                    If(
+                        varAssRespExec,
+                        Set(
+                            varAssResp,
+                            Substitute(
+                                JSON(
+                                    PenInput.Image,
+                                    JSONFormat.IncludeBinaryData
+                                ),
+                                Char(34),
+                                ""
+                            )
+                        ),
+                        Set(
+                            varAssReceb,
+                            Substitute(
+                                JSON(
+                                    PenInput.Image,
+                                    JSONFormat.IncludeBinaryData
+                                ),
+                                Char(34),
+                                ""
+                            )
+                        )
+                    )
+                  Text: ="Aceitar"
+                  Width: =120
+                  X: =Parent. Width - 140
+                  Y: =Parent.Height - 50
+      - Timer2_7:
+          Control: Timer@2.1.0
+          Properties:
+            AutoStart: =true
+            OnTimerEnd: |+
+              =
+              If(
+                  varSessaoAtiva &&
+                  (
+                      DateDiff(varUltimaAtividade, Now(), TimeUnit.Minutes) >= 15
+                      || varForcarExpiracao
+                  ),
+                  Set(varSessaoAtiva, false);
+                  Set(varForcarExpiracao, false);
+                  Navigate(scrSessaoExpirada, ScreenTransition.Fade)
+              )
+
+            Repeat: =true
+            Visible: =false
+            X: =20
+            Y: =80

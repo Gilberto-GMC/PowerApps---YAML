@@ -1,0 +1,205 @@
+# ************************************************************************************************
+# Warning: YAML source code for Canvas Apps should only be used to review changes made within Power Apps Studio and for minor edits (Preview).
+# Use the maker portal to create and edit your Power Apps.
+# 
+# The schema file for Canvas Apps is available at https://go.microsoft.com/fwlink/?linkid=2304907
+# 
+# For more information, visit https://go.microsoft.com/fwlink/?linkid=2292623
+# ************************************************************************************************
+Screens:
+  Screen1:
+    Properties:
+      OnVisible: =Set(varUltimaAtividade, Now())
+    Children:
+      - Gallery3:
+          Control: Gallery@2.15.0
+          Variant: BrowseLayout_Vertical_OneTextVariant_ver5.0
+          Properties:
+            Height: =989
+            Items: |
+              =Filter(
+                  Sort(
+                      '11-tbl_AchadosPerdidos',
+                      ID,
+                      SortOrder.Descending
+                  ),
+                  Categoria = "Documentos" && Modulo_id = Blank()
+              )
+            TemplateSize: =50
+            Width: =1682
+            Y: =90
+          Children:
+            - Title4:
+                Control: Label@2.5.1
+                Properties:
+                  BorderColor: =RGBA(0, 0, 0, 1)
+                  Color: =RGBA(50, 49, 48, 1)
+                  FontWeight: =If(ThisItem.IsSelected, FontWeight.Semibold, FontWeight.Normal)
+                  Height: =Self.Size * 1.8
+                  OnSelect: =Select(Parent)
+                  PaddingBottom: =0
+                  PaddingLeft: =0
+                  PaddingRight: =0
+                  PaddingTop: =0
+                  Size: =14
+                  Text: =ThisItem.ID &" - "&ThisItem.Categoria&" - "&ThisItem.SubCategoria&" - "&ThisItem.Modulo_id
+                  VerticalAlign: =VerticalAlign.Top
+                  Width: =Parent.TemplateWidth - 86
+                  X: =16
+                  Y: =(Parent.TemplateHeight / 2) - (Self.Height / 2)
+            - NextArrow2:
+                Control: Classic/Icon@2.5.0
+                Properties:
+                  AccessibleLabel: =Self.Tooltip
+                  Color: =RGBA(166, 166, 166, 1)
+                  Height: =50
+                  Icon: =Icon.ChevronRight
+                  OnSelect: =Select(Parent)
+                  PaddingBottom: =12
+                  PaddingLeft: =12
+                  PaddingRight: =12
+                  PaddingTop: =12
+                  Tooltip: ="Exibir detalhes do item"
+                  Width: =50
+                  X: =Parent.TemplateWidth - Self.Width - 12
+                  Y: =(Parent.TemplateHeight / 2) - (Self.Height / 2)
+            - Separator6:
+                Control: Rectangle@2.3.0
+                Properties:
+                  Fill: =RGBA(255, 255, 255, 1)
+                  Height: =8
+                  OnSelect: =Select(Parent)
+                  Width: =Parent.TemplateWidth
+                  Y: =Parent.TemplateHeight - Self.Height
+            - Rectangle2:
+                Control: Rectangle@2.3.0
+                Properties:
+                  Fill: =App.Theme.Colors.Darker30
+                  Height: =Parent.TemplateHeight - Separator6.Height
+                  OnSelect: =Select(Parent)
+                  Visible: =ThisItem.IsSelected
+                  Width: =4
+            - Image6:
+                Control: Image@2.2.3
+                Properties:
+                  Height: =50
+                  Image: =ThisItem.ImgIdent.Small
+                  OnSelect: =Select(Parent)
+                  Width: =62
+                  X: =781
+            - ButtonCanvas9_3:
+                Control: Button@0.0.45
+                Properties:
+                  BasePaletteColor: =RGBA(249, 83, 109, 1)
+                  Icon: ="Delete"
+                  OnSelect: |-
+                    =Patch(
+                        '11-tbl_AchadosPerdidos',
+                        LookUp(
+                            '11-tbl_AchadosPerdidos',
+                            ID = ThisItem.ID
+                        ),
+                        {
+                            ImgIdent: Blank(),
+                            Modulo_id: 1
+                        }
+                    )
+                  Text: =
+                  X: =1036
+                  Y: =5
+            - ButtonCanvas9_4:
+                Control: Button@0.0.45
+                Properties:
+                  BasePaletteColor: =RGBA(249, 83, 109, 1)
+                  Icon: ="ArrowClockwise"
+                  OnSelect: |-
+                    =Patch(
+                        '11-tbl_AchadosPerdidos',
+                        LookUp(
+                            '11-tbl_AchadosPerdidos',
+                            ID = ThisItem.ID
+                        ),
+                        {Modulo_id: 1}
+                    )
+                  Text: =
+                  X: =1183
+                  Y: =5
+      - ButtonCanvas9:
+          Control: Button@0.0.45
+          Properties:
+            BasePaletteColor: =RGBA(249, 83, 109, 1)
+            Icon: ="Delete"
+            OnSelect: |-
+              =ForAll(
+                  Sequence(Value(TextInput1.Text)),
+                  Patch(
+                      '11-tbl_AchadosPerdidos',
+                      First(
+                          Filter(
+                              Sort(
+                                  '11-tbl_AchadosPerdidos',
+                                  ID,
+                                  SortOrder.Descending
+                              ),
+                              Categoria = "Documentos" && Modulo_id = Blank()
+                          )
+                      ),
+                      {
+                          ImgIdent: Blank(),
+                          Modulo_id: 1
+                      }
+                  )
+              )
+            Text: =
+            X: =779
+            Y: =28
+      - TextCanvas3:
+          Control: Text@0.0.51
+          Properties:
+            Align: ='TextCanvas.Align'.Center
+            Height: =62
+            Size: =30
+            Text: =Gallery3.AllItemsCount
+            Weight: ='TextCanvas.Weight'.Bold
+            Width: =339
+            X: =1187
+            Y: =13
+      - ButtonCanvas9_2:
+          Control: Button@0.0.45
+          Properties:
+            Appearance: ='ButtonCanvas.Appearance'.Secondary
+            Icon: ="ArrowClockwise"
+            OnSelect: =Refresh('11-tbl_AchadosPerdidos')
+            Text: =
+            X: =512
+            Y: =28
+      - TextInput1:
+          Control: Classic/TextInput@2.3.2
+          Properties:
+            Default: =
+            Format: =TextFormat.Number
+            Height: =35
+            Width: =82
+            X: =652
+            Y: =26
+      - Timer2_8:
+          Control: Timer@2.1.0
+          Properties:
+            AutoStart: =true
+            OnTimerEnd: |+
+              =
+              If(
+                  varSessaoAtiva &&
+                  (
+                      DateDiff(varUltimaAtividade, Now(), TimeUnit.Minutes) >= 15
+                      || varForcarExpiracao
+                  ),
+                  Set(varSessaoAtiva, false);
+                  Set(varForcarExpiracao, false);
+                  Navigate(scrSessaoExpirada, ScreenTransition.Fade)
+              )
+
+            Repeat: =true
+            Visible: =false
+            X: =20
+            Y: =80
