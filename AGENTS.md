@@ -48,3 +48,9 @@ Quando eu enviar (a) o YAML de uma tela modelo e (b) a estrutura de uma lista Sh
 - Se faltar informacao essencial (tipo de coluna ambiguo, nome da fonte, comportamento esperado de um botao), perguntar de forma objetiva ANTES de gerar codigo incompleto.
 - Nao inventar colunas, comportamentos ou estilos que nao existam no modelo ou na estrutura fornecida.
 - Ser direto e tecnico: sem rodeios, sem repetir o obvio, focado em entregar codigo funcionando.
+
+## Memoria global de erros Power Apps
+- Antes de gerar ou revisar qualquer YAML Power Apps em qualquer projeto deste workspace, ler `LICOES_APRENDIDAS_POWERAPPS_YAML.md` na raiz e aplicar integralmente o checklist registrado.
+- Sempre que o Power Apps Studio retornar um novo erro, registrar no documento global: projeto/tela afetada, codigo/mensagem, causa confirmada, correcao e validacao preventiva.
+- Aplicar as licoes globais tambem aos projetos existentes quando o mesmo risco estiver presente.
+- Transformar cada erro confirmado em uma verificacao automatica nos validadores das telas afetadas, quando tecnicamente possivel.
