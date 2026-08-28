@@ -1,0 +1,229 @@
+Screens:
+  scrMapaInicio:
+    Properties:
+      OnVisible: |-
+        =Set(varMapaVisivel, false);
+        Set(varUsuarioNome, User().FullName);
+        Set(varPodeEditar, DataSourceInfo('tb_alocacoesMapa', DataSourceInfo.EditPermission));
+        Set(varMenuAberto, Coalesce(varMenuAberto, true));
+        If(IsBlank(varAero), Set(varAero, First(colAerosMapa).ICAO));
+        If(IsBlank(varData), Set(varData, Today()))
+    Children:
+      - cntShellIni:
+          Control: GroupContainer@1.5.0
+          Variant: AutoLayout
+          Properties:
+            DropShadow: =DropShadow.None
+            Fill: =thmPrimariaEscura
+            Height: =Parent.Height
+            LayoutAlignItems: =LayoutAlignItems.Stretch
+            LayoutDirection: =LayoutDirection.Horizontal
+            LayoutGap: =0
+            RadiusBottomLeft: =0
+            RadiusBottomRight: =0
+            RadiusTopLeft: =0
+            RadiusTopRight: =0
+            Width: =Parent.Width
+          Children:
+            - cntApresentIni:
+                Control: GroupContainer@1.5.0
+                Variant: AutoLayout
+                Properties:
+                  DropShadow: =DropShadow.None
+                  Fill: =thmPrimariaEscura
+                  FillPortions: =1
+                  LayoutAlignItems: =LayoutAlignItems.Stretch
+                  LayoutDirection: =LayoutDirection.Vertical
+                  LayoutGap: =thmEspBloco
+                  LayoutMinHeight: =0
+                  LayoutMinWidth: =0
+                  LayoutOverflowY: =LayoutOverflow.Scroll
+                  PaddingBottom: =40
+                  PaddingLeft: =52
+                  PaddingRight: =52
+                  PaddingTop: =52
+                  RadiusBottomLeft: =0
+                  RadiusBottomRight: =0
+                  RadiusTopLeft: =0
+                  RadiusTopRight: =0
+                Children:
+                  - htmMarcaIni:
+                      Control: HtmlViewer@2.1.0
+                      Properties:
+                        AutoHeight: =true
+                        Color: =thmTextoBarra
+                        Fill: =thmPrimariaEscura
+                        Font: =thmFonte
+                        HtmlText: |-
+                          ="<div style='" & htmlFonte & "color:" & hxTextoBarra & ";'>" &
+                          "<div style='font-size:11px;letter-spacing:.28em;font-weight:700;opacity:.6;'>MOTIVA AEROPORTOS</div>" &
+                          "<div style='font-size:38px;font-weight:800;letter-spacing:.01em;line-height:1.05;margin-top:8px;'>MAPA DE ALOCAÇÃO DE PÁTIO</div>" &
+                          "<div style='font-size:14px;opacity:.72;margin-top:10px;max-width:640px;line-height:1.5;'>" &
+                          "A programação diária do pátio, com as posições nas linhas e o dia inteiro nas colunas — " &
+                          "a mesma leitura da planilha, agora compartilhada, validada e sempre atualizada." &
+                          "</div></div>"
+                        Size: =12
+                  - htmCartoesIni:
+                      Control: HtmlViewer@2.1.0
+                      Properties:
+                        AutoHeight: =true
+                        Color: =thmTextoBarra
+                        Fill: =thmPrimariaEscura
+                        Font: =thmFonte
+                        HtmlText: |-
+                          ="<table style='width:100%;border-spacing:0 14px;" & htmlFonte & "color:" & hxTextoBarra & ";'>" &
+                          "<tr><td style='vertical-align:top;border-left:3px solid " & hxTextoBarra & ";padding:2px 0 2px 16px;'>" &
+                          "<div style='font-size:10px;font-weight:700;letter-spacing:.14em;opacity:.6;'>COMO LER A GRADE</div>" &
+                          "<div style='font-size:13px;line-height:1.6;margin-top:6px;'>" &
+                          "Cada linha é uma posição do pátio e cada coluna é uma hora do dia. " &
+                          "O <b>preenchimento</b> do bloco diz a companhia, o <b>contorno</b> diz o portão de embarque, " &
+                          "o selo <b>P</b> marca o voo pesquisado e o bloco cinza marca posição interditada." &
+                          "</div></td></tr>" &
+                          "<tr><td style='vertical-align:top;border-left:3px solid " & hxTextoBarra & ";padding:2px 0 2px 16px;'>" &
+                          "<div style='font-size:10px;font-weight:700;letter-spacing:.14em;opacity:.6;'>COMO ALTERAR</div>" &
+                          "<div style='font-size:13px;line-height:1.6;margin-top:6px;'>" &
+                          "Dois toques: o primeiro na linha da posição, o segundo no voo. O painel abre à direita com " &
+                          "posição, portão, horários e marcadores. Quem alterou por último aparece no topo do painel." &
+                          "</div></td></tr>" &
+                          "<tr><td style='vertical-align:top;border-left:3px solid " & hxTextoBarra & ";padding:2px 0 2px 16px;'>" &
+                          "<div style='font-size:10px;font-weight:700;letter-spacing:.14em;opacity:.6;'>O QUE MUDOU EM RELAÇÃO À PLANILHA</div>" &
+                          "<div style='font-size:13px;line-height:1.6;margin-top:6px;'>" &
+                          "Duas aeronaves não ocupam mais a mesma posição no mesmo horário, nem o mesmo portão. " &
+                          "A restrição de aeronave e de envergadura de cada posição é conferida na hora de gravar. " &
+                          "E todo mundo vê a mesma programação ao mesmo tempo." &
+                          "</div></td></tr>" &
+                          "</table>"
+                        Size: =12
+            - cntEntradaIni:
+                Control: GroupContainer@1.5.0
+                Variant: AutoLayout
+                Properties:
+                  DropShadow: =DropShadow.None
+                  Fill: =thmSuperficie
+                  FillPortions: =0
+                  LayoutAlignItems: =LayoutAlignItems.Stretch
+                  LayoutDirection: =LayoutDirection.Vertical
+                  LayoutGap: =6
+                  LayoutMinHeight: =0
+                  LayoutOverflowY: =LayoutOverflow.Scroll
+                  PaddingBottom: =32
+                  PaddingLeft: =32
+                  PaddingRight: =32
+                  PaddingTop: =52
+                  RadiusBottomLeft: =0
+                  RadiusBottomRight: =0
+                  RadiusTopLeft: =0
+                  RadiusTopRight: =0
+                  Width: =430
+                Children:
+                  - htmEntradaCabIni:
+                      Control: HtmlViewer@2.1.0
+                      Properties:
+                        AutoHeight: =true
+                        Color: =thmTexto
+                        Fill: =thmSuperficie
+                        Font: =thmFonte
+                        HtmlText: |-
+                          ="<div style='" & htmlFonte & "color:" & hxTexto & ";'>" &
+                          "<div style='font-size:10px;font-weight:700;letter-spacing:.14em;color:" & hxTextoFraco & ";'>ABRIR O MAPA</div>" &
+                          "<div style='font-size:24px;font-weight:800;color:" & hxPrimaria & ";line-height:1.15;margin-top:6px;'>" &
+                          Upper(Coalesce(varUsuarioNome, "OPERAÇÃO")) & "</div>" &
+                          "<div style='font-size:12px;color:" & hxTextoFraco & ";margin-top:4px;margin-bottom:20px;'>" &
+                          If(varPodeEditar, "Perfil de edição — você pode lançar e realocar voos.", "Somente leitura — você vê a programação, mas não altera.") &
+                          "</div></div>"
+                        Size: =12
+                  - lblAeroIni:
+                      Control: Label@2.5.1
+                      Properties:
+                        Color: =thmTextoFraco
+                        Font: =thmFonte
+                        FontWeight: =FontWeight.Bold
+                        Height: =18
+                        Size: =10
+                        Text: ="AEROPORTO *"
+                  - drpAeroIni:
+                      Control: DropDown@0.0.45
+                      Properties:
+                        DefaultSelectedItems: =[varAero]
+                        Height: =44
+                        Items: =colAerosSel
+                  - htmAeroNomeIni:
+                      Control: HtmlViewer@2.1.0
+                      Properties:
+                        AutoHeight: =true
+                        Color: =thmTextoFraco
+                        Fill: =thmSuperficie
+                        Font: =thmFonte
+                        HtmlText: |-
+                          ="<div style='" & htmlFonte & "font-size:11px;color:" & hxTextoFraco & ";padding:2px 0 12px 0;'>" &
+                          Coalesce(LookUp(colAerosMapa As _a, _a.ICAO = drpAeroIni.Selected.Value).Aeroporto, "") &
+                          " &nbsp;&middot;&nbsp; " & CountRows(colPosicoes) & " posições cadastradas</div>"
+                        Size: =11
+                  - lblDataIni:
+                      Control: Label@2.5.1
+                      Properties:
+                        Color: =thmTextoFraco
+                        Font: =thmFonte
+                        FontWeight: =FontWeight.Bold
+                        Height: =18
+                        Size: =10
+                        Text: ="DATA DA OPERAÇÃO *"
+                  - dtpDataIni:
+                      Control: DatePicker@0.0.46
+                      Properties:
+                        AccessibleLabel: ="Data da operação"
+                        Format: =DateTimeFormat.ShortDate
+                        SelectedDate: =varData
+                        Width: =Parent.Width - 64
+                  - btnEntrarIni:
+                      Control: Button@0.0.45
+                      Properties:
+                        Appearance: ='ButtonCanvas.Appearance'.Primary
+                        BasePaletteColor: =thmPrimaria
+                        BorderRadius: =0
+                        FontColor: =thmTextoBarra
+                        FontSize: =14
+                        FontWeight: =FontWeight.Semibold
+                        Height: =52
+                        Icon: ="ArrowRight"
+                        IconStyle: ='ButtonCanvas.IconStyle'.Filled
+                        LayoutMinWidth: =0
+                        OnSelect: |-
+                          =Set(varAero, drpAeroIni.Selected.Value);
+                          Set(varData, dtpDataIni.SelectedDate);
+                          Navigate(scrMapaPatio, ScreenTransition.Fade)
+                        PaddingLeft: =18
+                        PaddingRight: =18
+                        PaddingTop: =0
+                        Text: ="ENTRAR NO MAPA"
+                  - btnRefIni:
+                      Control: Button@0.0.45
+                      Properties:
+                        Appearance: ='ButtonCanvas.Appearance'.Secondary
+                        BasePaletteColor: =thmPrimaria
+                        BorderRadius: =0
+                        FontColor: =thmPrimaria
+                        FontSize: =13
+                        FontWeight: =FontWeight.Semibold
+                        Height: =44
+                        Icon: ="Search"
+                        IconStyle: ='ButtonCanvas.IconStyle'.Filled
+                        LayoutMinWidth: =0
+                        OnSelect: =Navigate(scrMapaReferencia, ScreenTransition.Fade)
+                        PaddingLeft: =18
+                        PaddingRight: =18
+                        Text: ="POSIÇÕES E CORES"
+                  - htmRodapeIni:
+                      Control: HtmlViewer@2.1.0
+                      Properties:
+                        AutoHeight: =true
+                        Color: =thmTextoFraco
+                        Fill: =thmSuperficie
+                        Font: =thmFonte
+                        HtmlText: |-
+                          ="<div style='" & htmlFonte & "font-size:10px;line-height:1.6;color:" & hxTextoFraco &
+                          ";border-top:1px solid " & hxBorda & ";margin-top:22px;padding-top:14px;'>" &
+                          "A programação fica disponível dos dias futuros até 7 dias atrás. " &
+                          "Registros mais antigos saem do mapa automaticamente." &
+                          "</div>"
+                        Size: =10
