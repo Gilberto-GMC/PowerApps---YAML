@@ -1,0 +1,1817 @@
+# ************************************************************************************************
+# AirportNow — Safety & Fauna  ·  ScreenFauna
+#
+# ⚠️ LOCALE — ARQUIVO NO FORMATO INVARIANTE ("," para argumentos, ";" para encadear,
+#    "." decimal). É assim que a EXIBIÇÃO DE CÓDIGO do Studio lê e grava, mesmo com o
+#    Studio em pt-BR. NÃO converta para ";" / ";;": o arquivo para de compilar.
+#    A conversão para pt-BR (";" / ";;" / vírgula decimal) só vale para o que é colado
+#    na BARRA DE FÓRMULAS — aqui, nada é.
+#
+#
+# COLAR EM: Studio > tela ScreenFauna > exibição de código > substituir tudo.
+#
+# ESCOPO DE SEGURANÇA
+#   As galerias desta tela filtravam o aeroporto de forma OPCIONAL:
+#       IsBlank(combo.Selected.X) || Aeroporto = combo.Selected.X
+#   Com o combo em branco a condição é sempre verdadeira e a galeria devolvia
+#   TODOS os aeroportos — inclusive para o perfil "Base", que só pode enxergar
+#   o próprio. Foi acrescentada uma condição anterior, que não depende de
+#   nenhum controle da tela:
+#       IsBlank(varEscopoIATA / varEscopoAero) || <coluna> = varEscopoIATA / varEscopoAero
+#   varEscopoIATA / varEscopoAero é definida no App.OnStart e só tem valor para o perfil Base.
+#   O filtro escolhido pelo usuário continua funcionando como antes, agora
+#   dentro do que o perfil dele permite ver.
+#
+#   DELEGAÇÃO: estas condições usam IsBlank(), que o conector do SharePoint não
+#   delega — a consulta continua limitada às primeiras 500/2000 linhas, como já
+#   era antes desta mudança. As sete telas ScreenMod* receberam a versão
+#   delegável (With + Switch); aqui a prioridade foi fechar o acesso sem
+#   reescrever a consulta.
+# ************************************************************************************************
+Screens:
+  ScreenFauna:
+    Properties:
+      Fill: =RGBA(0, 0, 0, 0)
+      ImagePosition: =ImagePosition.Center
+      LoadingSpinner: =LoadingSpinner.Data
+      OnVisible: |-
+        =UpdateContext(
+            {
+                var_visibleHome: true,
+                var_visibleMenuFauna: false
+            }
+        );
+        Select(ButtonCanvasAtualizar)
+    Children:
+      - ScreenContainerFauna:
+          Control: GroupContainer@1.5.0
+          Variant: AutoLayout
+          Properties:
+            BorderStyle: =BorderStyle.None
+            DropShadow: =DropShadow.None
+            Fill: =RGBA(255, 255, 255, 1)
+            Height: =Max(App.Height, App.MinScreenHeight)
+            LayoutAlignItems: =LayoutAlignItems.Center
+            LayoutDirection: =LayoutDirection.Vertical
+            RadiusBottomLeft: =0
+            RadiusBottomRight: =0
+            RadiusTopLeft: =0
+            RadiusTopRight: =0
+            Width: =Parent.Width
+          Children:
+            - ContainerHeader_11:
+                Control: GroupContainer@1.5.0
+                Variant: AutoLayout
+                Properties:
+                  BorderColor: =RGBA(30, 30, 100, 1)
+                  DropShadow: =DropShadow.None
+                  Fill: =RGBA(0, 0, 0, 1)
+                  FillPortions: =0
+                  Height: =40
+                  LayoutAlignItems: =LayoutAlignItems.Center
+                  LayoutDirection: =LayoutDirection.Horizontal
+                  LayoutJustifyContent: =LayoutJustifyContent.SpaceBetween
+                  LayoutMaxHeight: =
+                  LayoutMaxWidth: =
+                  RadiusBottomLeft: =0
+                  RadiusBottomRight: =0
+                  RadiusTopLeft: =0
+                  RadiusTopRight: =0
+                  Width: =1728.84
+                Children:
+                  - Icon1_14:
+                      Control: Classic/Icon@2.5.0
+                      Properties:
+                        AlignInContainer: =AlignInContainer.Center
+                        Color: =RGBA(255, 255, 255, 1)
+                        Height: =30
+                        Icon: =Icon.BackArrow
+                        LayoutMaxHeight: =
+                        LayoutMaxWidth: =
+                        LayoutMinHeight: =0
+                        OnSelect: |-
+                          =Set(
+                              var_redirectAN,
+                              Blank()
+                          );
+                          Navigate(
+                              frmHome,
+                              ScreenTransition.Fade
+                          )
+                        PaddingBottom: =3
+                        PaddingLeft: =5
+                        PaddingRight: =5
+                        PaddingTop: =3
+                        Width: =60
+                  - Icon28_206:
+                      Control: Classic/Icon@2.5.0
+                      Properties:
+                        AlignInContainer: =AlignInContainer.Stretch
+                        Color: =RGBA(255, 255, 255, 1)
+                        DisabledBorderColor: =RGBA(0, 0, 0, 0)
+                        DisabledColor: =RGBA(0, 0, 0, 0)
+                        DisabledFill: =RGBA(0, 18, 107, 0.1)
+                        Height: =40
+                        HoverColor: =RGBA(71, 158, 245, 1)
+                        HoverFill: =RGBA(71, 158, 245, 0.2)
+                        Icon: =Icon.AddDocument
+                        LayoutMaxHeight: =
+                        LayoutMaxWidth: =
+                        LayoutMinHeight: =0
+                        OnSelect: |-
+                          =UpdateContext(
+                              {
+                                  var_visibleForms: true,
+                                  var_visibleMain: false
+                              }
+                          )
+                        PaddingBottom: =5
+                        PaddingLeft: =5
+                        PaddingRight: =5
+                        PaddingTop: =5
+                        Visible: =false //Host.OSType <> "Windows"
+                        Width: =60
+                        X: =1652.94
+                  - Label1_23:
+                      Control: Label@2.5.1
+                      Properties:
+                        Align: =Align.Center
+                        AlignInContainer: =AlignInContainer.Stretch
+                        Color: =RGBA(255, 255, 255, 1)
+                        FillPortions: =1
+                        Font: =Font.'Open Sans'
+                        FontWeight: =FontWeight.Semibold
+                        LayoutMaxHeight: =
+                        LayoutMaxWidth: =
+                        LayoutMinHeight: =0
+                        LayoutMinWidth: =0
+                        Size: =12
+                        Text: =var_tituloModulo
+                        Width: =1577.04
+                        X: =75.9
+                  - Image3_23:
+                      Control: Image@2.2.3
+                      Properties:
+                        AlignInContainer: =AlignInContainer.Stretch
+                        Height: =40
+                        Image: =MOTIVA_WHITE
+                        LayoutMaxHeight: =
+                        LayoutMaxWidth: =
+                        LayoutMinHeight: =0
+                        OnSelect: =Navigate(frmHome, ScreenTransition.Fade)
+                        Visible: =!Icon28_206.Visible
+                        Width: =75.94
+            - Container83_94:
+                Control: GroupContainer@1.5.0
+                Variant: AutoLayout
+                Properties:
+                  DropShadow: =DropShadow.None
+                  Fill: =RGBA(245, 245, 245, 1)
+                  FillPortions: =0
+                  Height: =80
+                  LayoutAlignItems: =LayoutAlignItems.Center
+                  LayoutDirection: =LayoutDirection.Horizontal
+                  LayoutGap: =10
+                  LayoutMaxHeight: =
+                  LayoutMaxWidth: =
+                  PaddingBottom: =10
+                  PaddingLeft: =10
+                  PaddingRight: =12.66
+                  PaddingTop: =12.66
+                  Visible: =Host.OSType = "Windows"
+                  Width: =1728.84
+                  Y: =40
+                Children:
+                  - ButtonCanvas7_20:
+                      Control: Button@0.0.45
+                      Properties:
+                        Align: =Align.Center
+                        AlignInContainer: =AlignInContainer.Stretch
+                        Appearance: ='ButtonCanvas.Appearance'.Secondary
+                        BorderRadius: =0
+                        BorderStyle: =BorderStyle.None
+                        FontSize: =14
+                        Icon: ="Add"
+                        IconStyle: ='ButtonCanvas.IconStyle'.Filled
+                        Layout: ='ButtonCanvas.Layout'.IconBefore
+                        LayoutMaxHeight: =
+                        LayoutMaxWidth: =
+                        OnSelect: |-
+                          =ClearCollect(
+                              col_ListaAnimais,
+                              First('AIRPORTNOW - FAUNA RELACIONAMENTO')
+                          );
+                          Clear(col_ListaAnimais);
+                          If(
+                              varAeroUser = "JOINVILLE" And TabListFaunaMenu.Selected.Value = "Afugentamento",
+                              Navigate(
+                                  ScreenFaunaForms,
+                                  ScreenTransition.Fade,
+                                  {
+                                      varItem: "Presença de fauna",
+                                      var_visibleFormFauna: true,
+                                      var_visibleHome: false,
+                                      var_visibleCadFauna: true,
+                                      var_acaoFauna: "Cadastrar",
+                                      var_visibleMenuFauna: false,
+                                      var_visibleIncluirAnimais: false,
+                                      varItemId: Blank()
+                                  }
+                              );
+                              ResetForm(FormInspPistaItensDetalhesPRESENCA);
+                              NewForm(FormInspPistaItensDetalhesPRESENCA),
+                              Navigate(
+                                  ScreenFaunaForms,
+                                  ScreenTransition.Fade,
+                                  {
+                                      var_visibleFormFauna: false,
+                                      var_visibleHome: false,
+                                      var_visibleCadFauna: true,
+                                      var_acaoFauna: "Cadastrar",
+                                      var_visibleMenuFauna: true,
+                                      var_visibleIncluirAnimais: false,
+                                      varItemId: Blank(),
+                                      varTipo: TabListFaunaMenu.Selected.Value
+                                  }
+                              )
+                          )
+                        Text: ="Cadastrar"
+                        Width: =113.92
+                        X: =14.06
+            - Label4_3:
+                Control: Label@2.5.1
+                Properties:
+                  AlignInContainer: =AlignInContainer.Stretch
+                  Fill: =RGBA(245, 245, 245, 1)
+                  Height: =10
+                  LayoutMaxHeight: =
+                  LayoutMaxWidth: =
+                  Text: =
+                  Width: =1728.84
+            - Container33_3:
+                Control: GroupContainer@1.5.0
+                Variant: AutoLayout
+                Properties:
+                  DropShadow: =DropShadow.None
+                  Fill: =RGBA(245, 245, 245, 1)
+                  FillPortions: =0
+                  Height: =20
+                  LayoutDirection: =LayoutDirection.Horizontal
+                  LayoutGap: =5
+                  LayoutMaxHeight: =
+                  LayoutMaxWidth: =
+                  PaddingLeft: =10
+                  PaddingRight: =12.66
+                  RadiusBottomLeft: =0
+                  RadiusBottomRight: =0
+                  RadiusTopLeft: =0
+                  RadiusTopRight: =0
+                  Visible: =Host.OSType = "Windows"
+                  Width: =1728.84
+                Children:
+                  - Label20_729:
+                      Control: Label@2.5.1
+                      Properties:
+                        AlignInContainer: =AlignInContainer.Stretch
+                        FontWeight: =FontWeight.Semibold
+                        Height: =30
+                        LayoutMaxHeight: =
+                        LayoutMaxWidth: =
+                        LayoutMinHeight: =0
+                        LayoutMinWidth: =0
+                        Size: =11
+                        Text: ="Bloco:"
+                        Width: =126.59
+                        X: =109.63
+                  - Label20_739:
+                      Control: Label@2.5.1
+                      Properties:
+                        AlignInContainer: =AlignInContainer.Stretch
+                        FontWeight: =FontWeight.Semibold
+                        Height: =30
+                        LayoutMaxHeight: =
+                        LayoutMaxWidth: =
+                        LayoutMinHeight: =0
+                        LayoutMinWidth: =0
+                        Size: =11
+                        Text: ="Aeroporto:"
+                        Width: =189.86
+                        X: =243.16
+                  - Label20_213:
+                      Control: Label@2.5.1
+                      Properties:
+                        AlignInContainer: =AlignInContainer.Stretch
+                        FontWeight: =FontWeight.Semibold
+                        Height: =30
+                        LayoutMaxHeight: =
+                        LayoutMaxWidth: =
+                        LayoutMinHeight: =0
+                        LayoutMinWidth: =0
+                        Size: =11
+                        Text: ="Período:"
+                        Width: =329.11
+                        X: =439.94
+            - ContainerFilter1_3:
+                Control: GroupContainer@1.5.0
+                Variant: AutoLayout
+                Properties:
+                  DropShadow: =DropShadow.None
+                  Fill: =RGBA(245, 245, 245, 1)
+                  FillPortions: =0
+                  Height: =60
+                  LayoutDirection: =LayoutDirection.Horizontal
+                  LayoutGap: =5
+                  LayoutMaxHeight: =
+                  LayoutMaxWidth: =
+                  PaddingBottom: =5
+                  PaddingLeft: =10
+                  PaddingRight: =12.66
+                  PaddingTop: =6.33
+                  RadiusBottomLeft: =0
+                  RadiusBottomRight: =0
+                  RadiusTopLeft: =0
+                  RadiusTopRight: =0
+                  Visible: =Host.OSType = "Windows"
+                  Width: =1728.84
+                Children:
+                  - cmbDerFluBloco_1:
+                      Control: Classic/DropDown@2.3.1
+                      Properties:
+                        BorderColor: =RGBA(0, 0, 0, 1)
+                        BorderThickness: =1
+                        ChevronBackground: =RGBA(0, 0, 0, 0)
+                        ChevronFill: =RGBA(0, 0, 0, 1)
+                        ChevronHoverBackground: =RGBA(0, 0, 0, 0)
+                        ChevronHoverFill: =RGBA(0, 0, 0, 1)
+                        Default: |-
+                          =If(
+                              varPerfilUser = "Base",
+                              varBlocoUser,
+                              varPerfilUser = "Bloco",
+                              varBlocoUser,
+                              Blank()
+                          )
+                        DisplayMode: =If(varPerfilUser = "Base" Or varPerfilUser = "Bloco" , DisplayMode.Disabled,DisplayMode.Edit)
+                        Fill: =RGBA(250, 250, 250, 1)
+                        Height: =30
+                        HoverFill: =RGBA(255, 255, 255, 1)
+                        Items: =["","SUL","CENTRAL"]
+                        Items.Value: =Value
+                        LayoutMaxHeight: =
+                        LayoutMaxWidth: =
+                        LayoutMinHeight: =0
+                        LayoutMinWidth: =0
+                        SelectionColor: =RGBA(255, 255, 255, 1)
+                        SelectionFill: =RGBA(186, 202, 226, 1)
+                        Size: =11
+                        Width: =126.59
+                        X: =109.63
+                        Y: =25
+                  - cmbOcoFaunaAeroporto:
+                      Control: Classic/DropDown@2.3.1
+                      Properties:
+                        BorderColor: =RGBA(0, 0, 0, 1)
+                        BorderThickness: =1
+                        ChevronBackground: =RGBA(0, 0, 0, 0)
+                        ChevronFill: =RGBA(0, 0, 0, 1)
+                        ChevronHoverBackground: =RGBA(0, 0, 0, 0)
+                        ChevronHoverFill: =RGBA(0, 0, 0, 1)
+                        Default: |-
+                          =If(
+                              varPerfilUser = "Base",
+                              varAeroUser,
+                              Blank()
+                          )
+                        DisplayMode: =If(varPerfilUser = "Base" , DisplayMode.Disabled,DisplayMode.Edit)
+                        Fill: =RGBA(250, 250, 250, 1)
+                        Height: =30
+                        HoverFill: =RGBA(255, 255, 255, 1)
+                        Items: |-
+                          =Filter(
+                              colAeros,
+                              Bloco = cmbDerFluBloco_1.Selected.Value
+                          )
+                          /*ForAll(
+                              Distinct(
+                                  Filter(
+                                      colAeros;
+                                      Bloco = cmbDerFluBloco_1.Selected.Value
+                                  );
+                                  Aeroporto
+                              );
+                              {Result: ThisRecord.Value}
+                          )*/
+                        Items.Value: =Aeroporto
+                        LayoutMaxHeight: =
+                        LayoutMaxWidth: =
+                        LayoutMinHeight: =0
+                        LayoutMinWidth: =0
+                        OnChange: =Select(ButtonCanvasAtualizar)
+                        SelectionColor: =RGBA(255, 255, 255, 1)
+                        SelectionFill: =RGBA(186, 202, 226, 1)
+                        Size: =11
+                        Width: =189.86
+                        X: =243.16
+                        Y: =25
+                  - dtpFaunaDtfInicio:
+                      Control: Classic/DatePicker@2.6.0
+                      Properties:
+                        BorderColor: =RGBA(0, 0, 0, 1)
+                        BorderThickness: =1
+                        DefaultDate: |-
+                          =If(
+                              Host.OSType = "Windows",
+                              DateValue("01/01/" & Text(Year(Today()))),
+                              Today()
+                          )
+                        Fill: =RGBA(250, 250, 250, 1)
+                        Height: =30
+                        IconBackground: =RGBA(219, 219, 219, 1)
+                        IconFill: =RGBA(0, 0, 0, 1)
+                        LayoutMaxHeight: =
+                        LayoutMaxWidth: =
+                        LayoutMinHeight: =0
+                        LayoutMinWidth: =0
+                        OnChange: |+
+                          =
+                        OnSelect: =
+                        PaddingTop: =6.33
+                        Size: =11
+                        Width: =164.55
+                        X: =439.94
+                        Y: =25
+                  - dtpFaunaDtfTermino:
+                      Control: Classic/DatePicker@2.6.0
+                      Properties:
+                        BorderColor: =RGBA(0, 0, 0, 1)
+                        BorderThickness: =1
+                        DefaultDate: =Today() + 1
+                        Fill: =RGBA(250, 250, 250, 1)
+                        Height: =30
+                        IconBackground: =RGBA(219, 219, 219, 1)
+                        IconFill: =RGBA(0, 0, 0, 1)
+                        LayoutMaxHeight: =
+                        LayoutMaxWidth: =
+                        LayoutMinHeight: =0
+                        LayoutMinWidth: =0
+                        OnChange: =
+                        OnSelect: =
+                        PaddingTop: =6.33
+                        Size: =11
+                        Width: =164.55
+                        X: =611.42
+                        Y: =25
+                  - TextInputBuscarFauna:
+                      Control: Classic/TextInput@2.3.2
+                      Properties:
+                        BorderColor: =RGBA(0, 0, 0, 1)
+                        BorderThickness: =1
+                        Default: =
+                        Height: =30
+                        HintText: |-
+                          ="🔍 Buscar por ID"
+                        LayoutMaxHeight: =
+                        LayoutMaxWidth: =
+                        PaddingRight: =6.33
+                        PaddingTop: =6.33
+                        RadiusBottomLeft: =0
+                        RadiusBottomRight: =0
+                        RadiusTopLeft: =0
+                        RadiusTopRight: =0
+                        Size: =11
+                        Width: =253.16
+                        X: =1176.46
+                        Y: =12
+                  - ButtonCanvas5_3:
+                      Control: Button@0.0.45
+                      Properties:
+                        AccessibleLabel: =
+                        Appearance: ='ButtonCanvas.Appearance'.Transparent
+                        Height: =30
+                        Icon: ="Eraser"
+                        IconStyle: ='ButtonCanvas.IconStyle'.Outline
+                        Layout: ='ButtonCanvas.Layout'.IconOnly
+                        LayoutMaxHeight: =
+                        LayoutMaxWidth: =
+                        LayoutMinHeight: =0
+                        OnSelect: |-
+                          =Reset(cmbDerFluBloco_1);
+                          Reset(cmbOcoFaunaAeroporto);
+                          Reset(dtpFaunaDtfInicio);
+                          Reset(dtpFaunaDtfTermino);
+                          Reset(TextInputBuscarFauna)
+                        Text: ="Limpar Filtros"
+                        Width: =50.63
+                        X: =1437.89
+                  - ButtonCanvasAtualizar:
+                      Control: Button@0.0.45
+                      Properties:
+                        Appearance: ='ButtonCanvas.Appearance'.Transparent
+                        BorderRadius: =0
+                        BorderRadiusBottomLeft: =0
+                        BorderRadiusBottomRight: =0
+                        BorderRadiusTopLeft: =0
+                        BorderRadiusTopRight: =0
+                        Height: =30
+                        Icon: ="ArrowSync"
+                        Layout: ='ButtonCanvas.Layout'.IconOnly
+                        LayoutMaxHeight: =
+                        LayoutMaxWidth: =
+                        OnSelect: "=ClearCollect(\n    col_presenca,\n    Filter(\n        SortByColumns(\n            'Presença de Fauna',\n            \"ID\",\n            SortOrder.Descending\n        ),\n        StartsWith(\n            Aeroporto,\n            cmbOcoFaunaAeroporto.Selected.IATA\n        )\n    )\n)\n    /*\n\nConcurrent(\n    ClearCollect(\n        col_colisao;\n        Filter(\n            Sort(\n                'AIRPORTNOW - Colisões/Quase-Colisão/Avistamento';\n               'Data e Hora da ocorrência';\n                SortOrder.Descending\n            );\n        // Filtro por aeroporto (IATA)\n            IsBlank(cmbOcoFaunaAeroporto.Selected.Result) || StartsWith(\n                Aeroporto;\n                Text(\n                    LookUp(\n                        colAeros;\n                        Aeroporto = Text(cmbOcoFaunaAeroporto.Selected.Result)\n                    ).IATA\n                )\n            )\n        )\n    );\n    ClearCollect(\n        col_presenca;\n        Filter(\n            Sort(\n                'Presença de Fauna';\n                'Data e Hora';\n                SortOrder.Descending\n            );\n            (IsBlank(cmbOcoFaunaAeroporto.Selected.Result) || StartsWith(\n                Aeroporto;\n                Text(cmbOcoFaunaAeroporto.Selected.Result)\n            ) || StartsWith(\n                Aeroporto;\n                Text(\n                    LookUp(\n                        colAeros;\n                        Aeroporto = Text(cmbOcoFaunaAeroporto.Selected.Result)\n                    ).IATA\n                )\n            ))\n        )\n    );\n\nWith(\n    {\n        varIATA: If(\n            IsBlank(cmbOcoFaunaAeroporto.Selected.Result);\n            Blank();\n            LookUp(\n                colAeros;\n                Aeroporto = cmbOcoFaunaAeroporto.Selected.Result\n            ).IATA\n        )\n    };\n    \nClearCollect(\n    col_foco;\n    Sort(\n        Filter(\n            'Formulário de Focos (Atrativos e Vulnerabilidade)';\n            If(\n                IsBlank(varIATA);\n                true;\n                Aeroporto=varIATA               \n            )\n        );\n        ID;\n        SortOrder.Descending\n    )\n)\n);\n\n\n\n   /* ClearCollect(\n        col_foco;\n        Filter(\n            Sort(\n                'Formulário de Focos (Atrativos e Vulnerabilidade)';\n                'Data e Hora da ocorrência';\n                SortOrder.Descending\n            );\n            // Filtro por aeroporto (IATA)\n            IsBlank(cmbOcoFaunaAeroporto.Selected.Result) || (\n                Aeroporto = \n                Text(\n                    LookUp(\n                        colAeros;\n                        Aeroporto = Text(cmbOcoFaunaAeroporto.Selected.Result)\n                    ).IATA\n                )\n            )\n        )\n    );   \n\n    //acesso indevido de fauna\n    If(\n        varPerfilUser <> \"Base\";\n        ClearCollect(\n            col_aceIndFaunaRegistros;\n            Sort(\n                '14.7-tbl_AcessIndFauna';\n                aceIndFauna_id;\n                SortOrder.Descending\n            )\n        );\n        ClearCollect(\n            col_aceIndFaunaRegistros;\n            Sort(\n                Filter(\n                    '14.7-tbl_AcessIndFauna';\n                    aceIndFauna_aeroporto = varAeroUser\n                );\n                aceIndFauna_id;\n                SortOrder.Descending\n            )\n        )\n    )\n);;\nRefresh('AIRPORTNOW - FAUNA RELACIONAMENTO')*/"
+                        Text: ="Atualizar galeria"
+                        Width: =50.63
+                        X: =1495.52
+            - Rectangle6_3:
+                Control: Rectangle@2.3.0
+                Properties:
+                  AlignInContainer: =AlignInContainer.Stretch
+                  BorderStyle: =BorderStyle.None
+                  Fill: =RGBA(0, 0, 0, 1)
+                  Height: =10
+                  LayoutMaxHeight: =
+                  LayoutMaxWidth: =
+                  Width: =1728.84
+            - ScreenContainerMainFauna:
+                Control: GroupContainer@1.5.0
+                Variant: AutoLayout
+                Properties:
+                  DropShadow: =DropShadow.None
+                  Fill: =RGBA(255, 255, 255, 1)
+                  Height: =Parent.Height
+                  LayoutAlignItems: =LayoutAlignItems.Stretch
+                  LayoutDirection: =LayoutDirection.Vertical
+                  LayoutGap: =5
+                  LayoutMaxHeight: =
+                  LayoutMaxWidth: =
+                  RadiusBottomLeft: =0
+                  RadiusBottomRight: =0
+                  RadiusTopLeft: =0
+                  RadiusTopRight: =0
+                  Width: =Parent.Width
+                Children:
+                  - TabListFaunaMenu:
+                      Control: TabList@2.2.31
+                      Properties:
+                        AlignInContainer: =AlignInContainer.Stretch
+                        Alignment: ='TabList.Alignment'.Horizontal
+                        Height: =50
+                        Items: =["Colisão com dano", "Colisão sem dano", "Quase colisão","Avistamento","Presença de fauna","Afugentamento","Foco de atração de fauna","Vulnerabilidade em proteções físicas","Acesso indevido de fauna"]
+                        LayoutMaxHeight: =
+                        LayoutMaxWidth: =
+                        LayoutMinHeight: =0
+                        LayoutMinWidth: =0
+                        OnSelect: =
+                        Size: ='TabList.Size'.Medium
+                        Width: =500
+                  - Container5_2:
+                      Control: GroupContainer@1.5.0
+                      Variant: AutoLayout
+                      Properties:
+                        DropShadow: =DropShadow.Regular
+                        FillPortions: =0
+                        Height: =30
+                        LayoutDirection: =LayoutDirection.Horizontal
+                        LayoutGap: =15
+                        LayoutMaxHeight: =
+                        LayoutMaxWidth: =
+                        RadiusBottomLeft: =0
+                        RadiusBottomRight: =0
+                        RadiusTopLeft: =0
+                        RadiusTopRight: =0
+                      Children:
+                        - Label1_5:
+                            Control: Label@2.5.1
+                            Properties:
+                              Align: =Align.Center
+                              AlignInContainer: =AlignInContainer.Stretch
+                              BorderColor: =RGBA(0, 18, 107, 1)
+                              Font: =Font.'Open Sans'
+                              FontWeight: =FontWeight.Semibold
+                              LayoutMaxHeight: =
+                              LayoutMaxWidth: =
+                              LayoutMinHeight: =0
+                              Size: =11
+                              Text: ="ID"
+                              Width: =50
+                        - Label1_6:
+                            Control: Label@2.5.1
+                            Properties:
+                              AlignInContainer: =AlignInContainer.Stretch
+                              BorderColor: =RGBA(0, 18, 107, 1)
+                              Font: =Font.'Open Sans'
+                              FontWeight: =FontWeight.Semibold
+                              LayoutMaxHeight: =
+                              LayoutMaxWidth: =
+                              LayoutMinHeight: =0
+                              Size: =11
+                              Text: ="Aeroporto"
+                              Width: =85
+                        - Label1_7:
+                            Control: Label@2.5.1
+                            Properties:
+                              AlignInContainer: =AlignInContainer.Stretch
+                              BorderColor: =RGBA(0, 18, 107, 1)
+                              Font: =Font.'Open Sans'
+                              FontWeight: =FontWeight.Semibold
+                              LayoutMaxHeight: =
+                              LayoutMaxWidth: =
+                              LayoutMinHeight: =0
+                              Size: =11
+                              Text: ="Data"
+                              Width: =120
+                        - Label1_43:
+                            Control: Label@2.5.1
+                            Properties:
+                              AlignInContainer: =AlignInContainer.Stretch
+                              BorderColor: =RGBA(0, 18, 107, 1)
+                              Font: =Font.'Open Sans'
+                              FontWeight: =FontWeight.Semibold
+                              LayoutMaxHeight: =
+                              LayoutMaxWidth: =
+                              LayoutMinHeight: =0
+                              Size: =11
+                              Text: ="Tipo de Registro"
+                              Width: =210
+                        - Label1_44:
+                            Control: Label@2.5.1
+                            Properties:
+                              AlignInContainer: =AlignInContainer.Stretch
+                              BorderColor: =RGBA(0, 18, 107, 1)
+                              Font: =Font.'Open Sans'
+                              FontWeight: =FontWeight.Semibold
+                              LayoutMaxHeight: =
+                              LayoutMaxWidth: =
+                              LayoutMinHeight: =0
+                              Size: =11
+                              Text: ="Descrição da ocorrência"
+                              Width: =250
+                  - Container17_2:
+                      Control: GroupContainer@1.5.0
+                      Variant: AutoLayout
+                      Properties:
+                        DropShadow: =DropShadow.None
+                        LayoutDirection: =LayoutDirection.Horizontal
+                        LayoutMaxHeight: =
+                        LayoutMaxWidth: =
+                        RadiusBottomLeft: =0
+                        RadiusBottomRight: =0
+                        RadiusTopLeft: =0
+                        RadiusTopRight: =0
+                      Children:
+                        - GalleryColisao:
+                            Control: Gallery@2.15.0
+                            Variant: Vertical
+                            Properties:
+                              BorderColor: =RGBA(0, 18, 107, 1)
+                              Items: |-
+                                =SortByColumns(
+                                    Filter(
+                                        'AIRPORTNOW - Colisões/Quase-Colisão/Avistamento',
+
+                                        // ✅ Aeroporto — opcional
+                                        // escopo de segurança — independe do filtro da tela
+                                        IsBlank(varEscopoIATA) ||
+                                        Aeroporto = varEscopoIATA,
+                                        IsBlank(cmbOcoFaunaAeroporto.Selected.IATA) ||
+                                        Aeroporto = cmbOcoFaunaAeroporto.Selected.IATA,
+
+                                        // ✅ Tipo de Registro — opcional
+                                        // ⚠️ Se TabList sempre tiver valor selecionado, remova o IsBlank e mantenha só a segunda linha
+                                        IsBlank(TabListFaunaMenu.Selected.Value) ||
+                                        'Tipo de Registro' = TabListFaunaMenu.Selected.Value,
+
+                                        // ✅ Data Início — opcional
+                                        IsBlank(dtpFaunaDtfInicio.SelectedDate) ||
+                                        'Data e Hora da ocorrência' >= DateTimeValue(dtpFaunaDtfInicio.SelectedDate),
+
+                                        // ✅ Data Término — opcional
+                                        IsBlank(dtpFaunaDtfTermino.SelectedDate) ||
+                                        'Data e Hora da ocorrência' < DateAdd(
+                                            DateTimeValue(dtpFaunaDtfTermino.SelectedDate),
+                                            1,
+                                            TimeUnit.Days
+                                        ),
+
+                                        // ✅ Buscar por ID — opcional (bug de precedência corrigido)
+                                        IsBlank(TextInputBuscarFauna.Text) ||
+                                        ID = Value(TextInputBuscarFauna.Text)
+                                    ),
+                                    "ID",
+                                    SortOrder.Descending
+                                )
+                              LayoutMaxHeight: =
+                              LayoutMaxWidth: =
+                              LoadingSpinner: =LoadingSpinner.None
+                              TemplatePadding: =0
+                              TemplateSize: =30
+                              Visible: |-
+                                =Switch(
+                                    TabListFaunaMenu.Selected.Value,
+                                    "Colisão com dano",
+                                    true,
+                                    "Colisão sem dano",
+                                    true,
+                                    "Quase colisão",
+                                    true,
+                                    "Avistamento",
+                                    true,
+                                    false
+                                )
+                            Children:
+                              - Container6_6:
+                                  Control: GroupContainer@1.5.0
+                                  Variant: AutoLayout
+                                  Properties:
+                                    DropShadow: =DropShadow.None
+                                    Height: =30
+                                    LayoutDirection: =LayoutDirection.Horizontal
+                                    PaddingLeft: =7
+                                    PaddingRight: =50
+                                    RadiusBottomLeft: =0
+                                    RadiusBottomRight: =0
+                                    RadiusTopLeft: =0
+                                    RadiusTopRight: =0
+                                    Width: =Parent.Width
+                                  Children:
+                                    - Label1_45:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          AlignInContainer: =AlignInContainer.Stretch
+                                          BorderColor: =RGBA(0, 18, 107, 1)
+                                          Font: =Font.'Open Sans'
+                                          LayoutMaxHeight: =
+                                          LayoutMaxWidth: =
+                                          LayoutMinHeight: =0
+                                          Size: =10
+                                          Text: =ThisItem.ID
+                                          Width: =50
+                                    - Label1_46:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          AlignInContainer: =AlignInContainer.Stretch
+                                          BorderColor: =RGBA(0, 18, 107, 1)
+                                          Font: =Font.'Open Sans'
+                                          LayoutMaxHeight: =
+                                          LayoutMaxWidth: =
+                                          LayoutMinHeight: =0
+                                          Size: =10
+                                          Text: =ThisItem.Aeroporto
+                                          Width: =100
+                                          X: =54
+                                    - Label1_47:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          AlignInContainer: =AlignInContainer.Stretch
+                                          BorderColor: =RGBA(0, 18, 107, 1)
+                                          Font: =Font.'Open Sans'
+                                          LayoutMaxHeight: =
+                                          LayoutMaxWidth: =
+                                          LayoutMinHeight: =0
+                                          Size: =10
+                                          Text: =ThisItem.'Data e Hora da ocorrência'
+                                          Width: =130
+                                          X: =165
+                                    - Label1_48:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          AlignInContainer: =AlignInContainer.Stretch
+                                          BorderColor: =RGBA(0, 18, 107, 1)
+                                          Font: =Font.'Open Sans'
+                                          LayoutMaxHeight: =
+                                          LayoutMaxWidth: =
+                                          LayoutMinHeight: =0
+                                          Size: =10
+                                          Text: =ThisItem.'Tipo de Registro'
+                                          Width: =260
+                                          X: =295
+                                    - Label1_49:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          AlignInContainer: =AlignInContainer.Center
+                                          BorderColor: =RGBA(0, 18, 107, 1)
+                                          FillPortions: =1
+                                          Font: =Font.'Open Sans'
+                                          Height: =20
+                                          LayoutMaxHeight: =
+                                          LayoutMaxWidth: =
+                                          LayoutMinWidth: =0
+                                          PaddingTop: =3
+                                          Size: =10
+                                          Text: =Trim( ThisItem.'Descrição da ocorrência')
+                                          VerticalAlign: =VerticalAlign.Top
+                                          Width: =50
+                                          X: =456
+                                    - ButtonCanvas7_83:
+                                        Control: Button@0.0.45
+                                        Properties:
+                                          Align: =Align.Center
+                                          Appearance: ='ButtonCanvas.Appearance'.Secondary
+                                          BorderRadius: =0
+                                          BorderStyle: =BorderStyle.None
+                                          Height: =30
+                                          Icon: ="Eye"
+                                          IconStyle: ='ButtonCanvas.IconStyle'.Filled
+                                          Layout: ='ButtonCanvas.Layout'.IconBefore
+                                          LayoutMaxHeight: =
+                                          LayoutMaxWidth: =
+                                          OnSelect: |-
+                                            =ViewForm(FormInspPistaItensDetalhesCOLISAO);
+                                            Navigate(
+                                                ScreenFaunaForms,
+                                                ScreenTransition.Fade,
+                                                {
+                                                    var_visibleHome: false,
+                                                    var_visibleCadFauna: true,
+                                                    var_visibleFormFauna: true,
+                                                    var_acaoFauna: "Detalhes",
+                                                    varItem: TabListFaunaMenu.Selected.Value,
+                                                    varItemId: ThisItem.ID
+                                                }
+                                            )
+                                          PaddingBottom: =5
+                                          PaddingLeft: =5
+                                          PaddingRight: =5
+                                          PaddingTop: =5
+                                          Text: ="Visualizar"
+                                          Width: =100
+                                          X: =14.050000000000011
+                                    - ButtonCanvas7_84:
+                                        Control: Button@0.0.45
+                                        Properties:
+                                          Align: =Align.Center
+                                          Appearance: ='ButtonCanvas.Appearance'.Secondary
+                                          BorderRadius: =0
+                                          BorderStyle: =BorderStyle.None
+                                          Height: =30
+                                          Icon: ="Edit"
+                                          IconStyle: ='ButtonCanvas.IconStyle'.Filled
+                                          Layout: ='ButtonCanvas.Layout'.IconBefore
+                                          LayoutMaxHeight: =
+                                          LayoutMaxWidth: =
+                                          OnSelect: |-
+                                            =EditForm(FormInspPistaItensDetalhesCOLISAO);
+                                            Navigate(
+                                                ScreenFaunaForms,
+                                                ScreenTransition.Fade,
+                                                {
+                                                    var_visibleHome: false,
+                                                    var_visibleCadFauna: true,
+                                                    var_visibleFormFauna: true,
+                                                    var_acaoFauna: "Editar",
+                                                    varItem: TabListFaunaMenu.Selected.Value,
+                                                    varItemId: ThisItem.ID
+                                                }
+                                            )
+                                          PaddingBottom: =5
+                                          PaddingLeft: =5
+                                          PaddingRight: =5
+                                          PaddingTop: =5
+                                          Text: ="Editar"
+                                          Width: =100
+                                          X: =113.85999999999999
+                                    - ButtonCanvas7_85:
+                                        Control: Button@0.0.45
+                                        Properties:
+                                          Align: =Align.Center
+                                          Appearance: ='ButtonCanvas.Appearance'.Secondary
+                                          BorderRadius: =0
+                                          BorderStyle: =BorderStyle.None
+                                          Height: =30
+                                          Icon: ="AppsList"
+                                          IconStyle: ='ButtonCanvas.IconStyle'.Filled
+                                          Layout: ='ButtonCanvas.Layout'.IconBefore
+                                          LayoutMaxHeight: =
+                                          LayoutMaxWidth: =
+                                          OnSelect: |-
+                                            =Navigate(
+                                                ScreenDesdobramentos,
+                                                ScreenTransition.Fade,
+                                                {
+                                                    var_desdobramentosSelect: {
+                                                        ID: Value(ThisItem.ID),
+                                                        PROTOCOLO: "ID: " & Text(ThisItem.ID),
+                                                        CRIADOR: Text(ThisItem.'Criado por'.DisplayName),
+                                                        DESCRICAO: Text(ThisItem.'Descrição da ocorrência')
+                                                    }
+                                                }
+                                            )
+                                          PaddingBottom: =5
+                                          PaddingLeft: =5
+                                          PaddingRight: =5
+                                          PaddingTop: =5
+                                          Text: ="Desdobramentos"
+                                          Width: =140
+                                          X: =14.050000000000011
+                                    - ButtonCanvas7_86:
+                                        Control: Button@0.0.45
+                                        Properties:
+                                          Align: =Align.Center
+                                          Appearance: ='ButtonCanvas.Appearance'.Secondary
+                                          BorderRadius: =0
+                                          BorderStyle: =BorderStyle.None
+                                          DisplayMode: =
+                                          FontColor: =If(IsBlank(ThisItem.'Nº do Portal Único'), Color.Orange,Color.Green)
+                                          Height: =30
+                                          Icon: ="Warning"
+                                          IconStyle: ='ButtonCanvas.IconStyle'.Outline
+                                          Layout: ='ButtonCanvas.Layout'.IconBefore
+                                          LayoutMaxHeight: =
+                                          LayoutMaxWidth: =
+                                          OnSelect: |-
+                                            =Navigate(
+                                                ScreenAnaliseSafety,
+                                                ScreenTransition.Fade,
+                                                {
+                                                    var_item_id: ThisItem.ID,
+                                                    var_numPortalUnico: ThisItem.'Nº do Portal Único',
+                                                    var_analiseSfaty: ThisItem.AnaliseSafety
+                                                }
+                                            )
+                                          PaddingBottom: =5
+                                          PaddingLeft: =5
+                                          PaddingRight: =5
+                                          PaddingTop: =5
+                                          Text: ="Safety"
+                                          Width: =100
+                                          X: =113.84999999999997
+                                    - ButtonCanvas7_87:
+                                        Control: Button@0.0.45
+                                        Properties:
+                                          Align: =Align.Center
+                                          Appearance: ='ButtonCanvas.Appearance'.Secondary
+                                          BorderRadius: =0
+                                          BorderStyle: =BorderStyle.None
+                                          FontColor: =RGBA(255, 0, 0, 1)
+                                          Height: =30
+                                          Icon: ="Delete"
+                                          IconStyle: ='ButtonCanvas.IconStyle'.Filled
+                                          Layout: ='ButtonCanvas.Layout'.IconBefore
+                                          LayoutMaxHeight: =
+                                          LayoutMaxWidth: =
+                                          OnSelect: |-
+                                            =Navigate(
+                                                ScreenExcluir,
+                                                ScreenTransition.Fade,
+                                                {
+                                                    var_modulo: "Fauna",
+                                                    var_faunaCat: "Colisão",
+                                                    var_item: ThisItem,
+                                                    var_protocolo: "ID: " & Text(ThisItem.ID)
+                                                }
+                                            )
+                                          PaddingBottom: =5
+                                          PaddingLeft: =5
+                                          PaddingRight: =5
+                                          PaddingTop: =5
+                                          Text: ="Excluir"
+                                          Width: =100
+                                          X: =241.7599999999999
+                        - GalleryPresença:
+                            Control: Gallery@2.15.0
+                            Variant: Vertical
+                            Properties:
+                              BorderColor: =RGBA(0, 18, 107, 1)
+                              Items: |-
+                                =Filter(
+                                    col_presenca,
+
+                                    // ✅ Aeroporto — opcional
+                                    // escopo de segurança — independe do filtro da tela
+                                    IsBlank(varEscopoIATA) ||
+                                    Aeroporto = varEscopoIATA,
+                                    IsBlank(cmbOcoFaunaAeroporto.Selected.IATA) ||
+                                    Aeroporto = cmbOcoFaunaAeroporto.Selected.IATA,
+
+                                    // ✅ Tipo de Registro via TabList — lógica condicional mantida
+                                    If(
+                                        TabListFaunaMenu.Selected.Value = "Afugentamento",
+                                        'Foi registrada alguma ocorrência com fauna?'.Value = "Afugentamento",
+                                        'Foi registrada alguma ocorrência com fauna?'.Value <> "Afugentamento"
+                                    ),
+
+                                    // ✅ Data Início — opcional
+                                    IsBlank(dtpFaunaDtfInicio.SelectedDate) ||
+                                    'Data e Hora' >= DateTimeValue(dtpFaunaDtfInicio.SelectedDate),
+
+                                    // ✅ Data Término — opcional
+                                    IsBlank(dtpFaunaDtfTermino.SelectedDate) ||
+                                    'Data e Hora' < DateAdd(
+                                        DateTimeValue(dtpFaunaDtfTermino.SelectedDate),
+                                        1,
+                                        TimeUnit.Days
+                                    ),
+
+                                    // ✅ Buscar por ID — opcional (bug de precedência corrigido)
+                                    IsBlank(TextInputBuscarFauna.Text) ||
+                                    ID = Value(TextInputBuscarFauna.Text)
+                                )
+                              LayoutMaxHeight: =
+                              LayoutMaxWidth: =
+                              LayoutMinHeight: =0
+                              LoadingSpinner: =LoadingSpinner.None
+                              TemplatePadding: =0
+                              TemplateSize: =30
+                              Transition: =Transition.Push
+                              Visible: |-
+                                =Switch(
+                                    TabListFaunaMenu.Selected.Value,
+                                    "Presença de fauna",
+                                    true,
+                                    "Afugentamento",
+                                    true,
+                                    false
+                                )
+                            Children:
+                              - Container6_7:
+                                  Control: GroupContainer@1.5.0
+                                  Variant: AutoLayout
+                                  Properties:
+                                    DropShadow: =DropShadow.None
+                                    Height: =30
+                                    LayoutDirection: =LayoutDirection.Horizontal
+                                    PaddingLeft: =7
+                                    PaddingRight: =50
+                                    RadiusBottomLeft: =0
+                                    RadiusBottomRight: =0
+                                    RadiusTopLeft: =0
+                                    RadiusTopRight: =0
+                                    Width: '=Parent.Width '
+                                  Children:
+                                    - Label1_50:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          AlignInContainer: =AlignInContainer.Stretch
+                                          BorderColor: =RGBA(0, 18, 107, 1)
+                                          Font: =Font.'Open Sans'
+                                          LayoutMaxHeight: =
+                                          LayoutMaxWidth: =
+                                          LayoutMinHeight: =0
+                                          Size: =10
+                                          Text: =ThisItem.ID
+                                          Width: =50
+                                    - Label1_51:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          AlignInContainer: =AlignInContainer.Stretch
+                                          BorderColor: =RGBA(0, 18, 107, 1)
+                                          Font: =Font.'Open Sans'
+                                          LayoutMaxHeight: =
+                                          LayoutMaxWidth: =
+                                          LayoutMinHeight: =0
+                                          Size: =10
+                                          Text: =ThisItem.Aeroporto
+                                          Width: =95
+                                          X: =54
+                                    - Label1_52:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          AlignInContainer: =AlignInContainer.Stretch
+                                          BorderColor: =RGBA(0, 18, 107, 1)
+                                          Font: =Font.'Open Sans'
+                                          LayoutMaxHeight: =
+                                          LayoutMaxWidth: =
+                                          LayoutMinHeight: =0
+                                          Size: =10
+                                          Text: =ThisItem.'Data e Hora'
+                                          Width: =130
+                                          X: =165
+                                    - Label1_53:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          AlignInContainer: =AlignInContainer.Stretch
+                                          BorderColor: =RGBA(0, 18, 107, 1)
+                                          Font: =Font.'Open Sans'
+                                          LayoutMaxHeight: =
+                                          LayoutMaxWidth: =
+                                          LayoutMinHeight: =0
+                                          Size: =10
+                                          Text: =ThisItem.'Foi registrada alguma ocorrência com fauna?'.Value
+                                          Width: =265
+                                          X: =295
+                                    - Label1_54:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          AlignInContainer: =AlignInContainer.Center
+                                          BorderColor: =RGBA(0, 18, 107, 1)
+                                          FillPortions: =1
+                                          Font: =Font.'Open Sans'
+                                          Height: =20
+                                          LayoutMaxHeight: =
+                                          LayoutMaxWidth: =
+                                          LayoutMinHeight: =0
+                                          LayoutMinWidth: =0
+                                          PaddingTop: =3
+                                          Size: =10
+                                          Text: =Coalesce( Trim(ThisItem.'Descrição do evento/observação'), "N/A")
+                                          VerticalAlign: =VerticalAlign.Top
+                                          Width: =50
+                                          X: =456
+                                    - ButtonCanvas7_88:
+                                        Control: Button@0.0.45
+                                        Properties:
+                                          Align: =Align.Center
+                                          Appearance: ='ButtonCanvas.Appearance'.Secondary
+                                          BorderRadius: =0
+                                          BorderStyle: =BorderStyle.None
+                                          Height: =30
+                                          Icon: ="Eye"
+                                          IconStyle: ='ButtonCanvas.IconStyle'.Filled
+                                          Layout: ='ButtonCanvas.Layout'.IconBefore
+                                          LayoutMaxHeight: =
+                                          LayoutMaxWidth: =
+                                          OnSelect: |+
+                                            =ViewForm(FormInspPistaItensDetalhesPRESENCA);
+                                            Navigate(
+                                                ScreenFaunaForms,
+                                                ScreenTransition.Fade,
+                                                {
+                                                    var_visibleHome: false,
+                                                    var_visibleCadFauna: true,
+                                                    var_visibleFormFauna: true,
+                                                    var_acaoFauna: "Detalhes",
+                                                    varItem: TabListFaunaMenu.Selected.Value,
+                                                    varItemId: ThisItem.ID
+                                                }
+                                            )
+
+                                          PaddingBottom: =5
+                                          PaddingLeft: =5
+                                          PaddingRight: =5
+                                          PaddingTop: =5
+                                          Text: ="Visualizar"
+                                          Width: =100
+                                          X: =14.050000000000011
+                                    - ButtonCanvas7_89:
+                                        Control: Button@0.0.45
+                                        Properties:
+                                          Align: =Align.Center
+                                          Appearance: ='ButtonCanvas.Appearance'.Secondary
+                                          BorderRadius: =0
+                                          BorderStyle: =BorderStyle.None
+                                          Height: =30
+                                          Icon: ="Edit"
+                                          IconStyle: ='ButtonCanvas.IconStyle'.Filled
+                                          Layout: ='ButtonCanvas.Layout'.IconBefore
+                                          LayoutMaxHeight: =
+                                          LayoutMaxWidth: =
+                                          OnSelect: |+
+                                            =EditForm(FormInspPistaItensDetalhesPRESENCA);
+                                            Navigate(
+                                                ScreenFaunaForms,
+                                                ScreenTransition.Fade,
+                                                {
+                                                    var_visibleHome: false,
+                                                    var_visibleCadFauna: true,
+                                                    var_visibleFormFauna: true,
+                                                    var_acaoFauna: "Editar",
+                                                    varItem: TabListFaunaMenu.Selected.Value,
+                                                    varItemId: ThisItem.ID
+                                                }
+                                            )
+
+                                          PaddingBottom: =5
+                                          PaddingLeft: =5
+                                          PaddingRight: =5
+                                          PaddingTop: =5
+                                          Text: ="Editar"
+                                          Width: =100
+                                          X: =99.80999999999997
+                                    - ButtonCanvas7_90:
+                                        Control: Button@0.0.45
+                                        Properties:
+                                          Align: =Align.Center
+                                          Appearance: ='ButtonCanvas.Appearance'.Secondary
+                                          BorderRadius: =0
+                                          BorderStyle: =BorderStyle.None
+                                          Height: =30
+                                          Icon: ="AppsList"
+                                          IconStyle: ='ButtonCanvas.IconStyle'.Filled
+                                          Layout: ='ButtonCanvas.Layout'.IconBefore
+                                          LayoutMaxHeight: =
+                                          LayoutMaxWidth: =
+                                          OnSelect: |-
+                                            =Navigate(
+                                                ScreenDesdobramentos,
+                                                ScreenTransition.Fade,
+                                                {
+                                                    var_desdobramentosSelect: {
+                                                        ID: Value(ThisItem.ID),
+                                                        PROTOCOLO: "ID: " & Text(ThisItem.ID),
+                                                        CRIADOR: Text(ThisItem.'Criado por'.DisplayName),
+                                                        DESCRICAO: Text(ThisItem.'Descrição do evento/observação')
+                                                    }
+                                                }
+                                            )
+                                          PaddingBottom: =5
+                                          PaddingLeft: =5
+                                          PaddingRight: =5
+                                          PaddingTop: =5
+                                          Text: ="Desdobramentos"
+                                          Width: =140
+                                          X: =14.050000000000011
+                                    - ButtonCanvas7_92:
+                                        Control: Button@0.0.45
+                                        Properties:
+                                          Align: =Align.Center
+                                          Appearance: ='ButtonCanvas.Appearance'.Secondary
+                                          BorderRadius: =0
+                                          BorderStyle: =BorderStyle.None
+                                          FontColor: =RGBA(255, 0, 0, 1)
+                                          Height: =30
+                                          Icon: ="Delete"
+                                          IconStyle: ='ButtonCanvas.IconStyle'.Filled
+                                          Layout: ='ButtonCanvas.Layout'.IconBefore
+                                          LayoutMaxHeight: =
+                                          LayoutMaxWidth: =
+                                          OnSelect: |+
+                                            =Navigate(
+                                                ScreenExcluir,
+                                                ScreenTransition.Fade,
+                                                {
+                                                    var_modulo: "Fauna",
+                                                    var_faunaCat: "Presença",
+                                                    var_item: ThisItem,
+                                                    var_protocolo: "ID: " & Text(ThisItem.ID)
+                                                }
+                                            )
+
+                                          PaddingBottom: =5
+                                          PaddingLeft: =5
+                                          PaddingRight: =5
+                                          PaddingTop: =5
+                                          Text: ="Excluir"
+                                          Width: =100
+                                          X: =227.7099999999999
+                        - GalleryFoco:
+                            Control: Gallery@2.15.0
+                            Variant: Vertical
+                            Properties:
+                              BorderColor: =RGBA(0, 18, 107, 1)
+                              Items: |-
+                                =SortByColumns(
+                                    Filter(
+                                        'Formulário de Focos (Atrativos e Vulnerabilidade)',
+
+                                        // ✅ Aeroporto — opcional
+                                        // escopo de segurança — independe do filtro da tela
+                                        IsBlank(varEscopoIATA) ||
+                                        Aeroporto = varEscopoIATA,
+                                        IsBlank(cmbOcoFaunaAeroporto.Selected.IATA) ||
+                                        Aeroporto = cmbOcoFaunaAeroporto.Selected.IATA,
+
+                                        // ✅ Tipo de Vistoria — opcional
+                                        // ⚠️ Se TabList sempre tiver valor selecionado, remova o IsBlank
+                                        IsBlank(TabListFaunaMenu.Selected.Value) ||
+                                        'Tipo de vistoria' = TabListFaunaMenu.Selected.Value,
+
+                                        // ✅ Data Início — opcional
+                                        IsBlank(dtpFaunaDtfInicio.SelectedDate) ||
+                                        'Data e Hora da ocorrência' >= DateTimeValue(dtpFaunaDtfInicio.SelectedDate),
+
+                                        // ✅ Data Término — opcional
+                                        IsBlank(dtpFaunaDtfTermino.SelectedDate) ||
+                                        'Data e Hora da ocorrência' < DateAdd(
+                                            DateTimeValue(dtpFaunaDtfTermino.SelectedDate),
+                                            1,
+                                            TimeUnit.Days
+                                        ),
+
+                                        // ✅ Buscar por ID — opcional (bug de precedência corrigido)
+                                        IsBlank(TextInputBuscarFauna.Text) ||
+                                        ID = Value(TextInputBuscarFauna.Text)
+                                    ),
+                                    "ID",
+                                    SortOrder.Descending
+                                )
+                              LayoutMaxHeight: =
+                              LayoutMaxWidth: =
+                              LayoutMinHeight: =0
+                              LoadingSpinner: =LoadingSpinner.None
+                              TemplatePadding: =0
+                              TemplateSize: =30
+                              Transition: =Transition.Push
+                              Visible: |-
+                                =Switch(
+                                    TabListFaunaMenu.Selected.Value,
+                                    "Foco de atração de fauna",
+                                    true,
+                                    "Vulnerabilidade em proteções físicas",
+                                    true,
+                                    false
+                                )
+                            Children:
+                              - Container6_8:
+                                  Control: GroupContainer@1.5.0
+                                  Variant: AutoLayout
+                                  Properties:
+                                    DropShadow: =DropShadow.None
+                                    Height: =30
+                                    LayoutDirection: =LayoutDirection.Horizontal
+                                    PaddingLeft: =7
+                                    PaddingRight: =50
+                                    RadiusBottomLeft: =0
+                                    RadiusBottomRight: =0
+                                    RadiusTopLeft: =0
+                                    RadiusTopRight: =0
+                                    Width: =Parent.Width
+                                  Children:
+                                    - Label1_55:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          AlignInContainer: =AlignInContainer.Stretch
+                                          BorderColor: =RGBA(0, 18, 107, 1)
+                                          Font: =Font.'Open Sans'
+                                          LayoutMaxHeight: =
+                                          LayoutMaxWidth: =
+                                          LayoutMinHeight: =0
+                                          Size: =10
+                                          Text: =ThisItem.ID
+                                          Width: =60
+                                    - Label1_56:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          AlignInContainer: =AlignInContainer.Stretch
+                                          BorderColor: =RGBA(0, 18, 107, 1)
+                                          Font: =Font.'Open Sans'
+                                          LayoutMaxHeight: =
+                                          LayoutMaxWidth: =
+                                          LayoutMinHeight: =0
+                                          Size: =10
+                                          Text: =ThisItem.Aeroporto
+                                          Width: =100
+                                          X: =54
+                                    - Label1_57:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          AlignInContainer: =AlignInContainer.Stretch
+                                          BorderColor: =RGBA(0, 18, 107, 1)
+                                          Font: =Font.'Open Sans'
+                                          LayoutMaxHeight: =
+                                          LayoutMaxWidth: =
+                                          LayoutMinHeight: =0
+                                          Size: =10
+                                          Text: =ThisItem.'Data e Hora da ocorrência'
+                                          Width: =135
+                                          X: =165
+                                    - Label1_58:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          AlignInContainer: =AlignInContainer.Center
+                                          BorderColor: =RGBA(0, 18, 107, 1)
+                                          Font: =Font.'Open Sans'
+                                          Height: =20
+                                          LayoutMaxHeight: =
+                                          LayoutMaxWidth: =
+                                          LayoutMinHeight: =0
+                                          Size: =10
+                                          Text: =ThisItem.'Tipo de vistoria'
+                                          VerticalAlign: =VerticalAlign.Top
+                                          Width: =225
+                                          X: =295
+                                    - Label1_59:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          AlignInContainer: =AlignInContainer.Center
+                                          BorderColor: =RGBA(0, 18, 107, 1)
+                                          FillPortions: =1
+                                          Font: =Font.'Open Sans'
+                                          Height: =20
+                                          LayoutMaxHeight: =
+                                          LayoutMaxWidth: =
+                                          LayoutMinHeight: =0
+                                          LayoutMinWidth: =0
+                                          PaddingTop: =3
+                                          Size: =10
+                                          Text: =Coalesce( Trim(ThisItem.Observações), "N/A")
+                                          VerticalAlign: =VerticalAlign.Top
+                                          Width: =50
+                                          X: =456
+                                    - ButtonCanvas7_91:
+                                        Control: Button@0.0.45
+                                        Properties:
+                                          Align: =Align.Center
+                                          Appearance: ='ButtonCanvas.Appearance'.Secondary
+                                          BorderRadius: =0
+                                          BorderStyle: =BorderStyle.None
+                                          Height: =30
+                                          Icon: ="Eye"
+                                          IconStyle: ='ButtonCanvas.IconStyle'.Filled
+                                          Layout: ='ButtonCanvas.Layout'.IconBefore
+                                          LayoutMaxHeight: =
+                                          LayoutMaxWidth: =
+                                          OnSelect: |-
+                                            =ViewForm(FormInspPistaItensDetalhesFOCO);
+                                            Navigate(
+                                                ScreenFaunaForms,
+                                                ScreenTransition.Fade,
+                                                {
+                                                    var_visibleHome: false,
+                                                    var_visibleCadFauna: true,
+                                                    var_visibleFormFauna: true,
+                                                    var_acaoFauna: "Detalhes",
+                                                    varItem: TabListFaunaMenu.Selected.Value,
+                                                    varItemId: ThisItem.ID
+                                                }
+                                            )
+                                          PaddingBottom: =5
+                                          PaddingLeft: =5
+                                          PaddingRight: =5
+                                          PaddingTop: =5
+                                          Text: ="Visualizar"
+                                          Width: =100
+                                          X: =14.050000000000011
+                                    - ButtonCanvas7_93:
+                                        Control: Button@0.0.45
+                                        Properties:
+                                          Align: =Align.Center
+                                          Appearance: ='ButtonCanvas.Appearance'.Secondary
+                                          BorderRadius: =0
+                                          BorderStyle: =BorderStyle.None
+                                          Height: =30
+                                          Icon: ="Edit"
+                                          IconStyle: ='ButtonCanvas.IconStyle'.Filled
+                                          Layout: ='ButtonCanvas.Layout'.IconBefore
+                                          LayoutMaxHeight: =
+                                          LayoutMaxWidth: =
+                                          OnSelect: |-
+                                            =EditForm(FormInspPistaItensDetalhesFOCO);
+                                            Navigate(
+                                                ScreenFaunaForms,
+                                                ScreenTransition.Fade,
+                                                {
+                                                    var_visibleHome: false,
+                                                    var_visibleCadFauna: true,
+                                                    var_visibleFormFauna: true,
+                                                    var_acaoFauna: "Editar",
+                                                    varItem: TabListFaunaMenu.Selected.Value,
+                                                    varItemId: ThisItem.ID
+                                                }
+                                            )
+                                          PaddingBottom: =5
+                                          PaddingLeft: =5
+                                          PaddingRight: =5
+                                          PaddingTop: =5
+                                          Text: ="Editar"
+                                          Width: =100
+                                          X: =85.75999999999996
+                                    - ButtonCanvas7_94:
+                                        Control: Button@0.0.45
+                                        Properties:
+                                          Align: =Align.Center
+                                          Appearance: ='ButtonCanvas.Appearance'.Secondary
+                                          BorderRadius: =0
+                                          BorderStyle: =BorderStyle.None
+                                          Height: =30
+                                          Icon: ="AppsList"
+                                          IconStyle: ='ButtonCanvas.IconStyle'.Filled
+                                          Layout: ='ButtonCanvas.Layout'.IconBefore
+                                          LayoutMaxHeight: =
+                                          LayoutMaxWidth: =
+                                          OnSelect: |-
+                                            =Navigate(
+                                                ScreenDesdobramentos,
+                                                ScreenTransition.Fade,
+                                                {
+                                                    var_desdobramentosSelect: {
+                                                        ID: Value(ThisItem.ID),
+                                                        PROTOCOLO: "ID: " & Text(ThisItem.ID),
+                                                        CRIADOR: Text(ThisItem.'Criado por'.DisplayName),
+                                                        DESCRICAO: Text(ThisItem.Observações)
+                                                    }
+                                                }
+                                            )
+                                          PaddingBottom: =5
+                                          PaddingLeft: =5
+                                          PaddingRight: =5
+                                          PaddingTop: =5
+                                          Text: ="Desdobramentos"
+                                          Width: =140
+                                          X: =14.050000000000011
+                                    - ButtonCanvas7_95:
+                                        Control: Button@0.0.45
+                                        Properties:
+                                          Align: =Align.Center
+                                          Appearance: ='ButtonCanvas.Appearance'.Secondary
+                                          BorderRadius: =0
+                                          BorderStyle: =BorderStyle.None
+                                          FontColor: =RGBA(255, 0, 0, 1)
+                                          Height: =30
+                                          Icon: ="Delete"
+                                          IconStyle: ='ButtonCanvas.IconStyle'.Filled
+                                          Layout: ='ButtonCanvas.Layout'.IconBefore
+                                          LayoutMaxHeight: =
+                                          LayoutMaxWidth: =
+                                          OnSelect: |-
+                                            =Navigate(
+                                                ScreenExcluir,
+                                                ScreenTransition.Fade,
+                                                {
+                                                    var_modulo: "Fauna",
+                                                    var_faunaCat: "Foco",
+                                                    var_item: ThisItem,
+                                                    var_protocolo: "ID: " & Text(ThisItem.ID)
+                                                }
+                                            )
+                                          PaddingBottom: =5
+                                          PaddingLeft: =5
+                                          PaddingRight: =5
+                                          PaddingTop: =5
+                                          Text: ="Excluir"
+                                          Width: =100
+                                          X: =213.65999999999988
+                        - GalleryAcessoIndevido:
+                            Control: Gallery@2.15.0
+                            Variant: Vertical
+                            Properties:
+                              BorderColor: =RGBA(0, 18, 107, 1)
+                              Items: |-
+                                =SortByColumns(
+                                    Filter(
+                                        '14.7-tbl_AcessIndFauna',
+
+                                        // ✅ Aeroporto — opcional
+                                        // escopo de segurança — independe do filtro da tela
+                                        IsBlank(varEscopoAero) ||
+                                        aceIndFauna_aeroporto = varEscopoAero,
+                                        IsBlank(cmbOcoFaunaAeroporto.Selected.Aeroporto) ||
+                                        aceIndFauna_aeroporto = cmbOcoFaunaAeroporto.Selected.Aeroporto,
+
+                                        // ✅ Data Início — opcional
+                                        IsBlank(dtpFaunaDtfInicio.SelectedDate) ||
+                                        aceIndFauna_data >= DateTimeValue(dtpFaunaDtfInicio.SelectedDate),
+
+                                        // ✅ Data Término — opcional
+                                        IsBlank(dtpFaunaDtfTermino.SelectedDate) ||
+                                        aceIndFauna_data < DateAdd(
+                                            DateTimeValue(dtpFaunaDtfTermino.SelectedDate),
+                                            1,
+                                            TimeUnit.Days
+                                        ),
+
+                                        // ✅ Buscar por ID — opcional (bug de precedência corrigido)
+                                        IsBlank(TextInputBuscarFauna.Text) ||
+                                        ID = Value(TextInputBuscarFauna.Text)
+                                    ),
+                                    "ID",
+                                    SortOrder.Descending
+                                )
+                              LayoutMaxHeight: =
+                              LayoutMaxWidth: =
+                              LayoutMinHeight: =0
+                              LoadingSpinner: =LoadingSpinner.None
+                              TemplatePadding: =0
+                              TemplateSize: =40
+                              Transition: =Transition.Push
+                              Visible: =TabListFaunaMenu.Selected.Value = "Acesso indevido de fauna"
+                            Children:
+                              - Container6_9:
+                                  Control: GroupContainer@1.5.0
+                                  Variant: AutoLayout
+                                  Properties:
+                                    DropShadow: =DropShadow.None
+                                    Height: =40
+                                    LayoutAlignItems: =LayoutAlignItems.Center
+                                    LayoutDirection: =LayoutDirection.Horizontal
+                                    LayoutGap: =5
+                                    PaddingLeft: =7
+                                    PaddingRight: =50
+                                    RadiusBottomLeft: =0
+                                    RadiusBottomRight: =0
+                                    RadiusTopLeft: =0
+                                    RadiusTopRight: =0
+                                    Width: =Parent.Width
+                                  Children:
+                                    - Label1_61:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          BorderColor: =RGBA(0, 18, 107, 1)
+                                          Font: =Font.'Open Sans'
+                                          LayoutMaxHeight: =
+                                          LayoutMaxWidth: =
+                                          LayoutMinHeight: =0
+                                          Size: =10
+                                          Text: =ThisItem.aceIndFauna_id
+                                          Width: =50
+                                    - Label1_62:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          BorderColor: =RGBA(0, 18, 107, 1)
+                                          Font: =Font.'Open Sans'
+                                          LayoutMaxHeight: =
+                                          LayoutMaxWidth: =
+                                          LayoutMinHeight: =0
+                                          Size: =10
+                                          Text: =ThisItem.aceIndFauna_aeroporto
+                                          Width: =100
+                                          X: =54
+                                    - Label1_63:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          BorderColor: =RGBA(0, 18, 107, 1)
+                                          Font: =Font.'Open Sans'
+                                          LayoutMaxHeight: =
+                                          LayoutMaxWidth: =
+                                          LayoutMinHeight: =0
+                                          Size: =10
+                                          Text: =ThisItem.aceIndFauna_data&" "&ThisItem.aceIndFauna_hora
+                                          Width: =130
+                                          X: =165
+                                    - Label1_64:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          BorderColor: =RGBA(0, 18, 107, 1)
+                                          Font: =Font.'Open Sans'
+                                          LayoutMaxHeight: =
+                                          LayoutMaxWidth: =
+                                          LayoutMinHeight: =0
+                                          Size: =10
+                                          Text: =ThisItem.aceIndFauna_causa
+                                          Width: =220
+                                          X: =295
+                                    - Label1_65:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          BorderColor: =RGBA(0, 18, 107, 1)
+                                          FillPortions: =1
+                                          Font: =Font.'Open Sans'
+                                          Height: =20
+                                          LayoutMaxHeight: =
+                                          LayoutMaxWidth: =
+                                          LayoutMinHeight: =0
+                                          LayoutMinWidth: =0
+                                          PaddingTop: =3
+                                          Size: =10
+                                          Text: =Coalesce( Trim( ThisItem.aceIndFauna_descOcorrencia),"N/A")
+                                          VerticalAlign: =VerticalAlign.Top
+                                          Width: =50
+                                          X: =456
+                                    - ButtonCanvas7_76:
+                                        Control: Button@0.0.45
+                                        Properties:
+                                          Align: =Align.Center
+                                          Appearance: ='ButtonCanvas.Appearance'.Secondary
+                                          BorderRadius: =0
+                                          BorderStyle: =BorderStyle.None
+                                          Height: =30
+                                          Icon: ="Eye"
+                                          IconStyle: ='ButtonCanvas.IconStyle'.Filled
+                                          Layout: ='ButtonCanvas.Layout'.IconBefore
+                                          LayoutMaxHeight: =
+                                          LayoutMaxWidth: =
+                                          OnSelect: |-
+                                            =Navigate(
+                                                ScreenAcessIndFaunaDetalhes,
+                                                ScreenTransition.Fade,
+                                                {var_aceIndFaunaSelect: ThisItem}
+                                            )
+                                          PaddingBottom: =5
+                                          PaddingLeft: =5
+                                          PaddingRight: =5
+                                          PaddingTop: =5
+                                          Text: ="Visualizar"
+                                          Width: =100
+                                          X: =14.050000000000011
+                                    - ButtonCanvas7_77:
+                                        Control: Button@0.0.45
+                                        Properties:
+                                          Align: =Align.Center
+                                          Appearance: ='ButtonCanvas.Appearance'.Secondary
+                                          BorderRadius: =0
+                                          BorderStyle: =BorderStyle.None
+                                          DisplayMode: =DisplayMode.Disabled
+                                          Height: =30
+                                          Icon: ="Edit"
+                                          IconStyle: ='ButtonCanvas.IconStyle'.Filled
+                                          Layout: ='ButtonCanvas.Layout'.IconBefore
+                                          LayoutMaxHeight: =
+                                          LayoutMaxWidth: =
+                                          OnSelect: =
+                                          PaddingBottom: =5
+                                          PaddingLeft: =5
+                                          PaddingRight: =5
+                                          PaddingTop: =5
+                                          Text: ="Editar"
+                                          Width: =100
+                                          X: =127.91
+                                    - ButtonCanvas7_78:
+                                        Control: Button@0.0.45
+                                        Properties:
+                                          Align: =Align.Center
+                                          Appearance: ='ButtonCanvas.Appearance'.Secondary
+                                          BorderRadius: =0
+                                          BorderStyle: =BorderStyle.None
+                                          Height: =30
+                                          Icon: ="AppsList"
+                                          IconStyle: ='ButtonCanvas.IconStyle'.Filled
+                                          Layout: ='ButtonCanvas.Layout'.IconBefore
+                                          LayoutMaxHeight: =
+                                          LayoutMaxWidth: =
+                                          OnSelect: |-
+                                            =Navigate(
+                                                ScreenDesdobramentos,
+                                                ScreenTransition.Fade,
+                                                {
+                                                    var_desdobramentosSelect: {
+                                                        ID: Value(ThisItem.aceIndFauna_id),
+                                                        PROTOCOLO: "ID: " & Text(ThisItem.aceIndFauna_id),
+                                                        CRIADOR: Text(ThisItem.'Criado por'.DisplayName),
+                                                        DESCRICAO: Text(ThisItem.aceIndFauna_descOcorrencia)
+                                                    }
+                                                }
+                                            )
+                                          PaddingBottom: =5
+                                          PaddingLeft: =5
+                                          PaddingRight: =5
+                                          PaddingTop: =5
+                                          Text: ="Desdobramentos"
+                                          Width: =140
+                                          X: =14.050000000000011
+                                    - ButtonCanvas7_79:
+                                        Control: Button@0.0.45
+                                        Properties:
+                                          Align: =Align.Center
+                                          Appearance: ='ButtonCanvas.Appearance'.Secondary
+                                          BorderRadius: =0
+                                          BorderStyle: =BorderStyle.None
+                                          DisplayMode: =
+                                          FontColor: =RGBA(0, 0, 0, 1)
+                                          Height: =30
+                                          Icon: ="Warning"
+                                          IconStyle: ='ButtonCanvas.IconStyle'.Outline
+                                          Layout: ='ButtonCanvas.Layout'.IconBefore
+                                          LayoutMaxHeight: =
+                                          LayoutMaxWidth: =
+                                          OnSelect: |-
+                                            =/*Navigate(
+                                                ScreenAnaliseSafety;
+                                                ScreenTransition.Fade;
+                                                {
+                                                    var_item_id: ThisItem.ID;
+                                                    var_numPortalUnico: ThisItem.NumeroPortalUnico;
+                                                    var_analiseSfaty: ThisItem.AnaliseSafety
+                                                }
+                                            )*/
+                                          PaddingBottom: =5
+                                          PaddingLeft: =5
+                                          PaddingRight: =5
+                                          PaddingTop: =5
+                                          Text: ="Safety"
+                                          Visible: =false
+                                          Width: =100
+                                          X: =127.89999999999998
+                                    - ButtonCanvas7_80:
+                                        Control: Button@0.0.45
+                                        Properties:
+                                          Align: =Align.Center
+                                          Appearance: ='ButtonCanvas.Appearance'.Secondary
+                                          BorderRadius: =0
+                                          BorderStyle: =BorderStyle.None
+                                          FontColor: =RGBA(255, 0, 0, 1)
+                                          Height: =30
+                                          Icon: ="Delete"
+                                          IconStyle: ='ButtonCanvas.IconStyle'.Filled
+                                          Layout: ='ButtonCanvas.Layout'.IconBefore
+                                          LayoutMaxHeight: =
+                                          LayoutMaxWidth: =
+                                          OnSelect: |-
+                                            =Navigate(
+                                                ScreenExcluir,
+                                                ScreenTransition.Fade,
+                                                {
+                                                    var_modulo: var_tituloModulo,
+                                                    var_item: ThisItem,
+                                                    var_protocolo: "ID: " & Text(ThisItem.aceIndFauna_id)
+                                                }
+                                            )
+                                          PaddingBottom: =5
+                                          PaddingLeft: =5
+                                          PaddingRight: =5
+                                          PaddingTop: =5
+                                          Text: ="Excluir"
+                                          Width: =100
+                                          X: =255.80999999999992
+            - Label9_23:
+                Control: Label@2.5.1
+                Properties:
+                  Align: =Align.Right
+                  AlignInContainer: =AlignInContainer.End
+                  FontWeight: =FontWeight.Semibold
+                  Height: =30
+                  LayoutMaxHeight: =
+                  LayoutMaxWidth: =
+                  LayoutMinWidth: =50
+                  Size: =11
+                  Text: |-
+                    =Switch(
+                        true,
+                        GalleryColisao.Visible,
+                        GalleryColisao.AllItemsCount,
+                        GalleryPresença.Visible,
+                        GalleryPresença.AllItemsCount,
+                        GalleryFoco.Visible,
+                        GalleryFoco.AllItemsCount,
+                        GalleryAcessoIndevido.Visible,
+                        GalleryAcessoIndevido.AllItemsCount
+                    ) & " itens"
+                  Width: =126.59
+                  X: =1602.34

@@ -1,0 +1,397 @@
+{
+  "properties": {
+    "connectionReferences": {
+      "shared_sharepointonline": {
+        "runtimeSource": "invoker",
+        "connection": {
+          "connectionReferenceLogicalName": "iem_sharedsharepointonline_27185"
+        },
+        "api": {
+          "name": "shared_sharepointonline"
+        }
+      },
+      "shared_teams": {
+        "runtimeSource": "invoker",
+        "connection": {
+          "connectionReferenceLogicalName": "iem_sharedteams_5a6f9"
+        },
+        "api": {
+          "name": "shared_teams"
+        }
+      }
+    },
+    "definition": {
+      "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+      "contentVersion": "1.0.0.0",
+      "parameters": {
+        "$authentication": {
+          "defaultValue": {},
+          "type": "SecureObject"
+        },
+        "$connections": {
+          "defaultValue": {},
+          "type": "Object"
+        }
+      },
+      "triggers": {
+        "manual": {
+          "metadata": {
+            "operationMetadataId": "f69cb727-2bff-4179-9610-8c9a2370ec9e"
+          },
+          "type": "Request",
+          "kind": "PowerAppV2",
+          "inputs": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "text": {
+                  "title": "Participantes",
+                  "type": "string",
+                  "x-ms-dynamically-added": true,
+                  "description": " \"\"",
+                  "x-ms-content-hint": "TEXT"
+                },
+                "text_1": {
+                  "title": "Emergencia",
+                  "type": "string",
+                  "x-ms-dynamically-added": true,
+                  "description": " \"\"",
+                  "x-ms-content-hint": "TEXT"
+                },
+                "text_4": {
+                  "title": "Ambiente",
+                  "type": "string",
+                  "x-ms-dynamically-added": true,
+                  "description": " \"\"",
+                  "x-ms-content-hint": "TEXT"
+                },
+                "text_2": {
+                  "description": "\"\"",
+                  "title": "Usuario",
+                  "type": "string",
+                  "x-ms-content-hint": "TEXT",
+                  "x-ms-dynamically-added": true
+                },
+                "text_3": {
+                  "description": "\"\"",
+                  "title": "Aeroporto",
+                  "type": "string",
+                  "x-ms-content-hint": "TEXT",
+                  "x-ms-dynamically-added": true
+                },
+                "text_5": {
+                  "description": "\"\"",
+                  "title": "Descricao_ocorrencia",
+                  "type": "string",
+                  "x-ms-content-hint": "TEXT",
+                  "x-ms-dynamically-added": true
+                },
+                "number_1": {
+                  "description": "0",
+                  "title": "ID_acionamento",
+                  "type": "number",
+                  "x-ms-content-hint": "NUMBER",
+                  "x-ms-dynamically-added": true
+                }
+              },
+              "required": [
+                "text",
+                "text_1",
+                "text_4",
+                "text_2",
+                "text_3",
+                "text_5",
+                "number_1"
+              ]
+            }
+          }
+        }
+      },
+      "actions": {
+        "Parse_JSON": {
+          "runAfter": {},
+          "type": "ParseJson",
+          "inputs": {
+            "content": "@triggerBody()?['text']",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "Email": {
+                    "type": "string"
+                  },
+                  "ID_contato": {
+                    "type": "integer"
+                  },
+                  "ID_entidade": {
+                    "type": "integer"
+                  },
+                  "Nivel": {
+                    "type": "string"
+                  },
+                  "Nome": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "SelecionarEmails": {
+          "runAfter": {
+            "Parse_JSON": [
+              "Succeeded"
+            ]
+          },
+          "type": "Select",
+          "inputs": {
+            "from": "@body('Parse_JSON')",
+            "select": "@toLower(trim(coalesce(item()?['Email'], '')))"
+          }
+        },
+        "EmailsValidos": {
+          "runAfter": {
+            "SelecionarEmails": [
+              "Succeeded"
+            ]
+          },
+          "type": "Query",
+          "inputs": {
+            "from": "@body('SelecionarEmails')",
+            "where": "@and(not(empty(item())), contains(item(), '@'))"
+          }
+        },
+        "EmailsUnicos": {
+          "runAfter": {
+            "EmailsValidos": [
+              "Succeeded"
+            ]
+          },
+          "type": "Compose",
+          "inputs": "@union(body('EmailsValidos'), body('EmailsValidos'))"
+        },
+        "Condicao_tem_participantes": {
+          "runAfter": {
+            "EmailsUnicos": [
+              "Succeeded"
+            ]
+          },
+          "type": "If",
+          "expression": {
+            "and": [
+              {
+                "greaterOrEquals": [
+                  "@length(outputs('EmailsUnicos'))",
+                  1
+                ]
+              }
+            ]
+          },
+          "actions": {
+            "EmailsFinal": {
+              "runAfter": {},
+              "type": "Compose",
+              "inputs": "@join(outputs('EmailsUnicos'), ';')"
+            },
+            "Criar_um_chat": {
+              "runAfter": {
+                "EmailsFinal": [
+                  "Succeeded"
+                ]
+              },
+              "type": "OpenApiConnection",
+              "limit": {
+                "timeout": "PT60S"
+              },
+              "inputs": {
+                "parameters": {
+                  "item/members": "@outputs('EmailsFinal')",
+                  "item/topic": "@{if(contains(toLower(coalesce(triggerBody()?['text_4'], '')), 'simul'), 'EXERCÍCIO SIMULADO', 'EMERGÊNCIA REAL')} · @{triggerBody()?['text_3']} · #@{triggerBody()?['number_1']} · @{triggerBody()?['text_1']}"
+                },
+                "host": {
+                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_teams",
+                  "connectionName": "shared_teams",
+                  "operationId": "CreateChat"
+                },
+                "authentication": {
+                  "value": "@json(decodeBase64(triggerOutputs().headers['X-MS-APIM-Tokens']))['$ConnectionKey']",
+                  "type": "Raw"
+                },
+                "retryPolicy": {
+                  "type": "fixed",
+                  "count": 1,
+                  "interval": "PT5S"
+                }
+              }
+            }
+          },
+          "else": {
+            "actions": {}
+          }
+        },
+        "Respond_to_a_Power_App_or_flow": {
+          "runAfter": {
+            "Condicao_tem_participantes": [
+              "Succeeded",
+              "Failed",
+              "Skipped",
+              "TimedOut"
+            ]
+          },
+          "type": "Response",
+          "kind": "PowerApp",
+          "inputs": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "chat": {
+                  "title": "CHAT",
+                  "type": "string",
+                  "x-ms-content-hint": "TEXT",
+                  "x-ms-dynamically-added": true
+                }
+              },
+              "additionalProperties": {}
+            },
+            "statusCode": 200,
+            "body": {
+              "chat": "@{coalesce(outputs('Criar_um_chat')?['body/id'], '')}"
+            }
+          }
+        },
+        "Condicao_chat_criado": {
+          "runAfter": {
+            "Respond_to_a_Power_App_or_flow": [
+              "Succeeded"
+            ]
+          },
+          "type": "If",
+          "expression": {
+            "and": [
+              {
+                "not": {
+                  "equals": [
+                    "@coalesce(outputs('Criar_um_chat')?['body/id'], '')",
+                    ""
+                  ]
+                }
+              }
+            ]
+          },
+          "actions": {
+            "Post_card_in_a_chat_or_channel": {
+              "runAfter": {},
+              "type": "OpenApiConnection",
+              "inputs": {
+                "parameters": {
+                  "poster": "Flow bot",
+                  "location": "Group chat",
+                  "body/recipient": "@outputs('Criar_um_chat')?['body/id']",
+                  "body/messageBody": "{\n  \"$schema\": \"https://adaptivecards.io/schemas/adaptive-card.json\",\n  \"type\": \"AdaptiveCard\",\n  \"version\": \"1.4\",\n  \"body\": [\n    {\n      \"type\": \"Container\",\n      \"style\": \"@{if(contains(toLower(coalesce(triggerBody()?['text_4'], '')), 'simul'), 'warning', 'attention')}\",\n      \"bleed\": true,\n      \"items\": [\n        {\n          \"type\": \"TextBlock\",\n          \"text\": \"AIRPORT NOW · ACIONAMENTO PLEM/PRAI\",\n          \"size\": \"Small\",\n          \"weight\": \"Bolder\",\n          \"isSubtle\": true,\n          \"spacing\": \"None\",\n          \"wrap\": true\n        },\n        {\n          \"type\": \"TextBlock\",\n          \"text\": \"@{if(contains(toLower(coalesce(triggerBody()?['text_4'], '')), 'simul'), 'EXERCÍCIO SIMULADO', 'EMERGÊNCIA REAL')}\",\n          \"size\": \"Large\",\n          \"weight\": \"Bolder\",\n          \"spacing\": \"None\",\n          \"wrap\": true\n        }\n      ]\n    },\n    {\n      \"type\": \"TextBlock\",\n      \"text\": \"@{triggerBody()?['text_1']}\",\n      \"size\": \"Medium\",\n      \"weight\": \"Bolder\",\n      \"spacing\": \"Medium\",\n      \"wrap\": true\n    },\n    {\n      \"type\": \"FactSet\",\n      \"spacing\": \"Small\",\n      \"facts\": [\n        {\n          \"title\": \"Aeroporto\",\n          \"value\": \"@{triggerBody()?['text_3']}\"\n        },\n        {\n          \"title\": \"Protocolo\",\n          \"value\": \"#@{triggerBody()?['number_1']}\"\n        },\n        {\n          \"title\": \"Ambiente\",\n          \"value\": \"@{triggerBody()?['text_4']}\"\n        },\n        {\n          \"title\": \"Aberto por\",\n          \"value\": \"@{triggerBody()?['text_2']}\"\n        },\n        {\n          \"title\": \"Aberto às\",\n          \"value\": \"@{formatDateTime(convertFromUtc(utcNow(), 'E. South America Standard Time'), 'dd/MM/yyyy HH:mm:ss')}\"\n        }\n      ]\n    },\n    {\n      \"type\": \"TextBlock\",\n      \"text\": \"OCORRÊNCIA\",\n      \"size\": \"Small\",\n      \"weight\": \"Bolder\",\n      \"isSubtle\": true,\n      \"spacing\": \"Medium\",\n      \"wrap\": true\n    },\n    {\n      \"type\": \"TextBlock\",\n      \"text\": \"@{triggerBody()?['text_5']}\",\n      \"spacing\": \"None\",\n      \"wrap\": true\n    },\n    {\n      \"type\": \"Container\",\n      \"style\": \"emphasis\",\n      \"spacing\": \"Medium\",\n      \"items\": [\n        {\n          \"type\": \"TextBlock\",\n          \"weight\": \"Bolder\",\n          \"wrap\": true,\n          \"text\": \"Dirija-se ao COE se tiver disponibilidade.\"\n        },\n        {\n          \"type\": \"TextBlock\",\n          \"isSubtle\": true,\n          \"wrap\": true,\n          \"spacing\": \"Small\",\n          \"text\": \"Toda a comunicação da ocorrência acontece neste chat. Evite contato com a equipe operacional por outros canais, a fim de não comprometer a gestão da ocorrência.\"\n        }\n      ]\n    }\n  ]\n}"
+                },
+                "host": {
+                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_teams",
+                  "connectionName": "shared_teams",
+                  "operationId": "PostCardToConversation"
+                },
+                "authentication": {
+                  "value": "@json(decodeBase64(triggerOutputs().headers['X-MS-APIM-Tokens']))['$ConnectionKey']",
+                  "type": "Raw"
+                },
+                "retryPolicy": {
+                  "type": "exponential",
+                  "count": 4,
+                  "interval": "PT10S"
+                }
+              }
+            },
+            "Create_item": {
+              "runAfter": {
+                "Post_card_in_a_chat_or_channel": [
+                  "Succeeded",
+                  "Failed",
+                  "TimedOut"
+                ]
+              },
+              "type": "OpenApiConnection",
+              "inputs": {
+                "parameters": {
+                  "dataset": "https://grupoccr.sharepoint.com/sites/AIRPORTNOW",
+                  "table": "7fbfd875-2edd-4599-8603-90fec5c54333",
+                  "item/ID_acionamento": "@triggerBody()?['number_1']",
+                  "item/ID_chat": "@outputs('Criar_um_chat')?['body/id']",
+                  "item/Acao": "CHAT",
+                  "item/Atividade": "Chat do acionamento criado com @{length(outputs('EmailsUnicos'))} participante(s)",
+                  "item/Hora": "@{formatDateTime(convertFromUtc(utcNow(), 'E. South America Standard Time'), 'dd/MM/yyyy HH:mm:ss')}",
+                  "item/Excluido": 0,
+                  "item/Ativo": 1
+                },
+                "host": {
+                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+                  "connectionName": "shared_sharepointonline",
+                  "operationId": "PostItem"
+                },
+                "authentication": {
+                  "value": "@json(decodeBase64(triggerOutputs().headers['X-MS-APIM-Tokens']))['$ConnectionKey']",
+                  "type": "Raw"
+                },
+                "retryPolicy": {
+                  "type": "exponential",
+                  "count": 4,
+                  "interval": "PT10S"
+                }
+              }
+            }
+          },
+          "else": {
+            "actions": {
+              "Motivo_falha_chat": {
+                "runAfter": {},
+                "type": "Compose",
+                "inputs": "@if(empty(coalesce(string(body('Criar_um_chat')), '')), 'Nenhum participante valido, ou o Teams recusou a criacao do chat', string(body('Criar_um_chat')))"
+              },
+              "Log_falha_chat": {
+                "runAfter": {
+                  "Motivo_falha_chat": [
+                    "Succeeded"
+                  ]
+                },
+                "type": "OpenApiConnection",
+                "inputs": {
+                  "parameters": {
+                    "dataset": "https://grupoccr.sharepoint.com/sites/AIRPORTNOW",
+                    "table": "7fbfd875-2edd-4599-8603-90fec5c54333",
+                    "item/ID_acionamento": "@triggerBody()?['number_1']",
+                    "item/Acao": "ERRO CHAT",
+                    "item/Status": "Chat do Teams não criado",
+                    "item/Atividade": "@{concat('ERRO AO CRIAR O CHAT · ', substring(outputs('Motivo_falha_chat'), 0, min(300, length(outputs('Motivo_falha_chat')))))}",
+                    "item/Hora": "@{formatDateTime(convertFromUtc(utcNow(), 'E. South America Standard Time'), 'dd/MM/yyyy HH:mm:ss')}",
+                    "item/Excluido": 0,
+                    "item/Ativo": 1
+                  },
+                  "host": {
+                    "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+                    "connectionName": "shared_sharepointonline",
+                    "operationId": "PostItem"
+                  },
+                  "authentication": {
+                    "value": "@json(decodeBase64(triggerOutputs().headers['X-MS-APIM-Tokens']))['$ConnectionKey']",
+                    "type": "Raw"
+                  },
+                  "retryPolicy": {
+                    "type": "exponential",
+                    "count": 4,
+                    "interval": "PT10S"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "templateName": null
+  },
+  "schemaVersion": "1.0.0.0"
+}

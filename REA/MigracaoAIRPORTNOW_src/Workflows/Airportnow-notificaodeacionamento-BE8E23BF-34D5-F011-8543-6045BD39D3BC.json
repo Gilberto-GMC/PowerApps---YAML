@@ -1,0 +1,255 @@
+{
+  "properties": {
+    "connectionReferences": {
+      "shared_office365": {
+        "runtimeSource": "invoker",
+        "connection": {
+          "connectionReferenceLogicalName": "iem_sharedoffice365_d341f"
+        },
+        "api": {
+          "name": "shared_office365"
+        }
+      },
+      "shared_teams-1": {
+        "runtimeSource": "invoker",
+        "connection": {
+          "connectionReferenceLogicalName": "iem_sharedteams_5a6f9"
+        },
+        "api": {
+          "name": "shared_teams"
+        }
+      },
+      "shared_sharepointonline": {
+        "runtimeSource": "invoker",
+        "connection": {
+          "connectionReferenceLogicalName": "iem_sharedsharepointonline_27185"
+        },
+        "api": {
+          "name": "shared_sharepointonline"
+        }
+      }
+    },
+    "definition": {
+      "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+      "contentVersion": "1.0.0.0",
+      "parameters": {
+        "$connections": {
+          "defaultValue": {},
+          "type": "Object"
+        },
+        "$authentication": {
+          "defaultValue": {},
+          "type": "SecureObject"
+        }
+      },
+      "triggers": {
+        "manual": {
+          "metadata": {
+            "operationMetadataId": "13c49033-a875-4902-97ae-7408cbb0468a"
+          },
+          "type": "Request",
+          "kind": "PowerAppV2",
+          "inputs": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "text": {
+                  "description": "\"\"",
+                  "title": "Email",
+                  "type": "string",
+                  "x-ms-content-hint": "TEXT",
+                  "x-ms-dynamically-added": true
+                },
+                "text_2": {
+                  "description": "\"\"",
+                  "title": "Emergencia",
+                  "type": "string",
+                  "x-ms-content-hint": "TEXT",
+                  "x-ms-dynamically-added": true
+                },
+                "text_3": {
+                  "description": "\"\"",
+                  "title": "Ambiente",
+                  "type": "string",
+                  "x-ms-content-hint": "TEXT",
+                  "x-ms-dynamically-added": true
+                },
+                "text_5": {
+                  "description": "\"\"",
+                  "title": "Usuario",
+                  "type": "string",
+                  "x-ms-content-hint": "TEXT",
+                  "x-ms-dynamically-added": true
+                },
+                "number": {
+                  "description": "0",
+                  "title": "ID_atividade",
+                  "type": "number",
+                  "x-ms-content-hint": "NUMBER",
+                  "x-ms-dynamically-added": true
+                },
+                "number_1": {
+                  "description": "0",
+                  "title": "ID_acionamento",
+                  "type": "number",
+                  "x-ms-content-hint": "NUMBER",
+                  "x-ms-dynamically-added": true
+                },
+                "number_2": {
+                  "description": "0",
+                  "title": "ID_contato",
+                  "type": "number",
+                  "x-ms-content-hint": "NUMBER",
+                  "x-ms-dynamically-added": true
+                },
+                "text_1": {
+                  "description": "\"\"",
+                  "title": "Descricao_ocorrencia",
+                  "type": "string",
+                  "x-ms-content-hint": "TEXT",
+                  "x-ms-dynamically-added": true
+                }
+              },
+              "required": [
+                "text",
+                "text_2",
+                "text_3",
+                "text_5",
+                "number",
+                "number_1",
+                "number_2",
+                "text_1"
+              ]
+            }
+          }
+        }
+      },
+      "actions": {
+        "Enviar_um_email_(V2)": {
+          "runAfter": {},
+          "metadata": {
+            "operationMetadataId": "25886673-4861-4574-ab4c-e9a2363ba4ac"
+          },
+          "type": "OpenApiConnection",
+          "inputs": {
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_office365",
+              "connectionName": "shared_office365",
+              "operationId": "SendEmailV2"
+            },
+            "parameters": {
+              "emailMessage/To": "@triggerBody()?['text']",
+              "emailMessage/Subject": "Airport Now - Acionamento PLEM - @{triggerBody()?['text_3']}",
+              "emailMessage/Body": "<p>Prezados,<br><br>Este é um alerta de acionamento devido a emergência:</p><p><b>@{triggerBody()?['text_2']}</b></p><p>@{triggerBody()?['text_1']}</p><br><p>Por favor efetuem contato de imediato, sigam rigorosamente as instruções de segurança fornecidas. Evitem áreas de risco. Mantenham a calma e cooperem plenamente.</p><br><br><p><br>Atenciosamente,</p><p>@{triggerBody()?['text_5']}</p><br><br><p><br><br><br><br><br><br><br>Esta mensagem foi gerada automaticamente por - AirPort Now</p>",
+              "emailMessage/Importance": "Normal"
+            },
+            "authentication": {
+              "value": "@json(decodeBase64(triggerOutputs().headers['X-MS-APIM-Tokens']))['$ConnectionKey']",
+              "type": "Raw"
+            }
+          }
+        },
+        "Postar_uma_escolha_de_opções_como_o_bot_do_Flow_para_um_usuário": {
+          "runAfter": {
+            "Enviar_um_email_(V2)": [
+              "Succeeded"
+            ]
+          },
+          "limit": {
+            "timeout": "PT4H"
+          },
+          "metadata": {
+            "operationMetadataId": "cfc9222a-3cc9-483a-b808-2e798aa48770"
+          },
+          "type": "OpenApiConnectionWebhook",
+          "inputs": {
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_teams",
+              "connectionName": "shared_teams-1",
+              "operationId": "SubscribeUserMessageWithOptions"
+            },
+            "parameters": {
+              "UserMessageWithOptionsSubscriptionRequest/body/options": [
+                "Ok, estou a caminho",
+                "Não poderei comparecer"
+              ],
+              "UserMessageWithOptionsSubscriptionRequest/body/recipient/to": "@triggerBody()?['text']",
+              "UserMessageWithOptionsSubscriptionRequest/body/messageBody": "Este é um alerta de acionamento devido a emergência: \n@{triggerBody()?['text_2']} - @{triggerBody()?['text_3']}\n\n@{triggerBody()?['text_1']}\n\nPor favor, respondam a esta mensagem de imediato e sigam rigorosamente as instruções de segurança fornecidas. Evitem áreas de risco. Mantenham a calma e cooperem plenamente.",
+              "UserMessageWithOptionsSubscriptionRequest/body/messageTitle": "Acionamento - PLEM"
+            },
+            "authentication": {
+              "value": "@json(decodeBase64(triggerOutputs().headers['X-MS-APIM-Tokens']))['$ConnectionKey']",
+              "type": "Raw"
+            }
+          }
+        },
+        "Atualizar_item": {
+          "runAfter": {
+            "Postar_uma_escolha_de_opções_como_o_bot_do_Flow_para_um_usuário": [
+              "Succeeded"
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "65d0de5f-05ae-4075-9f23-6cc2ffca7d19"
+          },
+          "type": "OpenApiConnection",
+          "inputs": {
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+              "connectionName": "shared_sharepointonline",
+              "operationId": "PatchItem"
+            },
+            "parameters": {
+              "dataset": "https://grupoccr.sharepoint.com/sites/AIRPORTNOW",
+              "table": "f9aa085e-b364-442b-8bab-8b0135180cd2",
+              "id": "@triggerBody()?['number']",
+              "item/Atividade2": "@body('Postar_uma_escolha_de_opções_como_o_bot_do_Flow_para_um_usuário')?['selectedOption']",
+              "item/Hora2": "@formatDateTime(convertFromUtc(utcNow(), 'E. South America Standard Time'),'dd/MM/yyyy HH:mm')",
+              "item/Status_2": "Respondeu",
+              "item/ID_acionamento": "@triggerBody()?['number_1']",
+              "item/ID_contato": "@triggerBody()?['number_2']",
+              "item/Comentario": "@body('Postar_uma_escolha_de_opções_como_o_bot_do_Flow_para_um_usuário')?['comments']",
+              "item/Excluido": false
+            },
+            "authentication": {
+              "value": "@json(decodeBase64(triggerOutputs().headers['X-MS-APIM-Tokens']))['$ConnectionKey']",
+              "type": "Raw"
+            }
+          }
+        },
+        "Atualizar_item_SemResposta": {
+          "runAfter": {
+            "Postar_uma_escolha_de_opções_como_o_bot_do_Flow_para_um_usuário": [
+              "TimedOut"
+            ]
+          },
+          "type": "OpenApiConnection",
+          "inputs": {
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+              "connectionName": "shared_sharepointonline",
+              "operationId": "PatchItem"
+            },
+            "parameters": {
+              "dataset": "https://grupoccr.sharepoint.com/sites/AIRPORTNOW",
+              "table": "f9aa085e-b364-442b-8bab-8b0135180cd2",
+              "id": "@triggerBody()?['number']",
+              "item/Atividade2": "Sem resposta após 4 horas",
+              "item/Hora2": "@formatDateTime(convertFromUtc(utcNow(), 'E. South America Standard Time'),'dd/MM/yyyy HH:mm')",
+              "item/Status_2": "Sem resposta",
+              "item/ID_acionamento": "@triggerBody()?['number_1']",
+              "item/ID_contato": "@triggerBody()?['number_2']",
+              "item/Excluido": false
+            },
+            "authentication": {
+              "value": "@json(decodeBase64(triggerOutputs().headers['X-MS-APIM-Tokens']))['$ConnectionKey']",
+              "type": "Raw"
+            }
+          }
+        }
+      }
+    },
+    "templateName": null
+  },
+  "schemaVersion": "1.0.0.0"
+}

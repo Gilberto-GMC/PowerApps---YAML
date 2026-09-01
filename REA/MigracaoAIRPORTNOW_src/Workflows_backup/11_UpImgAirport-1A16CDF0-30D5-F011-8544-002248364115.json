@@ -1,0 +1,201 @@
+{
+  "properties": {
+    "connectionReferences": {
+      "shared_sharepointonline": {
+        "runtimeSource": "invoker",
+        "connection": {
+          "connectionReferenceLogicalName": "iem_sharedsharepointonline_27185"
+        },
+        "api": {
+          "name": "shared_sharepointonline"
+        }
+      }
+    },
+    "definition": {
+      "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+      "contentVersion": "1.0.0.0",
+      "parameters": {
+        "$connections": {
+          "defaultValue": {},
+          "type": "Object"
+        },
+        "$authentication": {
+          "defaultValue": {},
+          "type": "SecureObject"
+        }
+      },
+      "triggers": {
+        "manual": {
+          "metadata": {
+            "operationMetadataId": "942fa696-6c4e-4256-99ab-00f898c045d0"
+          },
+          "type": "Request",
+          "kind": "PowerApp",
+          "inputs": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "IdItem_Valor": {
+                  "type": "string",
+                  "description": "Inserir valor inicial",
+                  "x-ms-powerflows-param-ispartial": false
+                },
+                "Desc_Valor": {
+                  "type": "string",
+                  "description": "Inserir valor inicial",
+                  "x-ms-powerflows-param-ispartial": false
+                },
+                "Info_Valor": {
+                  "type": "string",
+                  "description": "Inserir valor inicial",
+                  "x-ms-powerflows-param-ispartial": false
+                },
+                "Criararquivo_NomedoArquivo": {
+                  "type": "string",
+                  "description": "Nome do arquivo.",
+                  "x-ms-powerflows-param-ispartial": false
+                },
+                "Criararquivo_ConteúdodoArquivo": {
+                  "type": "string",
+                  "format": "binary",
+                  "description": "O conteúdo do arquivo.",
+                  "x-ms-powerflows-param-ispartial": false
+                }
+              },
+              "required": [
+                "IdItem_Valor",
+                "Desc_Valor",
+                "Info_Valor",
+                "Criararquivo_NomedoArquivo",
+                "Criararquivo_ConteúdodoArquivo"
+              ]
+            }
+          }
+        }
+      },
+      "actions": {
+        "IdItem": {
+          "runAfter": {},
+          "metadata": {
+            "operationMetadataId": "87240297-17b5-45f2-954c-4fa42f169235"
+          },
+          "type": "InitializeVariable",
+          "inputs": {
+            "variables": [
+              {
+                "name": "IdItem",
+                "type": "string",
+                "value": "@triggerBody()['IdItem_Valor']"
+              }
+            ]
+          }
+        },
+        "Desc": {
+          "runAfter": {
+            "IdItem": [
+              "Succeeded"
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "d5adf05d-353c-4b53-9565-535fe448cd06"
+          },
+          "type": "InitializeVariable",
+          "inputs": {
+            "variables": [
+              {
+                "name": "Desc",
+                "type": "string",
+                "value": "@triggerBody()['Desc_Valor']"
+              }
+            ]
+          }
+        },
+        "Info": {
+          "runAfter": {
+            "Desc": [
+              "Succeeded"
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "7d439101-ca35-4cef-9602-250ee98d7257"
+          },
+          "type": "InitializeVariable",
+          "inputs": {
+            "variables": [
+              {
+                "name": "Info",
+                "type": "string",
+                "value": "@triggerBody()['Info_Valor']"
+              }
+            ]
+          }
+        },
+        "Criar_arquivo": {
+          "runAfter": {
+            "Info": [
+              "Succeeded"
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "0b931efd-bb62-486d-a144-1e944984c771"
+          },
+          "type": "OpenApiConnection",
+          "inputs": {
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+              "connectionName": "shared_sharepointonline",
+              "operationId": "CreateFile"
+            },
+            "parameters": {
+              "dataset": "https://grupoccr.sharepoint.com/sites/AIRPORTNOW",
+              "folderPath": "/112Bibl_AchPerdImgVinc",
+              "name": "@triggerBody()['Criararquivo_NomedoArquivo']",
+              "body": "@base64ToBinary(triggerBody()['Criararquivo_ConteúdodoArquivo'])"
+            },
+            "authentication": {
+              "value": "@json(decodeBase64(triggerOutputs().headers['X-MS-APIM-Tokens']))['$ConnectionKey']",
+              "type": "Raw"
+            }
+          },
+          "runtimeConfiguration": {
+            "contentTransfer": {
+              "transferMode": "Chunked"
+            }
+          }
+        },
+        "Atualizar_propriedades_do_arquivo": {
+          "runAfter": {
+            "Criar_arquivo": [
+              "Succeeded"
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "8f8382b2-05ed-4e87-8248-c1da7bb81954"
+          },
+          "type": "OpenApiConnection",
+          "inputs": {
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+              "connectionName": "shared_sharepointonline",
+              "operationId": "PatchFileItem"
+            },
+            "parameters": {
+              "dataset": "https://grupoccr.sharepoint.com/sites/AIRPORTNOW",
+              "table": "3bbc443e-ab49-4b71-9b1a-d59baf1badeb",
+              "id": "@outputs('Criar_arquivo')?['body/ItemId']",
+              "item/IdItem": "@triggerBody()['IdItem_Valor']",
+              "item/Desc": "@triggerBody()['Desc_Valor']",
+              "item/Info": "@triggerBody()['Info_Valor']"
+            },
+            "authentication": {
+              "value": "@json(decodeBase64(triggerOutputs().headers['X-MS-APIM-Tokens']))['$ConnectionKey']",
+              "type": "Raw"
+            }
+          }
+        }
+      }
+    },
+    "templateName": null
+  },
+  "schemaVersion": "1.0.0.0"
+}

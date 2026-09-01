@@ -1,0 +1,161 @@
+{
+  "properties": {
+    "connectionReferences": {
+      "shared_office365": {
+        "runtimeSource": "invoker",
+        "connection": {
+          "connectionReferenceLogicalName": "iem_sharedoffice365_d341f"
+        },
+        "api": {
+          "name": "shared_office365"
+        }
+      },
+      "shared_teams": {
+        "runtimeSource": "invoker",
+        "connection": {
+          "connectionReferenceLogicalName": "iem_sharedteams_1549b"
+        },
+        "api": {
+          "name": "shared_teams"
+        }
+      }
+    },
+    "definition": {
+      "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+      "contentVersion": "1.0.0.0",
+      "parameters": {
+        "$authentication": {
+          "defaultValue": {},
+          "type": "SecureObject"
+        },
+        "$connections": {
+          "defaultValue": {},
+          "type": "Object"
+        }
+      },
+      "triggers": {
+        "manual": {
+          "metadata": {
+            "operationMetadataId": "13c49033-a875-4902-97ae-7408cbb0468a"
+          },
+          "type": "Request",
+          "kind": "PowerAppV2",
+          "inputs": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "text": {
+                  "description": ".",
+                  "title": "Email",
+                  "type": "string",
+                  "x-ms-content-hint": "TEXT",
+                  "x-ms-dynamically-added": true
+                },
+                "text_1": {
+                  "description": ".",
+                  "title": "1",
+                  "type": "string",
+                  "x-ms-content-hint": "TEXT",
+                  "x-ms-dynamically-added": true
+                },
+                "text_2": {
+                  "description": ".",
+                  "title": "2",
+                  "type": "string",
+                  "x-ms-content-hint": "TEXT",
+                  "x-ms-dynamically-added": true
+                },
+                "text_3": {
+                  "description": ".",
+                  "title": "3",
+                  "type": "string",
+                  "x-ms-content-hint": "TEXT",
+                  "x-ms-dynamically-added": true
+                },
+                "text_4": {
+                  "description": ".",
+                  "title": "4",
+                  "type": "string",
+                  "x-ms-content-hint": "TEXT",
+                  "x-ms-dynamically-added": true
+                },
+                "text_5": {
+                  "description": ".",
+                  "title": "5",
+                  "type": "string",
+                  "x-ms-content-hint": "TEXT",
+                  "x-ms-dynamically-added": true
+                }
+              },
+              "required": [
+                "text",
+                "text_1",
+                "text_2",
+                "text_3",
+                "text_4",
+                "text_5"
+              ]
+            }
+          }
+        }
+      },
+      "actions": {
+        "Enviar_um_email_(V2)": {
+          "runAfter": {},
+          "metadata": {
+            "operationMetadataId": "25886673-4861-4574-ab4c-e9a2363ba4ac"
+          },
+          "type": "OpenApiConnection",
+          "inputs": {
+            "parameters": {
+              "emailMessage/To": "@triggerBody()?['text']",
+              "emailMessage/Subject": "Airport Now - Notificação",
+              "emailMessage/Body": "Notificação de registro&nbsp; &nbsp;<br><br>@{triggerBody()?['text_1']}<br><br>@{triggerBody()?['text_2']}<br><br>@{triggerBody()?['text_3']}<br><br>@{triggerBody()?['text_4']}<br><br>@{triggerBody()?['text_5']}<br><br><br><iframe></iframe><br><br><img><br><br><br><br><br><br><br>Esta mensagem foi gerada automaticamente por - AirPort Now",
+              "emailMessage/Importance": "Normal"
+            },
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_office365",
+              "connectionName": "shared_office365",
+              "operationId": "SendEmailV2"
+            },
+            "authentication": {
+              "value": "@json(decodeBase64(triggerOutputs().headers['X-MS-APIM-Tokens']))['$ConnectionKey']",
+              "type": "Raw"
+            }
+          }
+        },
+        "Postar_cartão_em_um_chat_ou_canal": {
+          "runAfter": {
+            "Enviar_um_email_(V2)": [
+              "Succeeded"
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "780bc8f0-b93f-49b0-b25f-3533548a36d8"
+          },
+          "type": "OpenApiConnection",
+          "inputs": {
+            "parameters": {
+              "poster": "Flow bot",
+              "location": "Chat with Flow bot",
+              "body/recipient": "@triggerBody()?['text']",
+              "body/messageBody": " {\n    \"$schema\": \"http://adaptivecards.io/schemas/adaptive-card.json\",\n    \"type\": \"AdaptiveCard\",\n    \"version\": \"1.0\",\n    \"body\": [\n {\n            \"type\": \"TextBlock\",\n            \"text\": \"Notificação de registro:\",\n            \"size\": \"ExtraLarge\",\n            \"isSubtle\": true\n        },\n        {\n            \"type\": \"ColumnSet\",\n            \"columns\": [\n                {\n                    \"type\": \"Column\",\n                    \"width\": \"auto\",\n                    \"items\": [\n                        {\n                            \"type\": \"Image\",\n                            \"url\": \"https://i.ibb.co/hfPSvxC/Logo2.png\",\n                            \"size\": \"ExtraLarge\"\n                        }\n                    ]\n                }\n            ]\n        },\n {\n            \"type\": \"Table\",\n            \"columns\": [\n                {\n                    \"width\": \"auto\",\n                }\n            ],\n            \"rows\": [\n                {\n                    \"type\": \"TableRow\",\n                    \"cells\": [\n                        {\n                            \"type\": \"TableCell\",\n                            \"items\": [\n                                {\n                                    \"type\": \"TextBlock\",\n                                    \"text\": \"@{triggerBody()?['text_1']}\",\n                                    \"wrap\": true\n                                },{\n                                    \"type\": \"TextBlock\",\n                                    \"text\": \"@{triggerBody()?['text_2']}\",\n                                    \"wrap\": true\n                                },{\n                                    \"type\": \"TextBlock\",\n                                    \"text\": \"@{triggerBody()?['text_3']}\",\n                                    \"wrap\": true\n                                },{\n                                    \"type\": \"TextBlock\",\n                                    \"text\": \"@{triggerBody()?['text_4']}\",\n                                    \"wrap\": true\n                                },{\n                                    \"type\": \"TextBlock\",\n                                    \"text\": \"@{triggerBody()?['text_5']}\",\n                                    \"wrap\": true\n                                }\n                            ]\n                        }                  \n                    ]\n                }   \n         ]\n}\n    ]\n}\n\n\n",
+              "body/isAlert": true
+            },
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_teams",
+              "connectionName": "shared_teams",
+              "operationId": "PostCardToConversation"
+            },
+            "authentication": {
+              "value": "@json(decodeBase64(triggerOutputs().headers['X-MS-APIM-Tokens']))['$ConnectionKey']",
+              "type": "Raw"
+            }
+          }
+        }
+      }
+    },
+    "templateName": null
+  },
+  "schemaVersion": "1.0.0.0"
+}

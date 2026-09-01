@@ -1,0 +1,714 @@
+# ************************************************************************************************
+# AirportNow — Safety & Fauna  ·  ScreenAnaliseSafety (navegação atualizada)
+#
+# ⚠️ LOCALE — ARQUIVO NO FORMATO INVARIANTE ("," para argumentos, ";" para encadear,
+#    "." decimal). É assim que a EXIBIÇÃO DE CÓDIGO do Studio lê e grava, mesmo com o
+#    Studio em pt-BR. NÃO converta para ";" / ";;": o arquivo para de compilar.
+#    A conversão para pt-BR (";" / ";;" / vírgula decimal) só vale para o que é colado
+#    na BARRA DE FÓRMULAS — aqui, nada é.
+#
+#
+# COLAR EM: Studio > tela ScreenAnaliseSafety > exibição de código.
+# Única mudança: os destinos de Navigate passam a ser as telas consolidadas
+# (ScreenMod*). Nenhuma alteração de layout ou de regra.
+# ************************************************************************************************
+Screens:
+  ScreenAnaliseSafety:
+    Properties:
+      OnVisible: |-
+        =UpdateContext({varBordaDefault: Color.Black})
+    Children:
+      - ScreenContainerSafety:
+          Control: GroupContainer@1.5.0
+          Variant: AutoLayout
+          Properties:
+            BorderStyle: =BorderStyle.None
+            DropShadow: =DropShadow.None
+            Fill: =RGBA(255, 255, 255, 1)
+            Height: =Max(App.Height, App.MinScreenHeight)
+            LayoutDirection: =LayoutDirection.Vertical
+            RadiusBottomLeft: =0
+            RadiusBottomRight: =0
+            RadiusTopLeft: =0
+            RadiusTopRight: =0
+            Width: =Parent.Width
+          Children:
+            - ContainerHeader_4:
+                Control: GroupContainer@1.5.0
+                Variant: AutoLayout
+                Properties:
+                  BorderColor: =RGBA(30, 30, 100, 1)
+                  DropShadow: =DropShadow.None
+                  Fill: =RGBA(0, 0, 0, 1)
+                  FillPortions: =0
+                  Height: =40
+                  LayoutAlignItems: =LayoutAlignItems.Center
+                  LayoutDirection: =LayoutDirection.Horizontal
+                  LayoutJustifyContent: =LayoutJustifyContent.SpaceBetween
+                  LayoutMaxHeight: =
+                  LayoutMaxWidth: =
+                  RadiusBottomLeft: =0
+                  RadiusBottomRight: =0
+                  RadiusTopLeft: =0
+                  RadiusTopRight: =0
+                  Width: =1729.08
+                Children:
+                  - Icon1_8:
+                      Control: Classic/Icon@2.5.0
+                      Properties:
+                        AlignInContainer: =AlignInContainer.Center
+                        Color: =RGBA(255, 255, 255, 1)
+                        Height: =30
+                        Icon: =Icon.BackArrow
+                        LayoutMaxHeight: =
+                        LayoutMaxWidth: =
+                        LayoutMinHeight: =0
+                        OnSelect: =Back();Reset(TxtPortalUnico);Reset(TxtAnaliseSaf)
+                        PaddingBottom: =3
+                        PaddingLeft: =5
+                        PaddingRight: =5
+                        PaddingTop: =3
+                        Width: =60
+                  - Label1_17:
+                      Control: Label@2.5.1
+                      Properties:
+                        Align: =Align.Center
+                        AlignInContainer: =AlignInContainer.Stretch
+                        Color: =RGBA(255, 255, 255, 1)
+                        FillPortions: =1
+                        Font: =Font.'Open Sans'
+                        FontWeight: =FontWeight.Semibold
+                        LayoutMaxHeight: =
+                        LayoutMaxWidth: =
+                        LayoutMinHeight: =0
+                        LayoutMinWidth: =0
+                        Size: =12
+                        Text: |-
+                          ="Análise Safety - ID: "&var_item_id
+                        Width: =0
+                  - Image3_16:
+                      Control: Image@2.2.3
+                      Properties:
+                        AlignInContainer: =AlignInContainer.Stretch
+                        Height: =40
+                        Image: =MOTIVA_WHITE
+                        LayoutMaxHeight: =
+                        LayoutMaxWidth: =
+                        LayoutMinHeight: =0
+                        OnSelect: =Navigate(frmHome, ScreenTransition.Fade)
+                        Width: =60
+            - Container4_1:
+                Control: GroupContainer@1.5.0
+                Variant: AutoLayout
+                Properties:
+                  DropShadow: =DropShadow.None
+                  LayoutDirection: =LayoutDirection.Vertical
+                  LayoutGap: =5
+                  LayoutMaxHeight: =
+                  LayoutMaxWidth: =
+                  LayoutOverflowY: =LayoutOverflow.Scroll
+                  PaddingBottom: =10
+                  PaddingLeft: =10
+                  PaddingRight: =10
+                  PaddingTop: =10
+                  RadiusBottomLeft: =0
+                  RadiusBottomRight: =0
+                  RadiusTopLeft: =0
+                  RadiusTopRight: =0
+                  Width: =0
+                Children:
+                  - Container5_1:
+                      Control: GroupContainer@1.5.0
+                      Variant: AutoLayout
+                      Properties:
+                        AlignInContainer: =AlignInContainer.Start
+                        DropShadow: =DropShadow.None
+                        FillPortions: =0
+                        Height: =40
+                        LayoutAlignItems: =LayoutAlignItems.Center
+                        LayoutDirection: =LayoutDirection.Horizontal
+                        LayoutGap: =7
+                        LayoutMaxHeight: =
+                        LayoutMaxWidth: =
+                        PaddingLeft: =2
+                        RadiusBottomLeft: =0
+                        RadiusBottomRight: =0
+                        RadiusTopLeft: =0
+                        RadiusTopRight: =0
+                        Visible: =false
+                        Width: =If(Parent.Width > 800, 500, Parent.Width - 30)
+                      Children:
+                        - dtpColVeiDataCadastro_1:
+                            Control: Classic/DatePicker@2.6.0
+                            Properties:
+                              BorderColor: =RGBA(0, 0, 0, 1)
+                              BorderThickness: =1
+                              DisplayMode: =
+                              FocusedBorderThickness: =2
+                              Height: =30
+                              LayoutMaxHeight: =
+                              LayoutMaxWidth: =
+                              PaddingBottom: =0
+                              Size: =10
+                              Width: =150
+                              Y: =24
+                        - cmbColVeiHoraCadastro_1:
+                            Control: Classic/DropDown@2.3.1
+                            Properties:
+                              BorderColor: =Color.Black
+                              BorderThickness: =1
+                              Default: =""
+                              DisplayMode: =
+                              FocusedBorderThickness: =2
+                              Height: =30
+                              Items: |-
+                                =[
+                                    "",
+                                    "00",
+                                    "01",
+                                    "02",
+                                    "03",
+                                    "04",
+                                    "05",
+                                    "06",
+                                    "07",
+                                    "08",
+                                    "09",
+                                    "10",
+                                    "11",
+                                    "12",
+                                    "13",
+                                    "14",
+                                    "15",
+                                    "16",
+                                    "17",
+                                    "18",
+                                    "19",
+                                    "20",
+                                    "21",
+                                    "22",
+                                    "23"
+                                ]
+                                /*Text(
+                                        Hour(Now());
+                                        "00"
+                                    );*/
+                              Items.Value: =Value
+                              LayoutMaxHeight: =
+                              LayoutMaxWidth: =
+                              PaddingBottom: =0
+                              PaddingTop: =0
+                              Size: =10
+                              Width: =80
+                              Y: =24
+                        - Label6_150:
+                            Control: Label@2.5.1
+                            Properties:
+                              Align: =Align.Center
+                              AutoHeight: =true
+                              Font: =Font.'Segoe UI'
+                              FontWeight: =FontWeight.Semibold
+                              Height: =30
+                              LayoutMaxHeight: =
+                              LayoutMaxWidth: =
+                              LayoutMinHeight: =0
+                              PaddingBottom: =0
+                              PaddingLeft: =0
+                              PaddingRight: =0
+                              Size: =13.93
+                              Text: =":"
+                              Width: =6.33
+                              Y: =24
+                        - cmbColVeiMinuCadastro_1:
+                            Control: Classic/DropDown@2.3.1
+                            Properties:
+                              BorderColor: =Color.Black
+                              BorderThickness: =1
+                              Default: =""
+                              DisplayMode: =
+                              FocusedBorderThickness: =2
+                              Height: =30
+                              Items: |-
+                                =["",
+                                    "00",
+                                    "01",
+                                    "02",
+                                    "03",
+                                    "04",
+                                    "05",
+                                    "06",
+                                    "07",
+                                    "08",
+                                    "09",
+                                    "10",
+                                    "11",
+                                    "12",
+                                    "13",
+                                    "14",
+                                    "15",
+                                    "16",
+                                    "17",
+                                    "18",
+                                    "19",
+                                    "20",
+                                    "21",
+                                    "22",
+                                    "23",
+                                    "24",
+                                    "25",
+                                    "26",
+                                    "27",
+                                    "28",
+                                    "29",
+                                    "30",
+                                    "31",
+                                    "32",
+                                    "33",
+                                    "34",
+                                    "35",
+                                    "36",
+                                    "37",
+                                    "38",
+                                    "39",
+                                    "40",
+                                    "41",
+                                    "42",
+                                    "43",
+                                    "44",
+                                    "45",
+                                    "46",
+                                    "47",
+                                    "48",
+                                    "49",
+                                    "50",
+                                    "51",
+                                    "52",
+                                    "53",
+                                    "54",
+                                    "55",
+                                    "56",
+                                    "57",
+                                    "58",
+                                    "59"
+                                ]
+                                /*Text(
+                                        Minute(Now());
+                                        "00"
+                                    );*/
+                              Items.Value: =Value
+                              LayoutMaxHeight: =
+                              LayoutMaxWidth: =
+                              PaddingBottom: =0
+                              PaddingTop: =0
+                              Size: =10
+                              Width: =80
+                              Y: =24
+                  - Label20_442:
+                      Control: Label@2.5.1
+                      Properties:
+                        AlignInContainer: =AlignInContainer.Start
+                        Font: =Font.'Segoe UI'
+                        FontWeight: =FontWeight.Semibold
+                        Height: =22
+                        LayoutMaxHeight: =
+                        LayoutMaxWidth: =
+                        Size: =11
+                        Text: ="Número do portal único:"
+                        Width: =If(Parent.Width > 800, 500, Parent.Width - 30)
+                        Y: =43
+                  - TxtPortalUnico:
+                      Control: Classic/TextInput@2.3.2
+                      Properties:
+                        AlignInContainer: =AlignInContainer.Start
+                        BorderColor: |-
+                          =If(
+                              IsBlank(Self.Text),
+                              varBordaDefault
+                          )
+                        BorderThickness: =1
+                        Default: =var_numPortalUnico
+                        DisabledBorderColor: =RGBA(0, 0, 0, 1)
+                        Height: =30
+                        HintText: =
+                        HoverBorderColor: =RGBA(0, 0, 0, 1)
+                        LayoutMaxHeight: =
+                        LayoutMaxWidth: =
+                        PaddingLeft: =5
+                        RadiusBottomLeft: =0
+                        RadiusBottomRight: =0
+                        RadiusTopLeft: =0
+                        RadiusTopRight: =0
+                        Size: =10
+                        Width: =If(Parent.Width > 800, 500, Parent.Width - 20)
+                        Y: =24
+                  - Label20_443:
+                      Control: Label@2.5.1
+                      Properties:
+                        AlignInContainer: =AlignInContainer.Start
+                        Font: =Font.'Segoe UI'
+                        FontWeight: =FontWeight.Semibold
+                        Height: =22
+                        LayoutMaxHeight: =
+                        LayoutMaxWidth: =
+                        Size: =11
+                        Text: ="Análise safety da ocorrência:"
+                        Width: =If(Parent.Width > 800, 500, Parent.Width - 30)
+                        Y: =43
+                  - TxtAnaliseSaf:
+                      Control: Classic/TextInput@2.3.2
+                      Properties:
+                        AlignInContainer: =AlignInContainer.Start
+                        BorderColor: =If(IsBlank(Self.Text),varBordaDefault)
+                        BorderThickness: =1
+                        Default: =var_analiseSfaty
+                        DisabledBorderColor: =RGBA(0, 0, 0, 1)
+                        FillPortions: =1
+                        Height: =30
+                        HintText: ="Descreva..."
+                        HoverBorderColor: =RGBA(0, 0, 0, 1)
+                        LayoutMaxHeight: =
+                        LayoutMaxWidth: =
+                        Mode: =TextMode.MultiLine
+                        PaddingLeft: =5
+                        RadiusBottomLeft: =0
+                        RadiusBottomRight: =0
+                        RadiusTopLeft: =0
+                        RadiusTopRight: =0
+                        Size: =10
+                        Width: =If(Parent.Width > 800, 500, Parent.Width - 20)
+                        Y: =24
+                  - Label20_503:
+                      Control: Label@2.5.1
+                      Properties:
+                        AlignInContainer: =AlignInContainer.Start
+                        Font: =Font.'Segoe UI'
+                        FontWeight: =FontWeight.Semibold
+                        Height: =22
+                        LayoutMaxHeight: =
+                        LayoutMaxWidth: =
+                        Size: =11
+                        Text: ="Agravante:"
+                        Visible: =var_tituloModulo =  "Incursão em pista"
+                        Width: =If(Parent.Width > 800, 500, Parent.Width - 30)
+                        Y: =43
+                  - cmbIncPistaAgravante_1:
+                      Control: Classic/DropDown@2.3.1
+                      Properties:
+                        BorderColor: =If(IsBlank(Self.Selected.Value),varBordaDefault)
+                        ChevronBackground: =RGBA(0, 0, 0, 1)
+                        ChevronFill: =RGBA(255, 255, 255, 1)
+                        ChevronHoverBackground: =ColorFade(RGBA(0, 0, 0, 1), -20%)
+                        ChevronHoverFill: =RGBA(255, 255, 255, 1)
+                        Default: =var_analiseAgravante
+                        DisabledBorderColor: =RGBA(0, 0, 0, 1)
+                        Font: =Font.'Open Sans'
+                        Height: =30
+                        HoverFill: =RGBA(186, 202, 226, 1)
+                        Items: =["","Com contribuição aeroportuária","Sem contribuição aeroportuária"]
+                        Items.Value: =Value
+                        LayoutMaxHeight: =
+                        LayoutMaxWidth: =
+                        OnChange: =
+                        PressedColor: =RGBA(255, 255, 255, 1)
+                        PressedFill: =RGBA(0, 0, 0, 1)
+                        SelectionColor: =RGBA(255, 255, 255, 1)
+                        SelectionFill: =RGBA(0, 0, 0, 1)
+                        Size: =11
+                        Visible: =var_tituloModulo =  "Incursão em pista"
+                        Width: =If(Parent.Width > 800, 500, Parent.Width - 20)
+                        X: =664
+                        Y: =39
+            - Container83_87:
+                Control: GroupContainer@1.5.0
+                Variant: AutoLayout
+                Properties:
+                  DropShadow: =DropShadow.None
+                  FillPortions: =0
+                  Height: =50
+                  LayoutAlignItems: =LayoutAlignItems.Center
+                  LayoutDirection: =LayoutDirection.Horizontal
+                  LayoutGap: =20
+                  LayoutJustifyContent: =LayoutJustifyContent.End
+                  LayoutMaxHeight: =
+                  LayoutMaxWidth: =
+                  PaddingBottom: =5
+                  PaddingLeft: =20
+                  PaddingRight: =20
+                  RadiusBottomLeft: =0
+                  RadiusBottomRight: =0
+                  RadiusTopLeft: =0
+                  RadiusTopRight: =0
+                  Visible: =Host.OSType = "Windows"
+                  Width: =1729.08
+                  Y: =40
+                Children:
+                  - ButtonCanvas7_1:
+                      Control: Button@0.0.45
+                      Properties:
+                        Align: =Align.Center
+                        AlignInContainer: =AlignInContainer.Center
+                        Appearance: ='ButtonCanvas.Appearance'.Secondary
+                        BorderRadius: =4
+                        BorderStyle: =BorderStyle.None
+                        FontSize: =20
+                        Icon: ="DismissCircle"
+                        IconStyle: ='ButtonCanvas.IconStyle'.Filled
+                        Layout: ='ButtonCanvas.Layout'.IconBefore
+                        LayoutMaxHeight: =
+                        LayoutMaxWidth: =
+                        OnSelect: =Select(Icon1_8)
+                        PaddingBottom: =0
+                        PaddingLeft: =0
+                        PaddingRight: =0
+                        PaddingTop: =0
+                        Text: ="Cancelar"
+                        Width: =150
+                  - ButtonCanvas7_11:
+                      Control: Button@0.0.45
+                      Properties:
+                        Align: =Align.Center
+                        AlignInContainer: =AlignInContainer.Center
+                        Appearance: ='ButtonCanvas.Appearance'.Primary
+                        BorderRadius: =4
+                        BorderStyle: =BorderStyle.None
+                        FontSize: =20
+                        Icon: ="Save"
+                        IconStyle: ='ButtonCanvas.IconStyle'.Filled
+                        Layout: ='ButtonCanvas.Layout'.IconBefore
+                        LayoutMaxHeight: =
+                        LayoutMaxWidth: =
+                        OnSelect: |-
+                          =Switch(
+                              var_tituloModulo,
+                              "Fauna",
+                              Patch(
+                                  'AIRPORTNOW - Colisões/Quase-Colisão/Avistamento',
+                                  LookUp(
+                                      'AIRPORTNOW - Colisões/Quase-Colisão/Avistamento',
+                                      ID = var_item_id
+                                  ),
+                                  {
+                                      'Nº do Portal Único': TxtPortalUnico.Text,
+                                      CriadoNumeroPortalUnico: If(
+                                          !IsBlank(TxtPortalUnico.Text),
+                                          Now(),
+                                          ""
+                                      ),
+                                      AnaliseSafety: TxtAnaliseSaf.Text,
+                                      CriadoAnaliseSafety: If(
+                                          !IsBlank(TxtAnaliseSaf.Text),
+                                          Now(),
+                                          ""
+                                      ),
+                                      Status: "Finalizado"
+                                  }
+                              );
+                              Navigate(
+                                  ScreenSucesso,
+                                  ScreenTransition.Fade,
+                                  {var_navigateSucess: ScreenFauna}
+                              ),
+                              "Colisão de veículos",/////////////////////////////////////////////////////////////////////////////////
+                              Patch(
+                                  '14.4-tbl_ColVeiculos',
+                                  LookUp(
+                                      '14.4-tbl_ColVeiculos',
+                                      ID = var_item_id
+                                  ),
+                                  {
+                                      NumeroPortalUnico: TxtPortalUnico.Text,
+                                      CriadoNumeroPortalUnico: If(
+                                          !IsBlank(TxtPortalUnico.Text),
+                                          Now(),
+                                          ""
+                                      ),
+                                      AnaliseSafety: TxtAnaliseSaf.Text,
+                                      CriadoAnaliseSafety: If(
+                                          !IsBlank(TxtAnaliseSaf.Text),
+                                          Now(),
+                                          ""
+                                      ),
+                                      Status: "Finalizado"
+                                  }
+                              );
+                              Navigate(
+                                  ScreenSucesso,
+                                  ScreenTransition.Fade,
+                                  {var_navigateSucess: ScreenModColisaoVeiculos}
+                              ),
+                              "Derramamento de fluídos",/////////////////////////////////////////////////////////////////////////////////
+                              Patch(
+                                  '14.2-tbl_DerramamentoDeFluidos',
+                                  LookUp(
+                                      '14.2-tbl_DerramamentoDeFluidos',
+                                      ID = var_item_id
+                                  ),
+                                  {
+                                      NumeroPortalUnico: TxtPortalUnico.Text,
+                                      CriadoNumeroPortalUnico: If(
+                                          !IsBlank(TxtPortalUnico.Text),
+                                          Now(),
+                                          ""
+                                      ),
+                                      AnaliseSafety: TxtAnaliseSaf.Text,
+                                      CriadoAnaliseSafety: If(
+                                          !IsBlank(TxtAnaliseSaf.Text),
+                                          Now(),
+                                          ""
+                                      ),
+                                      Status: "Finalizado"
+                                  }
+                              );
+                              Navigate(
+                                  ScreenSucesso,
+                                  ScreenTransition.Fade,
+                                  {var_navigateSucess: ScreenModDerramamento}
+                              ),
+                              "Excursão de pista",/////////////////////////////////////////////////////////////////////////////////
+                              Patch(
+                                  '14.6-tbl_ExcPista',
+                                  LookUp(
+                                      '14.6-tbl_ExcPista',
+                                      ID = var_item_id
+                                  ),
+                                  {
+                                      NumeroPortalUnico: TxtPortalUnico.Text,
+                                      CriadoNumeroPortalUnico: If(
+                                          !IsBlank(TxtPortalUnico.Text),
+                                          Now(),
+                                          ""
+                                      ),
+                                      AnaliseSafety: TxtAnaliseSaf.Text,
+                                      CriadoAnaliseSafety: If(
+                                          !IsBlank(TxtAnaliseSaf.Text),
+                                          Now(),
+                                          ""
+                                      ),
+                                      Status: "Finalizado"
+                                  }
+                              );
+                              Navigate(
+                                  ScreenSucesso,
+                                  ScreenTransition.Fade,
+                                  {var_navigateSucess: ScreenModExcursaoPista}
+                              ),
+                              "Incursão em pista",/////////////////////////////////////////////////////////////////////////////////
+                              Patch(
+                                  '14.3-tbl_IncPista',
+                                  LookUp(
+                                      '14.3-tbl_IncPista',
+                                      ID = var_item_id
+                                  ),
+                                  {
+                                      NumeroPortalUnico: TxtPortalUnico.Text,
+                                      CriadoNumeroPortalUnico: If(
+                                          !IsBlank(TxtPortalUnico.Text),
+                                          Now(),
+                                          ""
+                                      ),
+                                      AnaliseSafety: TxtAnaliseSaf.Text,
+                                      CriadoAnaliseSafety: If(
+                                          !IsBlank(TxtAnaliseSaf.Text),
+                                          Now(),
+                                          ""
+                                      ),
+                                      Status: "Finalizado",
+                                      Agravante: cmbIncPistaAgravante_1.Selected.Value
+                                  }
+                              );
+                              Navigate(
+                                  ScreenSucesso,
+                                  ScreenTransition.Fade,
+                                  {var_navigateSucess: ScreenModIncursaoPista}
+                              ),
+                              "Interferência externa",/////////////////////////////////////////////////////////////////////////////////
+                              Patch(
+                                  '14.5-tbl_IntExterna',
+                                  LookUp(
+                                      '14.5-tbl_IntExterna',
+                                      ID = var_item_id
+                                  ),
+                                  {
+                                      NumeroPortalUnico: TxtPortalUnico.Text,
+                                      CriadoNumeroPortalUnico: If(
+                                          !IsBlank(TxtPortalUnico.Text),
+                                          Now(),
+                                          ""
+                                      ),
+                                      AnaliseSafety: TxtAnaliseSaf.Text,
+                                      CriadoAnaliseSafety: If(
+                                          !IsBlank(TxtAnaliseSaf.Text),
+                                          Now(),
+                                          ""
+                                      ),
+                                      Status: "Finalizado"
+                                  }
+                              );
+                              Navigate(
+                                  ScreenSucesso,
+                                  ScreenTransition.Fade,
+                                  {var_navigateSucess: ScreenModInterferenciaExterna}
+                              ),
+                              "Jet blast",/////////////////////////////////////////////////////////////////////////////////
+                              Patch(
+                                  '14.8-tbl_JetBlast',
+                                  LookUp(
+                                      '14.8-tbl_JetBlast',
+                                      ID = var_item_id
+                                  ),
+                                  {
+                                      NumeroPortalUnico: TxtPortalUnico.Text,
+                                      CriadoNumeroPortalUnico: If(
+                                          !IsBlank(TxtPortalUnico.Text),
+                                          Now(),
+                                          ""
+                                      ),
+                                      AnaliseSafety: TxtAnaliseSaf.Text,
+                                      CriadoAnaliseSafety: If(
+                                          !IsBlank(TxtAnaliseSaf.Text),
+                                          Now(),
+                                          ""
+                                      ),
+                                      Status: "Finalizado"
+                                  }
+                              );
+                              Navigate(
+                                  ScreenSucesso,
+                                  ScreenTransition.Fade,
+                                  {var_navigateSucess: ScreenModJetBlast}
+                              ),
+                              "Ocorrência de solo",/////////////////////////////////////////////////////////////////////////////////////
+                              Patch(
+                                  '16.1-tbl_OcoSolo',
+                                  LookUp(
+                                      '16.1-tbl_OcoSolo',
+                                      ID = var_item_id
+                                  ),
+                                  {
+                                      NumeroPortalUnico: TxtPortalUnico.Text,
+                                      CriadoNumeroPortalUnico: If(
+                                          !IsBlank(TxtPortalUnico.Text),
+                                          Now(),
+                                          ""
+                                      ),
+                                      AnaliseSafety: TxtAnaliseSaf.Text,
+                                      CriadoAnaliseSafety: If(
+                                          !IsBlank(TxtAnaliseSaf.Text),
+                                          Now(),
+                                          ""
+                                      ),
+                                      Status: "Finalizado"
+                                  }
+                              );
+                              Navigate(
+                                  ScreenSucesso,
+                                  ScreenTransition.Fade,
+                                  {var_navigateSucess: ScreenModOcorrenciaSolo}
+                              )
+                          )
+                        PaddingBottom: =0
+                        PaddingLeft: =0
+                        PaddingRight: =0
+                        PaddingTop: =0
+                        Text: ="Salvar"
+                        Width: =150

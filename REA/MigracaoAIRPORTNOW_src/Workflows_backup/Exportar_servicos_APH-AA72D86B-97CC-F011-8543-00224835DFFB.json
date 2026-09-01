@@ -1,0 +1,340 @@
+{
+  "properties": {
+    "connectionReferences": {
+      "shared_sharepointonline": {
+        "runtimeSource": "invoker",
+        "connection": {
+          "connectionReferenceLogicalName": "iem_sharedsharepointonline_27185"
+        },
+        "api": {
+          "name": "shared_sharepointonline"
+        }
+      },
+      "shared_office365": {
+        "runtimeSource": "invoker",
+        "connection": {
+          "connectionReferenceLogicalName": "iem_sharedoffice365_d341f"
+        },
+        "api": {
+          "name": "shared_office365"
+        }
+      },
+      "shared_excelonlinebusiness": {
+        "runtimeSource": "invoker",
+        "connection": {
+          "connectionReferenceLogicalName": "iem_sharedexcelonlinebusiness_9d282"
+        },
+        "api": {
+          "name": "shared_excelonlinebusiness"
+        }
+      }
+    },
+    "definition": {
+      "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+      "contentVersion": "undefined",
+      "parameters": {
+        "$authentication": {
+          "defaultValue": {},
+          "type": "SecureObject"
+        },
+        "$connections": {
+          "defaultValue": {},
+          "type": "Object"
+        }
+      },
+      "triggers": {
+        "manual": {
+          "metadata": {
+            "operationMetadataId": "f2a84ed4-62f3-4e9c-8bc6-57a27ac2b69e"
+          },
+          "type": "Request",
+          "kind": "PowerAppV2",
+          "inputs": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "text": {
+                  "title": "Colecao",
+                  "type": "string",
+                  "x-ms-dynamically-added": true,
+                  "description": "Insira sua entrada",
+                  "x-ms-content-hint": "TEXT"
+                },
+                "text_1": {
+                  "title": "Email",
+                  "type": "string",
+                  "x-ms-dynamically-added": true,
+                  "description": "Insira sua entrada",
+                  "x-ms-content-hint": "TEXT"
+                }
+              },
+              "required": [
+                "text",
+                "text_1"
+              ]
+            }
+          }
+        }
+      },
+      "actions": {
+        "Analisar_JSON": {
+          "runAfter": {},
+          "metadata": {
+            "operationMetadataId": "04f143a4-fdce-43a3-8c15-43d4d0ad8b5e"
+          },
+          "type": "ParseJson",
+          "inputs": {
+            "content": "@triggerBody()['text']",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "TB_AEROPORTO": {
+                    "type": "string"
+                  },
+                  "TB_CNPJ": {
+                    "type": "string"
+                  },
+                  "TB_DATA": {
+                    "type": "string"
+                  },
+                  "TB_PACIENTE": {
+                    "type": "string"
+                  },
+                  "TB_RAZAO": {
+                    "type": "string"
+                  },
+                  "TB_SERVICO": {
+                    "type": "string"
+                  },
+                  "TB_VALOR": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "TB_AEROPORTO"
+                ]
+              }
+            }
+          }
+        },
+        "Obter_conteúdo_do_template": {
+          "runAfter": {
+            "Analisar_JSON": [
+              "Succeeded"
+            ]
+          },
+          "metadata": {
+            "%252fDocumentos%2bPartilhados%252fExportar%2bexcel%252fTemplate%252fTemplateExportarServicosAPH.xlsx": "/Documentos Partilhados/Exportar excel/Template/TemplateExportarServicosAPH.xlsx",
+            "operationMetadataId": "755c91cb-1100-48cd-97b3-03caf8cdf258"
+          },
+          "type": "OpenApiConnection",
+          "inputs": {
+            "parameters": {
+              "dataset": "https://grupoccr.sharepoint.com/sites/AIRPORTNOW",
+              "id": "%252fDocumentos%2bPartilhados%252fExportar%2bexcel%252fTemplate%252fTemplateExportarServicosAPH.xlsx",
+              "inferContentType": true
+            },
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+              "connectionName": "shared_sharepointonline",
+              "operationId": "GetFileContent"
+            },
+            "authentication": {
+              "value": "@json(decodeBase64(triggerOutputs().headers['X-MS-APIM-Tokens']))['$ConnectionKey']",
+              "type": "Raw"
+            }
+          }
+        },
+        "Criar_arquivo_copia_do_template": {
+          "runAfter": {
+            "Obter_conteúdo_do_template": [
+              "Succeeded"
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "3a546f94-49d3-4e71-83ba-04b9c3ef6214"
+          },
+          "type": "OpenApiConnection",
+          "inputs": {
+            "parameters": {
+              "dataset": "https://grupoccr.sharepoint.com/sites/AIRPORTNOW",
+              "folderPath": "/Documentos Partilhados/Exportar excel/Template",
+              "name": "XLSX_@{formatDateTime(utcNow(),'dd.MM.yyyy hh.mm')}.xlsx",
+              "body": "@body('Obter_conteúdo_do_template')"
+            },
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+              "connectionName": "shared_sharepointonline",
+              "operationId": "CreateFile"
+            },
+            "authentication": {
+              "value": "@json(decodeBase64(triggerOutputs().headers['X-MS-APIM-Tokens']))['$ConnectionKey']",
+              "type": "Raw"
+            }
+          },
+          "runtimeConfiguration": {
+            "contentTransfer": {
+              "transferMode": "Chunked"
+            }
+          }
+        },
+        "Obter_propriedades_de_arquivo": {
+          "runAfter": {
+            "Criar_arquivo_copia_do_template": [
+              "Succeeded"
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "100485bd-5c18-4e3a-b1e3-9f1fe787bb81"
+          },
+          "type": "OpenApiConnection",
+          "inputs": {
+            "parameters": {
+              "dataset": "https://grupoccr.sharepoint.com/sites/AIRPORTNOW",
+              "table": "bd2795ee-095c-437f-9009-700869b6a1f6",
+              "id": "@outputs('Criar_arquivo_copia_do_template')?['body/ItemId']"
+            },
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+              "connectionName": "shared_sharepointonline",
+              "operationId": "GetFileItem"
+            },
+            "authentication": {
+              "value": "@json(decodeBase64(triggerOutputs().headers['X-MS-APIM-Tokens']))['$ConnectionKey']",
+              "type": "Raw"
+            }
+          }
+        },
+        "Atraso": {
+          "runAfter": {
+            "Aplicar_a_cada_3": [
+              "Succeeded"
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "1629c843-a059-41e5-afce-6ad9fbf58aa7"
+          },
+          "type": "Wait",
+          "inputs": {
+            "interval": {
+              "count": 2,
+              "unit": "Minute"
+            }
+          }
+        },
+        "Obter_conteúdo_de_arquivo": {
+          "runAfter": {
+            "Atraso": [
+              "Succeeded"
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "1ac4e8bb-42ab-44aa-9a46-43b9c94b5d5f"
+          },
+          "type": "OpenApiConnection",
+          "inputs": {
+            "parameters": {
+              "dataset": "https://grupoccr.sharepoint.com/sites/AIRPORTNOW",
+              "id": "@outputs('Obter_propriedades_de_arquivo')?['body/{Identifier}']",
+              "inferContentType": true
+            },
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+              "connectionName": "shared_sharepointonline",
+              "operationId": "GetFileContent"
+            },
+            "authentication": {
+              "value": "@json(decodeBase64(triggerOutputs().headers['X-MS-APIM-Tokens']))['$ConnectionKey']",
+              "type": "Raw"
+            }
+          }
+        },
+        "Enviar_um_email_(V2)": {
+          "runAfter": {
+            "Obter_conteúdo_de_arquivo": [
+              "Succeeded"
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "88f92ffd-bff3-4d5e-a4ed-edca02f171ce"
+          },
+          "type": "OpenApiConnection",
+          "inputs": {
+            "parameters": {
+              "emailMessage/To": "@triggerBody()['text_1']",
+              "emailMessage/Subject": "Relatório de serviços - APH",
+              "emailMessage/Body": "<p>Segue anexo...<br>\n<br>\n<br>\n<br>\n<br>\n<br>\n<em>Email gerado automáticamente pelo Airport Now...</em></p>",
+              "emailMessage/Attachments": [
+                {
+                  "Name": "@outputs('Obter_propriedades_de_arquivo')?['body/{FilenameWithExtension}']",
+                  "ContentBytes": "@body('Obter_conteúdo_de_arquivo')"
+                }
+              ],
+              "emailMessage/Importance": "Normal"
+            },
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_office365",
+              "connectionName": "shared_office365",
+              "operationId": "SendEmailV2"
+            },
+            "authentication": {
+              "value": "@json(decodeBase64(triggerOutputs().headers['X-MS-APIM-Tokens']))['$ConnectionKey']",
+              "type": "Raw"
+            }
+          }
+        },
+        "Aplicar_a_cada_3": {
+          "foreach": "@body('Analisar_JSON')",
+          "actions": {
+            "Adicionar_uma_linha_em_uma_tabela_2": {
+              "metadata": {
+                "operationMetadataId": "de369743-71d0-48a8-ac14-49fb32bfb9c7",
+                "tableId": "servicosAPH"
+              },
+              "type": "OpenApiConnection",
+              "inputs": {
+                "parameters": {
+                  "source": "groups/396e9814-115b-4c36-9d54-921742be72db",
+                  "drive": "b!pXO8mWZsbEGuetV3ta9UJCrc4ViNU4xGuUpoHHETGCzulSe9XAl_Q5AJcAhptqH2",
+                  "file": "@outputs('Obter_propriedades_de_arquivo')?['body/{Identifier}']",
+                  "table": "servicosAPH",
+                  "item": {
+                    "AEROPORTO": "@items('Aplicar_a_cada_3')?['TB_AEROPORTO']",
+                    "CNPJ": "@items('Aplicar_a_cada_3')['TB_CNPJ']",
+                    "RAZÃO SOCIAL": "@items('Aplicar_a_cada_3')['TB_RAZAO']",
+                    "SERVIÇO": "@items('Aplicar_a_cada_3')['TB_SERVICO']",
+                    "VALOR": "@items('Aplicar_a_cada_3')['TB_VALOR']",
+                    "DATA": "@item()['TB_DATA']",
+                    "PACIENTE": "@item()?['TB_PACIENTE']"
+                  }
+                },
+                "host": {
+                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_excelonlinebusiness",
+                  "connectionName": "shared_excelonlinebusiness",
+                  "operationId": "AddRowV2"
+                },
+                "authentication": {
+                  "value": "@json(decodeBase64(triggerOutputs().headers['X-MS-APIM-Tokens']))['$ConnectionKey']",
+                  "type": "Raw"
+                }
+              }
+            }
+          },
+          "runAfter": {
+            "Obter_propriedades_de_arquivo": [
+              "Succeeded"
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "4370e0ba-dce8-433f-a8e1-5cef31a36b03"
+          },
+          "type": "Foreach"
+        }
+      }
+    },
+    "templateName": null
+  },
+  "schemaVersion": "1.0.0.0"
+}

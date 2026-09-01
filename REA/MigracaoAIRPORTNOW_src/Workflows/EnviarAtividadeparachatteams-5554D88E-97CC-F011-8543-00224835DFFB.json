@@ -1,0 +1,177 @@
+{
+  "properties": {
+    "connectionReferences": {
+      "shared_teams": {
+        "runtimeSource": "invoker",
+        "connection": {
+          "connectionReferenceLogicalName": "iem_sharedteams_5a6f9"
+        },
+        "api": {
+          "name": "shared_teams"
+        }
+      }
+    },
+    "definition": {
+      "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+      "contentVersion": "1.0.0.0",
+      "parameters": {
+        "$connections": {
+          "defaultValue": {},
+          "type": "Object"
+        },
+        "$authentication": {
+          "defaultValue": {},
+          "type": "SecureObject"
+        }
+      },
+      "triggers": {
+        "manual": {
+          "metadata": {
+            "operationMetadataId": "f78ad3be-665b-4665-8a63-598c9304db69"
+          },
+          "type": "Request",
+          "kind": "PowerAppV2",
+          "inputs": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "text": {
+                  "title": "Mensagem",
+                  "type": "string",
+                  "x-ms-dynamically-added": true,
+                  "description": " ",
+                  "x-ms-content-hint": "TEXT"
+                },
+                "text_1": {
+                  "title": "ID_chat",
+                  "type": "string",
+                  "x-ms-dynamically-added": true,
+                  "description": " ",
+                  "x-ms-content-hint": "TEXT"
+                }
+              },
+              "required": [
+                "text",
+                "text_1"
+              ]
+            }
+          }
+        }
+      },
+      "actions": {
+        "Responder_ao_app": {
+          "runAfter": {},
+          "type": "Response",
+          "kind": "PowerApp",
+          "inputs": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "title": "status",
+                  "type": "string",
+                  "x-ms-content-hint": "TEXT",
+                  "x-ms-dynamically-added": true
+                }
+              },
+              "additionalProperties": {}
+            },
+            "statusCode": 200,
+            "body": {
+              "status": "OK"
+            }
+          }
+        },
+        "Condicao_chat_valido": {
+          "runAfter": {
+            "Responder_ao_app": [
+              "Succeeded"
+            ]
+          },
+          "type": "If",
+          "expression": {
+            "and": [
+              {
+                "not": {
+                  "equals": [
+                    "@trim(coalesce(triggerBody()?['text_1'], ''))",
+                    ""
+                  ]
+                }
+              }
+            ]
+          },
+          "actions": {
+            "Partes": {
+              "runAfter": {},
+              "type": "Compose",
+              "inputs": "@split(concat(coalesce(triggerBody()?['text'], ''), '§§'), '§')"
+            },
+            "Estruturada": {
+              "runAfter": {
+                "Partes": [
+                  "Succeeded"
+                ]
+              },
+              "type": "Compose",
+              "inputs": "@contains(coalesce(triggerBody()?['text'], ''), '§')"
+            },
+            "Rotulo": {
+              "runAfter": {
+                "Estruturada": [
+                  "Succeeded"
+                ]
+              },
+              "type": "Compose",
+              "inputs": "@coalesce(json('{\"ABERTURA\": \"ACIONAMENTO ABERTO\", \"NOTIFICADO\": \"NOTIFICADO\", \"CIENTE\": \"CIENTE\", \"RECUSADO\": \"NÃO COMPARECERÁ\", \"SEM_RESPOSTA\": \"SEM RESPOSTA\", \"ACIONADO\": \"ACIONADO\", \"SOBREAVISO\": \"SOBREAVISO\", \"INFORMADO\": \"INFORMADO\", \"CHEGOU\": \"CHEGOU\", \"CONTATO_NR\": \"CONTATO NÃO REALIZADO\", \"EQUIPAMENTO\": \"EQUIPAMENTO SOLICITADO\", \"VITIMA_NOVA\": \"VÍTIMA REGISTRADA\", \"VITIMA_ALTERADA\": \"VÍTIMA ATUALIZADA\", \"VITIMA_EXCLUIDA\": \"VÍTIMA REMOVIDA\", \"MANUAL\": \"REGISTRO MANUAL\", \"ENCERRADO\": \"ACIONAMENTO ENCERRADO\"}')?[toupper(trim(outputs('Partes')[0]))], 'REGISTRO')"
+            },
+            "Corpo": {
+              "runAfter": {
+                "Rotulo": [
+                  "Succeeded"
+                ]
+              },
+              "type": "Compose",
+              "inputs": "@if(outputs('Estruturada'), concat('<p><b>', outputs('Rotulo'), '</b> &nbsp;&#183;&nbsp; ', formatDateTime(convertFromUtc(utcNow(), 'E. South America Standard Time'), 'HH:mm'), '</p>', if(empty(trim(outputs('Partes')[1])), '', concat('<p>', trim(outputs('Partes')[1]), '</p>')), if(empty(trim(outputs('Partes')[2])), '', concat('<p>', trim(outputs('Partes')[2]), '</p>'))), concat('<p>', coalesce(triggerBody()?['text'], ''), '</p>'))"
+            },
+            "Postar_mensagem_em_um_chat_ou_canal": {
+              "runAfter": {
+                "Corpo": [
+                  "Succeeded"
+                ]
+              },
+              "type": "OpenApiConnection",
+              "inputs": {
+                "parameters": {
+                  "poster": "Flow bot",
+                  "location": "Group chat",
+                  "body/recipient": "@triggerBody()?['text_1']",
+                  "body/messageBody": "@outputs('Corpo')"
+                },
+                "host": {
+                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_teams",
+                  "connectionName": "shared_teams",
+                  "operationId": "PostMessageToConversation"
+                },
+                "authentication": {
+                  "value": "@json(decodeBase64(triggerOutputs().headers['X-MS-APIM-Tokens']))['$ConnectionKey']",
+                  "type": "Raw"
+                },
+                "retryPolicy": {
+                  "type": "exponential",
+                  "count": 4,
+                  "interval": "PT10S"
+                }
+              }
+            }
+          },
+          "else": {
+            "actions": {}
+          }
+        }
+      }
+    },
+    "templateName": null
+  },
+  "schemaVersion": "1.0.0.0"
+}

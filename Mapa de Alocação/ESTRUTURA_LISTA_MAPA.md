@@ -12,6 +12,25 @@ tela de cadastro e nenhum índice de manutenção**.
 
 ---
 
+## Dois caminhos para criar a lista
+
+**A — pelo fluxo `List_Generator` (recomendado, ~2 min).** [lista_tb_alocacoesMapa.json](lista_tb_alocacoesMapa.json)
+já tem as 17 colunas, os 4 índices, as validações de coluna e a validação de lista. Importe
+[List_Generator_v2.zip](../List_Generator/List_Generator_v2.zip), execute o fluxo, informe o `siteUrl` e cole o
+JSON. Ele cria a lista com versionamento ligado, anexos desabilitados, desobriga e esconde o `Título`, e tira
+o `Título` da view padrão. Depois só restam os passos 8 e 9 da *Ordem de execução* — as views extras e a
+permissão.
+
+> **Uma diferença a saber.** O padrão do `List_Generator` é **nome interno igual ao nome de exibição**, tudo
+> em `snake_case`: a coluna aparece como `data_operacao`, não como "Data da Operação". Isso é proposital — é o
+> que elimina de vez o risco de nome codificado. Se preferir os rótulos amigáveis da tabela abaixo, renomeie a
+> exibição depois de criada; o nome interno não muda junto e o app continua funcionando.
+
+**B — manual.** Siga o resto deste documento. Mais lento e com o risco do nome codificado, mas não depende do
+fluxo estar importado no ambiente.
+
+---
+
 ## ⚠️ Leia antes de criar a primeira coluna
 
 Quando você digita o nome de exibição direto na criação, o SharePoint codifica o nome interno:
@@ -197,6 +216,8 @@ protege a lista contra edição direta pela interface do SharePoint.
 ---
 
 ## Ordem de execução
+
+> Fazendo pelo caminho **A**, os passos 1 a 7 já vêm prontos — vá direto para o 8.
 
 1. Criar a lista `tb_alocacoesMapa`.
 2. **Ligar o versionamento** — antes de qualquer carga.

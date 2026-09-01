@@ -1,0 +1,585 @@
+{
+  "properties": {
+    "connectionReferences": {
+      "shared_office365": {
+        "runtimeSource": "invoker",
+        "connection": {
+          "connectionReferenceLogicalName": "iem_sharedoffice365_d341f"
+        },
+        "api": {
+          "name": "shared_office365"
+        }
+      },
+      "shared_teams": {
+        "runtimeSource": "invoker",
+        "connection": {
+          "connectionReferenceLogicalName": "iem_sharedteams_5a6f9"
+        },
+        "api": {
+          "name": "shared_teams"
+        }
+      },
+      "shared_sharepointonline": {
+        "runtimeSource": "invoker",
+        "connection": {
+          "connectionReferenceLogicalName": "iem_sharedsharepointonline_27185"
+        },
+        "api": {
+          "name": "shared_sharepointonline"
+        }
+      }
+    },
+    "definition": {
+      "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+      "contentVersion": "1.0.0.0",
+      "parameters": {
+        "$connections": {
+          "defaultValue": {},
+          "type": "Object"
+        },
+        "$authentication": {
+          "defaultValue": {},
+          "type": "SecureObject"
+        }
+      },
+      "triggers": {
+        "manual": {
+          "metadata": {
+            "operationMetadataId": "f69cb727-2bff-4179-9610-8c9a2370ec9e"
+          },
+          "type": "Request",
+          "kind": "PowerAppV2",
+          "inputs": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "text": {
+                  "title": "Email",
+                  "type": "string",
+                  "x-ms-dynamically-added": true,
+                  "description": " \"\"",
+                  "x-ms-content-hint": "TEXT"
+                },
+                "text_1": {
+                  "title": "Emergencia",
+                  "type": "string",
+                  "x-ms-dynamically-added": true,
+                  "description": " \"\"",
+                  "x-ms-content-hint": "TEXT"
+                },
+                "text_4": {
+                  "title": "Ambiente",
+                  "type": "string",
+                  "x-ms-dynamically-added": true,
+                  "description": " \"\"",
+                  "x-ms-content-hint": "TEXT"
+                },
+                "text_3": {
+                  "description": "\"\"",
+                  "title": "Aeroporto",
+                  "type": "string",
+                  "x-ms-content-hint": "TEXT",
+                  "x-ms-dynamically-added": true
+                },
+                "text_5": {
+                  "description": "\"\"",
+                  "title": "Descricao_ocorrencia",
+                  "type": "string",
+                  "x-ms-content-hint": "TEXT",
+                  "x-ms-dynamically-added": true
+                },
+                "number_1": {
+                  "description": "0",
+                  "title": "ID_acionamento",
+                  "type": "number",
+                  "x-ms-content-hint": "NUMBER",
+                  "x-ms-dynamically-added": true
+                },
+                "text_6": {
+                  "description": "\"\"",
+                  "title": "ID_chat",
+                  "type": "string",
+                  "x-ms-content-hint": "TEXT",
+                  "x-ms-dynamically-added": true
+                },
+                "text_2": {
+                  "description": "\"\"",
+                  "title": "Usuario",
+                  "type": "string",
+                  "x-ms-content-hint": "TEXT",
+                  "x-ms-dynamically-added": true
+                },
+                "number": {
+                  "description": "0",
+                  "title": "ID_entidade",
+                  "type": "number",
+                  "x-ms-content-hint": "NUMBER",
+                  "x-ms-dynamically-added": true
+                },
+                "number_2": {
+                  "description": "0",
+                  "title": "ID_contato",
+                  "type": "number",
+                  "x-ms-content-hint": "NUMBER",
+                  "x-ms-dynamically-added": true
+                },
+                "text_7": {
+                  "description": "\"\"",
+                  "title": "Entidade",
+                  "type": "string",
+                  "x-ms-content-hint": "TEXT",
+                  "x-ms-dynamically-added": true
+                }
+              },
+              "required": [
+                "text",
+                "text_1",
+                "text_4",
+                "text_3",
+                "text_5",
+                "number_1",
+                "text_6",
+                "text_2",
+                "number",
+                "number_2",
+                "text_7"
+              ]
+            }
+          }
+        }
+      },
+      "actions": {
+        "Responder_ao_app": {
+          "runAfter": {},
+          "type": "Response",
+          "kind": "PowerApp",
+          "inputs": {
+            "schema": {
+              "type": "object",
+              "properties": {},
+              "additionalProperties": {}
+            },
+            "statusCode": 200,
+            "body": {}
+          }
+        },
+        "Condicao_email_valido": {
+          "runAfter": {
+            "Responder_ao_app": [
+              "Succeeded"
+            ]
+          },
+          "type": "If",
+          "expression": {
+            "and": [
+              {
+                "not": {
+                  "equals": [
+                    "@trim(coalesce(triggerBody()?['text'], ''))",
+                    ""
+                  ]
+                }
+              },
+              {
+                "contains": [
+                  "@coalesce(triggerBody()?['text'], '')",
+                  "@"
+                ]
+              }
+            ]
+          },
+          "actions": {
+            "Enviar_um_email_(V2)": {
+              "runAfter": {},
+              "type": "OpenApiConnection",
+              "inputs": {
+                "host": {
+                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_office365",
+                  "connectionName": "shared_office365",
+                  "operationId": "SendEmailV2"
+                },
+                "parameters": {
+                  "emailMessage/To": "@triggerBody()?['text']",
+                  "emailMessage/Subject": "@{if(contains(toLower(coalesce(triggerBody()?['text_4'], '')), 'simul'), '[SIMULADO] ', '')}Acionamento PLEM/PRAI - @{triggerBody()?['text_3']} - @{triggerBody()?['text_1']}",
+                  "emailMessage/Body": "<table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"background-color:#F5F7F9;margin:0;padding:0;\"><tr><td align=\"center\" style=\"padding:24px 12px;\"><table role=\"presentation\" width=\"600\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"width:600px;max-width:600px;background-color:#FFFFFF;border:1px solid #DFE5EA;\"><tr><td bgcolor=\"@{if(contains(toLower(coalesce(triggerBody()?['text_4'], '')), 'simul'), '#8A6100', '#A62639')}\" style=\"background-color:@{if(contains(toLower(coalesce(triggerBody()?['text_4'], '')), 'simul'), '#8A6100', '#A62639')};height:3px;font-size:0;line-height:0;\">&nbsp;</td></tr><tr><td style=\"padding:22px 28px 0 28px;\"><table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\"><tr><td style=\"font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;font-weight:700;letter-spacing:2px;color:#0B2E4F;\">AIRPORT NOW</td><td align=\"right\" style=\"font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;\"><span style=\"display:inline-block;padding:4px 12px;border:1px solid @{if(contains(toLower(coalesce(triggerBody()?['text_4'], '')), 'simul'), '#8A6100', '#A62639')};color:@{if(contains(toLower(coalesce(triggerBody()?['text_4'], '')), 'simul'), '#8A6100', '#A62639')};font-size:11px;font-weight:700;letter-spacing:1.2px;\">@{if(contains(toLower(coalesce(triggerBody()?['text_4'], '')), 'simul'), 'EXERCÍCIO SIMULADO', 'EMERGÊNCIA REAL')}</span></td></tr></table><div style=\"font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:12px;letter-spacing:1.2px;color:#5D6B77;padding-top:4px;\">ACIONAMENTO PLEM/PRAI</div></td></tr><tr><td style=\"padding:16px 28px 0 28px;\"><div style=\"border-top:1px solid #DFE5EA;font-size:0;line-height:0;\">&nbsp;</div></td></tr><tr><td style=\"padding:18px 28px 4px 28px;font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:16px;line-height:24px;color:#22303B;\">Ol&#225;, <b>@{triggerBody()?['text_2']}</b>.</td></tr><tr><td style=\"padding:6px 28px 18px 28px;font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:23px;color:#22303B;\">Voc&#234; foi acionado como <b>@{triggerBody()?['text_7']}</b> para a emerg&#234;ncia abaixo, registrada agora no aeroporto.</td></tr><tr><td style=\"padding:0 28px;\"><table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"border-top:1px solid #DFE5EA;border-bottom:1px solid #DFE5EA;\"><tr><td style=\"padding:10px 0;\"><table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\"><tr><td valign=\"top\" style=\"padding:6px 12px 6px 0;font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:13px;line-height:18px;color:#5D6B77;white-space:nowrap;\">Aeroporto</td><td valign=\"top\" style=\"padding:6px 0;font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:14px;line-height:20px;color:#22303B;font-weight:600;\">@{triggerBody()?['text_3']}</td></tr><tr><td valign=\"top\" style=\"padding:6px 12px 6px 0;font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:13px;line-height:18px;color:#5D6B77;white-space:nowrap;\">Emerg&#234;ncia</td><td valign=\"top\" style=\"padding:6px 0;font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:14px;line-height:20px;color:#22303B;font-weight:600;\">@{triggerBody()?['text_1']}</td></tr><tr><td valign=\"top\" style=\"padding:6px 12px 6px 0;font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:13px;line-height:18px;color:#5D6B77;white-space:nowrap;\">Protocolo</td><td valign=\"top\" style=\"padding:6px 0;font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:14px;line-height:20px;color:#22303B;font-weight:600;\">#@{triggerBody()?['number_1']}</td></tr><tr><td valign=\"top\" style=\"padding:6px 12px 6px 0;font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:13px;line-height:18px;color:#5D6B77;white-space:nowrap;\">Acionado &#224;s</td><td valign=\"top\" style=\"padding:6px 0;font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:14px;line-height:20px;color:#22303B;font-weight:600;\">@{formatDateTime(convertFromUtc(utcNow(), 'E. South America Standard Time'), 'dd/MM/yyyy HH:mm:ss')}</td></tr></table></td></tr></table></td></tr><tr><td style=\"padding:20px 28px 0 28px;\"><div style=\"font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:11px;letter-spacing:1.2px;font-weight:700;color:#5D6B77;padding-bottom:7px;\">OCORR&#202;NCIA</div><table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" bgcolor=\"#F5F7F9\" style=\"background-color:#F5F7F9;\"><tr><td style=\"padding:13px 16px;border-left:3px solid @{if(contains(toLower(coalesce(triggerBody()?['text_4'], '')), 'simul'), '#8A6100', '#A62639')};font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:23px;color:#22303B;\">@{triggerBody()?['text_5']}</td></tr></table></td></tr><tr><td style=\"padding:22px 28px 0 28px;\"><div style=\"font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:11px;letter-spacing:1.2px;font-weight:700;color:#5D6B77;padding-bottom:8px;\">O QUE FAZER AGORA</div><table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\"><tr><td valign=\"top\" width=\"22\" style=\"padding:3px 0;font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:14px;line-height:20px;color:@{if(contains(toLower(coalesce(triggerBody()?['text_4'], '')), 'simul'), '#8A6100', '#A62639')};font-weight:700;\">1.</td><td valign=\"top\" style=\"padding:3px 0;font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:14px;line-height:20px;color:#22303B;\">Responda no <b>Teams</b>: o bot do Flow acabou de enviar a voc&#234; uma mensagem com as op&#231;&#245;es <b>Ciente - estou a caminho</b> e <b>N&#227;o poderei comparecer</b>. Se puder, escreva no coment&#225;rio o tempo estimado de chegada.</td></tr><tr><td valign=\"top\" width=\"22\" style=\"padding:3px 0;font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:14px;line-height:20px;color:@{if(contains(toLower(coalesce(triggerBody()?['text_4'], '')), 'simul'), '#8A6100', '#A62639')};font-weight:700;\">2.</td><td valign=\"top\" style=\"padding:3px 0;font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:14px;line-height:20px;color:#22303B;\">Se tiver disponibilidade, <b>dirija-se ao COE</b> para auxiliar no gerenciamento da crise.</td></tr><tr><td valign=\"top\" width=\"22\" style=\"padding:3px 0;font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:14px;line-height:20px;color:@{if(contains(toLower(coalesce(triggerBody()?['text_4'], '')), 'simul'), '#8A6100', '#A62639')};font-weight:700;\">3.</td><td valign=\"top\" style=\"padding:3px 0;font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:14px;line-height:20px;color:#22303B;\">Acompanhe tudo pelo <b>chat do acionamento</b> no Teams. Evite contato com a equipe operacional por outros canais, a fim de n&#227;o comprometer a gest&#227;o da ocorr&#234;ncia.</td></tr></table></td></tr><tr><td style=\"padding:24px 28px 0 28px;\"><div style=\"border-top:1px solid #DFE5EA;font-size:0;line-height:0;\">&nbsp;</div></td></tr><tr><td style=\"padding:14px 28px 24px 28px;font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:12px;line-height:18px;color:#5D6B77;\">Mensagem autom&#225;tica do <b>Airport Now</b> &#183; protocolo #@{triggerBody()?['number_1']} &#183; n&#227;o responda a este e-mail.</td></tr></table></td></tr></table>",
+                  "emailMessage/Importance": "High"
+                },
+                "authentication": {
+                  "value": "@json(decodeBase64(triggerOutputs().headers['X-MS-APIM-Tokens']))['$ConnectionKey']",
+                  "type": "Raw"
+                },
+                "retryPolicy": {
+                  "type": "exponential",
+                  "count": 4,
+                  "interval": "PT10S"
+                }
+              }
+            },
+            "Chat_notificado_via_Flow": {
+              "runAfter": {
+                "Enviar_um_email_(V2)": [
+                  "Succeeded",
+                  "Failed",
+                  "Skipped",
+                  "TimedOut"
+                ]
+              },
+              "type": "OpenApiConnection",
+              "inputs": {
+                "parameters": {
+                  "poster": "Flow bot",
+                  "location": "Group chat",
+                  "body/recipient": "@triggerBody()?['text_6']",
+                  "body/messageBody": "<p><b>NOTIFICADO</b> &nbsp;&#183;&nbsp; @{formatDateTime(convertFromUtc(utcNow(), 'E. South America Standard Time'), 'HH:mm')}</p><p>@{triggerBody()?['text_7']} &#8212; @{triggerBody()?['text_2']}</p><p>Aguardando confirma&#231;&#227;o</p>"
+                },
+                "host": {
+                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_teams",
+                  "connectionName": "shared_teams",
+                  "operationId": "PostMessageToConversation"
+                },
+                "authentication": {
+                  "value": "@json(decodeBase64(triggerOutputs().headers['X-MS-APIM-Tokens']))['$ConnectionKey']",
+                  "type": "Raw"
+                },
+                "retryPolicy": {
+                  "type": "exponential",
+                  "count": 4,
+                  "interval": "PT10S"
+                }
+              }
+            },
+            "Postar_uma_escolha_de_opções": {
+              "runAfter": {
+                "Chat_notificado_via_Flow": [
+                  "Succeeded",
+                  "Failed",
+                  "Skipped",
+                  "TimedOut"
+                ]
+              },
+              "limit": {
+                "timeout": "PT4H"
+              },
+              "type": "OpenApiConnectionWebhook",
+              "inputs": {
+                "parameters": {
+                  "UserMessageWithOptionsSubscriptionRequest/body/options": [
+                    "Ciente - estou a caminho",
+                    "Não poderei comparecer"
+                  ],
+                  "UserMessageWithOptionsSubscriptionRequest/body/recipient/to": "@triggerBody()?['text']",
+                  "UserMessageWithOptionsSubscriptionRequest/body/messageBody": "@{triggerBody()?['text_3']} · @{triggerBody()?['text_1']}\nProtocolo #@{triggerBody()?['number_1']} · @{triggerBody()?['text_4']}\n\nVocê foi acionado como @{triggerBody()?['text_7']}.\n\nOCORRÊNCIA\n@{triggerBody()?['text_5']}\n\nResponda abaixo. Se puder, escreva no comentário o tempo estimado de chegada.",
+                  "UserMessageWithOptionsSubscriptionRequest/body/messageTitle": "@{if(contains(toLower(coalesce(triggerBody()?['text_4'], '')), 'simul'), 'EXERCÍCIO SIMULADO', 'EMERGÊNCIA REAL')} - Acionamento PLEM/PRAI"
+                },
+                "host": {
+                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_teams",
+                  "connectionName": "shared_teams",
+                  "operationId": "SubscribeUserMessageWithOptions"
+                },
+                "authentication": {
+                  "value": "@json(decodeBase64(triggerOutputs().headers['X-MS-APIM-Tokens']))['$ConnectionKey']",
+                  "type": "Raw"
+                }
+              }
+            },
+            "Condicao_resposta": {
+              "runAfter": {
+                "Postar_uma_escolha_de_opções": [
+                  "Succeeded"
+                ]
+              },
+              "type": "If",
+              "expression": {
+                "and": [
+                  {
+                    "equals": [
+                      "@outputs('Postar_uma_escolha_de_opções')?['body/selectedOption']",
+                      "Não poderei comparecer"
+                    ]
+                  }
+                ]
+              },
+              "actions": {
+                "Post_recusa": {
+                  "runAfter": {},
+                  "type": "OpenApiConnection",
+                  "inputs": {
+                    "parameters": {
+                      "poster": "Flow bot",
+                      "location": "Group chat",
+                      "body/recipient": "@triggerBody()?['text_6']",
+                      "body/messageBody": "<p><b>NÃO COMPARECERÁ</b> &nbsp;&#183;&nbsp; @{formatDateTime(convertFromUtc(utcNow(), 'E. South America Standard Time'), 'HH:mm')}</p><p>@{triggerBody()?['text_7']} &#8212; @{triggerBody()?['text_2']}</p>@{if(empty(trim(coalesce(outputs('Postar_uma_escolha_de_opções')?['body/comments'], ''))), '', concat('<blockquote>', trim(outputs('Postar_uma_escolha_de_opções')?['body/comments']), '</blockquote>'))}"
+                    },
+                    "host": {
+                      "apiId": "/providers/Microsoft.PowerApps/apis/shared_teams",
+                      "connectionName": "shared_teams",
+                      "operationId": "PostMessageToConversation"
+                    },
+                    "authentication": {
+                      "value": "@json(decodeBase64(triggerOutputs().headers['X-MS-APIM-Tokens']))['$ConnectionKey']",
+                      "type": "Raw"
+                    },
+                    "retryPolicy": {
+                      "type": "exponential",
+                      "count": 4,
+                      "interval": "PT10S"
+                    }
+                  }
+                },
+                "Log_recusa": {
+                  "runAfter": {
+                    "Post_recusa": [
+                      "Succeeded",
+                      "Failed",
+                      "TimedOut"
+                    ]
+                  },
+                  "type": "OpenApiConnection",
+                  "inputs": {
+                    "parameters": {
+                      "dataset": "https://grupoccr.sharepoint.com/sites/AIRPORTNOW",
+                      "table": "7fbfd875-2edd-4599-8603-90fec5c54333",
+                      "item/ID_acionamento": "@triggerBody()?['number_1']",
+                      "item/ID_entidade": "@triggerBody()?['number']",
+                      "item/ID_contato": "@triggerBody()?['number_2']",
+                      "item/ID_chat": "@triggerBody()?['text_6']",
+                      "item/Acao": "NAO COMPARECERA",
+                      "item/Atividade": "NÃO COMPARECERÁ · @{triggerBody()?['text_7']} — @{triggerBody()?['text_2']}@{if(empty(trim(coalesce(outputs('Postar_uma_escolha_de_opções')?['body/comments'], ''))), '', concat(' · ', trim(outputs('Postar_uma_escolha_de_opções')?['body/comments'])))}",
+                      "item/Hora": "@{formatDateTime(convertFromUtc(coalesce(outputs('Postar_uma_escolha_de_opções')?['body/responseTime'], utcNow()), 'E. South America Standard Time'), 'dd/MM/yyyy HH:mm:ss')}",
+                      "item/Excluido": 0,
+                      "item/Ativo": 1
+                    },
+                    "host": {
+                      "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+                      "connectionName": "shared_sharepointonline",
+                      "operationId": "PostItem"
+                    },
+                    "authentication": {
+                      "value": "@json(decodeBase64(triggerOutputs().headers['X-MS-APIM-Tokens']))['$ConnectionKey']",
+                      "type": "Raw"
+                    },
+                    "retryPolicy": {
+                      "type": "exponential",
+                      "count": 4,
+                      "interval": "PT10S"
+                    }
+                  }
+                }
+              },
+              "else": {
+                "actions": {
+                  "Post_ciente": {
+                    "runAfter": {},
+                    "type": "OpenApiConnection",
+                    "inputs": {
+                      "parameters": {
+                        "poster": "Flow bot",
+                        "location": "Group chat",
+                        "body/recipient": "@triggerBody()?['text_6']",
+                        "body/messageBody": "<p><b>CIENTE</b> &nbsp;&#183;&nbsp; @{formatDateTime(convertFromUtc(utcNow(), 'E. South America Standard Time'), 'HH:mm')}</p><p>@{triggerBody()?['text_7']} &#8212; @{triggerBody()?['text_2']}</p>@{if(empty(trim(coalesce(outputs('Postar_uma_escolha_de_opções')?['body/comments'], ''))), '', concat('<blockquote>', trim(outputs('Postar_uma_escolha_de_opções')?['body/comments']), '</blockquote>'))}"
+                      },
+                      "host": {
+                        "apiId": "/providers/Microsoft.PowerApps/apis/shared_teams",
+                        "connectionName": "shared_teams",
+                        "operationId": "PostMessageToConversation"
+                      },
+                      "authentication": {
+                        "value": "@json(decodeBase64(triggerOutputs().headers['X-MS-APIM-Tokens']))['$ConnectionKey']",
+                        "type": "Raw"
+                      },
+                      "retryPolicy": {
+                        "type": "exponential",
+                        "count": 4,
+                        "interval": "PT10S"
+                      }
+                    }
+                  },
+                  "Log_ciente": {
+                    "runAfter": {
+                      "Post_ciente": [
+                        "Succeeded",
+                        "Failed",
+                        "TimedOut"
+                      ]
+                    },
+                    "type": "OpenApiConnection",
+                    "inputs": {
+                      "parameters": {
+                        "dataset": "https://grupoccr.sharepoint.com/sites/AIRPORTNOW",
+                        "table": "7fbfd875-2edd-4599-8603-90fec5c54333",
+                        "item/ID_acionamento": "@triggerBody()?['number_1']",
+                        "item/ID_entidade": "@triggerBody()?['number']",
+                        "item/ID_contato": "@triggerBody()?['number_2']",
+                        "item/ID_chat": "@triggerBody()?['text_6']",
+                        "item/Acao": "RESPONDEU AO FLOW",
+                        "item/Atividade": "CIENTE · @{triggerBody()?['text_7']} — @{triggerBody()?['text_2']}@{if(empty(trim(coalesce(outputs('Postar_uma_escolha_de_opções')?['body/comments'], ''))), '', concat(' · ', trim(outputs('Postar_uma_escolha_de_opções')?['body/comments'])))}",
+                        "item/Hora": "@{formatDateTime(convertFromUtc(coalesce(outputs('Postar_uma_escolha_de_opções')?['body/responseTime'], utcNow()), 'E. South America Standard Time'), 'dd/MM/yyyy HH:mm:ss')}",
+                        "item/Excluido": 0,
+                        "item/Ativo": 0
+                      },
+                      "host": {
+                        "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+                        "connectionName": "shared_sharepointonline",
+                        "operationId": "PostItem"
+                      },
+                      "authentication": {
+                        "value": "@json(decodeBase64(triggerOutputs().headers['X-MS-APIM-Tokens']))['$ConnectionKey']",
+                        "type": "Raw"
+                      },
+                      "retryPolicy": {
+                        "type": "exponential",
+                        "count": 4,
+                        "interval": "PT10S"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "Post_message_SemResposta": {
+              "runAfter": {
+                "Postar_uma_escolha_de_opções": [
+                  "TimedOut"
+                ]
+              },
+              "type": "OpenApiConnection",
+              "inputs": {
+                "parameters": {
+                  "poster": "Flow bot",
+                  "location": "Group chat",
+                  "body/recipient": "@triggerBody()?['text_6']",
+                  "body/messageBody": "<p><b>SEM RESPOSTA</b> &nbsp;&#183;&nbsp; @{formatDateTime(convertFromUtc(utcNow(), 'E. South America Standard Time'), 'HH:mm')}</p><p>@{triggerBody()?['text_7']} &#8212; @{triggerBody()?['text_2']}</p><p>Sem retorno ap&#243;s 4 horas &#8212; tente contato por telefone</p>"
+                },
+                "host": {
+                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_teams",
+                  "connectionName": "shared_teams",
+                  "operationId": "PostMessageToConversation"
+                },
+                "authentication": {
+                  "value": "@json(decodeBase64(triggerOutputs().headers['X-MS-APIM-Tokens']))['$ConnectionKey']",
+                  "type": "Raw"
+                },
+                "retryPolicy": {
+                  "type": "exponential",
+                  "count": 4,
+                  "interval": "PT10S"
+                }
+              }
+            },
+            "Create_item_SemResposta": {
+              "runAfter": {
+                "Post_message_SemResposta": [
+                  "Succeeded",
+                  "Failed",
+                  "TimedOut"
+                ]
+              },
+              "type": "OpenApiConnection",
+              "inputs": {
+                "parameters": {
+                  "dataset": "https://grupoccr.sharepoint.com/sites/AIRPORTNOW",
+                  "table": "7fbfd875-2edd-4599-8603-90fec5c54333",
+                  "item/ID_acionamento": "@triggerBody()?['number_1']",
+                  "item/ID_entidade": "@triggerBody()?['number']",
+                  "item/ID_contato": "@triggerBody()?['number_2']",
+                  "item/ID_chat": "@triggerBody()?['text_6']",
+                  "item/Acao": "SEM RESPOSTA",
+                  "item/Atividade": "SEM RESPOSTA · @{triggerBody()?['text_7']} — @{triggerBody()?['text_2']} · sem retorno em 4 horas",
+                  "item/Hora": "@{formatDateTime(convertFromUtc(utcNow(), 'E. South America Standard Time'), 'dd/MM/yyyy HH:mm:ss')}",
+                  "item/Excluido": 0,
+                  "item/Ativo": 0
+                },
+                "host": {
+                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+                  "connectionName": "shared_sharepointonline",
+                  "operationId": "PostItem"
+                },
+                "authentication": {
+                  "value": "@json(decodeBase64(triggerOutputs().headers['X-MS-APIM-Tokens']))['$ConnectionKey']",
+                  "type": "Raw"
+                },
+                "retryPolicy": {
+                  "type": "exponential",
+                  "count": 4,
+                  "interval": "PT10S"
+                }
+              }
+            }
+          },
+          "else": {
+            "actions": {
+              "Post_contato_sem_email": {
+                "runAfter": {},
+                "type": "OpenApiConnection",
+                "inputs": {
+                  "parameters": {
+                    "poster": "Flow bot",
+                    "location": "Group chat",
+                    "body/recipient": "@triggerBody()?['text_6']",
+                    "body/messageBody": "<p><b>CONTATO NÃO REALIZADO</b> &nbsp;&#183;&nbsp; @{formatDateTime(convertFromUtc(utcNow(), 'E. South America Standard Time'), 'HH:mm')}</p><p>@{triggerBody()?['text_7']} &#8212; @{triggerBody()?['text_2']}</p><p>Sem e-mail v&#225;lido cadastrado &#8212; acione por telefone</p>"
+                  },
+                  "host": {
+                    "apiId": "/providers/Microsoft.PowerApps/apis/shared_teams",
+                    "connectionName": "shared_teams",
+                    "operationId": "PostMessageToConversation"
+                  },
+                  "authentication": {
+                    "value": "@json(decodeBase64(triggerOutputs().headers['X-MS-APIM-Tokens']))['$ConnectionKey']",
+                    "type": "Raw"
+                  },
+                  "retryPolicy": {
+                    "type": "exponential",
+                    "count": 4,
+                    "interval": "PT10S"
+                  }
+                }
+              },
+              "Log_contato_sem_email": {
+                "runAfter": {
+                  "Post_contato_sem_email": [
+                    "Succeeded",
+                    "Failed",
+                    "TimedOut"
+                  ]
+                },
+                "type": "OpenApiConnection",
+                "inputs": {
+                  "parameters": {
+                    "dataset": "https://grupoccr.sharepoint.com/sites/AIRPORTNOW",
+                    "table": "7fbfd875-2edd-4599-8603-90fec5c54333",
+                    "item/ID_acionamento": "@triggerBody()?['number_1']",
+                    "item/ID_entidade": "@triggerBody()?['number']",
+                    "item/ID_contato": "@triggerBody()?['number_2']",
+                    "item/ID_chat": "@triggerBody()?['text_6']",
+                    "item/Acao": "CONTATO_NR",
+                    "item/Status": "Sem e-mail válido",
+                    "item/Atividade": "CONTATO NÃO REALIZADO · @{triggerBody()?['text_7']} — @{triggerBody()?['text_2']} · sem e-mail válido cadastrado",
+                    "item/Hora": "@{formatDateTime(convertFromUtc(utcNow(), 'E. South America Standard Time'), 'dd/MM/yyyy HH:mm:ss')}",
+                    "item/Excluido": 0,
+                    "item/Ativo": 0
+                  },
+                  "host": {
+                    "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+                    "connectionName": "shared_sharepointonline",
+                    "operationId": "PostItem"
+                  },
+                  "authentication": {
+                    "value": "@json(decodeBase64(triggerOutputs().headers['X-MS-APIM-Tokens']))['$ConnectionKey']",
+                    "type": "Raw"
+                  },
+                  "retryPolicy": {
+                    "type": "exponential",
+                    "count": 4,
+                    "interval": "PT10S"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "templateName": null
+  },
+  "schemaVersion": "1.0.0.0"
+}

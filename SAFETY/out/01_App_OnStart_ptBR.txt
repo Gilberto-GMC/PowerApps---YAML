@@ -1,0 +1,262 @@
+// ══════════════════════════════════════════════════════════════════════════════
+// AirportNow — Safety & Fauna  ·  App.OnStart
+// ══════════════════════════════════════════════════════════════════════════════
+// LOCALE pt-BR — este arquivo é para a BARRA DE FÓRMULAS.
+//   ";"  separa argumentos          (invariante usa ",")
+//   ";;" encadeia/termina instrução (invariante usa ";")
+//   ","  é o separador decimal      (invariante usa ".")
+//
+// COLAR EM: Studio > árvore de controles > App > propriedade "OnStart".
+//
+// NÃO cole este conteúdo na exibição de código (.pa.yaml). Lá o Studio lê e
+// grava sempre no formato INVARIANTE, mesmo com o Studio em pt-BR — a versão
+// invariante correspondente está em 01_App.pa.yaml e as duas dizem a mesma coisa.
+//
+// PRÉ-REQUISITO: colar antes o App.Formulas (02_App_Formulas_ptBR.txt), que
+// define nfAeros, nfBlocos, nfDataPiso e os tokens de cor.
+// ══════════════════════════════════════════════════════════════════════════════
+
+// ───────────────────────────────────────────────────────────────
+// 1. PARÂMETROS DE ENTRADA
+// ───────────────────────────────────────────────────────────────
+Set(
+    varHub;
+    Param("HUB")
+);;
+Set(
+    var_redirectAN;
+    Param("MODULO")
+);;
+
+// ───────────────────────────────────────────────────────────────
+// 2. AEROPORTOS (materializa a named formula nfAeros)
+// ───────────────────────────────────────────────────────────────
+ClearCollect(
+    colAeros;
+    nfAeros
+);;
+
+// ───────────────────────────────────────────────────────────────
+// 3. IDENTIFICAÇÃO DO USUÁRIO
+//    Blank() = 0 é verdadeiro no Power Fx: Param("USUARIO") vazio
+//    passava no Coalesce como ID 0. Teste explícito de branco.
+// ───────────────────────────────────────────────────────────────
+Set(
+    varIdUser;
+    With(
+        {p: Value(Param("USUARIO"))};
+        If(
+            IsBlank(p) || p <= 0;
+            LookUp(
+                User;
+                usrNome = User().FullName
+            ).ID;
+            p
+        )
+    )
+);;
+
+With(
+    {
+        usuario: LookUp(
+            User;
+            ID = varIdUser
+        )
+    };
+    Set(
+        varNomeUser;
+        usuario.usrNome
+    );;
+    Set(
+        varEmailUser;
+        usuario.Email
+    );;
+    Set(
+        varFuncaoUser;
+        usuario.Funcao
+    );;
+    Set(
+        varBlocoUser;
+        usuario.Bloco
+    );;
+    Set(
+        varClusterUser;
+        usuario.Cluster
+    );;
+    Set(
+        varAeroUser;
+        usuario.Aeroporto
+    );;
+    Set(
+        varPerfilUser;
+        usuario.Perfil
+    );;
+    Set(
+        varAutUser;
+        usuario.Autorizacao
+    );;
+    Set(
+        varPerfilSafety;
+        usuario.View_safety = 1
+    )
+);;
+
+With(
+    {
+        aero: LookUp(
+            colAeros;
+            Aeroporto = varAeroUser
+        )
+    };
+    Set(
+        varICAOUser;
+        aero.ICAO
+    );;
+    Set(
+        varIATAUser;
+        aero.IATA
+    )
+);;
+
+// ───────────────────────────────────────────────────────────────
+// 4. ESCOPO DE SEGURANÇA
+//    Blank() = "sem restrição". Toda galeria consulta estas duas
+//    variáveis ANTES de qualquer filtro escolhido pelo usuário.
+//      Base  -> travado no próprio aeroporto
+//      Bloco -> travado no próprio bloco
+//      Sede  -> sem restrição
+// ───────────────────────────────────────────────────────────────
+Set(
+    varEscopoAero;
+    If(
+        varPerfilUser = "Base";
+        varAeroUser;
+        Blank()
+    )
+);;
+Set(
+    varEscopoBloco;
+    If(
+        varPerfilUser = "Bloco";
+        varBlocoUser;
+        Blank()
+    )
+);;
+// As listas de Fauna gravam o código IATA, não o nome do aeroporto.
+Set(
+    varEscopoIATA;
+    If(
+        IsBlank(varEscopoAero);
+        Blank();
+        LookUp(
+            colAeros;
+            Aeroporto = varEscopoAero
+        ).IATA
+    )
+);;
+
+// ───────────────────────────────────────────────────────────────
+// 5. NAVEGAÇÃO POR TIPO DE OCORRÊNCIA
+//    Telas consolidadas: cada módulo virou UMA tela (lista + formulário
+//    + detalhes no mesmo Screen, alternados por var_vista).
+// ───────────────────────────────────────────────────────────────
+ClearCollect(
+    col_NavTelas;
+    Table(
+        {
+            Id: 40;
+            TelaListar: ScreenModColisaoVeiculos
+        };
+        {
+            Id: 37;
+            TelaListar: ScreenModDerramamento
+        };
+        {
+            Id: 39;
+            TelaListar: ScreenModExcursaoPista
+        };
+        {
+            Id: 125;
+            TelaListar: ScreenFauna
+        };
+        {
+            Id: 38;
+            TelaListar: ScreenModIncursaoPista
+        };
+        {
+            Id: 41;
+            TelaListar: ScreenModInterferenciaExterna
+        };
+        {
+            Id: 43;
+            TelaListar: ScreenModJetBlast
+        };
+        {
+            Id: 36;
+            TelaListar: ScreenModOcorrenciaSolo
+        };
+        {
+            Id: 131;
+            TelaListar: ScreenFOD
+        };
+        {
+            Id: 139;
+            TelaListar: ScreenCSO
+        };
+        {
+            Id: 127;
+            TelaListar: ScreenVistoriaSafetyFauna
+        }
+    )
+);;
+
+// ───────────────────────────────────────────────────────────────
+// 6. MENU DE MÓDULOS
+// ───────────────────────────────────────────────────────────────
+ClearCollect(
+    col_menuModulos;
+    Filter(
+        tbl_Modulos;
+        (Menu.Value = "Pátios e Pistas" && SubMenu.Value = "Safety") || Titulo = "Fauna"
+    )
+);;
+If(
+    !varPerfilSafety;
+    RemoveIf(
+        col_menuModulos;
+        Identificador = "VIS-SAF" || Identificador = "CSO"
+    )
+);;
+
+// ───────────────────────────────────────────────────────────────
+// 7. ESTADO INICIAL DE UI
+// ───────────────────────────────────────────────────────────────
+Set(
+    var_vista;
+    "lista"
+);;
+
+// ───────────────────────────────────────────────────────────────
+// 8. CARGA NÃO CRÍTICA — foto do usuário (conector Office 365)
+//    Fica por último e dentro de IfError: se o conector falhar ou
+//    demorar, o app abre mesmo assim.
+//
+//    REMOVIDOS por serem código morto (nenhuma tela do app os lê):
+//      ImgBase64 / ImgBase64Limpo -> JSON() de imagem binária a cada
+//                                    abertura, sem nenhum consumidor.
+//      var_ultimaVersao           -> consulta a tbl_controle_versoes
+//                                    sem nenhum consumidor.
+//      var_sideBarWidth           -> sem nenhum consumidor.
+//    Se algum deles voltar a ser necessário, reponha aqui dentro.
+// ───────────────────────────────────────────────────────────────
+Set(
+    varFotoUser;
+    IfError(
+        UsuáriosdoOffice365.UserPhoto(
+            First(
+                UsuáriosdoOffice365.SearchUser({searchTerm: varNomeUser})
+            ).Id
+        );
+        Blank()
+    )
+);;

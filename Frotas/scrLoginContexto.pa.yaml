@@ -1,0 +1,385 @@
+Screens:
+  scrLoginContexto:
+    Properties:
+      OnVisible: |-
+        =Set(varCarregando, true);
+        Set(varMenuAberto, true);
+        Set(varFiltroAero, "Todos");
+        Set(varFiltroTipo, "Todos");
+        Set(varFiltroSituacao, "Todos");
+        Set(varFiltroStatus, "Ativo");
+        Set(varRecorte, "TODOS");
+        Set(
+            varUsuario,
+            LookUp(
+                tb_usuariosFrota,
+                email_usuario = User().Email And ativo = 1
+            )
+        );
+        Set(varAcessoLiberado, !IsBlank(varUsuario));
+        Set(varAeroUser, varUsuario.aeroporto_padrao);
+        Set(
+            varPerfilNivel,
+            Coalesce(
+                LookUp(colPerfil, Valor = varUsuario.perfil).Nivel,
+                0
+            )
+        );
+        Set(
+            varAerosPermitidos,
+            If(
+                Trim(Upper(varUsuario.aeroportos)) = "TODOS",
+                colAerosValidos,
+                Filter(
+                    colAerosValidos,
+                    IATA in Split(varUsuario.aeroportos, ";").Value
+                )
+            )
+        );
+        ClearCollect(
+            colOpAero,
+            ForAll(
+                varAerosPermitidos As _a,
+                {Value: _a.IATA}
+            )
+        );
+        ClearCollect(colFiltroAero, {Value: "Todos"});
+        Collect(colFiltroAero, colOpAero);
+        Clear(colFrota);
+        ForAll(
+            varAerosPermitidos As _aero,
+            Collect(
+                colFrota,
+                ForAll(
+                    Filter(
+                        tb_ativosFrota,
+                        ativo = 1,
+                        aeroporto = _aero.IATA
+                    ) As _r,
+                    {
+                        ID: _r.ID,
+                        codigo_ativo: _r.codigo_ativo,
+                        identificacao_visual: _r.identificacao_visual,
+                        placa: _r.placa,
+                        tipo_ativo: _r.tipo_ativo,
+                        categoria_uso: _r.categoria_uso,
+                        marca: _r.marca,
+                        modelo: _r.modelo,
+                        ano_fabricacao: _r.ano_fabricacao,
+                        combustivel: _r.combustivel,
+                        aeroporto: _r.aeroporto,
+                        bloco: _r.bloco,
+                        base_operacional: _r.base_operacional,
+                        centro_custo: _r.centro_custo,
+                        setor_responsavel: _r.setor_responsavel,
+                        gestor_nome: _r.gestor_nome,
+                        gestor_email: _r.gestor_email,
+                        status: _r.status,
+                        situacao_operacional: _r.situacao_operacional,
+                        motivo_situacao: _r.motivo_situacao,
+                        tipo_medidor: _r.tipo_medidor,
+                        medidor_km: _r.medidor_km,
+                        medidor_horas: _r.medidor_horas,
+                        medidor_data: _r.medidor_data,
+                        tipo_propriedade: _r.tipo_propriedade,
+                        fornecedor_txt: _r.fornecedor_txt,
+                        circula_lado_ar: _r.circula_lado_ar
+                    }
+                )
+            )
+        );
+        Set(varCacheEm, Now());
+        Set(varCacheTruncado, CountRows(colFrota) >= 2000);
+        Set(varCarregando, false)
+    Children:
+      - cntLoginRaiz:
+          Control: GroupContainer@1.5.0
+          Variant: AutoLayout
+          Properties:
+            DropShadow: =DropShadow.None
+            Fill: =thmSuperficie
+            Height: =Parent.Height
+            LayoutDirection: =LayoutDirection.Horizontal
+            RadiusBottomLeft: =0
+            RadiusBottomRight: =0
+            RadiusTopLeft: =0
+            RadiusTopRight: =0
+            Width: =Parent.Width
+          Children:
+            - cntLoginMarca:
+                Control: GroupContainer@1.5.0
+                Variant: AutoLayout
+                Properties:
+                  DropShadow: =DropShadow.None
+                  Fill: =thmPrimaria
+                  LayoutAlignItems: =LayoutAlignItems.Stretch
+                  LayoutDirection: =LayoutDirection.Vertical
+                  LayoutJustifyContent: =LayoutJustifyContent.Center
+                  LayoutMinHeight: =0
+                  PaddingBottom: =56
+                  PaddingLeft: =56
+                  PaddingRight: =56
+                  PaddingTop: =56
+                  RadiusBottomLeft: =0
+                  RadiusBottomRight: =0
+                  RadiusTopLeft: =0
+                  RadiusTopRight: =0
+                Children:
+                  - htmLoginMarca:
+                      Control: HtmlViewer@2.1.0
+                      Properties:
+                        AlignInContainer: =AlignInContainer.Stretch
+                        AutoHeight: =true
+                        Color: =thmTextoBarra
+                        Fill: =thmPrimaria
+                        Font: =thmFonte
+                        HtmlText: |-
+                          ="<div style='" & htmlFonte & "color:" & hxTextoBarra & ";'>" &
+                          "<div style='font-size:11px;letter-spacing:.28em;font-weight:700;opacity:.72;'>MOTIVA AEROPORTOS</div>" &
+                          "<div style='font-size:46px;font-weight:800;letter-spacing:-.02em;line-height:1.04;margin-top:16px;'>GESTÃO<br>DE FROTAS</div>" &
+                          "<div style='height:4px;width:72px;background:" & hxAcao & ";margin:24px 0;'></div>" &
+                          "<div style='font-size:14px;line-height:1.75;opacity:.86;max-width:420px;'>Cadastro único de veículos, GSE e CCI da rede. Um ativo, um registro, um histórico &mdash; do carro administrativo ao carro contraincêndio.</div>" &
+                          "<div style='margin-top:32px;'>" &
+                          "<span style='display:inline-block;border:1px solid " & hxBordaBarra & ";padding:7px 13px;font-size:11px;font-weight:600;letter-spacing:.09em;margin:0 8px 8px 0;'>16 AEROPORTOS</span>" &
+                          "<span style='display:inline-block;border:1px solid " & hxBordaBarra & ";padding:7px 13px;font-size:11px;font-weight:600;letter-spacing:.09em;margin:0 8px 8px 0;'>2 BLOCOS</span>" &
+                          "<span style='display:inline-block;border:1px solid " & hxBordaBarra & ";padding:7px 13px;font-size:11px;font-weight:600;letter-spacing:.09em;margin:0 8px 8px 0;'>MÓDULO 1 &middot; CADASTRO</span>" &
+                          "</div>" &
+                          "<div style='margin-top:40px;font-size:11px;letter-spacing:.12em;opacity:.55;'>ONDA 1 &middot; FUNDAÇÃO</div>" &
+                          "</div>"
+                        PaddingBottom: =0
+                        PaddingLeft: =0
+                        PaddingRight: =0
+                        PaddingTop: =0
+                        Size: =11
+            - cntLoginAcesso:
+                Control: GroupContainer@1.5.0
+                Variant: AutoLayout
+                Properties:
+                  DropShadow: =DropShadow.None
+                  Fill: =thmFundo
+                  LayoutAlignItems: =LayoutAlignItems.Center
+                  LayoutDirection: =LayoutDirection.Vertical
+                  LayoutJustifyContent: =LayoutJustifyContent.Center
+                  LayoutMinHeight: =0
+                  PaddingLeft: =40
+                  PaddingRight: =40
+                  RadiusBottomLeft: =0
+                  RadiusBottomRight: =0
+                  RadiusTopLeft: =0
+                  RadiusTopRight: =0
+                Children:
+                  - cntLoginCartao:
+                      Control: GroupContainer@1.5.0
+                      Variant: AutoLayout
+                      Properties:
+                        BorderColor: =thmBorda
+                        BorderThickness: =1
+                        DropShadow: =DropShadow.None
+                        Fill: =thmSuperficie
+                        FillPortions: =0
+                        Height: =480
+                        LayoutAlignItems: =LayoutAlignItems.Stretch
+                        LayoutDirection: =LayoutDirection.Vertical
+                        LayoutGap: =20
+                        LayoutMinHeight: =0
+                        PaddingBottom: =32
+                        PaddingLeft: =32
+                        PaddingRight: =32
+                        PaddingTop: =32
+                        RadiusBottomLeft: =0
+                        RadiusBottomRight: =0
+                        RadiusTopLeft: =0
+                        RadiusTopRight: =0
+                        Width: =460
+                      Children:
+                        - htmLoginStatus:
+                            Control: HtmlViewer@2.1.0
+                            Properties:
+                              AlignInContainer: =AlignInContainer.Stretch
+                              AutoHeight: =true
+                              Fill: =thmSuperficie
+                              Font: =thmFonte
+                              HtmlText: |-
+                                =If(
+                                    varCarregando,
+                                    "<div style='" & htmlFonte & "'>" &
+                                    "<div style='font-size:11px;font-weight:700;letter-spacing:.16em;color:" & hxTextoFraco & ";'>VERIFICANDO ACESSO</div>" &
+                                    "<div style='font-size:21px;font-weight:700;color:" & hxTexto & ";margin-top:10px;'>Carregando a frota</div>" &
+                                    "<div style='font-size:13px;line-height:1.7;color:" & hxTextoFraco & ";margin-top:8px;'>Consultando os aeroportos do seu perfil. Isso acontece uma vez por sessão &mdash; depois a navegação roda em memória.</div>" &
+                                    "</div>",
+                                    varAcessoLiberado,
+                                    "<div style='" & htmlFonte & "'>" &
+                                    "<div style='font-size:11px;font-weight:700;letter-spacing:.16em;color:" & hxTextoFraco & ";'>ACESSO LIBERADO</div>" &
+                                    "<div style='font-size:24px;font-weight:800;color:" & hxTexto & ";margin-top:10px;line-height:1.2;'>" & varUsuario.nome_usuario & "</div>" &
+                                    "<div style='font-size:12px;color:" & hxTextoFraco & ";margin-top:4px;'>" & User().Email & "</div>" &
+                                    "<div style='margin-top:18px;'>" &
+                                    "<span style='display:inline-block;background:" & hxPrimariaClara & ";color:" & hxPrimariaEscura & ";padding:6px 12px;font-size:11px;font-weight:700;letter-spacing:.06em;margin:0 8px 8px 0;'>" & Upper(varUsuario.perfil) & "</span>" &
+                                    "<span style='display:inline-block;background:" & hxFundo & ";border:1px solid " & hxBorda & ";color:" & hxTexto & ";padding:6px 12px;font-size:11px;font-weight:700;letter-spacing:.06em;margin:0 8px 8px 0;'>BASE " & varAeroUser & "</span>" &
+                                    "<span style='display:inline-block;background:" & hxFundo & ";border:1px solid " & hxBorda & ";color:" & hxTexto & ";padding:6px 12px;font-size:11px;font-weight:700;letter-spacing:.06em;margin:0 8px 8px 0;'>" & CountRows(varAerosPermitidos) & " AEROPORTOS</span>" &
+                                    "</div>" &
+                                    "<div style='border-top:1px solid " & hxBorda & ";margin-top:18px;padding-top:16px;'>" &
+                                    "<table style='width:100%;border-collapse:collapse;'>" &
+                                    "<tr><td style='font-size:12px;color:" & hxTextoFraco & ";padding:3px 0;'>Ativos carregados</td><td style='text-align:right;font-size:16px;font-weight:700;color:" & hxPrimaria & ";'>" & Text(CountRows(colFrota), "#,##0") & "</td></tr>" &
+                                    "<tr><td style='font-size:12px;color:" & hxTextoFraco & ";padding:3px 0;'>Baixa de ativo</td><td style='text-align:right;font-size:12px;font-weight:700;color:" & If(varUsuario.pode_baixar_ativo = 1, hxVerde, hxTextoFraco) & ";'>" & If(varUsuario.pode_baixar_ativo = 1, "AUTORIZADA", "NÃO AUTORIZADA") & "</td></tr>" &
+                                    "</table></div>" &
+                                    If(
+                                        varCacheTruncado,
+                                        "<div style='margin-top:14px;border-left:3px solid " & hxAmbar & ";background:" & hxAmbarSuave & ";padding:10px 12px;font-size:12px;line-height:1.6;color:" & hxTexto & ";'>Cache no limite de linhas. Aumente o limite de dados do app para 2000 e recarregue.</div>",
+                                        ""
+                                    ) &
+                                    "</div>",
+                                    "<div style='" & htmlFonte & "'>" &
+                                    "<div style='font-size:11px;font-weight:700;letter-spacing:.16em;color:" & hxVermelho & ";'>ACESSO NÃO LIBERADO</div>" &
+                                    "<div style='font-size:22px;font-weight:800;color:" & hxTexto & ";margin-top:10px;line-height:1.25;'>Seu usuário não está cadastrado</div>" &
+                                    "<div style='font-size:13px;line-height:1.75;color:" & hxTextoFraco & ";margin-top:10px;'>Nenhum registro ativo foi encontrado para <b style='color:" & hxTexto & ";'>" & User().Email & "</b> na base de usuários da frota.</div>" &
+                                    "<div style='margin-top:16px;border-left:3px solid " & hxVermelho & ";background:" & hxVermelhoSuave & ";padding:12px 14px;font-size:12px;line-height:1.7;color:" & hxTexto & ";'>Solicite ao gestor de frota o cadastro do seu e-mail, com perfil e aeroportos de acesso. Depois use RECARREGAR.</div>" &
+                                    "</div>"
+                                )
+                              PaddingBottom: =0
+                              PaddingLeft: =0
+                              PaddingRight: =0
+                              PaddingTop: =0
+                              Size: =11
+                        - cntLoginSpinner:
+                            Control: GroupContainer@1.5.0
+                            Variant: AutoLayout
+                            Properties:
+                              DropShadow: =DropShadow.None
+                              Fill: =thmSuperficie
+                              FillPortions: =0
+                              Height: =56
+                              LayoutAlignItems: =LayoutAlignItems.Center
+                              LayoutDirection: =LayoutDirection.Horizontal
+                              LayoutJustifyContent: =LayoutJustifyContent.Center
+                              LayoutMinHeight: =0
+                              RadiusBottomLeft: =0
+                              RadiusBottomRight: =0
+                              RadiusTopLeft: =0
+                              RadiusTopRight: =0
+                              Visible: =varCarregando
+                            Children:
+                              - spnLogin:
+                                  Control: Spinner@1.4.6
+                                  Properties:
+                                    Appearance: ='Spinner.Appearance'.Primary
+                                    BasePaletteColor: =thmPrimaria
+                                    Height: =40
+                                    Width: =40
+                        - btnLoginEntrar:
+                            Control: Button@0.0.45
+                            Properties:
+                              Appearance: ='ButtonCanvas.Appearance'.Primary
+                              BasePaletteColor: =thmPrimaria
+                              BorderRadius: =0
+                              FontColor: =thmTextoBarra
+                              FontSize: =13
+                              FontWeight: =FontWeight.Semibold
+                              Height: =46
+                              OnSelect: |-
+                                =Set(varFiltroAero, "Todos");
+                                Navigate(scrFrotaPainel, ScreenTransition.Fade)
+                              Text: ="ENTRAR NO SISTEMA"
+                              Visible: =varAcessoLiberado And !varCarregando
+                        - btnLoginRecarregar:
+                            Control: Button@0.0.45
+                            Properties:
+                              Appearance: ='ButtonCanvas.Appearance'.Secondary
+                              BasePaletteColor: =thmPrimaria
+                              BorderRadius: =0
+                              FontSize: =13
+                              FontWeight: =FontWeight.Semibold
+                              Height: =42
+                              Icon: ="ArrowClockwise"
+                              IconStyle: ='ButtonCanvas.IconStyle'.Filled
+                              OnSelect: |-
+                                =// espelho do OnVisible — Navigate para a própria tela não o reexecuta
+                                Set(varCarregando, true);
+                                Set(varFiltroAero, "Todos");
+                                Set(varFiltroTipo, "Todos");
+                                Set(varFiltroSituacao, "Todos");
+                                Set(varFiltroStatus, "Ativo");
+                                Set(varRecorte, "TODOS");
+                                Set(
+                                    varUsuario,
+                                    LookUp(
+                                        tb_usuariosFrota,
+                                        email_usuario = User().Email And ativo = 1
+                                    )
+                                );
+                                Set(varAcessoLiberado, !IsBlank(varUsuario));
+                                Set(varAeroUser, varUsuario.aeroporto_padrao);
+                                Set(
+                                    varPerfilNivel,
+                                    Coalesce(
+                                        LookUp(colPerfil, Valor = varUsuario.perfil).Nivel,
+                                        0
+                                    )
+                                );
+                                Set(
+                                    varAerosPermitidos,
+                                    If(
+                                        Trim(Upper(varUsuario.aeroportos)) = "TODOS",
+                                        colAerosValidos,
+                                        Filter(
+                                            colAerosValidos,
+                                            IATA in Split(varUsuario.aeroportos, ";").Value
+                                        )
+                                    )
+                                );
+                                ClearCollect(
+                                    colOpAero,
+                                    ForAll(
+                                        varAerosPermitidos As _a,
+                                        {Value: _a.IATA}
+                                    )
+                                );
+                                ClearCollect(colFiltroAero, {Value: "Todos"});
+                                Collect(colFiltroAero, colOpAero);
+                                Clear(colFrota);
+                                ForAll(
+                                    varAerosPermitidos As _aero,
+                                    Collect(
+                                        colFrota,
+                                        ForAll(
+                                            Filter(
+                                                tb_ativosFrota,
+                                                ativo = 1,
+                                                aeroporto = _aero.IATA
+                                            ) As _r,
+                                            {
+                                                ID: _r.ID,
+                                                codigo_ativo: _r.codigo_ativo,
+                                                identificacao_visual: _r.identificacao_visual,
+                                                placa: _r.placa,
+                                                tipo_ativo: _r.tipo_ativo,
+                                                categoria_uso: _r.categoria_uso,
+                                                marca: _r.marca,
+                                                modelo: _r.modelo,
+                                                ano_fabricacao: _r.ano_fabricacao,
+                                                combustivel: _r.combustivel,
+                                                aeroporto: _r.aeroporto,
+                                                bloco: _r.bloco,
+                                                base_operacional: _r.base_operacional,
+                                                centro_custo: _r.centro_custo,
+                                                setor_responsavel: _r.setor_responsavel,
+                                                gestor_nome: _r.gestor_nome,
+                                                gestor_email: _r.gestor_email,
+                                                status: _r.status,
+                                                situacao_operacional: _r.situacao_operacional,
+                                                motivo_situacao: _r.motivo_situacao,
+                                                tipo_medidor: _r.tipo_medidor,
+                                                medidor_km: _r.medidor_km,
+                                                medidor_horas: _r.medidor_horas,
+                                                medidor_data: _r.medidor_data,
+                                                tipo_propriedade: _r.tipo_propriedade,
+                                                fornecedor_txt: _r.fornecedor_txt,
+                                                circula_lado_ar: _r.circula_lado_ar
+                                            }
+                                        )
+                                    )
+                                );
+                                Set(varCacheEm, Now());
+                                Set(varCacheTruncado, CountRows(colFrota) >= 2000);
+                                Set(varCarregando, false)
+                              Text: ="RECARREGAR"
+                              Visible: =!varCarregando And (!varAcessoLiberado Or varCacheTruncado)

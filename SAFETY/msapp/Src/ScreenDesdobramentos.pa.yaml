@@ -1,0 +1,843 @@
+# ************************************************************************************************
+# Warning: YAML source code for Canvas Apps should only be used to review changes made within Power Apps Studio and for minor edits (Preview).
+# Use the maker portal to create and edit your Power Apps.
+# 
+# The schema file for Canvas Apps is available at https://go.microsoft.com/fwlink/?linkid=2304907
+# 
+# For more information, visit https://go.microsoft.com/fwlink/?linkid=2292623
+# ************************************************************************************************
+Screens:
+  ScreenDesdobramentos:
+    Properties:
+      OnHidden: =Clear(col_desdobramentos)
+      OnVisible: |+
+        =ClearCollect(
+            col_desdobramentos,
+            Filter(
+                tbl_desdobramentos,
+                ID_ocorrencia = var_desdobramentosSelect.ID,
+                Modulo = var_tituloModulo
+            )
+        )
+
+    Children:
+      - ScreenContainer1_9:
+          Control: GroupContainer@1.5.0
+          Variant: AutoLayout
+          Properties:
+            DropShadow: =DropShadow.None
+            Fill: =RGBA(255, 255, 255, 1)
+            Height: =Parent.Height
+            LayoutAlignItems: =LayoutAlignItems.Stretch
+            LayoutDirection: =LayoutDirection.Vertical
+            RadiusBottomLeft: =0
+            RadiusBottomRight: =0
+            RadiusTopLeft: =0
+            RadiusTopRight: =0
+            Width: =Parent.Width
+          Children:
+            - ContainerHeader_3:
+                Control: GroupContainer@1.5.0
+                Variant: AutoLayout
+                Properties:
+                  BorderColor: =RGBA(30, 30, 100, 1)
+                  DropShadow: =DropShadow.None
+                  Fill: =RGBA(0, 0, 0, 1)
+                  FillPortions: =0
+                  Height: =40
+                  LayoutAlignItems: =LayoutAlignItems.Center
+                  LayoutDirection: =LayoutDirection.Horizontal
+                  LayoutJustifyContent: =LayoutJustifyContent.SpaceBetween
+                  LayoutMaxHeight: =
+                  LayoutMaxWidth: =
+                  RadiusBottomLeft: =0
+                  RadiusBottomRight: =0
+                  RadiusTopLeft: =0
+                  RadiusTopRight: =0
+                  Width: =1728.84
+                Children:
+                  - Icon1_7:
+                      Control: Classic/Icon@2.5.0
+                      Properties:
+                        AlignInContainer: =AlignInContainer.Center
+                        Color: =RGBA(255, 255, 255, 1)
+                        Height: =30
+                        Icon: =Icon.BackArrow
+                        LayoutMaxHeight: =
+                        LayoutMaxWidth: =
+                        LayoutMinHeight: =0
+                        OnSelect: |-
+                          =If(
+                              var_tituloModulo = "Acesso indevido de fauna",
+                              Navigate(
+                                  ScreenFauna,
+                                  ScreenTransition.Fade
+                              ),
+                              Navigate(
+                                  LookUp(
+                                      col_NavTelas,
+                                      Id = LookUp(
+                                          col_menuModulos,
+                                          Titulo = var_tituloModulo
+                                      ).ID,
+                                      TelaListar
+                                  ),
+                                  ScreenTransition.Fade
+                              )
+                          );
+                          Reset(RichTextDesdobramentosMsg)
+                        PaddingBottom: =3
+                        PaddingLeft: =5
+                        PaddingRight: =5
+                        PaddingTop: =3
+                        Width: =60
+                  - Label1_16:
+                      Control: Label@2.5.1
+                      Properties:
+                        Align: =Align.Center
+                        AlignInContainer: =AlignInContainer.Stretch
+                        Color: =RGBA(255, 255, 255, 1)
+                        FillPortions: =1
+                        Font: =Font.'Open Sans'
+                        FontWeight: =FontWeight.Semibold
+                        LayoutMaxHeight: =
+                        LayoutMaxWidth: =
+                        LayoutMinHeight: =0
+                        LayoutMinWidth: =0
+                        Size: =12
+                        Text: ="Desdobramentos"
+                        Width: =1577.04
+                        X: =75.9
+                  - Image3_15:
+                      Control: Image@2.2.3
+                      Properties:
+                        AlignInContainer: =AlignInContainer.Stretch
+                        Height: =40
+                        Image: =MOTIVA_WHITE
+                        LayoutMaxHeight: =
+                        LayoutMaxWidth: =
+                        LayoutMinHeight: =0
+                        OnSelect: =Navigate(frmHome, ScreenTransition.Fade)
+                        Visible: =!Icon28_204.Visible
+                        Width: =75.94
+                  - Icon28_204:
+                      Control: Classic/Icon@2.5.0
+                      Properties:
+                        AlignInContainer: =AlignInContainer.Stretch
+                        Color: =RGBA(255, 255, 255, 1)
+                        DisabledBorderColor: =RGBA(0, 0, 0, 0)
+                        DisabledColor: =RGBA(0, 0, 0, 0)
+                        DisabledFill: =RGBA(0, 18, 107, 0.1)
+                        Height: =40
+                        HoverColor: =RGBA(71, 158, 245, 1)
+                        HoverFill: =RGBA(71, 158, 245, 0.2)
+                        Icon: =Icon.AddDocument
+                        LayoutMaxHeight: =
+                        LayoutMaxWidth: =
+                        LayoutMinHeight: =0
+                        OnSelect: |-
+                          =UpdateContext(
+                              {
+                                  var_visibleForms: true,
+                                  var_visibleMain: false
+                              }
+                          )
+                        PaddingBottom: =5
+                        PaddingLeft: =5
+                        PaddingRight: =5
+                        PaddingTop: =5
+                        Visible: =Host.OSType <> "Windows"
+                        Width: =60
+                        X: =1652.94
+            - BottomContainer1_8:
+                Control: GroupContainer@1.5.0
+                Variant: AutoLayout
+                Properties:
+                  DropShadow: =DropShadow.None
+                  Fill: =RGBA(255, 255, 255, 1)
+                  LayoutAlignItems: =LayoutAlignItems.Stretch
+                  LayoutDirection: =LayoutDirection.Horizontal
+                  LayoutGap: =16
+                  LayoutMaxHeight: =
+                  LayoutMaxWidth: =
+                  LayoutWrap: =true
+                  PaddingBottom: =2
+                  PaddingLeft: =2
+                  PaddingRight: =2
+                  PaddingTop: =2
+                  RadiusBottomLeft: =0
+                  RadiusBottomRight: =0
+                  RadiusTopLeft: =0
+                  RadiusTopRight: =0
+                Children:
+                  - MainContainer1_8:
+                      Control: GroupContainer@1.5.0
+                      Variant: AutoLayout
+                      Properties:
+                        DropShadow: =DropShadow.None
+                        Fill: =RGBA(255, 255, 255, 1)
+                        FillPortions: =7
+                        LayoutDirection: =LayoutDirection.Vertical
+                        LayoutGap: =5
+                        LayoutMaxHeight: =
+                        LayoutMaxWidth: =
+                        PaddingBottom: =10
+                        RadiusBottomLeft: =0
+                        RadiusBottomRight: =0
+                        RadiusTopLeft: =0
+                        RadiusTopRight: =0
+                      Children:
+                        - Container78:
+                            Control: GroupContainer@1.5.0
+                            Variant: AutoLayout
+                            Properties:
+                              DropShadow: =DropShadow.None
+                              LayoutDirection: =LayoutDirection.Horizontal
+                              LayoutMaxHeight: =
+                              LayoutMaxWidth: =
+                              RadiusBottomLeft: =0
+                              RadiusBottomRight: =0
+                              RadiusTopLeft: =0
+                              RadiusTopRight: =0
+                            Children:
+                              - Container79:
+                                  Control: GroupContainer@1.5.0
+                                  Variant: AutoLayout
+                                  Properties:
+                                    DropShadow: =DropShadow.None
+                                    FillPortions: =0
+                                    LayoutDirection: =LayoutDirection.Vertical
+                                    LayoutGap: =5
+                                    LayoutMaxHeight: =
+                                    LayoutMaxWidth: =
+                                    PaddingBottom: =10
+                                    PaddingLeft: =10
+                                    PaddingRight: =10
+                                    PaddingTop: =10
+                                    RadiusBottomLeft: =0
+                                    RadiusBottomRight: =0
+                                    RadiusTopLeft: =0
+                                    RadiusTopRight: =0
+                                    Width: =Parent.Width / 3
+                                  Children:
+                                    - DataCardKey333_1:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          AlignInContainer: =AlignInContainer.Stretch
+                                          AutoHeight: =true
+                                          BorderColor: =RGBA(0, 0, 0, 1)
+                                          Font: =Font.'Open Sans'
+                                          FontWeight: =FontWeight.Semibold
+                                          LayoutMaxHeight: =
+                                          LayoutMaxWidth: =
+                                          LayoutMinWidth: =0
+                                          PaddingLeft: =20
+                                          Size: =11
+                                          Text: ="Anotação:"
+                                          VerticalAlign: =VerticalAlign.Bottom
+                                          Width: =Parent.Width - 60
+                                          Wrap: =false
+                                          X: =20
+                                          Y: =10
+                                    - RichTextDesdobramentosMsg:
+                                        Control: RichTextEditor@2.7.0
+                                        Properties:
+                                          AlignInContainer: =AlignInContainer.Center
+                                          BorderColor: =RGBA(0, 0, 0, 1)
+                                          Default: =""
+                                          FillPortions: =1
+                                          Height: =250
+                                          LayoutMaxHeight: =
+                                          LayoutMaxWidth: =
+                                          LayoutMinHeight: =0
+                                          LayoutMinWidth: =0
+                                          Size: =12
+                                          Width: =Parent.Width - 57
+                                          X: =7
+                                          Y: =145
+                                    - DataCardKey333_2:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          AlignInContainer: =AlignInContainer.Stretch
+                                          BorderColor: =RGBA(0, 0, 0, 1)
+                                          Font: =Font.'Open Sans'
+                                          FontWeight: =FontWeight.Semibold
+                                          Height: =10
+                                          LayoutMaxHeight: =
+                                          LayoutMaxWidth: =
+                                          LayoutMinWidth: =0
+                                          PaddingLeft: =20
+                                          Size: =11
+                                          Text: =
+                                          VerticalAlign: =VerticalAlign.Bottom
+                                          Visible: =false
+                                          Width: =Parent.Width - 60
+                                          Wrap: =false
+                                          X: =20
+                                          Y: =10
+                                    - FormDesdobramentosAnexo:
+                                        Control: Form@2.4.4
+                                        Variant: Classic
+                                        Layout: Vertical
+                                        Properties:
+                                          BorderColor: =RGBA(0, 0, 0, 1)
+                                          BorderStyle: =BorderStyle.None
+                                          DataSource: =tbl_desdobramentos
+                                          DefaultMode: =FormMode.New
+                                          FillPortions: =0
+                                          Height: =160
+                                          LayoutMaxHeight: =
+                                          LayoutMaxWidth: =
+                                          LayoutMinWidth: =0
+                                          NumberOfColumns: =1
+                                          Width: =301
+                                          X: =47
+                                          Y: =340
+                                        Children:
+                                          - Anexos_DataCard19:
+                                              Control: TypedDataCard@1.0.7
+                                              Variant: ClassicAttachmentsEdit
+                                              Properties:
+                                                BorderColor: =RGBA(0, 0, 0, 1)
+                                                BorderStyle: =BorderStyle.None
+                                                DataField: ="{Attachments}"
+                                                Default: =ThisItem.Anexos
+                                                DisplayName: =DataSourceInfo([@tbl_desdobramentos],DataSourceInfo.DisplayName,Anexos)
+                                                Required: =false
+                                                Update: =DataCardValue283.Attachments
+                                                Width: =Parent.Width
+                                                X: =0
+                                                Y: =0
+                                              Children:
+                                                - DataCardKey333:
+                                                    Control: Label@2.5.1
+                                                    MetadataKey: FieldName
+                                                    Properties:
+                                                      AutoHeight: =true
+                                                      BorderColor: =RGBA(0, 0, 0, 1)
+                                                      Font: =Font.'Open Sans'
+                                                      FontWeight: =FontWeight.Semibold
+                                                      Height: =34
+                                                      Size: =11
+                                                      Text: =Parent.DisplayName&":"
+                                                      Width: =Parent.Width - 60
+                                                      Wrap: =false
+                                                      X: =20
+                                                      Y: =10
+                                                - DataCardValue283:
+                                                    Control: Attachments@2.3.0
+                                                    MetadataKey: FieldValue
+                                                    Properties:
+                                                      BorderColor: =If(IsBlank(Parent.Error), Color.Black, Color.Red)
+                                                      DisplayMode: =Parent.DisplayMode
+                                                      Font: =Font.'Open Sans'
+                                                      Height: =90
+                                                      HoverFill: =RGBA(186, 202, 226, 1)
+                                                      ItemColor: =RGBA(255, 255, 255, 1)
+                                                      ItemFill: =RGBA(0, 0, 0, 1)
+                                                      ItemHoverFill: =RGBA(186, 202, 226, 1)
+                                                      Items: =Parent.Default
+                                                      PaddingBottom: =5
+                                                      PaddingLeft: =If(Self.DisplayMode = DisplayMode.Edit, 5, 0)
+                                                      PaddingRight: =5
+                                                      PaddingTop: =5
+                                                      PressedColor: =RGBA(255, 255, 255, 1)
+                                                      PressedFill: =RGBA(0, 0, 0, 1)
+                                                      Size: =10
+                                                      Tooltip: =Parent.DisplayName
+                                                      Width: =Parent.Width - 40
+                                                      X: =20
+                                                      Y: =55
+                                                - ErrorMessage328:
+                                                    Control: Label@2.5.1
+                                                    MetadataKey: ErrorMessage
+                                                    Properties:
+                                                      AutoHeight: =true
+                                                      BorderColor: =RGBA(0, 0, 0, 1)
+                                                      Color: =RGBA(168, 0, 0, 1)
+                                                      Font: =Font.'Open Sans'
+                                                      FontWeight: =FontWeight.Semibold
+                                                      Height: =10
+                                                      Live: =Live.Assertive
+                                                      PaddingBottom: =0
+                                                      PaddingLeft: =0
+                                                      PaddingRight: =0
+                                                      PaddingTop: =0
+                                                      Size: =14
+                                                      Text: =Parent.Error
+                                                      Visible: =Parent.DisplayMode=DisplayMode.Edit
+                                                      Width: =Parent.Width - 60
+                                                      X: =30
+                                                      Y: =DataCardValue283.Y + DataCardValue283.Height
+                                                - StarVisible328:
+                                                    Control: Label@2.5.1
+                                                    MetadataKey: FieldRequired
+                                                    Properties:
+                                                      Align: =Align.Center
+                                                      BorderColor: =RGBA(0, 0, 0, 1)
+                                                      Font: =Font.'Open Sans'
+                                                      Height: =DataCardKey333.Height
+                                                      Text: ="*"
+                                                      Visible: =And(Parent.Required, Parent.DisplayMode=DisplayMode.Edit)
+                                                      Width: =30
+                                                      Wrap: =false
+                                                      Y: =DataCardKey333.Y
+                                    - Container9:
+                                        Control: GroupContainer@1.5.0
+                                        Variant: AutoLayout
+                                        Properties:
+                                          DropShadow: =DropShadow.None
+                                          FillPortions: =0
+                                          Height: =40
+                                          LayoutAlignItems: =LayoutAlignItems.Center
+                                          LayoutDirection: =LayoutDirection.Horizontal
+                                          LayoutGap: =20
+                                          LayoutJustifyContent: =LayoutJustifyContent.End
+                                          LayoutMaxHeight: =
+                                          LayoutMaxWidth: =
+                                          PaddingRight: =20
+                                          RadiusBottomLeft: =0
+                                          RadiusBottomRight: =0
+                                          RadiusTopLeft: =0
+                                          RadiusTopRight: =0
+                                        Children:
+                                          - ButtonCanvas11:
+                                              Control: Button@0.0.45
+                                              Properties:
+                                                Appearance: ='ButtonCanvas.Appearance'.Secondary
+                                                Icon: ="DismissCircle"
+                                                IconStyle: ='ButtonCanvas.IconStyle'.Filled
+                                                LayoutMaxHeight: =
+                                                LayoutMaxWidth: =
+                                                LayoutMinWidth: =0
+                                                OnSelect: |-
+                                                  =If(
+                                                      var_tituloModulo = "Acesso indevido de fauna",
+                                                      Navigate(
+                                                          ScreenFauna,
+                                                          ScreenTransition.Fade
+                                                      ),
+                                                      Navigate(
+                                                          LookUp(
+                                                              col_NavTelas,
+                                                              Id = LookUp(
+                                                                  col_menuModulos,
+                                                                  Titulo = var_tituloModulo
+                                                              ).ID,
+                                                              TelaListar
+                                                          ),
+                                                          ScreenTransition.Fade
+                                                      )
+                                                  );
+                                                  Reset(RichTextDesdobramentosMsg)
+                                                Text: ="Cancelar"
+                                                Width: =120
+                                          - ButtonCanvas11_1:
+                                              Control: Button@0.0.45
+                                              Properties:
+                                                Icon: ="Send"
+                                                IconStyle: ='ButtonCanvas.IconStyle'.Filled
+                                                LayoutMaxHeight: =
+                                                LayoutMaxWidth: =
+                                                LayoutMinWidth: =0
+                                                OnSelect: |-
+                                                  =If(
+                                                      RichTextDesdobramentosMsg.HtmlText = "",
+                                                      Notify(
+                                                          "Atenção o campo de texto deve ser preenchido!",
+                                                          NotificationType.Error
+                                                      ),
+                                                      Patch(
+                                                          tbl_desdobramentos,
+                                                          Defaults(tbl_desdobramentos),
+                                                          {
+                                                              Modulo: var_tituloModulo,
+                                                              ID_ocorrencia: var_desdobramentosSelect.ID,
+                                                              descricao: RichTextDesdobramentosMsg.HtmlText,
+                                                              Usuario: varNomeUser
+                                                          },
+                                                          FormDesdobramentosAnexo.Updates
+                                                      );
+                                                      ClearCollect(
+                                                          col_desdobramentos,
+                                                          Filter(
+                                                              tbl_desdobramentos,
+                                                              ID_ocorrencia = var_desdobramentosSelect.ID,
+                                                              Modulo = var_tituloModulo
+                                                          )
+                                                      );
+                                                      Notify(
+                                                          "Registro cadastrado com sucesso",
+                                                          NotificationType.Success
+                                                      );
+                                                      Reset(RichTextDesdobramentosMsg);
+                                                      ResetForm(FormDesdobramentosAnexo)
+                                                  )
+                                                Text: ="Enviar"
+                                                Width: =120
+                              - Container79_1:
+                                  Control: GroupContainer@1.5.0
+                                  Variant: AutoLayout
+                                  Properties:
+                                    BorderStyle: =BorderStyle.None
+                                    DropShadow: =DropShadow.None
+                                    LayoutDirection: =LayoutDirection.Vertical
+                                    LayoutMaxHeight: =
+                                    LayoutMaxWidth: =
+                                    LayoutMinWidth: =400
+                                    PaddingBottom: =10
+                                    PaddingLeft: =10
+                                    PaddingRight: =10
+                                    PaddingTop: =10
+                                    RadiusBottomLeft: =0
+                                    RadiusBottomRight: =0
+                                    RadiusTopLeft: =0
+                                    RadiusTopRight: =0
+                                  Children:
+                                    - Container141:
+                                        Control: GroupContainer@1.5.0
+                                        Variant: AutoLayout
+                                        Properties:
+                                          DropShadow: =DropShadow.None
+                                          Fill: =RGBA(255, 255, 255, 1)
+                                          LayoutDirection: =LayoutDirection.Vertical
+                                          LayoutGap: =10
+                                          LayoutMaxHeight: =
+                                          LayoutMaxWidth: =
+                                          RadiusBottomLeft: =0
+                                          RadiusBottomRight: =0
+                                          RadiusTopLeft: =0
+                                          RadiusTopRight: =0
+                                          Width: =Parent.Width - 40
+                                        Children:
+                                          - HtmlText7_2:
+                                              Control: HtmlViewer@2.1.0
+                                              Properties:
+                                                AlignInContainer: =AlignInContainer.Stretch
+                                                AutoHeight: =true
+                                                DisabledBorderColor: =RGBA(56, 56, 56, 1)
+                                                Fill: =RGBA(247, 247, 247, 1)
+                                                Font: =Font.'Open Sans'
+                                                HtmlText: |+
+                                                  ="<b>Protocolo</b>:  " & var_desdobramentosSelect.PROTOCOLO& "&nbsp&nbsp&nbsp|&nbsp&nbsp&nbsp<b>Criador</b>:  " & var_desdobramentosSelect.CRIADOR&"<br>"&
+                                                  "<b>Descrição: </b>" & var_desdobramentosSelect.DESCRICAO
+
+
+
+                                                  /*LookUp(
+                                                      tbl_PassageiroIndisciplinado;
+                                                      passInd_id = GalleryDesdobramentos.Selected.passIndDesd_idOcorrencia;
+                                                      passInd_motivacao
+                                                  )*/
+                                                LayoutMaxHeight: =
+                                                LayoutMaxWidth: =
+                                                Size: =11
+                                          - GalleryDesdobramentos_15:
+                                              Control: Gallery@2.15.0
+                                              Variant: VariableHeight
+                                              Properties:
+                                                BorderColor: =RGBA(255, 255, 255, 1)
+                                                Height: =600
+                                                Items: |-
+                                                  =SortByColumns(
+                                                      col_desdobramentos,
+                                                      "Created",
+                                                      SortOrder.Descending
+                                                  )
+                                                LayoutMaxHeight: =
+                                                LayoutMaxWidth: =
+                                                LayoutMinHeight: =0
+                                                LoadingSpinner: =LoadingSpinner.None
+                                                ShowNavigation: =true
+                                                ShowScrollbar: =false
+                                                TemplatePadding: =2
+                                                TemplateSize: =195
+                                                Width: =495
+                                                X: =601
+                                                Y: =7
+                                              Children:
+                                                - Image21_1:
+                                                    Control: Image@2.2.3
+                                                    Properties:
+                                                      BorderColor: =RGBA(255, 255, 255, 1)
+                                                      BorderStyle: =BorderStyle.None
+                                                      DisabledBorderColor: =RGBA(255, 255, 255, 1)
+                                                      DisplayMode: =DisplayMode.View
+                                                      Fill: =RGBA(247, 247, 247, 1)
+                                                      FlipHorizontal: =true
+                                                      Height: =40
+                                                      Image: =gradiente
+                                                      ImagePosition: =ImagePosition.Center
+                                                      OnSelect: =Select(Parent)
+                                                      PressedBorderColor: =RGBA(255, 255, 255, 1)
+                                                      Width: =Parent.Width
+                                                - HtmlText2_18:
+                                                    Control: HtmlViewer@2.1.0
+                                                    Properties:
+                                                      AutoHeight: =true
+                                                      Color: =RGBA(26, 26, 26, 1)
+                                                      DisabledBorderColor: =RGBA(56, 56, 56, 1)
+                                                      DisplayMode: =DisplayMode.View
+                                                      Fill: =RGBA(0, 0, 0, 0)
+                                                      Font: =Font.'Open Sans'
+                                                      Height: =60
+                                                      HtmlText: |-
+                                                        ="<b>" & First(
+                                                            Split(
+                                                                ThisItem.Usuario,
+                                                                ","
+                                                            )
+                                                        ).Value & "</b><br>" & ThisItem.descricao
+                                                      OnSelect: =
+                                                      PaddingBottom: =0
+                                                      PaddingTop: =0
+                                                      Size: =10
+                                                      Width: =Parent.Width
+                                                      Y: =LabelDesdData_15.Y + LabelDesdData_15.Height +10
+                                                - LabelDesdData_15:
+                                                    Control: Label@2.5.1
+                                                    Properties:
+                                                      BorderColor: =RGBA(0, 0, 0, 1)
+                                                      Font: =Font.'Open Sans'
+                                                      FontWeight: =FontWeight.Bold
+                                                      Height: =30
+                                                      PaddingLeft: =6
+                                                      Size: =10
+                                                      Text: =ThisItem.Criado
+                                                      Width: =300
+                                                      Y: =5
+                                                - ButtonCanvas3_18:
+                                                    Control: Button@0.0.45
+                                                    Properties:
+                                                      Appearance: ='ButtonCanvas.Appearance'.Subtle
+                                                      BorderRadius: =4
+                                                      BorderStyle: =BorderStyle.None
+                                                      DisplayMode: |-
+                                                        =If(
+                                                            ThisItem.Usuario = varNomeUser And ThisItem.'Tem anexos' Or varAutUser = "Admin" And ThisItem.'Tem anexos',
+                                                            DisplayMode.Edit,
+                                                            DisplayMode.Disabled
+                                                        )
+                                                      FontColor: =RGBA(0, 0, 0, 1)
+                                                      Height: =30
+                                                      Icon: ="Attach"
+                                                      OnSelect: |+
+                                                        =UpdateContext({varVisibleDesdAnexos: true});
+                                                        UpdateContext({varListaDesdobramentoSelect: Parent.Selected})
+                                                      PaddingBottom: =0
+                                                      PaddingLeft: =0
+                                                      PaddingRight: =0
+                                                      PaddingTop: =0
+                                                      Text: ="Anexos"
+                                                      Width: =120
+                                                      X: =Parent.Width - 230
+                                                      Y: =5
+                                                - ButtonCanvas3_19:
+                                                    Control: Button@0.0.45
+                                                    Properties:
+                                                      Appearance: ='ButtonCanvas.Appearance'.Subtle
+                                                      BorderRadius: =4
+                                                      BorderStyle: =BorderStyle.None
+                                                      DisplayMode: |-
+                                                        =If(
+                                                            First(
+                                                                Split(
+                                                                    ThisItem.Usuario,
+                                                                    ","
+                                                                )
+                                                            ).Value = varNomeUser,
+                                                            DisplayMode.Edit,
+                                                            DisplayMode.Disabled
+                                                        )
+                                                      FontColor: =RGBA(255, 0, 0, 1)
+                                                      Height: =30
+                                                      Icon: ="Delete"
+                                                      Layout: ='ButtonCanvas.Layout'.IconOnly
+                                                      OnSelect: |-
+                                                        =Navigate(
+                                                            ScreenExcluir,
+                                                            ScreenTransition.Fade,
+                                                            {
+                                                                var_modulo: "Desdobramentos",
+                                                                var_item: ThisItem,
+                                                                var_protocolo: "ID: " & ThisItem.ID
+                                                            }
+                                                        )
+                                                      PaddingBottom: =0
+                                                      PaddingLeft: =0
+                                                      PaddingRight: =0
+                                                      PaddingTop: =0
+                                                      Text: =
+                                                      Width: =60
+                                                      X: =Parent.Width - 100
+                                                      Y: =5
+      - ContainerAnexos_15:
+          Control: GroupContainer@1.5.0
+          Variant: ManualLayout
+          Properties:
+            DropShadow: =DropShadow.None
+            Fill: =RGBA(0, 0, 0, 0.5)
+            Height: =Parent.Height
+            RadiusBottomLeft: =0
+            RadiusBottomRight: =0
+            RadiusTopLeft: =0
+            RadiusTopRight: =0
+            Visible: =varVisibleDesdAnexos
+            Width: =Parent.Width
+          Children:
+            - Container142:
+                Control: GroupContainer@1.5.0
+                Variant: ManualLayout
+                Properties:
+                  BorderColor: =RGBA(0, 0, 0, 0)
+                  BorderStyle: =BorderStyle.None
+                  DropShadow: =DropShadow.None
+                  Fill: =RGBA(255, 255, 255, 1)
+                  Height: =270
+                  RadiusBottomLeft: =10
+                  RadiusBottomRight: =10
+                  RadiusTopLeft: =10
+                  RadiusTopRight: =10
+                  X: =Parent.Width / 2 - Self.Width / 2
+                  Y: =184
+                Children:
+                  - FormDesdobramentosAnexosDetalhes:
+                      Control: Form@2.4.4
+                      Variant: Classic
+                      Layout: Vertical
+                      Properties:
+                        AcceptsFocus: =true
+                        BorderColor: =RGBA(0, 0, 0, 0)
+                        BorderStyle: =BorderStyle.None
+                        DataSource: =tbl_desdobramentos
+                        DefaultMode: =FormMode.View
+                        Fill: =RGBA(255, 255, 255, 1)
+                        Height: =250
+                        Item: =varListaDesdobramentoSelect
+                        NumberOfColumns: =1
+                        Width: =Container142.Width
+                      Children:
+                        - Anexos_DataCard20:
+                            Control: TypedDataCard@1.0.7
+                            Variant: ClassicAttachmentsEdit
+                            Properties:
+                              BorderColor: =RGBA(0, 0, 0, 0)
+                              DataField: ="{Attachments}"
+                              Default: =ThisItem.Anexos
+                              DisplayName: =DataSourceInfo([@tbl_desdobramentos],DataSourceInfo.DisplayName,Anexos)
+                              Height: =250
+                              Required: =false
+                              Update: =DataCardValue289.Attachments
+                              Width: =500
+                              X: =0
+                              Y: =0
+                            Children:
+                              - DataCardKey340:
+                                  Control: Label@2.5.1
+                                  MetadataKey: FieldName
+                                  Properties:
+                                    AutoHeight: =true
+                                    BorderColor: =RGBA(0, 0, 0, 1)
+                                    Font: =Font.'Open Sans'
+                                    Height: =34
+                                    Text: =Parent.DisplayName
+                                    Visible: =false
+                                    Width: =Parent.Width - 60
+                                    Wrap: =false
+                                    X: =30
+                                    Y: =10
+                              - DataCardValue289:
+                                  Control: Attachments@2.3.0
+                                  MetadataKey: FieldValue
+                                  Properties:
+                                    BorderColor: =If(IsBlank(Parent.Error), Parent.BorderColor, Color.Red)
+                                    DisplayMode: =Parent.DisplayMode
+                                    Font: =Font.'Open Sans'
+                                    Height: =200
+                                    HoverFill: =RGBA(186, 202, 226, 1)
+                                    ItemColor: =RGBA(255, 255, 255, 1)
+                                    ItemFill: =RGBA(0, 0, 0, 1)
+                                    ItemHoverFill: =RGBA(186, 202, 226, 1)
+                                    Items: =Parent.Default
+                                    PaddingBottom: =5
+                                    PaddingLeft: =If(Self.DisplayMode = DisplayMode.Edit, 5, 0)
+                                    PaddingRight: =5
+                                    PaddingTop: =5
+                                    PressedColor: =RGBA(255, 255, 255, 1)
+                                    PressedFill: =RGBA(0, 0, 0, 1)
+                                    Size: =12
+                                    Tooltip: =Parent.DisplayName
+                                    Width: =Parent.Width - 60
+                                    X: =30
+                                    Y: =DataCardKey340.Y + DataCardKey340.Height + 5
+                              - ErrorMessage335:
+                                  Control: Label@2.5.1
+                                  MetadataKey: ErrorMessage
+                                  Properties:
+                                    AutoHeight: =true
+                                    BorderColor: =RGBA(0, 0, 0, 1)
+                                    Color: =RGBA(168, 0, 0, 1)
+                                    Font: =Font.'Open Sans'
+                                    FontWeight: =FontWeight.Semibold
+                                    Height: =10
+                                    Live: =Live.Assertive
+                                    PaddingBottom: =0
+                                    PaddingLeft: =0
+                                    PaddingRight: =0
+                                    PaddingTop: =0
+                                    Size: =14
+                                    Text: =Parent.Error
+                                    Visible: =Parent.DisplayMode=DisplayMode.Edit
+                                    Width: =Parent.Width - 60
+                                    X: =30
+                                    Y: =DataCardValue289.Y + DataCardValue289.Height
+                              - StarVisible335:
+                                  Control: Label@2.5.1
+                                  MetadataKey: FieldRequired
+                                  Properties:
+                                    Align: =Align.Center
+                                    BorderColor: =RGBA(0, 0, 0, 1)
+                                    Font: =Font.'Open Sans'
+                                    Height: =DataCardKey340.Height
+                                    Text: ="*"
+                                    Visible: =And(Parent.Required, Parent.DisplayMode=DisplayMode.Edit)
+                                    Width: =30
+                                    Wrap: =false
+                                    Y: =DataCardKey340.Y
+                  - Label50_18:
+                      Control: Label@2.5.1
+                      Properties:
+                        BorderColor: =RGBA(0, 0, 0, 0)
+                        Color: =RGBA(255, 255, 255, 1)
+                        Fill: =RGBA(0, 0, 0, 1)
+                        Font: =Font.'Open Sans'
+                        FontWeight: =FontWeight.Semibold
+                        PaddingLeft: =50
+                        Text: ="Anexos:"
+                        Width: =Container142.Width
+                  - Icon56:
+                      Control: Classic/Icon@2.5.0
+                      Properties:
+                        BorderColor: =RGBA(0, 0, 0, 1)
+                        Color: =RGBA(255, 255, 255, 1)
+                        Height: =30
+                        Icon: =Icon.Cancel
+                        OnSelect: |-
+                          =UpdateContext({varVisibleDesdAnexos: false})
+                        PaddingBottom: =5
+                        PaddingLeft: =5
+                        PaddingRight: =5
+                        PaddingTop: =5
+                        Width: =30
+                        X: =463
+                        Y: =5
+                  - Icon5:
+                      Control: Icon@0.0.7
+                      Properties:
+                        Height: =30
+                        Icon: ="Attach"
+                        IconColor: =RGBA(255, 255, 255, 1)
+                        IconStyle: ='Icon.IconStyle'.Filled
+                        Width: =30
+                        X: =10
+                        Y: =5

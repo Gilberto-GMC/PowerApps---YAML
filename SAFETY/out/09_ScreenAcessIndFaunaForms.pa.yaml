@@ -1,0 +1,1015 @@
+# ************************************************************************************************
+# AirportNow — Safety & Fauna  ·  ScreenAcessIndFaunaForms  (correção pontual)
+#
+# ⚠️ LOCALE — ARQUIVO NO FORMATO INVARIANTE ("," para argumentos, ";" para encadear,
+#    "." decimal). É assim que a EXIBIÇÃO DE CÓDIGO do Studio lê e grava, mesmo com o
+#    Studio em pt-BR. NÃO converta para ";" / ";;": o arquivo para de compilar.
+#
+# COLAR EM: Studio > tela ScreenAcessIndFaunaForms > exibição de código > substituir tudo.
+#
+# POR QUE ESTA TELA ENTROU NA ENTREGA
+#
+#   Ela é a única tela que FICA no app e ainda apontava para uma das 21 telas que serão
+#   excluídas. Sem esta correção, apagar ScreenIncursaoPista quebra o formulário de
+#   Acesso Indevido de Fauna.
+#
+# O BUG (de cópia, estava em produção)
+#
+#   Ao salvar um Acesso Indevido de FAUNA, a tela de sucesso voltava para
+#   ScreenIncursaoPista — o módulo de Incursão de Pista. O usuário cadastrava fauna e
+#   caía na lista do módulo errado.
+#
+#       {var_navigateSucess: ScreenIncursaoPista}   ->   {var_navigateSucess: ScreenFauna}
+#
+# O QUE ESTA TELA AINDA NÃO TEM (diferente das 7 ScreenMod*)
+#
+#   Esta é uma correção pontual, não a refatoração completa. Continuam pendentes aqui:
+#     · o ID ainda é calculado no cliente (max + 1) — mesmo risco de protocolo duplicado;
+#     · aceIndFauna_aeroporto ainda grava varAeroUser fixo, sem o combo de aeroporto;
+#     · sem trava de reentrância no botão de gravar.
+#   Me peça e eu aplico o mesmo tratamento das ScreenMod* aqui.
+# ************************************************************************************************
+Screens:
+  ScreenAcessIndFaunaForms:
+    Properties:
+      OnVisible: |-
+        =UpdateContext(
+            {
+                //Default color border
+                varBordaDefault: RGBA(
+                    0,
+                    0,
+                    0,
+                    1
+                )
+            }
+        );
+        Select(ButtonResetFormAceIndFauna)
+    Children:
+      - ScreenContainerForms_10:
+          Control: GroupContainer@1.5.0
+          Variant: AutoLayout
+          Properties:
+            BorderStyle: =BorderStyle.None
+            DropShadow: =DropShadow.None
+            Fill: =RGBA(255, 255, 255, 1)
+            Height: =Max(App.Height, App.MinScreenHeight)
+            LayoutDirection: =LayoutDirection.Vertical
+            LayoutOverflowX: =LayoutOverflow.Scroll
+            RadiusBottomLeft: =0
+            RadiusBottomRight: =0
+            RadiusTopLeft: =0
+            RadiusTopRight: =0
+            Width: =Parent.Width
+          Children:
+            - ContainerHeader_32:
+                Control: GroupContainer@1.5.0
+                Variant: AutoLayout
+                Properties:
+                  BorderColor: =RGBA(30, 30, 100, 1)
+                  DropShadow: =DropShadow.None
+                  Fill: =RGBA(0, 0, 0, 1)
+                  FillPortions: =0
+                  Height: =40
+                  LayoutAlignItems: =LayoutAlignItems.Center
+                  LayoutDirection: =LayoutDirection.Horizontal
+                  LayoutJustifyContent: =LayoutJustifyContent.SpaceBetween
+                  LayoutMaxHeight: =
+                  LayoutMaxWidth: =
+                  RadiusBottomLeft: =0
+                  RadiusBottomRight: =0
+                  RadiusTopLeft: =0
+                  RadiusTopRight: =0
+                  Width: =1729.08
+                Children:
+                  - Icon1_35:
+                      Control: Classic/Icon@2.5.0
+                      Properties:
+                        AlignInContainer: =AlignInContainer.Center
+                        Color: =RGBA(255, 255, 255, 1)
+                        Height: =30
+                        Icon: =Icon.BackArrow
+                        LayoutMaxHeight: =
+                        LayoutMaxWidth: =
+                        LayoutMinHeight: =0
+                        OnSelect: =Navigate(ScreenFauna,ScreenTransition.Fade)
+                        PaddingBottom: =3
+                        PaddingLeft: =5
+                        PaddingRight: =5
+                        PaddingTop: =3
+                        Width: =60
+                  - Label1_67:
+                      Control: Label@2.5.1
+                      Properties:
+                        Align: =Align.Center
+                        AlignInContainer: =AlignInContainer.Stretch
+                        Color: =RGBA(255, 255, 255, 1)
+                        FillPortions: =1
+                        Font: =Font.'Open Sans'
+                        FontWeight: =FontWeight.Semibold
+                        LayoutMaxHeight: =
+                        LayoutMaxWidth: =
+                        LayoutMinHeight: =0
+                        LayoutMinWidth: =0
+                        Size: =12
+                        Text: ="Formulário"
+                        Width: =0
+                  - Image3_44:
+                      Control: Image@2.2.3
+                      Properties:
+                        AlignInContainer: =AlignInContainer.Stretch
+                        Height: =40
+                        Image: =MOTIVA_WHITE
+                        LayoutMaxHeight: =
+                        LayoutMaxWidth: =
+                        LayoutMinHeight: =0
+                        OnSelect: =Navigate(frmHome, ScreenTransition.Fade)
+                        Width: =60
+            - ButtonResetFormAceIndFauna:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =ColorFade(Self.Fill, -15%)
+                  Color: =RGBA(255, 255, 255, 1)
+                  DisabledBorderColor: =RGBA(166, 166, 166, 1)
+                  Fill: =RGBA(56, 96, 178, 1)
+                  Font: =Font.'Open Sans'
+                  HoverBorderColor: =ColorFade(Self.BorderColor, 20%)
+                  HoverColor: =RGBA(255, 255, 255, 1)
+                  HoverFill: =ColorFade(RGBA(56, 96, 178, 1), -20%)
+                  LayoutMaxHeight: =
+                  LayoutMaxWidth: =
+                  OnSelect: |-
+                    =Clear(col_aceIndFauGalleryImg);
+                    Reset(cmbAceIndFauHoraCadastro);
+                    Reset(cmbAceIndFauMinuCadastro);
+                    Reset(TxtAceIndFauLocal);
+                    Reset(TxtAceIndFauMapaGrade);
+                    Reset(TxtAceIndFauDescOcorrencia);
+                    Reset(cmbAceIndFauCausaProvavel);
+                    Reset(TxtAceIndFauCausaProvavelOutros)
+                  PressedBorderColor: =Self.Fill
+                  PressedColor: =Self.Fill
+                  PressedFill: =Self.Color
+                  Visible: =false
+                  X: =455
+                  Y: =9
+            - Container3_46:
+                Control: GroupContainer@1.5.0
+                Variant: ManualLayout
+                Properties:
+                  BorderColor: =RGBA(0, 18, 107, 1)
+                  DropShadow: =DropShadow.None
+                  Height: =715
+                  LayoutMaxHeight: =
+                  LayoutMaxWidth: =
+                  RadiusBottomLeft: =0
+                  RadiusBottomRight: =0
+                  RadiusTopLeft: =0
+                  RadiusTopRight: =0
+                  Width: =1138
+                  X: =110
+                  Y: =44
+                Children:
+                  - Rectangle12_371:
+                      Control: Rectangle@2.3.0
+                      Group: Group16.2.1_8
+                      Properties:
+                        BorderColor: =RGBA(0, 18, 107, 1)
+                        BorderThickness: =1
+                        Fill: =RGBA(0, 0, 0, 0)
+                        Height: =45
+                        Width: =1030
+                        X: =13
+                        Y: =30
+                  - Label20_548:
+                      Control: Label@2.5.1
+                      Group: Group16.2.1_8
+                      Properties:
+                        BorderColor: =RGBA(0, 18, 107, 1)
+                        Color: =RGBA(56, 96, 178, 1)
+                        Fill: =RGBA(255, 255, 255, 1)
+                        Font: =Font.'Open Sans'
+                        Height: =28
+                        Italic: =true
+                        Size: =12
+                        Text: ="Data e hora da ocorrência:"
+                        Width: =212
+                        X: =24
+                        Y: =13
+                  - cmbAceIndFauMinuCadastro:
+                      Control: Classic/DropDown@2.3.1
+                      Group: Group16.2.1_8
+                      Properties:
+                        BorderColor: |-
+                          =If(
+                              Self.Selected.Value = "min",
+                              varBordaDefault
+                          )
+                        ChevronBackground: =RGBA(56, 96, 178, 1)
+                        ChevronFill: =RGBA(255, 255, 255, 1)
+                        ChevronHoverBackground: =ColorFade(RGBA(56, 96, 178, 1), -20%)
+                        ChevronHoverFill: =RGBA(255, 255, 255, 1)
+                        Default: =""
+                        DisplayMode: =
+                        FocusedBorderThickness: =2
+                        Font: =Font.'Open Sans'
+                        Height: =30
+                        HoverFill: =RGBA(186, 202, 226, 1)
+                        Items: |-
+                          =["min",
+                              "00",
+                              "01",
+                              "02",
+                              "03",
+                              "04",
+                              "05",
+                              "06",
+                              "07",
+                              "08",
+                              "09",
+                              "10",
+                              "11",
+                              "12",
+                              "13",
+                              "14",
+                              "15",
+                              "16",
+                              "17",
+                              "18",
+                              "19",
+                              "20",
+                              "21",
+                              "22",
+                              "23",
+                              "24",
+                              "25",
+                              "26",
+                              "27",
+                              "28",
+                              "29",
+                              "30",
+                              "31",
+                              "32",
+                              "33",
+                              "34",
+                              "35",
+                              "36",
+                              "37",
+                              "38",
+                              "39",
+                              "40",
+                              "41",
+                              "42",
+                              "43",
+                              "44",
+                              "45",
+                              "46",
+                              "47",
+                              "48",
+                              "49",
+                              "50",
+                              "51",
+                              "52",
+                              "53",
+                              "54",
+                              "55",
+                              "56",
+                              "57",
+                              "58",
+                              "59"
+                          ]
+                          /*Text(
+                                  Minute(Now());
+                                  "00"
+                              );*/
+                        Items.Value: =Value
+                        PaddingBottom: =0
+                        PaddingTop: =0
+                        PressedColor: =RGBA(255, 255, 255, 1)
+                        PressedFill: =RGBA(0, 18, 107, 1)
+                        SelectionColor: =RGBA(255, 255, 255, 1)
+                        SelectionFill: =RGBA(56, 96, 178, 1)
+                        Size: =11
+                        Width: =77
+                        X: =276
+                        Y: =37
+                  - Label6_207:
+                      Control: Label@2.5.1
+                      Group: Group16.2.1_8
+                      Properties:
+                        Align: =Align.Center
+                        AutoHeight: =true
+                        BorderColor: =RGBA(0, 18, 107, 1)
+                        Color: =RGBA(56, 96, 178, 1)
+                        Font: =Font.'Open Sans'
+                        FontWeight: =FontWeight.Bold
+                        Height: =30
+                        PaddingBottom: =0
+                        Size: =11
+                        Text: =":"
+                        Width: =13
+                        X: =262
+                        Y: =37
+                  - cmbAceIndFauHoraCadastro:
+                      Control: Classic/DropDown@2.3.1
+                      Group: Group16.2.1_8
+                      Properties:
+                        BorderColor: |-
+                          =//RGBA(175; 191; 224; 1)
+                          If(
+                              Self.Selected.Value = "hor",
+                              varBordaDefault
+                          )
+                        ChevronBackground: =RGBA(56, 96, 178, 1)
+                        ChevronFill: =RGBA(255, 255, 255, 1)
+                        ChevronHoverBackground: =ColorFade(RGBA(56, 96, 178, 1), -20%)
+                        ChevronHoverFill: =RGBA(255, 255, 255, 1)
+                        Default: =""
+                        DisplayMode: =
+                        FocusedBorderThickness: =2
+                        Font: =Font.'Open Sans'
+                        Height: =30
+                        HoverFill: =RGBA(186, 202, 226, 1)
+                        Items: |-
+                          =[
+                              "hor",
+                              "00",
+                              "01",
+                              "02",
+                              "03",
+                              "04",
+                              "05",
+                              "06",
+                              "07",
+                              "08",
+                              "09",
+                              "10",
+                              "11",
+                              "12",
+                              "13",
+                              "14",
+                              "15",
+                              "16",
+                              "17",
+                              "18",
+                              "19",
+                              "20",
+                              "21",
+                              "22",
+                              "23"
+                          ]
+                          /*Text(
+                                  Hour(Now());
+                                  "00"
+                              );*/
+                        Items.Value: =Value
+                        PaddingBottom: =0
+                        PaddingTop: =0
+                        PressedColor: =RGBA(255, 255, 255, 1)
+                        PressedFill: =RGBA(0, 18, 107, 1)
+                        SelectionColor: =RGBA(255, 255, 255, 1)
+                        SelectionFill: =RGBA(56, 96, 178, 1)
+                        Size: =11
+                        Width: =77
+                        X: =186
+                        Y: =37
+                  - dtpAceIndFauDataCadastro:
+                      Control: Classic/DatePicker@2.6.0
+                      Group: Group16.2.1_8
+                      Properties:
+                        BorderColor: =RGBA(175, 191, 224, 1)
+                        DisplayMode: =
+                        FocusedBorderThickness: =2
+                        Font: =Font.'Open Sans'
+                        Height: =30
+                        IconBackground: =RGBA(56, 96, 178, 1)
+                        IconFill: =RGBA(255, 255, 255, 1)
+                        PaddingBottom: =0
+                        Size: =11
+                        Width: =150
+                        X: =26
+                        Y: =37
+                  - Container14_6:
+                      Control: GroupContainer@1.5.0
+                      Variant: ManualLayout
+                      Properties:
+                        DropShadow: =DropShadow.None
+                        Fill: =RGBA(255, 255, 255, 1)
+                        Height: =593
+                        PaddingLeft: =5
+                        Width: =1084
+                        Y: =81
+                      Children:
+                        - ContainerImgCadastrar_5:
+                            Control: GroupContainer@1.5.0
+                            Variant: ManualLayout
+                            Properties:
+                              BorderColor: =RGBA(56, 96, 178, 1)
+                              DropShadow: =DropShadow.None
+                              Height: =436
+                              Width: =426
+                              X: =628
+                            Children:
+                              - UploadedImageCadastrar_5:
+                                  Control: Image@2.2.3
+                                  Group: Group99_6
+                                  Properties:
+                                    BorderColor: =RGBA(241, 244, 249, 1)
+                                    BorderThickness: =5
+                                    Height: =128
+                                    Image: =If(IsBlank(AddMediaButtonImgCadastrar_5.Media), SampleImage, AddMediaButtonImgCadastrar_5.Media)
+                                    ImagePosition: =ImagePosition.Fill
+                                    Width: =176
+                                    X: =11
+                                    Y: =231
+                              - AddMediaButtonImgCadastrar_5:
+                                  Control: AddMedia@2.2.1
+                                  Group: Group99_6
+                                  Properties:
+                                    BorderColor: =RGBA(241, 244, 249, 1)
+                                    BorderThickness: =5
+                                    Color: =RGBA(255, 255, 255, 1)
+                                    Fill: =RGBA(39, 67, 125, 1)
+                                    Height: =128
+                                    Size: =14
+                                    Width: =176
+                                    X: =11
+                                    Y: =231
+                              - Button5_24:
+                                  Control: Classic/Button@2.2.0
+                                  Group: Group99_6
+                                  Properties:
+                                    BorderColor: =ColorFade(Self.Fill, -15%)
+                                    Color: =RGBA(255, 255, 255, 1)
+                                    DisabledBorderColor: =RGBA(166, 166, 166, 1)
+                                    Fill: =RGBA(56, 96, 178, 1)
+                                    Font: =Font.'Open Sans'
+                                    Height: =30
+                                    HoverBorderColor: =ColorFade(Self.BorderColor, 20%)
+                                    HoverColor: =RGBA(255, 255, 255, 1)
+                                    HoverFill: =ColorFade(RGBA(56, 96, 178, 1), -20%)
+                                    OnSelect: |-
+                                      =If(
+                                          IsBlank(AddMediaButtonImgCadastrar_5.Media) = false,
+                                          Collect(
+                                              col_aceIndFauGalleryImg,
+                                              {
+                                                  id: Value(
+                                                      First(
+                                                          SortByColumns(
+                                                              Filter(
+                                                                  col_aceIndFauGalleryImg,
+                                                                  id >= 0
+                                                              ),
+                                                              "id",
+                                                              SortOrder.Descending
+                                                          )
+                                                      ).id + 1
+                                                  ),
+                                                  img: UploadedImageCadastrar_5.Image
+                                              }
+                                          )
+                                      );
+                                      Reset(AddMediaButtonImgCadastrar_5)
+                                    PressedBorderColor: =Self.Fill
+                                    PressedColor: =Self.Fill
+                                    PressedFill: =Self.Color
+                                    RadiusBottomLeft: =5
+                                    RadiusBottomRight: =5
+                                    RadiusTopLeft: =5
+                                    RadiusTopRight: =5
+                                    Size: =12
+                                    Text: ="Incluir na galeria"
+                                    Width: =176
+                                    X: =12
+                                    Y: =372
+                              - Label55_14:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    Align: =Align.Center
+                                    BorderColor: =RGBA(241, 244, 249, 1)
+                                    BorderStyle: =BorderStyle.None
+                                    BorderThickness: =2
+                                    Font: =Font.'Open Sans'
+                                    Height: =20
+                                    Size: =10
+                                    Text: '="Contém " & CountRows(col_aceIndFauGalleryImg) & " foto(s) na galeria." '
+                                    Width: =195
+                                    X: =221
+                                    Y: =208
+                              - GalleryImgCadastrar_5:
+                                  Control: Gallery@2.15.0
+                                  Variant: Horizontal
+                                  Properties:
+                                    BorderColor: =If(CountRows(col_incPistaImg) = 0,varBordaDefault)
+                                    BorderThickness: =1
+                                    Height: =186
+                                    Items: =SortByColumns(col_aceIndFauGalleryImg,"id",SortOrder.Descending)
+                                    LoadingSpinner: =LoadingSpinner.None
+                                    TemplateSize: =153
+                                    Width: =405
+                                    X: =10
+                                    Y: =21
+                                  Children:
+                                    - Image23_15:
+                                        Control: Image@2.2.3
+                                        Properties:
+                                          BorderColor: =RGBA(153, 160, 196, 1)
+                                          BorderThickness: =5
+                                          CalculateOriginalDimensions: =true
+                                          Fill: =RGBA(255, 255, 255, 1)
+                                          Image: =ThisItem.img
+                                          OnSelect: =Select(Parent)
+                                          Width: =120
+                                          X: =15
+                                          Y: =14
+                                    - Button4_14:
+                                        Control: Classic/Button@2.2.0
+                                        Properties:
+                                          BorderColor: =ColorFade(Self.Fill, -15%)
+                                          Color: =RGBA(255, 255, 255, 1)
+                                          DisabledBorderColor: =RGBA(0, 0, 0, 0)
+                                          DisabledFill: =RGBA(255, 0, 0, 1)
+                                          Fill: =RGBA(255, 56, 56, 1)
+                                          Font: =Font.'Open Sans'
+                                          Height: =25
+                                          HoverBorderColor: =
+                                          HoverColor: =RGBA(255, 255, 255, 1)
+                                          HoverFill: =RGBA(255, 0, 0, 1)
+                                          OnSelect: =Remove(col_aceIndFauGalleryImg,ThisItem)
+                                          PressedBorderColor: =
+                                          PressedColor: =Self.Fill
+                                          PressedFill: =RGBA(255, 0, 0, 1)
+                                          RadiusBottomLeft: =4
+                                          RadiusBottomRight: =4
+                                          RadiusTopLeft: =4
+                                          RadiusTopRight: =4
+                                          Text: ="X"
+                                          Width: =50
+                                          X: =50
+                                          Y: =125
+                              - Label20_555:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    BorderColor: =RGBA(0, 18, 107, 1)
+                                    Color: =RGBA(56, 96, 178, 1)
+                                    Fill: =RGBA(255, 255, 255, 1)
+                                    Font: =Font.'Open Sans'
+                                    Height: =20
+                                    Italic: =true
+                                    Size: =12
+                                    Text: ="Fotos da ocorrência:"
+                                    Width: =160
+                                    X: =20
+                                    Y: =5
+                              - Label55_13:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    Align: =Align.Center
+                                    BorderColor: =RGBA(241, 244, 249, 1)
+                                    Color: =RGBA(166, 166, 166, 1)
+                                    Fill: =RGBA(241, 244, 249, 1)
+                                    Font: =Font.'Open Sans'
+                                    Height: =180
+                                    Size: =16
+                                    Text: ="Sem fotos para visualizar."
+                                    Visible: =If(CountRows(col_aceIndFauGalleryImg) = 0,true,false)
+                                    Width: =400
+                                    X: =12
+                                    Y: =24
+                        - Container48_1:
+                            Control: GroupContainer@1.5.0
+                            Variant: AutoLayout
+                            Properties:
+                              BorderColor: =RGBA(0, 18, 107, 1)
+                              BorderThickness: =1
+                              DropShadow: =DropShadow.None
+                              Height: =554
+                              LayoutDirection: =LayoutDirection.Vertical
+                              LayoutGap: =3
+                              PaddingBottom: =10
+                              PaddingLeft: =10
+                              PaddingRight: =10
+                              PaddingTop: =10
+                              Width: =601
+                              X: =12
+                              Y: =20
+                            Children:
+                              - Label20_550:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    AlignInContainer: =AlignInContainer.Stretch
+                                    BorderColor: =RGBA(0, 18, 107, 1)
+                                    Color: =RGBA(56, 96, 178, 1)
+                                    Fill: =RGBA(255, 255, 255, 1)
+                                    Font: =Font.'Open Sans'
+                                    Height: =30
+                                    Italic: =true
+                                    LayoutMaxHeight: =
+                                    LayoutMaxWidth: =
+                                    Size: =11
+                                    Text: ="Local do sistema de proteção da área operacional onde ocorreu o acesso indevido:"
+                                    Width: =583
+                                    X: =7
+                                    Y: =7
+                              - TxtAceIndFauLocal:
+                                  Control: Classic/TextInput@2.3.2
+                                  Properties:
+                                    AlignInContainer: =AlignInContainer.Stretch
+                                    BorderColor: =If(IsBlank(Self.Text),varBordaDefault)
+                                    Default: =""
+                                    DisabledBorderColor: =RGBA(136, 160, 209, 1)
+                                    Font: =Font.'Open Sans'
+                                    Height: =30
+                                    HintText: ="Descreva..."
+                                    HoverBorderColor: =RGBA(136, 160, 209, 1)
+                                    HoverFill: =RGBA(186, 202, 226, 1)
+                                    LayoutMaxHeight: =
+                                    LayoutMaxWidth: =
+                                    RadiusBottomLeft: =0
+                                    RadiusBottomRight: =0
+                                    RadiusTopLeft: =0
+                                    RadiusTopRight: =0
+                                    Size: =11
+                                    Width: =208
+                                    X: =408
+                                    Y: =67
+                              - Label20_551:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    AlignInContainer: =AlignInContainer.Stretch
+                                    BorderColor: =RGBA(0, 18, 107, 1)
+                                    Color: =RGBA(56, 96, 178, 1)
+                                    Fill: =RGBA(255, 255, 255, 1)
+                                    Font: =Font.'Open Sans'
+                                    Height: =30
+                                    Italic: =true
+                                    LayoutMaxHeight: =
+                                    LayoutMaxWidth: =
+                                    Size: =11
+                                    Text: ="Mapa de grade:"
+                                    Width: =583
+                                    X: =7
+                                    Y: =7
+                              - TxtAceIndFauMapaGrade:
+                                  Control: Classic/TextInput@2.3.2
+                                  Properties:
+                                    AlignInContainer: =AlignInContainer.Stretch
+                                    BorderColor: =If(IsBlank(Self.Text),varBordaDefault)
+                                    Default: =""
+                                    DisabledBorderColor: =RGBA(136, 160, 209, 1)
+                                    Font: =Font.'Open Sans'
+                                    Height: =30
+                                    HoverBorderColor: =RGBA(136, 160, 209, 1)
+                                    HoverFill: =RGBA(186, 202, 226, 1)
+                                    LayoutMaxHeight: =
+                                    LayoutMaxWidth: =
+                                    MaxLength: =5
+                                    RadiusBottomLeft: =0
+                                    RadiusBottomRight: =0
+                                    RadiusTopLeft: =0
+                                    RadiusTopRight: =0
+                                    Size: =11
+                                    Width: =130
+                                    X: =650
+                                    Y: =67
+                              - Label20_553:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    AlignInContainer: =AlignInContainer.Stretch
+                                    BorderColor: =RGBA(0, 18, 107, 1)
+                                    Color: =RGBA(56, 96, 178, 1)
+                                    Fill: =RGBA(255, 255, 255, 1)
+                                    Font: =Font.'Open Sans'
+                                    Height: =30
+                                    Italic: =true
+                                    LayoutMaxHeight: =
+                                    LayoutMaxWidth: =
+                                    Size: =11
+                                    Text: ="Causa provável:"
+                                    Width: =583
+                                    X: =7
+                                    Y: =7
+                              - cmbAceIndFauCausaProvavel:
+                                  Control: Classic/DropDown@2.3.1
+                                  Properties:
+                                    AlignInContainer: =AlignInContainer.Stretch
+                                    BorderColor: =If(IsBlank(Self.Selected.Value),varBordaDefault)
+                                    ChevronBackground: =RGBA(50, 86, 160, 1)
+                                    ChevronFill: =RGBA(255, 255, 255, 1)
+                                    ChevronHoverBackground: =ColorFade(RGBA(56, 96, 178, 1), -20%)
+                                    ChevronHoverFill: =RGBA(255, 255, 255, 1)
+                                    Default: =""
+                                    DisabledBorderColor: =RGBA(175, 191, 224, 1)
+                                    Font: =Font.'Open Sans'
+                                    Height: =30
+                                    HoverFill: =RGBA(186, 202, 226, 1)
+                                    Items: |-
+                                      =[
+                                          "",
+                                          "Buraco na tela",
+                                          "Buraco no muro",
+                                          "Cerca baixa",
+                                          "Dobramento da tela",
+                                          "Falta de baldrame",
+                                          "Falta de barreira física",
+                                          "Falta de concertina",
+                                          "Galhos e arbustos que facilitam acesso",
+                                          "Muro baixo",
+                                          "Queda do muro",
+                                          "Outros"
+                                      ]
+                                    Items.Value: =Value
+                                    LayoutMaxHeight: =
+                                    LayoutMaxWidth: =
+                                    OnChange: =
+                                    PressedColor: =RGBA(255, 255, 255, 1)
+                                    PressedFill: =RGBA(0, 18, 107, 1)
+                                    SelectionColor: =RGBA(255, 255, 255, 1)
+                                    SelectionFill: =RGBA(56, 96, 178, 1)
+                                    Size: =11
+                                    Width: =280
+                                    X: =815
+                                    Y: =67
+                              - Rectangle22_7:
+                                  Control: Rectangle@2.3.0
+                                  Properties:
+                                    AlignInContainer: =AlignInContainer.Stretch
+                                    BorderColor: =RGBA(0, 0, 0, 0)
+                                    Fill: =RGBA(0, 0, 0, 0)
+                                    Height: =5
+                                    LayoutMaxHeight: =
+                                    LayoutMaxWidth: =
+                              - TxtAceIndFauCausaProvavelOutros:
+                                  Control: Classic/TextInput@2.3.2
+                                  Properties:
+                                    AlignInContainer: =AlignInContainer.Stretch
+                                    BorderColor: =If(IsBlank(Self.Text),varBordaDefault)
+                                    Default: =""
+                                    DisabledBorderColor: =RGBA(136, 160, 209, 1)
+                                    DisplayMode: |-
+                                      =If(
+                                          cmbAceIndFauCausaProvavel.Selected.Value = "Outros",
+                                          DisplayMode.Edit,
+                                          DisplayMode.Disabled
+                                      )
+                                    Font: =Font.'Open Sans'
+                                    Height: =30
+                                    HintText: ="Outros..."
+                                    HoverBorderColor: =RGBA(136, 160, 209, 1)
+                                    HoverFill: =RGBA(186, 202, 226, 1)
+                                    LayoutMaxHeight: =
+                                    LayoutMaxWidth: =
+                                    RadiusBottomLeft: =0
+                                    RadiusBottomRight: =0
+                                    RadiusTopLeft: =0
+                                    RadiusTopRight: =0
+                                    Size: =11
+                                    Width: =130
+                                    X: =650
+                                    Y: =67
+                              - Label20_554:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    AlignInContainer: =AlignInContainer.Stretch
+                                    BorderColor: =RGBA(0, 18, 107, 1)
+                                    Color: =RGBA(56, 96, 178, 1)
+                                    Fill: =RGBA(255, 255, 255, 1)
+                                    Font: =Font.'Open Sans'
+                                    Height: =30
+                                    Italic: =true
+                                    LayoutMaxHeight: =
+                                    LayoutMaxWidth: =
+                                    Size: =11
+                                    Text: ="Descrição da ocorrência:"
+                                    Width: =583
+                                    X: =7
+                                    Y: =7
+                              - TxtAceIndFauDescOcorrencia:
+                                  Control: Classic/TextInput@2.3.2
+                                  Properties:
+                                    AlignInContainer: =AlignInContainer.Stretch
+                                    BorderColor: =If(IsBlank(Self.Text),varBordaDefault)
+                                    Default: =""
+                                    DisabledBorderColor: =RGBA(136, 160, 209, 1)
+                                    FillPortions: =1
+                                    Font: =Font.'Open Sans'
+                                    Height: =190
+                                    HoverBorderColor: =RGBA(136, 160, 209, 1)
+                                    HoverFill: =RGBA(186, 202, 226, 1)
+                                    LayoutMaxHeight: =
+                                    LayoutMaxWidth: =
+                                    Mode: =TextMode.MultiLine
+                                    RadiusBottomLeft: =0
+                                    RadiusBottomRight: =0
+                                    RadiusTopLeft: =0
+                                    RadiusTopRight: =0
+                                    Size: =12
+                                    Tooltip: ="somente números"
+                                    Width: =425
+                                    X: =664
+                                    Y: =106
+                        - Label20_549:
+                            Control: Label@2.5.1
+                            Properties:
+                              BorderColor: =RGBA(0, 18, 107, 1)
+                              Color: =RGBA(56, 96, 178, 1)
+                              Fill: =RGBA(255, 255, 255, 1)
+                              Font: =Font.'Open Sans'
+                              FontWeight: =FontWeight.Semibold
+                              Height: =22
+                              Italic: =true
+                              Size: =12
+                              Text: ="Fauna:"
+                              Width: =65
+                              X: =26
+                              Y: =8
+            - Container83_111:
+                Control: GroupContainer@1.5.0
+                Variant: AutoLayout
+                Properties:
+                  DropShadow: =DropShadow.None
+                  FillPortions: =0
+                  Height: =40
+                  LayoutAlignItems: =LayoutAlignItems.Center
+                  LayoutDirection: =LayoutDirection.Horizontal
+                  LayoutGap: =20
+                  LayoutJustifyContent: =LayoutJustifyContent.End
+                  LayoutMaxHeight: =
+                  LayoutMaxWidth: =
+                  PaddingBottom: =5
+                  PaddingLeft: =20
+                  PaddingRight: =20
+                  PaddingTop: =5
+                  RadiusBottomLeft: =0
+                  RadiusBottomRight: =0
+                  RadiusTopLeft: =0
+                  RadiusTopRight: =0
+                  Visible: =Host.OSType = "Windows"
+                  Width: =1729.08
+                  Y: =40
+                Children:
+                  - ButtonCanvas7_81:
+                      Control: Button@0.0.45
+                      Properties:
+                        Align: =Align.Center
+                        AlignInContainer: =AlignInContainer.Center
+                        Appearance: ='ButtonCanvas.Appearance'.Secondary
+                        BorderRadius: =4
+                        BorderStyle: =BorderStyle.None
+                        FontSize: =20
+                        Icon: ="DismissCircle"
+                        IconStyle: ='ButtonCanvas.IconStyle'.Filled
+                        Layout: ='ButtonCanvas.Layout'.IconBefore
+                        LayoutMaxHeight: =
+                        LayoutMaxWidth: =
+                        OnSelect: =Navigate(ScreenFauna,ScreenTransition.Fade)
+                        PaddingBottom: =0
+                        PaddingLeft: =0
+                        PaddingRight: =0
+                        PaddingTop: =0
+                        Text: ="Cancelar"
+                        Width: =150
+                  - ButtonCanvas7_82:
+                      Control: Button@0.0.45
+                      Properties:
+                        Align: =Align.Center
+                        AlignInContainer: =AlignInContainer.Center
+                        Appearance: ='ButtonCanvas.Appearance'.Primary
+                        BorderRadius: =4
+                        BorderStyle: =BorderStyle.None
+                        FontSize: =20
+                        FontWeight: =FontWeight.Normal
+                        Icon: ="Save"
+                        IconStyle: ='ButtonCanvas.IconStyle'.Filled
+                        Layout: ='ButtonCanvas.Layout'.IconBefore
+                        LayoutMaxHeight: =
+                        LayoutMaxWidth: =
+                        OnSelect: |-
+                          =UpdateContext(
+                              {
+                                  var_visibleSpiner: true,
+                                  var_formErro: false,
+                                  var_aceIndFaunaId: Value(
+                                      First(
+                                          SortByColumns(
+                                              Filter(
+                                                  '14.7-tbl_AcessIndFauna',
+                                                  aceIndFauna_id > 0
+                                              ),
+                                              "ID",
+                                              SortOrder.Descending
+                                          )
+                                      ).aceIndFauna_id + 1
+                                  )
+                              }
+                          );
+                          Switch(
+                              true,
+                              cmbAceIndFauHoraCadastro.Selected.Value = "hor",
+                              UpdateContext(
+                                  {
+                                      var_formErro: true,
+                                      varBordaDefault: Color.Red
+                                  }
+                              ),
+                              cmbAceIndFauMinuCadastro.Selected.Value = "min",
+                              UpdateContext(
+                                  {
+                                      var_formErro: true,
+                                      varBordaDefault: Color.Red
+                                  }
+                              ),
+                              IsBlank(TxtAceIndFauLocal.Text) = true,
+                              UpdateContext(
+                                  {
+                                      var_formErro: true,
+                                      varBordaDefault: Color.Red
+                                  }
+                              ),
+                              IsBlank(TxtAceIndFauMapaGrade.Text) = true,
+                              UpdateContext(
+                                  {
+                                      var_formErro: true,
+                                      varBordaDefault: Color.Red
+                                  }
+                              ),
+                              IsBlank(cmbAceIndFauCausaProvavel.Selected.Value) = true,
+                              UpdateContext(
+                                  {
+                                      var_formErro: true,
+                                      varBordaDefault: Color.Red
+                                  }
+                              ),
+                              cmbAceIndFauCausaProvavel.Selected.Value = "Outros" And IsBlank(TxtAceIndFauCausaProvavelOutros.Text) = true,
+                              UpdateContext(
+                                  {
+                                      var_formErro: true,
+                                      varBordaDefault: Color.Red
+                                  }
+                              ),
+                              IsBlank(TxtAceIndFauDescOcorrencia.Text) = true,
+                              UpdateContext(
+                                  {
+                                      var_formErro: true,
+                                      varBordaDefault: Color.Red
+                                  }
+                              ),
+                              /*CountRows(col_aceIndFauGalleryImg) = 0; //validar se possui fotos
+                              UpdateContext(
+                                  {
+                                      var_formErro: true;
+                                      varBordaDefault: Color.Red
+                                  }
+                              );*/
+                              UpdateContext({var_formErro: false})
+                          );
+                          If(
+                              var_formErro = true,
+                              Notify(
+                                  "Atenção todas as informações devem ser preenchidas!",
+                                  NotificationType.Error
+                              ),
+                              //Insert de dados no database------------------------------------------------------------------------------
+                              Patch(
+                                  '14.7-tbl_AcessIndFauna',
+                                  Defaults('14.7-tbl_AcessIndFauna'),
+                                  {
+                                      aceIndFauna_id: var_aceIndFaunaId,
+                                      aceIndFauna_data: dtpAceIndFauDataCadastro.SelectedDate,
+                                      aceIndFauna_hora: cmbAceIndFauHoraCadastro.Selected.Value & ":" & cmbAceIndFauMinuCadastro.Selected.Value,
+                                      aceIndFauna_local: TxtAceIndFauLocal.Text,
+                                      aceIndFauna_mapaGrade: TxtAceIndFauMapaGrade.Text,
+                                      aceIndFauna_causa: cmbAceIndFauCausaProvavel.Selected.Value,
+                                      aceIndFauna_causaOutros: TxtAceIndFauCausaProvavelOutros.Text,
+                                      aceIndFauna_descOcorrencia: TxtAceIndFauDescOcorrencia.Text,
+                                      aceIndFauna_bloco: varBlocoUser,
+                                      aceIndFauna_aeroporto: varAeroUser
+                                  }
+                              );
+                              //insert das imagens
+                          ForAll(
+                                  col_aceIndFauGalleryImg,
+                                  Patch(
+                                      '14.7-tbl_AcessIndFaunaImg',
+                                      Defaults('14.7-tbl_AcessIndFaunaImg'),
+                                      {
+                                          aceIndFaunaImg_idOcorrencia: var_aceIndFaunaId,
+                                          aceIndFaunaImg_imagem: img
+                                      }
+                                  )
+                              );
+                              Select(ButtonResetFormAceIndFauna);
+                              Navigate(
+                                  ScreenSucesso,
+                                  ScreenTransition.Fade,
+                                  {var_navigateSucess: ScreenFauna}
+                              )
+                          );
+                          UpdateContext({var_visibleSpiner: false})
+                        PaddingBottom: =0
+                        PaddingLeft: =0
+                        PaddingRight: =0
+                        PaddingTop: =0
+                        Text: ="Salvar"
+                        Width: =150

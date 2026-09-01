@@ -1,0 +1,679 @@
+Screens:
+  scrFrotaPainel:
+    Properties:
+      OnVisible: |-
+        =UpdateContext(
+            {
+                locTotal: CountRows(colFrota),
+                locDisponivel: CountRows(Filter(colFrota, situacao_operacional = "Disponível")),
+                locEmUso: CountRows(Filter(colFrota, situacao_operacional = "Em Uso")),
+                locManutencao: CountRows(Filter(colFrota, situacao_operacional = "Em Manutenção")),
+                locParado: CountRows(
+                    Filter(
+                        colFrota,
+                        situacao_operacional = "Indisponível" Or situacao_operacional = "Bloqueado"
+                    )
+                ),
+                locInativo: CountRows(Filter(colFrota, status <> "Ativo")),
+                locLadoAr: CountRows(Filter(colFrota, circula_lado_ar = 1)),
+                locSemCodigo: CountRows(Filter(colFrota, IsBlank(codigo_ativo))),
+                locSemGestor: CountRows(Filter(colFrota, IsBlank(gestor_email))),
+                locSemPlaca: CountRows(
+                    Filter(
+                        colFrota,
+                        IsBlank(placa),
+                        tipo_ativo in ForAll(Filter(colTipoAtivo, ExigePlaca) As _t, {Value: _t.Tipo}).Value
+                    )
+                ),
+                locMedidorParado: CountRows(
+                    Filter(
+                        colFrota,
+                        tipo_medidor <> "Não se aplica",
+                        IsBlank(medidor_data) Or medidor_data < DateAdd(Today(), -90, TimeUnit.Days)
+                    )
+                )
+            }
+        );
+        ClearCollect(
+            colDistAero,
+            ForAll(
+                varAerosPermitidos As _a,
+                {
+                    IATA: _a.IATA,
+                    Aeroporto: _a.Aeroporto,
+                    Bloco: _a.Bloco,
+                    Qtd: CountRows(Filter(colFrota, aeroporto = _a.IATA)),
+                    Parados: CountRows(
+                        Filter(
+                            colFrota,
+                            aeroporto = _a.IATA,
+                            situacao_operacional <> "Disponível",
+                            situacao_operacional <> "Em Uso"
+                        )
+                    )
+                }
+            )
+        );
+        UpdateContext({locMaxAero: Max(Max(colDistAero, Qtd), 1)})
+    Children:
+      - cntShellPnl:
+          Control: GroupContainer@1.5.0
+          Variant: AutoLayout
+          Properties:
+            DropShadow: =DropShadow.None
+            Fill: =thmFundo
+            Height: =Parent.Height
+            LayoutAlignItems: =LayoutAlignItems.Stretch
+            LayoutDirection: =LayoutDirection.Horizontal
+            RadiusBottomLeft: =0
+            RadiusBottomRight: =0
+            RadiusTopLeft: =0
+            RadiusTopRight: =0
+            Width: =Parent.Width
+          Children:
+            - cntMenuPnl:
+                Control: GroupContainer@1.5.0
+                Variant: AutoLayout
+                Properties:
+                  DropShadow: =DropShadow.None
+                  Fill: =thmPrimariaEscura
+                  FillPortions: =0
+                  LayoutAlignItems: =LayoutAlignItems.Stretch
+                  LayoutDirection: =LayoutDirection.Vertical
+                  LayoutGap: =10
+                  LayoutMinHeight: =0
+                  PaddingBottom: =14
+                  PaddingLeft: =12
+                  PaddingRight: =12
+                  PaddingTop: =16
+                  RadiusBottomLeft: =0
+                  RadiusBottomRight: =0
+                  RadiusTopLeft: =0
+                  RadiusTopRight: =0
+                  Width: =If(varMenuAberto, 236, 76)
+                Children:
+                  - htmMenuMarcaPnl:
+                      Control: HtmlViewer@2.1.0
+                      Properties:
+                        AlignInContainer: =AlignInContainer.Start
+                        AutoHeight: =true
+                        Color: =thmTextoBarra
+                        Fill: =thmPrimariaEscura
+                        Font: =thmFonte
+                        HtmlText: |-
+                          ="<div style='" & htmlFonte & "color:" & hxTextoBarra & ";'>" &
+                          If(
+                              varMenuAberto,
+                              "<div style='font-size:10px;letter-spacing:.24em;font-weight:700;opacity:.6;'>MOTIVA</div><div style='font-size:16px;font-weight:800;letter-spacing:.01em;margin-top:2px;'>GESTÃO DE FROTAS</div>",
+                              "<div style='font-size:17px;font-weight:800;text-align:left; margin-left:12px;'>GF</div>"
+                          ) &
+                          "</div>"
+                        PaddingBottom: =14
+                        PaddingLeft: =4
+                        PaddingRight: =0
+                        PaddingTop: =0
+                        Size: =11
+                  - cntMenuNavPnl:
+                      Control: GroupContainer@1.5.0
+                      Variant: AutoLayout
+                      Properties:
+                        DropShadow: =DropShadow.None
+                        Fill: =thmPrimariaEscura
+                        LayoutAlignItems: =LayoutAlignItems.Stretch
+                        LayoutDirection: =LayoutDirection.Vertical
+                        LayoutGap: =10
+                        LayoutMinHeight: =0
+                        LayoutMinWidth: =0
+                        LayoutOverflowY: =LayoutOverflow.Scroll
+                        RadiusBottomLeft: =0
+                        RadiusBottomRight: =0
+                        RadiusTopLeft: =0
+                        RadiusTopRight: =0
+                      Children:
+                        - btnMenuPainelPnl:
+                            Control: Button@0.0.45
+                            Properties:
+                              Align: =Align.Left
+                              AlignInContainer: =AlignInContainer.Stretch
+                              Appearance: ='ButtonCanvas.Appearance'.Primary
+                              BasePaletteColor: =thmPrimaria
+                              BorderRadius: =0
+                              FontColor: =thmTextoBarra
+                              FontSize: =14
+                              FontWeight: =FontWeight.Semibold
+                              Height: =44
+                              Icon: ="Eye"
+                              IconStyle: ='ButtonCanvas.IconStyle'.Filled
+                              LayoutMinWidth: =0
+                              OnSelect: =Navigate(scrFrotaPainel, ScreenTransition.Fade)
+                              PaddingLeft: =18
+                              Text: =If(varMenuAberto, "PAINEL", "")
+                        - btnMenuFrotaPnl:
+                            Control: Button@0.0.45
+                            Properties:
+                              Align: =Align.Left
+                              AlignInContainer: =AlignInContainer.Stretch
+                              Appearance: ='ButtonCanvas.Appearance'.Secondary
+                              BasePaletteColor: =thmTextoBarra
+                              BorderRadius: =0
+                              FontColor: =thmTextoBarra
+                              FontSize: =14
+                              FontWeight: =FontWeight.Semibold
+                              Height: =44
+                              Icon: ="Search"
+                              IconStyle: ='ButtonCanvas.IconStyle'.Filled
+                              LayoutMinWidth: =0
+                              OnSelect: |-
+                                =Set(varFiltroAero, "Todos");
+                                Navigate(scrFrotaLista, ScreenTransition.Fade)
+                              PaddingLeft: =18
+                              Text: =If(varMenuAberto, "CONSULTAR FROTA", "")
+                        - btnMenuNovoPnl:
+                            Control: Button@0.0.45
+                            Properties:
+                              Align: =Align.Left
+                              AlignInContainer: =AlignInContainer.Stretch
+                              Appearance: ='ButtonCanvas.Appearance'.Secondary
+                              BasePaletteColor: =thmTextoBarra
+                              BorderRadius: =0
+                              DisplayMode: =If(varPerfilNivel >= 3, DisplayMode.Edit, DisplayMode.Disabled)
+                              FontColor: =thmTextoBarra
+                              FontSize: =14
+                              FontWeight: =FontWeight.Semibold
+                              Height: =44
+                              Icon: ="Add"
+                              IconStyle: ='ButtonCanvas.IconStyle'.Filled
+                              LayoutMinWidth: =0
+                              OnSelect: |-
+                                =Set(varFormModo, "Novo");
+                                Set(
+                                    varFormRec,
+                                    Patch(
+                                        Defaults(tb_ativosFrota),
+                                        {
+                                            aeroporto: varAeroUser,
+                                            status: "Ativo",
+                                            situacao_operacional: "Disponível",
+                                            tipo_propriedade: "Próprio",
+                                            circula_lado_ar: 0,
+                                            medidor_km: 0,
+                                            medidor_horas: 0
+                                        }
+                                    )
+                                );
+                                Navigate(scrFrotaForm, ScreenTransition.Fade)
+                              PaddingLeft: =18
+                              Text: =If(varMenuAberto, "NOVO ATIVO", "")
+                  - htmMenuUsuarioPnl:
+                      Control: HtmlViewer@2.1.0
+                      Properties:
+                        AlignInContainer: =AlignInContainer.Stretch
+                        AutoHeight: =true
+                        Color: =thmTextoBarra
+                        Fill: =thmPrimariaEscura
+                        Font: =thmFonte
+                        HtmlText: |-
+                          ="<div style='" & htmlFonte & "border-top:1px solid " & hxBordaBarra & ";padding-top:12px;'>" &
+                          If(
+                              varMenuAberto,
+                              "<div style='font-size:12px;font-weight:700;color:" & hxTextoBarra & ";'>" & varUsuario.nome_usuario & "</div><div style='font-size:10px;color:" & hxTextoBarraFraco & ";margin-top:2px;'>" & Upper(varUsuario.perfil) & " &middot; " & varAeroUser & "</div>",
+                              "<div style='font-size:11px;font-weight:700;color:" & hxTextoBarraSuave & ";text-align:center;'>" & varAeroUser & "</div>"
+                          ) &
+                          "</div>"
+                        PaddingBottom: =10
+                        PaddingLeft: =4
+                        PaddingRight: =0
+                        PaddingTop: =0
+                        Size: =11
+                  - btnMenuRecolherPnl:
+                      Control: Button@0.0.45
+                      Properties:
+                        Align: =Align.Left
+                        AlignInContainer: =AlignInContainer.Stretch
+                        Appearance: ='ButtonCanvas.Appearance'.Secondary
+                        BasePaletteColor: =thmTextoBarra
+                        BorderRadius: =0
+                        FontColor: =thmTextoBarra
+                        FontSize: =14
+                        FontWeight: =FontWeight.Semibold
+                        Height: =38
+                        Icon: ="ChevronRight"
+                        IconStyle: ='ButtonCanvas.IconStyle'.Filled
+                        LayoutMinWidth: =0
+                        OnSelect: =Set(varMenuAberto, !varMenuAberto)
+                        PaddingLeft: =18
+                        Text: =If(varMenuAberto, "RECOLHER MENU", "")
+                  - btnMenuSairPnl:
+                      Control: Button@0.0.45
+                      Properties:
+                        Align: =Align.Left
+                        AlignInContainer: =AlignInContainer.Stretch
+                        Appearance: ='ButtonCanvas.Appearance'.Secondary
+                        BasePaletteColor: =thmTextoBarra
+                        BorderRadius: =0
+                        FontColor: =thmTextoBarra
+                        FontSize: =14
+                        FontWeight: =FontWeight.Semibold
+                        Height: =38
+                        Icon: ="ArrowExit"
+                        IconStyle: ='ButtonCanvas.IconStyle'.Filled
+                        LayoutMinWidth: =0
+                        OnSelect: =Navigate(scrLoginContexto, ScreenTransition.Fade)
+                        PaddingLeft: =18
+                        Text: =If(varMenuAberto, "SAIR DO SISTEMA", "")
+            - cntPainelRaiz:
+                Control: GroupContainer@1.5.0
+                Variant: AutoLayout
+                Properties:
+                  DropShadow: =DropShadow.None
+                  Fill: =thmFundo
+                  LayoutDirection: =LayoutDirection.Vertical
+                  RadiusBottomLeft: =0
+                  RadiusBottomRight: =0
+                  RadiusTopLeft: =0
+                  RadiusTopRight: =0
+                Children:
+                  - cntPainelTopo:
+                      Control: GroupContainer@1.5.0
+                      Variant: AutoLayout
+                      Properties:
+                        DropShadow: =DropShadow.None
+                        Fill: =thmPrimaria
+                        FillPortions: =0
+                        Height: =72
+                        LayoutAlignItems: =LayoutAlignItems.Center
+                        LayoutDirection: =LayoutDirection.Horizontal
+                        LayoutGap: =12
+                        LayoutJustifyContent: =LayoutJustifyContent.SpaceBetween
+                        LayoutMinHeight: =0
+                        PaddingLeft: =26
+                        PaddingRight: =26
+                        RadiusBottomLeft: =0
+                        RadiusBottomRight: =0
+                        RadiusTopLeft: =0
+                        RadiusTopRight: =0
+                      Children:
+                        - htmPainelTitulo:
+                            Control: HtmlViewer@2.1.0
+                            Properties:
+                              AutoHeight: =true
+                              Color: =thmTextoBarra
+                              Fill: =thmPrimaria
+                              FillPortions: =1
+                              Font: =thmFonte
+                              HtmlText: |-
+                                ="<div style='" & htmlFonte & "color:" & hxTextoBarra & ";'>" &
+                                "<div style='font-size:19px;font-weight:800;letter-spacing:.02em;line-height:1.1;'>PAINEL DA FROTA</div>" &
+                                "<div style='font-size:11px;opacity:.75;margin-top:3px;'>" & varUsuario.nome_usuario & " &nbsp;&middot;&nbsp; " & Upper(varUsuario.perfil) & " &nbsp;&middot;&nbsp; " & CountRows(varAerosPermitidos) & " aeroporto(s) &nbsp;&middot;&nbsp; cache de " & Text(varCacheEm, "HH:mm") & "</div>" &
+                                "</div>"
+                              PaddingBottom: =0
+                              PaddingLeft: =0
+                              PaddingRight: =0
+                              PaddingTop: =0
+                              Size: =11
+                        - cntPainelAcoes:
+                            Control: GroupContainer@1.5.0
+                            Variant: AutoLayout
+                            Properties:
+                              DropShadow: =DropShadow.None
+                              Fill: =thmTransparente
+                              FillPortions: =0
+                              LayoutAlignItems: =LayoutAlignItems.Center
+                              LayoutDirection: =LayoutDirection.Horizontal
+                              LayoutGap: =10
+                              LayoutJustifyContent: =LayoutJustifyContent.End
+                              LayoutMinHeight: =0
+                              RadiusBottomLeft: =0
+                              RadiusBottomRight: =0
+                              RadiusTopLeft: =0
+                              RadiusTopRight: =0
+                              Width: =180
+                            Children:
+                              - btnPainelAtualizar:
+                                  Control: Button@0.0.45
+                                  Properties:
+                                    Appearance: ='ButtonCanvas.Appearance'.Secondary
+                                    BasePaletteColor: =thmBotaoBarra
+                                    BorderRadius: =0
+                                    FontColor: =thmTextoBarra
+                                    FontSize: =14
+                                    FontWeight: =FontWeight.Semibold
+                                    Height: =40
+                                    Icon: ="ArrowClockwise"
+                                    IconStyle: ='ButtonCanvas.IconStyle'.Filled
+                                    OnSelect: |-
+                                      =If(
+                                          !IsBlank(varOcupadoDesde) && DateDiff(varOcupadoDesde, Now(), TimeUnit.Seconds) < 20,
+                                          Notify("Aguarde: a atualização anterior ainda está em andamento.", NotificationType.Warning, 3000),
+                                          Set(varOcupadoDesde, Now());
+                                          Clear(colFrota);
+                                          ForAll(
+                                              varAerosPermitidos As _aero,
+                                              Collect(
+                                                  colFrota,
+                                                  ForAll(
+                                                      Filter(
+                                                          tb_ativosFrota,
+                                                          ativo = 1,
+                                                          aeroporto = _aero.IATA
+                                                      ) As _r,
+                                                      {
+                                                          ID: _r.ID,
+                                                          codigo_ativo: _r.codigo_ativo,
+                                                          identificacao_visual: _r.identificacao_visual,
+                                                          placa: _r.placa,
+                                                          tipo_ativo: _r.tipo_ativo,
+                                                          categoria_uso: _r.categoria_uso,
+                                                          marca: _r.marca,
+                                                          modelo: _r.modelo,
+                                                          ano_fabricacao: _r.ano_fabricacao,
+                                                          combustivel: _r.combustivel,
+                                                          aeroporto: _r.aeroporto,
+                                                          bloco: _r.bloco,
+                                                          base_operacional: _r.base_operacional,
+                                                          centro_custo: _r.centro_custo,
+                                                          setor_responsavel: _r.setor_responsavel,
+                                                          gestor_nome: _r.gestor_nome,
+                                                          gestor_email: _r.gestor_email,
+                                                          status: _r.status,
+                                                          situacao_operacional: _r.situacao_operacional,
+                                                          motivo_situacao: _r.motivo_situacao,
+                                                          tipo_medidor: _r.tipo_medidor,
+                                                          medidor_km: _r.medidor_km,
+                                                          medidor_horas: _r.medidor_horas,
+                                                          medidor_data: _r.medidor_data,
+                                                          tipo_propriedade: _r.tipo_propriedade,
+                                                          fornecedor_txt: _r.fornecedor_txt,
+                                                          circula_lado_ar: _r.circula_lado_ar
+                                                      }
+                                                  )
+                                              )
+                                          );
+                                          Set(varCacheEm, Now());
+                                          Set(varCacheTruncado, CountRows(colFrota) >= 2000);
+                                          Set(varOcupadoDesde, Blank());
+                                          Notify(
+                                              "Frota atualizada: " & CountRows(colFrota) & " ativos em " & CountRows(varAerosPermitidos) & " aeroporto(s).",
+                                              NotificationType.Success,
+                                              2500
+                                          );
+                                          // espelho do OnVisible — Navigate para a própria tela não o reexecuta
+                                          UpdateContext(
+                                              {
+                                                  locTotal: CountRows(colFrota),
+                                                  locDisponivel: CountRows(Filter(colFrota, situacao_operacional = "Disponível")),
+                                                  locEmUso: CountRows(Filter(colFrota, situacao_operacional = "Em Uso")),
+                                                  locManutencao: CountRows(Filter(colFrota, situacao_operacional = "Em Manutenção")),
+                                                  locParado: CountRows(
+                                                      Filter(
+                                                          colFrota,
+                                                          situacao_operacional = "Indisponível" Or situacao_operacional = "Bloqueado"
+                                                      )
+                                                  ),
+                                                  locInativo: CountRows(Filter(colFrota, status <> "Ativo")),
+                                                  locLadoAr: CountRows(Filter(colFrota, circula_lado_ar = 1)),
+                                                  locSemCodigo: CountRows(Filter(colFrota, IsBlank(codigo_ativo))),
+                                                  locSemGestor: CountRows(Filter(colFrota, IsBlank(gestor_email))),
+                                                  locSemPlaca: CountRows(
+                                                      Filter(
+                                                          colFrota,
+                                                          IsBlank(placa),
+                                                          tipo_ativo in ForAll(Filter(colTipoAtivo, ExigePlaca) As _t, {Value: _t.Tipo}).Value
+                                                      )
+                                                  ),
+                                                  locMedidorParado: CountRows(
+                                                      Filter(
+                                                          colFrota,
+                                                          tipo_medidor <> "Não se aplica",
+                                                          IsBlank(medidor_data) Or medidor_data < DateAdd(Today(), -90, TimeUnit.Days)
+                                                      )
+                                                  )
+                                              }
+                                          );
+                                          ClearCollect(
+                                              colDistAero,
+                                              ForAll(
+                                                  varAerosPermitidos As _a,
+                                                  {
+                                                      IATA: _a.IATA,
+                                                      Aeroporto: _a.Aeroporto,
+                                                      Bloco: _a.Bloco,
+                                                      Qtd: CountRows(Filter(colFrota, aeroporto = _a.IATA)),
+                                                      Parados: CountRows(
+                                                          Filter(
+                                                              colFrota,
+                                                              aeroporto = _a.IATA,
+                                                              situacao_operacional <> "Disponível",
+                                                              situacao_operacional <> "Em Uso"
+                                                          )
+                                                      )
+                                                  }
+                                              )
+                                          );
+                                          UpdateContext({locMaxAero: Max(Max(colDistAero, Qtd), 1)})
+                                      )
+                                    Text: ="ATUALIZAR"
+                                    Width: =160
+                  - cntPainelCorpo:
+                      Control: GroupContainer@1.5.0
+                      Variant: AutoLayout
+                      Properties:
+                        DropShadow: =DropShadow.None
+                        Fill: =thmFundo
+                        LayoutAlignItems: =LayoutAlignItems.Stretch
+                        LayoutDirection: =LayoutDirection.Vertical
+                        LayoutGap: =26
+                        LayoutMinHeight: =0
+                        LayoutOverflowY: =LayoutOverflow.Scroll
+                        PaddingBottom: =26
+                        PaddingLeft: =26
+                        PaddingRight: =26
+                        PaddingTop: =26
+                        RadiusBottomLeft: =0
+                        RadiusBottomRight: =0
+                        RadiusTopLeft: =0
+                        RadiusTopRight: =0
+                      Children:
+                        - htmPainelLeitura:
+                            Control: HtmlViewer@2.1.0
+                            Properties:
+                              AlignInContainer: =AlignInContainer.Stretch
+                              AutoHeight: =true
+                              Fill: =thmFundo
+                              Font: =thmFonte
+                              HtmlText: |-
+                                ="<div style='" & htmlFonte & "background:" & hxSuperficie & ";border:1px solid " & hxBorda & ";border-left:4px solid " & If(locParado + locSemCodigo + locMedidorParado > 0, hxAcao, hxVerde) & ";padding:14px 18px;'>" &
+                                "<div style='font-size:10px;font-weight:800;letter-spacing:.14em;color:" & hxTextoFraco & ";'>LEITURA DE HOJE</div>" &
+                                "<div style='font-size:14px;line-height:1.7;color:" & hxTexto & ";margin-top:6px;'>" &
+                                    If(
+                                        locTotal = 0,
+                                        "O cache está vazio. Confira se há ativos cadastrados nos aeroportos do seu perfil e use ATUALIZAR.",
+                                        If(
+                                            locParado + locSemCodigo + locMedidorParado = 0,
+                                            "<b>" & Text(locTotal, "#,##0") & " ativos</b> nos aeroportos do seu acesso, todos com cadastro íntegro e medidor em dia.",
+                                            "<b>" & Text(locTotal, "#,##0") & " ativos</b> no seu acesso" &
+                                            If(locParado > 0, " &mdash; <b>" & locParado & "</b> parado(s)", "") &
+                                            If(locMedidorParado > 0, ", <b>" & locMedidorParado & "</b> sem leitura de medidor", "") &
+                                            If(locSemCodigo > 0, ", <b>" & locSemCodigo & "</b> sem código FRT", "") &
+                                            "."
+                                        )
+                                    ) &
+                                "</div></div>"
+                              PaddingBottom: =0
+                              PaddingLeft: =0
+                              PaddingRight: =0
+                              PaddingTop: =0
+                              Size: =11
+                        - htmPainelKpis:
+                            Control: HtmlViewer@2.1.0
+                            Properties:
+                              AlignInContainer: =AlignInContainer.Stretch
+                              AutoHeight: =true
+                              Fill: =thmFundo
+                              Font: =thmFonte
+                              HtmlText: |-
+                                ="<table style='width:100%;border-collapse:separate;border-spacing:13px 0;" & htmlFonte & "'><tr>" &
+                                "<td style='width:25%;vertical-align:top;'><div style='background:" & hxSuperficie & ";border:1px solid " & hxBorda & ";border-top:3px solid " & hxPrimaria & ";padding:16px 18px 18px 18px;'>" &
+                                "<div style='font-size:10px;font-weight:700;letter-spacing:.14em;color:" & hxTextoFraco & ";'>TOTAL DA FROTA</div>" &
+                                "<div style='font-size:34px;font-weight:800;color:" & hxPrimaria & ";line-height:1.15;margin-top:8px;'>" & Text(locTotal, "#,##0") & "</div>" &
+                                "<div style='font-size:11px;color:" & hxTextoFraco & ";margin-top:2px;'>" & Text(locLadoAr, "#,##0") & " circulam no lado ar</div></div></td>" &
+                                "<td style='width:25%;vertical-align:top;'><div style='background:" & hxSuperficie & ";border:1px solid " & hxBorda & ";border-top:3px solid " & hxVerde & ";padding:16px 18px 18px 18px;'>" &
+                                "<div style='font-size:10px;font-weight:700;letter-spacing:.14em;color:" & hxTextoFraco & ";'>DISPONÍVEIS</div>" &
+                                "<div style='font-size:34px;font-weight:800;color:" & hxVerde & ";line-height:1.15;margin-top:8px;'>" & Text(locDisponivel, "#,##0") & "</div>" &
+                                "<div style='font-size:11px;color:" & hxTextoFraco & ";margin-top:2px;'>" & If(locTotal > 0, Text(locDisponivel / locTotal, "0%"), "-") & " da frota &nbsp;&middot;&nbsp; " & Text(locEmUso, "#,##0") & " em uso</div></div></td>" &
+                                "<td style='width:25%;vertical-align:top;'><div style='background:" & hxSuperficie & ";border:1px solid " & hxBorda & ";border-top:3px solid " & hxAmbar & ";padding:16px 18px 18px 18px;'>" &
+                                "<div style='font-size:10px;font-weight:700;letter-spacing:.14em;color:" & hxTextoFraco & ";'>EM MANUTENÇÃO</div>" &
+                                "<div style='font-size:34px;font-weight:800;color:" & hxAmbar & ";line-height:1.15;margin-top:8px;'>" & Text(locManutencao, "#,##0") & "</div>" &
+                                "<div style='font-size:11px;color:" & hxTextoFraco & ";margin-top:2px;'>" & Text(locMedidorParado, "#,##0") & " sem leitura há 90 dias</div></div></td>" &
+                                "<td style='width:25%;vertical-align:top;'><div style='background:" & hxSuperficie & ";border:1px solid " & hxBorda & ";border-top:3px solid " & hxVermelho & ";padding:16px 18px 18px 18px;'>" &
+                                "<div style='font-size:10px;font-weight:700;letter-spacing:.14em;color:" & hxTextoFraco & ";'>PARADOS</div>" &
+                                "<div style='font-size:34px;font-weight:800;color:" & hxVermelho & ";line-height:1.15;margin-top:8px;'>" & Text(locParado, "#,##0") & "</div>" &
+                                "<div style='font-size:11px;color:" & hxTextoFraco & ";margin-top:2px;'>indisponíveis ou bloqueados</div></div></td>" &
+                                "</tr></table>"
+                              PaddingBottom: =0
+                              PaddingLeft: =0
+                              PaddingRight: =0
+                              PaddingTop: =0
+                              Size: =11
+                        - cntPainelLinha2:
+                            Control: GroupContainer@1.5.0
+                            Variant: AutoLayout
+                            Properties:
+                              DropShadow: =DropShadow.None
+                              Fill: =thmTransparente
+                              LayoutAlignItems: =LayoutAlignItems.Stretch
+                              LayoutDirection: =LayoutDirection.Horizontal
+                              LayoutGap: =26
+                              LayoutMinHeight: =320
+                              PaddingBottom: =2
+                              PaddingLeft: =15
+                              PaddingRight: =15
+                              PaddingTop: =2
+                              RadiusBottomLeft: =0
+                              RadiusBottomRight: =0
+                              RadiusTopLeft: =0
+                              RadiusTopRight: =0
+                            Children:
+                              - cntPainelDistribuicao:
+                                  Control: GroupContainer@1.5.0
+                                  Variant: AutoLayout
+                                  Properties:
+                                    BorderColor: =thmBorda
+                                    BorderThickness: =1
+                                    DropShadow: =DropShadow.None
+                                    Fill: =thmSuperficie
+                                    FillPortions: =3
+                                    LayoutAlignItems: =LayoutAlignItems.Stretch
+                                    LayoutDirection: =LayoutDirection.Vertical
+                                    LayoutMinHeight: =0
+                                    PaddingBottom: =18
+                                    PaddingLeft: =20
+                                    PaddingRight: =20
+                                    PaddingTop: =18
+                                    RadiusBottomLeft: =0
+                                    RadiusBottomRight: =0
+                                    RadiusTopLeft: =0
+                                    RadiusTopRight: =0
+                                  Children:
+                                    - htmDistTitulo:
+                                        Control: HtmlViewer@2.1.0
+                                        Properties:
+                                          AlignInContainer: =AlignInContainer.Stretch
+                                          AutoHeight: =true
+                                          Fill: =thmSuperficie
+                                          Font: =thmFonte
+                                          HtmlText: |-
+                                            ="<div style='" & htmlFonte & "'>" &
+                                            "<div style='font-size:13px;font-weight:800;letter-spacing:.10em;color:" & hxTexto & ";'>DISTRIBUIÇÃO POR AEROPORTO</div>" &
+                                            "<div style='font-size:11px;color:" & hxTextoFraco & ";margin-top:3px;'>Barra proporcional ao maior aeroporto &nbsp;&middot;&nbsp; vermelho = parados &nbsp;&middot;&nbsp; clique na linha para abrir a lista do aeroporto</div>" &
+                                            "</div>"
+                                          PaddingBottom: =12
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                          PaddingTop: =0
+                                          Size: =11
+                                    - galDistAero:
+                                        Control: Gallery@2.15.0
+                                        Variant: Vertical
+                                        Properties:
+                                          BorderColor: =thmBorda
+                                          BorderStyle: =BorderStyle.None
+                                          Fill: =thmSuperficie
+                                          Items: =Sort(colDistAero, Qtd, SortOrder.Descending)
+                                          LayoutMinHeight: =0
+                                          TemplatePadding: =0
+                                          TemplateSize: =34
+                                        Children:
+                                          - htmDistLinha:
+                                              Control: HtmlViewer@2.1.0
+                                              Properties:
+                                                Fill: =thmSuperficie
+                                                Font: =thmFonte
+                                                Height: =32
+                                                HtmlText: |-
+                                                  ="<table style='width:100%;border-collapse:collapse;" & htmlFonte & "'><tr>" &
+                                                  "<td style='width:46px;font-size:12px;font-weight:800;color:" & hxPrimaria & ";'>" & ThisItem.IATA & "</td>" &
+                                                  "<td style='font-size:12px;color:" & hxTexto & ";white-space:nowrap;overflow:hidden;'>" & ThisItem.Aeroporto & "</td>" &
+                                                  "<td style='width:44%;padding:0 10px;'><div style='background:" & hxFundo & ";border:1px solid " & hxBorda & ";height:12px;'><div style='background:" & hxPrimaria & ";height:12px;width:" & Text(Round(ThisItem.Qtd / Max(locMaxAero, 1) * 100, 0)) & "%;'></div></div></td>" &
+                                                  "<td style='width:44px;text-align:right;font-size:13px;font-weight:800;color:" & hxTexto & ";'>" & ThisItem.Qtd & "</td>" &
+                                                  "<td style='width:40px;text-align:right;font-size:12px;font-weight:700;color:" & If(ThisItem.Parados > 0, hxVermelho, hxTextoFraco) & ";'>" & ThisItem.Parados & "</td>" &
+                                                  "<td style='width:58px;text-align:right;font-size:11px;font-weight:700;color:" & hxPrimaria & ";'>VER &rsaquo;</td>" &
+                                                  "</tr></table>"
+                                                OnSelect: |-
+                                                  =Set(varFiltroAero, ThisItem.IATA);
+                                                  Navigate(scrFrotaLista, ScreenTransition.Fade)
+                                                PaddingBottom: =0
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                                PaddingTop: =0
+                                                Size: =11
+                                                Width: =Parent.Width - 20
+                              - cntPainelAlertas:
+                                  Control: GroupContainer@1.5.0
+                                  Variant: AutoLayout
+                                  Properties:
+                                    BorderColor: =thmBorda
+                                    BorderThickness: =1
+                                    DropShadow: =DropShadow.None
+                                    Fill: =thmSuperficie
+                                    FillPortions: =2
+                                    LayoutAlignItems: =LayoutAlignItems.Stretch
+                                    LayoutDirection: =LayoutDirection.Vertical
+                                    LayoutMinHeight: =0
+                                    LayoutOverflowY: =LayoutOverflow.Scroll
+                                    PaddingBottom: =18
+                                    PaddingLeft: =20
+                                    PaddingRight: =20
+                                    PaddingTop: =18
+                                    RadiusBottomLeft: =0
+                                    RadiusBottomRight: =0
+                                    RadiusTopLeft: =0
+                                    RadiusTopRight: =0
+                                  Children:
+                                    - htmPainelAlertas:
+                                        Control: HtmlViewer@2.1.0
+                                        Properties:
+                                          AlignInContainer: =AlignInContainer.Stretch
+                                          AutoHeight: =true
+                                          Fill: =thmSuperficie
+                                          Font: =thmFonte
+                                          HtmlText: |-
+                                            ="<div style='" & htmlFonte & "'>" &
+                                            "<div style='font-size:13px;font-weight:800;letter-spacing:.10em;color:" & hxTexto & ";'>PENDÊNCIAS</div>" &
+                                            "<div style='font-size:11px;color:" & hxTextoFraco & ";margin-top:3px;margin-bottom:14px;'>Integridade do cadastro &mdash; tudo do próprio Módulo 1</div>" &
+                                            "<table style='width:100%;border-collapse:collapse;'>" &
+                                            "<tr><td style='border-left:3px solid " & hxPrimaria & ";padding:10px 12px;background:" & hxFundo & ";'><div style='font-size:12px;font-weight:700;color:" & hxTexto & ";'>Ativos sem código FRT</div><div style='font-size:11px;color:" & hxTextoFraco & ";'>falha na segunda gravação &nbsp;&middot;&nbsp; corrigir</div></td><td style='text-align:right;font-size:22px;font-weight:800;color:" & If(locSemCodigo > 0, hxPrimaria, hxTextoFraco) & ";background:" & hxFundo & ";padding-right:12px;'>" & locSemCodigo & "</td></tr>" &
+                                            "<tr><td colspan='2' style='height:8px;'></td></tr>" &
+                                            "<tr><td style='border-left:3px solid " & hxAmbar & ";padding:10px 12px;background:" & hxFundo & ";'><div style='font-size:12px;font-weight:700;color:" & hxTexto & ";'>Sem leitura de medidor</div><div style='font-size:11px;color:" & hxTextoFraco & ";'>nunca registrada ou há mais de 90 dias</div></td><td style='text-align:right;font-size:22px;font-weight:800;color:" & If(locMedidorParado > 0, hxAmbar, hxTextoFraco) & ";background:" & hxFundo & ";padding-right:12px;'>" & locMedidorParado & "</td></tr>" &
+                                            "<tr><td colspan='2' style='height:8px;'></td></tr>" &
+                                            "<tr><td style='border-left:3px solid " & hxVermelho & ";padding:10px 12px;background:" & hxFundo & ";'><div style='font-size:12px;font-weight:700;color:" & hxTexto & ";'>Sem placa em tipo que exige</div><div style='font-size:11px;color:" & hxTextoFraco & ";'>o tipo de ativo pede placa e o campo está vazio</div></td><td style='text-align:right;font-size:22px;font-weight:800;color:" & If(locSemPlaca > 0, hxVermelho, hxTextoFraco) & ";background:" & hxFundo & ";padding-right:12px;'>" & locSemPlaca & "</td></tr>" &
+                                            "<tr><td colspan='2' style='height:8px;'></td></tr>" &
+                                            "<tr><td style='border-left:3px solid " & hxOperacional & ";padding:10px 12px;background:" & hxFundo & ";'><div style='font-size:12px;font-weight:700;color:" & hxTexto & ";'>Sem gestor responsável</div><div style='font-size:11px;color:" & hxTextoFraco & ";'>ninguém responde pelo ativo no cadastro</div></td><td style='text-align:right;font-size:22px;font-weight:800;color:" & If(locSemGestor > 0, hxOperacional, hxTextoFraco) & ";background:" & hxFundo & ";padding-right:12px;'>" & locSemGestor & "</td></tr>" &
+                                            "<tr><td colspan='2' style='height:8px;'></td></tr>" &
+                                            "<tr><td style='border-left:3px solid " & hxTextoFraco & ";padding:10px 12px;background:" & hxFundo & ";'><div style='font-size:12px;font-weight:700;color:" & hxTexto & ";'>Registros inativos ou baixados</div><div style='font-size:11px;color:" & hxTextoFraco & ";'>fora do filtro padrão da consulta</div></td><td style='text-align:right;font-size:22px;font-weight:800;color:" & hxTextoFraco & ";background:" & hxFundo & ";padding-right:12px;'>" & locInativo & "</td></tr>" &
+                                            "</table></div>"
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                          PaddingTop: =0
+                                          Size: =11

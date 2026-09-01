@@ -1,0 +1,1209 @@
+# ************************************************************************************************
+# Warning: YAML source code for Canvas Apps should only be used to review changes made within Power Apps Studio and for minor edits (Preview).
+# Use the maker portal to create and edit your Power Apps.
+# 
+# The schema file for Canvas Apps is available at https://go.microsoft.com/fwlink/?linkid=2304907
+# 
+# For more information, visit https://go.microsoft.com/fwlink/?linkid=2292623
+# ************************************************************************************************
+Screens:
+  ScreenIncursaoPistaDetalhes:
+    Properties:
+      OnVisible: |-
+        =ClearCollect(
+            col_incPistaDetImagens,
+            Filter(
+                '14.3-tbl_IncPistaImg',
+                incPistaImg_idOcorrencia = var_incPistaSelect.incPista_id
+            )
+        );
+        ClearCollect(
+            col_incPistaEnvolvidosDetalhes,
+            Filter(
+                '14.3-tbl_IncPistaEnvolvidos',
+                incPistaEnv_idOcorrencia = var_incPistaSelect.incPista_id
+            )
+        )
+    Children:
+      - ScreenContainerDetalhes_5:
+          Control: GroupContainer@1.5.0
+          Variant: AutoLayout
+          Properties:
+            DropShadow: =DropShadow.None
+            Fill: =RGBA(255, 255, 255, 1)
+            Height: =Parent.Height
+            LayoutDirection: =LayoutDirection.Vertical
+            RadiusBottomLeft: =0
+            RadiusBottomRight: =0
+            RadiusTopLeft: =0
+            RadiusTopRight: =0
+            Width: =Parent.Width
+          Children:
+            - ContainerHeader_20:
+                Control: GroupContainer@1.5.0
+                Variant: AutoLayout
+                Properties:
+                  BorderColor: =RGBA(30, 30, 100, 1)
+                  DropShadow: =DropShadow.None
+                  Fill: =RGBA(0, 0, 0, 1)
+                  FillPortions: =0
+                  Height: =40
+                  LayoutAlignItems: =LayoutAlignItems.Center
+                  LayoutDirection: =LayoutDirection.Horizontal
+                  LayoutJustifyContent: =LayoutJustifyContent.SpaceBetween
+                  LayoutMaxHeight: =
+                  LayoutMaxWidth: =
+                  RadiusBottomLeft: =0
+                  RadiusBottomRight: =0
+                  RadiusTopLeft: =0
+                  RadiusTopRight: =0
+                  Width: =1729.08
+                Children:
+                  - Icon1_23:
+                      Control: Classic/Icon@2.5.0
+                      Properties:
+                        AlignInContainer: =AlignInContainer.Center
+                        Color: =RGBA(255, 255, 255, 1)
+                        Height: =30
+                        Icon: =Icon.BackArrow
+                        LayoutMaxHeight: =
+                        LayoutMaxWidth: =
+                        LayoutMinHeight: =0
+                        OnSelect: |-
+                          =If(
+                              var_incPistaDetVisibleImagem = true,
+                              UpdateContext({var_incPistaDetVisibleImagem: false}),
+                              Navigate(
+                                  ScreenIncursaoPista,
+                                  ScreenTransition.Fade
+                              )
+                          )
+                        PaddingBottom: =3
+                        PaddingLeft: =5
+                        PaddingRight: =5
+                        PaddingTop: =3
+                        Width: =60
+                  - Label1_33:
+                      Control: Label@2.5.1
+                      Properties:
+                        Align: =Align.Center
+                        AlignInContainer: =AlignInContainer.Stretch
+                        Color: =RGBA(255, 255, 255, 1)
+                        FillPortions: =1
+                        Font: =Font.'Open Sans'
+                        FontWeight: =FontWeight.Semibold
+                        LayoutMaxHeight: =
+                        LayoutMaxWidth: =
+                        LayoutMinHeight: =0
+                        LayoutMinWidth: =0
+                        Size: =12
+                        Text: ="Detalhes"
+                        Width: =0
+                  - Image3_32:
+                      Control: Image@2.2.3
+                      Properties:
+                        AlignInContainer: =AlignInContainer.Stretch
+                        Height: =40
+                        Image: =MOTIVA_WHITE
+                        LayoutMaxHeight: =
+                        LayoutMaxWidth: =
+                        LayoutMinHeight: =0
+                        OnSelect: =Navigate(frmHome, ScreenTransition.Fade)
+                        Width: =60
+            - ContainerVisibleImagem_6:
+                Control: GroupContainer@1.5.0
+                Variant: ManualLayout
+                Properties:
+                  DropShadow: =DropShadow.None
+                  Fill: =RGBA(0, 0, 0, 1)
+                  Height: =Parent.Height
+                  LayoutMaxHeight: =
+                  LayoutMaxWidth: =
+                  RadiusBottomLeft: =0
+                  RadiusBottomRight: =0
+                  RadiusTopLeft: =0
+                  RadiusTopRight: =0
+                  Visible: =var_incPistaDetVisibleImagem
+                  Width: =Parent.Width
+                Children:
+                  - Image26_7:
+                      Control: Image@2.2.3
+                      Properties:
+                        BorderColor: =RGBA(0, 0, 0, 1)
+                        BorderThickness: =5
+                        CalculateOriginalDimensions: =true
+                        DisabledBorderColor: =RGBA(0, 0, 0, 0)
+                        DisabledFill: =RGBA(0, 0, 0, 0)
+                        Fill: =RGBA(0, 0, 0, 1)
+                        Height: =Parent.Height
+                        HoverBorderColor: =
+                        HoverFill: =
+                        Image: =GalleryIncPistaDetImg.Selected.incPistaImg_imagem.Full
+                        PaddingBottom: =50
+                        PaddingLeft: =10
+                        PaddingRight: =10
+                        PaddingTop: =10
+                        PressedBorderColor: =
+                        PressedFill: =
+                        Width: =Parent.Width
+                  - Container3_2:
+                      Control: GroupContainer@1.5.0
+                      Variant: ManualLayout
+                      Properties:
+                        Height: =50
+                        Visible: =false
+                        Width: =250
+                        X: |+
+                          =Parent.Width - 250
+                        Y: =Parent.Height - 50
+                      Children:
+                        - Label65_20:
+                            Control: Label@2.5.1
+                            Properties:
+                              BorderColor: =RGBA(0, 0, 0, 1)
+                              Color: =RGBA(255, 255, 255, 1)
+                              Font: =Font.'Open Sans'
+                              Size: =14
+                              Text: ="Paisagem"
+                              Width: =174
+                              X: =137
+                              Y: =5
+                        - Icon38_17:
+                            Control: Classic/Icon@2.5.0
+                            Properties:
+                              BorderColor: =RGBA(0, 0, 0, 1)
+                              Color: =RGBA(255, 255, 255, 1)
+                              Height: =40
+                              Icon: =Icon.LevelsLayersItems
+                              OnSelect: |-
+                                =UpdateContext(
+                                    {
+                                        varXImgDetail: 79,
+                                        varYImgDetail: 65,
+                                        varWImgDetail: 969,
+                                        varHImgDetail: 501
+                                    }
+                                )
+                              PaddingBottom: =5
+                              PaddingRight: =170
+                              PaddingTop: =5
+                              Width: =230
+                              X: =81
+                              Y: =5
+                  - Container6_2:
+                      Control: GroupContainer@1.5.0
+                      Variant: ManualLayout
+                      Properties:
+                        Height: =50
+                        Visible: =false
+                        Width: =250
+                        X: |+
+                          =Parent.Width - 250
+                        Y: =Parent.Height - 100
+                      Children:
+                        - Label65_19:
+                            Control: Label@2.5.1
+                            Properties:
+                              BorderColor: =RGBA(0, 0, 0, 1)
+                              Color: =RGBA(255, 255, 255, 1)
+                              Font: =Font.'Open Sans'
+                              Size: =14
+                              Text: ="Retrato"
+                              Width: =174
+                              X: =137
+                              Y: =5
+                        - Icon38_16:
+                            Control: Classic/Icon@2.5.0
+                            Properties:
+                              BorderColor: =RGBA(0, 0, 0, 1)
+                              Color: =RGBA(255, 255, 255, 1)
+                              Height: =40
+                              Icon: =Icon.Copy
+                              OnSelect: |-
+                                =UpdateContext(
+                                    {
+                                        varXImgDetail: 293,
+                                        varYImgDetail: 16,
+                                        varWImgDetail: 550,
+                                        varHImgDetail: 686
+                                    }
+                                )
+                              PaddingBottom: =5
+                              PaddingRight: =170
+                              PaddingTop: =5
+                              Width: =230
+                              X: =81
+                              Y: =5
+            - Container36_2:
+                Control: GroupContainer@1.5.0
+                Variant: AutoLayout
+                Properties:
+                  DropShadow: =DropShadow.None
+                  Height: =571
+                  LayoutDirection: =LayoutDirection.Vertical
+                  LayoutMaxHeight: =
+                  LayoutMaxWidth: =
+                  LayoutOverflowY: =LayoutOverflow.Scroll
+                  Visible: =!var_incPistaDetVisibleImagem
+                  Width: =1103
+                  X: =19
+                  Y: =80
+                Children:
+                  - Container38_2:
+                      Control: GroupContainer@1.5.0
+                      Variant: ManualLayout
+                      Properties:
+                        DropShadow: =DropShadow.None
+                        FillPortions: =0
+                        Height: =600
+                        LayoutMaxHeight: =
+                        LayoutMaxWidth: =
+                        RadiusBottomLeft: =0
+                        RadiusBottomRight: =0
+                        RadiusTopLeft: =0
+                        RadiusTopRight: =0
+                      Children:
+                        - Container35_10:
+                            Control: GroupContainer@1.5.0
+                            Variant: AutoLayout
+                            Properties:
+                              DropShadow: =DropShadow.None
+                              Fill: =RGBA(247, 247, 247, 1)
+                              Height: =541
+                              LayoutDirection: =LayoutDirection.Vertical
+                              LayoutOverflowY: =LayoutOverflow.Scroll
+                              PaddingLeft: =5
+                              RadiusBottomLeft: =0
+                              RadiusBottomRight: =0
+                              RadiusTopLeft: =0
+                              RadiusTopRight: =0
+                              Width: =310
+                              X: =17
+                              Y: =17
+                            Children:
+                              - Label16_168:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    BorderColor: =RGBA(0, 0, 0, 1)
+                                    Font: =Font.'Open Sans'
+                                    FontWeight: =FontWeight.Bold
+                                    Height: =20
+                                    LayoutMaxHeight: =
+                                    LayoutMaxWidth: =
+                                    Size: =10
+                                    Text: ="Ocorrido em:"
+                                    Width: =160
+                                    X: =958
+                                    Y: =213
+                              - Label16_180:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    BorderColor: =RGBA(0, 0, 0, 1)
+                                    Font: =Font.'Open Sans'
+                                    Height: =20
+                                    LayoutMaxHeight: =
+                                    LayoutMaxWidth: =
+                                    Size: =10
+                                    Text: =GalleryIncPistaRegistros.Selected.incPista_data & " - " & GalleryIncPistaRegistros.Selected.incPista_aeroporto
+                                    Width: =300
+                                    X: =958
+                                    Y: =24
+                              - Label16_187:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    BorderColor: =RGBA(0, 0, 0, 1)
+                                    Font: =Font.'Open Sans'
+                                    FontWeight: =FontWeight.Bold
+                                    Height: =20
+                                    LayoutMaxHeight: =
+                                    LayoutMaxWidth: =
+                                    Size: =10
+                                    Text: |-
+                                      ="Local: "
+                                    Width: =300
+                                    X: =50
+                                    Y: =90
+                              - Label16_190:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    BorderColor: =RGBA(0, 0, 0, 1)
+                                    Font: =Font.'Open Sans'
+                                    Height: =20
+                                    LayoutMaxHeight: =
+                                    LayoutMaxWidth: =
+                                    Size: =10
+                                    Text: =GalleryIncPistaRegistros.Selected.incPista_localOcorrencia
+                                    Width: =300
+                                    X: =50
+                                    Y: =20
+                              - Label16_193:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    BorderColor: =RGBA(0, 0, 0, 1)
+                                    Font: =Font.'Open Sans'
+                                    FontWeight: =FontWeight.Bold
+                                    Height: =20
+                                    LayoutMaxHeight: =
+                                    LayoutMaxWidth: =
+                                    Size: =10
+                                    Text: |-
+                                      ="Condições da pista: "
+                                    Width: =300
+                                    X: =50
+                                    Y: =50
+                              - Label16_195:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    BorderColor: =RGBA(0, 0, 0, 1)
+                                    Font: =Font.'Open Sans'
+                                    Height: =20
+                                    LayoutMaxHeight: =
+                                    LayoutMaxWidth: =
+                                    Size: =10
+                                    Text: =GalleryIncPistaRegistros.Selected.incPista_condPista
+                                    Width: =300
+                                    X: =50
+                                    Y: =20
+                              - Label16_209:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    BorderColor: =RGBA(0, 0, 0, 1)
+                                    Font: =Font.'Open Sans'
+                                    FontWeight: =FontWeight.Bold
+                                    Height: =20
+                                    LayoutMaxHeight: =
+                                    LayoutMaxWidth: =
+                                    Size: =10
+                                    Text: |-
+                                      ="Condições meteorológicas: "
+                                    Width: =300
+                                    X: =50
+                                    Y: =100
+                              - Label16_210:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    BorderColor: =RGBA(0, 0, 0, 1)
+                                    Font: =Font.'Open Sans'
+                                    Height: =20
+                                    LayoutMaxHeight: =
+                                    LayoutMaxWidth: =
+                                    Size: =10
+                                    Text: =GalleryIncPistaRegistros.Selected.incPista_condMeteor
+                                    Width: =300
+                                    X: =50
+                                    Y: =120
+                              - Label16_211:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    BorderColor: =RGBA(0, 0, 0, 1)
+                                    Font: =Font.'Open Sans'
+                                    FontWeight: =FontWeight.Bold
+                                    Height: =20
+                                    LayoutMaxHeight: =
+                                    LayoutMaxWidth: =
+                                    Size: =10
+                                    Text: |-
+                                      ="Teto: (pés)"
+                                    Width: =300
+                                    X: =50
+                                    Y: =258
+                              - Label16_212:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    BorderColor: =RGBA(0, 0, 0, 1)
+                                    Font: =Font.'Open Sans'
+                                    Height: =20
+                                    LayoutMaxHeight: =
+                                    LayoutMaxWidth: =
+                                    Size: =10
+                                    Text: =GalleryIncPistaRegistros.Selected.incPista_condTeto
+                                    Width: =300
+                                    X: =50
+                                    Y: =76
+                              - Label16_213:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    BorderColor: =RGBA(0, 0, 0, 1)
+                                    Font: =Font.'Open Sans'
+                                    FontWeight: =FontWeight.Bold
+                                    Height: =20
+                                    LayoutMaxHeight: =
+                                    LayoutMaxWidth: =
+                                    Size: =10
+                                    Text: |-
+                                      ="Visibilidade (m): "
+                                    Width: =300
+                                    X: =50
+                                    Y: =314
+                              - Label16_214:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    BorderColor: =RGBA(0, 0, 0, 1)
+                                    Font: =Font.'Open Sans'
+                                    Height: =20
+                                    LayoutMaxHeight: =
+                                    LayoutMaxWidth: =
+                                    Size: =10
+                                    Text: =GalleryIncPistaRegistros.Selected.incPista_condVisib
+                                    Width: =300
+                                    X: =50
+                                    Y: =278
+                              - Label16_215:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    BorderColor: =RGBA(0, 0, 0, 1)
+                                    Font: =Font.'Open Sans'
+                                    FontWeight: =FontWeight.Bold
+                                    Height: =20
+                                    LayoutMaxHeight: =
+                                    LayoutMaxWidth: =
+                                    Size: =10
+                                    Text: ="Menor distância entre os envolvidos:"
+                                    Width: =300
+                                    X: =50
+                                    Y: =258
+                              - Label16_216:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    BorderColor: =RGBA(0, 0, 0, 1)
+                                    Font: =Font.'Open Sans'
+                                    Height: =20
+                                    LayoutMaxHeight: =
+                                    LayoutMaxWidth: =
+                                    Size: =10
+                                    Text: ="Vertical - " & GalleryIncPistaRegistros.Selected.incPista_distVertical & " / " & "Horizontal - " & GalleryIncPistaRegistros.Selected.incPista_distHorizontal
+                                    Width: =300
+                                    X: =50
+                                    Y: =334
+                              - Label16_217:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    BorderColor: =RGBA(0, 0, 0, 1)
+                                    Font: =Font.'Open Sans'
+                                    FontWeight: =FontWeight.Bold
+                                    Height: =20
+                                    LayoutMaxHeight: =
+                                    LayoutMaxWidth: =
+                                    Size: =10
+                                    Text: ="Severidade:"
+                                    Width: =300
+                                    X: =50
+                                    Y: =258
+                              - Label16_218:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    BorderColor: =RGBA(0, 0, 0, 1)
+                                    Font: =Font.'Open Sans'
+                                    Height: =20
+                                    LayoutMaxHeight: =
+                                    LayoutMaxWidth: =
+                                    Size: =10
+                                    Text: =GalleryIncPistaRegistros.Selected.incPista_severidade
+                                    Width: =300
+                                    X: =50
+                                    Y: =76
+                              - Label16_219:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    BorderColor: =RGBA(0, 0, 0, 1)
+                                    Font: =Font.'Open Sans'
+                                    FontWeight: =FontWeight.Bold
+                                    Height: =20
+                                    LayoutMaxHeight: =
+                                    LayoutMaxWidth: =
+                                    Size: =10
+                                    Text: ="Comentário safety:"
+                                    Width: =300
+                                    X: =50
+                                    Y: =106
+                              - Label16_221:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    Align: =Align.Justify
+                                    AutoHeight: =true
+                                    BorderColor: =RGBA(255, 255, 255, 1)
+                                    Font: =Font.'Open Sans'
+                                    LayoutMaxHeight: =
+                                    LayoutMaxWidth: =
+                                    LayoutMinHeight: =30
+                                    Overflow: =Overflow.Scroll
+                                    PaddingRight: =20
+                                    Size: =10
+                                    Text: =GalleryIncPistaRegistros.Selected.incPista_comentario
+                                    Width: =300
+                                    X: =50
+                                    Y: =150
+                        - Gallery18:
+                            Control: Gallery@2.15.0
+                            Variant: Vertical
+                            Properties:
+                              BorderColor: =RGBA(255, 255, 255, 1)
+                              BorderStyle: =BorderStyle.None
+                              Fill: =RGBA(247, 247, 247, 1)
+                              Height: =287
+                              Items: =col_incPistaEnvolvidosDetalhes
+                              LoadingSpinner: =LoadingSpinner.None
+                              ShowNavigation: =true
+                              ShowScrollbar: =false
+                              TemplateSize: =130
+                              Width: =514
+                              X: =345
+                              Y: =LabelIncPistaDescOcorrencia.Height + LabelIncPistaDescOcorrencia.Y + 35
+                            Children:
+                              - ContainerAer:
+                                  Control: GroupContainer@1.5.0
+                                  Variant: ManualLayout
+                                  Properties:
+                                    DropShadow: =DropShadow.None
+                                    Height: =130
+                                    Visible: =If(ThisItem.incPistaEnv_tipo = "Aeronave",true,false)
+                                    Width: =504
+                                  Children:
+                                    - Label71:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          BorderColor: =RGBA(0, 0, 0, 1)
+                                          Font: =Font.'Open Sans'
+                                          Height: =20
+                                          OnSelect: =
+                                          Size: =10
+                                          Text: =ThisItem.incPistaEnv_matricula
+                                          Width: =115
+                                          X: =120
+                                    - Label71_1:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          BorderColor: =RGBA(0, 0, 0, 1)
+                                          Font: =Font.'Open Sans'
+                                          FontWeight: =FontWeight.Bold
+                                          Height: =20
+                                          OnSelect: =
+                                          Size: =10
+                                          Text: ="Matricula:"
+                                          Width: =115
+                                    - Label16_220:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          BorderColor: =RGBA(0, 0, 0, 1)
+                                          Font: =Font.'Open Sans'
+                                          FontWeight: =FontWeight.Bold
+                                          Height: =20
+                                          Size: =10
+                                          Text: ="Ação evasiva:"
+                                          Width: =110
+                                          Y: =20
+                                    - Label71_2:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          BorderColor: =RGBA(0, 0, 0, 1)
+                                          Font: =Font.'Open Sans'
+                                          OnSelect: =
+                                          Size: =10
+                                          Text: |-
+                                            =If(
+                                                !IsBlank(ThisItem.incPistaEnv_acaoEvasiva),
+                                                ThisItem.incPistaEnv_acaoEvasiva & "  " & ThisItem.incPistaEnv_selectAcao & "  " & ThisItem.incPistaEnv_outraAcao,
+                                                "Não houve."
+                                            )
+                                          VerticalAlign: =VerticalAlign.Top
+                                          Width: =350
+                                          X: =120
+                                          Y: =20
+                                    - Label16_223:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          BorderColor: =RGBA(0, 0, 0, 1)
+                                          Font: =Font.'Open Sans'
+                                          FontWeight: =FontWeight.Bold
+                                          Height: =20
+                                          Size: =10
+                                          Text: ="Distância percorrida:"
+                                          Width: =160
+                                          Y: =100
+                                    - Label71_6:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          BorderColor: =RGBA(0, 0, 0, 1)
+                                          Font: =Font.'Open Sans'
+                                          Height: =20
+                                          OnSelect: =
+                                          Size: =10
+                                          Text: =ThisItem.incPistaEnv_distPerc
+                                          Width: =80
+                                          X: =152
+                                          Y: =100
+                                    - Label16_224:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          BorderColor: =RGBA(0, 0, 0, 1)
+                                          Font: =Font.'Open Sans'
+                                          FontWeight: =FontWeight.Bold
+                                          Height: =20
+                                          Size: =10
+                                          Text: ="Distância cabeceira:"
+                                          X: =257
+                                          Y: =100
+                                    - Label71_7:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          BorderColor: =RGBA(0, 0, 0, 1)
+                                          Font: =Font.'Open Sans'
+                                          Height: =20
+                                          OnSelect: =
+                                          Size: =10
+                                          Text: =ThisItem.incPistaEnv_distPerc
+                                          Width: =80
+                                          X: =399
+                                          Y: =100
+                                    - Label16_225:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          BorderColor: =RGBA(0, 0, 0, 1)
+                                          Font: =Font.'Open Sans'
+                                          FontWeight: =FontWeight.Bold
+                                          Height: =20
+                                          Size: =10
+                                          Text: ="Local da ação:"
+                                          Width: =105
+                                          Y: =60
+                                    - Label71_3:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          BorderColor: =RGBA(0, 0, 0, 1)
+                                          Font: =Font.'Open Sans'
+                                          Height: =20
+                                          OnSelect: =
+                                          Size: =10
+                                          Text: =ThisItem.incPistaEnv_locAcao
+                                          Width: =380
+                                          X: =120
+                                          Y: =60
+                                    - Label16_226:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          BorderColor: =RGBA(0, 0, 0, 1)
+                                          Font: =Font.'Open Sans'
+                                          FontWeight: =FontWeight.Bold
+                                          Height: =20
+                                          Size: =10
+                                          Text: ="Mapa de grade:"
+                                          Width: =120
+                                          Y: =80
+                                    - Label71_4:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          BorderColor: =RGBA(0, 0, 0, 1)
+                                          Font: =Font.'Open Sans'
+                                          Height: =20
+                                          OnSelect: =
+                                          Size: =10
+                                          Text: =ThisItem.incPistaEnv_mapGrad
+                                          Width: =380
+                                          X: =120
+                                          Y: =80
+                                    - Icon7_2:
+                                        Control: Classic/Icon@2.5.0
+                                        Properties:
+                                          Color: =RGBA(0, 0, 0, 1)
+                                          Height: =40
+                                          Icon: =Icon.Airplane
+                                          PaddingBottom: =5
+                                          PaddingLeft: =5
+                                          PaddingRight: =5
+                                          PaddingTop: =5
+                                          Width: =40
+                                          X: =460
+                              - ContainerVei:
+                                  Control: GroupContainer@1.5.0
+                                  Variant: ManualLayout
+                                  Properties:
+                                    DropShadow: =DropShadow.None
+                                    Height: =130
+                                    Visible: =If(ThisItem.incPistaEnv_tipo = "Veiculo",true,false)
+                                    Width: =504
+                                  Children:
+                                    - Label71_5:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          BorderColor: =RGBA(0, 0, 0, 1)
+                                          Font: =Font.'Open Sans'
+                                          Height: =20
+                                          OnSelect: =
+                                          Size: =10
+                                          Text: =ThisItem.incPistaEnv_codigo
+                                          Width: =115
+                                          X: =120
+                                    - Label71_8:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          BorderColor: =RGBA(0, 0, 0, 1)
+                                          Font: =Font.'Open Sans'
+                                          FontWeight: =FontWeight.Bold
+                                          Height: =20
+                                          OnSelect: =
+                                          Size: =10
+                                          Text: ="Código:"
+                                          Width: =115
+                                    - Label16_227:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          BorderColor: =RGBA(0, 0, 0, 1)
+                                          Font: =Font.'Open Sans'
+                                          FontWeight: =FontWeight.Bold
+                                          Height: =20
+                                          Size: =10
+                                          Text: ="Ação evasiva:"
+                                          Width: =110
+                                          Y: =20
+                                    - Label71_9:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          BorderColor: =RGBA(0, 0, 0, 1)
+                                          Font: =Font.'Open Sans'
+                                          OnSelect: =
+                                          Size: =10
+                                          Text: |-
+                                            =If(
+                                                !IsBlank(ThisItem.incPistaEnv_acaoEvasiva),
+                                                ThisItem.incPistaEnv_acaoEvasiva & "  " & ThisItem.incPistaEnv_selectAcao & "  " & ThisItem.incPistaEnv_outraAcao,
+                                                "Não houve."
+                                            )
+                                          VerticalAlign: =VerticalAlign.Top
+                                          Width: =380
+                                          X: =120
+                                          Y: =20
+                                    - Label16_229:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          BorderColor: =RGBA(0, 0, 0, 1)
+                                          Font: =Font.'Open Sans'
+                                          FontWeight: =FontWeight.Bold
+                                          Height: =20
+                                          Size: =10
+                                          Text: |-
+                                            ="Empresa: "
+                                          Width: =100
+                                          Y: =100
+                                    - Label71_10:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          BorderColor: =RGBA(0, 0, 0, 1)
+                                          Font: =Font.'Open Sans'
+                                          Height: =20
+                                          OnSelect: =
+                                          Size: =10
+                                          Text: =ThisItem.incPistaEnv_empresa
+                                          Width: =170
+                                          X: =120
+                                          Y: =100
+                                    - Label16_230:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          BorderColor: =RGBA(0, 0, 0, 1)
+                                          Font: =Font.'Open Sans'
+                                          FontWeight: =FontWeight.Bold
+                                          Height: =20
+                                          Size: =10
+                                          Text: ="Contato com órgão ATS:"
+                                          Width: =170
+                                          X: =295
+                                          Y: =100
+                                    - Label71_11:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          BorderColor: =RGBA(0, 0, 0, 1)
+                                          Font: =Font.'Open Sans'
+                                          Height: =20
+                                          OnSelect: =
+                                          Size: =10
+                                          Text: =ThisItem.incPistaEnv_contatoAts
+                                          Width: =40
+                                          X: =460
+                                          Y: =100
+                                    - Label16_231:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          BorderColor: =RGBA(0, 0, 0, 1)
+                                          Font: =Font.'Open Sans'
+                                          FontWeight: =FontWeight.Bold
+                                          Height: =20
+                                          Size: =10
+                                          Text: ="Local da ação:"
+                                          Width: =105
+                                          Y: =60
+                                    - Label71_12:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          BorderColor: =RGBA(0, 0, 0, 1)
+                                          Font: =Font.'Open Sans'
+                                          Height: =20
+                                          OnSelect: =
+                                          Size: =10
+                                          Text: =ThisItem.incPistaEnv_locAcao
+                                          Width: =380
+                                          X: =120
+                                          Y: =60
+                                    - Label16_228:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          BorderColor: =RGBA(0, 0, 0, 1)
+                                          Font: =Font.'Open Sans'
+                                          FontWeight: =FontWeight.Bold
+                                          Height: =20
+                                          Size: =10
+                                          Text: ="Mapa de grade:"
+                                          Width: =120
+                                          Y: =80
+                                    - Label71_13:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          BorderColor: =RGBA(0, 0, 0, 1)
+                                          Font: =Font.'Open Sans'
+                                          Height: =20
+                                          OnSelect: =
+                                          Size: =10
+                                          Text: =ThisItem.incPistaEnv_mapGrad
+                                          Width: =380
+                                          X: =120
+                                          Y: =80
+                                    - Icon7_1:
+                                        Control: Classic/Icon@2.5.0
+                                        Properties:
+                                          Color: =RGBA(0, 0, 0, 1)
+                                          Height: =40
+                                          Icon: =Icon.Cars
+                                          PaddingBottom: =5
+                                          PaddingLeft: =5
+                                          PaddingRight: =5
+                                          PaddingTop: =5
+                                          Width: =40
+                                          X: =460
+                              - ContainerPes:
+                                  Control: GroupContainer@1.5.0
+                                  Variant: ManualLayout
+                                  Properties:
+                                    DropShadow: =DropShadow.None
+                                    Height: =130
+                                    Visible: =If(ThisItem.incPistaEnv_tipo = "Pessoa",true,false)
+                                    Width: =504
+                                  Children:
+                                    - Label71_14:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          BorderColor: =RGBA(0, 0, 0, 1)
+                                          Font: =Font.'Open Sans'
+                                          Height: =20
+                                          OnSelect: =
+                                          Size: =10
+                                          Text: =ThisItem.incPistaEnv_colete &" / "& ThisItem.incPistaEnv_nome
+                                          Width: =380
+                                          X: =120
+                                    - Label71_15:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          BorderColor: =RGBA(0, 0, 0, 1)
+                                          Font: =Font.'Open Sans'
+                                          FontWeight: =FontWeight.Bold
+                                          Height: =20
+                                          OnSelect: =
+                                          Size: =10
+                                          Text: ="Colete / nome:"
+                                          Width: =115
+                                    - Label16_232:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          BorderColor: =RGBA(0, 0, 0, 1)
+                                          Font: =Font.'Open Sans'
+                                          FontWeight: =FontWeight.Bold
+                                          Height: =20
+                                          Size: =10
+                                          Text: ="Ação evasiva:"
+                                          Width: =110
+                                          Y: =20
+                                    - Label71_16:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          BorderColor: =RGBA(0, 0, 0, 1)
+                                          Font: =Font.'Open Sans'
+                                          OnSelect: =
+                                          Size: =10
+                                          Text: |-
+                                            =If(
+                                                !IsBlank(ThisItem.incPistaEnv_acaoEvasiva),
+                                                ThisItem.incPistaEnv_acaoEvasiva & "  " & ThisItem.incPistaEnv_selectAcao & "  " & ThisItem.incPistaEnv_outraAcao,
+                                                "Não houve."
+                                            )
+                                          VerticalAlign: =VerticalAlign.Top
+                                          Width: =380
+                                          X: =120
+                                          Y: =20
+                                    - Label16_238:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          BorderColor: =RGBA(0, 0, 0, 1)
+                                          Font: =Font.'Open Sans'
+                                          FontWeight: =FontWeight.Bold
+                                          Height: =20
+                                          Size: =10
+                                          Text: ="Local da ação:"
+                                          Width: =105
+                                          Y: =60
+                                    - Label71_19:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          BorderColor: =RGBA(0, 0, 0, 1)
+                                          Font: =Font.'Open Sans'
+                                          Height: =20
+                                          OnSelect: =
+                                          Size: =10
+                                          Text: =ThisItem.incPistaEnv_locAcao
+                                          Width: =380
+                                          X: =120
+                                          Y: =60
+                                    - Label16_233:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          BorderColor: =RGBA(0, 0, 0, 1)
+                                          Font: =Font.'Open Sans'
+                                          FontWeight: =FontWeight.Bold
+                                          Height: =20
+                                          Size: =10
+                                          Text: ="Mapa de grade:"
+                                          Width: =120
+                                          Y: =80
+                                    - Label71_20:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          BorderColor: =RGBA(0, 0, 0, 1)
+                                          Font: =Font.'Open Sans'
+                                          Height: =20
+                                          OnSelect: =
+                                          Size: =10
+                                          Text: =ThisItem.incPistaEnv_mapGrad
+                                          Width: =380
+                                          X: =120
+                                          Y: =80
+                                    - Label16_234:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          BorderColor: =RGBA(0, 0, 0, 1)
+                                          Font: =Font.'Open Sans'
+                                          FontWeight: =FontWeight.Bold
+                                          Height: =20
+                                          Size: =10
+                                          Text: |-
+                                            ="Empresa: "
+                                          Width: =120
+                                          Y: =100
+                                    - Label71_17:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          BorderColor: =RGBA(0, 0, 0, 1)
+                                          Font: =Font.'Open Sans'
+                                          Height: =20
+                                          OnSelect: =
+                                          Size: =10
+                                          Text: =ThisItem.incPistaEnv_empresa
+                                          Width: =170
+                                          X: =120
+                                          Y: =100
+                                    - Label16_236:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          BorderColor: =RGBA(0, 0, 0, 1)
+                                          Font: =Font.'Open Sans'
+                                          FontWeight: =FontWeight.Bold
+                                          Height: =20
+                                          Size: =10
+                                          Text: ="Contato com órgão ATS:"
+                                          Width: =170
+                                          X: =295
+                                          Y: =100
+                                    - Label71_18:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          BorderColor: =RGBA(0, 0, 0, 1)
+                                          Font: =Font.'Open Sans'
+                                          Height: =20
+                                          OnSelect: =
+                                          Size: =10
+                                          Text: =ThisItem.incPistaEnv_contatoAts
+                                          Width: =40
+                                          X: =460
+                                          Y: =100
+                                    - Icon7:
+                                        Control: Classic/Icon@2.5.0
+                                        Properties:
+                                          Color: =RGBA(0, 0, 0, 1)
+                                          Height: =40
+                                          Icon: =Icon.People
+                                          PaddingBottom: =5
+                                          PaddingLeft: =5
+                                          PaddingRight: =5
+                                          PaddingTop: =5
+                                          Width: =40
+                                          X: =460
+                        - Label16_235:
+                            Control: Label@2.5.1
+                            Properties:
+                              BorderColor: =RGBA(0, 0, 0, 1)
+                              Font: =Font.'Open Sans'
+                              FontWeight: =FontWeight.Bold
+                              Height: =20
+                              Size: =11
+                              Text: ="Envolvidos:"
+                              Width: =514
+                              X: =345
+                              Y: =LabelIncPistaDescOcorrencia.Height + LabelIncPistaDescOcorrencia.Y + 10
+                        - Label16_237:
+                            Control: Label@2.5.1
+                            Properties:
+                              BorderColor: =RGBA(0, 0, 0, 1)
+                              Fill: =RGBA(255, 255, 255, 1)
+                              Font: =Font.'Open Sans'
+                              FontWeight: =FontWeight.Bold
+                              Height: =20
+                              Size: =12
+                              Text: ="Galeria de imagens:"
+                              Width: =200
+                              X: =878
+                              Y: =133
+                        - Rectangle22_2:
+                            Control: Rectangle@2.3.0
+                            Properties:
+                              BorderColor: =RGBA(0, 0, 0, 1)
+                              Fill: =RGBA(0, 0, 0, 1)
+                              Height: =1
+                              Visible: =false
+                              Width: =1082
+                              Y: =499
+                        - GalleryIncPistaDetImg:
+                            Control: Gallery@2.15.0
+                            Variant: BrowseLayout_Vertical_TwoTextOneImageVariant_ver5.0
+                            Properties:
+                              BorderColor: =RGBA(0, 0, 0, 1)
+                              BorderStyle: =BorderStyle.None
+                              BorderThickness: =1
+                              Fill: =RGBA(247, 247, 247, 1)
+                              Height: =391
+                              Items: =col_incPistaDetImagens
+                              LoadingSpinner: =LoadingSpinner.None
+                              TemplateSize: =110
+                              Width: =200
+                              X: =878
+                              Y: =158
+                            Children:
+                              - Image23_6:
+                                  Control: Image@2.2.3
+                                  Properties:
+                                    BorderColor: =RGBA(0, 0, 0, 1)
+                                    BorderStyle: =BorderStyle.None
+                                    BorderThickness: =5
+                                    CalculateOriginalDimensions: =true
+                                    Fill: =RGBA(255, 255, 255, 1)
+                                    Height: =90
+                                    Image: =ThisItem.ocoSoloImg_imagem
+                                    OnSelect: =
+                                    X: =46
+                                    Y: =11
+                              - Icon31_3:
+                                  Control: Classic/Icon@2.5.0
+                                  Properties:
+                                    BorderColor: =RGBA(0, 0, 0, 1)
+                                    Color: =RGBA(0, 0, 0, 1)
+                                    Height: =110
+                                    HoverFill: =RGBA(0, 0, 0, 0.1)
+                                    Icon: =Icon.Search
+                                    OnSelect: |-
+                                      =UpdateContext({var_incPistaDetVisibleImagem: true});
+                                      Select(Parent)
+                                    PaddingBottom: =15
+                                    PaddingLeft: =100
+                                    PaddingRight: =5
+                                    PaddingTop: =70
+                                    Width: =200
+                        - Label16_222:
+                            Control: Label@2.5.1
+                            Properties:
+                              BorderColor: =RGBA(0, 0, 0, 1)
+                              Font: =Font.'Open Sans'
+                              FontWeight: =FontWeight.Bold
+                              Height: =20
+                              Size: =10
+                              Text: ="Descrição da ocorrência:"
+                              Width: =300
+                              X: =345
+                              Y: =9
+                        - LabelIncPistaDescOcorrencia:
+                            Control: Label@2.5.1
+                            Properties:
+                              Align: =Align.Justify
+                              BorderColor: =RGBA(255, 255, 255, 1)
+                              BorderStyle: =BorderStyle.None
+                              BorderThickness: =1
+                              Fill: =RGBA(247, 247, 247, 1)
+                              Font: =Font.'Open Sans'
+                              Height: =200
+                              Overflow: =Overflow.Scroll
+                              Size: =10
+                              Text: =GalleryIncPistaRegistros.Selected.incPista_descOcorrencia
+                              Width: =514
+                              X: =345
+                              Y: =27
+                        - Container39_2:
+                            Control: GroupContainer@1.5.0
+                            Variant: ManualLayout
+                            Properties:
+                              BorderColor: =RGBA(167, 182, 203, 1)
+                              DropShadow: =DropShadow.None
+                              Fill: =RGBA(247, 247, 247, 1)
+                              Height: =98
+                              RadiusBottomLeft: =0
+                              RadiusBottomRight: =0
+                              RadiusTopLeft: =0
+                              RadiusTopRight: =0
+                              Width: =200
+                              X: =878
+                              Y: =26
+                            Children:
+                              - Label16_247:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    BorderColor: =RGBA(0, 0, 0, 1)
+                                    Font: =Font.'Open Sans'
+                                    Height: =20
+                                    Size: =10
+                                    Text: =GalleryIncPistaRegistros.Selected.Criado
+                                    Width: =200
+                                    Y: =73
+                              - Label16_244:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    BorderColor: =RGBA(0, 0, 0, 1)
+                                    Font: =Font.'Open Sans'
+                                    FontWeight: =FontWeight.Bold
+                                    Height: =20
+                                    Size: =10
+                                    Text: ="Cadastrado por:"
+                                    Width: =200
+                              - Label16_246:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    BorderColor: =RGBA(0, 0, 0, 1)
+                                    Font: =Font.'Open Sans'
+                                    FontWeight: =FontWeight.Bold
+                                    Height: =20
+                                    Size: =10
+                                    Text: ="Cadastrado em:"
+                                    Width: =200
+                                    Y: =55
+                              - Label16_245:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    BorderColor: =RGBA(0, 0, 0, 1)
+                                    Font: =Font.'Open Sans'
+                                    Size: =10
+                                    Text: =GalleryIncPistaRegistros.Selected.'Criado por'.DisplayName
+                                    VerticalAlign: =VerticalAlign.Top
+                                    Width: =200
+                                    Y: =15

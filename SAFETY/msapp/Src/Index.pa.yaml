@@ -1,0 +1,120 @@
+# ************************************************************************************************
+# Warning: YAML source code for Canvas Apps should only be used to review changes made within Power Apps Studio and for minor edits (Preview).
+# Use the maker portal to create and edit your Power Apps.
+# 
+# The schema file for Canvas Apps is available at https://go.microsoft.com/fwlink/?linkid=2304907
+# 
+# For more information, visit https://go.microsoft.com/fwlink/?linkid=2292623
+# ************************************************************************************************
+Screens:
+  Index:
+    Properties:
+      Fill: =RGBA(0, 0, 0, 0)
+      OnVisible: |-
+        =If(
+            Mid(
+                Param("LOGADO"),
+                13,
+                8
+            ) = Text(
+                Now(),
+                "ddmmyyyy"
+            ),
+            Set(
+                var_usuarioID,
+                Param("USUARIO")
+            );
+            Select(NavInspecao),
+            UpdateContext({var_visibleErro: true})
+        )
+    Children:
+      - ScreenContainer1:
+          Control: GroupContainer@1.5.0
+          Variant: AutoLayout
+          Properties:
+            DropShadow: =DropShadow.None
+            Fill: =RGBA(255, 255, 255, 1)
+            Height: =Max(App.Height, App.MinScreenHeight)
+            LayoutAlignItems: =LayoutAlignItems.Stretch
+            LayoutDirection: =LayoutDirection.Vertical
+            LayoutGap: =40
+            PaddingBottom: =16
+            PaddingLeft: =50
+            PaddingRight: =63.29
+            PaddingTop: =126.59
+            RadiusBottomLeft: =0
+            RadiusBottomRight: =0
+            RadiusTopLeft: =0
+            RadiusTopRight: =0
+            Visible: =var_visibleErro
+            Width: =Parent.Width
+          Children:
+            - Label3:
+                Control: Label@2.5.1
+                Properties:
+                  AutoHeight: =true
+                  Color: =RGBA(77, 77, 77, 1)
+                  LayoutMaxHeight: =
+                  LayoutMaxWidth: =
+                  Size: =63.29
+                  Text: ="Erro"
+                  Width: =0
+            - Label3_1:
+                Control: Label@2.5.1
+                Properties:
+                  AutoHeight: =true
+                  Color: =RGBA(77, 77, 77, 1)
+                  Fill: =RGBA(238, 204, 204, 0.52)
+                  LayoutMaxHeight: =
+                  LayoutMaxWidth: =
+                  Size: =30.37
+                  Text: ="O usuário não está logado, por favor efetue o login acessando o botão abaixo:"
+                  Width: =0
+            - NavInspecao:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  LayoutMaxHeight: =
+                  LayoutMaxWidth: =
+                  OnSelect: |-
+                    =Navigate(
+                        frmHome,
+                        ScreenTransition.Fade
+                    )
+                  PaddingRight: =6.33
+                  PaddingTop: =6.33
+                  Text: ="Botão Navigate inspeção"
+                  Visible: =false
+                  Width: =0
+            - LinkAirportNow:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  LayoutMaxHeight: =
+                  LayoutMaxWidth: =
+                  OnSelect: |-
+                    =Launch(
+                        "/providers/Microsoft.PowerApps/apps/3b57c1ae-5b14-40e3-9d9f-7f65818f4389",
+                        {LOGADO: ""},
+                        LaunchTarget.Replace
+                    )
+                  PaddingRight: =6.33
+                  PaddingTop: =6.33
+                  Text: ="Botão Link Airport Now"
+                  Visible: =false
+                  Width: =0
+            - ButtonCanvas1:
+                Control: Button@0.0.45
+                Properties:
+                  Appearance: ='ButtonCanvas.Appearance'.Primary
+                  Height: =50
+                  LayoutMaxHeight: =
+                  LayoutMaxWidth: =
+                  OnSelect: |-
+                    =Launch(
+                            "/providers/Microsoft.PowerApps/apps/a5af3add-12da-4107-b027-23daea7b0056",
+                            {
+                                LOGADO: ""
+                            },
+                            LaunchTarget.Replace
+                        )
+                  Text: ="Efetuar Login"
+                  Width: =0

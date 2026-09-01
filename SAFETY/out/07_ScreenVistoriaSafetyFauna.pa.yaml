@@ -1,0 +1,1877 @@
+# ************************************************************************************************
+# AirportNow — Safety & Fauna  ·  ScreenVistoriaSafetyFauna
+#
+# ⚠️ LOCALE — ARQUIVO NO FORMATO INVARIANTE ("," para argumentos, ";" para encadear,
+#    "." decimal). É assim que a EXIBIÇÃO DE CÓDIGO do Studio lê e grava, mesmo com o
+#    Studio em pt-BR. NÃO converta para ";" / ";;": o arquivo para de compilar.
+#    A conversão para pt-BR (";" / ";;" / vírgula decimal) só vale para o que é colado
+#    na BARRA DE FÓRMULAS — aqui, nada é.
+#
+#
+# COLAR EM: Studio > tela ScreenVistoriaSafetyFauna > exibição de código > substituir tudo.
+#
+# ESCOPO DE SEGURANÇA
+#   As galerias desta tela filtravam o aeroporto de forma OPCIONAL:
+#       IsBlank(combo.Selected.X) || Aeroporto = combo.Selected.X
+#   Com o combo em branco a condição é sempre verdadeira e a galeria devolvia
+#   TODOS os aeroportos — inclusive para o perfil "Base", que só pode enxergar
+#   o próprio. Foi acrescentada uma condição anterior, que não depende de
+#   nenhum controle da tela:
+#       IsBlank(varEscopoAero) || <coluna> = varEscopoAero
+#   varEscopoAero é definida no App.OnStart e só tem valor para o perfil Base.
+#   O filtro escolhido pelo usuário continua funcionando como antes, agora
+#   dentro do que o perfil dele permite ver.
+#
+#   DELEGAÇÃO: estas condições usam IsBlank(), que o conector do SharePoint não
+#   delega — a consulta continua limitada às primeiras 500/2000 linhas, como já
+#   era antes desta mudança. As sete telas ScreenMod* receberam a versão
+#   delegável (With + Switch); aqui a prioridade foi fechar o acesso sem
+#   reescrever a consulta.
+#
+# ⚠️ DEFEITO GRAVE NÃO CORRIGIDO AQUI — PRECISA DA SUA CONFIRMAÇÃO
+#
+#   A galeria Table1_2 desta tela consulta a lista  '1 - CSO' :
+#
+#       Items: =Search(Sort(Filter('1 - CSO', StartsWith(Aeroporto, ...), ...
+#
+#   mas o formulário (Form1_2) grava em  tbl_vistoriaSafetyFauna .
+#   Ou seja: a tela lista reuniões de CSO e salva vistorias — o que é gravado
+#   nunca aparece na listagem.
+#
+#   O esquema exportado confirma que as colunas certas existem em
+#   tbl_vistoriaSafetyFauna:  Bloco, Aeroporto, Protocolo, Data, TipoVistoria,
+#   Quadrante, Local, LocalEspecifico, Area, Descricao, AcalicaoRisco, Acoes,
+#   SetorResponsavel, Prioridade, Observacao, foto1, foto2.
+#
+#   Não troquei a fonte de dados porque isso obriga a reescrever também todos os
+#   ThisItem.<coluna> dos filhos da galeria (hoje apontam para colunas de CSO),
+#   e o rótulo da linha usa ThisItem.aeroporto em minúsculo, que não existe em
+#   nenhuma das duas listas. É uma correção que precisa ser feita olhando a tela
+#   montada. Me confirme que quer e eu entrego a galeria reescrita.
+#
+# ************************************************************************************************
+Screens:
+  ScreenVistoriaSafetyFauna:
+    Properties:
+      OnHidden: |-
+        =UpdateContext({CurrentItem: Blank()})
+      OnVisible: "=UpdateContext({var_visibleForms: false}) "
+    Children:
+      - ScreenContainer2_2:
+          Control: GroupContainer@1.5.0
+          Variant: AutoLayout
+          Properties:
+            DropShadow: =DropShadow.None
+            Fill: =RGBA(245, 245, 245, 1)
+            Height: =Parent.Height
+            LayoutAlignItems: =LayoutAlignItems.Stretch
+            LayoutDirection: =LayoutDirection.Vertical
+            LayoutGap: =10
+            RadiusBottomLeft: =0
+            RadiusBottomRight: =0
+            RadiusTopLeft: =0
+            RadiusTopRight: =0
+            Width: =Parent.Width
+          Children:
+            - HeaderContainer1_2:
+                Control: GroupContainer@1.5.0
+                Variant: AutoLayout
+                Properties:
+                  BorderColor: =RGBA(30, 30, 100, 1)
+                  DropShadow: =DropShadow.None
+                  Fill: =RGBA(0, 0, 0, 1)
+                  FillPortions: =0
+                  Height: =40
+                  LayoutAlignItems: =LayoutAlignItems.Center
+                  LayoutDirection: =LayoutDirection.Horizontal
+                  LayoutJustifyContent: =LayoutJustifyContent.SpaceBetween
+                  LayoutMaxHeight: =
+                  LayoutMaxWidth: =
+                  RadiusBottomLeft: =0
+                  RadiusBottomRight: =0
+                  RadiusTopLeft: =0
+                  RadiusTopRight: =0
+                  Width: =1729.08
+                Children:
+                  - Icon1_36:
+                      Control: Classic/Icon@2.5.0
+                      Properties:
+                        AlignInContainer: =AlignInContainer.Center
+                        Color: =RGBA(255, 255, 255, 1)
+                        Height: =30
+                        Icon: =Icon.BackArrow
+                        LayoutMaxHeight: =
+                        LayoutMaxWidth: =
+                        LayoutMinHeight: =0
+                        OnSelect: =Navigate(frmHome,ScreenTransition.Fade)
+                        PaddingBottom: =3
+                        PaddingLeft: =5
+                        PaddingRight: =5
+                        PaddingTop: =3
+                        Width: =60
+                  - Label1_68:
+                      Control: Label@2.5.1
+                      Properties:
+                        Align: =Align.Center
+                        AlignInContainer: =AlignInContainer.Stretch
+                        Color: =RGBA(255, 255, 255, 1)
+                        FillPortions: =1
+                        Font: =Font.'Open Sans'
+                        FontWeight: =FontWeight.Semibold
+                        LayoutMaxHeight: =
+                        LayoutMaxWidth: =
+                        LayoutMinHeight: =0
+                        LayoutMinWidth: =0
+                        Size: =12
+                        Text: =var_tituloModulo
+                        Width: =0
+                  - Image3_45:
+                      Control: Image@2.2.3
+                      Properties:
+                        AlignInContainer: =AlignInContainer.Stretch
+                        Height: =40
+                        Image: =MOTIVA_WHITE
+                        LayoutMaxHeight: =
+                        LayoutMaxWidth: =
+                        LayoutMinHeight: =0
+                        OnSelect: =Navigate(frmHome, ScreenTransition.Fade)
+                        Width: =60
+            - BodyContainer1_2:
+                Control: GroupContainer@1.5.0
+                Variant: AutoLayout
+                Properties:
+                  DropShadow: =DropShadow.None
+                  LayoutDirection: =LayoutDirection.Horizontal
+                  LayoutGap: =16
+                  LayoutMaxHeight: =
+                  LayoutMaxWidth: =
+                  PaddingBottom: =2
+                  PaddingLeft: =16
+                  PaddingRight: =16
+                  PaddingTop: =4
+                  RadiusBottomLeft: =0
+                  RadiusBottomRight: =0
+                  RadiusTopLeft: =0
+                  RadiusTopRight: =0
+                Children:
+                  - SidebarContainer1_2:
+                      Control: GroupContainer@1.5.0
+                      Variant: AutoLayout
+                      Properties:
+                        Fill: =RGBA(255, 255, 255, 1)
+                        FillPortions: =0
+                        LayoutDirection: =LayoutDirection.Vertical
+                        LayoutGap: =10
+                        LayoutMaxHeight: =
+                        LayoutMaxWidth: =
+                        PaddingBottom: =10
+                        PaddingLeft: =10
+                        PaddingRight: =10
+                        PaddingTop: =10
+                        Visible: =If(And(ScreenVistoriaSafetyFauna.Size = ScreenSize.Small, Or(newMode, isItemSelected)), false, true)
+                        Width: =400
+                      Children:
+                        - SearchContainer1_4:
+                            Control: GroupContainer@1.5.0
+                            Variant: AutoLayout
+                            Properties:
+                              DropShadow: =DropShadow.None
+                              Fill: =RGBA(245, 245, 245, 1)
+                              FillPortions: =0
+                              Height: =44
+                              LayoutDirection: =LayoutDirection.Horizontal
+                              LayoutMaxHeight: =
+                              LayoutMaxWidth: =
+                              PaddingRight: =5
+                            Children:
+                              - SearchInput1_2:
+                                  Control: TextInput@0.0.54
+                                  Properties:
+                                    FillPortions: =1
+                                    Height: =44
+                                    LayoutMaxHeight: =
+                                    LayoutMaxWidth: =
+                                    Placeholder: ="Pesquisar"
+                                    TriggerOutput: ='TextInputCanvas.TriggerOutput'.Keypress
+                        - SearchContainer1_5:
+                            Control: GroupContainer@1.5.0
+                            Variant: AutoLayout
+                            Properties:
+                              DropShadow: =DropShadow.None
+                              Fill: =RGBA(245, 245, 245, 1)
+                              FillPortions: =0
+                              Height: =64
+                              LayoutAlignItems: =LayoutAlignItems.Center
+                              LayoutDirection: =LayoutDirection.Vertical
+                              LayoutGap: =1
+                              LayoutMaxHeight: =
+                              LayoutMaxWidth: =
+                              PaddingLeft: =3
+                              PaddingRight: =3
+                            Children:
+                              - Container12_4:
+                                  Control: GroupContainer@1.5.0
+                                  Variant: AutoLayout
+                                  Properties:
+                                    DropShadow: =DropShadow.None
+                                    FillPortions: =0
+                                    Height: =30
+                                    LayoutAlignItems: =LayoutAlignItems.Center
+                                    LayoutDirection: =LayoutDirection.Horizontal
+                                    LayoutGap: =10
+                                    LayoutJustifyContent: =LayoutJustifyContent.Center
+                                    LayoutMaxHeight: =
+                                    LayoutMaxWidth: =
+                                    LayoutMinWidth: =0
+                                    PaddingLeft: =10
+                                    PaddingRight: =10
+                                    RadiusBottomLeft: =0
+                                    RadiusBottomRight: =0
+                                    RadiusTopLeft: =0
+                                    RadiusTopRight: =0
+                                  Children:
+                                    - Container125_6:
+                                        Control: GroupContainer@1.5.0
+                                        Variant: AutoLayout
+                                        Properties:
+                                          AlignInContainer: =AlignInContainer.SetByContainer
+                                          BorderColor: =RGBA(0, 0, 0, 0)
+                                          BorderStyle: =BorderStyle.None
+                                          DropShadow: =DropShadow.None
+                                          FillPortions: =0
+                                          Height: =30
+                                          LayoutAlignItems: =LayoutAlignItems.Center
+                                          LayoutDirection: =LayoutDirection.Horizontal
+                                          LayoutJustifyContent: =LayoutJustifyContent.Center
+                                          LayoutMaxHeight: =
+                                          LayoutMaxWidth: =
+                                          LayoutMinWidth: =0
+                                          Width: =120
+                                        Children:
+                                          - ComboboxCanvasBloco_5:
+                                              Control: Classic/DropDown@2.3.1
+                                              Properties:
+                                                AlignInContainer: =AlignInContainer.Stretch
+                                                AllowEmptySelection: =true
+                                                BorderColor: =RGBA(215, 223, 240, 1)
+                                                BorderStyle: =BorderStyle.None
+                                                ChevronBackground: =RGBA(0, 0, 0, 0)
+                                                ChevronFill: =RGBA(122, 138, 143, 1)
+                                                ChevronHoverBackground: =
+                                                ChevronHoverFill: =RGBA(0, 0, 0, 1)
+                                                Default: |-
+                                                  =If(
+                                                      varPerfilUser = "Sede",
+                                                      Blank(),
+                                                      varBlocoUser
+                                                  )
+                                                DisplayMode: |-
+                                                  =If(
+                                                      varPerfilUser = "Sede",
+                                                      DisplayMode.Edit,
+                                                      DisplayMode.View
+                                                  )
+                                                Fill: =RGBA(245, 245, 245, 1)
+                                                FillPortions: =1
+                                                Font: =Font.'Open Sans'
+                                                Height: =30
+                                                HoverFill: =RGBA(186, 202, 226, 1)
+                                                Items: =Distinct(colAeros,Bloco)
+                                                Items.Value: =Value
+                                                LayoutMaxHeight: =
+                                                LayoutMaxWidth: =
+                                                LayoutMinHeight: =30
+                                                LayoutMinWidth: =0
+                                                PressedColor: =RGBA(255, 255, 255, 1)
+                                                PressedFill: =RGBA(0, 0, 0, 1)
+                                                SelectionColor: =RGBA(255, 255, 255, 1)
+                                                SelectionFill: =RGBA(0, 0, 0, 1)
+                                                Size: =10
+                                                Width: =0
+                                                Y: =241
+                                    - Container125_7:
+                                        Control: GroupContainer@1.5.0
+                                        Variant: AutoLayout
+                                        Properties:
+                                          AlignInContainer: =AlignInContainer.SetByContainer
+                                          BorderColor: =RGBA(0, 0, 0, 0)
+                                          BorderStyle: =BorderStyle.None
+                                          DropShadow: =DropShadow.None
+                                          Height: =30
+                                          LayoutAlignItems: =LayoutAlignItems.Center
+                                          LayoutDirection: =LayoutDirection.Horizontal
+                                          LayoutJustifyContent: =LayoutJustifyContent.Center
+                                          LayoutMaxHeight: =
+                                          LayoutMaxWidth: =
+                                          LayoutMinWidth: =0
+                                          Width: =150
+                                        Children:
+                                          - ComboboxCanvasAeroporto_5:
+                                              Control: Classic/DropDown@2.3.1
+                                              Properties:
+                                                AlignInContainer: =AlignInContainer.Stretch
+                                                AllowEmptySelection: =true
+                                                BorderColor: =ComboboxCanvasBloco_5.BorderColor
+                                                BorderStyle: =BorderStyle.None
+                                                ChevronBackground: =RGBA(0, 0, 0, 0)
+                                                ChevronFill: =RGBA(122, 138, 143, 1)
+                                                ChevronHoverBackground: =
+                                                ChevronHoverFill: =RGBA(0, 0, 0, 1)
+                                                Default: |-
+                                                  =If(
+                                                      varPerfilUser = "Base",
+                                                      varAeroUser,
+                                                      Blank()
+                                                  )
+                                                DisplayMode: |-
+                                                  =If(
+                                                      varPerfilUser = "Base",
+                                                      DisplayMode.View,
+                                                      DisplayMode.Edit
+                                                  )
+                                                Fill: =RGBA(245, 245, 245, 1)
+                                                FillPortions: =1
+                                                Font: =Font.'Open Sans'
+                                                Height: =30
+                                                HoverFill: =RGBA(186, 202, 226, 1)
+                                                Items: |-
+                                                  =Distinct(
+                                                      Filter(
+                                                          colAeros,
+                                                          Bloco = ComboboxCanvasBloco_5.Selected.Value
+                                                      ),
+                                                      Aeroporto
+                                                  )
+                                                Items.Value: =Value
+                                                LayoutMaxHeight: =
+                                                LayoutMaxWidth: =
+                                                LayoutMinHeight: =30
+                                                LayoutMinWidth: =0
+                                                PressedColor: =RGBA(255, 255, 255, 1)
+                                                PressedFill: =RGBA(0, 0, 0, 1)
+                                                SelectionColor: =RGBA(255, 255, 255, 1)
+                                                SelectionFill: =RGBA(0, 0, 0, 1)
+                                                Size: =10
+                                                Width: =0
+                                                Y: =241
+                                    - ButtonCanvas6_2:
+                                        Control: Button@0.0.45
+                                        Properties:
+                                          Appearance: ='ButtonCanvas.Appearance'.Transparent
+                                          Icon: ="Eraser"
+                                          IconStyle: ='ButtonCanvas.IconStyle'.Filled
+                                          Layout: ='ButtonCanvas.Layout'.IconOnly
+                                          LayoutMaxHeight: =
+                                          LayoutMaxWidth: =
+                                          LayoutMinHeight: =0
+                                          OnSelect: =Reset(ComboboxCanvasBloco_5);Reset(ComboboxCanvasAeroporto_5);Reset(dtpHomeDtfInicio_3);Reset(dtpHomeDtfTermino_3)
+                                          Text: =
+                                          Width: =40
+                              - Container124_2:
+                                  Control: GroupContainer@1.5.0
+                                  Variant: AutoLayout
+                                  Properties:
+                                    BorderColor: =RGBA(0, 0, 0, 0)
+                                    BorderStyle: =BorderStyle.None
+                                    DropShadow: =DropShadow.None
+                                    Fill: =RGBA(255, 255, 255, 1)
+                                    FillPortions: =0
+                                    Height: =30
+                                    LayoutAlignItems: =LayoutAlignItems.Center
+                                    LayoutDirection: =LayoutDirection.Horizontal
+                                    LayoutJustifyContent: =LayoutJustifyContent.Center
+                                    LayoutMaxHeight: =
+                                    LayoutMaxWidth: =
+                                    LayoutMinHeight: =0
+                                    LayoutMinWidth: =130
+                                    RadiusBottomLeft: =0
+                                    RadiusBottomRight: =0
+                                    RadiusTopLeft: =0
+                                    RadiusTopRight: =0
+                                    Width: =100
+                                  Children:
+                                    - dtpHomeDtfInicio_3:
+                                        Control: DatePicker@0.0.46
+                                        Properties:
+                                          AlignInContainer: =AlignInContainer.Stretch
+                                          Fill: =RGBA(255, 255, 255, 1)
+                                          FillPortions: =1
+                                          FontSize: =14
+                                          Format: ='DatePickerCanvas.Format'.Short
+                                          Height: =30
+                                          LayoutMaxHeight: =
+                                          LayoutMaxWidth: =
+                                          LayoutMinHeight: =0
+                                          LayoutMinWidth: =0
+                                          OnChange: =
+                                          SelectedDate: =DateValue("01/01/" & Text(Year(Today())))
+                                          Width: =120
+                                    - dtpHomeDtfTermino_3:
+                                        Control: DatePicker@0.0.46
+                                        Properties:
+                                          AlignInContainer: =AlignInContainer.Stretch
+                                          Fill: =RGBA(255, 255, 255, 1)
+                                          FillPortions: =1
+                                          FontSize: =14
+                                          Format: ='DatePickerCanvas.Format'.Short
+                                          Height: =30
+                                          LayoutMaxHeight: =
+                                          LayoutMaxWidth: =
+                                          LayoutMinHeight: =0
+                                          LayoutMinWidth: =0
+                                          SelectedDate: =Today()
+                                          Width: =120
+                        - Table1_2:
+                            Control: Gallery@2.15.0
+                            Variant: BrowseLayout_Vertical_TwoTextOneImageVariant_ver5.0
+                            Properties:
+                              BorderStyle: =BorderStyle.None
+                              Items: |-
+                                =Search(
+                                    Sort(
+                                        Filter(
+                                            '1 - CSO',
+                                            // escopo de segurança — independe do filtro da tela
+                                            IsBlank(varEscopoAero) ||
+                                            Aeroporto = varEscopoAero,
+                                            StartsWith(
+                                                Aeroporto,
+                                                Text(ComboboxCanvasAeroporto_5.Selected.Value)
+                                            ),
+                                            'Data/Hora' >= dtpHomeDtfInicio_3.SelectedDate && 'Data/Hora' <= dtpHomeDtfTermino_3.SelectedDate
+                                        ),
+                                        'Data/Hora',
+                                        SortOrder.Descending
+                                    ),
+                                    SearchInput1_2.Value,
+                                    Assuntos_Abordados
+                                )
+                              LayoutMaxHeight: =
+                              LayoutMaxWidth: =
+                              TemplateSize: =100
+                              Transition: =Transition.Push
+                            Children:
+                              - NextArrow1_2:
+                                  Control: Classic/Icon@2.5.0
+                                  Properties:
+                                    AccessibleLabel: =Self.Tooltip
+                                    BorderColor: =RGBA(0, 0, 0, 1)
+                                    Color: =RGBA(0, 0, 0, 0)
+                                    DisabledBorderColor: =RGBA(56, 56, 56, 1)
+                                    DisabledColor: =RGBA(119, 119, 119, 1)
+                                    Height: =100
+                                    Icon: =Icon.ChevronRight
+                                    OnSelect: |-
+                                      =UpdateContext(
+                                          {
+                                              isItemSelected: true,
+                                              newMode: false,
+                                              editMode: false,
+                                              CurrentItem: ThisItem,
+                                              var_selectTipoFOD: ThisItem.tipo
+                                          }
+                                      )
+                                    PaddingBottom: =16
+                                    PaddingLeft: =Parent.Width - 40
+                                    PaddingRight: =16
+                                    PaddingTop: =16
+                                    Tooltip: ="Exibir detalhes do item"
+                                    Width: =Parent.Width
+                              - Title1_2:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    BorderColor: =RGBA(0, 0, 0, 1)
+                                    Color: =RGBA(50, 49, 48, 1)
+                                    FontWeight: =If(ThisItem.IsSelected, FontWeight.Semibold, FontWeight.Normal)
+                                    Height: =Self.Size * 1.8
+                                    OnSelect: =Select(Parent)
+                                    PaddingBottom: =0
+                                    PaddingLeft: =0
+                                    PaddingRight: =0
+                                    PaddingTop: =0
+                                    Size: =14
+                                    Text: |-
+                                      =Coalesce(
+                                          ThisItem.identificacao,
+                                          ThisItem.tipo
+                                      )
+                                    VerticalAlign: =VerticalAlign.Top
+                                    Width: =Parent.TemplateWidth - 173
+                                    X: =82
+                                    Y: =15
+                              - ButtonCanvas4_2:
+                                  Control: Button@0.0.45
+                                  Properties:
+                                    Appearance: ='ButtonCanvas.Appearance'.Secondary
+                                    FontColor: =RGBA(12, 59, 94, 1)
+                                    FontWeight: =FontWeight.Semibold
+                                    IconStyle: ='ButtonCanvas.IconStyle'.Outline
+                                    OnSelect: =
+                                    Text: =LookUp(colAeros,Aeroporto = ThisItem.aeroporto).IATA
+                                    Width: =60
+                                    X: =Parent.Width - 80
+                                    Y: =20
+                              - ButtonCanvas3_4:
+                                  Control: Button@0.0.45
+                                  Properties:
+                                    Appearance: ='ButtonCanvas.Appearance'.Secondary
+                                    BorderRadius: =60
+                                    FontColor: =RGBA(135, 135, 135, 1)
+                                    FontSize: =40
+                                    Height: =60
+                                    Icon: ="DocumentBulletList"
+                                    IconStyle: ='ButtonCanvas.IconStyle'.Filled
+                                    OnSelect: =Launch(If(!IsBlank(ThisItem.foto), Index(Split(ThisItem.foto,Char(34)),8).Value))
+                                    PaddingBottom: =5
+                                    PaddingLeft: =3
+                                    PaddingRight: =0
+                                    PaddingTop: =3
+                                    Text: =
+                                    Width: =60
+                                    X: =15
+                                    Y: =20
+                              - Subtitle1_4:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    BorderColor: =RGBA(0, 0, 0, 1)
+                                    FontWeight: =If(ThisItem.IsSelected, FontWeight.Semibold, FontWeight.Normal)
+                                    Height: =Self.Size * 1.8
+                                    OnSelect: =Select(Parent)
+                                    PaddingBottom: =0
+                                    PaddingLeft: =0
+                                    PaddingRight: =0
+                                    PaddingTop: =0
+                                    Size: =11
+                                    Text: =ThisItem.data&" "&TimeValue(ThisItem.Criado)
+                                    VerticalAlign: =VerticalAlign.Top
+                                    Width: =Title1_2.Width
+                                    X: =Title1_2.X
+                                    Y: =Title1_2.Y + Title1_2.Height + 5
+                              - Subtitle1_5:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    BorderColor: =RGBA(0, 0, 0, 1)
+                                    Color: =RGBA(45, 128, 40, 1)
+                                    FontWeight: =If(ThisItem.IsSelected, FontWeight.Semibold, FontWeight.Normal)
+                                    Height: =Self.Size * 1.8
+                                    OnSelect: =Select(Parent)
+                                    PaddingBottom: =0
+                                    PaddingLeft: =0
+                                    PaddingRight: =0
+                                    PaddingTop: =0
+                                    Size: =10
+                                    Text: =If(IsBlank(ThisItem.foto), "AN", "FORMS")
+                                    VerticalAlign: =VerticalAlign.Top
+                                    Width: =Title1_2.Width
+                                    X: =Title1_2.X
+                                    Y: =Subtitle1_4.Y + Subtitle1_4.Height + 5
+                              - TextCanvas3_2:
+                                  Control: Text@0.0.51
+                                  Properties:
+                                    Align: ='TextCanvas.Align'.End
+                                    Height: =Self.Size * 1.8
+                                    PaddingRight: =20
+                                    Size: =12
+                                    Text: =ThisItem.responsavel_registro
+                                    Weight: ='TextCanvas.Weight'.Semibold
+                                    Width: =238
+                                    X: =141
+                                    Y: =72
+                              - Separator2_2:
+                                  Control: Rectangle@2.3.0
+                                  Properties:
+                                    Fill: =RGBA(214, 221, 224, 1)
+                                    Height: =2
+                                    OnSelect: =Select(Parent)
+                                    Width: =Parent.TemplateWidth
+                                    Y: =Parent.TemplateHeight - Self.Height
+                  - DeleteConfirmDialogContainer1_2:
+                      Control: GroupContainer@1.5.0
+                      Variant: AutoLayout
+                      Properties:
+                        FillPortions: =7
+                        LayoutDirection: =LayoutDirection.Vertical
+                        LayoutMaxHeight: =
+                        LayoutMaxWidth: =
+                        Visible: =If(deleteMode, true, false)
+                        Width: =0
+                      Children:
+                        - ConfirmDeleteLabelContainer1_2:
+                            Control: GroupContainer@1.5.0
+                            Variant: AutoLayout
+                            Properties:
+                              DropShadow: =DropShadow.None
+                              LayoutAlignItems: =LayoutAlignItems.End
+                              LayoutDirection: =LayoutDirection.Horizontal
+                              LayoutMaxHeight: =
+                              LayoutMaxWidth: =
+                              PaddingBottom: =20
+                              RadiusBottomLeft: =0
+                              RadiusBottomRight: =0
+                              RadiusTopLeft: =0
+                              RadiusTopRight: =0
+                            Children:
+                              - TextCanvas1_10:
+                                  Control: Text@0.0.51
+                                  Properties:
+                                    Align: ='TextCanvas.Align'.Center
+                                    FillPortions: =1
+                                    LayoutMaxHeight: =
+                                    LayoutMaxWidth: =
+                                    Size: =16
+                                    Text: ="Tem certeza de que deseja excluir este registro?"
+                        - ConfirmDeleteButtonBarContainer1_2:
+                            Control: GroupContainer@1.5.0
+                            Variant: AutoLayout
+                            Properties:
+                              DropShadow: =DropShadow.None
+                              LayoutDirection: =LayoutDirection.Horizontal
+                              LayoutGap: =15
+                              LayoutJustifyContent: =LayoutJustifyContent.Center
+                              LayoutMaxHeight: =
+                              LayoutMaxWidth: =
+                              LayoutWrap: =true
+                              RadiusBottomLeft: =0
+                              RadiusBottomRight: =0
+                              RadiusTopLeft: =0
+                              RadiusTopRight: =0
+                            Children:
+                              - ConfirmDeleteButton1_2:
+                                  Control: Button@0.0.45
+                                  Properties:
+                                    AccessibleLabel: ="Delete"
+                                    LayoutMaxHeight: =
+                                    LayoutMaxWidth: =
+                                    OnSelect: |
+                                      =Remove(
+                                          tbl_FOD,
+                                          selectedRecord
+                                      );
+                                      If(
+                                          IsEmpty(
+                                              Errors(
+                                                  tbl_FOD,
+                                                  selectedRecord
+                                              )
+                                          ),
+                                          Navigate(
+                                              ScreenSucesso,
+                                              ScreenTransition.Fade,
+                                              {var_navigateSucess: ScreenVistoriaSafetyFauna}
+                                          );
+                                          UpdateContext(
+                                              {
+                                                  isItemSelected: false,
+                                                  newMode: false,
+                                                  deleteMode: false
+                                              }
+                                          )
+                                      );
+                                    Text: ="Delete"
+                              - CancelDeleteButton1_2:
+                                  Control: Button@0.0.45
+                                  Properties:
+                                    AccessibleLabel: ="Cancel"
+                                    Appearance: ='ButtonCanvas.Appearance'.Secondary
+                                    LayoutMaxHeight: =
+                                    LayoutMaxWidth: =
+                                    OnSelect: |-
+                                      =UpdateContext({ deleteMode: false })
+                                    Text: ="Cancel"
+                  - RightContainer1_2:
+                      Control: GroupContainer@1.5.0
+                      Variant: AutoLayout
+                      Properties:
+                        DropShadow: =DropShadow.None
+                        FillPortions: =7
+                        LayoutAlignItems: =LayoutAlignItems.Stretch
+                        LayoutDirection: =LayoutDirection.Vertical
+                        LayoutGap: =16
+                        LayoutMaxHeight: =
+                        LayoutMaxWidth: =
+                        PaddingBottom: =2
+                        PaddingLeft: =2
+                        PaddingRight: =2
+                        RadiusBottomLeft: =0
+                        RadiusBottomRight: =0
+                        RadiusTopLeft: =0
+                        RadiusTopRight: =0
+                        Visible: =If(Or(deleteMode, And(ScreenVistoriaSafetyFauna.Size = ScreenSize.Small, !newMode, !isItemSelected)), false, true)
+                        Width: =0
+                      Children:
+                        - Container8_2:
+                            Control: GroupContainer@1.5.0
+                            Variant: AutoLayout
+                            Properties:
+                              Fill: =RGBA(255, 255, 255, 1)
+                              FillPortions: =0
+                              Height: =60
+                              LayoutDirection: =LayoutDirection.Horizontal
+                              LayoutMaxHeight: =
+                              LayoutMaxWidth: =
+                              LayoutMinHeight: =40
+                            Children:
+                              - Container21_2:
+                                  Control: GroupContainer@1.5.0
+                                  Variant: AutoLayout
+                                  Properties:
+                                    DropShadow: =DropShadow.None
+                                    LayoutDirection: =LayoutDirection.Horizontal
+                                    LayoutGap: =10
+                                    LayoutMaxHeight: =
+                                    LayoutMaxWidth: =
+                                    LayoutMinHeight: =60
+                                    PaddingLeft: =If(ScreenVistoriaSafetyFauna.Size = ScreenSize.Small,8,12)
+                                    PaddingRight: =12
+                                    RadiusBottomLeft: =0
+                                    RadiusBottomRight: =0
+                                    RadiusTopLeft: =0
+                                    RadiusTopRight: =0
+                                  Children:
+                                    - NewRecordButton1_2:
+                                        Control: Button@0.0.45
+                                        Properties:
+                                          AlignInContainer: =AlignInContainer.Center
+                                          Appearance: ='ButtonCanvas.Appearance'.Primary
+                                          BasePaletteColor: =RGBA(5, 102, 178, 1)
+                                          Icon: ="Add"
+                                          IconStyle: ='ButtonCanvas.IconStyle'.Filled
+                                          LayoutMaxHeight: =
+                                          LayoutMaxWidth: =
+                                          OnSelect: |
+                                            =NewForm(Form1_2);
+                                            UpdateContext(
+                                                {
+                                                    newMode: true,
+                                                    CurrentItem: Blank(),
+                                                    var_selectTipoFOD: Blank()
+                                                }
+                                            );
+                                          Text: ="Novo"
+                                          Visible: |-
+                                            =And(
+                                                !newMode,
+                                                !deleteMode
+                                            )
+                                          Width: =100
+                                    - EditButton1_2:
+                                        Control: Button@0.0.45
+                                        Properties:
+                                          AlignInContainer: =AlignInContainer.Center
+                                          Appearance: ='ButtonCanvas.Appearance'.Transparent
+                                          Icon: ="Edit"
+                                          LayoutMaxHeight: =
+                                          LayoutMaxWidth: =
+                                          OnSelect: |-
+                                            =UpdateContext({ editMode: true, selectedRecord: Table1.Selected })
+                                          Text: ="Editar"
+                                          Visible: =And(!newMode, !deleteMode)
+                                          Width: =100
+                                    - DeleteButton1_2:
+                                        Control: Button@0.0.45
+                                        Properties:
+                                          AlignInContainer: =AlignInContainer.Center
+                                          Appearance: ='ButtonCanvas.Appearance'.Transparent
+                                          Icon: ="Delete"
+                                          LayoutMaxHeight: =
+                                          LayoutMaxWidth: =
+                                          OnSelect: |-
+                                            =UpdateContext({ deleteMode: true, selectedRecord: Table1.Selected })
+                                          Text: ="Excluir"
+                                          Visible: =And(!newMode, !deleteMode)
+                                          Width: =100
+                                    - Label4_11:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          AlignInContainer: =AlignInContainer.Center
+                                          FillPortions: =1
+                                          LayoutMaxHeight: =
+                                          LayoutMaxWidth: =
+                                          Text: =
+                        - MainContainer1_2:
+                            Control: GroupContainer@1.5.0
+                            Variant: AutoLayout
+                            Properties:
+                              Fill: =RGBA(255, 255, 255, 1)
+                              LayoutDirection: =LayoutDirection.Vertical
+                              LayoutGap: =16
+                              LayoutMaxHeight: =
+                              LayoutMaxWidth: =
+                              LayoutMinHeight: =150
+                              LayoutMinWidth: =300
+                              LayoutOverflowY: =LayoutOverflow.Scroll
+                              PaddingBottom: =20
+                              PaddingTop: =8
+                              Visible: =newMode Or editMode Or !IsBlank(CurrentItem)
+                            Children:
+                              - Form1_2:
+                                  Control: Form@2.4.4
+                                  Layout: Vertical
+                                  Properties:
+                                    BorderStyle: =BorderStyle.None
+                                    DataSource: =tbl_vistoriaSafetyFauna
+                                    DefaultMode: =If(newMode, FormMode.New, editMode, FormMode.Edit, FormMode.View)
+                                    Height: =450
+                                    Item: =CurrentItem
+                                    LayoutMaxHeight: =
+                                    LayoutMaxWidth: =
+                                    LayoutMinHeight: =100
+                                    LayoutMinWidth: =300
+                                    OnFailure: |
+                                      =Navigate(
+                                          ScreenErro,
+                                          ScreenTransition.Fade,
+                                          {var_navigateSucess: ScreenVistoriaSafetyFauna}
+                                      );
+                                    OnSuccess: |-
+                                      =Navigate(
+                                          ScreenSucesso,
+                                          ScreenTransition.Fade,
+                                          {var_navigateSucess: ScreenVistoriaSafetyFauna}
+                                      );
+                                      UpdateContext({isItemSelected: false});
+                                      ResetForm(Form1_2)
+                                    Width: =Parent.Width
+                                  Children:
+                                    - Bloco_DataCard1:
+                                        Control: TypedDataCard@1.0.7
+                                        Variant: TextualEdit
+                                        Properties:
+                                          DataField: ="Bloco"
+                                          Default: =Coalesce( ThisItem.Bloco, varBlocoUser)
+                                          DisplayName: =DataSourceInfo([@tbl_vistoriaSafetyFauna],DataSourceInfo.DisplayName,Bloco)
+                                          MaxLength: =DataSourceInfo([@tbl_vistoriaSafetyFauna], DataSourceInfo.MaxLength, Bloco)
+                                          Required: =false
+                                          Update: =DataCardValue46.Value
+                                          Visible: =false
+                                          Width: =400
+                                          X: =0
+                                          Y: =0
+                                        Children:
+                                          - DataCardKey52:
+                                              Control: Text@0.0.51
+                                              MetadataKey: FieldName
+                                              Properties:
+                                                Height: =22
+                                                Text: =Parent.DisplayName
+                                                Weight: ='TextCanvas.Weight'.Semibold
+                                                Width: =Parent.Width - 48
+                                                Wrap: =false
+                                                X: =24
+                                                Y: =10
+                                          - DataCardValue46:
+                                              Control: TextInput@0.0.54
+                                              MetadataKey: FieldValue
+                                              Properties:
+                                                AccessibleLabel: =Parent.DisplayName
+                                                DisplayMode: =Parent.DisplayMode
+                                                Mode: ="'TextInputCanvas.Mode'.TextInputModeSingleLine"
+                                                Required: =Parent.Required
+                                                ValidationState: =If(IsBlank(Parent.Error), "None", "Error")
+                                                Value: =Parent.Default
+                                                Width: =Parent.Width - 48
+                                                X: =24
+                                                Y: =DataCardKey52.Y + DataCardKey52.Height + 4
+                                          - ErrorMessage54:
+                                              Control: Text@0.0.51
+                                              MetadataKey: ErrorMessage
+                                              Properties:
+                                                Height: =30
+                                                Text: =Parent.Error
+                                                Visible: =And(!IsBlank(Parent.Error), Parent.DisplayMode=DisplayMode.Edit)
+                                                Width: =Parent.Width - 48
+                                                X: =24
+                                                Y: =DataCardValue46.Y + DataCardValue46.Height
+                                          - StarVisible54:
+                                              Control: Text@0.0.51
+                                              MetadataKey: FieldRequired
+                                              Properties:
+                                                Align: ='TextCanvas.Align'.Center
+                                                Height: =30
+                                                Text: ="*"
+                                                Visible: =And(Parent.Required, Parent.DisplayMode=DisplayMode.Edit)
+                                                Width: =30
+                                                Y: =DataCardKey52.Y
+                                    - Aeroporto_DataCard3:
+                                        Control: TypedDataCard@1.0.7
+                                        Variant: TextualEdit
+                                        Properties:
+                                          DataField: ="Aeroporto"
+                                          Default: =Coalesce( ThisItem.Aeroporto, varAeroUser)
+                                          DisplayName: =DataSourceInfo([@tbl_vistoriaSafetyFauna],DataSourceInfo.DisplayName,Aeroporto)
+                                          MaxLength: =DataSourceInfo([@tbl_vistoriaSafetyFauna], DataSourceInfo.MaxLength, Aeroporto)
+                                          Required: =false
+                                          Update: =DataCardValue47.Value
+                                          Visible: =false
+                                          Width: =Bloco_DataCard1.Width
+                                          X: =1
+                                          Y: =0
+                                        Children:
+                                          - DataCardKey53:
+                                              Control: Text@0.0.51
+                                              MetadataKey: FieldName
+                                              Properties:
+                                                Height: =22
+                                                Text: =Parent.DisplayName
+                                                Weight: ='TextCanvas.Weight'.Semibold
+                                                Width: =Parent.Width - 48
+                                                Wrap: =false
+                                                X: =24
+                                                Y: =10
+                                          - DataCardValue47:
+                                              Control: TextInput@0.0.54
+                                              MetadataKey: FieldValue
+                                              Properties:
+                                                AccessibleLabel: =Parent.DisplayName
+                                                DisplayMode: =Parent.DisplayMode
+                                                Mode: ="'TextInputCanvas.Mode'.TextInputModeSingleLine"
+                                                Required: =Parent.Required
+                                                ValidationState: =If(IsBlank(Parent.Error), "None", "Error")
+                                                Value: =Parent.Default
+                                                Width: =Parent.Width - 48
+                                                X: =24
+                                                Y: =DataCardKey53.Y + DataCardKey53.Height + 4
+                                          - ErrorMessage55:
+                                              Control: Text@0.0.51
+                                              MetadataKey: ErrorMessage
+                                              Properties:
+                                                Height: =30
+                                                Text: =Parent.Error
+                                                Visible: =And(!IsBlank(Parent.Error), Parent.DisplayMode=DisplayMode.Edit)
+                                                Width: =Parent.Width - 48
+                                                X: =24
+                                                Y: =DataCardValue47.Y + DataCardValue47.Height
+                                          - StarVisible55:
+                                              Control: Text@0.0.51
+                                              MetadataKey: FieldRequired
+                                              Properties:
+                                                Align: ='TextCanvas.Align'.Center
+                                                Height: =30
+                                                Text: ="*"
+                                                Visible: =And(Parent.Required, Parent.DisplayMode=DisplayMode.Edit)
+                                                Width: =30
+                                                Y: =DataCardKey53.Y
+                                    - Protocolo_DataCard1:
+                                        Control: TypedDataCard@1.0.7
+                                        Variant: TextualEdit
+                                        Properties:
+                                          DataField: ="Protocolo"
+                                          Default: =ThisItem.Protocolo
+                                          DisplayName: =DataSourceInfo([@tbl_vistoriaSafetyFauna],DataSourceInfo.DisplayName,Protocolo)
+                                          MaxLength: =DataSourceInfo([@tbl_vistoriaSafetyFauna], DataSourceInfo.MaxLength, Protocolo)
+                                          Required: =false
+                                          Update: =DataCardValue55.Value
+                                          Visible: =false
+                                          Width: =Bloco_DataCard1.Width
+                                          X: =2
+                                          Y: =0
+                                        Children:
+                                          - DataCardKey61:
+                                              Control: Text@0.0.51
+                                              MetadataKey: FieldName
+                                              Properties:
+                                                Height: =22
+                                                Text: =Parent.DisplayName
+                                                Weight: ='TextCanvas.Weight'.Semibold
+                                                Width: =Parent.Width - 48
+                                                Wrap: =false
+                                                X: =24
+                                                Y: =10
+                                          - DataCardValue55:
+                                              Control: TextInput@0.0.54
+                                              MetadataKey: FieldValue
+                                              Properties:
+                                                AccessibleLabel: =Parent.DisplayName
+                                                DisplayMode: =Parent.DisplayMode
+                                                Mode: ="'TextInputCanvas.Mode'.TextInputModeSingleLine"
+                                                Required: =Parent.Required
+                                                ValidationState: =If(IsBlank(Parent.Error), "None", "Error")
+                                                Value: =Parent.Default
+                                                Width: =Parent.Width - 48
+                                                X: =24
+                                                Y: =DataCardKey61.Y + DataCardKey61.Height + 4
+                                          - ErrorMessage61:
+                                              Control: Text@0.0.51
+                                              MetadataKey: ErrorMessage
+                                              Properties:
+                                                Height: =30
+                                                Text: =Parent.Error
+                                                Visible: =And(!IsBlank(Parent.Error), Parent.DisplayMode=DisplayMode.Edit)
+                                                Width: =Parent.Width - 48
+                                                X: =24
+                                                Y: =DataCardValue55.Y + DataCardValue55.Height
+                                          - StarVisible61:
+                                              Control: Text@0.0.51
+                                              MetadataKey: FieldRequired
+                                              Properties:
+                                                Align: ='TextCanvas.Align'.Center
+                                                Height: =30
+                                                Text: ="*"
+                                                Visible: =And(Parent.Required, Parent.DisplayMode=DisplayMode.Edit)
+                                                Width: =30
+                                                Y: =DataCardKey61.Y
+                                    - Data_DataCard1:
+                                        Control: TypedDataCard@1.0.7
+                                        Variant: DateTimeEdit
+                                        Properties:
+                                          DataField: ="Data"
+                                          Default: =Coalesce( ThisItem.Data, Now())
+                                          DisplayName: =DataSourceInfo([@tbl_vistoriaSafetyFauna],DataSourceInfo.DisplayName,Data)
+                                          Required: =true
+                                          Update: =If(Not IsBlank(DateValue3.SelectedDate), DateTime(Year(DateValue3.SelectedDate), Month(DateValue3.SelectedDate), Day(DateValue3.SelectedDate), Value(HourValue3.Selected.Value), Value(MinuteValue3.Selected.Value), Second(DateValue3.SelectedDate)))
+                                          Width: =Bloco_DataCard1.Width
+                                          X: =0
+                                          Y: =1
+                                        Children:
+                                          - DataCardKey47:
+                                              Control: Text@0.0.51
+                                              MetadataKey: FieldName
+                                              Properties:
+                                                Height: =22
+                                                Text: ="Data/Hora:"
+                                                Weight: ='TextCanvas.Weight'.Semibold
+                                                Width: =Parent.Width - 48
+                                                Wrap: =false
+                                                X: =24
+                                                Y: =10
+                                          - DateValue3:
+                                              Control: DatePicker@0.0.46
+                                              MetadataKey: DateFieldValue
+                                              Properties:
+                                                AccessibleLabel: =Parent.DisplayName
+                                                DateTimeZone: ='DatePickerCanvas.DateTimeZone'.UTC
+                                                DisplayMode: =Parent.DisplayMode
+                                                Format: ='DatePickerCanvas.Format'.Short
+                                                SelectedDate: =Parent.Default
+                                                ValidationState: =If(IsBlank(Parent.Error), "None", "Error")
+                                                Width: =(Parent.Width - 48) / 2
+                                                X: =24
+                                                Y: =DataCardKey47.Y + DataCardKey47.Height + 4
+                                          - HourValue3:
+                                              Control: DropDown@0.0.45
+                                              MetadataKey: HourFieldValue
+                                              Properties:
+                                                AccessibleLabel: =If(Parent.Required, Substitute("{0}. Obrigatório.", "{0}", Parent.DisplayName), Parent.DisplayName)
+                                                DefaultSelectedItems: =[Text(Hour(Parent.Default),"00")]
+                                                DisplayMode: =Parent.DisplayMode
+                                                Height: =28
+                                                Items: =["00","01","02","03","04","05","06","07","08","09","10","11","12","13","14","15","16","17","18","19","20","21","22","23"]
+                                                Required: =Parent.Required
+                                                ValidationState: =If(IsBlank(Parent.Error), "None", "Error")
+                                                Width: =DateValue3.Width / 2 - 10
+                                                X: =DateValue3.X + DateValue3.Width + 10
+                                                Y: =DateValue3.Y + 1
+                                          - Separator4:
+                                              Control: Text@0.0.51
+                                              MetadataKey: HourMinuteSeparator
+                                              Properties:
+                                                Align: ='TextCanvas.Align'.Center
+                                                Height: =HourValue3.Height
+                                                Text: =":"
+                                                Width: =10
+                                                X: =HourValue3.X + HourValue3.Width
+                                                Y: =HourValue3.Y
+                                          - MinuteValue3:
+                                              Control: DropDown@0.0.45
+                                              MetadataKey: MinuteFieldValue
+                                              Properties:
+                                                AccessibleLabel: =If(Parent.Required, Substitute("{0}. Obrigatório.", "{0}", Parent.DisplayName), Parent.DisplayName)
+                                                DefaultSelectedItems: =[Text(Minute(Parent.Default),"00")]
+                                                DisplayMode: =Parent.DisplayMode
+                                                Height: =28
+                                                Items: =["00","01","02","03","04","05","06","07","08","09","10","11","12","13","14","15","16","17","18","19","20","21","22","23","24","25","26","27","28","29","30","31","32","33","34","35","36","37","38","39","40","41","42","43","44","45","46","47","48","49","50","51","52","53","54","55","56","57","58","59"]
+                                                ValidationState: =If(IsBlank(Parent.Error), "None", "Error")
+                                                Width: =HourValue3.Width
+                                                X: =HourValue3.X + HourValue3.Width + Separator4.Width
+                                                Y: =HourValue3.Y + 1
+                                          - ErrorMessage50:
+                                              Control: Text@0.0.51
+                                              MetadataKey: ErrorMessage
+                                              Properties:
+                                                Height: =30
+                                                Text: =Parent.Error
+                                                Visible: =And(!IsBlank(Parent.Error), Parent.DisplayMode=DisplayMode.Edit)
+                                                Width: =Parent.Width - 48
+                                                X: =24
+                                                Y: =DateValue3.Y + DateValue3.Height
+                                          - StarVisible50:
+                                              Control: Text@0.0.51
+                                              MetadataKey: FieldRequired
+                                              Properties:
+                                                Align: ='TextCanvas.Align'.Center
+                                                Height: =20
+                                                Text: ="*"
+                                                Visible: =And(Parent.Required, Parent.DisplayMode=DisplayMode.Edit)
+                                                Width: =30
+                                                Y: =DataCardKey47.Y
+                                    - TipoVistoria_DataCard1:
+                                        Control: TypedDataCard@1.0.7
+                                        Variant: ComboBoxEdit
+                                        Properties:
+                                          DataField: ="TipoVistoria"
+                                          Default: =ThisItem.TipoVistoria
+                                          DisplayName: =DataSourceInfo([@tbl_vistoriaSafetyFauna],DataSourceInfo.DisplayName,TipoVistoria)
+                                          Required: =true
+                                          Update: =DataCardValue45.Selected
+                                          Width: =Bloco_DataCard1.Width
+                                          X: =1
+                                          Y: =1
+                                        Children:
+                                          - DataCardKey51:
+                                              Control: Text@0.0.51
+                                              MetadataKey: FieldName
+                                              Properties:
+                                                Height: =22
+                                                Text: ="Tipo de Vistoria:"
+                                                Weight: ='TextCanvas.Weight'.Semibold
+                                                Width: =Parent.Width - 48
+                                                Wrap: =false
+                                                X: =24
+                                                Y: =10
+                                          - DataCardValue45:
+                                              Control: ComboBox@0.0.51
+                                              MetadataKey: FieldValue
+                                              Properties:
+                                                AccessibleLabel: =Parent.DisplayName
+                                                DefaultSelectedItems: =[Parent.Default]
+                                                DisplayMode: =Parent.DisplayMode
+                                                Items: =Choices([@tbl_vistoriaSafetyFauna].TipoVistoria)
+                                                Required: =Parent.Required
+                                                ValidationState: =If(IsBlank(Parent.Error), "None", "Error")
+                                                Width: =Parent.Width - 48
+                                                X: =24
+                                                Y: =DataCardKey51.Y + DataCardKey51.Height + 4
+                                          - ErrorMessage51:
+                                              Control: Text@0.0.51
+                                              MetadataKey: ErrorMessage
+                                              Properties:
+                                                Height: =30
+                                                Text: =Parent.Error
+                                                Visible: =And(!IsBlank(Parent.Error), Parent.DisplayMode=DisplayMode.Edit)
+                                                Width: =Parent.Width - 48
+                                                X: =24
+                                                Y: =DataCardValue45.Y + DataCardValue45.Height
+                                          - StarVisible51:
+                                              Control: Text@0.0.51
+                                              MetadataKey: FieldRequired
+                                              Properties:
+                                                Align: ='TextCanvas.Align'.Center
+                                                Height: =20
+                                                Text: ="*"
+                                                Visible: =And(Parent.Required, Parent.DisplayMode=DisplayMode.Edit)
+                                                Width: =30
+                                                Y: =DataCardKey51.Y
+                                    - Quadrante_DataCard1:
+                                        Control: TypedDataCard@1.0.7
+                                        Variant: TextualEdit
+                                        Properties:
+                                          DataField: ="Quadrante"
+                                          Default: =ThisItem.Quadrante
+                                          DisplayName: =DataSourceInfo([@tbl_vistoriaSafetyFauna],DataSourceInfo.DisplayName,Quadrante)
+                                          MaxLength: =DataSourceInfo([@tbl_vistoriaSafetyFauna], DataSourceInfo.MaxLength, Quadrante)
+                                          Required: =false
+                                          Update: =DataCardValue48.Value
+                                          Width: =Bloco_DataCard1.Width
+                                          X: =2
+                                          Y: =1
+                                        Children:
+                                          - DataCardKey54:
+                                              Control: Text@0.0.51
+                                              MetadataKey: FieldName
+                                              Properties:
+                                                Height: =22
+                                                Text: ="Quadrante:"
+                                                Weight: ='TextCanvas.Weight'.Semibold
+                                                Width: =Parent.Width - 48
+                                                Wrap: =false
+                                                X: =24
+                                                Y: =10
+                                          - DataCardValue48:
+                                              Control: TextInput@0.0.54
+                                              MetadataKey: FieldValue
+                                              Properties:
+                                                AccessibleLabel: =Parent.DisplayName
+                                                DisplayMode: =Parent.DisplayMode
+                                                Mode: ="'TextInputCanvas.Mode'.TextInputModeSingleLine"
+                                                Required: =Parent.Required
+                                                ValidationState: =If(IsBlank(Parent.Error), "None", "Error")
+                                                Value: =Parent.Default
+                                                Width: =Parent.Width - 48
+                                                X: =24
+                                                Y: =DataCardKey54.Y + DataCardKey54.Height + 4
+                                          - ErrorMessage56:
+                                              Control: Text@0.0.51
+                                              MetadataKey: ErrorMessage
+                                              Properties:
+                                                Height: =30
+                                                Text: =Parent.Error
+                                                Visible: =And(!IsBlank(Parent.Error), Parent.DisplayMode=DisplayMode.Edit)
+                                                Width: =Parent.Width - 48
+                                                X: =24
+                                                Y: =DataCardValue48.Y + DataCardValue48.Height
+                                          - StarVisible56:
+                                              Control: Text@0.0.51
+                                              MetadataKey: FieldRequired
+                                              Properties:
+                                                Align: ='TextCanvas.Align'.Center
+                                                Height: =30
+                                                Text: ="*"
+                                                Visible: =And(Parent.Required, Parent.DisplayMode=DisplayMode.Edit)
+                                                Width: =30
+                                                Y: =DataCardKey54.Y
+                                    - Area_DataCard1:
+                                        Control: TypedDataCard@1.0.7
+                                        Variant: ComboBoxEdit
+                                        Properties:
+                                          DataField: ="Area"
+                                          Default: =ThisItem.Area
+                                          DisplayName: =DataSourceInfo([@tbl_vistoriaSafetyFauna],DataSourceInfo.DisplayName,Area)
+                                          Required: =false
+                                          Update: =DataCardValue51.Selected
+                                          Width: =Bloco_DataCard1.Width
+                                          X: =0
+                                          Y: =2
+                                        Children:
+                                          - DataCardKey55:
+                                              Control: Text@0.0.51
+                                              MetadataKey: FieldName
+                                              Properties:
+                                                Height: =22
+                                                Text: ="Área:"
+                                                Weight: ='TextCanvas.Weight'.Semibold
+                                                Width: =Parent.Width - 48
+                                                Wrap: =false
+                                                X: =24
+                                                Y: =10
+                                          - DataCardValue51:
+                                              Control: ComboBox@0.0.51
+                                              MetadataKey: FieldValue
+                                              Properties:
+                                                AccessibleLabel: =Parent.DisplayName
+                                                DefaultSelectedItems: =[Parent.Default]
+                                                DisplayMode: =Parent.DisplayMode
+                                                Items: =Choices([@tbl_vistoriaSafetyFauna].Area)
+                                                Required: =Parent.Required
+                                                ValidationState: =If(IsBlank(Parent.Error), "None", "Error")
+                                                Width: =Parent.Width - 48
+                                                X: =24
+                                                Y: =DataCardKey55.Y + DataCardKey55.Height + 4
+                                          - ErrorMessage57:
+                                              Control: Text@0.0.51
+                                              MetadataKey: ErrorMessage
+                                              Properties:
+                                                Height: =30
+                                                Text: =Parent.Error
+                                                Visible: =And(!IsBlank(Parent.Error), Parent.DisplayMode=DisplayMode.Edit)
+                                                Width: =Parent.Width - 48
+                                                X: =24
+                                                Y: =DataCardValue51.Y + DataCardValue51.Height
+                                          - StarVisible57:
+                                              Control: Text@0.0.51
+                                              MetadataKey: FieldRequired
+                                              Properties:
+                                                Align: ='TextCanvas.Align'.Center
+                                                Height: =20
+                                                Text: ="*"
+                                                Visible: =And(Parent.Required, Parent.DisplayMode=DisplayMode.Edit)
+                                                Width: =30
+                                                Y: =DataCardKey55.Y
+                                    - Local_DataCard1:
+                                        Control: TypedDataCard@1.0.7
+                                        Variant: ComboBoxEdit
+                                        Properties:
+                                          DataField: ="Local"
+                                          Default: =ThisItem.Local
+                                          DisplayName: =DataSourceInfo([@tbl_vistoriaSafetyFauna],DataSourceInfo.DisplayName,Local)
+                                          Required: =false
+                                          Update: =DataCardValue56.Selected
+                                          Width: =Bloco_DataCard1.Width
+                                          X: =1
+                                          Y: =2
+                                        Children:
+                                          - DataCardKey64:
+                                              Control: Text@0.0.51
+                                              MetadataKey: FieldName
+                                              Properties:
+                                                Height: =22
+                                                Text: ="Local:"
+                                                Weight: ='TextCanvas.Weight'.Semibold
+                                                Width: =Parent.Width - 48
+                                                Wrap: =false
+                                                X: =24
+                                                Y: =10
+                                          - DataCardValue56:
+                                              Control: ComboBox@0.0.51
+                                              MetadataKey: FieldValue
+                                              Properties:
+                                                AccessibleLabel: =Parent.DisplayName
+                                                DefaultSelectedItems: =[Parent.Default]
+                                                DisplayMode: =Parent.DisplayMode
+                                                Items: =Choices([@tbl_vistoriaSafetyFauna].Local)
+                                                Required: =Parent.Required
+                                                ValidationState: =If(IsBlank(Parent.Error), "None", "Error")
+                                                Width: =Parent.Width - 48
+                                                X: =24
+                                                Y: =DataCardKey64.Y + DataCardKey64.Height + 4
+                                          - ErrorMessage64:
+                                              Control: Text@0.0.51
+                                              MetadataKey: ErrorMessage
+                                              Properties:
+                                                Height: =30
+                                                Text: =Parent.Error
+                                                Visible: =And(!IsBlank(Parent.Error), Parent.DisplayMode=DisplayMode.Edit)
+                                                Width: =Parent.Width - 48
+                                                X: =24
+                                                Y: =DataCardValue56.Y + DataCardValue56.Height
+                                          - StarVisible64:
+                                              Control: Text@0.0.51
+                                              MetadataKey: FieldRequired
+                                              Properties:
+                                                Align: ='TextCanvas.Align'.Center
+                                                Height: =20
+                                                Text: ="*"
+                                                Visible: =And(Parent.Required, Parent.DisplayMode=DisplayMode.Edit)
+                                                Width: =30
+                                                Y: =DataCardKey64.Y
+                                    - LocalEspecifico_DataCard1:
+                                        Control: TypedDataCard@1.0.7
+                                        Variant: TextualEdit
+                                        Properties:
+                                          DataField: ="LocalEspecifico"
+                                          Default: =ThisItem.LocalEspecifico
+                                          DisplayName: =DataSourceInfo([@tbl_vistoriaSafetyFauna],DataSourceInfo.DisplayName,LocalEspecifico)
+                                          MaxLength: =DataSourceInfo([@tbl_vistoriaSafetyFauna], DataSourceInfo.MaxLength, LocalEspecifico)
+                                          Required: =false
+                                          Update: =DataCardValue57.Value
+                                          Width: =Bloco_DataCard1.Width
+                                          X: =2
+                                          Y: =2
+                                        Children:
+                                          - DataCardKey65:
+                                              Control: Text@0.0.51
+                                              MetadataKey: FieldName
+                                              Properties:
+                                                Height: =22
+                                                Text: ="Especificação do Local:"
+                                                Weight: ='TextCanvas.Weight'.Semibold
+                                                Width: =Parent.Width - 48
+                                                Wrap: =false
+                                                X: =24
+                                                Y: =10
+                                          - DataCardValue57:
+                                              Control: TextInput@0.0.54
+                                              MetadataKey: FieldValue
+                                              Properties:
+                                                AccessibleLabel: =Parent.DisplayName
+                                                DisplayMode: =Parent.DisplayMode
+                                                Mode: ="'TextInputCanvas.Mode'.TextInputModeSingleLine"
+                                                Required: =Parent.Required
+                                                ValidationState: =If(IsBlank(Parent.Error), "None", "Error")
+                                                Value: =Parent.Default
+                                                Width: =Parent.Width - 48
+                                                X: =24
+                                                Y: =DataCardKey65.Y + DataCardKey65.Height + 4
+                                          - ErrorMessage65:
+                                              Control: Text@0.0.51
+                                              MetadataKey: ErrorMessage
+                                              Properties:
+                                                Height: =30
+                                                Text: =Parent.Error
+                                                Visible: =And(!IsBlank(Parent.Error), Parent.DisplayMode=DisplayMode.Edit)
+                                                Width: =Parent.Width - 48
+                                                X: =24
+                                                Y: =DataCardValue57.Y + DataCardValue57.Height
+                                          - StarVisible65:
+                                              Control: Text@0.0.51
+                                              MetadataKey: FieldRequired
+                                              Properties:
+                                                Align: ='TextCanvas.Align'.Center
+                                                Height: =30
+                                                Text: ="*"
+                                                Visible: =And(Parent.Required, Parent.DisplayMode=DisplayMode.Edit)
+                                                Width: =30
+                                                Y: =DataCardKey65.Y
+                                    - Descricao_DataCard1:
+                                        Control: TypedDataCard@1.0.7
+                                        Variant: TextualEdit
+                                        Properties:
+                                          DataField: ="Descricao"
+                                          Default: =ThisItem.Descricao
+                                          DisplayName: =DataSourceInfo([@tbl_vistoriaSafetyFauna],DataSourceInfo.DisplayName,Descricao)
+                                          MaxLength: =DataSourceInfo([@tbl_vistoriaSafetyFauna], DataSourceInfo.MaxLength, Descricao)
+                                          Required: =false
+                                          Update: =DataCardValue52.Value
+                                          Width: =Bloco_DataCard1.Width * 3
+                                          X: =0
+                                          Y: =3
+                                        Children:
+                                          - DataCardKey58:
+                                              Control: Text@0.0.51
+                                              MetadataKey: FieldName
+                                              Properties:
+                                                Height: =22
+                                                Text: ="Descrição:"
+                                                Weight: ='TextCanvas.Weight'.Semibold
+                                                Width: =Parent.Width - 48
+                                                Wrap: =false
+                                                X: =24
+                                                Y: =10
+                                          - DataCardValue52:
+                                              Control: TextInput@0.0.54
+                                              MetadataKey: FieldValue
+                                              Properties:
+                                                AccessibleLabel: =Parent.DisplayName
+                                                DisplayMode: =Parent.DisplayMode
+                                                Height: =60
+                                                Mode: ='TextInputCanvas.Mode'.Multiline
+                                                Required: =Parent.Required
+                                                ValidationState: =If(IsBlank(Parent.Error), "None", "Error")
+                                                Value: =Parent.Default
+                                                Width: =Parent.Width - 48
+                                                X: =24
+                                                Y: =DataCardKey58.Y + DataCardKey58.Height + 4
+                                          - ErrorMessage58:
+                                              Control: Text@0.0.51
+                                              MetadataKey: ErrorMessage
+                                              Properties:
+                                                Height: =30
+                                                Text: =Parent.Error
+                                                Visible: =And(!IsBlank(Parent.Error), Parent.DisplayMode=DisplayMode.Edit)
+                                                Width: =Parent.Width - 48
+                                                X: =24
+                                                Y: =DataCardValue52.Y + DataCardValue52.Height
+                                          - StarVisible58:
+                                              Control: Text@0.0.51
+                                              MetadataKey: FieldRequired
+                                              Properties:
+                                                Align: ='TextCanvas.Align'.Center
+                                                Height: =30
+                                                Text: ="*"
+                                                Visible: =And(Parent.Required, Parent.DisplayMode=DisplayMode.Edit)
+                                                Width: =30
+                                                Y: =DataCardKey58.Y
+                                    - Acoes_DataCard1:
+                                        Control: TypedDataCard@1.0.7
+                                        Variant: TextualEdit
+                                        Properties:
+                                          DataField: ="Acoes"
+                                          Default: =ThisItem.Acoes
+                                          DisplayName: =DataSourceInfo([@tbl_vistoriaSafetyFauna],DataSourceInfo.DisplayName,Acoes)
+                                          MaxLength: =DataSourceInfo([@tbl_vistoriaSafetyFauna], DataSourceInfo.MaxLength, Acoes)
+                                          Required: =false
+                                          Update: =DataCardValue53.Value
+                                          Width: =Descricao_DataCard1.Width
+                                          X: =0
+                                          Y: =4
+                                        Children:
+                                          - DataCardKey59:
+                                              Control: Text@0.0.51
+                                              MetadataKey: FieldName
+                                              Properties:
+                                                Height: =22
+                                                Text: ="Ações:"
+                                                Weight: ='TextCanvas.Weight'.Semibold
+                                                Width: =Parent.Width - 48
+                                                Wrap: =false
+                                                X: =24
+                                                Y: =10
+                                          - DataCardValue53:
+                                              Control: TextInput@0.0.54
+                                              MetadataKey: FieldValue
+                                              Properties:
+                                                AccessibleLabel: =Parent.DisplayName
+                                                DisplayMode: =Parent.DisplayMode
+                                                Height: =60
+                                                Mode: ='TextInputCanvas.Mode'.Multiline
+                                                Required: =Parent.Required
+                                                ValidationState: =If(IsBlank(Parent.Error), "None", "Error")
+                                                Value: =Parent.Default
+                                                Width: =Parent.Width - 48
+                                                X: =24
+                                                Y: =DataCardKey59.Y + DataCardKey59.Height + 4
+                                          - ErrorMessage59:
+                                              Control: Text@0.0.51
+                                              MetadataKey: ErrorMessage
+                                              Properties:
+                                                Height: =30
+                                                Text: =Parent.Error
+                                                Visible: =And(!IsBlank(Parent.Error), Parent.DisplayMode=DisplayMode.Edit)
+                                                Width: =Parent.Width - 48
+                                                X: =24
+                                                Y: =DataCardValue53.Y + DataCardValue53.Height
+                                          - StarVisible59:
+                                              Control: Text@0.0.51
+                                              MetadataKey: FieldRequired
+                                              Properties:
+                                                Align: ='TextCanvas.Align'.Center
+                                                Height: =30
+                                                Text: ="*"
+                                                Visible: =And(Parent.Required, Parent.DisplayMode=DisplayMode.Edit)
+                                                Width: =30
+                                                Y: =DataCardKey59.Y
+                                    - Prioridade_DataCard1:
+                                        Control: TypedDataCard@1.0.7
+                                        Variant: ComboBoxEdit
+                                        Properties:
+                                          DataField: ="Prioridade"
+                                          Default: =ThisItem.Prioridade
+                                          DisplayName: =DataSourceInfo([@tbl_vistoriaSafetyFauna],DataSourceInfo.DisplayName,Prioridade)
+                                          Required: =false
+                                          Update: =DataCardValue59.Selected
+                                          Width: =Bloco_DataCard1.Width
+                                          X: =2
+                                          Y: =4
+                                        Children:
+                                          - DataCardKey67:
+                                              Control: Text@0.0.51
+                                              MetadataKey: FieldName
+                                              Properties:
+                                                Height: =22
+                                                Text: ="Prioridade:"
+                                                Weight: ='TextCanvas.Weight'.Semibold
+                                                Width: =Parent.Width - 48
+                                                Wrap: =false
+                                                X: =24
+                                                Y: =10
+                                          - DataCardValue59:
+                                              Control: ComboBox@0.0.51
+                                              MetadataKey: FieldValue
+                                              Properties:
+                                                AccessibleLabel: =Parent.DisplayName
+                                                DefaultSelectedItems: =[Parent.Default]
+                                                DisplayMode: =Parent.DisplayMode
+                                                Items: =Choices([@tbl_vistoriaSafetyFauna].Prioridade)
+                                                Required: =Parent.Required
+                                                ValidationState: =If(IsBlank(Parent.Error), "None", "Error")
+                                                Width: =Parent.Width - 48
+                                                X: =24
+                                                Y: =DataCardKey67.Y + DataCardKey67.Height + 4
+                                          - ErrorMessage67:
+                                              Control: Text@0.0.51
+                                              MetadataKey: ErrorMessage
+                                              Properties:
+                                                Height: =30
+                                                Text: =Parent.Error
+                                                Visible: =And(!IsBlank(Parent.Error), Parent.DisplayMode=DisplayMode.Edit)
+                                                Width: =Parent.Width - 48
+                                                X: =24
+                                                Y: =DataCardValue59.Y + DataCardValue59.Height
+                                          - StarVisible67:
+                                              Control: Text@0.0.51
+                                              MetadataKey: FieldRequired
+                                              Properties:
+                                                Align: ='TextCanvas.Align'.Center
+                                                Height: =20
+                                                Text: ="*"
+                                                Visible: =And(Parent.Required, Parent.DisplayMode=DisplayMode.Edit)
+                                                Width: =30
+                                                Y: =DataCardKey67.Y
+                                    - SetorResponsavel_DataCard1:
+                                        Control: TypedDataCard@1.0.7
+                                        Variant: ComboBoxEdit
+                                        Properties:
+                                          DataField: ="SetorResponsavel"
+                                          Default: =ThisItem.SetorResponsavel
+                                          DisplayName: =DataSourceInfo([@tbl_vistoriaSafetyFauna],DataSourceInfo.DisplayName,SetorResponsavel)
+                                          Required: =false
+                                          Update: =DataCardValue54.Selected
+                                          Width: =Bloco_DataCard1.Width
+                                          X: =0
+                                          Y: =5
+                                        Children:
+                                          - DataCardKey60:
+                                              Control: Text@0.0.51
+                                              MetadataKey: FieldName
+                                              Properties:
+                                                Height: =22
+                                                Text: ="Setor Responsável:"
+                                                Weight: ='TextCanvas.Weight'.Semibold
+                                                Width: =Parent.Width - 48
+                                                Wrap: =false
+                                                X: =24
+                                                Y: =10
+                                          - DataCardValue54:
+                                              Control: ComboBox@0.0.51
+                                              MetadataKey: FieldValue
+                                              Properties:
+                                                AccessibleLabel: =Parent.DisplayName
+                                                DefaultSelectedItems: =[Parent.Default]
+                                                DisplayMode: =Parent.DisplayMode
+                                                Items: =Choices([@tbl_vistoriaSafetyFauna].SetorResponsavel)
+                                                Required: =Parent.Required
+                                                ValidationState: =If(IsBlank(Parent.Error), "None", "Error")
+                                                Width: =Parent.Width - 48
+                                                X: =24
+                                                Y: =DataCardKey60.Y + DataCardKey60.Height + 4
+                                          - ErrorMessage60:
+                                              Control: Text@0.0.51
+                                              MetadataKey: ErrorMessage
+                                              Properties:
+                                                Height: =30
+                                                Text: =Parent.Error
+                                                Visible: =And(!IsBlank(Parent.Error), Parent.DisplayMode=DisplayMode.Edit)
+                                                Width: =Parent.Width - 48
+                                                X: =24
+                                                Y: =DataCardValue54.Y + DataCardValue54.Height
+                                          - StarVisible60:
+                                              Control: Text@0.0.51
+                                              MetadataKey: FieldRequired
+                                              Properties:
+                                                Align: ='TextCanvas.Align'.Center
+                                                Height: =20
+                                                Text: ="*"
+                                                Visible: =And(Parent.Required, Parent.DisplayMode=DisplayMode.Edit)
+                                                Width: =30
+                                                Y: =DataCardKey60.Y
+                                    - Observacao_DataCard1:
+                                        Control: TypedDataCard@1.0.7
+                                        Variant: TextualEdit
+                                        Properties:
+                                          DataField: ="Observacao"
+                                          Default: =ThisItem.Observacao
+                                          DisplayName: =DataSourceInfo([@tbl_vistoriaSafetyFauna],DataSourceInfo.DisplayName,Observacao)
+                                          MaxLength: =DataSourceInfo([@tbl_vistoriaSafetyFauna], DataSourceInfo.MaxLength, Observacao)
+                                          Required: =false
+                                          Update: =DataCardValue58.Value
+                                          Width: =Descricao_DataCard1.Width
+                                          X: =1
+                                          Y: =5
+                                        Children:
+                                          - DataCardKey66:
+                                              Control: Text@0.0.51
+                                              MetadataKey: FieldName
+                                              Properties:
+                                                Height: =22
+                                                Text: ="Observação:"
+                                                Weight: ='TextCanvas.Weight'.Semibold
+                                                Width: =Parent.Width - 48
+                                                Wrap: =false
+                                                X: =24
+                                                Y: =10
+                                          - DataCardValue58:
+                                              Control: TextInput@0.0.54
+                                              MetadataKey: FieldValue
+                                              Properties:
+                                                AccessibleLabel: =Parent.DisplayName
+                                                DisplayMode: =Parent.DisplayMode
+                                                Height: =60
+                                                Mode: ='TextInputCanvas.Mode'.Multiline
+                                                Required: =Parent.Required
+                                                ValidationState: =If(IsBlank(Parent.Error), "None", "Error")
+                                                Value: =Parent.Default
+                                                Width: =Parent.Width - 48
+                                                X: =24
+                                                Y: =DataCardKey66.Y + DataCardKey66.Height + 4
+                                          - ErrorMessage66:
+                                              Control: Text@0.0.51
+                                              MetadataKey: ErrorMessage
+                                              Properties:
+                                                Height: =30
+                                                Text: =Parent.Error
+                                                Visible: =And(!IsBlank(Parent.Error), Parent.DisplayMode=DisplayMode.Edit)
+                                                Width: =Parent.Width - 48
+                                                X: =24
+                                                Y: =DataCardValue58.Y + DataCardValue58.Height
+                                          - StarVisible66:
+                                              Control: Text@0.0.51
+                                              MetadataKey: FieldRequired
+                                              Properties:
+                                                Align: ='TextCanvas.Align'.Center
+                                                Height: =30
+                                                Text: ="*"
+                                                Visible: =And(Parent.Required, Parent.DisplayMode=DisplayMode.Edit)
+                                                Width: =30
+                                                Y: =DataCardKey66.Y
+                                    - foto1_DataCard1:
+                                        Control: TypedDataCard@1.0.7
+                                        Variant: LargePicture
+                                        Properties:
+                                          DataField: ="foto1"
+                                          Default: =ThisItem.foto1
+                                          DisplayName: =DataSourceInfo([@tbl_vistoriaSafetyFauna],DataSourceInfo.DisplayName,foto1)
+                                          Required: =false
+                                          Update: =Image5.Image
+                                          Width: =Bloco_DataCard1.Width
+                                          X: =0
+                                          Y: =6
+                                        Children:
+                                          - DataCardKey62:
+                                              Control: Text@0.0.51
+                                              MetadataKey: FieldName
+                                              Properties:
+                                                Height: =34
+                                                Text: ="Foto 1:"
+                                                Weight: ='TextCanvas.Weight'.Semibold
+                                                Width: =Parent.Width - 60
+                                                Wrap: =false
+                                                X: =30
+                                                Y: =10
+                                          - Image5:
+                                              Control: Image@2.2.3
+                                              MetadataKey: FieldValue
+                                              Properties:
+                                                BorderColor: =If(IsBlank(Parent.Error), Parent.BorderColor, Color.Red)
+                                                DisplayMode: =Parent.DisplayMode
+                                                Height: =AddPicture7.Height
+                                                Image: =If(IsBlank(AddPicture7.Media), Parent.Default, AddPicture7.Media)
+                                                Tooltip: =Parent.DisplayName
+                                                Width: =AddPicture7.Width
+                                                X: =AddPicture7.X
+                                                Y: =AddPicture7.Y
+                                          - AddPicture7:
+                                              Control: AddMedia@2.2.1
+                                              MetadataKey: AddPicture
+                                              Properties:
+                                                Height: =200
+                                                Width: =Parent.Width - 60
+                                                X: =30
+                                                Y: =DataCardKey62.Y + DataCardKey62.Height + 5
+                                          - ErrorMessage62:
+                                              Control: Text@0.0.51
+                                              MetadataKey: ErrorMessage
+                                              Properties:
+                                                Height: =10
+                                                Size: =12
+                                                Text: =Parent.Error
+                                                Visible: =Parent.DisplayMode=DisplayMode.Edit
+                                                Width: =Parent.Width - 60
+                                                X: =30
+                                                Y: =Image5.Y + Image5.Height
+                                          - StarVisible62:
+                                              Control: Text@0.0.51
+                                              MetadataKey: FieldRequired
+                                              Properties:
+                                                Align: ='TextCanvas.Align'.Center
+                                                Height: =DataCardKey62.Height
+                                                Text: ="*"
+                                                Visible: =And(Parent.Required, Parent.DisplayMode=DisplayMode.Edit)
+                                                Width: =30
+                                                Wrap: =false
+                                                Y: =DataCardKey62.Y
+                                    - foto2_DataCard1:
+                                        Control: TypedDataCard@1.0.7
+                                        Variant: LargePicture
+                                        Properties:
+                                          DataField: ="foto2"
+                                          Default: =ThisItem.foto2
+                                          DisplayName: =DataSourceInfo([@tbl_vistoriaSafetyFauna],DataSourceInfo.DisplayName,foto2)
+                                          Required: =false
+                                          Update: =Image6.Image
+                                          Width: =Bloco_DataCard1.Width
+                                          X: =1
+                                          Y: =6
+                                        Children:
+                                          - DataCardKey63:
+                                              Control: Text@0.0.51
+                                              MetadataKey: FieldName
+                                              Properties:
+                                                Height: =34
+                                                Text: ="Foto 2:"
+                                                Weight: ='TextCanvas.Weight'.Semibold
+                                                Width: =Parent.Width - 60
+                                                Wrap: =false
+                                                X: =30
+                                                Y: =10
+                                          - Image6:
+                                              Control: Image@2.2.3
+                                              MetadataKey: FieldValue
+                                              Properties:
+                                                BorderColor: =If(IsBlank(Parent.Error), Parent.BorderColor, Color.Red)
+                                                DisplayMode: =Parent.DisplayMode
+                                                Height: =AddPicture11.Height
+                                                Image: =If(IsBlank(AddPicture11.Media), Parent.Default, AddPicture11.Media)
+                                                Tooltip: =Parent.DisplayName
+                                                Width: =AddPicture11.Width
+                                                X: =AddPicture11.X
+                                                Y: =AddPicture11.Y
+                                          - AddPicture11:
+                                              Control: AddMedia@2.2.1
+                                              MetadataKey: AddPicture
+                                              Properties:
+                                                Height: =200
+                                                Width: =Parent.Width - 60
+                                                X: =30
+                                                Y: =DataCardKey63.Y + DataCardKey63.Height + 5
+                                          - ErrorMessage63:
+                                              Control: Text@0.0.51
+                                              MetadataKey: ErrorMessage
+                                              Properties:
+                                                Height: =10
+                                                Size: =12
+                                                Text: =Parent.Error
+                                                Visible: =Parent.DisplayMode=DisplayMode.Edit
+                                                Width: =Parent.Width - 60
+                                                X: =30
+                                                Y: =Image6.Y + Image6.Height
+                                          - StarVisible63:
+                                              Control: Text@0.0.51
+                                              MetadataKey: FieldRequired
+                                              Properties:
+                                                Align: ='TextCanvas.Align'.Center
+                                                Height: =DataCardKey63.Height
+                                                Text: ="*"
+                                                Visible: =And(Parent.Required, Parent.DisplayMode=DisplayMode.Edit)
+                                                Width: =30
+                                                Wrap: =false
+                                                Y: =DataCardKey63.Y
+                        - ButtonContainer1_2:
+                            Control: GroupContainer@1.5.0
+                            Variant: AutoLayout
+                            Properties:
+                              DropShadow: =DropShadow.None
+                              FillPortions: =0
+                              Height: =50
+                              LayoutAlignItems: =LayoutAlignItems.End
+                              LayoutDirection: =LayoutDirection.Horizontal
+                              LayoutGap: =10
+                              LayoutJustifyContent: =LayoutJustifyContent.End
+                              LayoutMaxHeight: =
+                              LayoutMaxWidth: =
+                              LayoutMinHeight: =50
+                              LayoutOverflowY: =LayoutOverflow.Scroll
+                              PaddingBottom: =10
+                              PaddingLeft: =10
+                              PaddingRight: =10
+                              RadiusBottomLeft: =0
+                              RadiusBottomRight: =0
+                              RadiusTopLeft: =0
+                              RadiusTopRight: =0
+                              Visible: =MainContainer1_2.Visible
+                            Children:
+                              - TextCanvas2_2:
+                                  Control: Text@0.0.51
+                                  Properties:
+                                    FillPortions: =1
+                                    LayoutMaxHeight: =
+                                    LayoutMaxWidth: =
+                                    Text: =
+                              - CancelButton1_2:
+                                  Control: Button@0.0.45
+                                  Properties:
+                                    Appearance: ='ButtonCanvas.Appearance'.Secondary
+                                    Icon: ="DismissCircle"
+                                    LayoutMaxHeight: =
+                                    LayoutMaxWidth: =
+                                    OnSelect: |
+                                      =ResetForm(Form1_2);
+                                      UpdateContext(
+                                          {
+                                              newMode: false,
+                                              editMode: false,
+                                              isItemSelected: false,
+                                              CurrentItem: Blank()
+                                          }
+                                      );
+                                    Text: ="Cancelar"
+                                    Width: =100
+                              - SubmitButton1_2:
+                                  Control: Button@0.0.45
+                                  Properties:
+                                    Appearance: ='ButtonCanvas.Appearance'.Primary
+                                    Icon: ="Save"
+                                    LayoutMaxHeight: =
+                                    LayoutMaxWidth: =
+                                    OnSelect: =SubmitForm(Form1_2)
+                                    Text: ="Salvar"
+                                    Visible: =newMode Or editMode
+                                    Width: =100

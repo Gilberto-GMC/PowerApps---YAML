@@ -1,0 +1,3454 @@
+Screens:
+  ScreenContatos:
+    Properties:
+      OnVisible: |-
+        =Set(
+            varContatoAntes,
+            LookUp(
+                tbl_contatos_entidades,
+                ID = -1
+            )
+        );
+
+        Set(
+            varContatoHistorico,
+            varContatoAntes
+        );
+
+        Set(
+            varLogContatoCriado,
+            LookUp(
+                tbl_contatos_entidades_log,
+                ID = -1
+            )
+        );
+
+        Set(
+            varErroLogContato,
+            ""
+        );
+
+        Set(
+            varSalvandoContato,
+            false
+        );
+
+        ClearCollect(
+            colHistoricoContato,
+            FirstN(
+                tbl_contatos_entidades_log,
+                0
+            )
+        );
+
+        ClearCollect(
+            colAlteracoesContato,
+            Table(
+                {
+                    Campo: "",
+                    Antes: "",
+                    Depois: ""
+                }
+            )
+        );
+
+        Clear(colAlteracoesContato);
+
+        UpdateContext(
+            {
+                var_visibleFormContatos: false,
+                var_visibleHistoricoContato: false,
+                var_visibleExcluirContato: false,
+                var_dadosContatos: Blank()
+            }
+        );
+
+        Select(ButtonRefreshChekREAcontatos_2)
+    Children:
+      - ContainerGerenciarContatos:
+          Control: GroupContainer@1.5.0
+          Variant: AutoLayout
+          Properties:
+            DropShadow: =DropShadow.None
+            Fill: =RGBA(255, 255, 255, 1)
+            Height: =Parent.Height
+            LayoutAlignItems: =LayoutAlignItems.Center
+            LayoutDirection: =LayoutDirection.Vertical
+            LayoutOverflowY: =LayoutOverflow.Scroll
+            RadiusBottomLeft: =0
+            RadiusBottomRight: =0
+            RadiusTopLeft: =0
+            RadiusTopRight: =0
+            Width: =Parent.Width
+            X: =Parent.Width - Self.Width
+          Children:
+            - HeaderTitle_9:
+                Control: CanvasComponent
+                ComponentName: HeaderTitle
+                Properties:
+                  AlignInContainer: =AlignInContainer.Stretch
+                  Height: =50
+                  IconVisible: =true
+                  LayoutMaxHeight: =
+                  LayoutMaxWidth: =
+                  ScreenNavigator: =
+                  Width: =Max(App.Width, App.MinScreenWidth)
+                  var_subtitulo1: =
+                  var_subtitulo2: =
+                  var_tituloModulo: =var_tituloModulo
+            - ContainerFilterOcoGerais_7:
+                Control: GroupContainer@1.5.0
+                Variant: AutoLayout
+                Properties:
+                  DropShadow: =DropShadow.None
+                  Fill: =RGBA(255, 255, 255, 1)
+                  FillPortions: =0
+                  Height: =100
+                  LayoutDirection: =LayoutDirection.Horizontal
+                  LayoutGap: =5
+                  LayoutMaxHeight: =
+                  LayoutMaxWidth: =
+                  LayoutOverflowY: =LayoutOverflow.Scroll
+                  PaddingLeft: =15
+                  PaddingRight: =10
+                  RadiusBottomLeft: =0
+                  RadiusBottomRight: =0
+                  RadiusTopLeft: =0
+                  RadiusTopRight: =0
+                  Width: =300
+                  X: =Parent.Width - Self.Width
+                Children:
+                  - Container51_135:
+                      Control: GroupContainer@1.5.0
+                      Variant: ManualLayout
+                      Properties:
+                        AlignInContainer: =AlignInContainer.Center
+                        DropShadow: =DropShadow.None
+                        Fill: =RGBA(109, 49, 162, 1)
+                        FillPortions: =0
+                        Height: =60
+                        LayoutMaxHeight: =
+                        LayoutMaxWidth: =
+                        RadiusBottomLeft: =10
+                        RadiusBottomRight: =10
+                        RadiusTopLeft: =10
+                        RadiusTopRight: =10
+                        Width: =80
+                      Children:
+                        - Label2_193:
+                            Control: Label@2.5.1
+                            Properties:
+                              Align: =Align.Center
+                              Color: =RGBA(255, 255, 255, 1)
+                              DisabledColor: =RGBA(255, 255, 255, 1)
+                              FontWeight: =FontWeight.Bold
+                              Height: =30
+                              PaddingTop: =2
+                              Size: =9
+                              Text: ="Novo Contato"
+                              Width: =80
+                              Y: =30
+                        - Icon28_163:
+                            Control: Classic/Icon@2.5.0
+                            Properties:
+                              Color: =RGBA(255, 255, 255, 1)
+                              DisabledBorderColor: =RGBA(0, 0, 0, 0)
+                              DisabledColor: =RGBA(255, 255, 255, 1)
+                              DisabledFill: =RGBA(0, 0, 0, 0)
+                              Height: =60
+                              HoverColor: =RGBA(255, 255, 255, 1)
+                              HoverFill: =RGBA(0, 18, 107, 0.1)
+                              Icon: =Icon.AddDocument
+                              OnSelect: |-
+                                =Set(
+                                    varContatoAntes,
+                                    LookUp(
+                                        tbl_contatos_entidades,
+                                        ID = -1
+                                    )
+                                );
+
+                                Set(
+                                    varContatoHistorico,
+                                    varContatoAntes
+                                );
+
+                                Set(
+                                    varLogContatoCriado,
+                                    LookUp(
+                                        tbl_contatos_entidades_log,
+                                        ID = -1
+                                    )
+                                );
+
+                                Set(
+                                    varErroLogContato,
+                                    ""
+                                );
+
+                                Set(
+                                    varSalvandoContato,
+                                    false
+                                );
+
+                                Clear(colHistoricoContato);
+                                Clear(colAlteracoesContato);
+
+                                UpdateContext(
+                                    {
+                                        var_visibleFormContatos: true,
+                                        var_acaoFormContatos: "Cadastrar contato",
+                                        var_dadosContatos: Blank()
+                                    }
+                                );
+
+                                ResetForm(FormCadastrarContato);
+                                NewForm(FormCadastrarContato)
+                              PaddingBottom: =31
+                              PaddingTop: =4
+                              Width: =80
+                  - Label16_811:
+                      Control: Label@2.5.1
+                      Properties:
+                        AlignInContainer: =AlignInContainer.Center
+                        BorderColor: =RGBA(0, 18, 107, 1)
+                        Font: =Font.'Open Sans'
+                        FontWeight: =FontWeight.Bold
+                        Height: =30
+                        LayoutMaxHeight: =
+                        LayoutMaxWidth: =
+                        Size: =10
+                        Text: =""
+                        Width: =10
+                        X: =50
+                        Y: =80
+                  - Container91_22:
+                      Control: GroupContainer@1.5.0
+                      Variant: ManualLayout
+                      Properties:
+                        AlignInContainer: =AlignInContainer.Center
+                        FillPortions: =0
+                        Height: =30
+                        LayoutMaxHeight: =
+                        LayoutMaxWidth: =
+                        Width: =300
+                        X: =Parent.Width - 310
+                        Y: =5
+                      Children:
+                        - Icon16_42:
+                            Control: Classic/Icon@2.5.0
+                            Properties:
+                              BorderColor: =RGBA(56, 96, 178, 1)
+                              Color: =RGBA(0, 0, 0, 1)
+                              Fill: =RGBA(0, 0, 0, 0.1)
+                              FocusedBorderThickness: =0
+                              Height: =30
+                              Icon: =Icon.CancelBadge
+                              OnSelect: |+
+                                =Reset(txtBuscarPlemPrai_2)
+
+                              PaddingBottom: =6
+                              PaddingTop: =5
+                              Width: =40
+                              X: =txtBuscarPlemPrai_2.Width
+                        - txtBuscarPlemPrai_2:
+                            Control: Classic/TextInput@2.3.2
+                            Properties:
+                              DelayOutput: =true
+                              BorderColor: =RGBA(255, 255, 255, 1)
+                              BorderThickness: =0
+                              Default: =""
+                              DisabledBorderColor: =RGBA(0, 0, 0, 0)
+                              DisabledFill: =RGBA(250, 250, 250, 1)
+                              Height: =30
+                              HintText: ="Buscar nome..."
+                              HoverBorderColor: =RGBA(0, 0, 0, 0)
+                              PaddingLeft: =40
+                              RadiusBottomLeft: =0
+                              RadiusBottomRight: =0
+                              RadiusTopLeft: =0
+                              RadiusTopRight: =0
+                              Reset: =
+                              Size: =10
+                              Width: =Parent.Width - 40
+                        - Icon13_69:
+                            Control: Classic/Icon@2.5.0
+                            Properties:
+                              BorderColor: =RGBA(136, 160, 209, 1)
+                              Color: =RGBA(56, 96, 178, 1)
+                              DisabledBorderColor: =RGBA(0, 0, 0, 1)
+                              DisplayMode: =DisplayMode.View
+                              FocusedBorderColor: =RGBA(0, 0, 0, 1)
+                              FocusedBorderThickness: =0
+                              Height: =30
+                              Icon: =Icon.Search
+                              PaddingBottom: =3
+                              PaddingTop: =3
+                              Width: =40
+                  - Label16_812:
+                      Control: Label@2.5.1
+                      Properties:
+                        Align: =Align.Right
+                        AlignInContainer: =AlignInContainer.Center
+                        AutoHeight: =true
+                        BorderColor: =RGBA(0, 18, 107, 1)
+                        Color: =RGBA(109, 49, 162, 1)
+                        Font: =Font.'Open Sans'
+                        FontWeight: =FontWeight.Bold
+                        Height: =30
+                        LayoutMaxHeight: =
+                        LayoutMaxWidth: =
+                        Size: =10
+                        Text: ="Bloco:"
+                        Width: =55
+                        X: =50
+                        Y: =80
+                  - Container22:
+                      Control: GroupContainer@1.5.0
+                      Variant: AutoLayout
+                      Properties:
+                        AlignInContainer: =AlignInContainer.Center
+                        FillPortions: =0
+                        Height: =30
+                        LayoutDirection: =LayoutDirection.Horizontal
+                        LayoutMaxHeight: =
+                        LayoutMaxWidth: =
+                        Width: =110
+                      Children:
+                        - cmbCKREAbloco_3:
+                            Control: Classic/DropDown@2.3.1
+                            Properties:
+                              AlignInContainer: =AlignInContainer.Center
+                              AllowEmptySelection: =true
+                              BorderColor: =RGBA(0, 0, 0, 1)
+                              BorderStyle: =BorderStyle.None
+                              BorderThickness: =0
+                              ChevronBackground: =RGBA(0, 0, 0, 0)
+                              ChevronFill: =RGBA(39, 67, 125, 1)
+                              ChevronHoverBackground: =
+                              ChevronHoverFill: =RGBA(255, 255, 255, 1)
+                              Default: |-
+                                =Switch(
+                                    varPerfilUser,
+                                    "Base",
+                                    varBlocoUser,
+                                    "Bloco",
+                                    varBlocoUser,
+                                    ""
+                                )
+                              DisplayMode: =If(varPerfilUser = "Base", DisplayMode.View,DisplayMode.Edit)
+                              Fill: =RGBA(237, 237, 237, 1)
+                              Font: =Font.'Open Sans'
+                              Height: =30
+                              HoverFill: =RGBA(186, 202, 226, 1)
+                              Items: =["","SUL","CENTRAL"]
+                              Items.Value: =Value
+                              LayoutMaxHeight: =
+                              LayoutMaxWidth: =
+                              LayoutMinWidth: =100
+                              PressedColor: =RGBA(255, 255, 255, 1)
+                              PressedFill: =RGBA(0, 18, 107, 1)
+                              SelectionColor: =RGBA(255, 255, 255, 1)
+                              SelectionFill: =RGBA(56, 96, 178, 1)
+                              Size: =10
+                              Width: =110
+                              X: =328
+                              Y: =241
+                  - Label16_813:
+                      Control: Label@2.5.1
+                      Properties:
+                        Align: =Align.Right
+                        AlignInContainer: =AlignInContainer.Center
+                        AutoHeight: =true
+                        BorderColor: =RGBA(0, 18, 107, 1)
+                        Color: =RGBA(109, 49, 162, 1)
+                        Font: =Font.'Open Sans'
+                        FontWeight: =FontWeight.Bold
+                        Height: =30
+                        LayoutMaxHeight: =
+                        LayoutMaxWidth: =
+                        Size: =10
+                        Text: ="Aeroporto:"
+                        Width: =90
+                        X: =908
+                        Y: =169
+                  - Container22_1:
+                      Control: GroupContainer@1.5.0
+                      Variant: AutoLayout
+                      Properties:
+                        AlignInContainer: =AlignInContainer.Center
+                        FillPortions: =0
+                        Height: =30
+                        LayoutDirection: =LayoutDirection.Horizontal
+                        LayoutMaxHeight: =
+                        LayoutMaxWidth: =
+                        Width: =150
+                      Children:
+                        - cmbCKREAaeroporto_3:
+                            Control: Classic/DropDown@2.3.1
+                            Properties:
+                              AlignInContainer: =AlignInContainer.Center
+                              BorderColor: =RGBA(0, 0, 0, 1)
+                              BorderStyle: =BorderStyle.None
+                              BorderThickness: =0
+                              ChevronBackground: =RGBA(0, 0, 0, 0)
+                              ChevronFill: =RGBA(39, 67, 125, 1)
+                              ChevronHoverBackground: =
+                              ChevronHoverFill: =RGBA(255, 255, 255, 1)
+                              Default: |-
+                                =If(
+                                    varPerfilUser = "Base",
+                                    varAeroUser,
+                                    ""
+                                )
+                              DisplayMode: =If(varPerfilUser = "Base" , DisplayMode.View,DisplayMode.Edit)
+                              Fill: =RGBA(237, 237, 237, 1)
+                              Font: =Font.'Open Sans'
+                              Height: =30
+                              HoverFill: =RGBA(186, 202, 226, 1)
+                              Items: |-
+                                =Distinct(
+                                    Filter(
+                                        colAeros,
+                                        Bloco = cmbCKREAbloco_3.Selected.Value
+                                    ),
+                                    Aeroporto
+                                )
+                              Items.Value: =Value
+                              LayoutMaxHeight: =
+                              LayoutMaxWidth: =
+                              LayoutMinWidth: =100
+                              OnChange: =Select(ButtonRefreshChekREAcontatos_2)
+                              PressedColor: =RGBA(255, 255, 255, 1)
+                              PressedFill: =RGBA(0, 18, 107, 1)
+                              SelectionColor: =RGBA(255, 255, 255, 1)
+                              SelectionFill: =RGBA(56, 96, 178, 1)
+                              Size: =10
+                              Width: =150
+                              X: =458
+                              Y: =241
+                  - Label16_814:
+                      Control: Label@2.5.1
+                      Properties:
+                        Align: =Align.Right
+                        AlignInContainer: =AlignInContainer.Center
+                        AutoHeight: =true
+                        BorderColor: =RGBA(0, 18, 107, 1)
+                        Color: =RGBA(109, 49, 162, 1)
+                        Font: =Font.'Open Sans'
+                        FontWeight: =FontWeight.Bold
+                        Height: =30
+                        LayoutMaxHeight: =
+                        LayoutMaxWidth: =
+                        Size: =10
+                        Text: ="Tipificação:"
+                        Width: =90
+                        X: =908
+                        Y: =193
+                  - Container22_2:
+                      Control: GroupContainer@1.5.0
+                      Variant: AutoLayout
+                      Properties:
+                        AlignInContainer: =AlignInContainer.Center
+                        FillPortions: =0
+                        Height: =30
+                        LayoutDirection: =LayoutDirection.Horizontal
+                        LayoutMaxHeight: =
+                        LayoutMaxWidth: =
+                        Width: =200
+                      Children:
+                        - cmbContatosTipo:
+                            Control: Classic/DropDown@2.3.1
+                            Properties:
+                              AlignInContainer: =AlignInContainer.Center
+                              AllowEmptySelection: =true
+                              BorderColor: =RGBA(0, 0, 0, 1)
+                              BorderStyle: =BorderStyle.None
+                              BorderThickness: =0
+                              ChevronBackground: =RGBA(0, 0, 0, 0)
+                              ChevronFill: =RGBA(39, 67, 125, 1)
+                              ChevronHoverBackground: =
+                              ChevronHoverFill: =RGBA(255, 255, 255, 1)
+                              Default: =""
+                              FillPortions: =1
+                              Font: =Font.'Open Sans'
+                              Height: =30
+                              HoverFill: =RGBA(186, 202, 226, 1)
+                              Items: =Choices([@tbl_contatos_entidades].tipo_entidade)
+                              Items.Value: =Value
+                              LayoutMaxHeight: =
+                              LayoutMaxWidth: =
+                              LayoutMinWidth: =100
+                              PressedColor: =RGBA(255, 255, 255, 1)
+                              PressedFill: =RGBA(0, 18, 107, 1)
+                              SelectionColor: =RGBA(255, 255, 255, 1)
+                              SelectionFill: =RGBA(56, 96, 178, 1)
+                              Size: =10
+                              Width: =150
+                              X: =458
+                              Y: =241
+                  - ButtonCanvas11_29:
+                      Control: Button@0.0.45
+                      Properties:
+                        AlignInContainer: =AlignInContainer.Center
+                        Appearance: ='ButtonCanvas.Appearance'.Transparent
+                        BorderRadius: =0
+                        FontWeight: =FontWeight.Normal
+                        Height: =30
+                        Icon: ="Eraser"
+                        IconStyle: ='ButtonCanvas.IconStyle'.Filled
+                        Layout: ='ButtonCanvas.Layout'.IconOnly
+                        LayoutMaxHeight: =
+                        LayoutMaxWidth: =
+                        OnSelect: |-
+                          =Reset(cmbCKREAbloco_3);
+                          Reset(cmbCKREAaeroporto_3);
+                          Reset(cmbContatosTipo);
+                          Reset(txtBuscarPlemPrai_2)
+                        Text: ="Limpar"
+                        Width: =40
+                  - ButtonRefreshChekREAcontatos_2:
+                      Control: Button@0.0.45
+                      Properties:
+                        AlignInContainer: =AlignInContainer.Center
+                        Appearance: ='ButtonCanvas.Appearance'.Transparent
+                        BorderRadius: =0
+                        FontWeight: =FontWeight.Normal
+                        Height: =30
+                        Icon: ="ArrowClockwise"
+                        IconStyle: ='ButtonCanvas.IconStyle'.Filled
+                        Layout: ='ButtonCanvas.Layout'.IconOnly
+                        LayoutMaxHeight: =
+                        LayoutMaxWidth: =
+                        OnSelect: |-
+                          =Refresh(tbl_contatos_entidades);
+
+                          ClearCollect(
+                              col_gerenciarContatos,
+                              Filter(
+                                  tbl_contatos_entidades,
+                                  (
+                                      IsBlank(cmbCKREAbloco_3.Selected.Value) ||
+                                      Bloco = cmbCKREAbloco_3.Selected.Value
+                                  ) &&
+                                  (
+                                      IsBlank(cmbCKREAaeroporto_3.Selected.Value) ||
+                                      Aeroporto = cmbCKREAaeroporto_3.Selected.Value
+                                  )
+                              )
+                          )
+                        Text: =
+                        Width: =40
+                  - EditButton1_4:
+                      Control: Button@0.0.45
+                      Properties:
+                        AlignInContainer: =AlignInContainer.Center
+                        Appearance: ='ButtonCanvas.Appearance'.Transparent
+                        Icon: ="DocumentPdf"
+                        LayoutMaxHeight: =
+                        LayoutMaxWidth: =
+                        OnSelect: |-
+                          =Set(
+                              varIDhtmlCriado,
+                              'Criar-HTML'.Run(
+                                  HtmlText3_2.HtmlText,
+                                  "ANEXO1-" & varIATAUser & "-" & Now()
+                              ).idhtml
+                          );
+                          Launch(
+                              Substitute(
+                                  LookUp(
+                                      Documentos,
+                                      ID = varIDhtmlCriado,
+                                      Miniatura.Large
+                                  ),
+                                  "thumbnail",
+                                  "pdf"
+                              )
+                          )
+                        Text: ="Relatório"
+                        Width: =If(ScreenAPH.Size = ScreenSize.Small, 75, 100)
+            - Container135_7:
+                Control: GroupContainer@1.5.0
+                Variant: AutoLayout
+                Properties:
+                  DropShadow: =DropShadow.Regular
+                  Height: =Parent.Height
+                  LayoutDirection: =LayoutDirection.Vertical
+                  LayoutMaxHeight: =
+                  LayoutMaxWidth: =
+                  LayoutMinHeight: =0
+                  RadiusBottomLeft: =0
+                  RadiusBottomRight: =0
+                  RadiusTopLeft: =0
+                  RadiusTopRight: =0
+                  Width: =Parent.Width - 200
+                Children:
+                  - GalleryContatos:
+                      Control: Gallery@2.15.0
+                      Variant: VariableHeight
+                      Properties:
+                        Fill: =RGBA(244, 246, 248, 1)
+                        Items: |-
+                          =With(
+                              {
+                                  varBuscaContato: Lower(
+                                      Trim(
+                                          txtBuscarPlemPrai_2.Text
+                                      )
+                                  )
+                              },
+                              SortByColumns(
+                                  AddColumns(
+                                      Filter(
+                                          col_gerenciarContatos,
+                                          (
+                                              IsBlank(cmbCKREAaeroporto_3.Selected.Value) ||
+                                              StartsWith(
+                                                  Aeroporto,
+                                                  cmbCKREAaeroporto_3.Selected.Value
+                                              )
+                                          ) &&
+                                          (
+                                              IsBlank(cmbContatosTipo.Selected.Value) ||
+                                              tipo_entidade.Value = cmbContatosTipo.Selected.Value
+                                          ) &&
+                                          (
+                                              IsBlank(varBuscaContato) ||
+                                              varBuscaContato in Lower(Coalesce(nome, "")) ||
+                                              varBuscaContato in Lower(Coalesce(nome_orgao, "")) ||
+                                              varBuscaContato in Lower(Coalesce(cargo, "")) ||
+                                              varBuscaContato in Lower(Coalesce(email, "")) ||
+                                              varBuscaContato in Lower(Coalesce(tel_principal, "")) ||
+                                              varBuscaContato in Lower(Coalesce(tel_reserva, "")) ||
+                                              varBuscaContato in Lower(Text(ID))
+                                          )
+                                      ),
+                                      ordemStatus,
+                                      Switch(
+                                          status,
+                                          "Desatualizado", 1,
+                                          "Atualizado", 2,
+                                          3
+                                      )
+                                  ),
+                                  "ordemStatus",
+                                  SortOrder.Ascending,
+                                  "nome_orgao",
+                                  SortOrder.Ascending,
+                                  "nome",
+                                  SortOrder.Ascending
+                              )
+                          )
+                        LayoutMaxHeight: =
+                        LayoutMaxWidth: =
+                        TemplatePadding: =4
+                        TemplateSize: =100
+                      Children:
+                        - HtmlText7:
+                            Control: HtmlViewer@2.1.0
+                            Properties:
+                              AutoHeight: =true
+                              Fill: =RGBA(0, 0, 0, 0)
+                              HtmlText: |
+                                =Concatenate(
+                                  "<div style=""font-family:Segoe UI, sans-serif; padding:4px; background-color:#f4f6f8;"">",
+                                    "<div style=""border-radius:12px; box-shadow:0 2px 6px rgba(0,0,0,0.1); padding:10px; background-color:",
+                                      If(
+                                        ThisItem.status = "Atualizado",
+                                        "#ffffff",
+                                        "#ffe3e3"
+                                      ),
+                                    ";"">",
+                                      "<h2 style=""margin-top:0; font-size:14px; color:#2b579a;"">Aeroporto: <span style=""font-weight:normal;"">", ThisItem.Aeroporto, "</span></h2>",
+                                      "<p style=""margin:0px 0; font-size:12px; color:#333;"">",
+                                      "<strong>Tipificação:</strong> ", ThisItem.tipo_entidade.Value, " | ", ThisItem.nome_orgao,"</p>",
+
+                                      "<p style=""margin:0px 0; font-size:12px; color:#333;"">",
+                                        "<strong>Nome:</strong> ",ThisItem.nome, 
+                                      "</p>",
+                                      "<p style=""margin:0px 0; font-size:12px; color:#333;"">",
+                                        "<strong>Telefone principal:</strong> ", ThisItem.tel_principal, "<br>",
+                                        "<strong>Telefone reserva:</strong> ", ThisItem.tel_reserva,
+                                      "</p>",
+                                      "<p style=""margin:0px 0; font-size:12px; color:#0078d4;"">",
+                                        "<strong>" & If(!IsBlank(ThisItem.email_ccr.Email), "Email: ") & "</strong> ", ThisItem.email_ccr.Email,
+                                      "</p>",
+                                      "<p style=""margin:4px 0; font-size:12px; font-weight:bold; color:" &
+                                        If(
+                                          ThisItem.status = "Atualizado",
+                                          "#28a745",   // verde
+                                          If(
+                                            ThisItem.status = "Desatualizado",
+                                            "#dc3545", // vermelho
+                                            "#6c757d"  // cinza para outros
+                                          )
+                                        ) & ";"">Status: " & ThisItem.status & "</p>",
+                                    "</div>",
+                                  "</div>"
+                                )
+                              OnSelect: =Select(Parent)
+                              PaddingBottom: =0
+                              PaddingLeft: =0
+                              PaddingRight: =0
+                              PaddingTop: =0
+                              Width: =Parent.Width - 40
+                              X: =10
+                              Y: =5
+                        - Container12:
+                            Control: GroupContainer@1.5.0
+                            Variant: AutoLayout
+                            Properties:
+                              DropShadow: =DropShadow.None
+                              Height: =50
+                              LayoutAlignItems: =LayoutAlignItems.Center
+                              LayoutDirection: =LayoutDirection.Horizontal
+                              LayoutGap: =10
+                              LayoutJustifyContent: =LayoutJustifyContent.Center
+                              RadiusBottomLeft: =0
+                              RadiusBottomRight: =0
+                              RadiusTopLeft: =0
+                              RadiusTopRight: =0
+                              Width: =300
+                              X: =Parent.Width - 350
+                              Y: =HtmlText7.Height - 60
+                            Children:
+                              - ButtonCanvas11_45:
+                                  Control: Button@0.0.45
+                                  Properties:
+                                    Appearance: ='ButtonCanvas.Appearance'.Primary
+                                    BasePaletteColor: =RGBA(255, 0, 0, 1)
+                                    BorderRadiusBottomLeft: =4
+                                    BorderRadiusBottomRight: =4
+                                    BorderRadiusTopLeft: =4
+                                    BorderRadiusTopRight: =4
+                                    FontSize: =14
+                                    Height: =30
+                                    Icon: ="Delete"
+                                    LayoutMaxHeight: =
+                                    LayoutMaxWidth: =
+                                    OnSelect: |-
+                                      =UpdateContext({var_visibleExcluirContato: true, var_dadosContatos: ThisItem})
+                                    Text: ="Excluir"
+                                    Width: =90
+                                    X: =120
+                                    Y: =160
+                              - ButtonCanvas11_46:
+                                  Control: Button@0.0.45
+                                  Properties:
+                                    Appearance: ='ButtonCanvas.Appearance'.Secondary
+                                    BorderRadiusBottomLeft: =4
+                                    BorderRadiusBottomRight: =4
+                                    BorderRadiusTopLeft: =4
+                                    BorderRadiusTopRight: =4
+                                    FontSize: =14
+                                    Height: =30
+                                    Icon: ="History"
+                                    LayoutMaxHeight: =
+                                    LayoutMaxWidth: =
+                                    OnSelect: "=With(\n    {\n        _contato: ThisItem,\n        _idContato: ThisItem.ID\n    },\n    \n    Set(\n        varContatoHistorico,\n        _contato\n    );\n    \n    Refresh(tbl_contatos_entidades_log);\n    \n    ClearCollect(\n        colHistoricoContato,\n        Sort(\n            Filter(\n                tbl_contatos_entidades_log,\n                id_contato = _idContato\n            ),\n            Criado,\n            SortOrder.Descending\n        )\n    );\n    \n    UpdateContext(\n        {\n            var_visibleHistoricoContato: true\n        }\n    )\n)"
+                                    Text: ="Histórico"
+                                    Width: =90
+                                    X: =1104
+                                    Y: =160
+                              - ButtonCanvas11_44:
+                                  Control: Button@0.0.45
+                                  Properties:
+                                    Appearance: ='ButtonCanvas.Appearance'.Primary
+                                    BorderRadiusBottomLeft: =4
+                                    BorderRadiusBottomRight: =4
+                                    BorderRadiusTopLeft: =4
+                                    BorderRadiusTopRight: =4
+                                    BorderStyle: =BorderStyle.None
+                                    FontSize: =14
+                                    Height: =30
+                                    Icon: ="Edit"
+                                    LayoutMaxHeight: =
+                                    LayoutMaxWidth: =
+                                    OnSelect: |-
+                                      =With(
+                                          {
+                                              _idContato: ThisItem.ID
+                                          },
+
+                                          Refresh(tbl_contatos_entidades);
+
+                                          Set(
+                                              varContatoAntes,
+                                              LookUp(
+                                                  tbl_contatos_entidades,
+                                                  ID = _idContato
+                                              )
+                                          );
+
+                                          Set(
+                                              varContatoHistorico,
+                                              varContatoAntes
+                                          );
+
+                                          Set(
+                                              varErroLogContato,
+                                              ""
+                                          );
+
+                                          Set(
+                                              varLogContatoCriado,
+                                              LookUp(
+                                                  tbl_contatos_entidades_log,
+                                                  ID = -1
+                                              )
+                                          );
+
+                                          Set(
+                                              varSalvandoContato,
+                                              false
+                                          );
+
+                                          Clear(colHistoricoContato);
+                                          Clear(colAlteracoesContato);
+
+                                          UpdateContext(
+                                              {
+                                                  var_visibleFormContatos: true,
+                                                  var_acaoFormContatos: "Editar contato",
+                                                  var_dadosContatos: varContatoAntes
+                                              }
+                                          );
+
+                                          ResetForm(FormCadastrarContato);
+                                          EditForm(FormCadastrarContato)
+                                      )
+                                    Text: ="Atualizar"
+                                    Width: =90
+                                    X: =1104
+                                    Y: =160
+                  - Label16_815:
+                      Control: Label@2.5.1
+                      Properties:
+                        Align: =Align.Right
+                        AlignInContainer: =AlignInContainer.Stretch
+                        AutoHeight: =true
+                        BorderColor: =RGBA(0, 18, 107, 1)
+                        Color: =RGBA(202, 151, 247, 1)
+                        Fill: =RGBA(0, 0, 0, 1)
+                        Font: =Font.'Open Sans'
+                        FontWeight: =FontWeight.Bold
+                        Height: =30
+                        LayoutMaxHeight: =
+                        LayoutMaxWidth: =
+                        PaddingRight: =25
+                        Size: =10
+                        Text: =GalleryContatos.AllItemsCount& " Registros"
+                        Width: =300
+                        X: =50
+                        Y: =80
+      - ContainerExcluirContato:
+          Control: GroupContainer@1.5.0
+          Variant: AutoLayout
+          Properties:
+            DropShadow: =DropShadow.None
+            Fill: =RGBA(0, 0, 0, 0.7)
+            Height: =Parent.Height
+            LayoutAlignItems: =LayoutAlignItems.Center
+            LayoutDirection: =LayoutDirection.Vertical
+            LayoutJustifyContent: =LayoutJustifyContent.Center
+            PaddingBottom: =200
+            RadiusBottomLeft: =0
+            RadiusBottomRight: =0
+            RadiusTopLeft: =0
+            RadiusTopRight: =0
+            Visible: =var_visibleExcluirContato
+            Width: =Parent.Width
+          Children:
+            - Label16_897:
+                Control: Label@2.5.1
+                Properties:
+                  FontWeight: =FontWeight.Bold
+                  Height: =150
+                  LayoutMaxHeight: =
+                  LayoutMaxWidth: =
+                  Size: =10
+                  Text: =""
+                  Width: =300
+                  X: =50
+                  Y: =80
+            - Container137_5:
+                Control: GroupContainer@1.5.0
+                Variant: AutoLayout
+                Properties:
+                  AlignInContainer: =AlignInContainer.SetByContainer
+                  BorderThickness: =1
+                  DropShadow: =DropShadow.Regular
+                  Fill: =RGBA(255, 255, 255, 1)
+                  FillPortions: =0
+                  Height: =150
+                  LayoutAlignItems: =LayoutAlignItems.Center
+                  LayoutDirection: =LayoutDirection.Vertical
+                  LayoutMaxHeight: =
+                  LayoutMaxWidth: =
+                  PaddingBottom: =10
+                  Width: =300
+                Children:
+                  - Label16_898:
+                      Control: Label@2.5.1
+                      Properties:
+                        AlignInContainer: =AlignInContainer.Stretch
+                        BorderColor: =RGBA(0, 0, 0, 1)
+                        BorderThickness: =1
+                        Fill: =RGBA(255, 255, 255, 1)
+                        FontWeight: =FontWeight.Semibold
+                        LayoutMaxHeight: =
+                        LayoutMaxWidth: =
+                        PaddingLeft: =10
+                        Size: =12
+                        Text: ="⚠️ Deseja realmente excluir?"
+                        Width: =300
+                        X: =50
+                        Y: =80
+                  - Label124_5:
+                      Control: Label@2.5.1
+                      Properties:
+                        Align: =Align.Center
+                        AlignInContainer: =AlignInContainer.Stretch
+                        FillPortions: =1
+                        LayoutMaxHeight: =
+                        LayoutMaxWidth: =
+                        LayoutMinHeight: =0
+                        Size: =12
+                        Text: =var_dadosContatos.nome
+                  - Container97_37:
+                      Control: GroupContainer@1.5.0
+                      Variant: AutoLayout
+                      Properties:
+                        DropShadow: =DropShadow.None
+                        FillPortions: =0
+                        Height: =40
+                        LayoutAlignItems: =LayoutAlignItems.Center
+                        LayoutDirection: =LayoutDirection.Horizontal
+                        LayoutGap: =50
+                        LayoutJustifyContent: =LayoutJustifyContent.Center
+                        LayoutMaxHeight: =
+                        LayoutMaxWidth: =
+                        LayoutMinWidth: =40
+                        PaddingLeft: =3
+                        PaddingRight: =3
+                      Children:
+                        - ButtonCanvas27_59:
+                            Control: Button@0.0.45
+                            Properties:
+                              Appearance: ='ButtonCanvas.Appearance'.Secondary
+                              LayoutMaxHeight: =
+                              LayoutMaxWidth: =
+                              OnSelect: |-
+                                =UpdateContext({var_visibleExcluirContato: false})
+                              Text: ="Não"
+                        - ButtonCanvas27_60:
+                            Control: Button@0.0.45
+                            Properties:
+                              LayoutMaxHeight: =
+                              LayoutMaxWidth: =
+                              OnSelect: |-
+                                =Patch(
+                                    tbl_contatos_entidades_log,
+                                    Defaults(tbl_contatos_entidades_log),
+                                    {
+                                        id_contato: var_dadosContatos.ID,
+                                        aeroporto: var_dadosContatos.Aeroporto,
+                                        bloco: var_dadosContatos.Bloco,
+                                        acao: "Exclusão",
+                                        origem: "Gestão de Contatos",
+                                        nome_contato: var_dadosContatos.nome,
+                                        status_anterior: var_dadosContatos.status,
+                                        status_novo: "Excluído",
+                                        usuario_nome: User().FullName,
+                                        usuario_email: User().Email,
+                                        detalhes: "Contato excluído pela gestão de contatos.",
+                                        DetalhesHtml:
+                                            "<div style='font-family:Segoe UI, Arial, sans-serif; font-size:12px; color:#b42318;'>
+                                                Contato excluído pela gestão de contatos.
+                                            </div>"
+                                    }
+                                );
+
+                                RemoveIf(
+                                    tbl_contatos_entidades,
+                                    ID = var_dadosContatos.ID
+                                );
+
+                                UpdateContext(
+                                    {
+                                        var_visibleExcluirContato: false,
+                                        var_dadosContatos: Blank()
+                                    }
+                                );
+
+                                Notify(
+                                    "Contato excluído com registro de histórico.",
+                                    NotificationType.Warning,
+                                    4000
+                                );
+
+                                Select(ButtonRefreshChekREAcontatos_2)
+                              Text: ="Sim"
+      - ContainerFormCadastrarContato:
+          Control: GroupContainer@1.5.0
+          Variant: AutoLayout
+          Properties:
+            DropShadow: =DropShadow.Regular
+            Fill: =RGBA(0, 0, 0, 0.7)
+            Height: =Parent.Height
+            LayoutDirection: =LayoutDirection.Vertical
+            LayoutGap: =5
+            LayoutJustifyContent: =LayoutJustifyContent.Center
+            LayoutOverflowY: =LayoutOverflow.Scroll
+            PaddingBottom: =40
+            PaddingLeft: =10
+            PaddingRight: =10
+            PaddingTop: =60
+            RadiusBottomLeft: =0
+            RadiusBottomRight: =0
+            RadiusTopLeft: =0
+            RadiusTopRight: =0
+            Visible: =var_visibleFormContatos
+            Width: =Parent.Width
+          Children:
+            - Container10:
+                Control: GroupContainer@1.5.0
+                Variant: AutoLayout
+                Properties:
+                  AlignInContainer: =AlignInContainer.Center
+                  Fill: =RGBA(255, 255, 255, 1)
+                  LayoutDirection: =LayoutDirection.Vertical
+                  LayoutGap: =10
+                  LayoutMaxHeight: =
+                  LayoutMaxWidth: =
+                  Width: =1000
+                Children:
+                  - Container39_103:
+                      Control: GroupContainer@1.5.0
+                      Variant: ManualLayout
+                      Properties:
+                        BorderColor: =RGBA(167, 182, 203, 1)
+                        DropShadow: =DropShadow.Regular
+                        Fill: =RGBA(247, 247, 247, 1)
+                        FillPortions: =0
+                        Height: =40
+                        LayoutMaxHeight: =
+                        LayoutMaxWidth: =
+                        RadiusBottomLeft: =0
+                        RadiusBottomRight: =0
+                        RadiusTopLeft: =0
+                        RadiusTopRight: =0
+                        Width: =200
+                        X: =836
+                        Y: =15
+                      Children:
+                        - Label16_899:
+                            Control: Label@2.5.1
+                            Properties:
+                              FontWeight: =FontWeight.Semibold
+                              Size: =12
+                              Text: =var_acaoFormContatos
+                              Width: =300
+                              X: =6
+                        - Icon11_132:
+                            Control: Classic/Icon@2.5.0
+                            Properties:
+                              Color: =RGBA(0, 0, 0, 1)
+                              Height: =40
+                              Icon: =Icon.Cancel
+                              OnSelect: |-
+                                =UpdateContext({var_visibleFormContatos: false})
+                              PaddingBottom: =10
+                              PaddingLeft: =10
+                              PaddingRight: =10
+                              PaddingTop: =10
+                              Width: =50
+                              X: =Parent.Width - 50
+                  - FormCadastrarContato:
+                      Control: Form@2.4.4
+                      Layout: Vertical
+                      Properties:
+                        DataSource: =tbl_contatos_entidades
+                        Fill: =RGBA(255, 255, 255, 1)
+                        Height: =400
+                        Item: |-
+                          =If(
+                              IsBlank(var_dadosContatos.ID),
+                              Defaults(tbl_contatos_entidades),
+                              var_dadosContatos
+                          )
+                        LayoutMaxHeight: =
+                        LayoutMaxWidth: =
+                        LayoutMinWidth: =0
+                        NumberOfColumns: =2
+                        OnFailure: |-
+                          =Notify(
+                              "Não foi possível salvar o contato. Verifique os campos obrigatórios e tente novamente.",
+                              NotificationType.Error,
+                              4000
+                          )
+                        OnSuccess: |-
+                          =With(
+                              {
+                                  contatoDepois: FormCadastrarContato.LastSubmit,
+                                  contatoAntes: varContatoAntes,
+                                  acaoLog: If(
+                                      IsBlank(varContatoAntes.ID),
+                                      "Cadastro",
+                                      "Atualização"
+                                  )
+                              },
+
+                              Set(
+                                  varErroLogContato,
+                                  ""
+                              );
+
+                              ClearCollect(
+                                  colAlteracoesContato,
+                                  Filter(
+                                      Table(
+                                          {
+                                              Campo: "Aeroporto",
+                                              Antes: Coalesce(
+                                                  contatoAntes.Aeroporto,
+                                                  ""
+                                              ),
+                                              Depois: Coalesce(
+                                                  contatoDepois.Aeroporto,
+                                                  ""
+                                              )
+                                          },
+                                          {
+                                              Campo: "Bloco",
+                                              Antes: Coalesce(
+                                                  contatoAntes.Bloco,
+                                                  ""
+                                              ),
+                                              Depois: Coalesce(
+                                                  contatoDepois.Bloco,
+                                                  ""
+                                              )
+                                          },
+                                          {
+                                              Campo: "Tipificação",
+                                              Antes: Coalesce(
+                                                  contatoAntes.tipo_entidade.Value,
+                                                  ""
+                                              ),
+                                              Depois: Coalesce(
+                                                  contatoDepois.tipo_entidade.Value,
+                                                  ""
+                                              )
+                                          },
+                                          {
+                                              Campo: "Órgão/Entidade",
+                                              Antes: Coalesce(
+                                                  contatoAntes.nome_orgao,
+                                                  ""
+                                              ),
+                                              Depois: Coalesce(
+                                                  contatoDepois.nome_orgao,
+                                                  ""
+                                              )
+                                          },
+                                          {
+                                              Campo: "Nome",
+                                              Antes: Coalesce(
+                                                  contatoAntes.nome,
+                                                  ""
+                                              ),
+                                              Depois: Coalesce(
+                                                  contatoDepois.nome,
+                                                  ""
+                                              )
+                                          },
+                                          {
+                                              Campo: "Cargo/Função",
+                                              Antes: Coalesce(
+                                                  contatoAntes.cargo,
+                                                  ""
+                                              ),
+                                              Depois: Coalesce(
+                                                  contatoDepois.cargo,
+                                                  ""
+                                              )
+                                          },
+                                          {
+                                              Campo: "Cargo Motiva",
+                                              Antes: Coalesce(
+                                                  contatoAntes.cargo_motiva.Value,
+                                                  ""
+                                              ),
+                                              Depois: Coalesce(
+                                                  contatoDepois.cargo_motiva.Value,
+                                                  ""
+                                              )
+                                          },
+                                          {
+                                              Campo: "E-mail",
+                                              Antes: Coalesce(
+                                                  contatoAntes.email,
+                                                  ""
+                                              ),
+                                              Depois: Coalesce(
+                                                  contatoDepois.email,
+                                                  ""
+                                              )
+                                          },
+                                          {
+                                              Campo: "Colaborador Motiva",
+                                              Antes: Coalesce(
+                                                  contatoAntes.email_ccr.DisplayName,
+                                                  ""
+                                              ),
+                                              Depois: Coalesce(
+                                                  contatoDepois.email_ccr.DisplayName,
+                                                  ""
+                                              )
+                                          },
+                                          {
+                                              Campo: "E-mail Motiva",
+                                              Antes: Coalesce(
+                                                  contatoAntes.email_ccr.Email,
+                                                  ""
+                                              ),
+                                              Depois: Coalesce(
+                                                  contatoDepois.email_ccr.Email,
+                                                  ""
+                                              )
+                                          },
+                                          {
+                                              Campo: "Telefone principal",
+                                              Antes: Coalesce(
+                                                  contatoAntes.tel_principal,
+                                                  ""
+                                              ),
+                                              Depois: Coalesce(
+                                                  contatoDepois.tel_principal,
+                                                  ""
+                                              )
+                                          },
+                                          {
+                                              Campo: "Telefone reserva",
+                                              Antes: Coalesce(
+                                                  contatoAntes.tel_reserva,
+                                                  ""
+                                              ),
+                                              Depois: Coalesce(
+                                                  contatoDepois.tel_reserva,
+                                                  ""
+                                              )
+                                          },
+                                          {
+                                              Campo: "Capacidade",
+                                              Antes: Coalesce(
+                                                  contatoAntes.capacidade,
+                                                  ""
+                                              ),
+                                              Depois: Coalesce(
+                                                  contatoDepois.capacidade,
+                                                  ""
+                                              )
+                                          },
+                                          {
+                                              Campo: "Distância",
+                                              Antes: Coalesce(
+                                                  contatoAntes.distancia,
+                                                  ""
+                                              ),
+                                              Depois: Coalesce(
+                                                  contatoDepois.distancia,
+                                                  ""
+                                              )
+                                          },
+                                          {
+                                              Campo: "Tempo estimado de deslocamento",
+                                              Antes: Coalesce(
+                                                  contatoAntes.tempo_estimado_de_deslocamento,
+                                                  ""
+                                              ),
+                                              Depois: Coalesce(
+                                                  contatoDepois.tempo_estimado_de_deslocamento,
+                                                  ""
+                                              )
+                                          },
+                                          {
+                                              Campo: "Status",
+                                              Antes: Coalesce(
+                                                  contatoAntes.status,
+                                                  ""
+                                              ),
+                                              Depois: Coalesce(
+                                                  contatoDepois.status,
+                                                  ""
+                                              )
+                                          }
+                                      ),
+                                      acaoLog = "Cadastro" ||
+                                      Antes <> Depois
+                                  )
+                              );
+
+                              IfError(
+                                  With(
+                                      {
+                                          _logCriado:
+                                              Patch(
+                                                  tbl_contatos_entidades_log,
+                                                  Defaults(tbl_contatos_entidades_log),
+                                                  {
+                                                      id_contato: contatoDepois.ID,
+                                                      aeroporto: contatoDepois.Aeroporto,
+                                                      bloco: contatoDepois.Bloco,
+                                                      acao: acaoLog,
+                                                      origem: "Gestão de Contatos",
+                                                      nome_contato: contatoDepois.nome,
+
+                                                      status_anterior: If(
+                                                          acaoLog = "Cadastro",
+                                                          Blank(),
+                                                          contatoAntes.status
+                                                      ),
+
+                                                      status_novo: contatoDepois.status,
+                                                      usuario_nome: User().FullName,
+                                                      usuario_email: User().Email,
+
+                                                      detalhes:
+                                                          Concat(
+                                                              colAlteracoesContato As ALT,
+                                                              ALT.Campo &
+                                                              ": " &
+                                                              Coalesce(
+                                                                  ALT.Antes,
+                                                                  ""
+                                                              ) &
+                                                              " → " &
+                                                              Coalesce(
+                                                                  ALT.Depois,
+                                                                  ""
+                                                              ),
+                                                              Char(10)
+                                                          ),
+
+                                                      DetalhesHtml:
+                                                          "<table style='width:100%; border-collapse:collapse; font-family:Segoe UI,Arial,sans-serif; font-size:12px;'>" &
+
+                                                              "<thead>" &
+                                                                  "<tr style='background:#111827; color:#ffffff; text-align:left;'>" &
+
+                                                                      "<th style='padding:6px; border:1px solid #374151; width:28%;'>" &
+                                                                          "Campo" &
+                                                                      "</th>" &
+
+                                                                      "<th style='padding:6px; border:1px solid #374151; width:36%;'>" &
+                                                                          "Antes" &
+                                                                      "</th>" &
+
+                                                                      "<th style='padding:6px; border:1px solid #374151; width:36%;'>" &
+                                                                          "Depois" &
+                                                                      "</th>" &
+
+                                                                  "</tr>" &
+                                                              "</thead>" &
+
+                                                              "<tbody>" &
+
+                                                                  Concat(
+                                                                      colAlteracoesContato As ALT,
+
+                                                                      "<tr>" &
+
+                                                                          "<td style='padding:6px; border:1px solid #d1d5db; font-weight:600; vertical-align:top;'>" &
+                                                                              ALT.Campo &
+                                                                          "</td>" &
+
+                                                                          "<td style='padding:6px; border:1px solid #d1d5db; color:#6b7280; vertical-align:top;'>" &
+                                                                              Coalesce(
+                                                                                  ALT.Antes,
+                                                                                  ""
+                                                                              ) &
+                                                                          "</td>" &
+
+                                                                          "<td style='padding:6px; border:1px solid #d1d5db; color:#111827; vertical-align:top;'>" &
+                                                                              Coalesce(
+                                                                                  ALT.Depois,
+                                                                                  ""
+                                                                              ) &
+                                                                          "</td>" &
+
+                                                                      "</tr>"
+                                                                  ) &
+
+                                                              "</tbody>" &
+                                                          "</table>"
+                                                  }
+                                              )
+                                      },
+
+                                      Collect(
+                                          colHistoricoContato,
+                                          _logCriado
+                                      );
+
+                                      true
+                                  ),
+
+                                  Set(
+                                      varErroLogContato,
+                                      Coalesce(
+                                          FirstError.Message,
+                                          "Não foi possível registrar o histórico da atualização."
+                                      )
+                                  );
+
+                                  false
+                              );
+
+                              Set(
+                                  varContatoHistorico,
+                                  contatoDepois
+                              );
+
+                              UpdateContext(
+                                  {
+                                      var_visibleFormContatos: false,
+                                      var_dadosContatos: Blank()
+                                  }
+                              );
+
+                              ResetForm(FormCadastrarContato);
+
+                              Set(
+                                  varSalvandoContato,
+                                  false
+                              );
+
+                              Select(ButtonRefreshChekREAcontatos_2);
+
+                              If(
+                                  IsBlank(varErroLogContato),
+
+                                  Notify(
+                                      If(
+                                          acaoLog = "Cadastro",
+                                          "Contato cadastrado e histórico registrado com sucesso.",
+                                          "Contato atualizado e histórico registrado com sucesso."
+                                      ),
+                                      NotificationType.Success,
+                                      5000
+                                  ),
+
+                                  Notify(
+                                      "O contato foi salvo, mas não foi possível registrar o histórico. " &
+                                      "Detalhes: " &
+                                      varErroLogContato,
+                                      NotificationType.Error,
+                                      8000
+                                  )
+                              )
+                          )
+                        X: =40
+                        Y: =40
+                      Children:
+                        - Aeroporto_DataCard5:
+                            Control: TypedDataCard@1.0.7
+                            Variant: TextualEdit
+                            Properties:
+                              DataField: ="Aeroporto"
+                              Default: =Coalesce(ThisItem.Aeroporto, cmbCKREAaeroporto_3.Selected.Value)
+                              DisplayMode: =DisplayMode.View
+                              DisplayName: =DataSourceInfo([@tbl_contatos_entidades],DataSourceInfo.DisplayName,Aeroporto)
+                              MaxLength: =DataSourceInfo([@tbl_contatos_entidades], DataSourceInfo.MaxLength, Aeroporto)
+                              Required: =true
+                              Update: =DataCardValue102.Value
+                              Width: =500
+                              X: =0
+                              Y: =0
+                            Children:
+                              - DataCardKey122:
+                                  Control: Text@0.0.51
+                                  MetadataKey: FieldName
+                                  Properties:
+                                    Height: =22
+                                    Text: =Parent.DisplayName
+                                    Weight: ='TextCanvas.Weight'.Semibold
+                                    Width: =Parent.Width - 48
+                                    Wrap: =false
+                                    X: =24
+                                    Y: =10
+                              - DataCardValue102:
+                                  Control: TextInput@0.0.54
+                                  MetadataKey: FieldValue
+                                  Properties:
+                                    AccessibleLabel: =Parent.DisplayName
+                                    Appearance: ='TextInputCanvas.Appearance'.FilledLighter
+                                    BorderColor: =RGBA(229, 229, 229, 1)
+                                    BorderStyle: =BorderStyle.Solid
+                                    BorderThickness: =1
+                                    DisplayMode: =Parent.DisplayMode
+                                    Height: =40
+                                    Mode: ="'TextInputCanvas.Mode'.TextInputModeSingleLine"
+                                    Required: =Parent.Required
+                                    ValidationState: =If(IsBlank(Parent.Error), "None", "Error")
+                                    Value: =Parent.Default
+                                    Width: =Parent.Width - 48
+                                    X: =24
+                                    Y: =DataCardKey122.Y + DataCardKey122.Height + 4
+                              - ErrorMessage118:
+                                  Control: Text@0.0.51
+                                  MetadataKey: ErrorMessage
+                                  Properties:
+                                    Height: =30
+                                    Text: =Parent.Error
+                                    Visible: =And(!IsBlank(Parent.Error), Parent.DisplayMode=DisplayMode.Edit)
+                                    Width: =Parent.Width - 48
+                                    X: =24
+                                    Y: =DataCardValue102.Y + DataCardValue102.Height
+                              - StarVisible118:
+                                  Control: Text@0.0.51
+                                  MetadataKey: FieldRequired
+                                  Properties:
+                                    Align: ='TextCanvas.Align'.Center
+                                    Height: =30
+                                    Text: ="*"
+                                    Visible: =And(Parent.Required, Parent.DisplayMode=DisplayMode.Edit)
+                                    Width: =30
+                                    Y: =DataCardKey122.Y
+                        - tipo_entidade_DataCard2:
+                            Control: TypedDataCard@1.0.7
+                            Variant: ComboBoxEdit
+                            Properties:
+                              DataField: ="tipo_entidade"
+                              Default: =ThisItem.tipo_entidade
+                              DisplayName: =DataSourceInfo([@tbl_contatos_entidades],DataSourceInfo.DisplayName,tipo_entidade)
+                              Required: =true
+                              Update: =DataCardValue109.Selected
+                              Width: =500
+                              X: =1
+                              Y: =0
+                            Children:
+                              - DataCardKey123:
+                                  Control: Text@0.0.51
+                                  MetadataKey: FieldName
+                                  Properties:
+                                    Height: =22
+                                    Text: ="Tipificação"//Parent.DisplayName
+                                    Weight: ='TextCanvas.Weight'.Semibold
+                                    Width: =Parent.Width - 48
+                                    Wrap: =false
+                                    X: =24
+                                    Y: =10
+                              - DataCardValue109:
+                                  Control: ComboBox@0.0.51
+                                  MetadataKey: FieldValue
+                                  Properties:
+                                    AccessibleLabel: =Parent.DisplayName
+                                    Appearance: ='ComboboxCanvas.Appearance'.FilledLighter
+                                    BorderColor: =RGBA(229, 229, 229, 1)
+                                    BorderStyle: =BorderStyle.Solid
+                                    BorderThickness: =1
+                                    DefaultSelectedItems: =[Parent.Default]
+                                    DisplayMode: =Parent.DisplayMode
+                                    Height: =40
+                                    IsSearchable: =false
+                                    Items: =Choices([@tbl_contatos_entidades].tipo_entidade)
+                                    Required: =Parent.Required
+                                    ValidationState: =If(IsBlank(Parent.Error), "None", "Error")
+                                    Width: =Parent.Width - 48
+                                    X: =24
+                                    Y: =38
+                                  Children:
+                                    - Value2:
+                                        Control: ComboBoxDataField@1.5.0
+                                        Variant: textualColumn
+                                        IsLocked: true
+                                        Properties:
+                                          FieldDisplayName: ="Value"
+                                          FieldName: ="Value"
+                                          FieldType: ="s"
+                                          Order: =1
+                              - ErrorMessage119:
+                                  Control: Text@0.0.51
+                                  MetadataKey: ErrorMessage
+                                  Properties:
+                                    Height: =30
+                                    Text: =Parent.Error
+                                    Visible: =And(!IsBlank(Parent.Error), Parent.DisplayMode=DisplayMode.Edit)
+                                    Width: =Parent.Width - 48
+                                    X: =24
+                                    Y: =DataCardValue109.Y + DataCardValue109.Height
+                              - StarVisible119:
+                                  Control: Text@0.0.51
+                                  MetadataKey: FieldRequired
+                                  Properties:
+                                    Align: ='TextCanvas.Align'.Center
+                                    Height: =20
+                                    Text: ="*"
+                                    Visible: =And(Parent.Required, Parent.DisplayMode=DisplayMode.Edit)
+                                    Width: =30
+                                    Y: =DataCardKey123.Y
+                        - nome_orgao_DataCard2:
+                            Control: TypedDataCard@1.0.7
+                            Variant: TextualEdit
+                            Properties:
+                              DataField: ="nome_orgao"
+                              Default: =If(DataCardValue109.Selected.Value = "Operador de Aeródromo", "MOTIVA", ThisItem.nome_orgao)
+                              DisplayName: =DataSourceInfo([@tbl_contatos_entidades],DataSourceInfo.DisplayName,nome_orgao)
+                              MaxLength: =DataSourceInfo([@tbl_contatos_entidades], DataSourceInfo.MaxLength, nome_orgao)
+                              Required: '=true    '
+                              Update: =DataCardValue98.Value
+                              Width: =500
+                              X: =0
+                              Y: =1
+                            Children:
+                              - DataCardKey110:
+                                  Control: Text@0.0.51
+                                  MetadataKey: FieldName
+                                  Properties:
+                                    Height: =22
+                                    Text: ="Órgão/Entidade"//Parent.DisplayName
+                                    Weight: ='TextCanvas.Weight'.Semibold
+                                    Width: =Parent.Width - 48
+                                    Wrap: =false
+                                    X: =24
+                                    Y: =10
+                              - DataCardValue98:
+                                  Control: TextInput@0.0.54
+                                  MetadataKey: FieldValue
+                                  Properties:
+                                    AccessibleLabel: =Parent.DisplayName
+                                    Appearance: ='TextInputCanvas.Appearance'.FilledLighter
+                                    BorderColor: =RGBA(229, 229, 229, 1)
+                                    BorderStyle: =BorderStyle.Solid
+                                    BorderThickness: =1
+                                    DisplayMode: =Parent.DisplayMode
+                                    Height: =40
+                                    Mode: ="'TextInputCanvas.Mode'.TextInputModeSingleLine"
+                                    Required: =Parent.Required
+                                    ValidationState: =If(IsBlank(Parent.Error), "None", "Error")
+                                    Value: =Parent.Default
+                                    Width: =Parent.Width - 48
+                                    X: =24
+                                    Y: =DataCardKey110.Y + DataCardKey110.Height + 4
+                              - ErrorMessage106:
+                                  Control: Text@0.0.51
+                                  MetadataKey: ErrorMessage
+                                  Properties:
+                                    Height: =30
+                                    Text: =Parent.Error
+                                    Visible: =And(!IsBlank(Parent.Error), Parent.DisplayMode=DisplayMode.Edit)
+                                    Width: =Parent.Width - 48
+                                    X: =24
+                                    Y: =DataCardValue98.Y + DataCardValue98.Height
+                              - StarVisible106:
+                                  Control: Text@0.0.51
+                                  MetadataKey: FieldRequired
+                                  Properties:
+                                    Align: ='TextCanvas.Align'.Center
+                                    Height: =30
+                                    Text: ="*"
+                                    Visible: =And(Parent.Required, Parent.DisplayMode=DisplayMode.Edit)
+                                    Width: =30
+                                    Y: =DataCardKey110.Y
+                        - cargo_motiva_DataCard1:
+                            Control: TypedDataCard@1.0.7
+                            Variant: ComboBoxEdit
+                            Properties:
+                              DataField: ="cargo_motiva"
+                              Default: =ThisItem.cargo_motiva
+                              DisplayMode: =If(DataCardValue109.Selected.Value = "Operador de Aeródromo",Parent.DisplayMode,DisplayMode.View)
+                              DisplayName: =DataSourceInfo([@tbl_contatos_entidades],DataSourceInfo.DisplayName,cargo_motiva)
+                              Required: =false
+                              Update: =DataCardValue2.Selected
+                              Width: =500
+                              X: =1
+                              Y: =1
+                            Children:
+                              - DataCardKey2:
+                                  Control: Text@0.0.51
+                                  MetadataKey: FieldName
+                                  Properties:
+                                    Height: =22
+                                    Text: ="Cargo"
+                                    Weight: ='TextCanvas.Weight'.Semibold
+                                    Width: =Parent.Width - 48
+                                    Wrap: =false
+                                    X: =24
+                                    Y: =10
+                              - DataCardValue2:
+                                  Control: ComboBox@0.0.51
+                                  MetadataKey: FieldValue
+                                  Properties:
+                                    AccessibleLabel: =Parent.DisplayName
+                                    Appearance: ='ComboboxCanvas.Appearance'.FilledLighter
+                                    BorderColor: =RGBA(229, 229, 229, 1)
+                                    BorderStyle: =BorderStyle.Solid
+                                    BorderThickness: =1
+                                    DefaultSelectedItems: =[Parent.Default]
+                                    DisplayMode: =Parent.DisplayMode
+                                    Fill: =RGBA(255, 255, 255, 1)
+                                    Height: =40
+                                    Items: =Choices([@tbl_contatos_entidades].cargo_motiva)
+                                    Required: =Parent.Required
+                                    ValidationState: =If(IsBlank(Parent.Error), "None", "Error")
+                                    Width: =Parent.Width - 48
+                                    X: =24
+                                    Y: =DataCardKey2.Y + DataCardKey2.Height + 4
+                              - ErrorMessage2:
+                                  Control: Text@0.0.51
+                                  MetadataKey: ErrorMessage
+                                  Properties:
+                                    Height: =30
+                                    Text: =Parent.Error
+                                    Visible: =And(!IsBlank(Parent.Error), Parent.DisplayMode=DisplayMode.Edit)
+                                    Width: =Parent.Width - 48
+                                    X: =24
+                                    Y: =DataCardValue2.Y + DataCardValue2.Height
+                              - StarVisible2:
+                                  Control: Text@0.0.51
+                                  MetadataKey: FieldRequired
+                                  Properties:
+                                    Align: ='TextCanvas.Align'.Center
+                                    Height: =20
+                                    Text: ="*"
+                                    Visible: =And(Parent.Required, Parent.DisplayMode=DisplayMode.Edit)
+                                    Width: =30
+                                    Y: =DataCardKey2.Y
+                        - email_ccr_DataCard1:
+                            Control: TypedDataCard@1.0.7
+                            Variant: ComboBoxEdit
+                            Properties:
+                              DataField: ="email_ccr"
+                              Default: =ThisItem.email_ccr
+                              DisplayMode: =If(DataCardValue109.Selected.Value = "Operador de Aeródromo",Parent.DisplayMode, DisplayMode.View)
+                              DisplayName: =DataSourceInfo([@tbl_contatos_entidades],DataSourceInfo.DisplayName,email_ccr)
+                              Required: =false
+                              Update: =DataCardValue91.Selected
+                              Width: =500
+                              X: =0
+                              Y: =2
+                            Children:
+                              - DataCardKey104:
+                                  Control: Text@0.0.51
+                                  MetadataKey: FieldName
+                                  Properties:
+                                    Height: =22
+                                    Text: ="Consultar colaborador"//Parent.DisplayName
+                                    Weight: ='TextCanvas.Weight'.Semibold
+                                    Width: =Parent.Width - 48
+                                    Wrap: =false
+                                    X: =24
+                                    Y: =10
+                              - ErrorMessage100:
+                                  Control: Text@0.0.51
+                                  MetadataKey: ErrorMessage
+                                  Properties:
+                                    Height: =30
+                                    Text: =Parent.Error
+                                    Visible: =And(!IsBlank(Parent.Error), Parent.DisplayMode=DisplayMode.Edit)
+                                    Width: =Parent.Width - 48
+                                    X: =24
+                                    Y: =DataCardValue91.Y + DataCardValue91.Height
+                              - StarVisible100:
+                                  Control: Text@0.0.51
+                                  MetadataKey: FieldRequired
+                                  Properties:
+                                    Align: ='TextCanvas.Align'.Center
+                                    Height: =20
+                                    Text: ="*"
+                                    Visible: =And(Parent.Required, Parent.DisplayMode=DisplayMode.Edit)
+                                    Width: =30
+                                    Y: =DataCardKey104.Y
+                              - DataCardValue91:
+                                  Control: Classic/ComboBox@2.4.0
+                                  Properties:
+                                    BorderColor: =RGBA(229, 229, 229, 1)
+                                    BorderThickness: =1
+                                    ChevronBackground: =
+                                    ChevronFill: =RGBA(79, 90, 94, 1)
+                                    DefaultSelectedItems: =Parent.Default
+                                    DisplayFields: =["DisplayName","Email"]
+                                    DisplayMode: =Parent.DisplayMode
+                                    Items: =Choices([@tbl_contatos_entidades].email_ccr)
+                                    PaddingLeft: =12
+                                    SearchFields: =["DisplayName"]
+                                    SelectMultiple: =false
+                                    Size: =10
+                                    Tooltip: =Parent.DisplayName
+                                    Width: =Parent.Width - 52
+                                    X: =24
+                                    Y: =DataCardKey104.Y + DataCardKey104.Height + 2
+                        - nome_DataCard2:
+                            Control: TypedDataCard@1.0.7
+                            Variant: TextualEdit
+                            Properties:
+                              DataField: ="nome"
+                              Default: =ThisItem.nome
+                              DisplayName: =DataSourceInfo([@tbl_contatos_entidades],DataSourceInfo.DisplayName,nome)
+                              MaxLength: =DataSourceInfo([@tbl_contatos_entidades], DataSourceInfo.MaxLength, nome)
+                              Required: =true
+                              Update: =DataCardValue92.Value
+                              Width: =500
+                              X: =1
+                              Y: =2
+                            Children:
+                              - DataCardKey105:
+                                  Control: Text@0.0.51
+                                  MetadataKey: FieldName
+                                  Properties:
+                                    Height: =22
+                                    Text: ="Nome completo"//Parent.DisplayName
+                                    Weight: ='TextCanvas.Weight'.Semibold
+                                    Width: =Parent.Width - 48
+                                    Wrap: =false
+                                    X: =24
+                                    Y: =10
+                              - DataCardValue92:
+                                  Control: TextInput@0.0.54
+                                  MetadataKey: FieldValue
+                                  Properties:
+                                    AccessibleLabel: =Parent.DisplayName
+                                    Appearance: ='TextInputCanvas.Appearance'.FilledLighter
+                                    BorderColor: =RGBA(229, 229, 229, 1)
+                                    BorderStyle: =BorderStyle.Solid
+                                    BorderThickness: =1
+                                    DisplayMode: =Parent.DisplayMode
+                                    Height: =40
+                                    Mode: ="'TextInputCanvas.Mode'.TextInputModeSingleLine"
+                                    Required: =Parent.Required
+                                    ValidationState: =If(IsBlank(Parent.Error), "None", "Error")
+                                    Value: =Parent.Default
+                                    Width: =Parent.Width - 48
+                                    X: =24
+                                    Y: =DataCardKey105.Y + DataCardKey105.Height + 4
+                              - ErrorMessage101:
+                                  Control: Text@0.0.51
+                                  MetadataKey: ErrorMessage
+                                  Properties:
+                                    Height: =30
+                                    Text: =Parent.Error
+                                    Visible: =And(!IsBlank(Parent.Error), Parent.DisplayMode=DisplayMode.Edit)
+                                    Width: =Parent.Width - 48
+                                    X: =24
+                                    Y: =DataCardValue92.Y + DataCardValue92.Height
+                              - StarVisible101:
+                                  Control: Text@0.0.51
+                                  MetadataKey: FieldRequired
+                                  Properties:
+                                    Align: ='TextCanvas.Align'.Center
+                                    Height: =30
+                                    Text: ="*"
+                                    Visible: =And(Parent.Required, Parent.DisplayMode=DisplayMode.Edit)
+                                    Width: =30
+                                    Y: =DataCardKey105.Y
+                        - tel_principal_DataCard2:
+                            Control: TypedDataCard@1.0.7
+                            Variant: TextualEdit
+                            Properties:
+                              DataField: ="tel_fixo"
+                              Default: =ThisItem.tel_principal
+                              DisplayName: =DataSourceInfo([@tbl_contatos_entidades],DataSourceInfo.DisplayName,tel_principal)
+                              MaxLength: =DataSourceInfo([@tbl_contatos_entidades], DataSourceInfo.MaxLength, tel_principal)
+                              Required: =true
+                              Update: =DataCardValue95.Value
+                              Width: =500
+                              X: =0
+                              Y: =3
+                            Children:
+                              - DataCardKey107:
+                                  Control: Text@0.0.51
+                                  MetadataKey: FieldName
+                                  Properties:
+                                    Height: =22
+                                    Text: ="Telefone principal "//Parent.DisplayName
+                                    Weight: ='TextCanvas.Weight'.Semibold
+                                    Width: =Parent.Width - 48
+                                    Wrap: =false
+                                    X: =24
+                                    Y: =10
+                              - DataCardValue95:
+                                  Control: TextInput@0.0.54
+                                  MetadataKey: FieldValue
+                                  Properties:
+                                    AccessibleLabel: =Parent.DisplayName
+                                    Appearance: ='TextInputCanvas.Appearance'.FilledLighter
+                                    BorderColor: =RGBA(229, 229, 229, 1)
+                                    BorderStyle: =BorderStyle.Solid
+                                    BorderThickness: =1
+                                    DisplayMode: =Parent.DisplayMode
+                                    Height: =40
+                                    Mode: ="'TextInputCanvas.Mode'.TextInputModeSingleLine"
+                                    Required: =Parent.Required
+                                    ValidationState: =If(IsBlank(Parent.Error), "None", "Error")
+                                    Value: =Parent.Default
+                                    Width: =Parent.Width - 48
+                                    X: =24
+                                    Y: =DataCardKey107.Y + DataCardKey107.Height + 4
+                              - ErrorMessage103:
+                                  Control: Text@0.0.51
+                                  MetadataKey: ErrorMessage
+                                  Properties:
+                                    Height: =30
+                                    Text: =Parent.Error
+                                    Visible: =And(!IsBlank(Parent.Error), Parent.DisplayMode=DisplayMode.Edit)
+                                    Width: =Parent.Width - 48
+                                    X: =24
+                                    Y: =DataCardValue95.Y + DataCardValue95.Height
+                              - StarVisible103:
+                                  Control: Text@0.0.51
+                                  MetadataKey: FieldRequired
+                                  Properties:
+                                    Align: ='TextCanvas.Align'.Center
+                                    Height: =30
+                                    Text: ="*"
+                                    Visible: =And(Parent.Required, Parent.DisplayMode=DisplayMode.Edit)
+                                    Width: =30
+                                    Y: =DataCardKey107.Y
+                        - tel_reserva_DataCard2:
+                            Control: TypedDataCard@1.0.7
+                            Variant: TextualEdit
+                            Properties:
+                              DataField: ="tel_cel_institucional"
+                              Default: =ThisItem.tel_reserva
+                              DisplayName: =DataSourceInfo([@tbl_contatos_entidades],DataSourceInfo.DisplayName,tel_reserva)
+                              MaxLength: =DataSourceInfo([@tbl_contatos_entidades], DataSourceInfo.MaxLength, tel_reserva)
+                              Required: =false
+                              Update: =DataCardValue96.Value
+                              Width: =500
+                              X: =1
+                              Y: =3
+                            Children:
+                              - DataCardKey108:
+                                  Control: Text@0.0.51
+                                  MetadataKey: FieldName
+                                  Properties:
+                                    Height: =22
+                                    Text: ="Telefone reserva"//Parent.DisplayName
+                                    Weight: ='TextCanvas.Weight'.Semibold
+                                    Width: =Parent.Width - 48
+                                    Wrap: =false
+                                    X: =24
+                                    Y: =10
+                              - DataCardValue96:
+                                  Control: TextInput@0.0.54
+                                  MetadataKey: FieldValue
+                                  Properties:
+                                    AccessibleLabel: =Parent.DisplayName
+                                    Appearance: ='TextInputCanvas.Appearance'.FilledLighter
+                                    BorderColor: =RGBA(229, 229, 229, 1)
+                                    BorderStyle: =BorderStyle.Solid
+                                    BorderThickness: =1
+                                    DisplayMode: =Parent.DisplayMode
+                                    Height: =40
+                                    Mode: ="'TextInputCanvas.Mode'.TextInputModeSingleLine"
+                                    Required: =Parent.Required
+                                    ValidationState: =If(IsBlank(Parent.Error), "None", "Error")
+                                    Value: =Parent.Default
+                                    Width: =Parent.Width - 48
+                                    X: =24
+                                    Y: =DataCardKey108.Y + DataCardKey108.Height + 4
+                              - ErrorMessage104:
+                                  Control: Text@0.0.51
+                                  MetadataKey: ErrorMessage
+                                  Properties:
+                                    Height: =30
+                                    Text: =Parent.Error
+                                    Visible: =And(!IsBlank(Parent.Error), Parent.DisplayMode=DisplayMode.Edit)
+                                    Width: =Parent.Width - 48
+                                    X: =24
+                                    Y: =DataCardValue96.Y + DataCardValue96.Height
+                              - StarVisible104:
+                                  Control: Text@0.0.51
+                                  MetadataKey: FieldRequired
+                                  Properties:
+                                    Align: ='TextCanvas.Align'.Center
+                                    Height: =30
+                                    Text: ="*"
+                                    Visible: =And(Parent.Required, Parent.DisplayMode=DisplayMode.Edit)
+                                    Width: =30
+                                    Y: =DataCardKey108.Y
+                        - capacidade_DataCard1:
+                            Control: TypedDataCard@1.0.7
+                            Variant: TextualEdit
+                            Properties:
+                              DataField: ="capacidade"
+                              Default: =ThisItem.capacidade
+                              DisplayName: =DataSourceInfo([@tbl_contatos_entidades],DataSourceInfo.DisplayName,capacidade)
+                              MaxLength: =DataSourceInfo([@tbl_contatos_entidades], DataSourceInfo.MaxLength, capacidade)
+                              Required: =Self.Visible
+                              Update: =DataCardValue5.Value
+                              Visible: '=DataCardValue109.Selected.Value = "Recursos Externos" Or DataCardValue109.Selected.Value = "Equipe Recovery KIT"  '
+                              Width: =500
+                              X: =0
+                              Y: =4
+                            Children:
+                              - DataCardKey5:
+                                  Control: Text@0.0.51
+                                  MetadataKey: FieldName
+                                  Properties:
+                                    Height: =22
+                                    Text: ="Capacidade"
+                                    Weight: ='TextCanvas.Weight'.Semibold
+                                    Width: =Parent.Width - 48
+                                    Wrap: =false
+                                    X: =24
+                                    Y: =10
+                              - DataCardValue5:
+                                  Control: TextInput@0.0.54
+                                  MetadataKey: FieldValue
+                                  Properties:
+                                    AccessibleLabel: =Parent.DisplayName
+                                    DisplayMode: =Parent.DisplayMode
+                                    Mode: ="'TextInputCanvas.Mode'.TextInputModeSingleLine"
+                                    Required: =Parent.Required
+                                    ValidationState: =If(IsBlank(Parent.Error), "None", "Error")
+                                    Value: =Parent.Default
+                                    Width: =Parent.Width - 48
+                                    X: =24
+                                    Y: =DataCardKey5.Y + DataCardKey5.Height + 4
+                              - ErrorMessage5:
+                                  Control: Text@0.0.51
+                                  MetadataKey: ErrorMessage
+                                  Properties:
+                                    Height: =30
+                                    Text: =Parent.Error
+                                    Visible: =And(!IsBlank(Parent.Error), Parent.DisplayMode=DisplayMode.Edit)
+                                    Width: =Parent.Width - 48
+                                    X: =24
+                                    Y: =DataCardValue5.Y + DataCardValue5.Height
+                              - StarVisible5:
+                                  Control: Text@0.0.51
+                                  MetadataKey: FieldRequired
+                                  Properties:
+                                    Align: ='TextCanvas.Align'.Center
+                                    Height: =30
+                                    Text: ="*"
+                                    Visible: =And(Parent.Required, Parent.DisplayMode=DisplayMode.Edit)
+                                    Width: =30
+                                    Y: =DataCardKey5.Y
+                        - distancia_DataCard1:
+                            Control: TypedDataCard@1.0.7
+                            Variant: TextualEdit
+                            Properties:
+                              DataField: ="dist_x00e2_ncia"
+                              Default: =ThisItem.distancia
+                              DisplayName: =DataSourceInfo([@tbl_contatos_entidades],DataSourceInfo.DisplayName,distancia)
+                              MaxLength: =DataSourceInfo([@tbl_contatos_entidades], DataSourceInfo.MaxLength, distancia)
+                              Required: =Self.Visible
+                              Update: =DataCardValue13.Value
+                              Visible: =capacidade_DataCard1.Visible
+                              Width: =500
+                              X: =1
+                              Y: =4
+                            Children:
+                              - DataCardKey13:
+                                  Control: Text@0.0.51
+                                  MetadataKey: FieldName
+                                  Properties:
+                                    Height: =22
+                                    Text: ="Distância"
+                                    Weight: ='TextCanvas.Weight'.Semibold
+                                    Width: =Parent.Width - 48
+                                    Wrap: =false
+                                    X: =24
+                                    Y: =10
+                              - DataCardValue13:
+                                  Control: TextInput@0.0.54
+                                  MetadataKey: FieldValue
+                                  Properties:
+                                    AccessibleLabel: =Parent.DisplayName
+                                    DisplayMode: =Parent.DisplayMode
+                                    Mode: ="'TextInputCanvas.Mode'.TextInputModeSingleLine"
+                                    Required: =Parent.Required
+                                    ValidationState: =If(IsBlank(Parent.Error), "None", "Error")
+                                    Value: =Parent.Default
+                                    Width: =Parent.Width - 48
+                                    X: =24
+                                    Y: =DataCardKey13.Y + DataCardKey13.Height + 4
+                              - ErrorMessage13:
+                                  Control: Text@0.0.51
+                                  MetadataKey: ErrorMessage
+                                  Properties:
+                                    Height: =30
+                                    Text: =Parent.Error
+                                    Visible: =And(!IsBlank(Parent.Error), Parent.DisplayMode=DisplayMode.Edit)
+                                    Width: =Parent.Width - 48
+                                    X: =24
+                                    Y: =DataCardValue13.Y + DataCardValue13.Height
+                              - StarVisible13:
+                                  Control: Text@0.0.51
+                                  MetadataKey: FieldRequired
+                                  Properties:
+                                    Align: ='TextCanvas.Align'.Center
+                                    Height: =30
+                                    Text: ="*"
+                                    Visible: =And(Parent.Required, Parent.DisplayMode=DisplayMode.Edit)
+                                    Width: =30
+                                    Y: =DataCardKey13.Y
+                        - tempo_estimado_de_deslocamento_DataCard1:
+                            Control: TypedDataCard@1.0.7
+                            Variant: TextualEdit
+                            Properties:
+                              DataField: ="Tempoestimadodedeslocamento"
+                              Default: =ThisItem.tempo_estimado_de_deslocamento
+                              DisplayName: =DataSourceInfo([@tbl_contatos_entidades],DataSourceInfo.DisplayName,tempo_estimado_de_deslocamento)
+                              MaxLength: =DataSourceInfo([@tbl_contatos_entidades], DataSourceInfo.MaxLength, tempo_estimado_de_deslocamento)
+                              Required: =Self.Visible
+                              Update: =DataCardValue12.Value
+                              Visible: =capacidade_DataCard1.Visible
+                              Width: =500
+                              X: =0
+                              Y: =5
+                            Children:
+                              - DataCardKey12:
+                                  Control: Text@0.0.51
+                                  MetadataKey: FieldName
+                                  Properties:
+                                    Height: =22
+                                    Text: ="Tempo estimado de deslocamento"
+                                    Weight: ='TextCanvas.Weight'.Semibold
+                                    Width: =Parent.Width - 48
+                                    Wrap: =false
+                                    X: =24
+                                    Y: =10
+                              - DataCardValue12:
+                                  Control: TextInput@0.0.54
+                                  MetadataKey: FieldValue
+                                  Properties:
+                                    AccessibleLabel: =Parent.DisplayName
+                                    DisplayMode: =Parent.DisplayMode
+                                    Mode: ="'TextInputCanvas.Mode'.TextInputModeSingleLine"
+                                    Required: =Parent.Required
+                                    ValidationState: =If(IsBlank(Parent.Error), "None", "Error")
+                                    Value: =Parent.Default
+                                    Width: =Parent.Width - 48
+                                    X: =24
+                                    Y: =DataCardKey12.Y + DataCardKey12.Height + 4
+                              - ErrorMessage12:
+                                  Control: Text@0.0.51
+                                  MetadataKey: ErrorMessage
+                                  Properties:
+                                    Height: =30
+                                    Text: =Parent.Error
+                                    Visible: =And(!IsBlank(Parent.Error), Parent.DisplayMode=DisplayMode.Edit)
+                                    Width: =Parent.Width - 48
+                                    X: =24
+                                    Y: =DataCardValue12.Y + DataCardValue12.Height
+                              - StarVisible12:
+                                  Control: Text@0.0.51
+                                  MetadataKey: FieldRequired
+                                  Properties:
+                                    Align: ='TextCanvas.Align'.Center
+                                    Height: =30
+                                    Text: ="*"
+                                    Visible: =And(Parent.Required, Parent.DisplayMode=DisplayMode.Edit)
+                                    Width: =30
+                                    Y: =DataCardKey12.Y
+                        - status_DataCard2:
+                            Control: TypedDataCard@1.0.7
+                            Variant: TextualEdit
+                            Properties:
+                              DataField: ="status"
+                              Default: ="Atualizado"
+                              DisplayName: =DataSourceInfo([@tbl_contatos_entidades],DataSourceInfo.DisplayName,status)
+                              MaxLength: =DataSourceInfo([@tbl_contatos_entidades], DataSourceInfo.MaxLength, status)
+                              Required: =false
+                              Update: =DataCardValue1.Value
+                              Visible: =false
+                              Width: =500
+                              X: =1
+                              Y: =5
+                            Children:
+                              - DataCardKey1:
+                                  Control: Text@0.0.51
+                                  MetadataKey: FieldName
+                                  Properties:
+                                    Height: =22
+                                    Text: =Parent.DisplayName
+                                    Weight: ='TextCanvas.Weight'.Semibold
+                                    Width: =Parent.Width - 48
+                                    Wrap: =false
+                                    X: =24
+                                    Y: =10
+                              - DataCardValue1:
+                                  Control: TextInput@0.0.54
+                                  MetadataKey: FieldValue
+                                  Properties:
+                                    AccessibleLabel: =Parent.DisplayName
+                                    DisplayMode: =Parent.DisplayMode
+                                    Mode: ="'TextInputCanvas.Mode'.TextInputModeSingleLine"
+                                    Required: =Parent.Required
+                                    ValidationState: =If(IsBlank(Parent.Error), "None", "Error")
+                                    Value: =Parent.Default
+                                    Width: =Parent.Width - 48
+                                    X: =24
+                                    Y: =DataCardKey1.Y + DataCardKey1.Height + 4
+                              - ErrorMessage1:
+                                  Control: Text@0.0.51
+                                  MetadataKey: ErrorMessage
+                                  Properties:
+                                    Height: =30
+                                    Text: =Parent.Error
+                                    Visible: =And(!IsBlank(Parent.Error), Parent.DisplayMode=DisplayMode.Edit)
+                                    Width: =Parent.Width - 48
+                                    X: =24
+                                    Y: =DataCardValue1.Y + DataCardValue1.Height
+                              - StarVisible1:
+                                  Control: Text@0.0.51
+                                  MetadataKey: FieldRequired
+                                  Properties:
+                                    Align: ='TextCanvas.Align'.Center
+                                    Height: =30
+                                    Text: ="*"
+                                    Visible: =And(Parent.Required, Parent.DisplayMode=DisplayMode.Edit)
+                                    Width: =30
+                                    Y: =DataCardKey1.Y
+                        - Bloco_DataCard3:
+                            Control: TypedDataCard@1.0.7
+                            Variant: TextualEdit
+                            Properties:
+                              DataField: ="Bloco"
+                              Default: =Coalesce(ThisItem.Bloco, cmbCKREAbloco_3.Selected.Value)
+                              DisplayMode: =DisplayMode.View
+                              DisplayName: =DataSourceInfo([@tbl_contatos_entidades],DataSourceInfo.DisplayName,Bloco)
+                              MaxLength: =DataSourceInfo([@tbl_contatos_entidades], DataSourceInfo.MaxLength, Bloco)
+                              Required: =true
+                              Update: =DataCardValue101.Value
+                              Visible: =false
+                              Width: =500
+                              X: =0
+                              Y: =6
+                            Children:
+                              - DataCardKey119:
+                                  Control: Text@0.0.51
+                                  MetadataKey: FieldName
+                                  Properties:
+                                    Height: =22
+                                    Text: =Parent.DisplayName
+                                    Weight: ='TextCanvas.Weight'.Semibold
+                                    Width: =Parent.Width - 48
+                                    Wrap: =false
+                                    X: =24
+                                    Y: =10
+                              - DataCardValue101:
+                                  Control: TextInput@0.0.54
+                                  MetadataKey: FieldValue
+                                  Properties:
+                                    AccessibleLabel: =Parent.DisplayName
+                                    DisplayMode: =Parent.DisplayMode
+                                    Mode: ="'TextInputCanvas.Mode'.TextInputModeSingleLine"
+                                    Required: =Parent.Required
+                                    ValidationState: =If(IsBlank(Parent.Error), "None", "Error")
+                                    Value: =Parent.Default
+                                    Width: =Parent.Width - 48
+                                    X: =24
+                                    Y: =DataCardKey119.Y + DataCardKey119.Height + 4
+                              - ErrorMessage115:
+                                  Control: Text@0.0.51
+                                  MetadataKey: ErrorMessage
+                                  Properties:
+                                    Height: =30
+                                    Text: =Parent.Error
+                                    Visible: =And(!IsBlank(Parent.Error), Parent.DisplayMode=DisplayMode.Edit)
+                                    Width: =Parent.Width - 48
+                                    X: =24
+                                    Y: =DataCardValue101.Y + DataCardValue101.Height
+                              - StarVisible115:
+                                  Control: Text@0.0.51
+                                  MetadataKey: FieldRequired
+                                  Properties:
+                                    Align: ='TextCanvas.Align'.Center
+                                    Height: =30
+                                    Text: ="*"
+                                    Visible: =And(Parent.Required, Parent.DisplayMode=DisplayMode.Edit)
+                                    Width: =30
+                                    Y: =DataCardKey119.Y
+                        - email_DataCard2:
+                            Control: TypedDataCard@1.0.7
+                            Variant: TextualEdit
+                            Properties:
+                              DataField: ="email"
+                              Default: |-
+                                =If(
+                                    DataCardValue109.Selected.Value = "Operador de Aeródromo",
+                                    DataCardValue91.Selected.Email,
+                                    ThisItem.email
+                                )
+                              DisplayMode: =DisplayMode.View
+                              DisplayName: =DataSourceInfo([@tbl_contatos_entidades],DataSourceInfo.DisplayName,email)
+                              MaxLength: =DataSourceInfo([@tbl_contatos_entidades], DataSourceInfo.MaxLength, email)
+                              Required: =false
+                              Update: =DataCardValue112.Value
+                              Visible: =false
+                              Width: =500
+                              X: =1
+                              Y: =6
+                            Children:
+                              - DataCardKey146:
+                                  Control: Text@0.0.51
+                                  MetadataKey: FieldName
+                                  Properties:
+                                    Height: =22
+                                    Text: =Parent.DisplayName
+                                    Weight: ='TextCanvas.Weight'.Semibold
+                                    Width: =Parent.Width - 48
+                                    Wrap: =false
+                                    X: =24
+                                    Y: =10
+                              - DataCardValue112:
+                                  Control: TextInput@0.0.54
+                                  MetadataKey: FieldValue
+                                  Properties:
+                                    AccessibleLabel: =Parent.DisplayName
+                                    DisplayMode: =Parent.DisplayMode
+                                    Mode: ="'TextInputCanvas.Mode'.TextInputModeSingleLine"
+                                    Required: =Parent.Required
+                                    ValidationState: =If(IsBlank(Parent.Error), "None", "Error")
+                                    Value: =Parent.Default
+                                    Width: =Parent.Width - 48
+                                    X: =24
+                                    Y: =33
+                              - ErrorMessage142:
+                                  Control: Text@0.0.51
+                                  MetadataKey: ErrorMessage
+                                  Properties:
+                                    Height: =30
+                                    Text: =Parent.Error
+                                    Visible: =And(!IsBlank(Parent.Error), Parent.DisplayMode=DisplayMode.Edit)
+                                    Width: =Parent.Width - 48
+                                    X: =24
+                                    Y: =DataCardValue112.Y + DataCardValue112.Height
+                              - StarVisible142:
+                                  Control: Text@0.0.51
+                                  MetadataKey: FieldRequired
+                                  Properties:
+                                    Align: ='TextCanvas.Align'.Center
+                                    Height: =30
+                                    Text: ="*"
+                                    Visible: =And(Parent.Required, Parent.DisplayMode=DisplayMode.Edit)
+                                    Width: =30
+                                    Y: =DataCardKey146.Y
+                        - cargo_DataCard2:
+                            Control: TypedDataCard@1.0.7
+                            Variant: TextualEdit
+                            Properties:
+                              DataField: ="cargo"
+                              Default: |-
+                                =If(
+                                    DataCardValue109.Selected.Value = "Operador de Aeródromo",
+                                    DataCardValue91.Selected.Department & " / " & DataCardValue91.Selected.JobTitle,
+                                    ThisItem.cargo
+                                )
+                              DisplayName: =DataSourceInfo([@tbl_contatos_entidades],DataSourceInfo.DisplayName,cargo)
+                              MaxLength: =DataSourceInfo([@tbl_contatos_entidades], DataSourceInfo.MaxLength, cargo)
+                              Required: =false
+                              Update: =DataCardValue94.Value
+                              Visible: =false
+                              Width: =500
+                              X: =0
+                              Y: =7
+                            Children:
+                              - DataCardKey106:
+                                  Control: Text@0.0.51
+                                  MetadataKey: FieldName
+                                  Properties:
+                                    Height: =22
+                                    Text: ="Cargo/Função"//Parent.DisplayName
+                                    Weight: ='TextCanvas.Weight'.Semibold
+                                    Width: =Parent.Width - 48
+                                    Wrap: =false
+                                    X: =24
+                                    Y: =10
+                              - DataCardValue94:
+                                  Control: TextInput@0.0.54
+                                  MetadataKey: FieldValue
+                                  Properties:
+                                    AccessibleLabel: =Parent.DisplayName
+                                    DisplayMode: =Parent.DisplayMode
+                                    Mode: ="'TextInputCanvas.Mode'.TextInputModeSingleLine"
+                                    Required: =Parent.Required
+                                    ValidationState: =If(IsBlank(Parent.Error), "None", "Error")
+                                    Value: =Parent.Default
+                                    Width: =Parent.Width - 48
+                                    X: =24
+                                    Y: =DataCardKey106.Y + DataCardKey106.Height + 4
+                              - ErrorMessage102:
+                                  Control: Text@0.0.51
+                                  MetadataKey: ErrorMessage
+                                  Properties:
+                                    Height: =30
+                                    Text: =Parent.Error
+                                    Visible: =And(!IsBlank(Parent.Error), Parent.DisplayMode=DisplayMode.Edit)
+                                    Width: =Parent.Width - 48
+                                    X: =24
+                                    Y: =DataCardValue94.Y + DataCardValue94.Height
+                              - StarVisible102:
+                                  Control: Text@0.0.51
+                                  MetadataKey: FieldRequired
+                                  Properties:
+                                    Align: ='TextCanvas.Align'.Center
+                                    Height: =30
+                                    Text: ="*"
+                                    Visible: =And(Parent.Required, Parent.DisplayMode=DisplayMode.Edit)
+                                    Width: =30
+                                    Y: =DataCardKey106.Y
+                  - Container17:
+                      Control: GroupContainer@1.5.0
+                      Variant: AutoLayout
+                      Properties:
+                        DropShadow: =DropShadow.None
+                        FillPortions: =0
+                        Height: =50
+                        LayoutDirection: =LayoutDirection.Horizontal
+                        LayoutGap: =10
+                        LayoutJustifyContent: =LayoutJustifyContent.End
+                        LayoutMaxHeight: =
+                        LayoutMaxWidth: =
+                        PaddingRight: =20
+                        PaddingTop: =2
+                        RadiusBottomLeft: =0
+                        RadiusBottomRight: =0
+                        RadiusTopLeft: =0
+                        RadiusTopRight: =0
+                      Children:
+                        - ButtonCanvas27_62:
+                            Control: Button@0.0.45
+                            Properties:
+                              AlignInContainer: =AlignInContainer.Start
+                              Appearance: ='ButtonCanvas.Appearance'.Secondary
+                              BorderRadiusTopLeft: =0
+                              BorderRadiusTopRight: =0
+                              Icon: ="DismissCircle"
+                              LayoutMaxHeight: =
+                              LayoutMaxWidth: =
+                              OnSelect: |-
+                                =UpdateContext({var_visibleFormContatos: false})
+                              Text: ="Cancelar"
+                              Width: =100
+                        - ButtonCanvas27_61:
+                            Control: Button@0.0.45
+                            Properties:
+                              AlignInContainer: =AlignInContainer.Start
+                              BorderRadiusTopLeft: =0
+                              BorderRadiusTopRight: =0
+                              Icon: ="Save"
+                              LayoutMaxHeight: =
+                              LayoutMaxWidth: =
+                              OnSelect: =SubmitForm(FormCadastrarContato)
+                              Text: =If(IsBlank(var_dadosContatos), "Salvar", "Atualizar")
+                              Width: =100
+      - HtmlText3_2:
+          Control: HtmlViewer@2.1.0
+          Properties:
+            Fill: =RGBA(255, 255, 255, 1)
+            Height: =125
+            HtmlText: |-
+              =With(
+                  {
+                      _busca: Lower(
+                          Trim(
+                              txtBuscarPlemPrai_2.Text
+                          )
+                      ),
+                      _aeroporto: cmbCKREAaeroporto_3.Selected.Value,
+                      _tipoContato: cmbContatosTipo.Selected.Value,
+                      _iata: Coalesce(
+                          LookUp(
+                              colAeros,
+                              Aeroporto = cmbCKREAaeroporto_3.Selected.Value,
+                              IATA
+                          ),
+                          "---"
+                      )
+                  },
+
+                  With(
+                      {
+                          _dadosRelatorio:
+                              SortByColumns(
+                                  AddColumns(
+                                      Filter(
+                                          col_gerenciarContatos,
+
+                                          (
+                                              IsBlank(_aeroporto) ||
+                                              Aeroporto = _aeroporto
+                                          ) &&
+
+                                          (
+                                              IsBlank(_tipoContato) ||
+                                              tipo_entidade.Value = _tipoContato
+                                          ) &&
+
+                                          (
+                                              IsBlank(_busca) ||
+                                              _busca in Lower(
+                                                  Coalesce(
+                                                      Bloco,
+                                                      ""
+                                                  )
+                                              ) ||
+                                              _busca in Lower(
+                                                  Coalesce(
+                                                      Aeroporto,
+                                                      ""
+                                                  )
+                                              ) ||
+                                              _busca in Lower(
+                                                  Coalesce(
+                                                      nome,
+                                                      ""
+                                                  )
+                                              ) ||
+                                              _busca in Lower(
+                                                  Coalesce(
+                                                      nome_orgao,
+                                                      ""
+                                                  )
+                                              ) ||
+                                              _busca in Lower(
+                                                  Coalesce(
+                                                      cargo,
+                                                      ""
+                                                  )
+                                              ) ||
+                                              _busca in Lower(
+                                                  Coalesce(
+                                                      email,
+                                                      ""
+                                                  )
+                                              ) ||
+                                              _busca in Lower(
+                                                  Coalesce(
+                                                      tel_principal,
+                                                      ""
+                                                  )
+                                              ) ||
+                                              _busca in Lower(
+                                                  Coalesce(
+                                                      tel_reserva,
+                                                      ""
+                                                  )
+                                              ) ||
+                                              _busca in Lower(
+                                                  Text(ID)
+                                              )
+                                          )
+                                      ),
+
+                                      ordemStatus,
+
+                                      Switch(
+                                          status,
+                                          "Desatualizado",
+                                          1,
+                                          "Atualizado",
+                                          2,
+                                          3
+                                      )
+                                  ),
+
+                                  "ordemStatus",
+                                  SortOrder.Ascending,
+
+                                  "nome_orgao",
+                                  SortOrder.Ascending,
+
+                                  "nome",
+                                  SortOrder.Ascending
+                              )
+                      },
+
+                      With(
+                          {
+                              _totalContatos: CountRows(_dadosRelatorio),
+
+                              _totalAtualizados:
+                                  CountIf(
+                                      _dadosRelatorio,
+                                      status = "Atualizado"
+                                  ),
+
+                              _totalDesatualizados:
+                                  CountIf(
+                                      _dadosRelatorio,
+                                      status = "Desatualizado"
+                                  )
+                          },
+
+                          "<div style='
+                              width:100%;
+                              box-sizing:border-box;
+                              font-family:Segoe UI,Arial,sans-serif;
+                              color:#1f2937;
+                              background:#ffffff;
+                          '>" &
+
+                              "<table style='
+                                  width:100%;
+                                  border-collapse:collapse;
+                                  font-family:Segoe UI,Arial,sans-serif;
+                                  margin-bottom:10px;
+                              '>" &
+
+                                  "<tr>" &
+
+                                      "<td style='
+                                          width:33%;
+                                          vertical-align:middle;
+                                          padding:12px 8px;
+                                      '>" &
+
+                                          "<div style='
+                                              font-family:Segoe UI Rounded,Arial Rounded MT Bold,Segoe UI,Arial,sans-serif;
+                                              font-size:22px;
+                                              line-height:22px;
+                                              font-weight:800;
+                                              color:#6046ed;
+                                          '>" &
+                                              "MOTIVA" &
+                                          "</div>" &
+
+                                          "<div style='
+                                              margin-top:5px;
+                                              font-size:12px;
+                                              font-weight:600;
+                                              color:#6046ed;
+                                          '>" &
+
+                                              Coalesce(
+                                                  _aeroporto,
+                                                  "Todos os aeroportos"
+                                              ) &
+
+                                          "</div>" &
+
+                                      "</td>" &
+
+                                      "<td style='
+                                          width:34%;
+                                          vertical-align:middle;
+                                          text-align:center;
+                                          padding:12px 8px;
+                                      '>" &
+
+                                          "<div style='
+                                              font-size:11px;
+                                              font-weight:700;
+                                              color:#344054;
+                                          '>" &
+
+                                              "FOR-" &
+                                              _iata &
+                                              "-OBS-SREA-001" &
+
+                                          "</div>" &
+
+                                      "</td>" &
+
+                                      "<td style='
+                                          width:33%;
+                                          vertical-align:middle;
+                                          text-align:right;
+                                          padding:12px 8px;
+                                          font-size:11px;
+                                          color:#475467;
+                                      '>" &
+
+                                          "<strong>Rev.02</strong><br>" &
+                                          Text(
+                                              Today(),
+                                              "dd/mm/yyyy"
+                                          ) &
+
+                                      "</td>" &
+
+                                  "</tr>" &
+
+                                  "<tr>" &
+
+                                      "<td colspan='3' style='
+                                          padding:9px;
+                                          border:1px solid #d0d5dd;
+                                          background:#f2f4f7;
+                                          text-align:center;
+                                          font-size:15px;
+                                          font-weight:700;
+                                          color:#101828;
+                                      '>" &
+
+                                          "Lista de Contatos de Emergência" &
+
+                                      "</td>" &
+
+                                  "</tr>" &
+
+                              "</table>" &
+
+                              If(
+                                  _totalDesatualizados > 0,
+
+                                  "<div style='
+                                      margin:10px 0;
+                                      padding:11px 13px;
+                                      border:1px solid #fda29b;
+                                      border-left:5px solid #d92d20;
+                                      border-radius:7px;
+                                      background:#fff1f0;
+                                      color:#912018;
+                                  '>" &
+
+                                      "<div style='
+                                          font-size:13px;
+                                          font-weight:700;
+                                          margin-bottom:3px;
+                                      '>" &
+
+                                          "Atenção: existem contatos desatualizados" &
+
+                                      "</div>" &
+
+                                      "<div style='font-size:11px;'>" &
+
+                                          Text(_totalDesatualizados) &
+
+                                          If(
+                                              _totalDesatualizados = 1,
+                                              " contato requer validação e atualização cadastral.",
+                                              " contatos requerem validação e atualização cadastral."
+                                          ) &
+
+                                      "</div>" &
+
+                                  "</div>",
+
+                                  "<div style='
+                                      margin:10px 0;
+                                      padding:10px 13px;
+                                      border:1px solid #a6f4c5;
+                                      border-left:5px solid #12b76a;
+                                      border-radius:7px;
+                                      background:#ecfdf3;
+                                      color:#027a48;
+                                      font-size:12px;
+                                      font-weight:600;
+                                  '>" &
+
+                                      "Todos os contatos apresentados estão atualizados." &
+
+                                  "</div>"
+                              ) &
+
+                              "<table style='
+                                  width:100%;
+                                  border-collapse:separate;
+                                  border-spacing:6px 0;
+                                  margin:10px 0 14px 0;
+                                  font-family:Segoe UI,Arial,sans-serif;
+                              '>" &
+
+                                  "<tr>" &
+
+                                      "<td style='
+                                          width:33.33%;
+                                          padding:10px;
+                                          border:1px solid #d0d5dd;
+                                          border-radius:7px;
+                                          background:#f9fafb;
+                                          text-align:center;
+                                      '>" &
+
+                                          "<div style='
+                                              font-size:10px;
+                                              color:#667085;
+                                              text-transform:uppercase;
+                                              letter-spacing:0.4px;
+                                          '>" &
+                                              "Total de contatos" &
+                                          "</div>" &
+
+                                          "<div style='
+                                              margin-top:3px;
+                                              font-size:20px;
+                                              font-weight:700;
+                                              color:#101828;
+                                          '>" &
+                                              Text(_totalContatos) &
+                                          "</div>" &
+
+                                      "</td>" &
+
+                                      "<td style='
+                                          width:33.33%;
+                                          padding:10px;
+                                          border:1px solid #a6f4c5;
+                                          border-radius:7px;
+                                          background:#ecfdf3;
+                                          text-align:center;
+                                      '>" &
+
+                                          "<div style='
+                                              font-size:10px;
+                                              color:#027a48;
+                                              text-transform:uppercase;
+                                              letter-spacing:0.4px;
+                                          '>" &
+                                              "Atualizados" &
+                                          "</div>" &
+
+                                          "<div style='
+                                              margin-top:3px;
+                                              font-size:20px;
+                                              font-weight:700;
+                                              color:#027a48;
+                                          '>" &
+                                              Text(_totalAtualizados) &
+                                          "</div>" &
+
+                                      "</td>" &
+
+                                      "<td style='
+                                          width:33.33%;
+                                          padding:10px;
+                                          border:1px solid #fda29b;
+                                          border-radius:7px;
+                                          background:#fff1f0;
+                                          text-align:center;
+                                      '>" &
+
+                                          "<div style='
+                                              font-size:10px;
+                                              color:#b42318;
+                                              text-transform:uppercase;
+                                              letter-spacing:0.4px;
+                                          '>" &
+                                              "Desatualizados" &
+                                          "</div>" &
+
+                                          "<div style='
+                                              margin-top:3px;
+                                              font-size:20px;
+                                              font-weight:700;
+                                              color:#b42318;
+                                          '>" &
+                                              Text(_totalDesatualizados) &
+                                          "</div>" &
+
+                                      "</td>" &
+
+                                  "</tr>" &
+
+                              "</table>" &
+
+                              "<table style='
+                                  width:100%;
+                                  border-collapse:collapse;
+                                  table-layout:fixed;
+                                  font-family:Segoe UI,Arial,sans-serif;
+                                  font-size:10px;
+                              '>" &
+
+                                  "<thead>" &
+
+                                      "<tr style='
+                                          background:#004b87;
+                                          color:#ffffff;
+                                          text-align:center;
+                                      '>" &
+
+                                          "<th style='
+                                              width:5%;
+                                              border:1px solid #d0d5dd;
+                                              padding:7px 4px;
+                                          '>" &
+                                              "Cód." &
+                                          "</th>" &
+
+                                          "<th style='
+                                              width:17%;
+                                              border:1px solid #d0d5dd;
+                                              padding:7px 5px;
+                                          '>" &
+                                              "Tipificação" &
+                                          "</th>" &
+
+                                          "<th style='
+                                              width:17%;
+                                              border:1px solid #d0d5dd;
+                                              padding:7px 5px;
+                                          '>" &
+                                              "Órgão / Cargo" &
+                                          "</th>" &
+
+                                          "<th style='
+                                              width:18%;
+                                              border:1px solid #d0d5dd;
+                                              padding:7px 5px;
+                                          '>" &
+                                              "Telefone" &
+                                          "</th>" &
+
+                                          "<th style='
+                                              width:10%;
+                                              border:1px solid #d0d5dd;
+                                              padding:7px 5px;
+                                          '>" &
+                                              "Capacidade" &
+                                          "</th>" &
+
+                                          "<th style='
+                                              width:12%;
+                                              border:1px solid #d0d5dd;
+                                              padding:7px 5px;
+                                          '>" &
+                                              "Tempo estimado" &
+                                          "</th>" &
+
+                                          "<th style='
+                                              width:9%;
+                                              border:1px solid #d0d5dd;
+                                              padding:7px 5px;
+                                          '>" &
+                                              "Distância" &
+                                          "</th>" &
+
+                                          "<th style='
+                                              width:12%;
+                                              border:1px solid #d0d5dd;
+                                              padding:7px 5px;
+                                          '>" &
+                                              "Status" &
+                                          "</th>" &
+
+                                      "</tr>" &
+
+                                  "</thead>" &
+
+                                  "<tbody>" &
+
+                                      If(
+                                          _totalContatos = 0,
+
+                                          "<tr>" &
+                                              "<td colspan='8' style='
+                                                  padding:24px;
+                                                  border:1px solid #d0d5dd;
+                                                  background:#f9fafb;
+                                                  text-align:center;
+                                                  color:#667085;
+                                                  font-size:12px;
+                                              '>" &
+
+                                                  "Nenhum contato encontrado para os filtros selecionados." &
+
+                                              "</td>" &
+                                          "</tr>",
+
+                                          Concat(
+                                              _dadosRelatorio As CONTATO,
+
+                                              "<tr style='
+                                                  background:" &
+
+                                                  If(
+                                                      CONTATO.status = "Desatualizado",
+                                                      "#fff1f0",
+                                                      "#ffffff"
+                                                  ) &
+
+                                                  ";
+                                                  page-break-inside:avoid;
+                                              '>" &
+
+                                                  "<td style='
+                                                      border:1px solid #d0d5dd;
+                                                      border-left:" &
+
+                                                      If(
+                                                          CONTATO.status = "Desatualizado",
+                                                          "4px solid #d92d20",
+                                                          "1px solid #d0d5dd"
+                                                      ) &
+
+                                                      ";
+                                                      padding:7px 4px;
+                                                      text-align:center;
+                                                      font-weight:600;
+                                                  '>" &
+
+                                                      Text(CONTATO.ID) &
+
+                                                  "</td>" &
+
+                                                  "<td style='
+                                                      border:1px solid #d0d5dd;
+                                                      padding:7px 5px;
+                                                      text-align:left;
+                                                      vertical-align:top;
+                                                  '>" &
+
+                                                      "<strong>" &
+                                                          Coalesce(
+                                                              CONTATO.tipo_entidade.Value,
+                                                              "-"
+                                                          ) &
+                                                      "</strong>" &
+
+                                                      If(
+                                                          !IsBlank(CONTATO.nome_orgao),
+                                                          "<br><span style='color:#667085;'>" &
+                                                              CONTATO.nome_orgao &
+                                                          "</span>",
+                                                          ""
+                                                      ) &
+
+                                                  "</td>" &
+
+                                                  "<td style='
+                                                      border:1px solid #d0d5dd;
+                                                      padding:7px 5px;
+                                                      text-align:left;
+                                                      vertical-align:top;
+                                                  '>" &
+
+                                                      If(
+                                                          !IsBlank(CONTATO.nome),
+                                                          "<strong>" &
+                                                              CONTATO.nome &
+                                                          "</strong><br>",
+                                                          ""
+                                                      ) &
+
+                                                      "<span style='color:#475467;'>" &
+
+                                                          Coalesce(
+                                                              If(
+                                                                  CONTATO.nome_orgao = "MOTIVA",
+                                                                  CONTATO.cargo_motiva.Value,
+                                                                  CONTATO.cargo
+                                                              ),
+                                                              "-"
+                                                          ) &
+
+                                                      "</span>" &
+
+                                                  "</td>" &
+
+                                                  "<td style='
+                                                      border:1px solid #d0d5dd;
+                                                      padding:7px 5px;
+                                                      text-align:left;
+                                                      vertical-align:top;
+                                                  '>" &
+
+                                                      "<strong>Principal:</strong> " &
+                                                      Coalesce(
+                                                          CONTATO.tel_principal,
+                                                          "Não informado"
+                                                      ) &
+
+                                                      If(
+                                                          !IsBlank(CONTATO.tel_reserva),
+
+                                                          "<br><strong>Reserva:</strong> " &
+                                                          CONTATO.tel_reserva,
+
+                                                          ""
+                                                      ) &
+
+                                                  "</td>" &
+
+                                                  "<td style='
+                                                      border:1px solid #d0d5dd;
+                                                      padding:7px 5px;
+                                                      text-align:center;
+                                                      vertical-align:top;
+                                                  '>" &
+
+                                                      Coalesce(
+                                                          CONTATO.capacidade,
+                                                          "-"
+                                                      ) &
+
+                                                  "</td>" &
+
+                                                  "<td style='
+                                                      border:1px solid #d0d5dd;
+                                                      padding:7px 5px;
+                                                      text-align:center;
+                                                      vertical-align:top;
+                                                  '>" &
+
+                                                      Coalesce(
+                                                          CONTATO.tempo_estimado_de_deslocamento,
+                                                          "-"
+                                                      ) &
+
+                                                  "</td>" &
+
+                                                  "<td style='
+                                                      border:1px solid #d0d5dd;
+                                                      padding:7px 5px;
+                                                      text-align:center;
+                                                      vertical-align:top;
+                                                  '>" &
+
+                                                      Coalesce(
+                                                          CONTATO.distancia,
+                                                          "-"
+                                                      ) &
+
+                                                  "</td>" &
+
+                                                  "<td style='
+                                                      border:1px solid #d0d5dd;
+                                                      padding:7px 5px;
+                                                      text-align:center;
+                                                      vertical-align:top;
+                                                  '>" &
+
+                                                      "<span style='
+                                                          display:inline-block;
+                                                          padding:4px 7px;
+                                                          border-radius:12px;
+                                                          font-size:9px;
+                                                          font-weight:700;
+                                                          background:" &
+
+                                                          If(
+                                                              CONTATO.status = "Desatualizado",
+                                                              "#fee4e2",
+                                                              "#d1fadf"
+                                                          ) &
+
+                                                          ";
+                                                          color:" &
+
+                                                          If(
+                                                              CONTATO.status = "Desatualizado",
+                                                              "#b42318",
+                                                              "#027a48"
+                                                          ) &
+
+                                                          ";
+                                                      '>" &
+
+                                                          Coalesce(
+                                                              CONTATO.status,
+                                                              "Não informado"
+                                                          ) &
+
+                                                      "</span>" &
+
+                                                      If(
+                                                          CONTATO.status = "Desatualizado",
+
+                                                          "<div style='
+                                                              margin-top:4px;
+                                                              font-size:8px;
+                                                              line-height:11px;
+                                                              font-weight:600;
+                                                              color:#b42318;
+                                                          '>" &
+                                                              "Requer validação" &
+                                                          "</div>",
+
+                                                          ""
+                                                      ) &
+
+                                                  "</td>" &
+
+                                              "</tr>"
+                                          )
+                                      ) &
+
+                                  "</tbody>" &
+
+                              "</table>" &
+
+                              "<div style='
+                                  margin-top:10px;
+                                  padding-top:7px;
+                                  border-top:1px solid #eaecf0;
+                                  text-align:right;
+                                  font-size:9px;
+                                  color:#667085;
+                              '>" &
+
+                                  "Documento gerado em " &
+                                  Text(
+                                      Now(),
+                                      "dd/mm/yyyy hh:mm"
+                                  ) &
+                                  " · Airport Now" &
+
+                              "</div>" &
+
+                          "</div>"
+                      )
+                  )
+              )
+            Size: =10
+            Visible: =false
+            Width: =384
+            X: =980
+            Y: =616
+      - ContainerHistoricoContato:
+          Control: GroupContainer@1.5.0
+          Variant: AutoLayout
+          Properties:
+            Fill: =RGBA(0, 0, 0, 0.7)
+            Height: =Parent.Height
+            LayoutAlignItems: =LayoutAlignItems.Center
+            LayoutDirection: =LayoutDirection.Vertical
+            PaddingBottom: =20
+            PaddingLeft: =10
+            PaddingRight: =10
+            PaddingTop: =20
+            Visible: =var_visibleHistoricoContato
+            Width: =Parent.Width
+          Children:
+            - Container10_3:
+                Control: GroupContainer@1.5.0
+                Variant: AutoLayout
+                Properties:
+                  AlignInContainer: =AlignInContainer.Center
+                  Fill: =RGBA(255, 255, 255, 1)
+                  LayoutDirection: =LayoutDirection.Vertical
+                  LayoutGap: =10
+                  LayoutMaxHeight: =
+                  LayoutMaxWidth: =
+                  Width: =1000
+                Children:
+                  - Container39_105:
+                      Control: GroupContainer@1.5.0
+                      Variant: ManualLayout
+                      Properties:
+                        BorderColor: =RGBA(167, 182, 203, 1)
+                        DropShadow: =DropShadow.Regular
+                        Fill: =RGBA(247, 247, 247, 1)
+                        FillPortions: =0
+                        Height: =40
+                        LayoutMaxHeight: =
+                        LayoutMaxWidth: =
+                        RadiusBottomLeft: =0
+                        RadiusBottomRight: =0
+                        RadiusTopLeft: =0
+                        RadiusTopRight: =0
+                        Width: =200
+                        X: =836
+                        Y: =15
+                      Children:
+                        - Label16_900:
+                            Control: Label@2.5.1
+                            Properties:
+                              FontWeight: =FontWeight.Semibold
+                              Size: =12
+                              Text: ="Histórico de Atualizações do Contato"
+                              Width: =300
+                              X: =6
+                        - Icon11_133:
+                            Control: Classic/Icon@2.5.0
+                            Properties:
+                              Color: =RGBA(0, 0, 0, 1)
+                              Height: =40
+                              Icon: =Icon.Cancel
+                              OnSelect: |-
+                                =UpdateContext(
+                                    {
+                                        var_visibleHistoricoContato: false
+                                    }
+                                );
+
+                                Set(varContatoHistorico, Blank());
+                                Clear(colHistoricoContato)
+                              PaddingBottom: =10
+                              PaddingLeft: =10
+                              PaddingRight: =10
+                              PaddingTop: =10
+                              Width: =50
+                              X: =Parent.Width - 50
+                  - HtmlHistoricoContato:
+                      Control: HtmlViewer@2.1.0
+                      Properties:
+                        AlignInContainer: =AlignInContainer.Stretch
+                        FillPortions: =1
+                        HtmlText: |-
+                          =With(
+                              {
+                                  contato: varContatoHistorico,
+                                  historico: Sort(
+                                      colHistoricoContato,
+                                      Criado,
+                                      SortOrder.Descending
+                                  )
+                              },
+                              "<div style='font-family:Segoe UI, Arial, sans-serif; color:#1f2937; font-size:13px; width:100%; background:#ffffff; padding-left:6px;'>
+
+                                  <table style='width:100%; border-collapse:separate; border-spacing:0; margin-bottom:14px;'>
+                                      <tr>
+                                          <td style='width:33.33%; padding:12px; border:1px solid #e5e7eb; background:#f9fafb; border-radius:10px 0 0 10px;'>
+                                              <div style='font-size:11px; color:#6b7280;'>Registros de histórico</div>
+                                              <div style='font-size:22px; font-weight:700; color:#111827;'>" & CountRows(historico) & "</div>
+                                          </td>
+
+                                          <td style='width:33.33%; padding:12px; border-top:1px solid #d1fae5; border-bottom:1px solid #d1fae5; background:#ecfdf3;'>
+                                              <div style='font-size:11px; color:#047857;'>Status atual</div>
+                                              <div style='font-size:16px; font-weight:700; color:" &
+                                                  If(
+                                                      contato.status = "Desatualizado",
+                                                      "#b42318",
+                                                      "#027a48"
+                                                  ) &
+                                              ";'>" & Coalesce(contato.status, "Não informado") & "</div>
+                                          </td>
+
+                                          <td style='width:33.33%; padding:12px; border:1px solid #ddd6fe; background:#f5f3ff; border-radius:0 10px 10px 0;'>
+                                              <div style='font-size:11px; color:#6046ed;'>Integração operacional</div>
+                                              <div style='font-size:13px; font-weight:700; color:#6046ed;'>
+                                                  Gestão de Contatos + Teste de Contatos
+                                              </div>
+                                          </td>
+                                      </tr>
+                                  </table>" &
+
+                                  If(
+                                      CountRows(historico) = 0,
+
+                                      "<div style='padding:16px; border:1px solid #e5e7eb; background:#f9fafb; border-radius:10px; color:#6b7280;'>
+                                          Nenhuma atualização foi registrada para este contato.
+                                      </div>",
+
+                                      "<div style='position:relative; margin-left:18px; border-left:3px solid #ddd6fe; padding-left:18px; overflow:visible;'>" &
+
+                                      Concat(
+                                          historico As LOG,
+
+                                          With(
+                                              {
+                                                  corOrigem: If(
+                                                      LOG.origem = "Teste de Contatos",
+                                                      "#b42318",
+                                                      "#6046ed"
+                                                  ),
+
+                                                  fundoOrigem: If(
+                                                      LOG.origem = "Teste de Contatos",
+                                                      "#fff1f2",
+                                                      "#f5f3ff"
+                                                  ),
+
+                                                  corStatusNovo: If(
+                                                      LOG.status_novo = "Desatualizado",
+                                                      "#b42318",
+                                                      If(
+                                                          LOG.status_novo = "Atualizado",
+                                                          "#027a48",
+                                                          "#374151"
+                                                      )
+                                                  ),
+
+                                                  fundoStatusNovo: If(
+                                                      LOG.status_novo = "Desatualizado",
+                                                      "#fff1f2",
+                                                      If(
+                                                          LOG.status_novo = "Atualizado",
+                                                          "#ecfdf3",
+                                                          "#f9fafb"
+                                                      )
+                                                  ),
+
+                                                  detalheHtmlTratado:
+                                                      Substitute(
+                                                          Substitute(
+                                                              Substitute(
+                                                                  Substitute(
+                                                                      Substitute(
+                                                                          Coalesce(
+                                                                              LOG.DetalhesHtml,
+                                                                              "<pre style='white-space:pre-wrap; font-family:Segoe UI, Arial, sans-serif; font-size:12px; color:#374151;'>" & Coalesce(LOG.detalhes, "") & "</pre>"
+                                                                          ),
+                                                                          "background:#111827; color:#ffffff;",
+                                                                          "background:#f5f3ff; color:#4c1d95;"
+                                                                      ),
+                                                                      "background:#111827",
+                                                                      "background:#f5f3ff"
+                                                                  ),
+                                                                  "color:#ffffff",
+                                                                  "color:#4c1d95"
+                                                              ),
+                                                              "border:1px solid #374151",
+                                                              "border:1px solid #ddd6fe"
+                                                          ),
+                                                          "color:#b42318; font-weight:700;",
+                                                          "color:#b42318; font-weight:700;"
+                                                      )
+                                              },
+
+                                              "<div style='position:relative; margin-bottom:14px; overflow:visible;'>
+
+                                                  <div style='position:absolute; left:-26px; top:14px; width:12px; height:12px; border-radius:50%; background:" & corOrigem & "; border:3px solid #ffffff; box-shadow:0 0 0 2px #ddd6fe; z-index:2;'></div>
+
+                                                  <div style='border:1px solid #e5e7eb; border-radius:12px; overflow:hidden; background:#ffffff; box-shadow:0 2px 6px rgba(17,24,39,0.06);'>
+
+                                                      <div style='padding:10px 12px; background:" & fundoOrigem & "; border-bottom:1px solid #e5e7eb;'>
+
+                                                          <table style='width:100%; border-collapse:collapse;'>
+                                                              <tr>
+                                                                  <td style='vertical-align:top;'>
+                                                                      <div style='font-size:14px; font-weight:700; color:#111827; margin-bottom:4px;'>
+                                                                          " & Coalesce(LOG.acao, "Atualização") & "
+                                                                      </div>
+
+                                                                      <div style='font-size:11px; color:#6b7280;'>
+                                                                          " & Text(LOG.Criado, "[$-pt-BR]dd/mm/yyyy HH:mm") & "
+                                                                          | Usuário: " & Coalesce(LOG.usuario_nome, "Não informado") & "
+                                                                      </div>
+                                                                  </td>
+
+                                                                  <td style='text-align:right; vertical-align:top;'>
+                                                                      <span style='display:inline-block; padding:4px 8px; border-radius:999px; background:#ffffff; color:" & corOrigem & "; border:1px solid " & corOrigem & "; font-size:11px; font-weight:700;'>
+                                                                          " & Coalesce(LOG.origem, "Origem não informada") & "
+                                                                      </span>
+                                                                  </td>
+                                                              </tr>
+                                                          </table>
+                                                      </div>
+
+                                                      <div style='padding:12px;'>
+
+                                                          <div style='margin-bottom:10px;'>
+                                                              <span style='font-size:11px; color:#6b7280;'>Status anterior</span>
+                                                              <span style='display:inline-block; margin-left:6px; padding:4px 8px; border-radius:999px; background:#f3f4f6; color:#374151; font-size:11px; font-weight:700;'>
+                                                                  " & Coalesce(LOG.status_anterior, "-") & "
+                                                              </span>
+
+                                                              <span style='font-size:12px; color:#9ca3af; margin:0 8px;'>→</span>
+
+                                                              <span style='font-size:11px; color:#6b7280;'>Status novo</span>
+                                                              <span style='display:inline-block; margin-left:6px; padding:4px 8px; border-radius:999px; background:" & fundoStatusNovo & "; color:" & corStatusNovo & "; font-size:11px; font-weight:700;'>
+                                                                  " & Coalesce(LOG.status_novo, "-") & "
+                                                              </span>
+                                                          </div>
+
+                                                          <div style='border:1px solid #e5e7eb; border-radius:8px; overflow:hidden;'>
+                                                              " & detalheHtmlTratado & "
+                                                          </div>
+
+                                                      </div>
+                                                  </div>
+                                              </div>"
+                                          )
+                                      ) &
+
+                                      "</div>"
+                                  ) &
+
+                              "</div>"
+                          )
+                        LayoutMinHeight: =16
+                        LayoutMinWidth: =16
+                        PaddingRight: =10

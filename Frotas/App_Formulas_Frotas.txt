@@ -1,0 +1,338 @@
+// ===================================================================
+// App.Formulas — Motiva Gestão de Frotas (Módulo 1)
+// Colar em: Studio -> árvore de objetos -> App -> propriedade Formulas
+// Locale: barra de fórmulas pt-BR (; separa argumento, ;; termina definição)
+// NÃO é o OnStart. O OnStart fica vazio.
+// ===================================================================
+
+// ✈️ Aeroportos da rede — 16 unidades + linha vazia para filtros
+colAeros =
+Table(
+    {
+        IATA: "";
+        ICAO: "";
+        Bloco: "";
+        Aeroporto: "";
+        Cat: 0;
+        Classe: ""
+    };
+    {
+        IATA: "GYN";
+        ICAO: "SBGO";
+        Bloco: "CENTRAL";
+        Aeroporto: "GOIÂNIA";
+        Cat: 7;
+        Classe: "III"
+    };
+    {
+        IATA: "IMP";
+        ICAO: "SBIZ";
+        Bloco: "CENTRAL";
+        Aeroporto: "IMPERATRIZ";
+        Cat: 6;
+        Classe: "II"
+    };
+    {
+        IATA: "PMW";
+        ICAO: "SBPJ";
+        Bloco: "CENTRAL";
+        Aeroporto: "PALMAS";
+        Cat: 7;
+        Classe: "II"
+    };
+    {
+        IATA: "PLU";
+        ICAO: "SBBH";
+        Bloco: "CENTRAL";
+        Aeroporto: "PAMPULHA";
+        Cat: 5;
+        Classe: "II"
+    };
+    {
+        IATA: "PNZ";
+        ICAO: "SBPL";
+        Bloco: "CENTRAL";
+        Aeroporto: "PETROLINA";
+        Cat: 6;
+        Classe: "II"
+    };
+    {
+        IATA: "SLZ";
+        ICAO: "SBSL";
+        Bloco: "CENTRAL";
+        Aeroporto: "SÃO LUIS";
+        Cat: 7;
+        Classe: "III"
+    };
+    {
+        IATA: "THE";
+        ICAO: "SBTE";
+        Bloco: "CENTRAL";
+        Aeroporto: "TERESINA";
+        Cat: 7;
+        Classe: "III"
+    };
+    {
+        IATA: "BFH";
+        ICAO: "SBBI";
+        Bloco: "SUL";
+        Aeroporto: "BACACHERI";
+        Cat: 5;
+        Classe: "II"
+    };
+    {
+        IATA: "CWB";
+        ICAO: "SBCT";
+        Bloco: "SUL";
+        Aeroporto: "CURITIBA";
+        Cat: 7;
+        Classe: "IV"
+    };
+    {
+        IATA: "JOI";
+        ICAO: "SBJV";
+        Bloco: "SUL";
+        Aeroporto: "JOINVILLE";
+        Cat: 6;
+        Classe: "II"
+    };
+    {
+        IATA: "NVT";
+        ICAO: "SBNF";
+        Bloco: "SUL";
+        Aeroporto: "NAVEGANTES";
+        Cat: 7;
+        Classe: "III"
+    };
+    {
+        IATA: "BGX";
+        ICAO: "SBBG";
+        Bloco: "SUL";
+        Aeroporto: "BAGÉ";
+        Cat: 0;
+        Classe: "I"
+    };
+    {
+        IATA: "IGU";
+        ICAO: "SBFI";
+        Bloco: "SUL";
+        Aeroporto: "FOZ DO IGUAÇU";
+        Cat: 7;
+        Classe: "III"
+    };
+    {
+        IATA: "LDB";
+        ICAO: "SBLO";
+        Bloco: "SUL";
+        Aeroporto: "LONDRINA";
+        Cat: 7;
+        Classe: "II"
+    };
+    {
+        IATA: "PET";
+        ICAO: "SBPK";
+        Bloco: "SUL";
+        Aeroporto: "PELOTAS";
+        Cat: 5;
+        Classe: "I"
+    };
+    {
+        IATA: "URG";
+        ICAO: "SBUG";
+        Bloco: "SUL";
+        Aeroporto: "URUGUAIANA";
+        Cat: 5;
+        Classe: "I"
+    }
+);;
+
+// Aeroportos válidos para dropdown de campo obrigatório (sem a linha vazia)
+colAerosValidos = Sort(Filter(colAeros; IATA <> ""); Aeroporto; SortOrder.Ascending);;
+
+// Blocos regionais distintos, para filtro de gestor de bloco
+colBlocos = Sort(Distinct(colAerosValidos; Bloco); Value; SortOrder.Ascending);;
+
+// 🚚 Tipos de ativo — ExigePlaca/MedidorPadrao/LadoAr dirigem a validação do formulário
+colTipoAtivo =
+Table(
+    { Ordem: 1; Tipo: "Veículo Leve";         ExigePlaca: true;  MedidorPadrao: "Hodômetro (km)"; LadoAr: false };
+    { Ordem: 2; Tipo: "Veículo Pesado";       ExigePlaca: true;  MedidorPadrao: "Hodômetro (km)"; LadoAr: true  };
+    { Ordem: 3; Tipo: "Utilitário";           ExigePlaca: true;  MedidorPadrao: "Hodômetro (km)"; LadoAr: true  };
+    { Ordem: 4; Tipo: "Motocicleta";          ExigePlaca: true;  MedidorPadrao: "Hodômetro (km)"; LadoAr: false };
+    { Ordem: 5; Tipo: "Ônibus/Micro-ônibus";  ExigePlaca: true;  MedidorPadrao: "Hodômetro (km)"; LadoAr: true  };
+    { Ordem: 6; Tipo: "Reboque/Semirreboque"; ExigePlaca: false; MedidorPadrao: "Não se aplica";  LadoAr: true  };
+    { Ordem: 7; Tipo: "Máquina/Trator";       ExigePlaca: false; MedidorPadrao: "Horímetro (h)";  LadoAr: true  };
+    { Ordem: 8; Tipo: "GSE";                  ExigePlaca: false; MedidorPadrao: "Horímetro (h)";  LadoAr: true  };
+    { Ordem: 9; Tipo: "CCI/SESCINC";          ExigePlaca: true;  MedidorPadrao: "Ambos";          LadoAr: true  }
+);;
+
+colCategoriaUso =
+Table(
+    { Ordem: 1; Valor: "Administrativo" };
+    { Ordem: 2; Valor: "Operacional Lado Terra" };
+    { Ordem: 3; Valor: "Operacional Lado Ar" };
+    { Ordem: 4; Valor: "Emergência/SESCINC" };
+    { Ordem: 5; Valor: "Manutenção" };
+    { Ordem: 6; Valor: "Segurança/AVSEC" }
+);;
+
+colCombustivel =
+Table(
+    { Ordem: 1; Valor: "Gasolina" };
+    { Ordem: 2; Valor: "Etanol" };
+    { Ordem: 3; Valor: "Flex" };
+    { Ordem: 4; Valor: "Diesel S10" };
+    { Ordem: 5; Valor: "Diesel S500" };
+    { Ordem: 6; Valor: "GNV" };
+    { Ordem: 7; Valor: "Elétrico" };
+    { Ordem: 8; Valor: "Híbrido" };
+    { Ordem: 9; Valor: "Não se aplica" }
+);;
+
+// UsaKm / UsaHoras controlam quais campos de medidor o formulário exige
+colTipoMedidor =
+Table(
+    { Ordem: 1; Valor: "Hodômetro (km)"; UsaKm: true;  UsaHoras: false };
+    { Ordem: 2; Valor: "Horímetro (h)";  UsaKm: false; UsaHoras: true  };
+    { Ordem: 3; Valor: "Ambos";          UsaKm: true;  UsaHoras: true  };
+    { Ordem: 4; Valor: "Não se aplica";  UsaKm: false; UsaHoras: false }
+);;
+
+// Cor = controles nativos (RGBA) · Hex = HtmlViewer (string). As duas saem do MESMO token.
+colStatusAtivo =
+Table(
+    { Ordem: 1; Valor: "Ativo";   Cor: thmVerde;      Hex: hxVerde      };
+    { Ordem: 2; Valor: "Inativo"; Cor: thmAmbar;      Hex: hxAmbar      };
+    { Ordem: 3; Valor: "Baixado"; Cor: thmTextoFraco; Hex: hxTextoFraco }
+);;
+
+colSituacaoOper =
+Table(
+    { Ordem: 1; Valor: "Disponível";    Cor: thmVerde;    Hex: hxVerde    };
+    { Ordem: 2; Valor: "Em Uso";        Cor: thmPrimaria; Hex: hxPrimaria };
+    { Ordem: 3; Valor: "Em Manutenção"; Cor: thmAmbar;    Hex: hxAmbar    };
+    { Ordem: 4; Valor: "Indisponível";  Cor: thmVermelho; Hex: hxVermelho };
+    { Ordem: 5; Valor: "Bloqueado";     Cor: thmVermelho; Hex: hxVermelho }
+);;
+
+colTipoPropriedade =
+Table(
+    { Ordem: 1; Valor: "Próprio" };
+    { Ordem: 2; Valor: "Locado" };
+    { Ordem: 3; Valor: "Comodato" };
+    { Ordem: 4; Valor: "Terceiro/Contratada" }
+);;
+
+colMedidorOrigem =
+Table(
+    { Ordem: 1; Valor: "Cadastro" };
+    { Ordem: 2; Valor: "BDV" };
+    { Ordem: 3; Valor: "Abastecimento" };
+    { Ordem: 4; Valor: "Manutenção" };
+    { Ordem: 5; Valor: "Vistoria" }
+);;
+
+// Nivel: usado para comparar permissão sem encadear If
+colPerfil =
+Table(
+    { Ordem: 1; Valor: "Administrador";   Nivel: 5 };
+    { Ordem: 2; Valor: "Gestor de Frota"; Nivel: 4 };
+    { Ordem: 3; Valor: "Operador";        Nivel: 3 };
+    { Ordem: 4; Valor: "Condutor";        Nivel: 2 };
+    { Ordem: 5; Valor: "Consulta";        Nivel: 1 }
+);;
+
+// Opções dos dropdowns do FORMULÁRIO — derivadas das tabelas acima, sem redigitar nenhum valor.
+// Mesmo motivo dos filtros: o DropDown moderno exige tabela de uma coluna chamada `Value`.
+colOpTipo        = ForAll(Sort(colTipoAtivo; Ordem; SortOrder.Ascending) As _t; { Value: _t.Tipo });;
+colOpCategoria   = ForAll(colCategoriaUso As _c; { Value: _c.Valor });;
+colOpCombustivel = ForAll(colCombustivel As _c; { Value: _c.Valor });;
+colOpMedidor     = ForAll(colTipoMedidor As _m; { Value: _m.Valor });;
+colOpStatus      = ForAll(colStatusAtivo As _s; { Value: _s.Valor });;
+colOpSituacao    = ForAll(colSituacaoOper As _s; { Value: _s.Valor });;
+colOpPropriedade = ForAll(colTipoPropriedade As _p; { Value: _p.Valor });;
+// `colOpAero` não está aqui: depende do usuário logado. É coleção montada na `scrLoginContexto`.
+
+// Dropdowns de filtro. O DropDown moderno (`DropDown@0.0.45`) só aceita tabela de UMA coluna de
+// texto — `["a"; "b"]` — e é lido por `drp.Selected.Value`. Por isso estas três não têm `Ordem`.
+// O filtro de aeroporto NÃO está aqui: depende do usuário logado, então é a coleção `colFiltroAero`,
+// montada no `OnVisible` da `scrLoginContexto`.
+colFiltroStatus = ["Todos"; "Ativo"; "Inativo"; "Baixado"];;
+
+// Ordenação da consulta. "Medidor (maior)" ordena por texto com zero à esquerda,
+// que é o jeito de ordenar número sem trocar o tipo da chave no meio do Sort.
+colOpOrdem = ["Código"; "Placa"; "Aeroporto"; "Modelo"; "Medidor (maior)"];;
+
+colFiltroSituacao = ["Todos"; "Disponível"; "Em Uso"; "Em Manutenção"; "Indisponível"; "Bloqueado"];;
+
+colFiltroTipo =
+[
+    "Todos";
+    "Veículo Leve";
+    "Veículo Pesado";
+    "Utilitário";
+    "Motocicleta";
+    "Ônibus/Micro-ônibus";
+    "Reboque/Semirreboque";
+    "Máquina/Trator";
+    "GSE";
+    "CCI/SESCINC"
+];;
+
+// 🎨 Hex — usados dentro do HTML dos HtmlViewer
+hxPrimaria        = "#391694";;   // roxo institucional Motiva
+hxPrimariaEscura  = "#2A106E";;
+hxPrimariaClara   = "#EDE9FB";;
+hxAcao            = "#DD511A";;   // laranja de ação (instruções, CTA)
+hxOperacional     = "#0891B2";;
+hxSuperficie      = "#FFFFFF";;
+hxFundo           = "#F8FAFC";;   // slate claro
+hxBorda           = "#C9C5E6";;   // borda institucional clara
+hxTexto           = "#1E293B";;
+hxTextoFraco      = "#64748B";;
+hxVerde           = "#15803D";;
+hxAmbar           = "#B45309";;
+hxVermelho        = "#B91C1C";;
+hxVermelhoSuave   = "#FEF2F2";;   // fundo de aviso crítico
+hxAmbarSuave      = "#FFFBEB";;   // fundo de atenção
+hxTextoBarra      = "#D6DDE0";;   // texto sobre fundo escuro: barra, trilho, botão colorido
+hxTextoBarraSuave = "rgba(214,221,224,.72)";;
+hxTextoBarraFraco = "rgba(214,221,224,.5)";;
+hxBordaBarra      = "rgba(214,221,224,.28)";;
+hxBotaoBarra      = "#BDB2B0";;   // botão fantasma da barra roxa
+
+// 🎨 Cores dos controles nativos — derivadas dos hex acima, nunca redigitadas
+thmPrimaria       = ColorValue(hxPrimaria);;
+thmPrimariaEscura = ColorValue(hxPrimariaEscura);;
+thmPrimariaClara  = ColorValue(hxPrimariaClara);;
+thmAcao           = ColorValue(hxAcao);;
+thmOperacional    = ColorValue(hxOperacional);;
+thmSuperficie     = ColorValue(hxSuperficie);;
+thmFundo          = ColorValue(hxFundo);;
+thmBorda          = ColorValue(hxBorda);;
+thmTexto          = ColorValue(hxTexto);;
+thmTextoFraco     = ColorValue(hxTextoFraco);;
+thmVerde          = ColorValue(hxVerde);;
+thmAmbar          = ColorValue(hxAmbar);;
+thmVermelho       = ColorValue(hxVermelho);;
+thmTextoBarra     = ColorValue(hxTextoBarra);;
+thmBotaoBarra     = ColorValue(hxBotaoBarra);;
+thmTextoInverso   = RGBA(255; 255; 255; 1);;
+thmTransparente   = RGBA(0; 0; 0; 0);;
+
+// 🔤 Tipografia
+// Sora é a fonte da marca, mas não existe no Power Apps e o sanitizador do HtmlViewer não carrega
+// webfont. Segoe UI é a substituta e está em todos os clientes.
+thmFonte          = Font.'Segoe UI';;
+htmlFonte         = "font-family:'Segoe UI',Arial,sans-serif;-webkit-font-smoothing:antialiased;";;
+thmTamTitulo      = 19;;
+thmTamSubtitulo   = 14;;
+thmTamCorpo       = 12;;
+thmTamRotulo      = 11;;
+
+// 📐 Espaçamento e forma — Motiva usa canto reto
+thmEsp            = 13;;
+thmEspBloco       = 26;;
+thmRaio           = 0;;
+thmAlturaCampo    = 42;;
+thmAlturaBarra    = 72

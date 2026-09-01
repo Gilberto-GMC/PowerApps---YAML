@@ -1,0 +1,2565 @@
+Screens:
+  scrFrotaForm:
+    Properties:
+      OnVisible: |-
+        =UpdateContext({locErro: ""})
+    Children:
+      - cntShellFrm:
+          Control: GroupContainer@1.5.0
+          Variant: AutoLayout
+          Properties:
+            DropShadow: =DropShadow.None
+            Fill: =thmFundo
+            Height: =Parent.Height
+            LayoutAlignItems: =LayoutAlignItems.Stretch
+            LayoutDirection: =LayoutDirection.Horizontal
+            LayoutGap: =0
+            LayoutMinHeight: =0
+            RadiusBottomLeft: =0
+            RadiusBottomRight: =0
+            RadiusTopLeft: =0
+            RadiusTopRight: =0
+            Width: =Parent.Width
+          Children:
+            - cntMenuFrm:
+                Control: GroupContainer@1.5.0
+                Variant: AutoLayout
+                Properties:
+                  DropShadow: =DropShadow.None
+                  Fill: =thmPrimariaEscura
+                  FillPortions: =0
+                  LayoutAlignItems: =LayoutAlignItems.Stretch
+                  LayoutDirection: =LayoutDirection.Vertical
+                  LayoutGap: =10
+                  LayoutMinHeight: =0
+                  PaddingBottom: =14
+                  PaddingLeft: =12
+                  PaddingRight: =12
+                  PaddingTop: =16
+                  RadiusBottomLeft: =0
+                  RadiusBottomRight: =0
+                  RadiusTopLeft: =0
+                  RadiusTopRight: =0
+                  Width: =If(varMenuAberto, 236, 76)
+                Children:
+                  - htmMenuMarcaFrm:
+                      Control: HtmlViewer@2.1.0
+                      Properties:
+                        AlignInContainer: =AlignInContainer.Start
+                        AutoHeight: =true
+                        Color: =thmTextoBarra
+                        Fill: =thmPrimariaEscura
+                        Font: =thmFonte
+                        HtmlText: |-
+                          ="<div style='" & htmlFonte & "color:" & hxTextoBarra & ";'>" &
+                          If(
+                              varMenuAberto,
+                              "<div style='font-size:10px;letter-spacing:.24em;font-weight:700;opacity:.6;'>MOTIVA</div><div style='font-size:16px;font-weight:800;letter-spacing:.01em;margin-top:2px;'>GESTÃO DE FROTAS</div>",
+                              "<div style='font-size:17px;font-weight:800;text-align:left; margin-left:12px;'>GF</div>"
+                          ) &
+                          "</div>"
+                        PaddingBottom: =14
+                        PaddingLeft: =4
+                        PaddingRight: =0
+                        PaddingTop: =0
+                        Size: =11
+                  - cntMenuNavFrm:
+                      Control: GroupContainer@1.5.0
+                      Variant: AutoLayout
+                      Properties:
+                        DropShadow: =DropShadow.None
+                        Fill: =thmPrimariaEscura
+                        LayoutAlignItems: =LayoutAlignItems.Stretch
+                        LayoutDirection: =LayoutDirection.Vertical
+                        LayoutGap: =10
+                        LayoutMinHeight: =0
+                        LayoutMinWidth: =0
+                        LayoutOverflowY: =LayoutOverflow.Scroll
+                        RadiusBottomLeft: =0
+                        RadiusBottomRight: =0
+                        RadiusTopLeft: =0
+                        RadiusTopRight: =0
+                      Children:
+                        - btnMenuPainelFrm:
+                            Control: Button@0.0.45
+                            Properties:
+                              Align: =Align.Left
+                              AlignInContainer: =AlignInContainer.Stretch
+                              Appearance: ='ButtonCanvas.Appearance'.Secondary
+                              BasePaletteColor: =thmTextoBarra
+                              BorderRadius: =0
+                              FontColor: =thmTextoBarra
+                              FontSize: =14
+                              FontWeight: =FontWeight.Semibold
+                              Height: =44
+                              Icon: ="Eye"
+                              IconStyle: ='ButtonCanvas.IconStyle'.Filled
+                              LayoutMinWidth: =0
+                              OnSelect: =Navigate(scrFrotaPainel, ScreenTransition.Fade)
+                              PaddingLeft: =18
+                              Text: =If(varMenuAberto, "PAINEL", "")
+                        - btnMenuFrotaFrm:
+                            Control: Button@0.0.45
+                            Properties:
+                              Align: =Align.Left
+                              AlignInContainer: =AlignInContainer.Stretch
+                              Appearance: ='ButtonCanvas.Appearance'.Secondary
+                              BasePaletteColor: =thmTextoBarra
+                              BorderRadius: =0
+                              FontColor: =thmTextoBarra
+                              FontSize: =14
+                              FontWeight: =FontWeight.Semibold
+                              Height: =44
+                              Icon: ="Search"
+                              IconStyle: ='ButtonCanvas.IconStyle'.Filled
+                              LayoutMinWidth: =0
+                              OnSelect: |-
+                                =Set(varFiltroAero, "Todos");
+                                Navigate(scrFrotaLista, ScreenTransition.Fade)
+                              PaddingLeft: =18
+                              Text: =If(varMenuAberto, "CONSULTAR FROTA", "")
+                        - btnMenuNovoFrm:
+                            Control: Button@0.0.45
+                            Properties:
+                              Align: =Align.Left
+                              AlignInContainer: =AlignInContainer.Stretch
+                              Appearance: ='ButtonCanvas.Appearance'.Primary
+                              BasePaletteColor: =thmPrimaria
+                              BorderRadius: =0
+                              DisplayMode: =If(varPerfilNivel >= 3, DisplayMode.Edit, DisplayMode.Disabled)
+                              FontColor: =thmTextoBarra
+                              FontSize: =14
+                              FontWeight: =FontWeight.Semibold
+                              Height: =44
+                              Icon: ="Add"
+                              IconStyle: ='ButtonCanvas.IconStyle'.Filled
+                              LayoutMinWidth: =0
+                              OnSelect: |-
+                                =Set(varFormModo, "Novo");
+                                Set(
+                                    varFormRec,
+                                    Patch(
+                                        Defaults(tb_ativosFrota),
+                                        {
+                                            aeroporto: varAeroUser,
+                                            status: "Ativo",
+                                            situacao_operacional: "Disponível",
+                                            tipo_propriedade: "Próprio",
+                                            circula_lado_ar: 0,
+                                            medidor_km: 0,
+                                            medidor_horas: 0
+                                        }
+                                    )
+                                );
+                                Navigate(scrFrotaForm, ScreenTransition.Fade)
+                              PaddingLeft: =18
+                              Text: =If(varMenuAberto, "NOVO ATIVO", "")
+                  - htmMenuUsuarioFrm:
+                      Control: HtmlViewer@2.1.0
+                      Properties:
+                        AlignInContainer: =AlignInContainer.Stretch
+                        AutoHeight: =true
+                        Color: =thmTextoBarra
+                        Fill: =thmPrimariaEscura
+                        Font: =thmFonte
+                        HtmlText: |-
+                          ="<div style='" & htmlFonte & "border-top:1px solid " & hxBordaBarra & ";padding-top:12px;'>" &
+                          If(
+                              varMenuAberto,
+                              "<div style='font-size:12px;font-weight:700;color:" & hxTextoBarra & ";'>" & varUsuario.nome_usuario & "</div><div style='font-size:10px;color:" & hxTextoBarraFraco & ";margin-top:2px;'>" & Upper(varUsuario.perfil) & " &middot; " & varAeroUser & "</div>",
+                              "<div style='font-size:11px;font-weight:700;color:" & hxTextoBarraSuave & ";text-align:center;'>" & varAeroUser & "</div>"
+                          ) &
+                          "</div>"
+                        PaddingBottom: =10
+                        PaddingLeft: =4
+                        PaddingRight: =0
+                        PaddingTop: =0
+                        Size: =11
+                  - btnMenuRecolherFrm:
+                      Control: Button@0.0.45
+                      Properties:
+                        Align: =Align.Left
+                        AlignInContainer: =AlignInContainer.Stretch
+                        Appearance: ='ButtonCanvas.Appearance'.Secondary
+                        BasePaletteColor: =thmTextoBarra
+                        BorderRadius: =0
+                        FontColor: =thmTextoBarra
+                        FontSize: =14
+                        FontWeight: =FontWeight.Semibold
+                        Height: =38
+                        Icon: ="ChevronRight"
+                        IconStyle: ='ButtonCanvas.IconStyle'.Filled
+                        LayoutMinWidth: =0
+                        OnSelect: =Set(varMenuAberto, !varMenuAberto)
+                        PaddingLeft: =18
+                        Text: =If(varMenuAberto, "RECOLHER MENU", "")
+                  - btnMenuSairFrm:
+                      Control: Button@0.0.45
+                      Properties:
+                        Align: =Align.Left
+                        AlignInContainer: =AlignInContainer.Stretch
+                        Appearance: ='ButtonCanvas.Appearance'.Secondary
+                        BasePaletteColor: =thmTextoBarra
+                        BorderRadius: =0
+                        FontColor: =thmTextoBarra
+                        FontSize: =14
+                        FontWeight: =FontWeight.Semibold
+                        Height: =38
+                        Icon: ="ArrowExit"
+                        IconStyle: ='ButtonCanvas.IconStyle'.Filled
+                        LayoutMinWidth: =0
+                        OnSelect: =Navigate(scrLoginContexto, ScreenTransition.Fade)
+                        PaddingLeft: =18
+                        Text: =If(varMenuAberto, "SAIR DO SISTEMA", "")
+            - cntFrmRaiz:
+                Control: GroupContainer@1.5.0
+                Variant: AutoLayout
+                Properties:
+                  AlignInContainer: =AlignInContainer.Stretch
+                  DropShadow: =DropShadow.None
+                  Fill: =thmFundo
+                  FillPortions: =1
+                  LayoutDirection: =LayoutDirection.Vertical
+                  LayoutGap: =0
+                  LayoutMinHeight: =0
+                Children:
+                  - cntFrmTopo:
+                      Control: GroupContainer@1.5.0
+                      Variant: AutoLayout
+                      Properties:
+                        DropShadow: =DropShadow.None
+                        Fill: =thmPrimaria
+                        FillPortions: =0
+                        Height: =72
+                        LayoutAlignItems: =LayoutAlignItems.Center
+                        LayoutDirection: =LayoutDirection.Horizontal
+                        LayoutGap: =12
+                        LayoutJustifyContent: =LayoutJustifyContent.SpaceBetween
+                        LayoutMinHeight: =0
+                        PaddingLeft: =26
+                        PaddingRight: =26
+                        RadiusBottomLeft: =0
+                        RadiusBottomRight: =0
+                        RadiusTopLeft: =0
+                        RadiusTopRight: =0
+                      Children:
+                        - htmFrmTitulo:
+                            Control: HtmlViewer@2.1.0
+                            Properties:
+                              AutoHeight: =true
+                              Color: =thmTextoBarra
+                              Fill: =thmPrimaria
+                              FillPortions: =1
+                              Font: =thmFonte
+                              HtmlText: |-
+                                ="<div style='" & htmlFonte & "color:" & hxTextoBarra & ";'>" &
+                                "<div style='font-size:19px;font-weight:800;letter-spacing:.02em;line-height:1.1;'>" & If(varFormModo = "Editar", "EDITAR ATIVO", "NOVO ATIVO") & "</div>" &
+                                "<div style='font-size:11px;opacity:.75;margin-top:3px;'>" & If(varFormModo = "Editar", Coalesce(varFormRec.codigo_ativo, "sem código") & " &nbsp;&middot;&nbsp; registro " & varFormRec.ID, "O código FRT é gerado na gravação, a partir do ID do SharePoint") & "</div>" &
+                                "</div>"
+                              PaddingBottom: =0
+                              PaddingLeft: =0
+                              PaddingRight: =0
+                              PaddingTop: =0
+                              Size: =11
+                        - btnFrmCancelar:
+                            Control: Button@0.0.45
+                            Properties:
+                              Appearance: ='ButtonCanvas.Appearance'.Secondary
+                              BasePaletteColor: =thmSuperficie
+                              BorderRadius: =0
+                              FontColor: =thmTextoBarra
+                              FontSize: =12
+                              FontWeight: =FontWeight.Semibold
+                              Height: =40
+                              OnSelect: =Navigate(scrFrotaLista, ScreenTransition.Fade)
+                              Text: ="CANCELAR"
+                              Width: =130
+                        - btnFrmSalvar:
+                            Control: Button@0.0.45
+                            Properties:
+                              Appearance: ='ButtonCanvas.Appearance'.Primary
+                              BasePaletteColor: =thmAcao
+                              BorderRadius: =0
+                              DisplayMode: =If(varPerfilNivel >= 3, DisplayMode.Edit, DisplayMode.Disabled)
+                              FontColor: =thmTextoBarra
+                              FontSize: =12
+                              FontWeight: =FontWeight.Semibold
+                              Height: =40
+                              Icon: ="Save"
+                              IconStyle: ='ButtonCanvas.IconStyle'.Filled
+                              OnSelect: |-
+                                =If(
+                                    !IsBlank(varOcupadoDesde) && DateDiff(varOcupadoDesde, Now(), TimeUnit.Seconds) < 20,
+                                    Notify("Aguarde: a gravação anterior ainda está em andamento.", NotificationType.Warning, 3000),
+                                    UpdateContext(
+                                        {
+                                            locErro: If(
+                                                IsBlank(drpFrmTipo.Selected.Value), "Escolha o tipo de ativo.",
+                                                IsBlank(drpFrmCategoria.Selected.Value), "Escolha a categoria de uso.",
+                                                IsBlank(Trim(txtFrmMarca.Value)), "Informe a marca.",
+                                                IsBlank(Trim(txtFrmModelo.Value)), "Informe o modelo.",
+                                                !IsNumeric(txtFrmAnoFab.Value) Or Value(txtFrmAnoFab.Value) < 1950 Or Value(txtFrmAnoFab.Value) > Year(Today()) + 1,
+                                                    "Ano de fabricação inválido — use o ano com 4 dígitos.",
+                                                IsBlank(drpFrmCombustivel.Selected.Value), "Escolha o combustível.",
+                                                IsBlank(drpFrmTipoMedidor.Selected.Value), "Escolha o tipo de medidor.",
+                                                IsBlank(drpFrmAero.Selected.Value), "Escolha o aeroporto de lotação.",
+                                                IsBlank(Trim(txtFrmCentroCusto.Value)), "Informe o centro de custo.",
+                                                IsBlank(Trim(txtFrmSetor.Value)), "Informe o setor responsável.",
+                                                IsBlank(drpFrmStatus.Selected.Value), "Escolha o status do ativo.",
+                                                IsBlank(drpFrmSituacao.Selected.Value), "Escolha a situação operacional.",
+                                                IsBlank(drpFrmPropriedade.Selected.Value), "Escolha o tipo de propriedade.",
+                                                LookUp(colTipoAtivo, Tipo = drpFrmTipo.Selected.Value).ExigePlaca And IsBlank(Trim(txtFrmPlaca.Value)),
+                                                    "Este tipo de ativo exige placa.",
+                                                !IsBlank(Trim(txtFrmPlaca.Value)) And !IsMatch(Upper(Trim(txtFrmPlaca.Value)), "([A-Z]{3}[0-9]{4})|([A-Z]{3}[0-9][A-Z][0-9]{2})"),
+                                                    "Placa inválida — use o formato AAA0000 ou AAA0A00, sem hífen.",
+                                                !IsBlank(Trim(txtFrmGestorEmail.Value)) And !IsMatch(Trim(txtFrmGestorEmail.Value), Match.Email),
+                                                    "E-mail do gestor inválido.",
+                                                drpFrmStatus.Selected.Value <> "Ativo" And IsBlank(Trim(txtFrmMotivo.Value)),
+                                                    "Ativo fora do status Ativo exige o motivo da situação.",
+                                                ""
+                                            )
+                                        }
+                                    );
+                                    If(
+                                        !IsBlank(locErro),
+                                        Notify(locErro, NotificationType.Error, 4000),
+                                        Set(varOcupadoDesde, Now());
+                                        Set(
+                                            varAtivoGravado,
+                                            Patch(
+                                                'tb_ativosFrota',
+                                                If(varFormModo = "Editar", varFormRec, Defaults('tb_ativosFrota')),
+                                                {
+                                                    identificacao_visual: Trim(txtFrmIdVisual.Value),
+                                                    placa: Upper(Trim(txtFrmPlaca.Value)),
+                                                    renavam: Trim(txtFrmRenavam.Value),
+                                                    chassi: Trim(txtFrmChassi.Value),
+                                                    n_serie: Trim(txtFrmNSerie.Value),
+                                                    n_patrimonio: Trim(txtFrmNPatrimonio.Value),
+                                                    tipo_ativo: drpFrmTipo.Selected.Value,
+                                                    categoria_uso: drpFrmCategoria.Selected.Value,
+                                                    marca: Trim(txtFrmMarca.Value),
+                                                    modelo: Trim(txtFrmModelo.Value),
+                                                    ano_fabricacao: If(IsNumeric(txtFrmAnoFab.Value), Value(txtFrmAnoFab.Value), 0),
+                                                    ano_modelo: If(IsNumeric(txtFrmAnoModelo.Value), Value(txtFrmAnoModelo.Value), 0),
+                                                    cor: Trim(txtFrmCor.Value),
+                                                    combustivel: drpFrmCombustivel.Selected.Value,
+                                                    capacidade_tanque: If(IsNumeric(txtFrmTanque.Value), Value(txtFrmTanque.Value), 0),
+                                                    qtd_passageiros: If(IsNumeric(txtFrmQtdPassageiros.Value), Value(txtFrmQtdPassageiros.Value), 0),
+                                                    capacidade_carga_kg: If(IsNumeric(txtFrmCapacidadeCarga.Value), Value(txtFrmCapacidadeCarga.Value), 0),
+                                                    tipo_medidor: drpFrmTipoMedidor.Selected.Value,
+                                                    medidor_km: If(IsNumeric(txtFrmMedidorKm.Value), Value(txtFrmMedidorKm.Value), 0),
+                                                    medidor_horas: If(IsNumeric(txtFrmMedidorHoras.Value), Value(txtFrmMedidorHoras.Value), 0),
+                                                    medidor_data: dtpFrmMedidorData.SelectedDate,
+                                                    aeroporto: drpFrmAero.Selected.Value,
+                                                    base_operacional: Trim(txtFrmBase.Value),
+                                                    centro_custo: Trim(txtFrmCentroCusto.Value),
+                                                    setor_responsavel: Trim(txtFrmSetor.Value),
+                                                    gestor_nome: Trim(txtFrmGestorNome.Value),
+                                                    gestor_email: Trim(txtFrmGestorEmail.Value),
+                                                    status: drpFrmStatus.Selected.Value,
+                                                    situacao_operacional: drpFrmSituacao.Selected.Value,
+                                                    motivo_situacao: Trim(txtFrmMotivo.Value),
+                                                    tipo_propriedade: drpFrmPropriedade.Selected.Value,
+                                                    fornecedor_txt: Trim(txtFrmFornecedor.Value),
+                                                    contrato_numero: Trim(txtFrmContrato.Value),
+                                                    data_aquisicao: dtpFrmDataAquisicao.SelectedDate,
+                                                    valor_aquisicao: If(IsNumeric(txtFrmValorAquisicao.Value), Value(txtFrmValorAquisicao.Value), 0),
+                                                    data_fim_contrato: dtpFrmDataFimContrato.SelectedDate,
+                                                    circula_lado_ar: If(tglFrmLadoAr.Checked, 1, 0),
+                                                    observacoes: Trim(txtFrmObservacoes.Value),
+                                                    bloco: LookUp(colAeros, IATA = drpFrmAero.Selected.Value).Bloco,
+                                                    medidor_origem: If(varFormModo = "Editar" And If(IsNumeric(txtFrmMedidorKm.Value), Value(txtFrmMedidorKm.Value), 0) = Coalesce(varFormRec.medidor_km, 0) And If(IsNumeric(txtFrmMedidorHoras.Value), Value(txtFrmMedidorHoras.Value), 0) = Coalesce(varFormRec.medidor_horas, 0), Coalesce(varFormRec.medidor_origem, "Cadastro"), "Cadastro"),
+                                                    data_situacao: If(varFormModo = "Editar" And drpFrmStatus.Selected.Value = varFormRec.status And drpFrmSituacao.Selected.Value = varFormRec.situacao_operacional, varFormRec.data_situacao, Now()),
+                                                    ativo: 1
+                                                }
+                                            )
+                                        );
+                                        If(
+                                            IsBlank(varAtivoGravado.ID),
+                                            Notify("Falha ao gravar. Nenhum registro foi salvo.", NotificationType.Error, 5000);
+                                            Set(varOcupadoDesde, Blank()),
+                                            If(
+                                                IsBlank(varAtivoGravado.codigo_ativo),
+                                                Patch(
+                                                    'tb_ativosFrota',
+                                                    varAtivoGravado,
+                                                    {codigo_ativo: "FRT-" & Text(varAtivoGravado.ID, "00000")}
+                                                )
+                                            );
+                                            RemoveIf(colFrota, ID = varAtivoGravado.ID);
+                                            Collect(
+                                                colFrota,
+                                                ForAll(
+                                                    Filter(
+                                                        'tb_ativosFrota' As _reg,
+                                                        _reg.ID = varAtivoGravado.ID
+                                                    ) As _r,
+                                                    {
+                                                        ID: _r.ID,
+                                                        codigo_ativo: _r.codigo_ativo,
+                                                        identificacao_visual: _r.identificacao_visual,
+                                                        placa: _r.placa,
+                                                        tipo_ativo: _r.tipo_ativo,
+                                                        categoria_uso: _r.categoria_uso,
+                                                        marca: _r.marca,
+                                                        modelo: _r.modelo,
+                                                        ano_fabricacao: _r.ano_fabricacao,
+                                                        combustivel: _r.combustivel,
+                                                        aeroporto: _r.aeroporto,
+                                                        bloco: _r.bloco,
+                                                        base_operacional: _r.base_operacional,
+                                                        centro_custo: _r.centro_custo,
+                                                        setor_responsavel: _r.setor_responsavel,
+                                                        gestor_nome: _r.gestor_nome,
+                                                        gestor_email: _r.gestor_email,
+                                                        status: _r.status,
+                                                        situacao_operacional: _r.situacao_operacional,
+                                                        motivo_situacao: _r.motivo_situacao,
+                                                        tipo_medidor: _r.tipo_medidor,
+                                                        medidor_km: _r.medidor_km,
+                                                        medidor_horas: _r.medidor_horas,
+                                                        medidor_data: _r.medidor_data,
+                                                        tipo_propriedade: _r.tipo_propriedade,
+                                                        fornecedor_txt: _r.fornecedor_txt,
+                                                        circula_lado_ar: _r.circula_lado_ar
+                                                    }
+                                                )
+                                            );
+                                            Notify(
+                                                If(varFormModo = "Editar", "Ativo atualizado: ", "Ativo cadastrado: ") & LookUp(colFrota, ID = varAtivoGravado.ID).codigo_ativo,
+                                                NotificationType.Success,
+                                                3000
+                                            );
+                                            Set(varOcupadoDesde, Blank());
+                                            // a lista abre no recorte onde o ativo salvo aparece
+                                            Set(varFiltroAero, drpFrmAero.Selected.Value);
+                                            Set(varFiltroTipo, "Todos");
+                                            Set(varFiltroSituacao, "Todos");
+                                            Set(varFiltroStatus, "Ativo");
+                                            Navigate(scrFrotaLista, ScreenTransition.Fade)
+                                        )
+                                    )
+                                )
+                              Text: =If(varFormModo = "Editar", "SALVAR ALTERAÇÕES", "CADASTRAR ATIVO")
+                              Width: =230
+                  - cntFrmCorpo:
+                      Control: GroupContainer@1.5.0
+                      Variant: AutoLayout
+                      Properties:
+                        DropShadow: =DropShadow.None
+                        Fill: =thmFundo
+                        FillPortions: =1
+                        LayoutAlignItems: =LayoutAlignItems.Stretch
+                        LayoutDirection: =LayoutDirection.Vertical
+                        LayoutGap: =26
+                        LayoutMinHeight: =0
+                        LayoutOverflowY: =LayoutOverflow.Scroll
+                        PaddingBottom: =26
+                        PaddingLeft: =26
+                        PaddingRight: =26
+                        PaddingTop: =26
+                        RadiusBottomLeft: =0
+                        RadiusBottomRight: =0
+                        RadiusTopLeft: =0
+                        RadiusTopRight: =0
+                      Children:
+                        - htmFrmErro:
+                            Control: HtmlViewer@2.1.0
+                            Properties:
+                              AlignInContainer: =AlignInContainer.Stretch
+                              AutoHeight: =true
+                              Fill: =thmFundo
+                              FillPortions: =0
+                              Font: =thmFonte
+                              HtmlText: |-
+                                ="<div style='" & htmlFonte & "background:" & hxVermelhoSuave & ";border:1px solid " & hxVermelho & ";border-left:4px solid " & hxVermelho & ";padding:13px 16px;'>" &
+                                "<div style='font-size:10px;font-weight:800;letter-spacing:.14em;color:" & hxVermelho & ";'>CORRIJA PARA CONTINUAR</div>" &
+                                "<div style='font-size:13px;color:" & hxTexto & ";margin-top:5px;'>" & locErro & "</div></div>"
+                              PaddingBottom: =0
+                              PaddingLeft: =0
+                              PaddingRight: =0
+                              PaddingTop: =0
+                              Size: =11
+                              Visible: =!IsBlank(locErro)
+                        - cntFrmSec1:
+                            Control: GroupContainer@1.5.0
+                            Variant: AutoLayout
+                            Properties:
+                              AlignInContainer: =AlignInContainer.Stretch
+                              BorderColor: =thmBorda
+                              BorderStyle: =BorderStyle.Solid
+                              BorderThickness: =1
+                              DropShadow: =DropShadow.None
+                              Fill: =thmSuperficie
+                              FillPortions: =0
+                              Height: =276
+                              LayoutAlignItems: =LayoutAlignItems.Stretch
+                              LayoutDirection: =LayoutDirection.Vertical
+                              LayoutGap: =16
+                              LayoutMinHeight: =0
+                              PaddingBottom: =20
+                              PaddingLeft: =20
+                              PaddingRight: =20
+                              PaddingTop: =18
+                              RadiusBottomLeft: =0
+                              RadiusBottomRight: =0
+                              RadiusTopLeft: =0
+                              RadiusTopRight: =0
+                            Children:
+                              - htmFrmSec1:
+                                  Control: HtmlViewer@2.1.0
+                                  Properties:
+                                    AlignInContainer: =AlignInContainer.Stretch
+                                    AutoHeight: =false
+                                    Fill: =thmSuperficie
+                                    FillPortions: =0
+                                    Font: =thmFonte
+                                    Height: =46
+                                    HtmlText: |-
+                                      ="<div style='" & htmlFonte & "border-bottom:1px solid " & hxBorda & ";padding-bottom:8px;'>" &
+                                      "<div style='font-size:12px;font-weight:800;letter-spacing:.14em;color:" & hxPrimaria & ";'>IDENTIFICAÇÃO</div>" &
+                                      "<div style='font-size:11px;color:" & hxTextoFraco & ";margin-top:2px;'>O código FRT é gerado pelo app na gravação — não se digita.</div></div>"
+                                    PaddingBottom: =0
+                                    PaddingLeft: =0
+                                    PaddingRight: =0
+                                    PaddingTop: =0
+                                    Size: =11
+                              - cntFrmLin1_1:
+                                  Control: GroupContainer@1.5.0
+                                  Variant: AutoLayout
+                                  Properties:
+                                    AlignInContainer: =AlignInContainer.Stretch
+                                    DropShadow: =DropShadow.None
+                                    Fill: =thmSuperficie
+                                    FillPortions: =0
+                                    Height: =80
+                                    LayoutAlignItems: =LayoutAlignItems.Stretch
+                                    LayoutDirection: =LayoutDirection.Horizontal
+                                    LayoutGap: =16
+                                    LayoutMinHeight: =0
+                                    RadiusBottomLeft: =0
+                                    RadiusBottomRight: =0
+                                    RadiusTopLeft: =0
+                                    RadiusTopRight: =0
+                                  Children:
+                                    - cntFrmIdVisual:
+                                        Control: GroupContainer@1.5.0
+                                        Variant: AutoLayout
+                                        Properties:
+                                          AlignInContainer: =AlignInContainer.Stretch
+                                          DropShadow: =DropShadow.None
+                                          Fill: =thmSuperficie
+                                          FillPortions: =1
+                                          Height: =80
+                                          LayoutAlignItems: =LayoutAlignItems.Stretch
+                                          LayoutDirection: =LayoutDirection.Vertical
+                                          LayoutGap: =6
+                                          LayoutMinHeight: =0
+                                          LayoutMinWidth: =0
+                                          RadiusBottomLeft: =0
+                                          RadiusBottomRight: =0
+                                          RadiusTopLeft: =0
+                                          RadiusTopRight: =0
+                                        Children:
+                                          - lblFrmIdVisual:
+                                              Control: Text@0.0.51
+                                              Properties:
+                                                AlignInContainer: =AlignInContainer.Stretch
+                                                FillPortions: =0
+                                                FontColor: =thmTexto
+                                                Height: =20
+                                                LayoutMinWidth: =0
+                                                Size: =11
+                                                Text: ="Identificação Visual"
+                                                Weight: =FontWeight.Semibold
+                                          - txtFrmIdVisual:
+                                              Control: TextInput@0.0.54
+                                              Properties:
+                                                AlignInContainer: =AlignInContainer.Stretch
+                                                FillPortions: =1
+                                                FontSize: =12
+                                                LayoutMinWidth: =0
+                                                Mode: ='TextInputCanvas.Mode'.SingleLine
+                                                Placeholder: ="Identificação Visual"
+                                                Value: =varFormRec.identificacao_visual
+                                    - cntFrmPlaca:
+                                        Control: GroupContainer@1.5.0
+                                        Variant: AutoLayout
+                                        Properties:
+                                          AlignInContainer: =AlignInContainer.Stretch
+                                          DropShadow: =DropShadow.None
+                                          Fill: =thmSuperficie
+                                          FillPortions: =1
+                                          Height: =80
+                                          LayoutAlignItems: =LayoutAlignItems.Stretch
+                                          LayoutDirection: =LayoutDirection.Vertical
+                                          LayoutGap: =6
+                                          LayoutMinHeight: =0
+                                          LayoutMinWidth: =0
+                                          RadiusBottomLeft: =0
+                                          RadiusBottomRight: =0
+                                          RadiusTopLeft: =0
+                                          RadiusTopRight: =0
+                                        Children:
+                                          - lblFrmPlaca:
+                                              Control: Text@0.0.51
+                                              Properties:
+                                                AlignInContainer: =AlignInContainer.Stretch
+                                                FillPortions: =0
+                                                FontColor: =thmTexto
+                                                Height: =20
+                                                LayoutMinWidth: =0
+                                                Size: =11
+                                                Text: =If(LookUp(colTipoAtivo, Tipo = drpFrmTipo.Selected.Value).ExigePlaca, "Placa *", "Placa")
+                                                Weight: =FontWeight.Semibold
+                                          - txtFrmPlaca:
+                                              Control: TextInput@0.0.54
+                                              Properties:
+                                                AlignInContainer: =AlignInContainer.Stretch
+                                                FillPortions: =1
+                                                FontSize: =12
+                                                LayoutMinWidth: =0
+                                                Mode: ='TextInputCanvas.Mode'.SingleLine
+                                                Placeholder: ="Placa"
+                                                Value: =varFormRec.placa
+                                    - cntFrmRenavam:
+                                        Control: GroupContainer@1.5.0
+                                        Variant: AutoLayout
+                                        Properties:
+                                          AlignInContainer: =AlignInContainer.Stretch
+                                          DropShadow: =DropShadow.None
+                                          Fill: =thmSuperficie
+                                          FillPortions: =1
+                                          Height: =80
+                                          LayoutAlignItems: =LayoutAlignItems.Stretch
+                                          LayoutDirection: =LayoutDirection.Vertical
+                                          LayoutGap: =6
+                                          LayoutMinHeight: =0
+                                          LayoutMinWidth: =0
+                                          RadiusBottomLeft: =0
+                                          RadiusBottomRight: =0
+                                          RadiusTopLeft: =0
+                                          RadiusTopRight: =0
+                                        Children:
+                                          - lblFrmRenavam:
+                                              Control: Text@0.0.51
+                                              Properties:
+                                                AlignInContainer: =AlignInContainer.Stretch
+                                                FillPortions: =0
+                                                FontColor: =thmTexto
+                                                Height: =20
+                                                LayoutMinWidth: =0
+                                                Size: =11
+                                                Text: ="RENAVAM"
+                                                Weight: =FontWeight.Semibold
+                                          - txtFrmRenavam:
+                                              Control: TextInput@0.0.54
+                                              Properties:
+                                                AlignInContainer: =AlignInContainer.Stretch
+                                                FillPortions: =1
+                                                FontSize: =12
+                                                LayoutMinWidth: =0
+                                                Mode: ='TextInputCanvas.Mode'.SingleLine
+                                                Placeholder: ="RENAVAM"
+                                                Value: =varFormRec.renavam
+                              - cntFrmLin1_2:
+                                  Control: GroupContainer@1.5.0
+                                  Variant: AutoLayout
+                                  Properties:
+                                    AlignInContainer: =AlignInContainer.Stretch
+                                    DropShadow: =DropShadow.None
+                                    Fill: =thmSuperficie
+                                    FillPortions: =0
+                                    Height: =80
+                                    LayoutAlignItems: =LayoutAlignItems.Stretch
+                                    LayoutDirection: =LayoutDirection.Horizontal
+                                    LayoutGap: =16
+                                    LayoutMinHeight: =0
+                                    RadiusBottomLeft: =0
+                                    RadiusBottomRight: =0
+                                    RadiusTopLeft: =0
+                                    RadiusTopRight: =0
+                                  Children:
+                                    - cntFrmChassi:
+                                        Control: GroupContainer@1.5.0
+                                        Variant: AutoLayout
+                                        Properties:
+                                          AlignInContainer: =AlignInContainer.Stretch
+                                          DropShadow: =DropShadow.None
+                                          Fill: =thmSuperficie
+                                          FillPortions: =1
+                                          Height: =80
+                                          LayoutAlignItems: =LayoutAlignItems.Stretch
+                                          LayoutDirection: =LayoutDirection.Vertical
+                                          LayoutGap: =6
+                                          LayoutMinHeight: =0
+                                          LayoutMinWidth: =0
+                                          RadiusBottomLeft: =0
+                                          RadiusBottomRight: =0
+                                          RadiusTopLeft: =0
+                                          RadiusTopRight: =0
+                                        Children:
+                                          - lblFrmChassi:
+                                              Control: Text@0.0.51
+                                              Properties:
+                                                AlignInContainer: =AlignInContainer.Stretch
+                                                FillPortions: =0
+                                                FontColor: =thmTexto
+                                                Height: =20
+                                                LayoutMinWidth: =0
+                                                Size: =11
+                                                Text: ="Chassi"
+                                                Weight: =FontWeight.Semibold
+                                          - txtFrmChassi:
+                                              Control: TextInput@0.0.54
+                                              Properties:
+                                                AlignInContainer: =AlignInContainer.Stretch
+                                                FillPortions: =1
+                                                FontSize: =12
+                                                LayoutMinWidth: =0
+                                                Mode: ='TextInputCanvas.Mode'.SingleLine
+                                                Placeholder: ="Chassi"
+                                                Value: =varFormRec.chassi
+                                    - cntFrmNSerie:
+                                        Control: GroupContainer@1.5.0
+                                        Variant: AutoLayout
+                                        Properties:
+                                          AlignInContainer: =AlignInContainer.Stretch
+                                          DropShadow: =DropShadow.None
+                                          Fill: =thmSuperficie
+                                          FillPortions: =1
+                                          Height: =80
+                                          LayoutAlignItems: =LayoutAlignItems.Stretch
+                                          LayoutDirection: =LayoutDirection.Vertical
+                                          LayoutGap: =6
+                                          LayoutMinHeight: =0
+                                          LayoutMinWidth: =0
+                                          RadiusBottomLeft: =0
+                                          RadiusBottomRight: =0
+                                          RadiusTopLeft: =0
+                                          RadiusTopRight: =0
+                                        Children:
+                                          - lblFrmNSerie:
+                                              Control: Text@0.0.51
+                                              Properties:
+                                                AlignInContainer: =AlignInContainer.Stretch
+                                                FillPortions: =0
+                                                FontColor: =thmTexto
+                                                Height: =20
+                                                LayoutMinWidth: =0
+                                                Size: =11
+                                                Text: ="Número de Série"
+                                                Weight: =FontWeight.Semibold
+                                          - txtFrmNSerie:
+                                              Control: TextInput@0.0.54
+                                              Properties:
+                                                AlignInContainer: =AlignInContainer.Stretch
+                                                FillPortions: =1
+                                                FontSize: =12
+                                                LayoutMinWidth: =0
+                                                Mode: ='TextInputCanvas.Mode'.SingleLine
+                                                Placeholder: ="Número de Série"
+                                                Value: =varFormRec.n_serie
+                                    - cntFrmNPatrimonio:
+                                        Control: GroupContainer@1.5.0
+                                        Variant: AutoLayout
+                                        Properties:
+                                          AlignInContainer: =AlignInContainer.Stretch
+                                          DropShadow: =DropShadow.None
+                                          Fill: =thmSuperficie
+                                          FillPortions: =1
+                                          Height: =80
+                                          LayoutAlignItems: =LayoutAlignItems.Stretch
+                                          LayoutDirection: =LayoutDirection.Vertical
+                                          LayoutGap: =6
+                                          LayoutMinHeight: =0
+                                          LayoutMinWidth: =0
+                                          RadiusBottomLeft: =0
+                                          RadiusBottomRight: =0
+                                          RadiusTopLeft: =0
+                                          RadiusTopRight: =0
+                                        Children:
+                                          - lblFrmNPatrimonio:
+                                              Control: Text@0.0.51
+                                              Properties:
+                                                AlignInContainer: =AlignInContainer.Stretch
+                                                FillPortions: =0
+                                                FontColor: =thmTexto
+                                                Height: =20
+                                                LayoutMinWidth: =0
+                                                Size: =11
+                                                Text: ="Nº Patrimônio Contábil"
+                                                Weight: =FontWeight.Semibold
+                                          - txtFrmNPatrimonio:
+                                              Control: TextInput@0.0.54
+                                              Properties:
+                                                AlignInContainer: =AlignInContainer.Stretch
+                                                FillPortions: =1
+                                                FontSize: =12
+                                                LayoutMinWidth: =0
+                                                Mode: ='TextInputCanvas.Mode'.SingleLine
+                                                Placeholder: ="Nº Patrimônio Contábil"
+                                                Value: =varFormRec.n_patrimonio
+                        - cntFrmSec2:
+                            Control: GroupContainer@1.5.0
+                            Variant: AutoLayout
+                            Properties:
+                              AlignInContainer: =AlignInContainer.Stretch
+                              BorderColor: =thmBorda
+                              BorderStyle: =BorderStyle.Solid
+                              BorderThickness: =1
+                              DropShadow: =DropShadow.None
+                              Fill: =thmSuperficie
+                              FillPortions: =0
+                              Height: =468
+                              LayoutAlignItems: =LayoutAlignItems.Stretch
+                              LayoutDirection: =LayoutDirection.Vertical
+                              LayoutGap: =16
+                              LayoutMinHeight: =0
+                              PaddingBottom: =20
+                              PaddingLeft: =20
+                              PaddingRight: =20
+                              PaddingTop: =18
+                              RadiusBottomLeft: =0
+                              RadiusBottomRight: =0
+                              RadiusTopLeft: =0
+                              RadiusTopRight: =0
+                            Children:
+                              - htmFrmSec2:
+                                  Control: HtmlViewer@2.1.0
+                                  Properties:
+                                    AlignInContainer: =AlignInContainer.Stretch
+                                    AutoHeight: =false
+                                    Fill: =thmSuperficie
+                                    FillPortions: =0
+                                    Font: =thmFonte
+                                    Height: =46
+                                    HtmlText: |-
+                                      ="<div style='" & htmlFonte & "border-bottom:1px solid " & hxBorda & ";padding-bottom:8px;'>" &
+                                      "<div style='font-size:12px;font-weight:800;letter-spacing:.14em;color:" & hxPrimaria & ";'>CLASSIFICAÇÃO</div>" &
+                                      "<div style='font-size:11px;color:" & hxTextoFraco & ";margin-top:2px;'>O tipo de ativo dirige placa e medidor.</div></div>"
+                                    PaddingBottom: =0
+                                    PaddingLeft: =0
+                                    PaddingRight: =0
+                                    PaddingTop: =0
+                                    Size: =11
+                              - cntFrmLin2_1:
+                                  Control: GroupContainer@1.5.0
+                                  Variant: AutoLayout
+                                  Properties:
+                                    AlignInContainer: =AlignInContainer.Stretch
+                                    DropShadow: =DropShadow.None
+                                    Fill: =thmSuperficie
+                                    FillPortions: =0
+                                    Height: =80
+                                    LayoutAlignItems: =LayoutAlignItems.Stretch
+                                    LayoutDirection: =LayoutDirection.Horizontal
+                                    LayoutGap: =16
+                                    LayoutMinHeight: =0
+                                    RadiusBottomLeft: =0
+                                    RadiusBottomRight: =0
+                                    RadiusTopLeft: =0
+                                    RadiusTopRight: =0
+                                  Children:
+                                    - cntFrmTipo:
+                                        Control: GroupContainer@1.5.0
+                                        Variant: AutoLayout
+                                        Properties:
+                                          AlignInContainer: =AlignInContainer.Stretch
+                                          DropShadow: =DropShadow.None
+                                          Fill: =thmSuperficie
+                                          FillPortions: =1
+                                          Height: =80
+                                          LayoutAlignItems: =LayoutAlignItems.Stretch
+                                          LayoutDirection: =LayoutDirection.Vertical
+                                          LayoutGap: =6
+                                          LayoutMinHeight: =0
+                                          LayoutMinWidth: =0
+                                          RadiusBottomLeft: =0
+                                          RadiusBottomRight: =0
+                                          RadiusTopLeft: =0
+                                          RadiusTopRight: =0
+                                        Children:
+                                          - lblFrmTipo:
+                                              Control: Text@0.0.51
+                                              Properties:
+                                                AlignInContainer: =AlignInContainer.Stretch
+                                                FillPortions: =0
+                                                FontColor: =thmTexto
+                                                Height: =20
+                                                LayoutMinWidth: =0
+                                                Size: =11
+                                                Text: ="Tipo de Ativo *"
+                                                Weight: =FontWeight.Semibold
+                                          - drpFrmTipo:
+                                              Control: DropDown@0.0.45
+                                              Properties:
+                                                DefaultSelectedItems: =[Coalesce(varFormRec.tipo_ativo, "")]
+                                                Height: =42
+                                                Items: =colOpTipo
+                                                Width: =Parent.Width
+                                    - cntFrmCategoria:
+                                        Control: GroupContainer@1.5.0
+                                        Variant: AutoLayout
+                                        Properties:
+                                          AlignInContainer: =AlignInContainer.Stretch
+                                          DropShadow: =DropShadow.None
+                                          Fill: =thmSuperficie
+                                          FillPortions: =1
+                                          Height: =80
+                                          LayoutAlignItems: =LayoutAlignItems.Stretch
+                                          LayoutDirection: =LayoutDirection.Vertical
+                                          LayoutGap: =6
+                                          LayoutMinHeight: =0
+                                          LayoutMinWidth: =0
+                                          RadiusBottomLeft: =0
+                                          RadiusBottomRight: =0
+                                          RadiusTopLeft: =0
+                                          RadiusTopRight: =0
+                                        Children:
+                                          - lblFrmCategoria:
+                                              Control: Text@0.0.51
+                                              Properties:
+                                                AlignInContainer: =AlignInContainer.Stretch
+                                                FillPortions: =0
+                                                FontColor: =thmTexto
+                                                Height: =20
+                                                LayoutMinWidth: =0
+                                                Size: =11
+                                                Text: ="Categoria de Uso *"
+                                                Weight: =FontWeight.Semibold
+                                          - drpFrmCategoria:
+                                              Control: DropDown@0.0.45
+                                              Properties:
+                                                DefaultSelectedItems: =[Coalesce(varFormRec.categoria_uso, "")]
+                                                Height: =42
+                                                Items: =colOpCategoria
+                                                Width: =Parent.Width
+                                    - cntFrmMarca:
+                                        Control: GroupContainer@1.5.0
+                                        Variant: AutoLayout
+                                        Properties:
+                                          AlignInContainer: =AlignInContainer.Stretch
+                                          DropShadow: =DropShadow.None
+                                          Fill: =thmSuperficie
+                                          FillPortions: =1
+                                          Height: =80
+                                          LayoutAlignItems: =LayoutAlignItems.Stretch
+                                          LayoutDirection: =LayoutDirection.Vertical
+                                          LayoutGap: =6
+                                          LayoutMinHeight: =0
+                                          LayoutMinWidth: =0
+                                          RadiusBottomLeft: =0
+                                          RadiusBottomRight: =0
+                                          RadiusTopLeft: =0
+                                          RadiusTopRight: =0
+                                        Children:
+                                          - lblFrmMarca:
+                                              Control: Text@0.0.51
+                                              Properties:
+                                                AlignInContainer: =AlignInContainer.Stretch
+                                                FillPortions: =0
+                                                FontColor: =thmTexto
+                                                Height: =20
+                                                LayoutMinWidth: =0
+                                                Size: =11
+                                                Text: ="Marca *"
+                                                Weight: =FontWeight.Semibold
+                                          - txtFrmMarca:
+                                              Control: TextInput@0.0.54
+                                              Properties:
+                                                AlignInContainer: =AlignInContainer.Stretch
+                                                FillPortions: =1
+                                                FontSize: =12
+                                                LayoutMinWidth: =0
+                                                Mode: ='TextInputCanvas.Mode'.SingleLine
+                                                Placeholder: ="Marca"
+                                                Value: =varFormRec.marca
+                              - cntFrmLin2_2:
+                                  Control: GroupContainer@1.5.0
+                                  Variant: AutoLayout
+                                  Properties:
+                                    AlignInContainer: =AlignInContainer.Stretch
+                                    DropShadow: =DropShadow.None
+                                    Fill: =thmSuperficie
+                                    FillPortions: =0
+                                    Height: =80
+                                    LayoutAlignItems: =LayoutAlignItems.Stretch
+                                    LayoutDirection: =LayoutDirection.Horizontal
+                                    LayoutGap: =16
+                                    LayoutMinHeight: =0
+                                    RadiusBottomLeft: =0
+                                    RadiusBottomRight: =0
+                                    RadiusTopLeft: =0
+                                    RadiusTopRight: =0
+                                  Children:
+                                    - cntFrmModelo:
+                                        Control: GroupContainer@1.5.0
+                                        Variant: AutoLayout
+                                        Properties:
+                                          AlignInContainer: =AlignInContainer.Stretch
+                                          DropShadow: =DropShadow.None
+                                          Fill: =thmSuperficie
+                                          FillPortions: =1
+                                          Height: =80
+                                          LayoutAlignItems: =LayoutAlignItems.Stretch
+                                          LayoutDirection: =LayoutDirection.Vertical
+                                          LayoutGap: =6
+                                          LayoutMinHeight: =0
+                                          LayoutMinWidth: =0
+                                          RadiusBottomLeft: =0
+                                          RadiusBottomRight: =0
+                                          RadiusTopLeft: =0
+                                          RadiusTopRight: =0
+                                        Children:
+                                          - lblFrmModelo:
+                                              Control: Text@0.0.51
+                                              Properties:
+                                                AlignInContainer: =AlignInContainer.Stretch
+                                                FillPortions: =0
+                                                FontColor: =thmTexto
+                                                Height: =20
+                                                LayoutMinWidth: =0
+                                                Size: =11
+                                                Text: ="Modelo *"
+                                                Weight: =FontWeight.Semibold
+                                          - txtFrmModelo:
+                                              Control: TextInput@0.0.54
+                                              Properties:
+                                                AlignInContainer: =AlignInContainer.Stretch
+                                                FillPortions: =1
+                                                FontSize: =12
+                                                LayoutMinWidth: =0
+                                                Mode: ='TextInputCanvas.Mode'.SingleLine
+                                                Placeholder: ="Modelo"
+                                                Value: =varFormRec.modelo
+                                    - cntFrmAnoFab:
+                                        Control: GroupContainer@1.5.0
+                                        Variant: AutoLayout
+                                        Properties:
+                                          AlignInContainer: =AlignInContainer.Stretch
+                                          DropShadow: =DropShadow.None
+                                          Fill: =thmSuperficie
+                                          FillPortions: =1
+                                          Height: =80
+                                          LayoutAlignItems: =LayoutAlignItems.Stretch
+                                          LayoutDirection: =LayoutDirection.Vertical
+                                          LayoutGap: =6
+                                          LayoutMinHeight: =0
+                                          LayoutMinWidth: =0
+                                          RadiusBottomLeft: =0
+                                          RadiusBottomRight: =0
+                                          RadiusTopLeft: =0
+                                          RadiusTopRight: =0
+                                        Children:
+                                          - lblFrmAnoFab:
+                                              Control: Text@0.0.51
+                                              Properties:
+                                                AlignInContainer: =AlignInContainer.Stretch
+                                                FillPortions: =0
+                                                FontColor: =thmTexto
+                                                Height: =20
+                                                LayoutMinWidth: =0
+                                                Size: =11
+                                                Text: ="Ano de Fabricação *"
+                                                Weight: =FontWeight.Semibold
+                                          - txtFrmAnoFab:
+                                              Control: TextInput@0.0.54
+                                              Properties:
+                                                AlignInContainer: =AlignInContainer.Stretch
+                                                FillPortions: =1
+                                                FontSize: =12
+                                                LayoutMinWidth: =0
+                                                Mode: ='TextInputCanvas.Mode'.SingleLine
+                                                Placeholder: ="Ano de Fabricação"
+                                                Value: =If(IsBlank(varFormRec.ano_fabricacao), "", Text(varFormRec.ano_fabricacao))
+                                    - cntFrmAnoModelo:
+                                        Control: GroupContainer@1.5.0
+                                        Variant: AutoLayout
+                                        Properties:
+                                          AlignInContainer: =AlignInContainer.Stretch
+                                          DropShadow: =DropShadow.None
+                                          Fill: =thmSuperficie
+                                          FillPortions: =1
+                                          Height: =80
+                                          LayoutAlignItems: =LayoutAlignItems.Stretch
+                                          LayoutDirection: =LayoutDirection.Vertical
+                                          LayoutGap: =6
+                                          LayoutMinHeight: =0
+                                          LayoutMinWidth: =0
+                                          RadiusBottomLeft: =0
+                                          RadiusBottomRight: =0
+                                          RadiusTopLeft: =0
+                                          RadiusTopRight: =0
+                                        Children:
+                                          - lblFrmAnoModelo:
+                                              Control: Text@0.0.51
+                                              Properties:
+                                                AlignInContainer: =AlignInContainer.Stretch
+                                                FillPortions: =0
+                                                FontColor: =thmTexto
+                                                Height: =20
+                                                LayoutMinWidth: =0
+                                                Size: =11
+                                                Text: ="Ano do Modelo"
+                                                Weight: =FontWeight.Semibold
+                                          - txtFrmAnoModelo:
+                                              Control: TextInput@0.0.54
+                                              Properties:
+                                                AlignInContainer: =AlignInContainer.Stretch
+                                                FillPortions: =1
+                                                FontSize: =12
+                                                LayoutMinWidth: =0
+                                                Mode: ='TextInputCanvas.Mode'.SingleLine
+                                                Placeholder: ="Ano do Modelo"
+                                                Value: =If(IsBlank(varFormRec.ano_modelo), "", Text(varFormRec.ano_modelo))
+                              - cntFrmLin2_3:
+                                  Control: GroupContainer@1.5.0
+                                  Variant: AutoLayout
+                                  Properties:
+                                    AlignInContainer: =AlignInContainer.Stretch
+                                    DropShadow: =DropShadow.None
+                                    Fill: =thmSuperficie
+                                    FillPortions: =0
+                                    Height: =80
+                                    LayoutAlignItems: =LayoutAlignItems.Stretch
+                                    LayoutDirection: =LayoutDirection.Horizontal
+                                    LayoutGap: =16
+                                    LayoutMinHeight: =0
+                                    RadiusBottomLeft: =0
+                                    RadiusBottomRight: =0
+                                    RadiusTopLeft: =0
+                                    RadiusTopRight: =0
+                                  Children:
+                                    - cntFrmCor:
+                                        Control: GroupContainer@1.5.0
+                                        Variant: AutoLayout
+                                        Properties:
+                                          AlignInContainer: =AlignInContainer.Stretch
+                                          DropShadow: =DropShadow.None
+                                          Fill: =thmSuperficie
+                                          FillPortions: =1
+                                          Height: =80
+                                          LayoutAlignItems: =LayoutAlignItems.Stretch
+                                          LayoutDirection: =LayoutDirection.Vertical
+                                          LayoutGap: =6
+                                          LayoutMinHeight: =0
+                                          LayoutMinWidth: =0
+                                          RadiusBottomLeft: =0
+                                          RadiusBottomRight: =0
+                                          RadiusTopLeft: =0
+                                          RadiusTopRight: =0
+                                        Children:
+                                          - lblFrmCor:
+                                              Control: Text@0.0.51
+                                              Properties:
+                                                AlignInContainer: =AlignInContainer.Stretch
+                                                FillPortions: =0
+                                                FontColor: =thmTexto
+                                                Height: =20
+                                                LayoutMinWidth: =0
+                                                Size: =11
+                                                Text: ="Cor"
+                                                Weight: =FontWeight.Semibold
+                                          - txtFrmCor:
+                                              Control: TextInput@0.0.54
+                                              Properties:
+                                                AlignInContainer: =AlignInContainer.Stretch
+                                                FillPortions: =1
+                                                FontSize: =12
+                                                LayoutMinWidth: =0
+                                                Mode: ='TextInputCanvas.Mode'.SingleLine
+                                                Placeholder: ="Cor"
+                                                Value: =varFormRec.cor
+                                    - cntFrmCombustivel:
+                                        Control: GroupContainer@1.5.0
+                                        Variant: AutoLayout
+                                        Properties:
+                                          AlignInContainer: =AlignInContainer.Stretch
+                                          DropShadow: =DropShadow.None
+                                          Fill: =thmSuperficie
+                                          FillPortions: =1
+                                          Height: =80
+                                          LayoutAlignItems: =LayoutAlignItems.Stretch
+                                          LayoutDirection: =LayoutDirection.Vertical
+                                          LayoutGap: =6
+                                          LayoutMinHeight: =0
+                                          LayoutMinWidth: =0
+                                          RadiusBottomLeft: =0
+                                          RadiusBottomRight: =0
+                                          RadiusTopLeft: =0
+                                          RadiusTopRight: =0
+                                        Children:
+                                          - lblFrmCombustivel:
+                                              Control: Text@0.0.51
+                                              Properties:
+                                                AlignInContainer: =AlignInContainer.Stretch
+                                                FillPortions: =0
+                                                FontColor: =thmTexto
+                                                Height: =20
+                                                LayoutMinWidth: =0
+                                                Size: =11
+                                                Text: ="Combustível *"
+                                                Weight: =FontWeight.Semibold
+                                          - drpFrmCombustivel:
+                                              Control: DropDown@0.0.45
+                                              Properties:
+                                                DefaultSelectedItems: =[Coalesce(varFormRec.combustivel, "")]
+                                                Height: =42
+                                                Items: =colOpCombustivel
+                                                Width: =Parent.Width
+                                    - cntFrmTanque:
+                                        Control: GroupContainer@1.5.0
+                                        Variant: AutoLayout
+                                        Properties:
+                                          AlignInContainer: =AlignInContainer.Stretch
+                                          DropShadow: =DropShadow.None
+                                          Fill: =thmSuperficie
+                                          FillPortions: =1
+                                          Height: =80
+                                          LayoutAlignItems: =LayoutAlignItems.Stretch
+                                          LayoutDirection: =LayoutDirection.Vertical
+                                          LayoutGap: =6
+                                          LayoutMinHeight: =0
+                                          LayoutMinWidth: =0
+                                          RadiusBottomLeft: =0
+                                          RadiusBottomRight: =0
+                                          RadiusTopLeft: =0
+                                          RadiusTopRight: =0
+                                        Children:
+                                          - lblFrmTanque:
+                                              Control: Text@0.0.51
+                                              Properties:
+                                                AlignInContainer: =AlignInContainer.Stretch
+                                                FillPortions: =0
+                                                FontColor: =thmTexto
+                                                Height: =20
+                                                LayoutMinWidth: =0
+                                                Size: =11
+                                                Text: ="Capacidade do Tanque (L)"
+                                                Weight: =FontWeight.Semibold
+                                          - txtFrmTanque:
+                                              Control: TextInput@0.0.54
+                                              Properties:
+                                                AlignInContainer: =AlignInContainer.Stretch
+                                                FillPortions: =1
+                                                FontSize: =12
+                                                LayoutMinWidth: =0
+                                                Mode: ='TextInputCanvas.Mode'.SingleLine
+                                                Placeholder: ="Capacidade do Tanque (L)"
+                                                Value: =If(IsBlank(varFormRec.capacidade_tanque), "", Text(varFormRec.capacidade_tanque))
+                              - cntFrmLin2_4:
+                                  Control: GroupContainer@1.5.0
+                                  Variant: AutoLayout
+                                  Properties:
+                                    AlignInContainer: =AlignInContainer.Stretch
+                                    DropShadow: =DropShadow.None
+                                    Fill: =thmSuperficie
+                                    FillPortions: =0
+                                    Height: =80
+                                    LayoutAlignItems: =LayoutAlignItems.Stretch
+                                    LayoutDirection: =LayoutDirection.Horizontal
+                                    LayoutGap: =16
+                                    LayoutMinHeight: =0
+                                    RadiusBottomLeft: =0
+                                    RadiusBottomRight: =0
+                                    RadiusTopLeft: =0
+                                    RadiusTopRight: =0
+                                  Children:
+                                    - cntFrmQtdPassageiros:
+                                        Control: GroupContainer@1.5.0
+                                        Variant: AutoLayout
+                                        Properties:
+                                          AlignInContainer: =AlignInContainer.Stretch
+                                          DropShadow: =DropShadow.None
+                                          Fill: =thmSuperficie
+                                          FillPortions: =1
+                                          Height: =80
+                                          LayoutAlignItems: =LayoutAlignItems.Stretch
+                                          LayoutDirection: =LayoutDirection.Vertical
+                                          LayoutGap: =6
+                                          LayoutMinHeight: =0
+                                          LayoutMinWidth: =0
+                                          RadiusBottomLeft: =0
+                                          RadiusBottomRight: =0
+                                          RadiusTopLeft: =0
+                                          RadiusTopRight: =0
+                                        Children:
+                                          - lblFrmQtdPassageiros:
+                                              Control: Text@0.0.51
+                                              Properties:
+                                                AlignInContainer: =AlignInContainer.Stretch
+                                                FillPortions: =0
+                                                FontColor: =thmTexto
+                                                Height: =20
+                                                LayoutMinWidth: =0
+                                                Size: =11
+                                                Text: ="Lotação (passageiros)"
+                                                Weight: =FontWeight.Semibold
+                                          - txtFrmQtdPassageiros:
+                                              Control: TextInput@0.0.54
+                                              Properties:
+                                                AlignInContainer: =AlignInContainer.Stretch
+                                                FillPortions: =1
+                                                FontSize: =12
+                                                LayoutMinWidth: =0
+                                                Mode: ='TextInputCanvas.Mode'.SingleLine
+                                                Placeholder: ="Lotação (passageiros)"
+                                                Value: =If(IsBlank(varFormRec.qtd_passageiros), "", Text(varFormRec.qtd_passageiros))
+                                    - cntFrmCapacidadeCarga:
+                                        Control: GroupContainer@1.5.0
+                                        Variant: AutoLayout
+                                        Properties:
+                                          AlignInContainer: =AlignInContainer.Stretch
+                                          DropShadow: =DropShadow.None
+                                          Fill: =thmSuperficie
+                                          FillPortions: =1
+                                          Height: =80
+                                          LayoutAlignItems: =LayoutAlignItems.Stretch
+                                          LayoutDirection: =LayoutDirection.Vertical
+                                          LayoutGap: =6
+                                          LayoutMinHeight: =0
+                                          LayoutMinWidth: =0
+                                          RadiusBottomLeft: =0
+                                          RadiusBottomRight: =0
+                                          RadiusTopLeft: =0
+                                          RadiusTopRight: =0
+                                        Children:
+                                          - lblFrmCapacidadeCarga:
+                                              Control: Text@0.0.51
+                                              Properties:
+                                                AlignInContainer: =AlignInContainer.Stretch
+                                                FillPortions: =0
+                                                FontColor: =thmTexto
+                                                Height: =20
+                                                LayoutMinWidth: =0
+                                                Size: =11
+                                                Text: ="Capacidade de Carga (kg)"
+                                                Weight: =FontWeight.Semibold
+                                          - txtFrmCapacidadeCarga:
+                                              Control: TextInput@0.0.54
+                                              Properties:
+                                                AlignInContainer: =AlignInContainer.Stretch
+                                                FillPortions: =1
+                                                FontSize: =12
+                                                LayoutMinWidth: =0
+                                                Mode: ='TextInputCanvas.Mode'.SingleLine
+                                                Placeholder: ="Capacidade de Carga (kg)"
+                                                Value: =If(IsBlank(varFormRec.capacidade_carga_kg), "", Text(varFormRec.capacidade_carga_kg))
+                        - cntFrmSec3:
+                            Control: GroupContainer@1.5.0
+                            Variant: AutoLayout
+                            Properties:
+                              AlignInContainer: =AlignInContainer.Stretch
+                              BorderColor: =thmBorda
+                              BorderStyle: =BorderStyle.Solid
+                              BorderThickness: =1
+                              DropShadow: =DropShadow.None
+                              Fill: =thmSuperficie
+                              FillPortions: =0
+                              Height: =276
+                              LayoutAlignItems: =LayoutAlignItems.Stretch
+                              LayoutDirection: =LayoutDirection.Vertical
+                              LayoutGap: =16
+                              LayoutMinHeight: =0
+                              PaddingBottom: =20
+                              PaddingLeft: =20
+                              PaddingRight: =20
+                              PaddingTop: =18
+                              RadiusBottomLeft: =0
+                              RadiusBottomRight: =0
+                              RadiusTopLeft: =0
+                              RadiusTopRight: =0
+                            Children:
+                              - htmFrmSec3:
+                                  Control: HtmlViewer@2.1.0
+                                  Properties:
+                                    AlignInContainer: =AlignInContainer.Stretch
+                                    AutoHeight: =false
+                                    Fill: =thmSuperficie
+                                    FillPortions: =0
+                                    Font: =thmFonte
+                                    Height: =46
+                                    HtmlText: |-
+                                      ="<div style='" & htmlFonte & "border-bottom:1px solid " & hxBorda & ";padding-bottom:8px;'>" &
+                                      "<div style='font-size:12px;font-weight:800;letter-spacing:.14em;color:" & hxPrimaria & ";'>MEDIÇÃO</div>" &
+                                      "<div style='font-size:11px;color:" & hxTextoFraco & ";margin-top:2px;'>Hodômetro, horímetro ou nenhum — quem decide é o tipo de ativo.</div></div>"
+                                    PaddingBottom: =0
+                                    PaddingLeft: =0
+                                    PaddingRight: =0
+                                    PaddingTop: =0
+                                    Size: =11
+                              - cntFrmLin3_1:
+                                  Control: GroupContainer@1.5.0
+                                  Variant: AutoLayout
+                                  Properties:
+                                    AlignInContainer: =AlignInContainer.Stretch
+                                    DropShadow: =DropShadow.None
+                                    Fill: =thmSuperficie
+                                    FillPortions: =0
+                                    Height: =80
+                                    LayoutAlignItems: =LayoutAlignItems.Stretch
+                                    LayoutDirection: =LayoutDirection.Horizontal
+                                    LayoutGap: =16
+                                    LayoutMinHeight: =0
+                                    RadiusBottomLeft: =0
+                                    RadiusBottomRight: =0
+                                    RadiusTopLeft: =0
+                                    RadiusTopRight: =0
+                                  Children:
+                                    - cntFrmTipoMedidor:
+                                        Control: GroupContainer@1.5.0
+                                        Variant: AutoLayout
+                                        Properties:
+                                          AlignInContainer: =AlignInContainer.Stretch
+                                          DropShadow: =DropShadow.None
+                                          Fill: =thmSuperficie
+                                          FillPortions: =1
+                                          Height: =80
+                                          LayoutAlignItems: =LayoutAlignItems.Stretch
+                                          LayoutDirection: =LayoutDirection.Vertical
+                                          LayoutGap: =6
+                                          LayoutMinHeight: =0
+                                          LayoutMinWidth: =0
+                                          RadiusBottomLeft: =0
+                                          RadiusBottomRight: =0
+                                          RadiusTopLeft: =0
+                                          RadiusTopRight: =0
+                                        Children:
+                                          - lblFrmTipoMedidor:
+                                              Control: Text@0.0.51
+                                              Properties:
+                                                AlignInContainer: =AlignInContainer.Stretch
+                                                FillPortions: =0
+                                                FontColor: =thmTexto
+                                                Height: =20
+                                                LayoutMinWidth: =0
+                                                Size: =11
+                                                Text: ="Tipo de Medidor *"
+                                                Weight: =FontWeight.Semibold
+                                          - drpFrmTipoMedidor:
+                                              Control: DropDown@0.0.45
+                                              Properties:
+                                                DefaultSelectedItems: |-
+                                                  =[
+                                                      Coalesce(
+                                                          varFormRec.tipo_medidor,
+                                                          LookUp(colTipoAtivo, Tipo = drpFrmTipo.Selected.Value).MedidorPadrao,
+                                                          ""
+                                                      )
+                                                  ]
+                                                Height: =42
+                                                Items: =colOpMedidor
+                                                Width: =Parent.Width
+                                    - cntFrmMedidorKm:
+                                        Control: GroupContainer@1.5.0
+                                        Variant: AutoLayout
+                                        Properties:
+                                          AlignInContainer: =AlignInContainer.Stretch
+                                          DropShadow: =DropShadow.None
+                                          Fill: =thmSuperficie
+                                          FillPortions: =1
+                                          Height: =80
+                                          LayoutAlignItems: =LayoutAlignItems.Stretch
+                                          LayoutDirection: =LayoutDirection.Vertical
+                                          LayoutGap: =6
+                                          LayoutMinHeight: =0
+                                          LayoutMinWidth: =0
+                                          RadiusBottomLeft: =0
+                                          RadiusBottomRight: =0
+                                          RadiusTopLeft: =0
+                                          RadiusTopRight: =0
+                                          Visible: =LookUp(colTipoMedidor, Valor = drpFrmTipoMedidor.Selected.Value).UsaKm
+                                        Children:
+                                          - lblFrmMedidorKm:
+                                              Control: Text@0.0.51
+                                              Properties:
+                                                AlignInContainer: =AlignInContainer.Stretch
+                                                FillPortions: =0
+                                                FontColor: =thmTexto
+                                                Height: =20
+                                                LayoutMinWidth: =0
+                                                Size: =11
+                                                Text: ="Hodômetro Atual (km)"
+                                                Weight: =FontWeight.Semibold
+                                          - txtFrmMedidorKm:
+                                              Control: TextInput@0.0.54
+                                              Properties:
+                                                AlignInContainer: =AlignInContainer.Stretch
+                                                FillPortions: =1
+                                                FontSize: =12
+                                                LayoutMinWidth: =0
+                                                Mode: ='TextInputCanvas.Mode'.SingleLine
+                                                Placeholder: ="Hodômetro Atual (km)"
+                                                Value: =If(IsBlank(varFormRec.medidor_km), "", Text(varFormRec.medidor_km))
+                                    - cntFrmMedidorHoras:
+                                        Control: GroupContainer@1.5.0
+                                        Variant: AutoLayout
+                                        Properties:
+                                          AlignInContainer: =AlignInContainer.Stretch
+                                          DropShadow: =DropShadow.None
+                                          Fill: =thmSuperficie
+                                          FillPortions: =1
+                                          Height: =80
+                                          LayoutAlignItems: =LayoutAlignItems.Stretch
+                                          LayoutDirection: =LayoutDirection.Vertical
+                                          LayoutGap: =6
+                                          LayoutMinHeight: =0
+                                          LayoutMinWidth: =0
+                                          RadiusBottomLeft: =0
+                                          RadiusBottomRight: =0
+                                          RadiusTopLeft: =0
+                                          RadiusTopRight: =0
+                                          Visible: =LookUp(colTipoMedidor, Valor = drpFrmTipoMedidor.Selected.Value).UsaHoras
+                                        Children:
+                                          - lblFrmMedidorHoras:
+                                              Control: Text@0.0.51
+                                              Properties:
+                                                AlignInContainer: =AlignInContainer.Stretch
+                                                FillPortions: =0
+                                                FontColor: =thmTexto
+                                                Height: =20
+                                                LayoutMinWidth: =0
+                                                Size: =11
+                                                Text: ="Horímetro Atual (h)"
+                                                Weight: =FontWeight.Semibold
+                                          - txtFrmMedidorHoras:
+                                              Control: TextInput@0.0.54
+                                              Properties:
+                                                AlignInContainer: =AlignInContainer.Stretch
+                                                FillPortions: =1
+                                                FontSize: =12
+                                                LayoutMinWidth: =0
+                                                Mode: ='TextInputCanvas.Mode'.SingleLine
+                                                Placeholder: ="Horímetro Atual (h)"
+                                                Value: =If(IsBlank(varFormRec.medidor_horas), "", Text(varFormRec.medidor_horas))
+                              - cntFrmLin3_2:
+                                  Control: GroupContainer@1.5.0
+                                  Variant: AutoLayout
+                                  Properties:
+                                    AlignInContainer: =AlignInContainer.Stretch
+                                    DropShadow: =DropShadow.None
+                                    Fill: =thmSuperficie
+                                    FillPortions: =0
+                                    Height: =80
+                                    LayoutAlignItems: =LayoutAlignItems.Stretch
+                                    LayoutDirection: =LayoutDirection.Horizontal
+                                    LayoutGap: =16
+                                    LayoutMinHeight: =0
+                                    RadiusBottomLeft: =0
+                                    RadiusBottomRight: =0
+                                    RadiusTopLeft: =0
+                                    RadiusTopRight: =0
+                                  Children:
+                                    - cntFrmMedidorData:
+                                        Control: GroupContainer@1.5.0
+                                        Variant: AutoLayout
+                                        Properties:
+                                          AlignInContainer: =AlignInContainer.Stretch
+                                          DropShadow: =DropShadow.None
+                                          Fill: =thmSuperficie
+                                          FillPortions: =1
+                                          Height: =80
+                                          LayoutAlignItems: =LayoutAlignItems.Stretch
+                                          LayoutDirection: =LayoutDirection.Vertical
+                                          LayoutGap: =6
+                                          LayoutMinHeight: =0
+                                          LayoutMinWidth: =0
+                                          RadiusBottomLeft: =0
+                                          RadiusBottomRight: =0
+                                          RadiusTopLeft: =0
+                                          RadiusTopRight: =0
+                                        Children:
+                                          - lblFrmMedidorData:
+                                              Control: Text@0.0.51
+                                              Properties:
+                                                AlignInContainer: =AlignInContainer.Stretch
+                                                FillPortions: =0
+                                                FontColor: =thmTexto
+                                                Height: =20
+                                                LayoutMinWidth: =0
+                                                Size: =11
+                                                Text: ="Data da Última Leitura"
+                                                Weight: =FontWeight.Semibold
+                                          - dtpFrmMedidorData:
+                                              Control: DatePicker@0.0.46
+                                              Properties:
+                                                Format: =DateTimeFormat.ShortDate
+                                                SelectedDate: =varFormRec.medidor_data
+                                                Width: =Parent.Width
+                        - cntFrmSec4:
+                            Control: GroupContainer@1.5.0
+                            Variant: AutoLayout
+                            Properties:
+                              AlignInContainer: =AlignInContainer.Stretch
+                              BorderColor: =thmBorda
+                              BorderStyle: =BorderStyle.Solid
+                              BorderThickness: =1
+                              DropShadow: =DropShadow.None
+                              Fill: =thmSuperficie
+                              FillPortions: =0
+                              Height: =276
+                              LayoutAlignItems: =LayoutAlignItems.Stretch
+                              LayoutDirection: =LayoutDirection.Vertical
+                              LayoutGap: =16
+                              LayoutMinHeight: =0
+                              PaddingBottom: =20
+                              PaddingLeft: =20
+                              PaddingRight: =20
+                              PaddingTop: =18
+                              RadiusBottomLeft: =0
+                              RadiusBottomRight: =0
+                              RadiusTopLeft: =0
+                              RadiusTopRight: =0
+                            Children:
+                              - htmFrmSec4:
+                                  Control: HtmlViewer@2.1.0
+                                  Properties:
+                                    AlignInContainer: =AlignInContainer.Stretch
+                                    AutoHeight: =false
+                                    Fill: =thmSuperficie
+                                    FillPortions: =0
+                                    Font: =thmFonte
+                                    Height: =46
+                                    HtmlText: |-
+                                      ="<div style='" & htmlFonte & "border-bottom:1px solid " & hxBorda & ";padding-bottom:8px;'>" &
+                                      "<div style='font-size:12px;font-weight:800;letter-spacing:.14em;color:" & hxPrimaria & ";'>LOCALIZAÇÃO E RESPONSABILIDADE</div>" &
+                                      "<div style='font-size:11px;color:" & hxTextoFraco & ";margin-top:2px;'>O bloco é gravado junto com o aeroporto, sem digitação.</div></div>"
+                                    PaddingBottom: =0
+                                    PaddingLeft: =0
+                                    PaddingRight: =0
+                                    PaddingTop: =0
+                                    Size: =11
+                              - cntFrmLin4_1:
+                                  Control: GroupContainer@1.5.0
+                                  Variant: AutoLayout
+                                  Properties:
+                                    AlignInContainer: =AlignInContainer.Stretch
+                                    DropShadow: =DropShadow.None
+                                    Fill: =thmSuperficie
+                                    FillPortions: =0
+                                    Height: =80
+                                    LayoutAlignItems: =LayoutAlignItems.Stretch
+                                    LayoutDirection: =LayoutDirection.Horizontal
+                                    LayoutGap: =16
+                                    LayoutMinHeight: =0
+                                    RadiusBottomLeft: =0
+                                    RadiusBottomRight: =0
+                                    RadiusTopLeft: =0
+                                    RadiusTopRight: =0
+                                  Children:
+                                    - cntFrmAero:
+                                        Control: GroupContainer@1.5.0
+                                        Variant: AutoLayout
+                                        Properties:
+                                          AlignInContainer: =AlignInContainer.Stretch
+                                          DropShadow: =DropShadow.None
+                                          Fill: =thmSuperficie
+                                          FillPortions: =1
+                                          Height: =80
+                                          LayoutAlignItems: =LayoutAlignItems.Stretch
+                                          LayoutDirection: =LayoutDirection.Vertical
+                                          LayoutGap: =6
+                                          LayoutMinHeight: =0
+                                          LayoutMinWidth: =0
+                                          RadiusBottomLeft: =0
+                                          RadiusBottomRight: =0
+                                          RadiusTopLeft: =0
+                                          RadiusTopRight: =0
+                                        Children:
+                                          - lblFrmAero:
+                                              Control: Text@0.0.51
+                                              Properties:
+                                                AlignInContainer: =AlignInContainer.Stretch
+                                                FillPortions: =0
+                                                FontColor: =thmTexto
+                                                Height: =20
+                                                LayoutMinWidth: =0
+                                                Size: =11
+                                                Text: ="Aeroporto de Lotação *"
+                                                Weight: =FontWeight.Semibold
+                                          - drpFrmAero:
+                                              Control: DropDown@0.0.45
+                                              Properties:
+                                                DefaultSelectedItems: =[Coalesce(varFormRec.aeroporto, "")]
+                                                Height: =42
+                                                Items: =colOpAero
+                                                Width: =Parent.Width
+                                    - cntFrmBase:
+                                        Control: GroupContainer@1.5.0
+                                        Variant: AutoLayout
+                                        Properties:
+                                          AlignInContainer: =AlignInContainer.Stretch
+                                          DropShadow: =DropShadow.None
+                                          Fill: =thmSuperficie
+                                          FillPortions: =1
+                                          Height: =80
+                                          LayoutAlignItems: =LayoutAlignItems.Stretch
+                                          LayoutDirection: =LayoutDirection.Vertical
+                                          LayoutGap: =6
+                                          LayoutMinHeight: =0
+                                          LayoutMinWidth: =0
+                                          RadiusBottomLeft: =0
+                                          RadiusBottomRight: =0
+                                          RadiusTopLeft: =0
+                                          RadiusTopRight: =0
+                                        Children:
+                                          - lblFrmBase:
+                                              Control: Text@0.0.51
+                                              Properties:
+                                                AlignInContainer: =AlignInContainer.Stretch
+                                                FillPortions: =0
+                                                FontColor: =thmTexto
+                                                Height: =20
+                                                LayoutMinWidth: =0
+                                                Size: =11
+                                                Text: ="Base / Local"
+                                                Weight: =FontWeight.Semibold
+                                          - txtFrmBase:
+                                              Control: TextInput@0.0.54
+                                              Properties:
+                                                AlignInContainer: =AlignInContainer.Stretch
+                                                FillPortions: =1
+                                                FontSize: =12
+                                                LayoutMinWidth: =0
+                                                Mode: ='TextInputCanvas.Mode'.SingleLine
+                                                Placeholder: ="Base / Local"
+                                                Value: =varFormRec.base_operacional
+                                    - cntFrmCentroCusto:
+                                        Control: GroupContainer@1.5.0
+                                        Variant: AutoLayout
+                                        Properties:
+                                          AlignInContainer: =AlignInContainer.Stretch
+                                          DropShadow: =DropShadow.None
+                                          Fill: =thmSuperficie
+                                          FillPortions: =1
+                                          Height: =80
+                                          LayoutAlignItems: =LayoutAlignItems.Stretch
+                                          LayoutDirection: =LayoutDirection.Vertical
+                                          LayoutGap: =6
+                                          LayoutMinHeight: =0
+                                          LayoutMinWidth: =0
+                                          RadiusBottomLeft: =0
+                                          RadiusBottomRight: =0
+                                          RadiusTopLeft: =0
+                                          RadiusTopRight: =0
+                                        Children:
+                                          - lblFrmCentroCusto:
+                                              Control: Text@0.0.51
+                                              Properties:
+                                                AlignInContainer: =AlignInContainer.Stretch
+                                                FillPortions: =0
+                                                FontColor: =thmTexto
+                                                Height: =20
+                                                LayoutMinWidth: =0
+                                                Size: =11
+                                                Text: ="Centro de Custo *"
+                                                Weight: =FontWeight.Semibold
+                                          - txtFrmCentroCusto:
+                                              Control: TextInput@0.0.54
+                                              Properties:
+                                                AlignInContainer: =AlignInContainer.Stretch
+                                                FillPortions: =1
+                                                FontSize: =12
+                                                LayoutMinWidth: =0
+                                                Mode: ='TextInputCanvas.Mode'.SingleLine
+                                                Placeholder: ="Centro de Custo"
+                                                Value: =varFormRec.centro_custo
+                              - cntFrmLin4_2:
+                                  Control: GroupContainer@1.5.0
+                                  Variant: AutoLayout
+                                  Properties:
+                                    AlignInContainer: =AlignInContainer.Stretch
+                                    DropShadow: =DropShadow.None
+                                    Fill: =thmSuperficie
+                                    FillPortions: =0
+                                    Height: =80
+                                    LayoutAlignItems: =LayoutAlignItems.Stretch
+                                    LayoutDirection: =LayoutDirection.Horizontal
+                                    LayoutGap: =16
+                                    LayoutMinHeight: =0
+                                    RadiusBottomLeft: =0
+                                    RadiusBottomRight: =0
+                                    RadiusTopLeft: =0
+                                    RadiusTopRight: =0
+                                  Children:
+                                    - cntFrmSetor:
+                                        Control: GroupContainer@1.5.0
+                                        Variant: AutoLayout
+                                        Properties:
+                                          AlignInContainer: =AlignInContainer.Stretch
+                                          DropShadow: =DropShadow.None
+                                          Fill: =thmSuperficie
+                                          FillPortions: =1
+                                          Height: =80
+                                          LayoutAlignItems: =LayoutAlignItems.Stretch
+                                          LayoutDirection: =LayoutDirection.Vertical
+                                          LayoutGap: =6
+                                          LayoutMinHeight: =0
+                                          LayoutMinWidth: =0
+                                          RadiusBottomLeft: =0
+                                          RadiusBottomRight: =0
+                                          RadiusTopLeft: =0
+                                          RadiusTopRight: =0
+                                        Children:
+                                          - lblFrmSetor:
+                                              Control: Text@0.0.51
+                                              Properties:
+                                                AlignInContainer: =AlignInContainer.Stretch
+                                                FillPortions: =0
+                                                FontColor: =thmTexto
+                                                Height: =20
+                                                LayoutMinWidth: =0
+                                                Size: =11
+                                                Text: ="Setor Responsável *"
+                                                Weight: =FontWeight.Semibold
+                                          - txtFrmSetor:
+                                              Control: TextInput@0.0.54
+                                              Properties:
+                                                AlignInContainer: =AlignInContainer.Stretch
+                                                FillPortions: =1
+                                                FontSize: =12
+                                                LayoutMinWidth: =0
+                                                Mode: ='TextInputCanvas.Mode'.SingleLine
+                                                Placeholder: ="Setor Responsável"
+                                                Value: =varFormRec.setor_responsavel
+                                    - cntFrmGestorNome:
+                                        Control: GroupContainer@1.5.0
+                                        Variant: AutoLayout
+                                        Properties:
+                                          AlignInContainer: =AlignInContainer.Stretch
+                                          DropShadow: =DropShadow.None
+                                          Fill: =thmSuperficie
+                                          FillPortions: =1
+                                          Height: =80
+                                          LayoutAlignItems: =LayoutAlignItems.Stretch
+                                          LayoutDirection: =LayoutDirection.Vertical
+                                          LayoutGap: =6
+                                          LayoutMinHeight: =0
+                                          LayoutMinWidth: =0
+                                          RadiusBottomLeft: =0
+                                          RadiusBottomRight: =0
+                                          RadiusTopLeft: =0
+                                          RadiusTopRight: =0
+                                        Children:
+                                          - lblFrmGestorNome:
+                                              Control: Text@0.0.51
+                                              Properties:
+                                                AlignInContainer: =AlignInContainer.Stretch
+                                                FillPortions: =0
+                                                FontColor: =thmTexto
+                                                Height: =20
+                                                LayoutMinWidth: =0
+                                                Size: =11
+                                                Text: ="Gestor Responsável"
+                                                Weight: =FontWeight.Semibold
+                                          - txtFrmGestorNome:
+                                              Control: TextInput@0.0.54
+                                              Properties:
+                                                AlignInContainer: =AlignInContainer.Stretch
+                                                FillPortions: =1
+                                                FontSize: =12
+                                                LayoutMinWidth: =0
+                                                Mode: ='TextInputCanvas.Mode'.SingleLine
+                                                Placeholder: ="Gestor Responsável"
+                                                Value: =varFormRec.gestor_nome
+                                    - cntFrmGestorEmail:
+                                        Control: GroupContainer@1.5.0
+                                        Variant: AutoLayout
+                                        Properties:
+                                          AlignInContainer: =AlignInContainer.Stretch
+                                          DropShadow: =DropShadow.None
+                                          Fill: =thmSuperficie
+                                          FillPortions: =1
+                                          Height: =80
+                                          LayoutAlignItems: =LayoutAlignItems.Stretch
+                                          LayoutDirection: =LayoutDirection.Vertical
+                                          LayoutGap: =6
+                                          LayoutMinHeight: =0
+                                          LayoutMinWidth: =0
+                                          RadiusBottomLeft: =0
+                                          RadiusBottomRight: =0
+                                          RadiusTopLeft: =0
+                                          RadiusTopRight: =0
+                                        Children:
+                                          - lblFrmGestorEmail:
+                                              Control: Text@0.0.51
+                                              Properties:
+                                                AlignInContainer: =AlignInContainer.Stretch
+                                                FillPortions: =0
+                                                FontColor: =thmTexto
+                                                Height: =20
+                                                LayoutMinWidth: =0
+                                                Size: =11
+                                                Text: ="E-mail do Gestor"
+                                                Weight: =FontWeight.Semibold
+                                          - txtFrmGestorEmail:
+                                              Control: TextInput@0.0.54
+                                              Properties:
+                                                AlignInContainer: =AlignInContainer.Stretch
+                                                FillPortions: =1
+                                                FontSize: =12
+                                                LayoutMinWidth: =0
+                                                Mode: ='TextInputCanvas.Mode'.SingleLine
+                                                Placeholder: ="E-mail do Gestor"
+                                                Value: =varFormRec.gestor_email
+                        - cntFrmSec5:
+                            Control: GroupContainer@1.5.0
+                            Variant: AutoLayout
+                            Properties:
+                              AlignInContainer: =AlignInContainer.Stretch
+                              BorderColor: =thmBorda
+                              BorderStyle: =BorderStyle.Solid
+                              BorderThickness: =1
+                              DropShadow: =DropShadow.None
+                              Fill: =thmSuperficie
+                              FillPortions: =0
+                              Height: =336
+                              LayoutAlignItems: =LayoutAlignItems.Stretch
+                              LayoutDirection: =LayoutDirection.Vertical
+                              LayoutGap: =16
+                              LayoutMinHeight: =0
+                              PaddingBottom: =20
+                              PaddingLeft: =20
+                              PaddingRight: =20
+                              PaddingTop: =18
+                              RadiusBottomLeft: =0
+                              RadiusBottomRight: =0
+                              RadiusTopLeft: =0
+                              RadiusTopRight: =0
+                            Children:
+                              - htmFrmSec5:
+                                  Control: HtmlViewer@2.1.0
+                                  Properties:
+                                    AlignInContainer: =AlignInContainer.Stretch
+                                    AutoHeight: =false
+                                    Fill: =thmSuperficie
+                                    FillPortions: =0
+                                    Font: =thmFonte
+                                    Height: =46
+                                    HtmlText: |-
+                                      ="<div style='" & htmlFonte & "border-bottom:1px solid " & hxBorda & ";padding-bottom:8px;'>" &
+                                      "<div style='font-size:12px;font-weight:800;letter-spacing:.14em;color:" & hxPrimaria & ";'>SITUAÇÃO</div>" &
+                                      "<div style='font-size:11px;color:" & hxTextoFraco & ";margin-top:2px;'>Status é ciclo de vida patrimonial; situação é o dia a dia.</div></div>"
+                                    PaddingBottom: =0
+                                    PaddingLeft: =0
+                                    PaddingRight: =0
+                                    PaddingTop: =0
+                                    Size: =11
+                              - cntFrmLin5_1:
+                                  Control: GroupContainer@1.5.0
+                                  Variant: AutoLayout
+                                  Properties:
+                                    AlignInContainer: =AlignInContainer.Stretch
+                                    DropShadow: =DropShadow.None
+                                    Fill: =thmSuperficie
+                                    FillPortions: =0
+                                    Height: =80
+                                    LayoutAlignItems: =LayoutAlignItems.Stretch
+                                    LayoutDirection: =LayoutDirection.Horizontal
+                                    LayoutGap: =16
+                                    LayoutMinHeight: =0
+                                    RadiusBottomLeft: =0
+                                    RadiusBottomRight: =0
+                                    RadiusTopLeft: =0
+                                    RadiusTopRight: =0
+                                  Children:
+                                    - cntFrmStatus:
+                                        Control: GroupContainer@1.5.0
+                                        Variant: AutoLayout
+                                        Properties:
+                                          AlignInContainer: =AlignInContainer.Stretch
+                                          DropShadow: =DropShadow.None
+                                          Fill: =thmSuperficie
+                                          FillPortions: =1
+                                          Height: =80
+                                          LayoutAlignItems: =LayoutAlignItems.Stretch
+                                          LayoutDirection: =LayoutDirection.Vertical
+                                          LayoutGap: =6
+                                          LayoutMinHeight: =0
+                                          LayoutMinWidth: =0
+                                          RadiusBottomLeft: =0
+                                          RadiusBottomRight: =0
+                                          RadiusTopLeft: =0
+                                          RadiusTopRight: =0
+                                        Children:
+                                          - lblFrmStatus:
+                                              Control: Text@0.0.51
+                                              Properties:
+                                                AlignInContainer: =AlignInContainer.Stretch
+                                                FillPortions: =0
+                                                FontColor: =thmTexto
+                                                Height: =20
+                                                LayoutMinWidth: =0
+                                                Size: =11
+                                                Text: ="Status do Ativo *"
+                                                Weight: =FontWeight.Semibold
+                                          - drpFrmStatus:
+                                              Control: DropDown@0.0.45
+                                              Properties:
+                                                DefaultSelectedItems: =[Coalesce(varFormRec.status, "")]
+                                                Height: =42
+                                                Items: =colOpStatus
+                                                Width: =Parent.Width
+                                    - cntFrmSituacao:
+                                        Control: GroupContainer@1.5.0
+                                        Variant: AutoLayout
+                                        Properties:
+                                          AlignInContainer: =AlignInContainer.Stretch
+                                          DropShadow: =DropShadow.None
+                                          Fill: =thmSuperficie
+                                          FillPortions: =1
+                                          Height: =80
+                                          LayoutAlignItems: =LayoutAlignItems.Stretch
+                                          LayoutDirection: =LayoutDirection.Vertical
+                                          LayoutGap: =6
+                                          LayoutMinHeight: =0
+                                          LayoutMinWidth: =0
+                                          RadiusBottomLeft: =0
+                                          RadiusBottomRight: =0
+                                          RadiusTopLeft: =0
+                                          RadiusTopRight: =0
+                                        Children:
+                                          - lblFrmSituacao:
+                                              Control: Text@0.0.51
+                                              Properties:
+                                                AlignInContainer: =AlignInContainer.Stretch
+                                                FillPortions: =0
+                                                FontColor: =thmTexto
+                                                Height: =20
+                                                LayoutMinWidth: =0
+                                                Size: =11
+                                                Text: ="Situação Operacional *"
+                                                Weight: =FontWeight.Semibold
+                                          - drpFrmSituacao:
+                                              Control: DropDown@0.0.45
+                                              Properties:
+                                                DefaultSelectedItems: =[Coalesce(varFormRec.situacao_operacional, "")]
+                                                Height: =42
+                                                Items: =colOpSituacao
+                                                Width: =Parent.Width
+                              - cntFrmLin5_2:
+                                  Control: GroupContainer@1.5.0
+                                  Variant: AutoLayout
+                                  Properties:
+                                    AlignInContainer: =AlignInContainer.Stretch
+                                    DropShadow: =DropShadow.None
+                                    Fill: =thmSuperficie
+                                    FillPortions: =0
+                                    Height: =140
+                                    LayoutAlignItems: =LayoutAlignItems.Stretch
+                                    LayoutDirection: =LayoutDirection.Horizontal
+                                    LayoutGap: =16
+                                    LayoutMinHeight: =0
+                                    RadiusBottomLeft: =0
+                                    RadiusBottomRight: =0
+                                    RadiusTopLeft: =0
+                                    RadiusTopRight: =0
+                                  Children:
+                                    - cntFrmMotivo:
+                                        Control: GroupContainer@1.5.0
+                                        Variant: AutoLayout
+                                        Properties:
+                                          AlignInContainer: =AlignInContainer.Stretch
+                                          DropShadow: =DropShadow.None
+                                          Fill: =thmSuperficie
+                                          FillPortions: =1
+                                          Height: =140
+                                          LayoutAlignItems: =LayoutAlignItems.Stretch
+                                          LayoutDirection: =LayoutDirection.Vertical
+                                          LayoutGap: =6
+                                          LayoutMinHeight: =0
+                                          LayoutMinWidth: =0
+                                          RadiusBottomLeft: =0
+                                          RadiusBottomRight: =0
+                                          RadiusTopLeft: =0
+                                          RadiusTopRight: =0
+                                        Children:
+                                          - lblFrmMotivo:
+                                              Control: Text@0.0.51
+                                              Properties:
+                                                AlignInContainer: =AlignInContainer.Stretch
+                                                FillPortions: =0
+                                                FontColor: =thmTexto
+                                                Height: =20
+                                                LayoutMinWidth: =0
+                                                Size: =11
+                                                Text: ="Motivo da Situação"
+                                                Weight: =FontWeight.Semibold
+                                          - txtFrmMotivo:
+                                              Control: TextInput@0.0.54
+                                              Properties:
+                                                AlignInContainer: =AlignInContainer.Stretch
+                                                FillPortions: =1
+                                                FontSize: =12
+                                                LayoutMinWidth: =0
+                                                Mode: ='TextInputCanvas.Mode'.Multiline
+                                                Placeholder: ="Motivo da Situação"
+                                                Value: =varFormRec.motivo_situacao
+                        - cntFrmSec6:
+                            Control: GroupContainer@1.5.0
+                            Variant: AutoLayout
+                            Properties:
+                              AlignInContainer: =AlignInContainer.Stretch
+                              BorderColor: =thmBorda
+                              BorderStyle: =BorderStyle.Solid
+                              BorderThickness: =1
+                              DropShadow: =DropShadow.None
+                              Fill: =thmSuperficie
+                              FillPortions: =0
+                              Height: =276
+                              LayoutAlignItems: =LayoutAlignItems.Stretch
+                              LayoutDirection: =LayoutDirection.Vertical
+                              LayoutGap: =16
+                              LayoutMinHeight: =0
+                              PaddingBottom: =20
+                              PaddingLeft: =20
+                              PaddingRight: =20
+                              PaddingTop: =18
+                              RadiusBottomLeft: =0
+                              RadiusBottomRight: =0
+                              RadiusTopLeft: =0
+                              RadiusTopRight: =0
+                            Children:
+                              - htmFrmSec6:
+                                  Control: HtmlViewer@2.1.0
+                                  Properties:
+                                    AlignInContainer: =AlignInContainer.Stretch
+                                    AutoHeight: =false
+                                    Fill: =thmSuperficie
+                                    FillPortions: =0
+                                    Font: =thmFonte
+                                    Height: =46
+                                    HtmlText: |-
+                                      ="<div style='" & htmlFonte & "border-bottom:1px solid " & hxBorda & ";padding-bottom:8px;'>" &
+                                      "<div style='font-size:12px;font-weight:800;letter-spacing:.14em;color:" & hxPrimaria & ";'>AQUISIÇÃO E PROPRIEDADE</div>" &
+                                      "<div style='font-size:11px;color:" & hxTextoFraco & ";margin-top:2px;'>Fornecedor em texto livre nesta fase — a lista entra na Onda 3.</div></div>"
+                                    PaddingBottom: =0
+                                    PaddingLeft: =0
+                                    PaddingRight: =0
+                                    PaddingTop: =0
+                                    Size: =11
+                              - cntFrmLin6_1:
+                                  Control: GroupContainer@1.5.0
+                                  Variant: AutoLayout
+                                  Properties:
+                                    AlignInContainer: =AlignInContainer.Stretch
+                                    DropShadow: =DropShadow.None
+                                    Fill: =thmSuperficie
+                                    FillPortions: =0
+                                    Height: =80
+                                    LayoutAlignItems: =LayoutAlignItems.Stretch
+                                    LayoutDirection: =LayoutDirection.Horizontal
+                                    LayoutGap: =16
+                                    LayoutMinHeight: =0
+                                    RadiusBottomLeft: =0
+                                    RadiusBottomRight: =0
+                                    RadiusTopLeft: =0
+                                    RadiusTopRight: =0
+                                  Children:
+                                    - cntFrmPropriedade:
+                                        Control: GroupContainer@1.5.0
+                                        Variant: AutoLayout
+                                        Properties:
+                                          AlignInContainer: =AlignInContainer.Stretch
+                                          DropShadow: =DropShadow.None
+                                          Fill: =thmSuperficie
+                                          FillPortions: =1
+                                          Height: =80
+                                          LayoutAlignItems: =LayoutAlignItems.Stretch
+                                          LayoutDirection: =LayoutDirection.Vertical
+                                          LayoutGap: =6
+                                          LayoutMinHeight: =0
+                                          LayoutMinWidth: =0
+                                          RadiusBottomLeft: =0
+                                          RadiusBottomRight: =0
+                                          RadiusTopLeft: =0
+                                          RadiusTopRight: =0
+                                        Children:
+                                          - lblFrmPropriedade:
+                                              Control: Text@0.0.51
+                                              Properties:
+                                                AlignInContainer: =AlignInContainer.Stretch
+                                                FillPortions: =0
+                                                FontColor: =thmTexto
+                                                Height: =20
+                                                LayoutMinWidth: =0
+                                                Size: =11
+                                                Text: ="Tipo de Propriedade *"
+                                                Weight: =FontWeight.Semibold
+                                          - drpFrmPropriedade:
+                                              Control: DropDown@0.0.45
+                                              Properties:
+                                                DefaultSelectedItems: =[Coalesce(varFormRec.tipo_propriedade, "")]
+                                                Height: =42
+                                                Items: =colOpPropriedade
+                                                Width: =Parent.Width
+                                    - cntFrmFornecedor:
+                                        Control: GroupContainer@1.5.0
+                                        Variant: AutoLayout
+                                        Properties:
+                                          AlignInContainer: =AlignInContainer.Stretch
+                                          DropShadow: =DropShadow.None
+                                          Fill: =thmSuperficie
+                                          FillPortions: =1
+                                          Height: =80
+                                          LayoutAlignItems: =LayoutAlignItems.Stretch
+                                          LayoutDirection: =LayoutDirection.Vertical
+                                          LayoutGap: =6
+                                          LayoutMinHeight: =0
+                                          LayoutMinWidth: =0
+                                          RadiusBottomLeft: =0
+                                          RadiusBottomRight: =0
+                                          RadiusTopLeft: =0
+                                          RadiusTopRight: =0
+                                        Children:
+                                          - lblFrmFornecedor:
+                                              Control: Text@0.0.51
+                                              Properties:
+                                                AlignInContainer: =AlignInContainer.Stretch
+                                                FillPortions: =0
+                                                FontColor: =thmTexto
+                                                Height: =20
+                                                LayoutMinWidth: =0
+                                                Size: =11
+                                                Text: ="Fornecedor / Locadora"
+                                                Weight: =FontWeight.Semibold
+                                          - txtFrmFornecedor:
+                                              Control: TextInput@0.0.54
+                                              Properties:
+                                                AlignInContainer: =AlignInContainer.Stretch
+                                                FillPortions: =1
+                                                FontSize: =12
+                                                LayoutMinWidth: =0
+                                                Mode: ='TextInputCanvas.Mode'.SingleLine
+                                                Placeholder: ="Fornecedor / Locadora"
+                                                Value: =varFormRec.fornecedor_txt
+                                    - cntFrmContrato:
+                                        Control: GroupContainer@1.5.0
+                                        Variant: AutoLayout
+                                        Properties:
+                                          AlignInContainer: =AlignInContainer.Stretch
+                                          DropShadow: =DropShadow.None
+                                          Fill: =thmSuperficie
+                                          FillPortions: =1
+                                          Height: =80
+                                          LayoutAlignItems: =LayoutAlignItems.Stretch
+                                          LayoutDirection: =LayoutDirection.Vertical
+                                          LayoutGap: =6
+                                          LayoutMinHeight: =0
+                                          LayoutMinWidth: =0
+                                          RadiusBottomLeft: =0
+                                          RadiusBottomRight: =0
+                                          RadiusTopLeft: =0
+                                          RadiusTopRight: =0
+                                        Children:
+                                          - lblFrmContrato:
+                                              Control: Text@0.0.51
+                                              Properties:
+                                                AlignInContainer: =AlignInContainer.Stretch
+                                                FillPortions: =0
+                                                FontColor: =thmTexto
+                                                Height: =20
+                                                LayoutMinWidth: =0
+                                                Size: =11
+                                                Text: ="Nº do Contrato"
+                                                Weight: =FontWeight.Semibold
+                                          - txtFrmContrato:
+                                              Control: TextInput@0.0.54
+                                              Properties:
+                                                AlignInContainer: =AlignInContainer.Stretch
+                                                FillPortions: =1
+                                                FontSize: =12
+                                                LayoutMinWidth: =0
+                                                Mode: ='TextInputCanvas.Mode'.SingleLine
+                                                Placeholder: ="Nº do Contrato"
+                                                Value: =varFormRec.contrato_numero
+                              - cntFrmLin6_2:
+                                  Control: GroupContainer@1.5.0
+                                  Variant: AutoLayout
+                                  Properties:
+                                    AlignInContainer: =AlignInContainer.Stretch
+                                    DropShadow: =DropShadow.None
+                                    Fill: =thmSuperficie
+                                    FillPortions: =0
+                                    Height: =80
+                                    LayoutAlignItems: =LayoutAlignItems.Stretch
+                                    LayoutDirection: =LayoutDirection.Horizontal
+                                    LayoutGap: =16
+                                    LayoutMinHeight: =0
+                                    RadiusBottomLeft: =0
+                                    RadiusBottomRight: =0
+                                    RadiusTopLeft: =0
+                                    RadiusTopRight: =0
+                                  Children:
+                                    - cntFrmDataAquisicao:
+                                        Control: GroupContainer@1.5.0
+                                        Variant: AutoLayout
+                                        Properties:
+                                          AlignInContainer: =AlignInContainer.Stretch
+                                          DropShadow: =DropShadow.None
+                                          Fill: =thmSuperficie
+                                          FillPortions: =1
+                                          Height: =80
+                                          LayoutAlignItems: =LayoutAlignItems.Stretch
+                                          LayoutDirection: =LayoutDirection.Vertical
+                                          LayoutGap: =6
+                                          LayoutMinHeight: =0
+                                          LayoutMinWidth: =0
+                                          RadiusBottomLeft: =0
+                                          RadiusBottomRight: =0
+                                          RadiusTopLeft: =0
+                                          RadiusTopRight: =0
+                                        Children:
+                                          - lblFrmDataAquisicao:
+                                              Control: Text@0.0.51
+                                              Properties:
+                                                AlignInContainer: =AlignInContainer.Stretch
+                                                FillPortions: =0
+                                                FontColor: =thmTexto
+                                                Height: =20
+                                                LayoutMinWidth: =0
+                                                Size: =11
+                                                Text: ="Data de Aquisição"
+                                                Weight: =FontWeight.Semibold
+                                          - dtpFrmDataAquisicao:
+                                              Control: DatePicker@0.0.46
+                                              Properties:
+                                                Format: =DateTimeFormat.ShortDate
+                                                SelectedDate: =varFormRec.data_aquisicao
+                                                Width: =Parent.Width
+                                    - cntFrmValorAquisicao:
+                                        Control: GroupContainer@1.5.0
+                                        Variant: AutoLayout
+                                        Properties:
+                                          AlignInContainer: =AlignInContainer.Stretch
+                                          DropShadow: =DropShadow.None
+                                          Fill: =thmSuperficie
+                                          FillPortions: =1
+                                          Height: =80
+                                          LayoutAlignItems: =LayoutAlignItems.Stretch
+                                          LayoutDirection: =LayoutDirection.Vertical
+                                          LayoutGap: =6
+                                          LayoutMinHeight: =0
+                                          LayoutMinWidth: =0
+                                          RadiusBottomLeft: =0
+                                          RadiusBottomRight: =0
+                                          RadiusTopLeft: =0
+                                          RadiusTopRight: =0
+                                        Children:
+                                          - lblFrmValorAquisicao:
+                                              Control: Text@0.0.51
+                                              Properties:
+                                                AlignInContainer: =AlignInContainer.Stretch
+                                                FillPortions: =0
+                                                FontColor: =thmTexto
+                                                Height: =20
+                                                LayoutMinWidth: =0
+                                                Size: =11
+                                                Text: ="Valor de Aquisição"
+                                                Weight: =FontWeight.Semibold
+                                          - txtFrmValorAquisicao:
+                                              Control: TextInput@0.0.54
+                                              Properties:
+                                                AlignInContainer: =AlignInContainer.Stretch
+                                                FillPortions: =1
+                                                FontSize: =12
+                                                LayoutMinWidth: =0
+                                                Mode: ='TextInputCanvas.Mode'.SingleLine
+                                                Placeholder: ="Valor de Aquisição"
+                                                Value: =If(IsBlank(varFormRec.valor_aquisicao), "", Text(varFormRec.valor_aquisicao))
+                                    - cntFrmDataFimContrato:
+                                        Control: GroupContainer@1.5.0
+                                        Variant: AutoLayout
+                                        Properties:
+                                          AlignInContainer: =AlignInContainer.Stretch
+                                          DropShadow: =DropShadow.None
+                                          Fill: =thmSuperficie
+                                          FillPortions: =1
+                                          Height: =80
+                                          LayoutAlignItems: =LayoutAlignItems.Stretch
+                                          LayoutDirection: =LayoutDirection.Vertical
+                                          LayoutGap: =6
+                                          LayoutMinHeight: =0
+                                          LayoutMinWidth: =0
+                                          RadiusBottomLeft: =0
+                                          RadiusBottomRight: =0
+                                          RadiusTopLeft: =0
+                                          RadiusTopRight: =0
+                                        Children:
+                                          - lblFrmDataFimContrato:
+                                              Control: Text@0.0.51
+                                              Properties:
+                                                AlignInContainer: =AlignInContainer.Stretch
+                                                FillPortions: =0
+                                                FontColor: =thmTexto
+                                                Height: =20
+                                                LayoutMinWidth: =0
+                                                Size: =11
+                                                Text: ="Fim do Contrato / Locação"
+                                                Weight: =FontWeight.Semibold
+                                          - dtpFrmDataFimContrato:
+                                              Control: DatePicker@0.0.46
+                                              Properties:
+                                                Format: =DateTimeFormat.ShortDate
+                                                SelectedDate: =varFormRec.data_fim_contrato
+                                                Width: =Parent.Width
+                        - cntFrmSec7:
+                            Control: GroupContainer@1.5.0
+                            Variant: AutoLayout
+                            Properties:
+                              AlignInContainer: =AlignInContainer.Stretch
+                              BorderColor: =thmBorda
+                              BorderStyle: =BorderStyle.Solid
+                              BorderThickness: =1
+                              DropShadow: =DropShadow.None
+                              Fill: =thmSuperficie
+                              FillPortions: =0
+                              Height: =336
+                              LayoutAlignItems: =LayoutAlignItems.Stretch
+                              LayoutDirection: =LayoutDirection.Vertical
+                              LayoutGap: =16
+                              LayoutMinHeight: =0
+                              PaddingBottom: =20
+                              PaddingLeft: =20
+                              PaddingRight: =20
+                              PaddingTop: =18
+                              RadiusBottomLeft: =0
+                              RadiusBottomRight: =0
+                              RadiusTopLeft: =0
+                              RadiusTopRight: =0
+                            Children:
+                              - htmFrmSec7:
+                                  Control: HtmlViewer@2.1.0
+                                  Properties:
+                                    AlignInContainer: =AlignInContainer.Stretch
+                                    AutoHeight: =false
+                                    Fill: =thmSuperficie
+                                    FillPortions: =0
+                                    Font: =thmFonte
+                                    Height: =46
+                                    HtmlText: |-
+                                      ="<div style='" & htmlFonte & "border-bottom:1px solid " & hxBorda & ";padding-bottom:8px;'>" &
+                                      "<div style='font-size:12px;font-weight:800;letter-spacing:.14em;color:" & hxPrimaria & ";'>CONFORMIDADE</div>" &
+                                      "<div style='font-size:11px;color:" & hxTextoFraco & ";margin-top:2px;'>Define se os módulos 16, 17 e 18 vão se aplicar a este ativo.</div></div>"
+                                    PaddingBottom: =0
+                                    PaddingLeft: =0
+                                    PaddingRight: =0
+                                    PaddingTop: =0
+                                    Size: =11
+                              - cntFrmLin7_1:
+                                  Control: GroupContainer@1.5.0
+                                  Variant: AutoLayout
+                                  Properties:
+                                    AlignInContainer: =AlignInContainer.Stretch
+                                    DropShadow: =DropShadow.None
+                                    Fill: =thmSuperficie
+                                    FillPortions: =0
+                                    Height: =80
+                                    LayoutAlignItems: =LayoutAlignItems.Stretch
+                                    LayoutDirection: =LayoutDirection.Horizontal
+                                    LayoutGap: =16
+                                    LayoutMinHeight: =0
+                                    RadiusBottomLeft: =0
+                                    RadiusBottomRight: =0
+                                    RadiusTopLeft: =0
+                                    RadiusTopRight: =0
+                                  Children:
+                                    - cntFrmLadoAr:
+                                        Control: GroupContainer@1.5.0
+                                        Variant: AutoLayout
+                                        Properties:
+                                          AlignInContainer: =AlignInContainer.Stretch
+                                          DropShadow: =DropShadow.None
+                                          Fill: =thmSuperficie
+                                          FillPortions: =1
+                                          Height: =80
+                                          LayoutAlignItems: =LayoutAlignItems.Stretch
+                                          LayoutDirection: =LayoutDirection.Vertical
+                                          LayoutGap: =6
+                                          LayoutMinHeight: =0
+                                          LayoutMinWidth: =0
+                                          RadiusBottomLeft: =0
+                                          RadiusBottomRight: =0
+                                          RadiusTopLeft: =0
+                                          RadiusTopRight: =0
+                                        Children:
+                                          - lblFrmLadoAr:
+                                              Control: Text@0.0.51
+                                              Properties:
+                                                AlignInContainer: =AlignInContainer.Stretch
+                                                FillPortions: =0
+                                                FontColor: =thmTexto
+                                                Height: =20
+                                                LayoutMinWidth: =0
+                                                Size: =11
+                                                Text: ="Circula no Lado Ar"
+                                                Weight: =FontWeight.Semibold
+                                          - tglFrmLadoAr:
+                                              Control: Toggle@1.1.5
+                                              Properties:
+                                                BasePaletteColor: =thmPrimaria
+                                                Checked: =varFormRec.circula_lado_ar = 1
+                                                Height: =38
+                                                Label: =If(tglFrmLadoAr.Checked, "Sim, circula no lado ar", "Não circula")
+                                                LabelPosition: ='Toggle.LabelPosition'.Before
+                                                Width: =Parent.Width
+                              - cntFrmLin7_2:
+                                  Control: GroupContainer@1.5.0
+                                  Variant: AutoLayout
+                                  Properties:
+                                    AlignInContainer: =AlignInContainer.Stretch
+                                    DropShadow: =DropShadow.None
+                                    Fill: =thmSuperficie
+                                    FillPortions: =0
+                                    Height: =140
+                                    LayoutAlignItems: =LayoutAlignItems.Stretch
+                                    LayoutDirection: =LayoutDirection.Horizontal
+                                    LayoutGap: =16
+                                    LayoutMinHeight: =0
+                                    RadiusBottomLeft: =0
+                                    RadiusBottomRight: =0
+                                    RadiusTopLeft: =0
+                                    RadiusTopRight: =0
+                                  Children:
+                                    - cntFrmObservacoes:
+                                        Control: GroupContainer@1.5.0
+                                        Variant: AutoLayout
+                                        Properties:
+                                          AlignInContainer: =AlignInContainer.Stretch
+                                          DropShadow: =DropShadow.None
+                                          Fill: =thmSuperficie
+                                          FillPortions: =1
+                                          Height: =140
+                                          LayoutAlignItems: =LayoutAlignItems.Stretch
+                                          LayoutDirection: =LayoutDirection.Vertical
+                                          LayoutGap: =6
+                                          LayoutMinHeight: =0
+                                          LayoutMinWidth: =0
+                                          RadiusBottomLeft: =0
+                                          RadiusBottomRight: =0
+                                          RadiusTopLeft: =0
+                                          RadiusTopRight: =0
+                                        Children:
+                                          - lblFrmObservacoes:
+                                              Control: Text@0.0.51
+                                              Properties:
+                                                AlignInContainer: =AlignInContainer.Stretch
+                                                FillPortions: =0
+                                                FontColor: =thmTexto
+                                                Height: =20
+                                                LayoutMinWidth: =0
+                                                Size: =11
+                                                Text: ="Observações"
+                                                Weight: =FontWeight.Semibold
+                                          - txtFrmObservacoes:
+                                              Control: TextInput@0.0.54
+                                              Properties:
+                                                AlignInContainer: =AlignInContainer.Stretch
+                                                FillPortions: =1
+                                                FontSize: =12
+                                                LayoutMinWidth: =0
+                                                Mode: ='TextInputCanvas.Mode'.Multiline
+                                                Placeholder: ="Observações"
+                                                Value: =varFormRec.observacoes

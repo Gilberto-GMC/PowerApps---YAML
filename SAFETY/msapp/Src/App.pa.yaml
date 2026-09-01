@@ -1,0 +1,344 @@
+# ************************************************************************************************
+# Warning: YAML source code for Canvas Apps should only be used to review changes made within Power Apps Studio and for minor edits (Preview).
+# Use the maker portal to create and edit your Power Apps.
+# 
+# The schema file for Canvas Apps is available at https://go.microsoft.com/fwlink/?linkid=2304907
+# 
+# For more information, visit https://go.microsoft.com/fwlink/?linkid=2292623
+# ************************************************************************************************
+App:
+  Properties:
+    OnStart: |
+      =Set(
+          ImgBase64,
+          JSON(
+              MOTIVA_RGB_Logo_VersaoPositiva_Anil,
+              JSONFormat.IncludeBinaryData
+          )
+      );
+      Set(
+          ImgBase64Limpo,
+          Mid(
+              ImgBase64,
+              Find(
+                  ",",
+                  ImgBase64
+              ) + 1
+          )
+      );
+      Set(
+          varHub,
+          Param("HUB")
+      );
+      Set(
+          var_redirectAN,
+          Param("MODULO")
+      );
+      // 🔄 Obtem a última versão registrada
+      Set(
+          var_ultimaVersao,
+          Value(
+              First(
+                  Sort(
+                      tbl_controle_versoes,
+                      ID,
+                      SortOrder.Descending
+                  )
+              ).Numero_versao
+          )
+      );
+      // 📐 Define largura inicial da sidebar
+      Set(
+          var_sideBarWidth,
+          250
+      );
+      // ✈️ Coleta fixa dos aeroportos
+      ClearCollect(
+          colAeros,
+          Table(
+              {
+                  IATA: "",
+                  ICAO: "",
+                  Bloco: "",
+                  Aeroporto: "",
+                  Cat: 0,
+                  Classe: ""
+              },
+              {
+                  IATA: "GYN",
+                  ICAO: "SBGO",
+                  Bloco: "CENTRAL",
+                  Aeroporto: "GOIÂNIA",
+                  Cat: 7,
+                  Classe: "III"
+              },
+              {
+                  IATA: "IMP",
+                  ICAO: "SBIZ",
+                  Bloco: "CENTRAL",
+                  Aeroporto: "IMPERATRIZ",
+                  Cat: 6,
+                  Classe: "II"
+              },
+              {
+                  IATA: "PMW",
+                  ICAO: "SBPJ",
+                  Bloco: "CENTRAL",
+                  Aeroporto: "PALMAS",
+                  Cat: 7,
+                  Classe: "II"
+              },
+              {
+                  IATA: "PLU",
+                  ICAO: "SBBH",
+                  Bloco: "CENTRAL",
+                  Aeroporto: "PAMPULHA",
+                  Cat: 5,
+                  Classe: "II"
+              },
+              {
+                  IATA: "PNZ",
+                  ICAO: "SBPL",
+                  Bloco: "CENTRAL",
+                  Aeroporto: "PETROLINA",
+                  Cat: 6,
+                  Classe: "II"
+              },
+              {
+                  IATA: "SLZ",
+                  ICAO: "SBSL",
+                  Bloco: "CENTRAL",
+                  Aeroporto: "SÃO LUIS",
+                  Cat: 7,
+                  Classe: "III"
+              },
+              {
+                  IATA: "THE",
+                  ICAO: "SBTE",
+                  Bloco: "CENTRAL",
+                  Aeroporto: "TERESINA",
+                  Cat: 7,
+                  Classe: "III"
+              },
+              {
+                  IATA: "BFH",
+                  ICAO: "SBBI",
+                  Bloco: "SUL",
+                  Aeroporto: "BACACHERI",
+                  Cat: 5,
+                  Classe: "II"
+              },
+              {
+                  IATA: "CWB",
+                  ICAO: "SBCT",
+                  Bloco: "SUL",
+                  Aeroporto: "CURITIBA",
+                  Cat: 7,
+                  Classe: "IV"
+              },
+              {
+                  IATA: "JOI",
+                  ICAO: "SBJV",
+                  Bloco: "SUL",
+                  Aeroporto: "JOINVILLE",
+                  Cat: 6,
+                  Classe: "II"
+              },
+              {
+                  IATA: "NVT",
+                  ICAO: "SBNF",
+                  Bloco: "SUL",
+                  Aeroporto: "NAVEGANTES",
+                  Cat: 7,
+                  Classe: "III"
+              },
+              {
+                  IATA: "BGX",
+                  ICAO: "SBBG",
+                  Bloco: "SUL",
+                  Aeroporto: "BAGÉ",
+                  Cat: 0,
+                  Classe: "I"
+              },
+              {
+                  IATA: "IGU",
+                  ICAO: "SBFI",
+                  Bloco: "SUL",
+                  Aeroporto: "FOZ DO IGUAÇU",
+                  Cat: 7,
+                  Classe: "III"
+              },
+              {
+                  IATA: "LDB",
+                  ICAO: "SBLO",
+                  Bloco: "SUL",
+                  Aeroporto: "LONDRINA",
+                  Cat: 7,
+                  Classe: "II"
+              },
+              {
+                  IATA: "PET",
+                  ICAO: "SBPK",
+                  Bloco: "SUL",
+                  Aeroporto: "PELOTAS",
+                  Cat: 5,
+                  Classe: "I"
+              },
+              {
+                  IATA: "URG",
+                  ICAO: "SBUG",
+                  Bloco: "SUL",
+                  Aeroporto: "URUGUAIANA",
+                  Cat: 5,
+                  Classe: "I"
+              }
+          )
+      );
+      // 👤 Identificação do usuário
+      Set(
+          varIdUser,
+          Coalesce(
+              Value(Param("USUARIO")),//584; 
+              LookUp(
+                  User,
+                  usrNome = User().FullName
+              ).ID
+          )
+      );
+      // 🧾 Dados do usuário
+      With(
+          {
+              usuario: LookUp(
+                  User,
+                  ID = varIdUser
+              )
+          },
+          Set(
+              varNomeUser,
+              usuario.usrNome
+          );
+          Set(
+              varEmailUser,
+              usuario.Email
+          );
+          Set(
+              varFuncaoUser,
+              usuario.Funcao
+          );
+          Set(
+              varBlocoUser,
+              usuario.Bloco
+          );
+          Set(
+              varClusterUser,
+              usuario.Cluster
+          );
+          Set(
+              varAeroUser,
+              usuario.Aeroporto
+          );
+          Set(
+              varPerfilUser,
+              usuario.Perfil
+          );
+          Set(
+              varAutUser,
+              usuario.Autorizacao
+          );
+          Set(
+              varPerfilSafety,
+              usuario.View_safety = 1
+          )
+      );
+      // 📸 Foto do usuário via Office 365
+      Set(
+          varFotoUser,
+          UsuáriosdoOffice365.UserPhoto(First(UsuáriosdoOffice365.SearchUser({searchTerm: varNomeUser})).Id)
+      );
+      // 🏷️ Códigos ICAO e IATA do usuário
+      With(
+          {
+              aero: LookUp(
+                  colAeros,
+                  Aeroporto = varAeroUser
+              )
+          },
+          Set(
+              varICAOUser,
+              aero.ICAO
+          );
+          Set(
+              varIATAUser,
+              aero.IATA
+          )
+      );
+      // 🗂️ Coleta telas por tipo de ocorrência
+      ClearCollect(
+          col_NavTelas,
+          Table(
+              {
+                  Id: 40,
+                  TelaListar: ScreenColisaoVeiculos
+              },
+              {
+                  Id: 37,
+                  TelaListar: ScreenDerramamentoFluido
+              },
+              {
+                  Id: 39,
+                  TelaListar: ScreenExcursaoPista
+              },
+              {
+                  Id: 125,
+                  TelaListar: ScreenFauna
+              },
+              {
+                  Id: 38,
+                  TelaListar: ScreenIncursaoPista
+              },
+              {
+                  Id: 41,
+                  TelaListar: ScreenInterferenciaExterna
+              },
+              {
+                  Id: 43,
+                  TelaListar: ScreenJetBlast
+              },
+              {
+                  Id: 36,
+                  TelaListar: ScreenOcorrenciaSolo
+              },
+              {
+                  Id: 131,
+                  TelaListar: ScreenFOD
+              },
+              {
+                  Id: 139,
+                  TelaListar: ScreenCSO
+              },
+              {
+                  Id: 127,
+                  TelaListar: ScreenVistoriaSafetyFauna
+              }
+          )
+      );
+      If(
+          varPerfilSafety,
+      // 📋 Módulos do menu
+          ClearCollect(
+              col_menuModulos,
+              Filter(
+                  tbl_Modulos,
+                  (Menu.Value = "Pátios e Pistas" && SubMenu.Value = "Safety") || Titulo = "Fauna"
+              )
+          ),
+          ClearCollect(
+              col_menuModulos,
+              Filter(
+                  tbl_Modulos,
+                  Identificador <> "VIS-SAF" And Identificador <> "CSO",
+                  (Menu.Value = "Pátios e Pistas" && SubMenu.Value = "Safety") || Titulo = "Fauna"
+              )
+          )
+      );
+    Theme: =MOTIVA
