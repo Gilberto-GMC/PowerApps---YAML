@@ -1,0 +1,801 @@
+Screens:
+  ScreenChamadoDetalhe:
+    Properties:
+      Fill: =RGBA(247, 247, 247, 1)
+      LoadingSpinnerColor: =RGBA(96, 70, 237, 1)
+      OnVisible: |-
+        =UpdateContext(
+            {
+                varDetCarregando: true,
+                varDetOcupadoDesde: Blank(),
+                varDetObs: "",
+                varDetMsg: ""
+            }
+        );
+        Reset(txtDetObs);
+        Reset(txtDetMsg);
+        ClearCollect(
+            colChamStatus,
+            Table(
+                {Status: "Aberto",                 Hex: "#6046ED", Fundo: "#EEF2FF", Aberto: "SIM", Etapa: 1},
+                {Status: "Em atendimento",         Hex: "#0284C7", Fundo: "#E0F2FE", Aberto: "SIM", Etapa: 2},
+                {Status: "Aguardando usuário",     Hex: "#B45309", Fundo: "#FFF7ED", Aberto: "SIM", Etapa: 2},
+                {Status: "Resolvido",              Hex: "#15803D", Fundo: "#DCFCE7", Aberto: "NAO", Etapa: 3},
+                {Status: "Reaberto",               Hex: "#BE185D", Fundo: "#FDF2F8", Aberto: "SIM", Etapa: 2},
+                {Status: "Em análise",             Hex: "#0284C7", Fundo: "#E0F2FE", Aberto: "SIM", Etapa: 2},
+                {Status: "Aguardando informações", Hex: "#B45309", Fundo: "#FFF7ED", Aberto: "SIM", Etapa: 2},
+                {Status: "Aguardando aprovação",   Hex: "#6D28D9", Fundo: "#F5F3FF", Aberto: "SIM", Etapa: 3},
+                {Status: "Em backlog",             Hex: "#475569", Fundo: "#F1F5F9", Aberto: "SIM", Etapa: 4},
+                {Status: "Em desenvolvimento",     Hex: "#0284C7", Fundo: "#E0F2FE", Aberto: "SIM", Etapa: 5},
+                {Status: "Em homologação",         Hex: "#B45309", Fundo: "#FFF7ED", Aberto: "SIM", Etapa: 6},
+                {Status: "Ajustes solicitados",    Hex: "#BE185D", Fundo: "#FDF2F8", Aberto: "SIM", Etapa: 6},
+                {Status: "Entregue",               Hex: "#15803D", Fundo: "#DCFCE7", Aberto: "NAO", Etapa: 7},
+                {Status: "Reprovado",              Hex: "#B91C1C", Fundo: "#FEF2F2", Aberto: "NAO", Etapa: 0},
+                {Status: "Cancelado",              Hex: "#64748B", Fundo: "#F1F5F9", Aberto: "NAO", Etapa: 0},
+                {Status: "Fechado",                Hex: "#64748B", Fundo: "#F1F5F9", Aberto: "NAO", Etapa: 7}
+            )
+        );
+        ClearCollect(
+            colChamEtapas,
+            Table(
+                {N: 1, Nome: "Recebida"},
+                {N: 2, Nome: "Em análise"},
+                {N: 3, Nome: "Em aprovação"},
+                {N: 4, Nome: "Aprovada"},
+                {N: 5, Nome: "Desenvolvimento"},
+                {N: 6, Nome: "Homologação"},
+                {N: 7, Nome: "Entregue"}
+            )
+        );
+        ClearCollect(
+            colChamTransicoes,
+            Table(
+                {Ciclo: "SUPORTE", De: "Aberto",               Para: "Em atendimento",       Rotulo: "Assumir",             Papel: "ATENDENTE",   ExigeObs: "NAO", Conclui: "NAO", Assume: "SIM"},
+                {Ciclo: "SUPORTE", De: "Aberto",               Para: "Cancelado",            Rotulo: "Cancelar chamado",    Papel: "SOLICITANTE", ExigeObs: "SIM", Conclui: "SIM", Assume: "NAO"},
+                {Ciclo: "SUPORTE", De: "Em atendimento",       Para: "Aguardando usuário",   Rotulo: "Pedir informação",    Papel: "ATENDENTE",   ExigeObs: "SIM", Conclui: "NAO", Assume: "NAO"},
+                {Ciclo: "SUPORTE", De: "Em atendimento",       Para: "Resolvido",            Rotulo: "Resolver",            Papel: "ATENDENTE",   ExigeObs: "SIM", Conclui: "SIM", Assume: "NAO"},
+                {Ciclo: "SUPORTE", De: "Aguardando usuário",   Para: "Em atendimento",       Rotulo: "Responder",           Papel: "SOLICITANTE", ExigeObs: "SIM", Conclui: "NAO", Assume: "NAO"},
+                {Ciclo: "SUPORTE", De: "Resolvido",            Para: "Reaberto",             Rotulo: "Reabrir",             Papel: "SOLICITANTE", ExigeObs: "SIM", Conclui: "NAO", Assume: "NAO"},
+                {Ciclo: "SUPORTE", De: "Resolvido",            Para: "Fechado",              Rotulo: "Fechar",              Papel: "SOLICITANTE", ExigeObs: "NAO", Conclui: "SIM", Assume: "NAO"},
+                {Ciclo: "SUPORTE", De: "Reaberto",             Para: "Em atendimento",       Rotulo: "Assumir",             Papel: "ATENDENTE",   ExigeObs: "NAO", Conclui: "NAO", Assume: "SIM"},
+                {Ciclo: "DEMANDA", De: "Aberto",               Para: "Em análise",           Rotulo: "Iniciar análise",     Papel: "ATENDENTE",   ExigeObs: "NAO", Conclui: "NAO", Assume: "SIM"},
+                {Ciclo: "DEMANDA", De: "Aberto",               Para: "Cancelado",            Rotulo: "Cancelar demanda",    Papel: "SOLICITANTE", ExigeObs: "SIM", Conclui: "SIM", Assume: "NAO"},
+                {Ciclo: "DEMANDA", De: "Em análise",           Para: "Aguardando informações", Rotulo: "Pedir informação",  Papel: "ATENDENTE",   ExigeObs: "SIM", Conclui: "NAO", Assume: "NAO"},
+                {Ciclo: "DEMANDA", De: "Em análise",           Para: "Aguardando aprovação", Rotulo: "Enviar p/ aprovação", Papel: "ATENDENTE",   ExigeObs: "SIM", Conclui: "NAO", Assume: "NAO"},
+                {Ciclo: "DEMANDA", De: "Em análise",           Para: "Cancelado",            Rotulo: "Cancelar demanda",    Papel: "SOLICITANTE", ExigeObs: "SIM", Conclui: "SIM", Assume: "NAO"},
+                {Ciclo: "DEMANDA", De: "Aguardando informações", Para: "Em análise",         Rotulo: "Responder",           Papel: "SOLICITANTE", ExigeObs: "SIM", Conclui: "NAO", Assume: "NAO"},
+                {Ciclo: "DEMANDA", De: "Aguardando aprovação", Para: "Em backlog",           Rotulo: "Aprovar",             Papel: "GESTOR",      ExigeObs: "SIM", Conclui: "NAO", Assume: "NAO"},
+                {Ciclo: "DEMANDA", De: "Aguardando aprovação", Para: "Reprovado",            Rotulo: "Reprovar",            Papel: "GESTOR",      ExigeObs: "SIM", Conclui: "SIM", Assume: "NAO"},
+                {Ciclo: "DEMANDA", De: "Em backlog",           Para: "Em desenvolvimento",   Rotulo: "Iniciar",             Papel: "ATENDENTE",   ExigeObs: "NAO", Conclui: "NAO", Assume: "SIM"},
+                {Ciclo: "DEMANDA", De: "Em desenvolvimento",   Para: "Em homologação",       Rotulo: "Enviar p/ teste",     Papel: "ATENDENTE",   ExigeObs: "SIM", Conclui: "NAO", Assume: "NAO"},
+                {Ciclo: "DEMANDA", De: "Em homologação",       Para: "Ajustes solicitados",  Rotulo: "Solicitar ajuste",    Papel: "SOLICITANTE", ExigeObs: "SIM", Conclui: "NAO", Assume: "NAO"},
+                {Ciclo: "DEMANDA", De: "Em homologação",       Para: "Entregue",             Rotulo: "Dar aceite",          Papel: "SOLICITANTE", ExigeObs: "NAO", Conclui: "SIM", Assume: "NAO"},
+                {Ciclo: "DEMANDA", De: "Ajustes solicitados",  Para: "Em desenvolvimento",   Rotulo: "Retomar",             Papel: "ATENDENTE",   ExigeObs: "NAO", Conclui: "NAO", Assume: "SIM"},
+                {Ciclo: "DEMANDA", De: "Entregue",             Para: "Fechado",              Rotulo: "Fechar",              Papel: "ATENDENTE",   ExigeObs: "NAO", Conclui: "SIM", Assume: "NAO"}
+            )
+        );
+        UpdateContext(
+            {
+                varDetPapel: Switch(
+                    Upper(Trim(Coalesce(userRecord.usr_papel_chamados, ""))),
+                    "GESTOR",
+                    "GESTOR",
+                    "ATENDENTE",
+                    "ATENDENTE",
+                    "SOLICITANTE"
+                ),
+                varDetSouSolicitante: And(
+                    Not(IsBlank(varEmailUser)),
+                    varChamado.desk_solicitante_email = varEmailUser
+                )
+            }
+        );
+        ClearCollect(
+            colDetHistorico,
+            Sort(
+                Filter(
+                    tb_chamadoHistorico,
+                    id_fk_chamado = varChamado.desk_id
+                ),
+                Created,
+                SortOrder.Descending
+            )
+        );
+        ClearCollect(
+            colDetInteracoes,
+            Sort(
+                Filter(
+                    tb_chamadoInteracao,
+                    id_fk_chamado = varChamado.desk_id
+                ),
+                Created,
+                SortOrder.Ascending
+            )
+        );
+        UpdateContext({varDetCarregando: false})
+    Children:
+      - ContainerChamadoDetalhe_1:
+          Control: GroupContainer@1.5.0
+          Variant: ManualLayout
+          Properties:
+            DropShadow: =DropShadow.None
+            Fill: =RGBA(247, 247, 247, 1)
+            Height: =Parent.Height
+            RadiusBottomLeft: =0
+            RadiusBottomRight: =0
+            RadiusTopLeft: =0
+            RadiusTopRight: =0
+            Width: =Parent.Width
+          Children:
+            - HeaderTitleChamadoDetalhe:
+                Control: CanvasComponent
+                ComponentName: HeaderTitle
+                Properties:
+                  Height: =50
+                  IconVisible: =true
+                  ScreenNavigator: =If(varChamadoOrigem = "FILA", frmServiceDesk, ScreenMeusChamados)
+                  Width: =Parent.Width
+                  var_subtitulo1: ="Suporte e atendimento"
+                  var_subtitulo2: =""
+                  var_tituloModulo: ="Chamado #" & Text(varChamado.desk_id, "000000")
+            - cntDetMain:
+                Control: GroupContainer@1.5.0
+                Variant: ManualLayout
+                Properties:
+                  DropShadow: =DropShadow.None
+                  Fill: =RGBA(247, 247, 247, 1)
+                  Height: =Parent.Height - HeaderTitleChamadoDetalhe.Height
+                  RadiusBottomLeft: =0
+                  RadiusBottomRight: =0
+                  RadiusTopLeft: =0
+                  RadiusTopRight: =0
+                  Width: =Parent.Width
+                  Y: =HeaderTitleChamadoDetalhe.Height
+                Children:
+                  - cntDetShell:
+                      Control: GroupContainer@1.5.0
+                      Variant: ManualLayout
+                      Properties:
+                        BorderStyle: =BorderStyle.None
+                        DropShadow: =DropShadow.None
+                        Height: =Parent.Height - If(Parent.Height < 700, 16, 48)
+                        RadiusBottomLeft: =0
+                        RadiusBottomRight: =0
+                        RadiusTopLeft: =0
+                        RadiusTopRight: =0
+                        Width: =Max(300, Parent.Width - If(Parent.Width < 700, 16, 64))
+                        X: =(Parent.Width - Self.Width) / 2
+                        Y: =If(Parent.Height < 700, 8, 24)
+                      Children:
+                        - cntDetSidebar:
+                            Control: GroupContainer@1.5.0
+                            Variant: ManualLayout
+                            Properties:
+                              DropShadow: =DropShadow.None
+                              Fill: =RGBA(57, 22, 148, 1)
+                              Height: =Parent.Height-4
+                              RadiusBottomLeft: =0
+                              RadiusBottomRight: =0
+                              RadiusTopLeft: =0
+                              RadiusTopRight: =0
+                              Visible: =Parent.Width >= 900
+                              Width: =300
+                              Y: =2
+                            Children:
+                              - recDetSidebarOverlay:
+                                  Control: Rectangle@2.3.0
+                                  Properties:
+                                    BorderColor: =RGBA(0, 0, 0, 0)
+                                    Fill: =RGBA(0, 38, 255, 0.16)
+                                    Height: =Parent.Height
+                                    Width: =Parent.Width
+                              - htmDetResumo:
+                                  Control: HtmlViewer@2.1.0
+                                  Properties:
+                                    Font: =Font.'Open Sans'
+                                    Height: =Parent.Height - 60
+                                    HtmlText: |-
+                                      ="<div style='font-family:Open Sans,Segoe UI,sans-serif;'>" &
+                                      "<div style='font-size:10px;font-weight:800;letter-spacing:.08em;color:rgba(255,255,255,.6);'>PROTOCOLO</div>" &
+                                      "<div style='font-size:30px;font-weight:800;color:#FFFFFF;margin-top:2px;'>#" & Text(varChamado.desk_id, "000000") & "</div>" &
+                                      "<div style='margin-top:12px;'><span style='display:inline-block;background:rgba(255,255,255,.16);color:#FFFFFF;padding:6px 12px;font-size:11px;font-weight:700;letter-spacing:.03em;'>" &
+                                      Upper(Coalesce(varChamado.desk_status, "SEM STATUS")) & "</span></div>" &
+                                      "<div style='height:1px;background:rgba(255,255,255,.18);margin:22px 0;'></div>" &
+                                      "<table style='width:100%;border-collapse:collapse;'>" &
+                                      "<tr><td style='padding:6px 0;font-size:11px;color:rgba(255,255,255,.6);'>Categoria</td></tr>" &
+                                      "<tr><td style='padding:0 0 12px 0;font-size:12px;font-weight:700;color:#FFFFFF;'>" & Coalesce(varChamado.desk_categoria, "—") & "</td></tr>" &
+                                      "<tr><td style='padding:6px 0;font-size:11px;color:rgba(255,255,255,.6);'>Solicitante</td></tr>" &
+                                      "<tr><td style='padding:0 0 12px 0;font-size:12px;font-weight:700;color:#FFFFFF;'>" & Coalesce(varChamado.desk_usuario.DisplayName, "—") & "</td></tr>" &
+                                      "<tr><td style='padding:6px 0;font-size:11px;color:rgba(255,255,255,.6);'>Aberto em</td></tr>" &
+                                      "<tr><td style='padding:0 0 12px 0;font-size:12px;font-weight:700;color:#FFFFFF;'>" & Text(varChamado.Created, "dd/mm/yyyy hh:mm") & "</td></tr>" &
+                                      "<tr><td style='padding:6px 0;font-size:11px;color:rgba(255,255,255,.6);'>Atendente</td></tr>" &
+                                      "<tr><td style='padding:0 0 12px 0;font-size:12px;font-weight:700;color:#FFFFFF;'>" & Coalesce(varChamado.desk_atendente_nome, "ainda na fila") & "</td></tr>" &
+                                      "</table>" &
+                                      If(
+                                          varChamado.desk_ciclo = "DEMANDA",
+                                          "<div style='height:1px;background:rgba(255,255,255,.18);margin:16px 0;'></div>" &
+                                          "<div style='font-size:11px;font-weight:700;color:#FFFFFF;margin-bottom:10px;'>ANDAMENTO</div>" &
+                                          "<table style='width:100%;border-collapse:collapse;'>" &
+                                          Concat(
+                                              colChamEtapas,
+                                              "<tr><td style='width:26px;padding:4px 0;'>" &
+                                              "<div style='width:20px;height:20px;line-height:20px;text-align:center;font-size:10px;font-weight:800;color:" &
+                                              If(N <= Coalesce(LookUp(colChamStatus, Status = varChamado.desk_status, Etapa), 1), "#391694", "rgba(255,255,255,.5)") &
+                                              ";background:" &
+                                              If(N <= Coalesce(LookUp(colChamStatus, Status = varChamado.desk_status, Etapa), 1), "#FFFFFF", "rgba(255,255,255,.14)") &
+                                              ";'>" & N & "</div></td>" &
+                                              "<td style='padding:4px 0 4px 10px;font-size:11px;color:" &
+                                              If(N = Coalesce(LookUp(colChamStatus, Status = varChamado.desk_status, Etapa), 1), "#FFFFFF", "rgba(255,255,255,.6)") &
+                                              ";font-weight:" &
+                                              If(N = Coalesce(LookUp(colChamStatus, Status = varChamado.desk_status, Etapa), 1), "800", "400") &
+                                              ";'>" & Nome & "</td></tr>"
+                                          ) &
+                                          "</table>",
+                                          ""
+                                      ) &
+                                      "</div>"
+                                    PaddingBottom: =0
+                                    PaddingLeft: =0
+                                    PaddingRight: =0
+                                    PaddingTop: =0
+                                    Size: =11
+                                    Width: =244
+                                    X: =28
+                                    Y: =30
+                        - cntDetPanel:
+                            Control: GroupContainer@1.5.0
+                            Variant: ManualLayout
+                            Properties:
+                              BorderColor: =RGBA(226, 232, 240, 1)
+                              BorderThickness: =1
+                              DropShadow: =DropShadow.None
+                              Fill: =RGBA(255, 255, 255, 1)
+                              Height: =Parent.Height-4
+                              RadiusBottomLeft: =0
+                              RadiusBottomRight: =0
+                              RadiusTopLeft: =0
+                              RadiusTopRight: =0
+                              Width: =Parent.Width - Self.X
+                              X: =If(cntDetSidebar.Visible, 324, 0)
+                              Y: =2
+                            Children:
+                              - lblDetTituloEsq:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    Color: =RGBA(15, 23, 42, 1)
+                                    Font: =Font.'Open Sans'
+                                    FontWeight: =FontWeight.Bold
+                                    Height: =24
+                                    PaddingBottom: =0
+                                    PaddingLeft: =0
+                                    PaddingRight: =0
+                                    PaddingTop: =0
+                                    Size: =11
+                                    Text: ="Descrição da solicitação"
+                                    Width: =colDetEsqLargura.Width
+                                    X: =24
+                                    Y: =20
+                              - colDetEsqLargura:
+                                  Control: Rectangle@2.3.0
+                                  Properties:
+                                    BorderColor: =RGBA(0, 0, 0, 0)
+                                    Fill: =RGBA(0, 0, 0, 0)
+                                    Height: =1
+                                    Visible: =false
+                                    Width: =Max(220, (Parent.Width - 72) * 0.44)
+                                    X: =24
+                                    Y: =0
+                              - txtDetDescricao:
+                                  Control: Classic/TextInput@2.3.2
+                                  Properties:
+                                    BorderColor: =RGBA(226, 232, 240, 1)
+                                    BorderThickness: =1
+                                    Default: =Coalesce(varChamado.desk_descricao, "—")
+                                    DisplayMode: =DisplayMode.View
+                                    Fill: =RGBA(248, 250, 252, 1)
+                                    Font: =Font.'Open Sans'
+                                    Height: =Max(120, (Parent.Height - 240) * 0.5)
+                                    Mode: =TextMode.MultiLine
+                                    PaddingBottom: =10
+                                    PaddingLeft: =12
+                                    PaddingRight: =12
+                                    PaddingTop: =10
+                                    RadiusBottomLeft: =0
+                                    RadiusBottomRight: =0
+                                    RadiusTopLeft: =0
+                                    RadiusTopRight: =0
+                                    Size: =10
+                                    Width: =colDetEsqLargura.Width
+                                    X: =24
+                                    Y: =48
+                              - lblDetSolucaoTitulo:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    Color: =RGBA(15, 23, 42, 1)
+                                    Font: =Font.'Open Sans'
+                                    FontWeight: =FontWeight.Bold
+                                    Height: =24
+                                    PaddingBottom: =0
+                                    PaddingLeft: =0
+                                    PaddingRight: =0
+                                    PaddingTop: =0
+                                    Size: =11
+                                    Text: =If(varChamado.desk_status = "Reprovado", "Motivo da recusa", "Solução aplicada")
+                                    Width: =colDetEsqLargura.Width
+                                    X: =24
+                                    Y: =txtDetDescricao.Y + txtDetDescricao.Height + 18
+                              - txtDetSolucao:
+                                  Control: Classic/TextInput@2.3.2
+                                  Properties:
+                                    BorderColor: =RGBA(226, 232, 240, 1)
+                                    BorderThickness: =1
+                                    Default: =Coalesce(varChamado.desk_motivo_recusa, varChamado.desk_solucao, "Ainda não há registro de solução.")
+                                    DisplayMode: =DisplayMode.View
+                                    Fill: =If(IsBlank(varChamado.desk_motivo_recusa), RGBA(240, 253, 244, 1), RGBA(254, 242, 242, 1))
+                                    Font: =Font.'Open Sans'
+                                    Height: =Max(90, (Parent.Height - 240) * 0.28)
+                                    Mode: =TextMode.MultiLine
+                                    PaddingBottom: =10
+                                    PaddingLeft: =12
+                                    PaddingRight: =12
+                                    PaddingTop: =10
+                                    RadiusBottomLeft: =0
+                                    RadiusBottomRight: =0
+                                    RadiusTopLeft: =0
+                                    RadiusTopRight: =0
+                                    Size: =10
+                                    Width: =colDetEsqLargura.Width
+                                    X: =24
+                                    Y: =lblDetSolucaoTitulo.Y + 28
+                              - lblDetHistTitulo:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    Color: =RGBA(15, 23, 42, 1)
+                                    Font: =Font.'Open Sans'
+                                    FontWeight: =FontWeight.Bold
+                                    Height: =24
+                                    PaddingBottom: =0
+                                    PaddingLeft: =0
+                                    PaddingRight: =0
+                                    PaddingTop: =0
+                                    Size: =11
+                                    Text: ="Linha do tempo"
+                                    Width: =200
+                                    X: =colDetEsqLargura.X + colDetEsqLargura.Width + 24
+                                    Y: =20
+                              - galDetHistorico:
+                                  Control: Gallery@2.15.0
+                                  Variant: Vertical
+                                  Properties:
+                                    BorderColor: =RGBA(226, 232, 240, 1)
+                                    BorderStyle: =BorderStyle.None
+                                    Fill: =RGBA(255, 255, 255, 1)
+                                    Height: =Max(90, (Parent.Height - 260) * 0.34)
+                                    Items: =colDetHistorico
+                                    LayoutMinHeight: =0
+                                    ShowScrollbar: =true
+                                    TemplatePadding: =0
+                                    TemplateSize: =62
+                                    Visible: =Self.AllItemsCount > 0
+                                    Width: =Parent.Width - Self.X - 24
+                                    X: =lblDetHistTitulo.X
+                                    Y: =48
+                                  Children:
+                                    - htmDetHistLinha:
+                                        Control: HtmlViewer@2.1.0
+                                        Properties:
+                                          Fill: =RGBA(255, 255, 255, 1)
+                                          Font: =Font.'Open Sans'
+                                          Height: =60
+                                          HtmlText: |-
+                                            ="<div style='font-family:Open Sans,Segoe UI,sans-serif;border-left:3px solid " &
+                                            Coalesce(LookUp(colChamStatus, Status = ThisItem.status_para, Hex), "#CBD5E1") &
+                                            ";padding:6px 0 6px 10px;'>" &
+                                            "<div style='font-size:11px;font-weight:700;color:#0F172A;'>" &
+                                            If(IsBlank(ThisItem.status_de), "Abertura", ThisItem.status_de & " &rarr; " & ThisItem.status_para) &
+                                            "</div>" &
+                                            "<div style='font-size:10px;color:#64748B;margin-top:3px;'>" &
+                                            Text(ThisItem.Created, "dd/mm/yyyy hh:mm") & " &middot; " &
+                                            Left(ThisItem.autor_email, Coalesce(Find("@", ThisItem.autor_email), Len(ThisItem.autor_email) + 1) - 1) & "</div>" &
+                                            If(
+                                                IsBlank(ThisItem.observacao),
+                                                "",
+                                                "<div style='font-size:10px;color:#334155;margin-top:3px;'>" &
+                                                Left(Substitute(ThisItem.observacao, "<", " "), 90) & "</div>"
+                                            ) &
+                                            "</div>"
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                          PaddingTop: =0
+                                          Size: =10
+                                          Width: =Parent.Width
+                              - lblDetHistVazio:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    Color: =RGBA(100, 116, 139, 1)
+                                    Font: =Font.'Open Sans'
+                                    Height: =40
+                                    Size: =9
+                                    Text: ="Nenhuma movimentação registrada ainda."
+                                    Visible: =And(Not(varDetCarregando), galDetHistorico.AllItemsCount = 0)
+                                    Width: =galDetHistorico.Width
+                                    X: =galDetHistorico.X
+                                    Y: =galDetHistorico.Y
+                              - lblDetConversaTitulo:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    Color: =RGBA(15, 23, 42, 1)
+                                    Font: =Font.'Open Sans'
+                                    FontWeight: =FontWeight.Bold
+                                    Height: =24
+                                    PaddingBottom: =0
+                                    PaddingLeft: =0
+                                    PaddingRight: =0
+                                    PaddingTop: =0
+                                    Size: =11
+                                    Text: ="Conversa"
+                                    Width: =200
+                                    X: =lblDetHistTitulo.X
+                                    Y: =galDetHistorico.Y + galDetHistorico.Height + 18
+                              - galDetConversa:
+                                  Control: Gallery@2.15.0
+                                  Variant: Vertical
+                                  Properties:
+                                    BorderColor: =RGBA(226, 232, 240, 1)
+                                    BorderStyle: =BorderStyle.None
+                                    Fill: =RGBA(255, 255, 255, 1)
+                                    Height: =Max(90, (Parent.Height - 260) * 0.34)
+                                    Items: =Filter(colDetInteracoes, Or(interna = 0, varDetPapel <> "SOLICITANTE"))
+                                    LayoutMinHeight: =0
+                                    ShowScrollbar: =true
+                                    TemplatePadding: =0
+                                    TemplateSize: =74
+                                    Visible: =Self.AllItemsCount > 0
+                                    Width: =galDetHistorico.Width
+                                    X: =lblDetHistTitulo.X
+                                    Y: =lblDetConversaTitulo.Y + 28
+                                  Children:
+                                    - htmDetConversaLinha:
+                                        Control: HtmlViewer@2.1.0
+                                        Properties:
+                                          Fill: =RGBA(255, 255, 255, 1)
+                                          Font: =Font.'Open Sans'
+                                          Height: =72
+                                          HtmlText: |-
+                                            ="<div style='font-family:Open Sans,Segoe UI,sans-serif;padding:6px 0;'>" &
+                                            "<div style='background:" &
+                                            If(ThisItem.autor_papel = "atendente", "#EEF2FF", "#F8FAFC") &
+                                            ";border-left:3px solid " &
+                                            If(ThisItem.autor_papel = "atendente", "#6046ED", "#CBD5E1") &
+                                            ";padding:8px 10px;'>" &
+                                            "<div style='font-size:10px;font-weight:700;color:#391694;'>" &
+                                            Left(ThisItem.autor_email, Coalesce(Find("@", ThisItem.autor_email), Len(ThisItem.autor_email) + 1) - 1) &
+                                            "<span style='color:#64748B;font-weight:400;'> &middot; " & Text(ThisItem.Created, "dd/mm hh:mm") & "</span>" &
+                                            If(ThisItem.interna = 1, "<span style='color:#B45309;font-weight:700;'> &middot; NOTA INTERNA</span>", "") &
+                                            "</div>" &
+                                            "<div style='font-size:11px;color:#334155;margin-top:4px;line-height:1.45;'>" &
+                                            Left(Substitute(Coalesce(ThisItem.mensagem, ""), "<", " "), 160) &
+                                            "</div></div></div>"
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                          PaddingTop: =0
+                                          Size: =10
+                                          Width: =Parent.Width
+                              - lblDetConversaVazio:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    Color: =RGBA(100, 116, 139, 1)
+                                    Font: =Font.'Open Sans'
+                                    Height: =40
+                                    Size: =9
+                                    Text: ="Nenhuma mensagem ainda. Use o campo abaixo para falar com o atendimento."
+                                    Visible: =And(Not(varDetCarregando), galDetConversa.AllItemsCount = 0)
+                                    Width: =galDetConversa.Width
+                                    X: =galDetConversa.X
+                                    Y: =galDetConversa.Y
+                              - txtDetMsg:
+                                  Control: Classic/TextInput@2.3.2
+                                  Properties:
+                                    BorderColor: =RGBA(203, 213, 225, 1)
+                                    BorderThickness: =1
+                                    Default: =""
+                                    DelayOutput: =true
+                                    DisplayMode: =If(varDetOcupadoDesde = Blank(), DisplayMode.Edit, DisplayMode.Disabled)
+                                    Fill: =RGBA(248, 250, 252, 1)
+                                    Font: =Font.'Open Sans'
+                                    Height: =38
+                                    HintText: ="Escreva uma mensagem para o atendimento"
+                                    HoverBorderColor: =RGBA(96, 70, 237, 1)
+                                    PaddingLeft: =10
+                                    RadiusBottomLeft: =0
+                                    RadiusBottomRight: =0
+                                    RadiusTopLeft: =0
+                                    RadiusTopRight: =0
+                                    Size: =10
+                                    Width: =galDetConversa.Width - 130
+                                    X: =galDetConversa.X
+                                    Y: =galDetConversa.Y + galDetConversa.Height + 12
+                              - btnDetEnviarMsg:
+                                  Control: Button@0.0.45
+                                  Properties:
+                                    BorderRadius: =0
+                                    FontSize: =11
+                                    Height: =38
+                                    Icon: ="Send"
+                                    IconStyle: ='ButtonCanvas.IconStyle'.Filled
+                                    Layout: ='ButtonCanvas.Layout'.IconBefore
+                                    OnSelect: |-
+                                      =If(
+                                          IsBlank(Trim(txtDetMsg.Text)),
+                                          Notify(
+                                              "Escreva a mensagem antes de enviar.",
+                                              NotificationType.Warning,
+                                              3000
+                                          ),
+
+                                          !IsBlank(varDetOcupadoDesde) && DateDiff(varDetOcupadoDesde, Now(), TimeUnit.Seconds) < 30,
+                                          Notify(
+                                              "Aguarde: o envio anterior ainda está sendo processado.",
+                                              NotificationType.Warning,
+                                              3000
+                                          ),
+
+                                          UpdateContext({varDetOcupadoDesde: Now()});
+                                          IfError(
+                                              Patch(
+                                                  tb_chamadoInteracao,
+                                                  Defaults(tb_chamadoInteracao),
+                                                  {
+                                                      id_fk_chamado: varChamado.desk_id,
+                                                      autor_email: varEmailUser,
+                                                      autor_papel: If(varDetPapel = "SOLICITANTE", "solicitante", "atendente"),
+                                                      mensagem: Trim(txtDetMsg.Text),
+                                                      interna: 0
+                                                  }
+                                              );
+                                              Collect(
+                                                  colDetInteracoes,
+                                                  {
+                                                      id_fk_chamado: varChamado.desk_id,
+                                                      Created: Now(),
+                                                      autor_email: varEmailUser,
+                                                      autor_papel: If(varDetPapel = "SOLICITANTE", "solicitante", "atendente"),
+                                                      mensagem: Trim(txtDetMsg.Text),
+                                                      interna: 0
+                                                  }
+                                              );
+                                              Reset(txtDetMsg);
+                                              Notify(
+                                                  "Mensagem enviada.",
+                                                  NotificationType.Success,
+                                                  2000
+                                              ),
+                                              Notify(
+                                                  "Não foi possível enviar a mensagem. Tente novamente.",
+                                                  NotificationType.Error,
+                                                  5000
+                                              )
+                                          );
+                                          UpdateContext({varDetOcupadoDesde: Blank()})
+                                      )
+                                    Text: ="Enviar"
+                                    Width: =118
+                                    X: =txtDetMsg.X + txtDetMsg.Width + 12
+                                    Y: =txtDetMsg.Y
+                              - recDetFooterDivider:
+                                  Control: Rectangle@2.3.0
+                                  Properties:
+                                    BorderColor: =RGBA(0, 0, 0, 0)
+                                    Fill: =RGBA(226, 232, 240, 1)
+                                    Height: =1
+                                    Width: =Parent.Width
+                                    Y: =Parent.Height - 92
+                              - txtDetObs:
+                                  Control: Classic/TextInput@2.3.2
+                                  Properties:
+                                    BorderColor: =If(varDetTentouAcao && IsBlank(Trim(Self.Text)), RGBA(220, 38, 38, 1), RGBA(203, 213, 225, 1))
+                                    BorderThickness: =1
+                                    Default: =""
+                                    DelayOutput: =true
+                                    Fill: =RGBA(248, 250, 252, 1)
+                                    Font: =Font.'Open Sans'
+                                    Height: =38
+                                    HintText: ="Observação da ação (obrigatória em resolver, recusar, cancelar e responder)"
+                                    HoverBorderColor: =RGBA(96, 70, 237, 1)
+                                    PaddingLeft: =10
+                                    RadiusBottomLeft: =0
+                                    RadiusBottomRight: =0
+                                    RadiusTopLeft: =0
+                                    RadiusTopRight: =0
+                                    Size: =10
+                                    Visible: =galDetAcoes.AllItemsCount > 0
+                                    Width: =Max(180, Parent.Width - galDetAcoes.Width - 72)
+                                    X: =24
+                                    Y: =Parent.Height - 66
+                              - galDetAcoes:
+                                  Control: Gallery@2.15.0
+                                  Variant: Horizontal
+                                  Properties:
+                                    BorderColor: =RGBA(226, 232, 240, 1)
+                                    BorderStyle: =BorderStyle.None
+                                    Fill: =RGBA(255, 255, 255, 1)
+                                    Height: =42
+                                    Items: |-
+                                      =Filter(
+                                          colChamTransicoes,
+                                          Ciclo = Coalesce(varChamado.desk_ciclo, "SUPORTE") &&
+                                          De = varChamado.desk_status &&
+                                          (
+                                              (Papel = "SOLICITANTE" && varDetSouSolicitante) ||
+                                              (Papel = "ATENDENTE" && (varDetPapel = "ATENDENTE" || varDetPapel = "GESTOR")) ||
+                                              (Papel = "GESTOR" && varDetPapel = "GESTOR")
+                                          )
+                                      )
+                                    LayoutMinHeight: =0
+                                    ShowScrollbar: =false
+                                    TemplatePadding: =0
+                                    TemplateSize: =172
+                                    Width: =Min(520, Max(172, 172 * CountRows(Self.AllItems)))
+                                    X: =Parent.Width - Self.Width - 24
+                                    Y: =Parent.Height - 66
+                                  Children:
+                                    - btnDetAcao:
+                                        Control: Button@0.0.45
+                                        Properties:
+                                          Appearance: =If(ThisItem.Conclui = "SIM", 'ButtonCanvas.Appearance'.Primary, 'ButtonCanvas.Appearance'.Secondary)
+                                          BorderRadius: =0
+                                          DisplayMode: =If(IsBlank(varDetOcupadoDesde), DisplayMode.Edit, DisplayMode.Disabled)
+                                          FontSize: =11
+                                          FontWeight: =FontWeight.Semibold
+                                          Height: =38
+                                          OnSelect: |-
+                                            =UpdateContext({varDetTentouAcao: true});
+                                            If(
+                                                !IsBlank(varDetOcupadoDesde) && DateDiff(varDetOcupadoDesde, Now(), TimeUnit.Seconds) < 30,
+                                                Notify(
+                                                    "Aguarde: a ação anterior ainda está sendo processada.",
+                                                    NotificationType.Warning,
+                                                    3000
+                                                ),
+
+                                                ThisItem.ExigeObs = "SIM" && IsBlank(Trim(txtDetObs.Text)),
+                                                Notify(
+                                                    "Escreva a observação antes de confirmar esta ação.",
+                                                    NotificationType.Warning,
+                                                    4000
+                                                ),
+
+                                                UpdateContext({varDetOcupadoDesde: Now()});
+                                                IfError(
+                                                    Patch(
+                                                        tbl_ServiceDesk,
+                                                        LookUp(
+                                                            tbl_ServiceDesk,
+                                                            desk_id = varChamado.desk_id
+                                                        ),
+                                                        {
+                                                            desk_status: ThisItem.Para,
+                                                            desk_atendente_email: If(
+                                                                ThisItem.Assume = "SIM",
+                                                                varEmailUser,
+                                                                varChamado.desk_atendente_email
+                                                            ),
+                                                            desk_atendente_nome: If(
+                                                                ThisItem.Assume = "SIM",
+                                                                varNomeUser,
+                                                                varChamado.desk_atendente_nome
+                                                            ),
+                                                            desk_data_primeira_resposta: Coalesce(
+                                                                varChamado.desk_data_primeira_resposta,
+                                                                If(
+                                                                    ThisItem.Papel <> "SOLICITANTE",
+                                                                    Now()
+                                                                )
+                                                            ),
+                                                            desk_data_conclusao: If(
+                                                                ThisItem.Conclui = "SIM",
+                                                                Now(),
+                                                                varChamado.desk_data_conclusao
+                                                            ),
+                                                            desk_solucao: If(
+                                                                ThisItem.Para = "Resolvido",
+                                                                Trim(txtDetObs.Text),
+                                                                varChamado.desk_solucao
+                                                            ),
+                                                            desk_motivo_recusa: If(
+                                                                ThisItem.Para = "Reprovado",
+                                                                Trim(txtDetObs.Text),
+                                                                varChamado.desk_motivo_recusa
+                                                            )
+                                                        }
+                                                    );
+                                                    Patch(
+                                                        tb_chamadoHistorico,
+                                                        Defaults(tb_chamadoHistorico),
+                                                        {
+                                                            id_fk_chamado: varChamado.desk_id,
+                                                            status_de: varChamado.desk_status,
+                                                            status_para: ThisItem.Para,
+                                                            autor_email: varEmailUser,
+                                                            observacao: Trim(txtDetObs.Text)
+                                                        }
+                                                    );
+                                                    Set(
+                                                        varChamado,
+                                                        LookUp(
+                                                            tbl_ServiceDesk,
+                                                            desk_id = varChamado.desk_id
+                                                        )
+                                                    );
+                                                    ClearCollect(
+                                                        colDetHistorico,
+                                                        Sort(
+                                                            Filter(
+                                                                tb_chamadoHistorico,
+                                                                id_fk_chamado = varChamado.desk_id
+                                                            ),
+                                                            Created,
+                                                            SortOrder.Descending
+                                                        )
+                                                    );
+                                                    Reset(txtDetObs);
+                                                    UpdateContext({varDetTentouAcao: false});
+                                                    Notify(
+                                                        "Chamado atualizado para " & ThisItem.Para & ".",
+                                                        NotificationType.Success,
+                                                        3000
+                                                    ),
+                                                    Notify(
+                                                        "Não foi possível atualizar o chamado. Nada foi alterado além do que já aparece na linha do tempo.",
+                                                        NotificationType.Error,
+                                                        6000
+                                                    )
+                                                );
+                                                UpdateContext({varDetOcupadoDesde: Blank()})
+                                            )
+                                          Text: =ThisItem.Rotulo
+                                          Width: =160
+                                          X: =0
+                                          Y: =2
+                              - lblDetSemAcao:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    Align: =Align.Right
+                                    Color: =RGBA(100, 116, 139, 1)
+                                    Font: =Font.'Open Sans'
+                                    Height: =38
+                                    Size: =9
+                                    Text: ="Nenhuma ação disponível para você neste estado."
+                                    Visible: =And(Not(varDetCarregando), galDetAcoes.AllItemsCount = 0)
+                                    Width: =300
+                                    X: =Parent.Width - Self.Width - 24
+                                    Y: =Parent.Height - 66
+                              - cntDetLoading:
+                                  Control: GroupContainer@1.5.0
+                                  Variant: ManualLayout
+                                  Properties:
+                                    DropShadow: =DropShadow.None
+                                    Fill: =RGBA(255, 255, 255, 0.9)
+                                    Height: =Parent.Height
+                                    RadiusBottomLeft: =0
+                                    RadiusBottomRight: =0
+                                    RadiusTopLeft: =0
+                                    RadiusTopRight: =0
+                                    Visible: =varDetCarregando
+                                    Width: =Parent.Width
+                                  Children:
+                                    - lblDetLoading:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          Align: =Align.Center
+                                          Color: =RGBA(57, 22, 148, 1)
+                                          Font: =Font.'Open Sans'
+                                          FontWeight: =FontWeight.Bold
+                                          Height: =28
+                                          Size: =13
+                                          Text: ="Carregando o chamado..."
+                                          Width: =Parent.Width - 32
+                                          X: =16
+                                          Y: =(Parent.Height - Self.Height) / 2

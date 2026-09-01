@@ -1,0 +1,620 @@
+Screens:
+  ScreenMeusChamados:
+    Properties:
+      Fill: =RGBA(247, 247, 247, 1)
+      LoadingSpinnerColor: =RGBA(96, 70, 237, 1)
+      OnVisible: |-
+        =UpdateContext(
+            {
+                varChamCarregando: true,
+                varChamFiltro: "ABERTOS",
+                varChamEmail: Coalesce(varEmailUser, "@@SEM-LOGIN@@")
+            }
+        );
+        Reset(txtChamBusca);
+        ClearCollect(
+            colChamStatus,
+            Table(
+                {Status: "Aberto",                 Hex: "#6046ED", Fundo: "#EEF2FF", Aberto: "SIM", ComVoce: "NAO", Etapa: 1},
+                {Status: "Em atendimento",         Hex: "#0284C7", Fundo: "#E0F2FE", Aberto: "SIM", ComVoce: "NAO", Etapa: 2},
+                {Status: "Aguardando usuário",     Hex: "#B45309", Fundo: "#FFF7ED", Aberto: "SIM", ComVoce: "SIM", Etapa: 2},
+                {Status: "Resolvido",              Hex: "#15803D", Fundo: "#DCFCE7", Aberto: "NAO", ComVoce: "SIM", Etapa: 3},
+                {Status: "Reaberto",               Hex: "#BE185D", Fundo: "#FDF2F8", Aberto: "SIM", ComVoce: "NAO", Etapa: 2},
+                {Status: "Em análise",             Hex: "#0284C7", Fundo: "#E0F2FE", Aberto: "SIM", ComVoce: "NAO", Etapa: 2},
+                {Status: "Aguardando informações", Hex: "#B45309", Fundo: "#FFF7ED", Aberto: "SIM", ComVoce: "SIM", Etapa: 2},
+                {Status: "Aguardando aprovação",   Hex: "#6D28D9", Fundo: "#F5F3FF", Aberto: "SIM", ComVoce: "NAO", Etapa: 3},
+                {Status: "Em backlog",             Hex: "#475569", Fundo: "#F1F5F9", Aberto: "SIM", ComVoce: "NAO", Etapa: 4},
+                {Status: "Em desenvolvimento",     Hex: "#0284C7", Fundo: "#E0F2FE", Aberto: "SIM", ComVoce: "NAO", Etapa: 5},
+                {Status: "Em homologação",         Hex: "#B45309", Fundo: "#FFF7ED", Aberto: "SIM", ComVoce: "SIM", Etapa: 6},
+                {Status: "Ajustes solicitados",    Hex: "#BE185D", Fundo: "#FDF2F8", Aberto: "SIM", ComVoce: "NAO", Etapa: 6},
+                {Status: "Entregue",               Hex: "#15803D", Fundo: "#DCFCE7", Aberto: "NAO", ComVoce: "NAO", Etapa: 7},
+                {Status: "Reprovado",              Hex: "#B91C1C", Fundo: "#FEF2F2", Aberto: "NAO", ComVoce: "NAO", Etapa: 0},
+                {Status: "Cancelado",              Hex: "#64748B", Fundo: "#F1F5F9", Aberto: "NAO", ComVoce: "NAO", Etapa: 0},
+                {Status: "Fechado",                Hex: "#64748B", Fundo: "#F1F5F9", Aberto: "NAO", ComVoce: "NAO", Etapa: 7}
+            )
+        );
+        ClearCollect(
+            colChamEtapas,
+            Table(
+                {N: 1, Nome: "Recebida"},
+                {N: 2, Nome: "Em análise"},
+                {N: 3, Nome: "Em aprovação"},
+                {N: 4, Nome: "Aprovada"},
+                {N: 5, Nome: "Desenvolvimento"},
+                {N: 6, Nome: "Homologação"},
+                {N: 7, Nome: "Entregue"}
+            )
+        );
+        ClearCollect(
+            colMeusChamados,
+            Sort(
+                Filter(
+                    tbl_ServiceDesk,
+                    desk_solicitante_email = varChamEmail
+                ),
+                desk_id,
+                SortOrder.Descending
+            )
+        );
+        UpdateContext({varChamCarregando: false})
+    Children:
+      - ContainerMeusChamados_1:
+          Control: GroupContainer@1.5.0
+          Variant: ManualLayout
+          Properties:
+            DropShadow: =DropShadow.None
+            Fill: =RGBA(247, 247, 247, 1)
+            Height: =Parent.Height
+            RadiusBottomLeft: =0
+            RadiusBottomRight: =0
+            RadiusTopLeft: =0
+            RadiusTopRight: =0
+            Width: =Parent.Width
+          Children:
+            - HeaderTitleMeusChamados:
+                Control: CanvasComponent
+                ComponentName: HeaderTitle
+                Properties:
+                  Height: =50
+                  IconVisible: =true
+                  ScreenNavigator: =Home
+                  Width: =Parent.Width
+                  var_subtitulo1: ="Suporte e atendimento"
+                  var_subtitulo2: =""
+                  var_tituloModulo: ="Meus Chamados"
+            - cntChamMain:
+                Control: GroupContainer@1.5.0
+                Variant: ManualLayout
+                Properties:
+                  DropShadow: =DropShadow.None
+                  Fill: =RGBA(247, 247, 247, 1)
+                  Height: =Parent.Height - HeaderTitleMeusChamados.Height
+                  RadiusBottomLeft: =0
+                  RadiusBottomRight: =0
+                  RadiusTopLeft: =0
+                  RadiusTopRight: =0
+                  Width: =Parent.Width
+                  Y: =HeaderTitleMeusChamados.Height
+                Children:
+                  - cntChamShell:
+                      Control: GroupContainer@1.5.0
+                      Variant: ManualLayout
+                      Properties:
+                        BorderStyle: =BorderStyle.None
+                        DropShadow: =DropShadow.None
+                        Height: =Parent.Height - If(Parent.Height < 700, 16, 48)
+                        RadiusBottomLeft: =0
+                        RadiusBottomRight: =0
+                        RadiusTopLeft: =0
+                        RadiusTopRight: =0
+                        Width: =Max(300, Parent.Width - If(Parent.Width < 700, 16, 64))
+                        X: =(Parent.Width - Self.Width) / 2
+                        Y: =If(Parent.Height < 700, 8, 24)
+                      Children:
+                        - cntChamSidebar:
+                            Control: GroupContainer@1.5.0
+                            Variant: ManualLayout
+                            Properties:
+                              DropShadow: =DropShadow.None
+                              Fill: =RGBA(57, 22, 148, 1)
+                              Height: =Parent.Height-4
+                              RadiusBottomLeft: =0
+                              RadiusBottomRight: =0
+                              RadiusTopLeft: =0
+                              RadiusTopRight: =0
+                              Visible: =Parent.Width >= 900
+                              Width: =300
+                              Y: =2
+                            Children:
+                              - recChamSidebarOverlay:
+                                  Control: Rectangle@2.3.0
+                                  Properties:
+                                    BorderColor: =RGBA(0, 0, 0, 0)
+                                    Fill: =RGBA(0, 38, 255, 0.16)
+                                    Height: =Parent.Height
+                                    Width: =Parent.Width
+                              - lblChamBrand:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    AutoHeight: =true
+                                    Color: =RGBA(255, 255, 255, 1)
+                                    Font: =Font.'Open Sans'
+                                    FontWeight: =FontWeight.Bold
+                                    PaddingBottom: =0
+                                    PaddingLeft: =0
+                                    PaddingRight: =0
+                                    PaddingTop: =0
+                                    Size: =24
+                                    Text: ="Airport Now"
+                                    Width: =240
+                                    X: =28
+                                    Y: =34
+                              - lblChamSideTitle:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    AutoHeight: =true
+                                    Color: =RGBA(255, 255, 255, 0.72)
+                                    Font: =Font.'Open Sans'
+                                    PaddingBottom: =0
+                                    PaddingLeft: =0
+                                    PaddingRight: =0
+                                    PaddingTop: =0
+                                    Size: =11
+                                    Text: ="Seus chamados e demandas"
+                                    Width: =240
+                                    X: =28
+                                    Y: =75
+                              - recChamSideDivider:
+                                  Control: Rectangle@2.3.0
+                                  Properties:
+                                    BorderColor: =RGBA(0, 0, 0, 0)
+                                    Fill: =RGBA(255, 255, 255, 0.18)
+                                    Height: =1
+                                    Width: =244
+                                    X: =28
+                                    Y: =117
+                              - htmChamResumo:
+                                  Control: HtmlViewer@2.1.0
+                                  Properties:
+                                    Font: =Font.'Open Sans'
+                                    Height: =252
+                                    HtmlText: |-
+                                      ="<div style='font-family:Open Sans,Segoe UI,sans-serif;'>" &
+                                      "<div style='font-size:12px;font-weight:600;color:rgba(255,255,255,.92);margin-bottom:14px;'>Resumo</div>" &
+                                      "<table style='width:100%;border-collapse:collapse;'>" &
+                                      "<tr><td style='padding:9px 0;font-size:12px;color:rgba(255,255,255,.78);'>Em aberto</td>" &
+                                      "<td style='text-align:right;font-size:20px;font-weight:800;color:#FFFFFF;'>" &
+                                      CountRows(Filter(colMeusChamados, LookUp(colChamStatus, Status = desk_status, Aberto) = "SIM")) & "</td></tr>" &
+                                      "<tr><td style='padding:9px 0;font-size:12px;color:rgba(255,255,255,.78);'>Aguardando você</td>" &
+                                      "<td style='text-align:right;font-size:20px;font-weight:800;color:#FDBA74;'>" &
+                                      CountRows(Filter(colMeusChamados, LookUp(colChamStatus, Status = desk_status, ComVoce) = "SIM")) & "</td></tr>" &
+                                      "<tr><td style='padding:9px 0;font-size:12px;color:rgba(255,255,255,.78);'>Demandas</td>" &
+                                      "<td style='text-align:right;font-size:20px;font-weight:800;color:#FFFFFF;'>" &
+                                      CountRows(Filter(colMeusChamados, desk_ciclo = "DEMANDA")) & "</td></tr>" &
+                                      "<tr><td style='padding:9px 0;border-top:1px solid rgba(255,255,255,.18);font-size:12px;color:rgba(255,255,255,.6);'>Total</td>" &
+                                      "<td style='text-align:right;border-top:1px solid rgba(255,255,255,.18);font-size:20px;font-weight:800;color:rgba(255,255,255,.72);'>" &
+                                      CountRows(colMeusChamados) & "</td></tr>" &
+                                      "</table></div>"
+                                    PaddingBottom: =0
+                                    PaddingLeft: =0
+                                    PaddingRight: =0
+                                    PaddingTop: =0
+                                    Size: =11
+                                    Width: =244
+                                    X: =28
+                                    Y: =144
+                              - cntChamAjuda:
+                                  Control: GroupContainer@1.5.0
+                                  Variant: ManualLayout
+                                  Properties:
+                                    BorderColor: =RGBA(255, 255, 255, 0.16)
+                                    BorderThickness: =1
+                                    DropShadow: =DropShadow.None
+                                    Fill: =RGBA(255, 255, 255, 0.08)
+                                    Height: =94
+                                    RadiusBottomLeft: =0
+                                    RadiusBottomRight: =0
+                                    RadiusTopLeft: =0
+                                    RadiusTopRight: =0
+                                    Width: =244
+                                    X: =28
+                                    Y: =Parent.Height - 122
+                                  Children:
+                                    - lblChamAjudaTitle:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          Color: =RGBA(255, 255, 255, 1)
+                                          Font: =Font.'Open Sans'
+                                          FontWeight: =FontWeight.Semibold
+                                          Height: =24
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                          PaddingTop: =0
+                                          Size: =10
+                                          Text: ="Aguardando você"
+                                          Width: =204
+                                          X: =18
+                                          Y: =14
+                                    - lblChamAjudaText:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          AutoHeight: =true
+                                          Color: =RGBA(255, 255, 255, 0.68)
+                                          Font: =Font.'Open Sans'
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                          PaddingTop: =0
+                                          Size: =9
+                                          Text: ="Chamados nesse estado estão parados esperando a sua resposta ou o seu aceite."
+                                          Width: =204
+                                          X: =18
+                                          Y: =40
+                        - cntChamPanel:
+                            Control: GroupContainer@1.5.0
+                            Variant: ManualLayout
+                            Properties:
+                              BorderColor: =RGBA(226, 232, 240, 1)
+                              BorderThickness: =1
+                              DropShadow: =DropShadow.None
+                              Fill: =RGBA(255, 255, 255, 1)
+                              Height: =Parent.Height-4
+                              RadiusBottomLeft: =0
+                              RadiusBottomRight: =0
+                              RadiusTopLeft: =0
+                              RadiusTopRight: =0
+                              Width: =Parent.Width - Self.X
+                              X: =If(cntChamSidebar.Visible, 324, 0)
+                              Y: =2
+                            Children:
+                              - lblChamEyebrow:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    Color: =RGBA(96, 70, 237, 1)
+                                    Font: =Font.'Open Sans'
+                                    FontWeight: =FontWeight.Bold
+                                    Height: =20
+                                    PaddingBottom: =0
+                                    PaddingLeft: =0
+                                    PaddingRight: =0
+                                    PaddingTop: =0
+                                    Size: =9
+                                    Text: ="CENTRAL DE ATENDIMENTO"
+                                    Width: =260
+                                    X: =If(Parent.Width < 600, 18, 28)
+                                    Y: =20
+                              - lblChamTitulo:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    AutoHeight: =true
+                                    Color: =RGBA(15, 23, 42, 1)
+                                    Font: =Font.'Open Sans'
+                                    FontWeight: =FontWeight.Bold
+                                    PaddingBottom: =0
+                                    PaddingLeft: =0
+                                    PaddingRight: =0
+                                    PaddingTop: =0
+                                    Size: =22
+                                    Text: ="Acompanhe suas solicitações"
+                                    Width: =Parent.Width - Self.X - 220
+                                    X: =If(Parent.Width < 600, 18, 28)
+                                    Y: =42
+                              - lblChamSubtitulo:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    AutoHeight: =true
+                                    Color: =RGBA(100, 116, 139, 1)
+                                    Font: =Font.'Open Sans'
+                                    PaddingBottom: =0
+                                    PaddingLeft: =0
+                                    PaddingRight: =0
+                                    PaddingTop: =0
+                                    Size: =10
+                                    Text: ="Toque em um chamado para ver o andamento completo."
+                                    Width: =Parent.Width - Self.X - 220
+                                    X: =If(Parent.Width < 600, 18, 28)
+                                    Y: =76
+                              - btnChamNovo:
+                                  Control: Button@0.0.45
+                                  Properties:
+                                    BorderRadius: =0
+                                    FontWeight: =FontWeight.Semibold
+                                    Height: =42
+                                    Icon: ="Add"
+                                    IconStyle: ='ButtonCanvas.IconStyle'.Filled
+                                    Layout: ='ButtonCanvas.Layout'.IconBefore
+                                    OnSelect: |-
+                                      =Navigate(
+                                          ScreenServiceDeskForm,
+                                          ScreenTransition.Fade
+                                      )
+                                    Text: ="Abrir chamado"
+                                    Visible: =Parent.Width >= 520
+                                    Width: =162
+                                    X: =Parent.Width - Self.Width - 28
+                                    Y: =40
+                              - recChamHeaderDivider:
+                                  Control: Rectangle@2.3.0
+                                  Properties:
+                                    BorderColor: =RGBA(0, 0, 0, 0)
+                                    Fill: =RGBA(226, 232, 240, 1)
+                                    Height: =1
+                                    Width: =Parent.Width
+                                    Y: =108
+                              - btnChamFiltroAbertos:
+                                  Control: Button@0.0.45
+                                  Properties:
+                                    Appearance: =If(varChamFiltro = "ABERTOS", 'ButtonCanvas.Appearance'.Primary, 'ButtonCanvas.Appearance'.Secondary)
+                                    BorderRadius: =0
+                                    FontSize: =11
+                                    Height: =34
+                                    OnSelect: |-
+                                      =UpdateContext({varChamFiltro: "ABERTOS"})
+                                    Text: ="Em aberto"
+                                    Width: =108
+                                    X: =If(Parent.Width < 600, 18, 28)
+                                    Y: =126
+                              - btnChamFiltroVoce:
+                                  Control: Button@0.0.45
+                                  Properties:
+                                    Appearance: =If(varChamFiltro = "VOCE", 'ButtonCanvas.Appearance'.Primary, 'ButtonCanvas.Appearance'.Secondary)
+                                    BorderRadius: =0
+                                    FontSize: =11
+                                    Height: =34
+                                    OnSelect: |-
+                                      =UpdateContext({varChamFiltro: "VOCE"})
+                                    Text: ="Aguardando você"
+                                    Width: =140
+                                    X: =btnChamFiltroAbertos.X + btnChamFiltroAbertos.Width + 8
+                                    Y: =126
+                              - btnChamFiltroConcluidos:
+                                  Control: Button@0.0.45
+                                  Properties:
+                                    Appearance: =If(varChamFiltro = "CONCLUIDOS", 'ButtonCanvas.Appearance'.Primary, 'ButtonCanvas.Appearance'.Secondary)
+                                    BorderRadius: =0
+                                    FontSize: =11
+                                    Height: =34
+                                    OnSelect: |-
+                                      =UpdateContext({varChamFiltro: "CONCLUIDOS"})
+                                    Text: ="Concluídos"
+                                    Width: =108
+                                    X: =btnChamFiltroVoce.X + btnChamFiltroVoce.Width + 8
+                                    Y: =126
+                              - btnChamFiltroTodos:
+                                  Control: Button@0.0.45
+                                  Properties:
+                                    Appearance: =If(varChamFiltro = "TODOS", 'ButtonCanvas.Appearance'.Primary, 'ButtonCanvas.Appearance'.Secondary)
+                                    BorderRadius: =0
+                                    FontSize: =11
+                                    Height: =34
+                                    OnSelect: |-
+                                      =UpdateContext({varChamFiltro: "TODOS"})
+                                    Text: ="Todos"
+                                    Width: =84
+                                    X: =btnChamFiltroConcluidos.X + btnChamFiltroConcluidos.Width + 8
+                                    Y: =126
+                              - txtChamBusca:
+                                  Control: Classic/TextInput@2.3.2
+                                  Properties:
+                                    BorderColor: =RGBA(203, 213, 225, 1)
+                                    BorderThickness: =1
+                                    Default: =""
+                                    DelayOutput: =true
+                                    Fill: =RGBA(248, 250, 252, 1)
+                                    Font: =Font.'Open Sans'
+                                    Height: =34
+                                    HintText: ="Buscar na descrição ou na categoria"
+                                    HoverBorderColor: =RGBA(96, 70, 237, 1)
+                                    PaddingLeft: =10
+                                    RadiusBottomLeft: =0
+                                    RadiusBottomRight: =0
+                                    RadiusTopLeft: =0
+                                    RadiusTopRight: =0
+                                    Size: =10
+                                    Visible: =Parent.Width >= 760
+                                    Width: =Max(160, Parent.Width - Self.X - 28)
+                                    X: =btnChamFiltroTodos.X + btnChamFiltroTodos.Width + 16
+                                    Y: =126
+                              - lblChamContador:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    Color: =RGBA(100, 116, 139, 1)
+                                    Font: =Font.'Open Sans'
+                                    Height: =20
+                                    PaddingBottom: =0
+                                    PaddingLeft: =0
+                                    PaddingRight: =0
+                                    PaddingTop: =0
+                                    Size: =9
+                                    Text: =galChamados.AllItemsCount & " de " & CountRows(colMeusChamados) & " chamado(s)"
+                                    Width: =300
+                                    X: =If(Parent.Width < 600, 18, 28)
+                                    Y: =170
+                              - galChamados:
+                                  Control: Gallery@2.15.0
+                                  Variant: Vertical
+                                  Properties:
+                                    BorderColor: =RGBA(226, 232, 240, 1)
+                                    BorderStyle: =BorderStyle.None
+                                    Fill: =RGBA(255, 255, 255, 1)
+                                    Height: =Parent.Height - Self.Y - 20
+                                    Items: |-
+                                      =Search(
+                                          Filter(
+                                              colMeusChamados,
+                                              varChamFiltro = "TODOS" ||
+                                              (varChamFiltro = "ABERTOS" && LookUp(colChamStatus, Status = desk_status, Aberto) = "SIM") ||
+                                              (varChamFiltro = "VOCE" && LookUp(colChamStatus, Status = desk_status, ComVoce) = "SIM") ||
+                                              (varChamFiltro = "CONCLUIDOS" && LookUp(colChamStatus, Status = desk_status, Aberto) = "NAO")
+                                          ),
+                                          txtChamBusca.Text,
+                                          "desk_descricao",
+                                          "desk_categoria"
+                                      )
+                                    LayoutMinHeight: =0
+                                    ShowScrollbar: =true
+                                    TemplatePadding: =0
+                                    TemplateSize: =96
+                                    Visible: =And(Not(varChamCarregando), Self.AllItemsCount > 0)
+                                    Width: =Parent.Width - (2 * Self.X)
+                                    X: =If(Parent.Width < 600, 18, 28)
+                                    Y: =194
+                                  Children:
+                                    - htmChamLinha:
+                                        Control: HtmlViewer@2.1.0
+                                        Properties:
+                                          Fill: =RGBA(255, 255, 255, 1)
+                                          Font: =Font.'Open Sans'
+                                          Height: =94
+                                          HtmlText: |-
+                                            ="<table style='width:100%;border-collapse:collapse;border-left:3px solid " &
+                                            Coalesce(LookUp(colChamStatus, Status = ThisItem.desk_status, Hex), "#CBD5E1") &
+                                            ";border-bottom:1px solid #E2E8F0;font-family:Open Sans,Segoe UI,sans-serif;'><tr>" &
+                                            "<td style='width:96px;vertical-align:top;padding:14px 0 0 12px;'>" &
+                                            "<div style='font-size:15px;font-weight:800;color:#391694;'>#" & Text(ThisItem.desk_id, "000000") & "</div>" &
+                                            "<div style='font-size:10px;color:#64748B;margin-top:4px;'>" &
+                                            If(IsBlank(ThisItem.Created), "—", Text(ThisItem.Created, "dd/mm/yyyy")) &
+                                            "</div></td>" &
+                                            "<td style='vertical-align:top;padding:14px 12px 0 4px;'>" &
+                                            "<div style='font-size:13px;font-weight:700;color:#0F172A;'>" & Coalesce(ThisItem.desk_categoria, "Sem categoria") & "</div>" &
+                                            "<div style='font-size:11px;color:#64748B;margin-top:5px;line-height:1.45;'>" &
+                                            Left(Substitute(Substitute(Coalesce(ThisItem.desk_descricao, ""), "<", " "), Char(10), " "), 130) &
+                                            If(Len(Coalesce(ThisItem.desk_descricao, "")) > 130, "...", "") &
+                                            "</div></td>" &
+                                            "<td style='width:180px;vertical-align:top;text-align:right;padding:14px 12px 0 0;'>" &
+                                            "<span style='display:inline-block;background:" &
+                                            Coalesce(LookUp(colChamStatus, Status = ThisItem.desk_status, Fundo), "#F1F5F9") &
+                                            ";color:" & Coalesce(LookUp(colChamStatus, Status = ThisItem.desk_status, Hex), "#64748B") &
+                                            ";padding:5px 10px;font-size:10px;font-weight:700;letter-spacing:.03em;'>" &
+                                            Upper(Coalesce(ThisItem.desk_status, "SEM STATUS")) & "</span>" &
+                                            If(
+                                                ThisItem.desk_ciclo = "DEMANDA",
+                                                "<div style='font-size:10px;color:#6D28D9;font-weight:700;margin-top:7px;'>DEMANDA &middot; ETAPA " &
+                                                Coalesce(LookUp(colChamStatus, Status = ThisItem.desk_status, Etapa), 1) & " DE 7</div>",
+                                                ""
+                                            ) &
+                                            "</td></tr></table>"
+                                          OnSelect: |-
+                                            =Set(
+                                                varChamado,
+                                                ThisItem
+                                            );
+                                            Set(
+                                                varChamadoOrigem,
+                                                "MEUS"
+                                            );
+                                            Navigate(
+                                                ScreenChamadoDetalhe,
+                                                ScreenTransition.CoverRight
+                                            )
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                          PaddingTop: =0
+                                          Size: =11
+                                          Width: =Parent.Width
+                              - cntChamVazio:
+                                  Control: GroupContainer@1.5.0
+                                  Variant: ManualLayout
+                                  Properties:
+                                    BorderColor: =RGBA(226, 232, 240, 1)
+                                    BorderThickness: =1
+                                    DropShadow: =DropShadow.None
+                                    Fill: =RGBA(248, 250, 252, 1)
+                                    Height: =184
+                                    RadiusBottomLeft: =0
+                                    RadiusBottomRight: =0
+                                    RadiusTopLeft: =0
+                                    RadiusTopRight: =0
+                                    Visible: =And(Not(varChamCarregando), galChamados.AllItemsCount = 0)
+                                    Width: =Parent.Width - (2 * Self.X)
+                                    X: =If(Parent.Width < 600, 18, 28)
+                                    Y: =194
+                                  Children:
+                                    - lblChamVazioTitulo:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          Align: =Align.Center
+                                          Color: =RGBA(15, 23, 42, 1)
+                                          Font: =Font.'Open Sans'
+                                          FontWeight: =FontWeight.Semibold
+                                          Height: =28
+                                          Size: =13
+                                          Text: |-
+                                            =If(
+                                                varChamEmail = "@@SEM-LOGIN@@",
+                                                "Sessão não identificada",
+                                                CountRows(colMeusChamados) = 0,
+                                                "Você ainda não abriu nenhum chamado",
+                                                "Nenhum chamado neste filtro"
+                                            )
+                                          Width: =Parent.Width - 48
+                                          X: =24
+                                          Y: =46
+                                    - lblChamVazioTexto:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          Align: =Align.Center
+                                          AutoHeight: =true
+                                          Color: =RGBA(100, 116, 139, 1)
+                                          Font: =Font.'Open Sans'
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                          PaddingTop: =0
+                                          Size: =10
+                                          Text: |-
+                                            =If(
+                                                varChamEmail = "@@SEM-LOGIN@@",
+                                                "Entre novamente pela tela de login para ver os seus chamados.",
+                                                CountRows(colMeusChamados) = 0,
+                                                "Quando você abrir um chamado, ele aparece aqui com todo o andamento.",
+                                                "Tente outro filtro ou limpe a busca."
+                                            )
+                                          Width: =Parent.Width - 96
+                                          X: =48
+                                          Y: =82
+                                    - btnChamVazioAcao:
+                                        Control: Button@0.0.45
+                                        Properties:
+                                          BorderRadius: =0
+                                          FontSize: =11
+                                          Height: =36
+                                          OnSelect: |-
+                                            =Navigate(
+                                                ScreenServiceDeskForm,
+                                                ScreenTransition.Fade
+                                            )
+                                          Text: ="Abrir chamado"
+                                          Visible: =And(varChamEmail <> "@@SEM-LOGIN@@", CountRows(colMeusChamados) = 0)
+                                          Width: =150
+                                          X: =(Parent.Width - Self.Width) / 2
+                                          Y: =128
+                              - cntChamLoading:
+                                  Control: GroupContainer@1.5.0
+                                  Variant: ManualLayout
+                                  Properties:
+                                    DropShadow: =DropShadow.None
+                                    Fill: =RGBA(255, 255, 255, 0.9)
+                                    Height: =Parent.Height
+                                    RadiusBottomLeft: =0
+                                    RadiusBottomRight: =0
+                                    RadiusTopLeft: =0
+                                    RadiusTopRight: =0
+                                    Visible: =varChamCarregando
+                                    Width: =Parent.Width
+                                  Children:
+                                    - lblChamLoading:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          Align: =Align.Center
+                                          Color: =RGBA(57, 22, 148, 1)
+                                          Font: =Font.'Open Sans'
+                                          FontWeight: =FontWeight.Bold
+                                          Height: =28
+                                          Size: =13
+                                          Text: ="Carregando seus chamados..."
+                                          Width: =Parent.Width - 32
+                                          X: =16
+                                          Y: =(Parent.Height - Self.Height) / 2

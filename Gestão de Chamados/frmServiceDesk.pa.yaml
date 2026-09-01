@@ -1,0 +1,640 @@
+Screens:
+  frmServiceDesk:
+    Properties:
+      Fill: =RGBA(247, 247, 247, 1)
+      LoadingSpinnerColor: =RGBA(96, 70, 237, 1)
+      OnVisible: |-
+        =UpdateContext(
+            {
+                varFilaCarregando: true,
+                varFilaAba: "FILA",
+                varFilaPapel: Switch(
+                    Upper(Trim(Coalesce(userRecord.usr_papel_chamados, ""))),
+                    "GESTOR",
+                    "GESTOR",
+                    "ATENDENTE",
+                    "ATENDENTE",
+                    "SOLICITANTE"
+                )
+            }
+        );
+        Reset(txtFilaBusca);
+        ClearCollect(
+            colChamStatus,
+            Table(
+                {Status: "Aberto",                 Hex: "#6046ED", Fundo: "#EEF2FF", Fila: "SIM", Aprovar: "NAO"},
+                {Status: "Em atendimento",         Hex: "#0284C7", Fundo: "#E0F2FE", Fila: "NAO", Aprovar: "NAO"},
+                {Status: "Aguardando usuário",     Hex: "#B45309", Fundo: "#FFF7ED", Fila: "NAO", Aprovar: "NAO"},
+                {Status: "Reaberto",               Hex: "#BE185D", Fundo: "#FDF2F8", Fila: "SIM", Aprovar: "NAO"},
+                {Status: "Em análise",             Hex: "#0284C7", Fundo: "#E0F2FE", Fila: "NAO", Aprovar: "NAO"},
+                {Status: "Aguardando informações", Hex: "#B45309", Fundo: "#FFF7ED", Fila: "NAO", Aprovar: "NAO"},
+                {Status: "Aguardando aprovação",   Hex: "#6D28D9", Fundo: "#F5F3FF", Fila: "NAO", Aprovar: "SIM"},
+                {Status: "Em backlog",             Hex: "#475569", Fundo: "#F1F5F9", Fila: "SIM", Aprovar: "NAO"},
+                {Status: "Em desenvolvimento",     Hex: "#0284C7", Fundo: "#E0F2FE", Fila: "NAO", Aprovar: "NAO"},
+                {Status: "Em homologação",         Hex: "#B45309", Fundo: "#FFF7ED", Fila: "NAO", Aprovar: "NAO"},
+                {Status: "Ajustes solicitados",    Hex: "#BE185D", Fundo: "#FDF2F8", Fila: "SIM", Aprovar: "NAO"},
+                {Status: "Resolvido",              Hex: "#15803D", Fundo: "#DCFCE7", Fila: "NAO", Aprovar: "NAO"},
+                {Status: "Entregue",               Hex: "#15803D", Fundo: "#DCFCE7", Fila: "NAO", Aprovar: "NAO"},
+                {Status: "Reprovado",              Hex: "#B91C1C", Fundo: "#FEF2F2", Fila: "NAO", Aprovar: "NAO"}
+            )
+        );
+        If(
+            varFilaPapel = "SOLICITANTE",
+            Clear(colFila),
+            ClearCollect(
+                colFila,
+                Sort(
+                    Filter(
+                        tbl_ServiceDesk,
+                        desk_status <> "Fechado" And desk_status <> "Cancelado"
+                    ),
+                    desk_id,
+                    SortOrder.Descending
+                )
+            )
+        );
+        UpdateContext({varFilaCarregando: false})
+    Children:
+      - ContainerFila_1:
+          Control: GroupContainer@1.5.0
+          Variant: ManualLayout
+          Properties:
+            DropShadow: =DropShadow.None
+            Fill: =RGBA(247, 247, 247, 1)
+            Height: =Parent.Height
+            RadiusBottomLeft: =0
+            RadiusBottomRight: =0
+            RadiusTopLeft: =0
+            RadiusTopRight: =0
+            Width: =Parent.Width
+          Children:
+            - HeaderTitleFila:
+                Control: CanvasComponent
+                ComponentName: HeaderTitle
+                Properties:
+                  Height: =50
+                  IconVisible: =true
+                  ScreenNavigator: =frmAdmin
+                  Width: =Parent.Width
+                  var_subtitulo1: ="Administração"
+                  var_subtitulo2: =""
+                  var_tituloModulo: ="Service Desk"
+            - cntFilaMain:
+                Control: GroupContainer@1.5.0
+                Variant: ManualLayout
+                Properties:
+                  DropShadow: =DropShadow.None
+                  Fill: =RGBA(247, 247, 247, 1)
+                  Height: =Parent.Height - HeaderTitleFila.Height
+                  RadiusBottomLeft: =0
+                  RadiusBottomRight: =0
+                  RadiusTopLeft: =0
+                  RadiusTopRight: =0
+                  Width: =Parent.Width
+                  Y: =HeaderTitleFila.Height
+                Children:
+                  - cntFilaShell:
+                      Control: GroupContainer@1.5.0
+                      Variant: ManualLayout
+                      Properties:
+                        BorderStyle: =BorderStyle.None
+                        DropShadow: =DropShadow.None
+                        Height: =Parent.Height - If(Parent.Height < 700, 16, 48)
+                        RadiusBottomLeft: =0
+                        RadiusBottomRight: =0
+                        RadiusTopLeft: =0
+                        RadiusTopRight: =0
+                        Width: =Max(300, Parent.Width - If(Parent.Width < 700, 16, 64))
+                        X: =(Parent.Width - Self.Width) / 2
+                        Y: =If(Parent.Height < 700, 8, 24)
+                      Children:
+                        - cntFilaSidebar:
+                            Control: GroupContainer@1.5.0
+                            Variant: ManualLayout
+                            Properties:
+                              DropShadow: =DropShadow.None
+                              Fill: =RGBA(57, 22, 148, 1)
+                              Height: =Parent.Height-4
+                              RadiusBottomLeft: =0
+                              RadiusBottomRight: =0
+                              RadiusTopLeft: =0
+                              RadiusTopRight: =0
+                              Visible: =Parent.Width >= 900
+                              Width: =300
+                              Y: =2
+                            Children:
+                              - recFilaSidebarOverlay:
+                                  Control: Rectangle@2.3.0
+                                  Properties:
+                                    BorderColor: =RGBA(0, 0, 0, 0)
+                                    Fill: =RGBA(0, 38, 255, 0.16)
+                                    Height: =Parent.Height
+                                    Width: =Parent.Width
+                              - lblFilaBrand:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    AutoHeight: =true
+                                    Color: =RGBA(255, 255, 255, 1)
+                                    Font: =Font.'Open Sans'
+                                    FontWeight: =FontWeight.Bold
+                                    PaddingBottom: =0
+                                    PaddingLeft: =0
+                                    PaddingRight: =0
+                                    PaddingTop: =0
+                                    Size: =24
+                                    Text: ="Airport Now"
+                                    Width: =240
+                                    X: =28
+                                    Y: =34
+                              - lblFilaSideTitle:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    AutoHeight: =true
+                                    Color: =RGBA(255, 255, 255, 0.72)
+                                    Font: =Font.'Open Sans'
+                                    PaddingBottom: =0
+                                    PaddingLeft: =0
+                                    PaddingRight: =0
+                                    PaddingTop: =0
+                                    Size: =11
+                                    Text: ="Fila de atendimento"
+                                    Width: =240
+                                    X: =28
+                                    Y: =75
+                              - recFilaSideDivider:
+                                  Control: Rectangle@2.3.0
+                                  Properties:
+                                    BorderColor: =RGBA(0, 0, 0, 0)
+                                    Fill: =RGBA(255, 255, 255, 0.18)
+                                    Height: =1
+                                    Width: =244
+                                    X: =28
+                                    Y: =117
+                              - htmFilaResumo:
+                                  Control: HtmlViewer@2.1.0
+                                  Properties:
+                                    Font: =Font.'Open Sans'
+                                    Height: =230
+                                    HtmlText: |-
+                                      ="<div style='font-family:Open Sans,Segoe UI,sans-serif;'>" &
+                                      "<div style='font-size:12px;font-weight:600;color:rgba(255,255,255,.92);margin-bottom:14px;'>Situação</div>" &
+                                      "<table style='width:100%;border-collapse:collapse;'>" &
+                                      "<tr><td style='padding:9px 0;font-size:12px;color:rgba(255,255,255,.78);'>Sem atendente</td>" &
+                                      "<td style='text-align:right;font-size:20px;font-weight:800;color:#FDBA74;'>" &
+                                      CountRows(Filter(colFila, IsBlank(desk_atendente_email))) & "</td></tr>" &
+                                      "<tr><td style='padding:9px 0;font-size:12px;color:rgba(255,255,255,.78);'>Comigo</td>" &
+                                      "<td style='text-align:right;font-size:20px;font-weight:800;color:#FFFFFF;'>" &
+                                      CountRows(Filter(colFila, desk_atendente_email = varEmailUser)) & "</td></tr>" &
+                                      "<tr><td style='padding:9px 0;font-size:12px;color:rgba(255,255,255,.78);'>Aguardando aprovação</td>" &
+                                      "<td style='text-align:right;font-size:20px;font-weight:800;color:#FFFFFF;'>" &
+                                      CountRows(Filter(colFila, desk_status = "Aguardando aprovação")) & "</td></tr>" &
+                                      "<tr><td style='padding:9px 0;border-top:1px solid rgba(255,255,255,.18);font-size:12px;color:rgba(255,255,255,.6);'>Total em aberto</td>" &
+                                      "<td style='text-align:right;border-top:1px solid rgba(255,255,255,.18);font-size:20px;font-weight:800;color:rgba(255,255,255,.72);'>" &
+                                      CountRows(colFila) & "</td></tr>" &
+                                      "</table></div>"
+                                    PaddingBottom: =0
+                                    PaddingLeft: =0
+                                    PaddingRight: =0
+                                    PaddingTop: =0
+                                    Size: =11
+                                    Width: =244
+                                    X: =28
+                                    Y: =144
+                              - btnFilaMeusChamados:
+                                  Control: Button@0.0.45
+                                  Properties:
+                                    Appearance: ='ButtonCanvas.Appearance'.Secondary
+                                    BorderRadius: =0
+                                    FontSize: =11
+                                    Height: =38
+                                    Icon: ="Person"
+                                    IconStyle: ='ButtonCanvas.IconStyle'.Outline
+                                    Layout: ='ButtonCanvas.Layout'.IconBefore
+                                    OnSelect: |-
+                                      =Navigate(
+                                          ScreenMeusChamados,
+                                          ScreenTransition.Fade
+                                      )
+                                    Text: ="Meus chamados"
+                                    Width: =244
+                                    X: =28
+                                    Y: =390
+                              - btnFilaAbrir:
+                                  Control: Button@0.0.45
+                                  Properties:
+                                    Appearance: ='ButtonCanvas.Appearance'.Secondary
+                                    BorderRadius: =0
+                                    FontSize: =11
+                                    Height: =38
+                                    Icon: ="Add"
+                                    IconStyle: ='ButtonCanvas.IconStyle'.Outline
+                                    Layout: ='ButtonCanvas.Layout'.IconBefore
+                                    OnSelect: |-
+                                      =Navigate(
+                                          ScreenServiceDeskForm,
+                                          ScreenTransition.Fade
+                                      )
+                                    Text: ="Abrir chamado"
+                                    Width: =244
+                                    X: =28
+                                    Y: =438
+                        - cntFilaPanel:
+                            Control: GroupContainer@1.5.0
+                            Variant: ManualLayout
+                            Properties:
+                              BorderColor: =RGBA(226, 232, 240, 1)
+                              BorderThickness: =1
+                              DropShadow: =DropShadow.None
+                              Fill: =RGBA(255, 255, 255, 1)
+                              Height: =Parent.Height-4
+                              RadiusBottomLeft: =0
+                              RadiusBottomRight: =0
+                              RadiusTopLeft: =0
+                              RadiusTopRight: =0
+                              Width: =Parent.Width - Self.X
+                              X: =If(cntFilaSidebar.Visible, 324, 0)
+                              Y: =2
+                            Children:
+                              - lblFilaEyebrow:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    Color: =RGBA(96, 70, 237, 1)
+                                    Font: =Font.'Open Sans'
+                                    FontWeight: =FontWeight.Bold
+                                    Height: =20
+                                    PaddingBottom: =0
+                                    PaddingLeft: =0
+                                    PaddingRight: =0
+                                    PaddingTop: =0
+                                    Size: =9
+                                    Text: ="ATENDIMENTO"
+                                    Width: =260
+                                    X: =If(Parent.Width < 600, 18, 28)
+                                    Y: =20
+                              - lblFilaTitulo:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    AutoHeight: =true
+                                    Color: =RGBA(15, 23, 42, 1)
+                                    Font: =Font.'Open Sans'
+                                    FontWeight: =FontWeight.Bold
+                                    PaddingBottom: =0
+                                    PaddingLeft: =0
+                                    PaddingRight: =0
+                                    PaddingTop: =0
+                                    Size: =22
+                                    Text: ="Fila do Service Desk"
+                                    Width: =Parent.Width - (2 * Self.X)
+                                    X: =If(Parent.Width < 600, 18, 28)
+                                    Y: =42
+                              - lblFilaSubtitulo:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    AutoHeight: =true
+                                    Color: =RGBA(100, 116, 139, 1)
+                                    Font: =Font.'Open Sans'
+                                    PaddingBottom: =0
+                                    PaddingLeft: =0
+                                    PaddingRight: =0
+                                    PaddingTop: =0
+                                    Size: =10
+                                    Text: ="Toque em um chamado para assumir, responder ou resolver."
+                                    Width: =Parent.Width - (2 * Self.X)
+                                    X: =If(Parent.Width < 600, 18, 28)
+                                    Y: =76
+                              - recFilaHeaderDivider:
+                                  Control: Rectangle@2.3.0
+                                  Properties:
+                                    BorderColor: =RGBA(0, 0, 0, 0)
+                                    Fill: =RGBA(226, 232, 240, 1)
+                                    Height: =1
+                                    Width: =Parent.Width
+                                    Y: =108
+                              - btnFilaAbaFila:
+                                  Control: Button@0.0.45
+                                  Properties:
+                                    Appearance: =If(varFilaAba = "FILA", 'ButtonCanvas.Appearance'.Primary, 'ButtonCanvas.Appearance'.Secondary)
+                                    BorderRadius: =0
+                                    FontSize: =11
+                                    Height: =34
+                                    OnSelect: |-
+                                      =UpdateContext({varFilaAba: "FILA"})
+                                    Text: ="Sem atendente"
+                                    Visible: =varFilaPapel <> "SOLICITANTE"
+                                    Width: =140
+                                    X: =If(Parent.Width < 600, 18, 28)
+                                    Y: =126
+                              - btnFilaAbaMeus:
+                                  Control: Button@0.0.45
+                                  Properties:
+                                    Appearance: =If(varFilaAba = "MEUS", 'ButtonCanvas.Appearance'.Primary, 'ButtonCanvas.Appearance'.Secondary)
+                                    BorderRadius: =0
+                                    FontSize: =11
+                                    Height: =34
+                                    OnSelect: |-
+                                      =UpdateContext({varFilaAba: "MEUS"})
+                                    Text: ="Comigo"
+                                    Visible: =varFilaPapel <> "SOLICITANTE"
+                                    Width: =110
+                                    X: =btnFilaAbaFila.X + btnFilaAbaFila.Width + 8
+                                    Y: =126
+                              - btnFilaAbaAprovar:
+                                  Control: Button@0.0.45
+                                  Properties:
+                                    Appearance: =If(varFilaAba = "APROVAR", 'ButtonCanvas.Appearance'.Primary, 'ButtonCanvas.Appearance'.Secondary)
+                                    BorderRadius: =0
+                                    FontSize: =11
+                                    Height: =34
+                                    OnSelect: |-
+                                      =UpdateContext({varFilaAba: "APROVAR"})
+                                    Text: ="Aprovações"
+                                    Visible: =varFilaPapel = "GESTOR"
+                                    Width: =130
+                                    X: =btnFilaAbaMeus.X + btnFilaAbaMeus.Width + 8
+                                    Y: =126
+                              - btnFilaAbaTodos:
+                                  Control: Button@0.0.45
+                                  Properties:
+                                    Appearance: =If(varFilaAba = "TODOS", 'ButtonCanvas.Appearance'.Primary, 'ButtonCanvas.Appearance'.Secondary)
+                                    BorderRadius: =0
+                                    FontSize: =11
+                                    Height: =34
+                                    OnSelect: |-
+                                      =UpdateContext({varFilaAba: "TODOS"})
+                                    Text: ="Todos em aberto"
+                                    Visible: =varFilaPapel <> "SOLICITANTE"
+                                    Width: =150
+                                    X: =If(varFilaPapel = "GESTOR", btnFilaAbaAprovar.X + btnFilaAbaAprovar.Width + 8, btnFilaAbaMeus.X + btnFilaAbaMeus.Width + 8)
+                                    Y: =126
+                              - txtFilaBusca:
+                                  Control: Classic/TextInput@2.3.2
+                                  Properties:
+                                    BorderColor: =RGBA(203, 213, 225, 1)
+                                    BorderThickness: =1
+                                    Default: =""
+                                    DelayOutput: =true
+                                    Fill: =RGBA(248, 250, 252, 1)
+                                    Font: =Font.'Open Sans'
+                                    Height: =34
+                                    HintText: ="Buscar por descrição, categoria ou solicitante"
+                                    HoverBorderColor: =RGBA(96, 70, 237, 1)
+                                    PaddingLeft: =10
+                                    RadiusBottomLeft: =0
+                                    RadiusBottomRight: =0
+                                    RadiusTopLeft: =0
+                                    RadiusTopRight: =0
+                                    Size: =10
+                                    Visible: =And(varFilaPapel <> "SOLICITANTE", Parent.Width >= 900)
+                                    Width: =Max(180, Parent.Width - Self.X - 28)
+                                    X: =btnFilaAbaTodos.X + btnFilaAbaTodos.Width + 16
+                                    Y: =126
+                              - lblFilaContador:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    Color: =RGBA(100, 116, 139, 1)
+                                    Font: =Font.'Open Sans'
+                                    Height: =20
+                                    PaddingBottom: =0
+                                    PaddingLeft: =0
+                                    PaddingRight: =0
+                                    PaddingTop: =0
+                                    Size: =9
+                                    Text: =galFila.AllItemsCount & " de " & CountRows(colFila) & " chamado(s) em aberto"
+                                    Visible: =varFilaPapel <> "SOLICITANTE"
+                                    Width: =400
+                                    X: =If(Parent.Width < 600, 18, 28)
+                                    Y: =170
+                              - galFila:
+                                  Control: Gallery@2.15.0
+                                  Variant: Vertical
+                                  Properties:
+                                    BorderColor: =RGBA(226, 232, 240, 1)
+                                    BorderStyle: =BorderStyle.None
+                                    Fill: =RGBA(255, 255, 255, 1)
+                                    Height: =Parent.Height - Self.Y - 20
+                                    Items: |-
+                                      =Search(
+                                          Filter(
+                                              colFila,
+                                              varFilaAba = "TODOS" ||
+                                              (varFilaAba = "FILA" && IsBlank(desk_atendente_email)) ||
+                                              (varFilaAba = "MEUS" && desk_atendente_email = varEmailUser) ||
+                                              (varFilaAba = "APROVAR" && desk_status = "Aguardando aprovação")
+                                          ),
+                                          txtFilaBusca.Text,
+                                          "desk_descricao",
+                                          "desk_categoria",
+                                          "desk_solicitante_email"
+                                      )
+                                    LayoutMinHeight: =0
+                                    ShowScrollbar: =true
+                                    TemplatePadding: =0
+                                    TemplateSize: =96
+                                    Visible: =And(Not(varFilaCarregando), varFilaPapel <> "SOLICITANTE", Self.AllItemsCount > 0)
+                                    Width: =Parent.Width - (2 * Self.X)
+                                    X: =If(Parent.Width < 600, 18, 28)
+                                    Y: =194
+                                  Children:
+                                    - htmFilaLinha:
+                                        Control: HtmlViewer@2.1.0
+                                        Properties:
+                                          Fill: =RGBA(255, 255, 255, 1)
+                                          Font: =Font.'Open Sans'
+                                          Height: =94
+                                          HtmlText: |-
+                                            ="<table style='width:100%;border-collapse:collapse;border-left:3px solid " &
+                                            Coalesce(LookUp(colChamStatus, Status = ThisItem.desk_status, Hex), "#CBD5E1") &
+                                            ";border-bottom:1px solid #E2E8F0;font-family:Open Sans,Segoe UI,sans-serif;'><tr>" &
+                                            "<td style='width:104px;vertical-align:top;padding:14px 0 0 12px;'>" &
+                                            "<div style='font-size:15px;font-weight:800;color:#391694;'>#" & Text(ThisItem.desk_id, "000000") & "</div>" &
+                                            "<div style='font-size:10px;color:#64748B;margin-top:4px;'>" &
+                                            Text(ThisItem.Created, "dd/mm/yyyy") & "</div>" &
+                                            "<div style='font-size:10px;font-weight:700;color:" &
+                                            If(DateDiff(ThisItem.Created, Now(), TimeUnit.Days) > 5, "#B91C1C", "#94A3B8") &
+                                            ";margin-top:2px;'>" & DateDiff(ThisItem.Created, Now(), TimeUnit.Days) & " dia(s)</div></td>" &
+                                            "<td style='vertical-align:top;padding:14px 12px 0 4px;'>" &
+                                            "<div style='font-size:13px;font-weight:700;color:#0F172A;'>" & Coalesce(ThisItem.desk_categoria, "Sem categoria") & "</div>" &
+                                            "<div style='font-size:10px;color:#64748B;margin-top:3px;'>" &
+                                            Coalesce(ThisItem.desk_usuario.DisplayName, ThisItem.desk_solicitante_email, "—") & "</div>" &
+                                            "<div style='font-size:11px;color:#334155;margin-top:5px;line-height:1.4;'>" &
+                                            Left(Substitute(Substitute(Coalesce(ThisItem.desk_descricao, ""), "<", " "), Char(10), " "), 110) &
+                                            If(Len(Coalesce(ThisItem.desk_descricao, "")) > 110, "...", "") &
+                                            "</div></td>" &
+                                            "<td style='width:190px;vertical-align:top;text-align:right;padding:14px 12px 0 0;'>" &
+                                            "<span style='display:inline-block;background:" &
+                                            Coalesce(LookUp(colChamStatus, Status = ThisItem.desk_status, Fundo), "#F1F5F9") &
+                                            ";color:" & Coalesce(LookUp(colChamStatus, Status = ThisItem.desk_status, Hex), "#64748B") &
+                                            ";padding:5px 10px;font-size:10px;font-weight:700;letter-spacing:.03em;'>" &
+                                            Upper(Coalesce(ThisItem.desk_status, "SEM STATUS")) & "</span>" &
+                                            "<div style='font-size:10px;color:" &
+                                            If(IsBlank(ThisItem.desk_atendente_email), "#B45309", "#64748B") &
+                                            ";font-weight:" & If(IsBlank(ThisItem.desk_atendente_email), "700", "400") & ";margin-top:7px;'>" &
+                                            If(IsBlank(ThisItem.desk_atendente_email), "SEM ATENDENTE", Coalesce(ThisItem.desk_atendente_nome, ThisItem.desk_atendente_email)) &
+                                            "</div>" &
+                                            If(
+                                                ThisItem.desk_ciclo = "DEMANDA",
+                                                "<div style='font-size:10px;font-weight:700;color:#6D28D9;margin-top:4px;'>DEMANDA</div>",
+                                                ""
+                                            ) &
+                                            "</td></tr></table>"
+                                          OnSelect: |-
+                                            =Set(
+                                                varChamado,
+                                                ThisItem
+                                            );
+                                            Set(
+                                                varChamadoOrigem,
+                                                "FILA"
+                                            );
+                                            Navigate(
+                                                ScreenChamadoDetalhe,
+                                                ScreenTransition.CoverRight
+                                            )
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                          PaddingTop: =0
+                                          Size: =11
+                                          Width: =Parent.Width
+                                          X: =0
+                                          Y: =0
+                              - cntFilaVazia:
+                                  Control: GroupContainer@1.5.0
+                                  Variant: ManualLayout
+                                  Properties:
+                                    BorderColor: =RGBA(226, 232, 240, 1)
+                                    BorderThickness: =1
+                                    DropShadow: =DropShadow.None
+                                    Fill: =RGBA(248, 250, 252, 1)
+                                    Height: =184
+                                    RadiusBottomLeft: =0
+                                    RadiusBottomRight: =0
+                                    RadiusTopLeft: =0
+                                    RadiusTopRight: =0
+                                    Visible: =And(Not(varFilaCarregando), varFilaPapel <> "SOLICITANTE", galFila.AllItemsCount = 0)
+                                    Width: =Parent.Width - (2 * Self.X)
+                                    X: =If(Parent.Width < 600, 18, 28)
+                                    Y: =194
+                                  Children:
+                                    - lblFilaVaziaTitulo:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          Align: =Align.Center
+                                          Color: =RGBA(15, 23, 42, 1)
+                                          Font: =Font.'Open Sans'
+                                          FontWeight: =FontWeight.Semibold
+                                          Height: =28
+                                          Size: =13
+                                          Text: =If(CountRows(colFila) = 0, "Nenhum chamado em aberto", "Nada nesta aba")
+                                          Width: =Parent.Width - 48
+                                          X: =24
+                                          Y: =52
+                                    - lblFilaVaziaTexto:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          Align: =Align.Center
+                                          AutoHeight: =true
+                                          Color: =RGBA(100, 116, 139, 1)
+                                          Font: =Font.'Open Sans'
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                          PaddingTop: =0
+                                          Size: =10
+                                          Text: =If(CountRows(colFila) = 0, "A fila está limpa. Nada aguardando atendimento.", "Tente outra aba ou limpe a busca.")
+                                          Width: =Parent.Width - 96
+                                          X: =48
+                                          Y: =90
+                              - cntFilaSemAcesso:
+                                  Control: GroupContainer@1.5.0
+                                  Variant: ManualLayout
+                                  Properties:
+                                    BorderColor: =RGBA(253, 186, 116, 1)
+                                    BorderThickness: =1
+                                    DropShadow: =DropShadow.None
+                                    Fill: =RGBA(255, 247, 237, 1)
+                                    Height: =210
+                                    RadiusBottomLeft: =0
+                                    RadiusBottomRight: =0
+                                    RadiusTopLeft: =0
+                                    RadiusTopRight: =0
+                                    Visible: =And(Not(varFilaCarregando), varFilaPapel = "SOLICITANTE")
+                                    Width: =Parent.Width - (2 * Self.X)
+                                    X: =If(Parent.Width < 600, 18, 28)
+                                    Y: =140
+                                  Children:
+                                    - lblFilaSemAcessoTitulo:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          Align: =Align.Center
+                                          Color: =RGBA(154, 52, 18, 1)
+                                          Font: =Font.'Open Sans'
+                                          FontWeight: =FontWeight.Bold
+                                          Height: =30
+                                          Size: =14
+                                          Text: ="Você não atende chamados"
+                                          Width: =Parent.Width - 48
+                                          X: =24
+                                          Y: =34
+                                    - lblFilaSemAcessoTexto:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          Align: =Align.Center
+                                          AutoHeight: =true
+                                          Color: =RGBA(154, 52, 18, 0.86)
+                                          Font: =Font.'Open Sans'
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                          PaddingTop: =0
+                                          Size: =10
+                                          Text: ="A fila é restrita a quem tem papel de atendente ou gestor. Para acompanhar as suas próprias solicitações, use Meus chamados."
+                                          Width: =Parent.Width - 140
+                                          X: =70
+                                          Y: =74
+                                    - btnFilaSemAcessoIr:
+                                        Control: Button@0.0.45
+                                        Properties:
+                                          BorderRadius: =0
+                                          FontSize: =11
+                                          FontWeight: =FontWeight.Semibold
+                                          Height: =40
+                                          Icon: ="Person"
+                                          IconStyle: ='ButtonCanvas.IconStyle'.Filled
+                                          Layout: ='ButtonCanvas.Layout'.IconBefore
+                                          OnSelect: |-
+                                            =Navigate(
+                                                ScreenMeusChamados,
+                                                ScreenTransition.Fade
+                                            )
+                                          Text: ="Ir para Meus chamados"
+                                          Width: =210
+                                          X: =(Parent.Width - Self.Width) / 2
+                                          Y: =140
+                              - cntFilaLoading:
+                                  Control: GroupContainer@1.5.0
+                                  Variant: ManualLayout
+                                  Properties:
+                                    DropShadow: =DropShadow.None
+                                    Fill: =RGBA(255, 255, 255, 0.9)
+                                    Height: =Parent.Height
+                                    RadiusBottomLeft: =0
+                                    RadiusBottomRight: =0
+                                    RadiusTopLeft: =0
+                                    RadiusTopRight: =0
+                                    Visible: =varFilaCarregando
+                                    Width: =Parent.Width
+                                  Children:
+                                    - lblFilaLoading:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          Align: =Align.Center
+                                          Color: =RGBA(57, 22, 148, 1)
+                                          Font: =Font.'Open Sans'
+                                          FontWeight: =FontWeight.Bold
+                                          Height: =28
+                                          Size: =13
+                                          Text: ="Carregando a fila..."
+                                          Width: =Parent.Width - 32
+                                          X: =16
+                                          Y: =(Parent.Height - Self.Height) / 2

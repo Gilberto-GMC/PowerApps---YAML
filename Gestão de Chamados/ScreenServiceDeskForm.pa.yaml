@@ -1,0 +1,1409 @@
+Screens:
+  ScreenServiceDeskForm:
+    Properties:
+      Fill: =RGBA(247, 247, 247, 1)
+      LoadingSpinnerColor: =RGBA(96, 70, 237, 1)
+      OnVisible: |-
+        =UpdateContext(
+            {
+                varDeskProcessando: false,
+                varDeskTentouEnviar: false,
+                varDeskRegistroCriado: false,
+                varDeskErroFluxo: false,
+                varDeskOcupadoDesde: Blank()
+            }
+        );
+        Set(
+            varNumChamado,
+            Coalesce(
+                First(
+                    Sort(
+                        tbl_ServiceDesk,
+                        desk_id,
+                        SortOrder.Descending
+                    )
+                ).desk_id + 1,
+                1
+            )
+        );
+        ClearCollect(
+            colDeskCategorias,
+            Table(
+                {Chave: "RESET_SENHA", Nome: "Reset da Senha",                 Ciclo: "SUPORTE", Prioridade: "MEDIA",  Ordem: 1},
+                {Chave: "ACESSO",      Nome: "Acesso e permissão",             Ciclo: "SUPORTE", Prioridade: "ALTA",   Ordem: 2},
+                {Chave: "ERRO",        Nome: "Erro no sistema",                Ciclo: "SUPORTE", Prioridade: "ALTA",   Ordem: 3},
+                {Chave: "DADO",        Nome: "Correção de dado ou registro",   Ciclo: "SUPORTE", Prioridade: "MEDIA",  Ordem: 4},
+                {Chave: "DESEMPENHO",  Nome: "Lentidão ou desempenho",         Ciclo: "SUPORTE", Prioridade: "MEDIA",  Ordem: 5},
+                {Chave: "DUVIDA",      Nome: "Dúvida de uso",                  Ciclo: "SUPORTE", Prioridade: "BAIXA",  Ordem: 6},
+                {Chave: "NOVO_MODULO", Nome: "Solicitação de novo módulo",     Ciclo: "DEMANDA", Prioridade: "MEDIA",  Ordem: 7},
+                {Chave: "MELHORIA",    Nome: "Melhoria em módulo existente",   Ciclo: "DEMANDA", Prioridade: "MEDIA",  Ordem: 8},
+                {Chave: "INTEGRACAO",  Nome: "Integração com outro sistema",   Ciclo: "DEMANDA", Prioridade: "MEDIA",  Ordem: 9},
+                {Chave: "RELATORIO",   Nome: "Novo relatório ou indicador",    Ciclo: "DEMANDA", Prioridade: "BAIXA",  Ordem: 10}
+            )
+        );
+        NewForm(FormDesk_2)
+    Children:
+      - ContainerServiceDeskForm_1:
+          Control: GroupContainer@1.5.0
+          Variant: ManualLayout
+          Properties:
+            DropShadow: =DropShadow.None
+            Fill: =RGBA(247, 247, 247, 1)
+            Height: =Parent.Height
+            RadiusBottomLeft: =0
+            RadiusBottomRight: =0
+            RadiusTopLeft: =0
+            RadiusTopRight: =0
+            Width: =Parent.Width
+          Children:
+            - HeaderTitleLogin_1:
+                Control: CanvasComponent
+                ComponentName: HeaderTitle
+                Properties:
+                  Height: =50
+                  IconVisible: =true
+                  ScreenNavigator: =Login
+                  Width: =Parent.Width
+                  var_subtitulo1: ="Suporte e atendimento"
+                  var_subtitulo2: =""
+                  var_tituloModulo: ="Service Desk"
+            - cntDeskMain:
+                Control: GroupContainer@1.5.0
+                Variant: ManualLayout
+                Properties:
+                  DropShadow: =DropShadow.None
+                  Fill: =RGBA(247, 247, 247, 1)
+                  Height: =Parent.Height - HeaderTitleLogin_1.Height
+                  RadiusBottomLeft: =0
+                  RadiusBottomRight: =0
+                  RadiusTopLeft: =0
+                  RadiusTopRight: =0
+                  Width: =Parent.Width
+                  Y: =HeaderTitleLogin_1.Height
+                Children:
+                  - cntDeskShell:
+                      Control: GroupContainer@1.5.0
+                      Variant: ManualLayout
+                      Properties:
+                        BorderStyle: =BorderStyle.None
+                        DropShadow: =DropShadow.None
+                        Height: =Parent.Height - If(Parent.Height < 700, 16, 48)
+                        RadiusBottomLeft: =0
+                        RadiusBottomRight: =0
+                        RadiusTopLeft: =0
+                        RadiusTopRight: =0
+                        Width: =Max(300, Parent.Width - If(Parent.Width < 700, 16, 64))
+                        X: =(Parent.Width - Self.Width) / 2
+                        Y: =If(Parent.Height < 700, 8, 24)
+                      Children:
+                        - cntDeskSidebar:
+                            Control: GroupContainer@1.5.0
+                            Variant: ManualLayout
+                            Properties:
+                              DropShadow: =DropShadow.None
+                              Fill: =RGBA(57, 22, 148, 1)
+                              Height: =Parent.Height-4
+                              RadiusBottomLeft: =0
+                              RadiusBottomRight: =0
+                              RadiusTopLeft: =0
+                              RadiusTopRight: =0
+                              Visible: =Parent.Width >= 900
+                              Width: =300
+                              Y: =2
+                            Children:
+                              - recDeskSidebarOverlay:
+                                  Control: Rectangle@2.3.0
+                                  Properties:
+                                    BorderColor: =RGBA(0, 0, 0, 0)
+                                    Fill: =RGBA(0, 38, 255, 0.16)
+                                    Height: =Parent.Height
+                                    Width: =Parent.Width
+                              - lblDeskBrand:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    AutoHeight: =true
+                                    Color: =RGBA(255, 255, 255, 1)
+                                    Font: =Font.'Open Sans'
+                                    FontWeight: =FontWeight.Bold
+                                    PaddingBottom: =0
+                                    PaddingLeft: =0
+                                    PaddingRight: =0
+                                    PaddingTop: =0
+                                    Size: =24
+                                    Text: ="Airport Now"
+                                    Width: =240
+                                    X: =28
+                                    Y: =34
+                              - lblDeskSideTitle:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    AutoHeight: =true
+                                    Color: =RGBA(255, 255, 255, 0.72)
+                                    Font: =Font.'Open Sans'
+                                    PaddingBottom: =0
+                                    PaddingLeft: =0
+                                    PaddingRight: =0
+                                    PaddingTop: =0
+                                    Size: =11
+                                    Text: ="Central de suporte ao usuário"
+                                    Width: =240
+                                    X: =28
+                                    Y: =75
+                              - recDeskSideDivider:
+                                  Control: Rectangle@2.3.0
+                                  Properties:
+                                    BorderColor: =RGBA(0, 0, 0, 0)
+                                    Fill: =RGBA(255, 255, 255, 0.18)
+                                    Height: =1
+                                    Width: =244
+                                    X: =28
+                                    Y: =117
+                              - lblDeskHowTitle:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    AutoHeight: =true
+                                    Color: =RGBA(255, 255, 255, 1)
+                                    Font: =Font.'Open Sans'
+                                    FontWeight: =FontWeight.Semibold
+                                    PaddingBottom: =0
+                                    PaddingLeft: =0
+                                    PaddingRight: =0
+                                    PaddingTop: =0
+                                    Text: ="Como funciona"
+                                    Width: =230
+                                    X: =28
+                                    Y: =144
+                              - lblDeskStep1Number:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    Align: =Align.Center
+                                    Color: =RGBA(57, 22, 148, 1)
+                                    Fill: =RGBA(255, 255, 255, 1)
+                                    Font: =Font.'Open Sans'
+                                    FontWeight: =FontWeight.Bold
+                                    Height: =30
+                                    Size: =10
+                                    Text: ="1"
+                                    Width: =30
+                                    X: =28
+                                    Y: =194
+                              - lblDeskStep1:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    AutoHeight: =true
+                                    Color: =RGBA(255, 255, 255, 0.82)
+                                    Font: =Font.'Open Sans'
+                                    PaddingBottom: =0
+                                    PaddingLeft: =0
+                                    PaddingRight: =0
+                                    PaddingTop: =0
+                                    Size: =10
+                                    Text: ="Selecione a categoria e identifique o usuário."
+                                    Width: =198
+                                    X: =72
+                                    Y: =192
+                              - lblDeskStep2Number:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    Align: =Align.Center
+                                    Color: =RGBA(57, 22, 148, 1)
+                                    Fill: =RGBA(255, 255, 255, 1)
+                                    Font: =Font.'Open Sans'
+                                    FontWeight: =FontWeight.Bold
+                                    Height: =30
+                                    Size: =10
+                                    Text: ="2"
+                                    Width: =30
+                                    X: =28
+                                    Y: =256
+                              - lblDeskStep2:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    AutoHeight: =true
+                                    Color: =RGBA(255, 255, 255, 0.82)
+                                    Font: =Font.'Open Sans'
+                                    PaddingBottom: =0
+                                    PaddingLeft: =0
+                                    PaddingRight: =0
+                                    PaddingTop: =0
+                                    Size: =10
+                                    Text: ="Descreva a solicitação com o máximo de detalhes."
+                                    Width: =198
+                                    X: =72
+                                    Y: =254
+                              - lblDeskStep3Number:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    Align: =Align.Center
+                                    Color: =RGBA(57, 22, 148, 1)
+                                    Fill: =RGBA(255, 255, 255, 1)
+                                    Font: =Font.'Open Sans'
+                                    FontWeight: =FontWeight.Bold
+                                    Height: =30
+                                    Size: =10
+                                    Text: ="3"
+                                    Width: =30
+                                    X: =28
+                                    Y: =318
+                              - lblDeskStep3:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    AutoHeight: =true
+                                    Color: =RGBA(255, 255, 255, 0.82)
+                                    Font: =Font.'Open Sans'
+                                    PaddingBottom: =0
+                                    PaddingLeft: =0
+                                    PaddingRight: =0
+                                    PaddingTop: =0
+                                    Size: =10
+                                    Text: ="Anexe evidências e confirme a abertura do chamado."
+                                    Width: =198
+                                    X: =72
+                                    Y: =316
+                              - btnDeskMeusChamados:
+                                  Control: Button@0.0.45
+                                  Properties:
+                                    Appearance: ='ButtonCanvas.Appearance'.Secondary
+                                    BorderRadius: =0
+                                    FontSize: =11
+                                    Height: =38
+                                    Icon: ="Person"
+                                    IconStyle: ='ButtonCanvas.IconStyle'.Outline
+                                    Layout: ='ButtonCanvas.Layout'.IconBefore
+                                    OnSelect: |-
+                                      =Navigate(
+                                          ScreenMeusChamados,
+                                          ScreenTransition.Fade
+                                      )
+                                    Text: ="Acompanhar meus chamados"
+                                    Width: =244
+                                    X: =28
+                                    Y: =380
+                              - cntDeskSecurity:
+                                  Control: GroupContainer@1.5.0
+                                  Variant: ManualLayout
+                                  Properties:
+                                    BorderColor: =RGBA(255, 255, 255, 0.16)
+                                    BorderThickness: =1
+                                    DropShadow: =DropShadow.None
+                                    Fill: =RGBA(255, 255, 255, 0.08)
+                                    Height: =94
+                                    RadiusBottomLeft: =0
+                                    RadiusBottomRight: =0
+                                    RadiusTopLeft: =0
+                                    RadiusTopRight: =0
+                                    Width: =244
+                                    X: =28
+                                    Y: =Parent.Height - 122
+                                  Children:
+                                    - lblDeskSecurityTitle:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          Color: =RGBA(255, 255, 255, 1)
+                                          Font: =Font.'Open Sans'
+                                          FontWeight: =FontWeight.Semibold
+                                          Height: =24
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                          PaddingTop: =0
+                                          Size: =10
+                                          Text: ="Atendimento seguro"
+                                          Width: =204
+                                          X: =18
+                                          Y: =14
+                                    - lblDeskSecurityText:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          AutoHeight: =true
+                                          Color: =RGBA(255, 255, 255, 0.68)
+                                          Font: =Font.'Open Sans'
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                          PaddingTop: =0
+                                          Size: =9
+                                          Text: ="Os dados informados serão utilizados somente para tratar a solicitação."
+                                          Width: =204
+                                          X: =18
+                                          Y: =40
+                        - Container22_1:
+                            Control: GroupContainer@1.5.0
+                            Variant: ManualLayout
+                            Properties:
+                              BorderColor: =RGBA(226, 232, 240, 1)
+                              BorderThickness: =1
+                              DropShadow: =DropShadow.None
+                              Fill: =RGBA(255, 255, 255, 1)
+                              Height: =Parent.Height-4
+                              RadiusBottomLeft: =0
+                              RadiusBottomRight: =0
+                              RadiusTopLeft: =0
+                              RadiusTopRight: =0
+                              Width: =Parent.Width - Self.X
+                              X: =If(cntDeskSidebar.Visible, 324, 0)
+                              Y: =2
+                            Children:
+                              - lblDeskEyebrow:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    Color: =RGBA(96, 70, 237, 1)
+                                    Font: =Font.'Open Sans'
+                                    FontWeight: =FontWeight.Bold
+                                    Height: =20
+                                    PaddingBottom: =0
+                                    PaddingLeft: =0
+                                    PaddingRight: =0
+                                    PaddingTop: =0
+                                    Size: =9
+                                    Text: ="CENTRAL DE ATENDIMENTO"
+                                    Width: =260
+                                    X: =If(Parent.Width < 600, 18, 28)
+                                    Y: =20
+                              - Label19_13:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    AutoHeight: =true
+                                    Color: =RGBA(15, 23, 42, 1)
+                                    Font: =Font.'Open Sans'
+                                    FontWeight: =FontWeight.Bold
+                                    PaddingBottom: =0
+                                    PaddingLeft: =0
+                                    PaddingRight: =0
+                                    PaddingTop: =0
+                                    Size: =22
+                                    Text: ="Abrir novo chamado"
+                                    Width: =If(cntDeskProtocol.Visible, Parent.Width - Self.X - cntDeskProtocol.Width - 48, Parent.Width - (2 * Self.X))
+                                    X: =If(Parent.Width < 600, 18, 28)
+                                    Y: =42
+                              - lblDeskSubtitle:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    AutoHeight: =true
+                                    Color: =RGBA(100, 116, 139, 1)
+                                    Font: =Font.'Open Sans'
+                                    PaddingBottom: =0
+                                    PaddingLeft: =0
+                                    PaddingRight: =0
+                                    PaddingTop: =0
+                                    Size: =10
+                                    Text: ="Preencha os dados abaixo. Os campos marcados com * são obrigatórios."
+                                    Width: =If(cntDeskProtocol.Visible, Parent.Width - Self.X - cntDeskProtocol.Width - 48, Parent.Width - (2 * Self.X))
+                                    X: =If(Parent.Width < 600, 18, 28)
+                                    Y: =76
+                              - cntDeskProtocol:
+                                  Control: GroupContainer@1.5.0
+                                  Variant: ManualLayout
+                                  Properties:
+                                    BorderColor: =RGBA(221, 214, 254, 1)
+                                    BorderThickness: =1
+                                    DropShadow: =DropShadow.None
+                                    Fill: =RGBA(245, 243, 255, 1)
+                                    Height: =54
+                                    RadiusBottomLeft: =0
+                                    RadiusBottomRight: =0
+                                    RadiusTopLeft: =0
+                                    RadiusTopRight: =0
+                                    Visible: =Parent.Width >= 520
+                                    Width: =142
+                                    X: =Parent.Width - Self.Width - 28
+                                    Y: =28
+                                  Children:
+                                    - lblDeskProtocolCaption:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          Align: =Align.Center
+                                          Color: =RGBA(109, 40, 217, 1)
+                                          Font: =Font.'Open Sans'
+                                          FontWeight: =FontWeight.Semibold
+                                          Height: =18
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                          PaddingTop: =0
+                                          Size: =8
+                                          Text: ="PROTOCOLO"
+                                          Width: =Parent.Width
+                                          Y: =7
+                                    - lblDeskProtocolValue:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          Align: =Align.Center
+                                          Color: =RGBA(76, 29, 149, 1)
+                                          Font: =Font.'Open Sans'
+                                          FontWeight: =FontWeight.Bold
+                                          Height: =22
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                          PaddingTop: =0
+                                          Size: =12
+                                          Text: ="#" & Text(varNumChamado, "000000")
+                                          Width: =Parent.Width
+                                          Y: =24
+                              - recDeskHeaderDivider:
+                                  Control: Rectangle@2.3.0
+                                  Properties:
+                                    BorderColor: =RGBA(0, 0, 0, 0)
+                                    Fill: =RGBA(226, 232, 240, 1)
+                                    Height: =1
+                                    Width: =Parent.Width
+                                    Y: =108
+                              - cntDeskWarning:
+                                  Control: GroupContainer@1.5.0
+                                  Variant: ManualLayout
+                                  Properties:
+                                    BorderColor: =RGBA(253, 186, 116, 1)
+                                    BorderThickness: =1
+                                    DropShadow: =DropShadow.None
+                                    Fill: =RGBA(255, 247, 237, 1)
+                                    Height: =52
+                                    RadiusBottomLeft: =8
+                                    RadiusBottomRight: =8
+                                    RadiusTopLeft: =8
+                                    RadiusTopRight: =8
+                                    Visible: =And(varDeskRegistroCriado, varDeskErroFluxo)
+                                    Width: =Parent.Width - 48
+                                    X: =24
+                                    Y: =120
+                                  Children:
+                                    - lblDeskWarning:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          AutoHeight: =true
+                                          Color: =RGBA(154, 52, 18, 1)
+                                          Font: =Font.'Open Sans'
+                                          FontWeight: =FontWeight.Semibold
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                          PaddingTop: =0
+                                          Size: =9
+                                          Text: ="O chamado foi registrado, mas uma etapa posterior falhou. Não envie novamente; utilize Voltar."
+                                          Width: =Parent.Width - 28
+                                          X: =14
+                                          Y: =10
+                              - FormDesk_2:
+                                  Control: Form@2.4.4
+                                  Variant: Classic
+                                  Layout: Vertical
+                                  Properties:
+                                    BorderColor: =RGBA(0, 0, 0, 0)
+                                    BorderStyle: =BorderStyle.None
+                                    DataSource: =tbl_ServiceDesk
+                                    Fill: =RGBA(255, 255, 255, 1)
+                                    Height: =Parent.Height - Self.Y - 92
+                                    NumberOfColumns: =1
+                                    OnFailure: |-
+                                      =UpdateContext(
+                                          {
+                                              varDeskProcessando: false,
+                                              varDeskOcupadoDesde: Blank()
+                                          }
+                                      );
+                                      Notify(
+                                          Coalesce(
+                                              FormDesk_2.Error,
+                                              "Não foi possível criar o chamado. Verifique os campos obrigatórios e tente novamente."
+                                          ),
+                                          NotificationType.Error,
+                                          5000
+                                      )
+                                    OnSuccess: |-
+                                      =UpdateContext(
+                                          {
+                                              varDeskProcessando: false,
+                                              varDeskRegistroCriado: true,
+                                              varDeskOcupadoDesde: Blank()
+                                          }
+                                      );
+                                      IfError(
+                                          If(
+                                              varDeskCategoriaChave = "RESET_SENHA",
+
+                                              Set(
+                                                  varNovaSenha,
+                                                  Concatenate(
+                                                      Upper(Mid("abcdefghjkmnpqrstuvwxyz", Int(Rand() * 23) + 1, 1)),
+                                                      Upper(Mid("abcdefghjkmnpqrstuvwxyz", Int(Rand() * 23) + 1, 1)),
+                                                      Text(Int(Rand() * 90) + 10, "00"),
+                                                      Upper(Mid("abcdefghjkmnpqrstuvwxyz", Int(Rand() * 23) + 1, 1)),
+                                                      Upper(Mid("abcdefghjkmnpqrstuvwxyz", Int(Rand() * 23) + 1, 1)),
+                                                      Text(Int(Rand() * 90) + 10, "00")
+                                                  )
+                                              );
+                                              With(
+                                                  {
+                                                      locUsr: LookUp(
+                                                          User,
+                                                          usrNome = varDeskUsuario
+                                                      )
+                                                  },
+                                                  If(
+                                                      IsBlank(locUsr),
+                                                      Error(
+                                                          {
+                                                              Kind: ErrorKind.NotFound,
+                                                              Message: "Usuário não localizado no cadastro; a senha temporária não foi aplicada."
+                                                          }
+                                                      ),
+                                                      Patch(
+                                                          User,
+                                                          locUsr,
+                                                          {
+                                                              Senha: varNovaSenha,
+                                                              Validacao: 0
+                                                          }
+                                                      );
+                                                      Office365Outlook.SendEmailV2(
+                                                          varDeskUsuEmail,
+                                                          "AirPort Now - Abertura de chamado: " & Text(varNumChamado, "000000"),
+                                                          "<p><b>Novo chamado criado: " & Text(varNumChamado, "000000") & "</b></p>" &
+                                                          "<p>Criado em " & Text(Now(), "dd/mm/yyyy hh:mm") & "</p>" &
+                                                          "<p>Categoria: " & varDeskCategoria & "</p>" &
+                                                          "<p>Usuário: " & varDeskUsuario & "</p>" &
+                                                          "<p>Descrição: " & varDeskDescricao & "</p>" &
+                                                          "<p><br>Status: <b>Resolvido em auto atendimento.</b></p>" &
+                                                          "<p>Segue as informações de acesso temporário ao AirPort Now.</p>" &
+                                                          "<p><b>Usuário: </b>" & Left(varDeskUsuEmail, Coalesce(Find("@", varDeskUsuEmail), Len(varDeskUsuEmail) + 1) - 1) & "</p>" &
+                                                          "<p><b>Senha temporária: </b>" & varNovaSenha & "</p>" &
+                                                          "<p><i>Você será solicitado a criar uma nova senha no primeiro acesso.</i></p>" &
+                                                          "<br><br><br><br>" &
+                                                          "<p><i>Esta mensagem foi gerada automaticamente pelo AirPort Now.</i></p>",
+                                                          {
+                                                              Importance: "High",
+                                                              Cc: "douglas.nardelli@motiva.com.br; gilberto.claudino@motiva.com.br"
+                                                          }
+                                                      )
+                                                  )
+                                              ),
+
+                                              Office365Outlook.SendEmailV2(
+                                                  varDeskUsuEmail,
+                                                  "AirPort Now - Abertura do chamado: " & Text(varNumChamado, "000000"),
+                                                  "<p><b>Novo chamado criado: " & Text(varNumChamado, "000000") & "</b></p>" &
+                                                  "<p>Criado em " & Text(Now(), "dd/mm/yyyy hh:mm") & "</p>" &
+                                                  "<p>Categoria: " & varDeskCategoria & "</p>" &
+                                                  "<p>Usuário: " & varDeskUsuario & "</p>" &
+                                                  "<p>Descrição: " & varDeskDescricao & "</p>" &
+                                                  "<p>Status: <b>Em atendimento.</b></p>" &
+                                                  "<p>Aguarde contato.</p>" &
+                                                  "<br><br><br><br>" &
+                                                  "<p><i>Esta mensagem foi gerada automaticamente pelo AirPort Now.</i></p>",
+                                                  {
+                                                      Importance: "High",
+                                                      Attachments: ForAll(
+                                                          DataCardValue48_1.Attachments,
+                                                          {
+                                                              Name: ThisRecord.Name,
+                                                              ContentBytes: ThisRecord.Value
+                                                          }
+                                                      ),
+                                                      Cc: "douglas.nardelli@motiva.com.br; gilberto.claudino@motiva.com.br"
+                                                  }
+                                              )
+                                          ),
+                                          UpdateContext({varDeskErroFluxo: true})
+                                      );
+                                      If(
+                                          varDeskErroFluxo,
+
+                                          Notify(
+                                              "Chamado " & Text(varNumChamado, "000000") & " registrado, mas uma etapa posterior falhou. Não envie novamente; utilize Voltar.",
+                                              NotificationType.Warning,
+                                              6000
+                                          ),
+
+                                          Notify(
+                                              "Chamado criado com sucesso!",
+                                              NotificationType.Success,
+                                              3000
+                                          );
+                                          ResetForm(FormDesk_2);
+                                          Set(
+                                              varNumChamado,
+                                              Blank()
+                                          );
+                                          Navigate(
+                                              Login,
+                                              ScreenTransition.Fade
+                                          )
+                                      )
+                                    Width: =Parent.Width - (2 * Self.X)
+                                    X: =If(Parent.Width < 600, 16, 24)
+                                    Y: =If(cntDeskWarning.Visible, 184, 120)
+                                  Children:
+                                    - desk_categoria_DataCard2_2:
+                                        Control: TypedDataCard@1.0.7
+                                        Variant: ClassicTextualEdit
+                                        Properties:
+                                          DataField: ="desk_categoria"
+                                          Default: =ThisItem.desk_categoria
+                                          DisplayName: =DataSourceInfo([@tbl_ServiceDesk], DataSourceInfo.DisplayName, desk_categoria)
+                                          Height: =116
+                                          MaxLength: =DataSourceInfo([@tbl_ServiceDesk], DataSourceInfo.MaxLength, desk_categoria)
+                                          Required: =true
+                                          Update: =cmbDeskCategoria.Selected.Nome
+                                          Width: =Parent.Width
+                                          X: =0
+                                          Y: =0
+                                        Children:
+                                          - DataCardKey10_2:
+                                              Control: Label@2.5.1
+                                              MetadataKey: FieldName
+                                              Properties:
+                                                AutoHeight: =true
+                                                Color: =RGBA(30, 41, 59, 1)
+                                                Font: =Font.'Open Sans'
+                                                FontWeight: =FontWeight.Semibold
+                                                PaddingBottom: =0
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                                PaddingTop: =0
+                                                Size: =10
+                                                Text: ="Categoria *"
+                                                Width: =Parent.Width - 48
+                                                X: =24
+                                                Y: =8
+                                          - DataCardValue10_2:
+                                              Control: Classic/TextInput@2.3.2
+                                              MetadataKey: FieldValue
+                                              Properties:
+                                                Default: =Parent.Default
+                                                Height: =0
+                                                Visible: =false
+                                          - cmbDeskCategoria:
+                                              Control: Classic/ComboBox@2.4.0
+                                              Properties:
+                                                BorderColor: =If(!IsBlank(Parent.Error) || (varDeskTentouEnviar && IsBlank(Self.Selected.Nome)), RGBA(220, 38, 38, 1), RGBA(203, 213, 225, 1))
+                                                BorderThickness: =1
+                                                ChevronFill: =RGBA(255, 255, 255, 1)
+                                                ChevronHoverFill: =RGBA(96, 70, 237, 1)
+                                                DefaultSelectedItems: =LookUp(colDeskCategorias, Nome = Parent.Default)
+                                                DisplayFields: =["Nome"]
+                                                DisplayMode: =Parent.DisplayMode
+                                                Fill: =RGBA(248, 250, 252, 1)
+                                                HoverBorderColor: =RGBA(96, 70, 237, 1)
+                                                IsSearchable: =false
+                                                Items: =Sort(colDeskCategorias, Ordem)
+                                                PaddingLeft: =10
+                                                SearchFields: =["Nome"]
+                                                SelectMultiple: =false
+                                                SelectionColor: =RGBA(255, 255, 255, 1)
+                                                SelectionFill: =RGBA(96, 70, 237, 1)
+                                                Size: =10
+                                                Tooltip: =Parent.DisplayName
+                                                Width: =Parent.Width - 48
+                                                X: =24
+                                                Y: =36
+                                          - ErrorMessage10_2:
+                                              Control: Label@2.5.1
+                                              MetadataKey: ErrorMessage
+                                              Properties:
+                                                AutoHeight: =true
+                                                Color: =RGBA(185, 28, 28, 1)
+                                                Font: =Font.'Open Sans'
+                                                FontWeight: =FontWeight.Semibold
+                                                Live: =Live.Assertive
+                                                PaddingBottom: =0
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                                PaddingTop: =0
+                                                Size: =8
+                                                Text: =If(!IsBlank(Parent.Error), Parent.Error, If(varDeskTentouEnviar && IsBlank(cmbDeskCategoria.Selected.Nome), "Selecione uma categoria.", ""))
+                                                Visible: =Not(IsBlank(Self.Text))
+                                                Width: =Parent.Width - 48
+                                                X: =24
+                                                Y: =84
+                                          - StarVisible10_2:
+                                              Control: Label@2.5.1
+                                              MetadataKey: FieldRequired
+                                              Properties:
+                                                Text: =""
+                                                Visible: =false
+                                    - desk_id_DataCard2_2:
+                                        Control: TypedDataCard@1.0.7
+                                        Variant: ClassicNumberEdit
+                                        Properties:
+                                          DataField: ="desk_id"
+                                          Default: =varNumChamado
+                                          DisplayName: =DataSourceInfo([@tbl_ServiceDesk], DataSourceInfo.DisplayName, desk_id)
+                                          Height: =0
+                                          Required: =false
+                                          Update: =varNumChamado
+                                          Visible: =false
+                                          Width: =Parent.Width
+                                          X: =0
+                                          Y: =4
+                                        Children:
+                                          - DataCardKey9_2:
+                                              Control: Label@2.5.1
+                                              MetadataKey: FieldName
+                                              Properties:
+                                                Text: =Parent.DisplayName
+                                          - DataCardValue9_2:
+                                              Control: Classic/TextInput@2.3.2
+                                              MetadataKey: FieldValue
+                                              Properties:
+                                                Default: =Parent.Default
+                                                Format: =TextFormat.Number
+                                          - ErrorMessage9_2:
+                                              Control: Label@2.5.1
+                                              MetadataKey: ErrorMessage
+                                              Properties:
+                                                Text: =Parent.Error
+                                          - StarVisible9_2:
+                                              Control: Label@2.5.1
+                                              MetadataKey: FieldRequired
+                                              Properties:
+                                                Text: ="*"
+                                    - desk_usuario_DataCard2_2:
+                                        Control: TypedDataCard@1.0.7
+                                        Variant: ClassicComboBoxEdit
+                                        Properties:
+                                          DataField: ="desk_usuario"
+                                          Default: =ThisItem.desk_usuario
+                                          DisplayName: =DataSourceInfo([@tbl_ServiceDesk], DataSourceInfo.DisplayName, desk_usuario)
+                                          Height: =116
+                                          Required: =true
+                                          Update: =DataCardValue11_3.Selected
+                                          Width: =Parent.Width
+                                          X: =0
+                                          Y: =1
+                                        Children:
+                                          - DataCardKey11_3:
+                                              Control: Label@2.5.1
+                                              MetadataKey: FieldName
+                                              Properties:
+                                                AutoHeight: =true
+                                                Color: =RGBA(30, 41, 59, 1)
+                                                Font: =Font.'Open Sans'
+                                                FontWeight: =FontWeight.Semibold
+                                                PaddingBottom: =0
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                                PaddingTop: =0
+                                                Size: =10
+                                                Text: ="Nome completo *"
+                                                Width: =Parent.Width - 48
+                                                X: =24
+                                                Y: =8
+                                          - DataCardValue11_3:
+                                              Control: Classic/ComboBox@2.4.0
+                                              MetadataKey: FieldValue
+                                              Properties:
+                                                BorderColor: =If(!IsBlank(Parent.Error) || (varDeskTentouEnviar && IsBlank(Self.Selected.Email)), RGBA(220, 38, 38, 1), RGBA(203, 213, 225, 1))
+                                                BorderThickness: =1
+                                                ChevronFill: =RGBA(255, 255, 255, 1)
+                                                ChevronHoverFill: =RGBA(96, 70, 237, 1)
+                                                DefaultSelectedItems: =Parent.Default
+                                                DisplayFields: =["DisplayName","Email","Picture"]
+                                                DisplayMode: =Parent.DisplayMode
+                                                Fill: =RGBA(248, 250, 252, 1)
+                                                HoverBorderColor: =RGBA(96, 70, 237, 1)
+                                                Items: =Choices([@tbl_ServiceDesk].desk_usuario)
+                                                PaddingLeft: =10
+                                                SearchFields: =["DisplayName","Email"]
+                                                SelectMultiple: =false
+                                                SelectionColor: =RGBA(255, 255, 255, 1)
+                                                SelectionFill: =RGBA(96, 70, 237, 1)
+                                                Size: =10
+                                                Tooltip: =Parent.DisplayName
+                                                Width: =Parent.Width - 48
+                                                X: =24
+                                                Y: =36
+                                          - ErrorMessage11_3:
+                                              Control: Label@2.5.1
+                                              MetadataKey: ErrorMessage
+                                              Properties:
+                                                AutoHeight: =true
+                                                Color: =RGBA(185, 28, 28, 1)
+                                                Font: =Font.'Open Sans'
+                                                FontWeight: =FontWeight.Semibold
+                                                Live: =Live.Assertive
+                                                PaddingBottom: =0
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                                PaddingTop: =0
+                                                Size: =8
+                                                Text: =If(!IsBlank(Parent.Error), Parent.Error, If(varDeskTentouEnviar && IsBlank(DataCardValue11_3.Selected.Email), "Selecione o usuário.", ""))
+                                                Visible: =Not(IsBlank(Self.Text))
+                                                Width: =Parent.Width - 48
+                                                X: =24
+                                                Y: =84
+                                          - StarVisible11_3:
+                                              Control: Label@2.5.1
+                                              MetadataKey: FieldRequired
+                                              Properties:
+                                                Text: =""
+                                                Visible: =false
+                                    - desk_descricao_DataCard1_2:
+                                        Control: TypedDataCard@1.0.7
+                                        Variant: ClassicTextualEdit
+                                        Properties:
+                                          DataField: ="desk_descricao"
+                                          Default: =ThisItem.desk_descricao
+                                          DisplayName: =DataSourceInfo([@tbl_ServiceDesk], DataSourceInfo.DisplayName, desk_descricao)
+                                          Height: =176
+                                          MaxLength: =DataSourceInfo([@tbl_ServiceDesk], DataSourceInfo.MaxLength, desk_descricao)
+                                          Required: =true
+                                          Update: =Trim(DataCardValue14_2.Text)
+                                          Width: =Parent.Width
+                                          X: =0
+                                          Y: =2
+                                        Children:
+                                          - DataCardKey14_2:
+                                              Control: Label@2.5.1
+                                              MetadataKey: FieldName
+                                              Properties:
+                                                AutoHeight: =true
+                                                Color: =RGBA(30, 41, 59, 1)
+                                                Font: =Font.'Open Sans'
+                                                FontWeight: =FontWeight.Semibold
+                                                PaddingBottom: =0
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                                PaddingTop: =0
+                                                Size: =10
+                                                Text: ="Descrição da solicitação *"
+                                                Width: =Parent.Width - 48
+                                                X: =24
+                                                Y: =8
+                                          - lblDeskDescriptionHint:
+                                              Control: Label@2.5.1
+                                              Properties:
+                                                Color: =RGBA(100, 116, 139, 1)
+                                                Font: =Font.'Open Sans'
+                                                Height: =18
+                                                PaddingBottom: =0
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                                PaddingTop: =0
+                                                Size: =8
+                                                Text: ="Informe o problema, impacto e resultado esperado."
+                                                Width: =Parent.Width - 48
+                                                X: =24
+                                                Y: =30
+                                          - DataCardValue14_2:
+                                              Control: Classic/TextInput@2.3.2
+                                              MetadataKey: FieldValue
+                                              Properties:
+                                                BorderColor: =If(!IsBlank(Parent.Error) || (varDeskTentouEnviar && IsBlank(Trim(Self.Text))), RGBA(220, 38, 38, 1), RGBA(203, 213, 225, 1))
+                                                BorderThickness: =1
+                                                Default: =Parent.Default
+                                                DelayOutput: =true
+                                                DisplayMode: =Parent.DisplayMode
+                                                Fill: =RGBA(248, 250, 252, 1)
+                                                Height: =92
+                                                HoverBorderColor: =RGBA(96, 70, 237, 1)
+                                                MaxLength: =Parent.MaxLength
+                                                Mode: =TextMode.MultiLine
+                                                PaddingBottom: =10
+                                                PaddingRight: =12
+                                                PaddingTop: =10
+                                                RadiusBottomLeft: =0
+                                                RadiusBottomRight: =0
+                                                RadiusTopLeft: =0
+                                                RadiusTopRight: =0
+                                                Size: =10
+                                                Tooltip: =Parent.DisplayName
+                                                Width: =Parent.Width - 48
+                                                X: =24
+                                                Y: =52
+                                          - ErrorMessage14_2:
+                                              Control: Label@2.5.1
+                                              MetadataKey: ErrorMessage
+                                              Properties:
+                                                AutoHeight: =true
+                                                Color: =RGBA(185, 28, 28, 1)
+                                                Font: =Font.'Open Sans'
+                                                FontWeight: =FontWeight.Semibold
+                                                Live: =Live.Assertive
+                                                PaddingBottom: =0
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                                PaddingTop: =0
+                                                Size: =8
+                                                Text: =If(!IsBlank(Parent.Error), Parent.Error, If(varDeskTentouEnviar && IsBlank(Trim(DataCardValue14_2.Text)), "Descreva a solicitação.", ""))
+                                                Visible: =Not(IsBlank(Self.Text))
+                                                Width: =Parent.Width - 48
+                                                X: =24
+                                                Y: =148
+                                          - StarVisible14_2:
+                                              Control: Label@2.5.1
+                                              MetadataKey: FieldRequired
+                                              Properties:
+                                                Text: =""
+                                                Visible: =false
+                                    - desk_status_DataCard2_2:
+                                        Control: TypedDataCard@1.0.7
+                                        Variant: ClassicTextualEdit
+                                        Properties:
+                                          DataField: ="desk_status"
+                                          Default: =If(cmbDeskCategoria.Selected.Chave = "RESET_SENHA", "Resolvido", Coalesce(ThisItem.desk_status, "Em atendimento"))
+                                          DisplayName: =DataSourceInfo([@tbl_ServiceDesk], DataSourceInfo.DisplayName, desk_status)
+                                          Height: =0
+                                          MaxLength: =DataSourceInfo([@tbl_ServiceDesk], DataSourceInfo.MaxLength, desk_status)
+                                          Required: =false
+                                          Update: =If(cmbDeskCategoria.Selected.Chave = "RESET_SENHA", "Resolvido", "Em atendimento")
+                                          Visible: =false
+                                          Width: =Parent.Width
+                                          X: =0
+                                          Y: =5
+                                        Children:
+                                          - DataCardKey12_2:
+                                              Control: Label@2.5.1
+                                              MetadataKey: FieldName
+                                              Properties:
+                                                Text: =Parent.DisplayName
+                                          - DataCardValue12_2:
+                                              Control: Classic/TextInput@2.3.2
+                                              MetadataKey: FieldValue
+                                              Properties:
+                                                Default: =Parent.Default
+                                          - ErrorMessage12_2:
+                                              Control: Label@2.5.1
+                                              MetadataKey: ErrorMessage
+                                              Properties:
+                                                Text: =Parent.Error
+                                          - StarVisible12_2:
+                                              Control: Label@2.5.1
+                                              MetadataKey: FieldRequired
+                                              Properties:
+                                                Text: ="*"
+                                    - Anexos_DataCard1_1:
+                                        Control: TypedDataCard@1.0.7
+                                        Variant: ClassicAttachmentsEdit
+                                        Properties:
+                                          DataField: ="{Attachments}"
+                                          Default: =ThisItem.Anexos
+                                          DisplayName: =DataSourceInfo([@tbl_ServiceDesk], DataSourceInfo.DisplayName, Anexos)
+                                          Height: =176
+                                          Required: =false
+                                          Update: =DataCardValue48_1.Attachments
+                                          Width: =Parent.Width
+                                          X: =0
+                                          Y: =3
+                                        Children:
+                                          - DataCardKey55_1:
+                                              Control: Label@2.5.1
+                                              MetadataKey: FieldName
+                                              Properties:
+                                                AutoHeight: =true
+                                                Color: =RGBA(30, 41, 59, 1)
+                                                Font: =Font.'Open Sans'
+                                                FontWeight: =FontWeight.Semibold
+                                                PaddingBottom: =0
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                                PaddingTop: =0
+                                                Size: =10
+                                                Text: ="Anexos"
+                                                Width: =Parent.Width - 48
+                                                X: =24
+                                                Y: =8
+                                          - lblDeskAttachmentHint:
+                                              Control: Label@2.5.1
+                                              Properties:
+                                                Color: =RGBA(100, 116, 139, 1)
+                                                Font: =Font.'Open Sans'
+                                                Height: =18
+                                                PaddingBottom: =0
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                                PaddingTop: =0
+                                                Size: =8
+                                                Text: ="Inclua imagens, documentos ou evidências relevantes."
+                                                Width: =Parent.Width - 48
+                                                X: =24
+                                                Y: =30
+                                          - DataCardValue48_1:
+                                              Control: Attachments@2.3.0
+                                              MetadataKey: FieldValue
+                                              Properties:
+                                                BorderColor: =If(IsBlank(Parent.Error), RGBA(203, 213, 225, 1), RGBA(220, 38, 38, 1))
+                                                DisplayMode: =Parent.DisplayMode
+                                                Font: =Font.'Open Sans'
+                                                Height: =96
+                                                HoverFill: =RGBA(238, 242, 255, 1)
+                                                ItemColor: =RGBA(255, 255, 255, 1)
+                                                ItemFill: =RGBA(96, 70, 237, 1)
+                                                ItemHoverFill: =RGBA(79, 70, 229, 1)
+                                                Items: =Parent.Default
+                                                PaddingBottom: =8
+                                                PaddingLeft: =8
+                                                PaddingRight: =8
+                                                PaddingTop: =8
+                                                PressedColor: =RGBA(255, 255, 255, 1)
+                                                PressedFill: =RGBA(57, 22, 148, 1)
+                                                Size: =9
+                                                Tooltip: =Parent.DisplayName
+                                                Width: =Parent.Width - 48
+                                                X: =24
+                                                Y: =52
+                                          - ErrorMessage51_1:
+                                              Control: Label@2.5.1
+                                              MetadataKey: ErrorMessage
+                                              Properties:
+                                                AutoHeight: =true
+                                                Color: =RGBA(185, 28, 28, 1)
+                                                Font: =Font.'Open Sans'
+                                                FontWeight: =FontWeight.Semibold
+                                                Live: =Live.Assertive
+                                                PaddingBottom: =0
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                                PaddingTop: =0
+                                                Size: =8
+                                                Text: =Parent.Error
+                                                Visible: =Not(IsBlank(Parent.Error))
+                                                Width: =Parent.Width - 48
+                                                X: =24
+                                                Y: =150
+                                          - StarVisible51_1:
+                                              Control: Label@2.5.1
+                                              MetadataKey: FieldRequired
+                                              Properties:
+                                                Text: =""
+                                                Visible: =false
+                                    - desk_solicitante_email_DataCard:
+                                        Control: TypedDataCard@1.0.7
+                                        Variant: ClassicTextualEdit
+                                        Properties:
+                                          DataField: ="desk_solicitante_email"
+                                          Default: =ThisItem.desk_solicitante_email
+                                          DisplayName: =DataSourceInfo([@tbl_ServiceDesk], DataSourceInfo.DisplayName, desk_solicitante_email)
+                                          Height: =0
+                                          MaxLength: =DataSourceInfo([@tbl_ServiceDesk], DataSourceInfo.MaxLength, desk_solicitante_email)
+                                          Required: =false
+                                          Update: =DataCardValue11_3.Selected.Email
+                                          Visible: =false
+                                          Width: =Parent.Width
+                                          X: =0
+                                          Y: =6
+                                        Children:
+                                          - DataCardKey70:
+                                              Control: Label@2.5.1
+                                              MetadataKey: FieldName
+                                              Properties:
+                                                Text: =Parent.DisplayName
+                                          - DataCardValue70:
+                                              Control: Classic/TextInput@2.3.2
+                                              MetadataKey: FieldValue
+                                              Properties:
+                                                Default: =Parent.Default
+                                                MaxLength: =Parent.MaxLength
+                                          - ErrorMessage70:
+                                              Control: Label@2.5.1
+                                              MetadataKey: ErrorMessage
+                                              Properties:
+                                                Text: =Parent.Error
+                                          - StarVisible70:
+                                              Control: Label@2.5.1
+                                              MetadataKey: FieldRequired
+                                              Properties:
+                                                Text: =""
+                                                Visible: =false
+                                    - desk_ciclo_DataCard:
+                                        Control: TypedDataCard@1.0.7
+                                        Variant: ClassicTextualEdit
+                                        Properties:
+                                          DataField: ="desk_ciclo"
+                                          Default: =ThisItem.desk_ciclo
+                                          DisplayName: =DataSourceInfo([@tbl_ServiceDesk], DataSourceInfo.DisplayName, desk_ciclo)
+                                          Height: =0
+                                          MaxLength: =DataSourceInfo([@tbl_ServiceDesk], DataSourceInfo.MaxLength, desk_ciclo)
+                                          Required: =false
+                                          Update: =cmbDeskCategoria.Selected.Ciclo
+                                          Visible: =false
+                                          Width: =Parent.Width
+                                          X: =0
+                                          Y: =7
+                                        Children:
+                                          - DataCardKey71:
+                                              Control: Label@2.5.1
+                                              MetadataKey: FieldName
+                                              Properties:
+                                                Text: =Parent.DisplayName
+                                          - DataCardValue71:
+                                              Control: Classic/TextInput@2.3.2
+                                              MetadataKey: FieldValue
+                                              Properties:
+                                                Default: =Parent.Default
+                                                MaxLength: =Parent.MaxLength
+                                          - ErrorMessage71:
+                                              Control: Label@2.5.1
+                                              MetadataKey: ErrorMessage
+                                              Properties:
+                                                Text: =Parent.Error
+                                          - StarVisible71:
+                                              Control: Label@2.5.1
+                                              MetadataKey: FieldRequired
+                                              Properties:
+                                                Text: =""
+                                                Visible: =false
+                                    - desk_categoria_chave_DataCard:
+                                        Control: TypedDataCard@1.0.7
+                                        Variant: ClassicTextualEdit
+                                        Properties:
+                                          DataField: ="desk_categoria_chave"
+                                          Default: =ThisItem.desk_categoria_chave
+                                          DisplayName: =DataSourceInfo([@tbl_ServiceDesk], DataSourceInfo.DisplayName, desk_categoria_chave)
+                                          Height: =0
+                                          MaxLength: =DataSourceInfo([@tbl_ServiceDesk], DataSourceInfo.MaxLength, desk_categoria_chave)
+                                          Required: =false
+                                          Update: =cmbDeskCategoria.Selected.Chave
+                                          Visible: =false
+                                          Width: =Parent.Width
+                                          X: =0
+                                          Y: =8
+                                        Children:
+                                          - DataCardKey72:
+                                              Control: Label@2.5.1
+                                              MetadataKey: FieldName
+                                              Properties:
+                                                Text: =Parent.DisplayName
+                                          - DataCardValue72:
+                                              Control: Classic/TextInput@2.3.2
+                                              MetadataKey: FieldValue
+                                              Properties:
+                                                Default: =Parent.Default
+                                                MaxLength: =Parent.MaxLength
+                                          - ErrorMessage72:
+                                              Control: Label@2.5.1
+                                              MetadataKey: ErrorMessage
+                                              Properties:
+                                                Text: =Parent.Error
+                                          - StarVisible72:
+                                              Control: Label@2.5.1
+                                              MetadataKey: FieldRequired
+                                              Properties:
+                                                Text: =""
+                                                Visible: =false
+                                    - desk_prioridade_DataCard:
+                                        Control: TypedDataCard@1.0.7
+                                        Variant: ClassicTextualEdit
+                                        Properties:
+                                          DataField: ="desk_prioridade"
+                                          Default: =ThisItem.desk_prioridade
+                                          DisplayName: =DataSourceInfo([@tbl_ServiceDesk], DataSourceInfo.DisplayName, desk_prioridade)
+                                          Height: =0
+                                          MaxLength: =DataSourceInfo([@tbl_ServiceDesk], DataSourceInfo.MaxLength, desk_prioridade)
+                                          Required: =false
+                                          Update: =cmbDeskCategoria.Selected.Prioridade
+                                          Visible: =false
+                                          Width: =Parent.Width
+                                          X: =0
+                                          Y: =9
+                                        Children:
+                                          - DataCardKey73:
+                                              Control: Label@2.5.1
+                                              MetadataKey: FieldName
+                                              Properties:
+                                                Text: =Parent.DisplayName
+                                          - DataCardValue73:
+                                              Control: Classic/TextInput@2.3.2
+                                              MetadataKey: FieldValue
+                                              Properties:
+                                                Default: =Parent.Default
+                                                MaxLength: =Parent.MaxLength
+                                          - ErrorMessage73:
+                                              Control: Label@2.5.1
+                                              MetadataKey: ErrorMessage
+                                              Properties:
+                                                Text: =Parent.Error
+                                          - StarVisible73:
+                                              Control: Label@2.5.1
+                                              MetadataKey: FieldRequired
+                                              Properties:
+                                                Text: =""
+                                                Visible: =false
+                              - recDeskFooterDivider:
+                                  Control: Rectangle@2.3.0
+                                  Properties:
+                                    BorderColor: =RGBA(0, 0, 0, 0)
+                                    Fill: =RGBA(226, 232, 240, 1)
+                                    Height: =1
+                                    Width: =Parent.Width
+                                    Y: =Parent.Height - 84
+                              - lblDeskFooterHint:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    AutoHeight: =true
+                                    Color: =RGBA(100, 116, 139, 1)
+                                    Font: =Font.'Open Sans'
+                                    PaddingBottom: =0
+                                    PaddingLeft: =0
+                                    PaddingRight: =0
+                                    PaddingTop: =0
+                                    Size: =8
+                                    Text: =If(varDeskRegistroCriado, "O chamado já foi registrado.", "Revise os dados antes de confirmar.")
+                                    Visible: =Parent.Width >= 650
+                                    Width: =270
+                                    X: =28
+                                    Y: =Parent.Height - 55
+                              - ButtonCanvas22_1:
+                                  Control: Button@0.0.45
+                                  Properties:
+                                    Appearance: ='ButtonCanvas.Appearance'.Secondary
+                                    BorderRadius: =0
+                                    DisplayMode: =If(varDeskProcessando, DisplayMode.Disabled, DisplayMode.Edit)
+                                    FontWeight: =FontWeight.Semibold
+                                    Height: =42
+                                    Icon: ="Dismiss"
+                                    IconStyle: ='ButtonCanvas.IconStyle'.Outline
+                                    OnSelect: |-
+                                      =If(
+                                          !varDeskProcessando,
+                                          ResetForm(FormDesk_2);
+                                          UpdateContext(
+                                              {
+                                                  varDeskTentouEnviar: false,
+                                                  varDeskRegistroCriado: false,
+                                                  varDeskErroFluxo: false,
+                                                  varDeskOcupadoDesde: Blank()
+                                              }
+                                          );
+                                          Set(
+                                              varNumChamado,
+                                              Blank()
+                                          );
+                                          Navigate(
+                                              Login,
+                                              ScreenTransition.Fade
+                                          )
+                                      )
+                                    Text: =If(varDeskRegistroCriado, "Voltar", "Cancelar")
+                                    Width: =118
+                                    X: =Parent.Width - ButtonCanvas22_3.Width - Self.Width - 68
+                                    Y: =Parent.Height - 64
+                              - ButtonCanvas22_3:
+                                  Control: Button@0.0.45
+                                  Properties:
+                                    BorderRadius: =0
+                                    DisplayMode: =If(Or(varDeskProcessando, varDeskRegistroCriado), DisplayMode.Disabled, DisplayMode.Edit)
+                                    FontWeight: =FontWeight.Semibold
+                                    Height: =42
+                                    Icon: ="Save"
+                                    IconStyle: ='ButtonCanvas.IconStyle'.Filled
+                                    Layout: ='ButtonCanvas.Layout'.IconBefore
+                                    OnSelect: |-
+                                      =If(
+                                          varDeskRegistroCriado,
+                                          Notify(
+                                              "Este chamado já foi registrado. Utilize Voltar.",
+                                              NotificationType.Warning,
+                                              4000
+                                          ),
+
+                                          !IsBlank(varDeskOcupadoDesde) && DateDiff(varDeskOcupadoDesde, Now(), TimeUnit.Seconds) < 30,
+                                          Notify(
+                                              "Aguarde: o envio anterior ainda está sendo processado.",
+                                              NotificationType.Warning,
+                                              3000
+                                          ),
+
+                                          UpdateContext(
+                                              {
+                                                  varDeskOcupadoDesde: Now(),
+                                                  varDeskTentouEnviar: true
+                                              }
+                                          );
+                                          If(
+                                              IsBlank(cmbDeskCategoria.Selected.Nome) ||
+                                              IsBlank(DataCardValue11_3.Selected.Email) ||
+                                              IsBlank(Trim(DataCardValue14_2.Text)),
+
+                                              UpdateContext({varDeskOcupadoDesde: Blank()});
+                                              Notify(
+                                                  "Preencha os campos obrigatórios antes de confirmar.",
+                                                  NotificationType.Warning,
+                                                  4000
+                                              ),
+
+                                              Set(
+                                                  varNumChamado,
+                                                  Coalesce(
+                                                      First(
+                                                          Sort(
+                                                              tbl_ServiceDesk,
+                                                              desk_id,
+                                                              SortOrder.Descending
+                                                          )
+                                                      ).desk_id + 1,
+                                                      1
+                                                  )
+                                              );
+                                              UpdateContext(
+                                                  {
+                                                      varDeskCategoria: cmbDeskCategoria.Selected.Nome,
+                                                      varDeskCategoriaChave: cmbDeskCategoria.Selected.Chave,
+                                                      varDeskUsuario: DataCardValue11_3.Selected.DisplayName,
+                                                      varDeskDescricao: Trim(DataCardValue14_2.Text),
+                                                      varDeskUsuEmail: DataCardValue11_3.Selected.Email,
+                                                      varDeskProcessando: true,
+                                                      varDeskErroFluxo: false
+                                                  }
+                                              );
+                                              SubmitForm(FormDesk_2)
+                                          )
+                                      )
+                                    Text: =If(varDeskProcessando, "Enviando...", "Confirmar")
+                                    Width: =136
+                                    X: =Parent.Width - Self.Width - 48
+                                    Y: =Parent.Height - 64
+                              - cntDeskLoading:
+                                  Control: GroupContainer@1.5.0
+                                  Variant: ManualLayout
+                                  Properties:
+                                    DropShadow: =DropShadow.None
+                                    Fill: =RGBA(255, 255, 255, 0.9)
+                                    Height: =Parent.Height
+                                    RadiusBottomLeft: =18
+                                    RadiusBottomRight: =18
+                                    RadiusTopLeft: =18
+                                    RadiusTopRight: =18
+                                    Visible: =varDeskProcessando
+                                    Width: =Parent.Width
+                                  Children:
+                                    - cntDeskLoadingCard:
+                                        Control: GroupContainer@1.5.0
+                                        Variant: ManualLayout
+                                        Properties:
+                                          BorderColor: =RGBA(221, 214, 254, 1)
+                                          BorderThickness: =1
+                                          DropShadow: =DropShadow.ExtraBold
+                                          Fill: =RGBA(255, 255, 255, 1)
+                                          Height: =122
+                                          RadiusBottomLeft: =14
+                                          RadiusBottomRight: =14
+                                          RadiusTopLeft: =14
+                                          RadiusTopRight: =14
+                                          Width: =300
+                                          X: =(Parent.Width - Self.Width) / 2
+                                          Y: =(Parent.Height - Self.Height) / 2
+                                        Children:
+                                          - lblDeskLoadingTitle:
+                                              Control: Label@2.5.1
+                                              Properties:
+                                                Align: =Align.Center
+                                                Color: =RGBA(57, 22, 148, 1)
+                                                Font: =Font.'Open Sans'
+                                                FontWeight: =FontWeight.Bold
+                                                Height: =28
+                                                Text: ="Enviando chamado..."
+                                                Width: =Parent.Width - 32
+                                                X: =16
+                                                Y: =28
+                                          - lblDeskLoadingText:
+                                              Control: Label@2.5.1
+                                              Properties:
+                                                Align: =Align.Center
+                                                AutoHeight: =true
+                                                Color: =RGBA(100, 116, 139, 1)
+                                                Font: =Font.'Open Sans'
+                                                Size: =9
+                                                Text: ="Aguarde enquanto os dados e anexos são processados."
+                                                Width: =Parent.Width - 32
+                                                X: =16
+                                                Y: =62
