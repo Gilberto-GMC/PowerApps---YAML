@@ -32,13 +32,20 @@ portão em dois voos simultâneos, e mostra quem alterou o quê.
 **A numeração dos portões saiu da própria gravação.** Douglas: *"essa aeronave que vai chegar às 10 horas, da
 GOL 1214 e sai 1217, vai ser estacionada no tango 4 e vai utilizar o portão 4"*. Na aba `SEX 28.08` esse bloco
 está na linha 9 (T4), das 10:00 às 11:40, com contorno `#FF0066` — logo **`#FF0066` = portão 4**. Os outros
-quatro foram numerados por convenção, do frio para o quente: `#00FFFF` 1 · `#00B050` 2 · `#FFFF00` 3 ·
-`#FF0066` 4 · `#FF0000` 5. Trocar a numeração é **uma linha** em `colPortoes`, porque a lista guarda o número,
-nunca a cor.
+quatro tinham sido numerados por convenção, do frio para o quente. **A operação confirmou a numeração real**
+(31/08/2026): `#00B050` 1 · `#FFFF00` 2 · `#00FFFF` 3 · `#FF0066` 4 · `#C9C5E6` 5. Trocar a numeração é **uma
+linha** em `colPortoes`, porque a lista guarda o número, nunca a cor.
 
-> **Duas variantes de vermelho na planilha.** Os contornos aparecem como `#FF0000` e `#F22727` — a mesma
-> intenção, com a deriva de quem escolhe a cor à mão a cada caixa. No app existe um vermelho só; ao transcrever
-> os dias antigos, as duas viram portão 5.
+> **Duas variantes de vermelho na planilha — mapeamento agora em aberto.** Os contornos aparecem como `#FF0000`
+> e `#F22727` — a mesma intenção, com a deriva de quem escolhe a cor à mão a cada caixa. A nota original dizia
+> que as duas viram portão 5 ao transcrever os dias antigos, porque na heurística frio-para-quente o portão 5
+> era vermelho. **Não é mais**: a numeração confirmada usa `#C9C5E6` (um lilás/cinza) no portão 5, e nenhuma
+> cor de `colPortoes` é vermelha. Falta confirmar com a operação para qual portão os blocos vermelhos das 47
+> abas antigas devem ser transcritos antes de migrar o histórico.
+>
+> **Portão 5 e a companhia ONE compartilham `#C9C5E6`.** É a mesma cor de `hxBorda` e do preenchimento da
+> companhia ONE em `colCias`. Um voo da ONE no portão 5 tem contorno e preenchimento idênticos — vale confirmar
+> se isso é aceitável na leitura da grade ou se o portão 5 precisa de outro tom.
 
 ## 2. O que virou dado local e o que virou lista
 
@@ -65,6 +72,15 @@ republicar, cada uma vira lista trocando **só a definição em `App.Formulas`**
 
 > `colPosicoes.id` é identificador estável: é ele que vai gravado em `id_posicao`. Nunca reordenar nem
 > reaproveitar. Quem muda quando o desenho do pátio muda é a coluna `ordem`.
+
+> **Preparado para um segundo aeroporto, ainda cadastrado só pelo desenvolvedor (31/08/2026).** `colPatios` e
+> `colPosicoes` carregam uma coluna `aeroporto` (ICAO). Nenhuma tela lê essas duas direto — todas leem
+> `colPosicoesAero`/`colPatiosAero`, que filtram por `varAero` e caem de volta para a tabela inteira se o filtro
+> não achar nada (rede de segurança contra tela em branco — ver `AppFormulas_Mapa.fx.md` seção 6). Hoje só
+> existe `SBNF`, então não muda nada visível — mas incluir o segundo aeroporto é acrescentar linhas em
+> `App.Formulas` com o novo ICAO, sem tocar em tela nenhuma. Continua **fora de escopo** dar à operação uma tela
+> para cadastrar posição/pátio sozinha — isso só vira necessário (e só então compensa migrar para lista
+> SharePoint, pelo mesmo critério da tabela acima) quando um segundo aeroporto realmente entrar.
 
 ## 3. Estratégia de coleções — o núcleo da performance
 
@@ -137,9 +153,11 @@ separados, e é isso que torna a solução simples:
 - Como a sobreposição é bloqueada ao salvar, cada posição é uma **faixa única** e os segmentos saem em ordem,
   sem cálculo acumulado: `Index(_bl, _i.Value - 1)` dá o bloco anterior e o vão é a subtração. As duas linhas
   por posição do Excel existiam justamente por falta de validação.
-- Cor do `<td>`: `background` = `cor_hex` de `colCias`, `border: 3px solid` = `cor_hex` de `colPortoes`,
-  `hxVermelho` + selo `P` quando `pesquisado = 1`, cinza `hxTextoFraco` + `INTERDITADO` quando o tipo não é
-  `VOO`. **Nenhuma cor literal entra no `.pa.yaml`** (regra 16).
+- Cor do `<td>`: `background` = `cor_hex` de `colCias`; `border: 3px solid` = `cor_hex` de `colPortoes`, **sempre**
+  — nunca muda por causa de pesquisado ou bloqueio, porque a legenda diz "contorno = portão" e trocar a borda
+  junto confundiria as duas informações (decisão da operação, 31/08/2026). Quando `pesquisado = 1`, o `background`
+  vira `hxVermelho` com selo `P`; quando o tipo não é `VOO`, vira cinza `hxTextoFraco` + `INTERDITADO`. **Nenhuma
+  cor literal entra no `.pa.yaml`** (regra 16).
 
 ### Como se edita — os dois cliques pedidos
 
@@ -256,8 +274,9 @@ Mapa de Alocação/
    antes de abrir qualquer tela. *Erro de nome desconhecido tem precedência sobre tudo: a primeira coisa a
    conferir num painel cheio de erros é se o `App.Formulas` foi colado.*
 3. Conferir as contagens: `colPosicoes` = 25, `colPortoes` = 5, `colCias` = 6, `colPatios` = 3.
-4. **Confirmar com a operação** a numeração dos portões 1, 2, 3 e 5 — o 4 já está provado pela gravação. É uma
-   linha em `colPortoes` se a ordem for outra.
+4. ~~Confirmar com a operação a numeração dos portões 1, 2, 3 e 5~~ — **confirmado em 31/08/2026** (seção 1). O 4
+   já estava provado pela gravação. **Pendente:** para qual portão transcrever os blocos vermelhos das 47 abas
+   antigas do Excel, já que nenhuma cor de `colPortoes` é mais vermelha.
 5. `App.StartScreen = scrMapaInicio`; Configurações → Geral → **Limite de linhas de dados = 2000**.
 6. Adicionar a fonte de dados `tb_alocacoesMapa` — é a única.
 7. Colar as telas na ordem que resolve os `Navigate`: `scrMapaReferencia` → `scrMapaPatio` → `scrMapaInicio`.

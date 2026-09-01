@@ -7,6 +7,7 @@ Screens:
         Set(varPodeEditar, DataSourceInfo('tb_alocacoesMapa', DataSourceInfo.EditPermission));
         Set(varMenuAberto, Coalesce(varMenuAberto, true));
         If(IsBlank(varAero), Set(varAero, First(colAerosMapa).ICAO));
+        If(IsBlank(varAeroNome), Set(varAeroNome, First(colAerosMapa).Aeroporto));
         If(IsBlank(varData), Set(varData, Today()))
     Children:
       - cntShellIni:
@@ -144,7 +145,8 @@ Screens:
                   - drpAeroIni:
                       Control: DropDown@0.0.45
                       Properties:
-                        DefaultSelectedItems: =[varAero]
+                        DefaultSelectedItems: |-
+                          =[Coalesce(LookUp(colAerosMapa As _a, _a.ICAO = varAero).Aeroporto, First(colAerosMapa).Aeroporto)]
                         Height: =44
                         Items: =colAerosSel
                   - htmAeroNomeIni:
@@ -156,8 +158,8 @@ Screens:
                         Font: =thmFonte
                         HtmlText: |-
                           ="<div style='" & htmlFonte & "font-size:11px;color:" & hxTextoFraco & ";padding:2px 0 12px 0;'>" &
-                          Coalesce(LookUp(colAerosMapa As _a, _a.ICAO = drpAeroIni.Selected.Value).Aeroporto, "") &
-                          " &nbsp;&middot;&nbsp; " & CountRows(colPosicoes) & " posições cadastradas</div>"
+                          Coalesce(LookUp(colAerosMapa As _a, _a.Aeroporto = drpAeroIni.Selected.Value).ICAO, "") &
+                          " &nbsp;&middot;&nbsp; " & CountRows(Filter(colPosicoes, aeroporto = LookUp(colAerosMapa As _a, _a.Aeroporto = drpAeroIni.Selected.Value).ICAO)) & " posições cadastradas</div>"
                         Size: =11
                   - lblDataIni:
                       Control: Label@2.5.1
@@ -189,7 +191,8 @@ Screens:
                         IconStyle: ='ButtonCanvas.IconStyle'.Filled
                         LayoutMinWidth: =0
                         OnSelect: |-
-                          =Set(varAero, drpAeroIni.Selected.Value);
+                          =Set(varAeroNome, drpAeroIni.Selected.Value);
+                          Set(varAero, Coalesce(LookUp(colAerosMapa As _a, _a.Aeroporto = drpAeroIni.Selected.Value).ICAO, First(colAerosMapa).ICAO));
                           Set(varData, dtpDataIni.SelectedDate);
                           Navigate(scrMapaPatio, ScreenTransition.Fade)
                         PaddingLeft: =18

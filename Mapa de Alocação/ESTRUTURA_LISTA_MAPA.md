@@ -95,7 +95,7 @@ precisa ser vista por todo mundo ao mesmo tempo. Falha nos três testes de dado 
 | 2 | `data_operacao` | Data da Operação | Data e Hora → **Somente data** | Sim | **Indexada** — é a chave do filtro do dia |
 | 3 | `id_posicao` | ID da Posição | Número | Sim | 0 casas · **Indexada** · aponta para `colPosicoes.id` |
 | 4 | `posicao_txt` | Posição | Texto (uma linha) | Sim | `T4` — redundante, para leitura humana e Power BI |
-| 5 | `patio_txt` | Pátio | Texto (uma linha) | Sim | `PRINCIPAL` · `PATIO23` · `HELIPONTOS` |
+| 5 | `patio_txt` | Pátio | Texto (uma linha) | Sim | `PRINCIPAL` · `PATIO3` · `HELIPONTOS` |
 
 > `posicao_txt` e `patio_txt` são redundância proposital: deixam a lista legível sem o app e permitem filtrar
 > por pátio sem nenhum cruzamento. O app grava os três (`id_posicao`, `posicao_txt`, `patio_txt`) no mesmo `Patch`.
