@@ -223,44 +223,31 @@ filtro de nota interna usa `interna = 0`, que em Power Fx também casa com branc
 
 ---
 
-# Lista 4 — `tbl_ChamadoDemanda` (Onda 3)
+# Lista `tb_chamadoDemanda` — gerada pelo `List_Generator` (Onda 3)
 
-Extensão **1-para-1** da mestre, só para o ciclo de demanda. Guarda as respostas
-do roteiro de [ROTEIRO_NOVO_MODULO.md](ROTEIRO_NOVO_MODULO.md).
+Extensão **1-para-1** da mestre, só para o ciclo de demanda. JSON pronto em
+[tb_chamadoDemanda.json](tb_chamadoDemanda.json), validado.
 
-| # | Nome interno | Nome de exibição | Tipo | Obrig. | Passo do roteiro |
-|---|---|---|---|---|---|
-| 1 | `desk_id` | Nº do Chamado | Número | **Sim** | **Indexada**, um registro por chamado |
-| 2 | `dem_nome_modulo` | Nome do Módulo | Texto (uma linha) | **Sim** | 1 |
-| 3 | `dem_area` | Área Solicitante | Texto (uma linha) | **Sim** | 1 |
-| 4 | `dem_aeroportos` | Aeroportos Impactados | Texto (várias linhas) | **Sim** | 1 — siglas IATA separadas por `;`, ou `TODOS` |
-| 5 | `dem_como_e_hoje` | Como é Feito Hoje | Texto (várias linhas) | **Sim** | 2 |
-| 6 | `dem_ferramenta_atual` | Ferramenta Atual | Texto (uma linha) | **Sim** | 2 — Excel, papel, e-mail, outro sistema, nada |
-| 7 | `dem_volume_mensal` | Volume Mensal | Número | Não | 2 — quantos registros por mês |
-| 8 | `dem_tempo_gasto` | Tempo Gasto por Registro | Texto (uma linha) | Não | 2 |
-| 9 | `dem_quem_executa` | Quem Executa Hoje | Texto (uma linha) | Não | 2 |
-| 10 | `dem_o_que_registrar` | O Que Precisa Registrar | Texto (várias linhas) | **Sim** | 3 |
-| 11 | `dem_quem_consulta` | Quem Consulta | Texto (várias linhas) | **Sim** | 3 |
-| 12 | `dem_decisoes` | Decisões que Dependem | Texto (várias linhas) | Não | 3 |
-| 13 | `dem_indicadores` | Indicadores Esperados | Texto (várias linhas) | Não | 3 |
-| 14 | `dem_regulatorio` | Exigência Regulatória | Texto (uma linha) | **Sim** | 4 — `SIM`/`NAO` |
-| 15 | `dem_norma` | Norma / Referência | Texto (uma linha) | Não | 4 — obrigatório na tela se item 14 = `SIM` |
-| 16 | `dem_exige_evidencia` | Exige Evidência/Anexo | Texto (uma linha) | Não | 4 — `SIM`/`NAO` |
-| 17 | `dem_exige_aprovacao` | Exige Aprovação no Fluxo | Texto (uma linha) | Não | 4 — `SIM`/`NAO` |
-| 18 | `dem_patrocinador_email` | Patrocinador | Texto (uma linha) | **Sim** | 5 |
-| 19 | `dem_prazo_desejado` | Prazo Desejado | Data | Não | 5 |
-| 20 | `dem_impacto_sem` | Impacto se Não For Feito | Texto (várias linhas) | **Sim** | 5 |
+20 colunas, nas mesmas convenções do gerador: chave estrangeira `id_fk_chamado`,
+flags como `Number` 1/0 (`regulatorio`, `exige_evidencia`, `exige_aprovacao`),
+nenhum `<Default>` e nenhum `<Validation>` — as construções que derrubaram o
+`tb_chamadoInteracao` na primeira tentativa.
 
-- Anexos: **habilitados** (fluxograma, planilha modelo, print da tela atual).
-- Versionamento: ativar, 20 versões.
-- Índice em `desk_id`.
+| Passo do roteiro | Colunas |
+|---|---|
+| 1 — o que você precisa | `nome_modulo`, `area`, `aeroportos` |
+| 2 — como é hoje | `como_e_hoje`, `ferramenta_atual`, `volume_mensal`, `tempo_gasto`, `quem_executa` |
+| 3 — o que precisa mudar | `o_que_registrar`, `quem_consulta`, `decisoes`, `indicadores` |
+| 4 — regras e obrigações | `regulatorio`, `norma`, `exige_evidencia`, `exige_aprovacao` |
+| 5 — patrocínio e urgência | `patrocinador_email`, `prazo_desejado`, `impacto_sem` |
 
-### Por que lista separada e não colunas na mestre
+`id_fk_chamado` e `patrocinador_email` são indexadas. A data do registro é a
+coluna nativa `Created`.
 
-Vinte colunas que só valem para 4 das 10 categorias. Na mestre elas apareceriam
-em todo formulário, em toda view e em toda consulta de suporte — e a lista mestre
-é a que mais cresce. Separada, o custo é um `LookUp` por chamado de demanda, feito
-só na tela de detalhe.
+> ⚠️ Única construção ainda não comprovada neste tenant: `prazo_desejado` é
+> `DateTime` com `Format='DateOnly'` — tipo que as duas listas anteriores não
+> usaram, mas que aparece no exemplo da própria skill. Se o fluxo recusar, é só
+> remover essa coluna do JSON e rodar de novo; o wizard grava em branco sem erro.
 
 ---
 

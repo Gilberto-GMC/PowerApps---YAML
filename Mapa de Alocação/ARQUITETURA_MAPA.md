@@ -97,9 +97,14 @@ fórmula inteira gerando dezenas de erros derivados sem relação com a causa.
 `colGrade` guarda, por posição, o **HTML da linha já montado**. A galeria fica no mais barato que existe:
 
 ```
-galPosicoesMap.Items  =Filter(colGrade, locPatio = "TODOS" Or patio = locPatio)
-htmTrilhoMap.HtmlText =ThisItem.html
+galPosicoesMap.Items =Filter(colGrade, locPatio = "TODOS" Or patio = locPatio)
+htmLinhaMap.HtmlText =ThisItem.html
+htmLinhaMap.Fill     =If(varPosSel.id_posicao = ThisItem.id_posicao, thmPrimariaClara, thmSuperficie)
 ```
+
+**Uma linha da grade é um controle só.** Rótulo da posição e trilho de horas moram na mesma tabela HTML, no
+mesmo `HtmlViewer` — 25 controles no template, não 50. E o realce da posição selecionada é o `Fill` do
+controle, não HTML: trocar de posição não remonta string nenhuma, só repinta o fundo.
 
 ### As regras que as telas respeitam
 
@@ -111,19 +116,19 @@ htmTrilhoMap.HtmlText =ThisItem.html
    `HtmlViewer` da linha. Reprovado pela regra 23.
 3. **Filtros de tela são em memória.** Trocar de pátio é `Filter(colGrade, …)` — zero rede. Só trocar de
    **data** ou de **aeroporto** vai ao SharePoint.
-4. **Recarga governada por um único ponto.** `btnAtualizarMap.OnSelect` contém o bloco de recarga inteiro
+6. **Recarga governada por um único ponto.** `btnAtualizarMap.OnSelect` contém o bloco de recarga inteiro
    (`colDia` → `colGrade`); `OnVisible`, salvar, excluir e os botões de data chamam `Select(btnAtualizarMap)`.
    Isso também resolve a armadilha de `Navigate` para a própria tela não reexecutar o `OnVisible` — em vez de
    duplicar o bloco, existe uma cópia só.
-5. **Nunca `CountRows`/`CountIf` sobre a lista.** Os contadores da barra contam `colDia`. Reprovado pela regra 22.
-6. **Sincronismo multiusuário barato.** `tmrSyncMap` a cada 60 s compara o `Modificado` mais recente do dia no
+7. **Nunca `CountRows`/`CountIf` sobre a lista.** Os contadores da barra contam `colDia`. Reprovado pela regra 22.
+8. **Sincronismo multiusuário barato.** `tmrSyncMap` a cada 60 s compara o `Modificado` mais recente do dia no
    servidor com o mais recente em `colDia`. Diferente → aparece a faixa *"a programação foi alterada"* com o
    botão ATUALIZAR. **Não recarrega sozinho por baixo de quem está editando.** Uma consulta por minuto, e o
    timer é barrado por `varMapaVisivel` — `AutoStart` + `Repeat` continua rodando com a seção invisível
    (regra 27 do validador).
-7. **`App.OnStart` vazio de propósito.** Named formula não custa nada até ser lida. Nada de `ClearCollect` de
+9. **`App.OnStart` vazio de propósito.** Named formula não custa nada até ser lida. Nada de `ClearCollect` de
    dado estático na abertura.
-8. **Limite de linhas de dados = 2000.** Coleção maior que o limite trunca **em silêncio**.
+10. **Limite de linhas de dados = 2000.** Coleção maior que o limite trunca **em silêncio**.
 
 Resultado na abertura: **uma** requisição HTTP.
 
@@ -132,7 +137,7 @@ Resultado na abertura: **uma** requisição HTTP.
 | Tela | Papel |
 |---|---|
 | `scrMapaInicio` | Apresentação, como ler a grade, seleção de aeroporto e data, resolução de permissão |
-| `scrMapaPatio` | A grade, o painel lateral de edição, os filtros e a legenda |
+| `scrMapaPatio` | A grade, o painel de edição (popup), os filtros e a legenda |
 | `scrMapaReferencia` | Posições, portões e companhias em leitura, com as cores aplicadas |
 
 Shell comum: trilho lateral roxo (`cntMenu*`, 236 px aberto / 76 recolhido) + barra de título de 72 px. O
@@ -144,15 +149,46 @@ para `_1` e quebrar o YAML, e nome de controle é único no app inteiro, não po
 Power Apps não tem Gantt, e `HtmlViewer` não devolve clique por elemento — então desenho e clique são
 separados, e é isso que torna a solução simples:
 
-- Cada linha é um `<table style='table-layout:fixed'>` com um `<td>` por segmento e **largura em porcentagem**
-  calculada de `hora_inicio`/`hora_fim`: `(fim − ini) × 100 / 1440`.
+- **Uma geometria só, definida no HTML.** A linha é uma tabela `table-layout:fixed` de duas colunas: rótulo
+  com `width:132px` e trilho com o que sobrar. A régua do topo é **a mesma tabela**, com a mesma primeira
+  coluna em px. Como as duas ocupam a mesma largura de controle, o navegador resolve o alinhamento — nenhuma
+  conta de `X`/`Width`/padding em Power Fx precisa bater com outra.
+- **A largura de controle é a mesma porque as duas descontam a mesma constante.** `htmReguaMap` reserva
+  `mapLarguraBarra` em `PaddingRight`; `htmLinhaMap` usa `galPosicoesMap.Width - mapLarguraBarra`. É o espaço
+  da barra de rolagem da galeria. *Era exatamente aqui que a grade antiga desalinhava: régua e trilho eram
+  controles independentes, cada um com seu padding — e o `HtmlViewer` tem padding próprio diferente de zero,
+  que precisa ser zerado explicitamente nos quatro lados.*
+- Dentro do trilho, um `<td>` por segmento com **largura em porcentagem** de `hora_inicio`/`hora_fim`:
+  `(fim − ini) × 100 / 1440`.
 - `<table>` e não flexbox, e nenhum `<svg>` nem emoji — o sanitizador do `HtmlViewer` remove SVG e flexbox não
-  sobrevive em todo cliente.
+  sobrevive em todo cliente. `background-image: repeating-linear-gradient` **passa** pelo sanitizador (o mesmo
+  recurso já roda em `DueDiligence/ScreenDueDiligenceInicio.yaml`) e é o que desenha as linhas verticais de
+  hora por baixo dos vãos.
+- **A régua e a grade desenham a linha de hora com o mesmo mecanismo, a partir da mesma definição:**
+  `mapFundoHoras`, no `App.Formulas`. Não é preciosismo. A régua desenhava com `border-left` de célula e a
+  grade com gradiente; borda de célula o navegador **encaixa em pixel inteiro**, gradiente ele rasteriza em
+  **espaço contínuo**. Em 100 % numa tela comum os dois caem no mesmo lugar e parece resolvido — em zoom de
+  110 %/125 % ou tela HiDPI cada um arredonda para um lado e a linha de baixo sai até 1,25 px da de cima,
+  desalinhada de um jeito que varia coluna a coluna. Com a mesma declaração CSS sobre elementos de mesma
+  largura, o erro medido cai para 0,03 px em qualquer zoom. A porcentagem da coluna de hora sai da mesma
+  fonte (`mapPctHora`), então largura de célula e período do gradiente não podem divergir.
+- `border-collapse:separate;border-spacing:0` com `box-sizing:border-box` em toda célula: no layout fixo a
+  largura declarada é a da caixa **com** a borda, então os 3 px de contorno do portão saem de dentro do bloco
+  e não empurram o vizinho.
+- **As linhas horizontais são `border-top` das células, nunca `border-bottom`.** A borda de baixo cai no
+  limite recortado pela altura do controle e some; a de cima sempre aparece. A primeira posição de cada pátio
+  leva uma borda mais forte, que é o único separador de grupo da grade.
 - `Text(x, "0.000", "en-US")` — **a tag de idioma é obrigatória**: em cliente pt-BR, `Text(3.47, "0.000")`
   devolve `3,470` e quebra o `width:` do CSS. Reprovado pela regra 26 do validador.
-- Como a sobreposição é bloqueada ao salvar, cada posição é uma **faixa única** e os segmentos saem em ordem,
-  sem cálculo acumulado: `Index(_bl, _i.Value - 1)` dá o bloco anterior e o vão é a subtração. As duas linhas
-  por posição do Excel existiam justamente por falta de validação.
+- **Cursor monotônico, e não a subtração do bloco anterior.** O início efetivo de cada bloco é
+  `Max(ini, cursor)` e o cursor é `Max(FirstN(_bl, i-1), Max(ini, fim))`, tudo grampeado em `[0; 1440]`. Some
+  a possibilidade de largura negativa: dois registros sobrepostos, ou um com saída antes da chegada, davam um
+  `width:-12.500%` que o navegador descarta — e aí o layout fixo redistribuía a linha inteira, jogando os
+  blocos seguintes **horas para a esquerda**. A validação ao salvar impede a sobreposição pelo app, mas não
+  impede edição direta no SharePoint nem dado herdado da planilha. Com o cursor, o pior caso é um bloco
+  desenhado truncado — a linha continua correta, e o rótulo continua mostrando o horário real gravado.
+  A soma das larguras é exatamente 100 % em qualquer entrada (provado por teste de propriedade sobre 5000
+  casos aleatórios mais os dirigidos: sobreposto, engolido, empate, invertido, fora do dia).
 - Cor do `<td>`: `background` = `cor_hex` de `colCias`; `border: 3px solid` = `cor_hex` de `colPortoes`, **sempre**
   — nunca muda por causa de pesquisado ou bloqueio, porque a legenda diz "contorno = portão" e trocar a borda
   junto confundiria as duas informações (decisão da operação, 31/08/2026). Quando `pesquisado = 1`, o `background`
@@ -163,6 +199,13 @@ separados, e é isso que torna a solução simples:
 
 Toque na linha → `OnSelect` do `HtmlViewer` grava `varPosSel` e abre o painel com os voos daquela posição
 (vindos de `colDia`). Toque no voo → o formulário carrega e o cabeçalho mostra `Modificado`/`Modificado por`.
+
+**O painel é popup, não coluna fixa.** Ele e o véu (`recVeuMap`) são filhos **da tela**, depois do
+`cntShellMap` — em `.pa.yaml` quem vem depois desenha por cima. Fora do AutoLayout eles aceitam `X`/`Y`, e o
+painel ancora à direita com `X: =Parent.Width - Self.Width`. Ficam invisíveis enquanto `varPainelAberto` for
+falso, então a grade usa a largura inteira da tela o tempo todo — que é o que dá espaço aos blocos estreitos.
+Tocar no véu fecha. O `Visible` mora **só** no véu e no container do painel: os filhos herdam, e cada
+`Visible` a menos é uma expressão a menos para reavaliar.
 
 O formulário é **controles avulsos com `Patch`**, não um `Form`/`DataCard`. Isso elimina de saída as
 armadilhas de `MetadataKey: FieldValue` duplicado e da ordenação por `Y` dos DataCards.
@@ -249,7 +292,7 @@ O validador reprova `;;` dentro de `.pa.yaml`.
 | Constante da grade | `map*` | `mapMinutosDia` |
 | Variável global / de tela | `var*` / `loc*` | `varPosSel`, `locNonce` |
 | Tela | `scr*` | `scrMapaPatio` |
-| Controle | `cnt` `htm` `gal` `btn` `drp` `txt` `lbl` `tmr` `tgl` + descritivo + sufixo da tela | `htmTrilhoMap` |
+| Controle | `cnt` `htm` `gal` `btn` `drp` `txt` `lbl` `tmr` `tgl` `rec` + descritivo + sufixo da tela | `htmLinhaMap` |
 
 ## 9. Arquivos
 
@@ -292,16 +335,21 @@ regras 21, 22, 23, 25, 26 e 27 deste app.
 1. Abrir com usuário sem permissão de edição → botões desabilitados, mapa visível.
 2. Abrir 28/08 e **conferir a grade contra a aba `SEX 28.08` do Excel** — mesmas posições, mesmas cores, mesmos
    horários. Se a operação não reconhecer o desenho, o resto não vale.
-3. **Monitor aberto na abertura do app: uma única chamada ao SharePoint.** Trocar de pátio no filtro →
+3. **Alinhamento:** com um voo às 10:00, a borda esquerda do bloco tem que encostar no traço da coluna `10` da
+   régua. Encolher a janela e conferir de novo — a régua é percentual, o alinhamento tem que sobreviver.
+   Conferir também que **toda** posição mostra a linha horizontal, inclusive as sem nenhum voo.
+4. **Painel:** tocar numa posição abre o painel **sobre** a grade, e a grade continua com a largura toda.
+   Tocar fora (no véu) fecha. Com o painel fechado não existe coluna vazia à direita.
+5. **Monitor aberto na abertura do app: uma única chamada ao SharePoint.** Trocar de pátio no filtro →
    **nenhuma** chamada nova.
-4. Lançar T4 09:00→09:40, portão 4. Reabrir e conferir.
-5. Lançar T4 09:20→10:00 → **bloqueia** nomeando o conflitante.
-6. Mesmo horário, outra posição, **mesmo portão** → bloqueia.
-7. Lançar em T3 → pede confirmação de contingência no segundo toque em SALVAR.
-8. Realocar um voo pelo painel; a grade redesenha e o painel mostra quem alterou e quando.
-9. Marcar como pesquisado → selo `P` e borda vermelha. Criar `INTERDICAO` em A5 das 08:00 às 18:00 → faixa
-   cinza e voo naquele intervalo bloqueado.
-10. Dois navegadores no mesmo dia: um altera; no outro, em até 60 s, aparece a faixa — **sem** recarregar por
+6. Lançar T4 09:00→09:40, portão 4. Reabrir e conferir.
+7. Lançar T4 09:20→10:00 → **bloqueia** nomeando o conflitante.
+8. Mesmo horário, outra posição, **mesmo portão** → bloqueia.
+9. Lançar em T3 → pede confirmação de contingência no segundo toque em SALVAR.
+10. Realocar um voo pelo painel; a grade redesenha e o painel mostra quem alterou e quando.
+11. Marcar como pesquisado → selo `P` e borda vermelha. Criar `INTERDICAO` em A5 das 08:00 às 18:00 → faixa
+    cinza e voo naquele intervalo bloqueado.
+12. Dois navegadores no mesmo dia: um altera; no outro, em até 60 s, aparece a faixa — **sem** recarregar por
     baixo de quem está editando.
-11. Testar com **limite de delegação = 1** → a grade continua completa.
-12. Rodar o expurgo manualmente com data forjada e conferir as duas fases.
+13. Testar com **limite de delegação = 1** → a grade continua completa.
+14. Rodar o expurgo manualmente com data forjada e conferir as duas fases.

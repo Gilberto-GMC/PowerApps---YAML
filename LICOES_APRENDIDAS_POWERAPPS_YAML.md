@@ -1472,3 +1472,35 @@ para_invariante(para_ptbr(origem)) == origem   # caractere a caractere
 Se o conversor perder ou inventar um separador, a volta diverge. Só a **vírgula**
 é verificável por varredura direta: fora de string, comentário e decimal, ela não
 existe em pt-BR.
+
+## Duas grades que se olham têm que usar o mesmo mecanismo de desenho (2026-09-01)
+
+O Mapa de Alocação tem uma régua de horas no topo e 25 linhas de grade embaixo,
+cada uma num `HtmlViewer` diferente. A régua traçava a divisão de hora com
+`border-left: 1px` nas células da tabela; as linhas traçavam com
+`background-image: repeating-linear-gradient`. **Em 100 %, numa tela comum, os
+dois caem exatamente no mesmo pixel** — e o desenho passa como resolvido.
+
+Em zoom de 110 %/125 %, ou em tela HiDPI, não caem: borda de célula o navegador
+**encaixa em pixel inteiro** (a coluna da tabela e a caixa da borda são
+arredondadas no layout), gradiente ele **rasteriza em espaço contínuo**, a partir
+do período em float. Medido em Chromium sobre a página renderizada, o erro foi a
+até **1,25 px**, variando coluna a coluna — que é justamente o que o olho lê como
+"quase alinhado", pior do que um erro constante.
+
+A correção não é ajustar número: é **um mecanismo só**. O mesmo gradiente na
+célula da régua e na célula de cada linha, com a declaração vindo de uma única
+named formula (`mapFundoHoras`), e a porcentagem da coluna de hora saindo da
+mesma constante que o período do gradiente (`mapPctHora`). Erro medido depois:
+**0,03 px** em todas as combinações de zoom (100/110/125 %) e DPI (1×, 2×).
+
+Duas regras que valem para qualquer grade montada em HTML no Power Apps:
+
+1. **Elementos que precisam se alinhar entre controles não podem depender de
+   duas contas diferentes.** Nem duas contas de CSS, nem uma conta de CSS contra
+   uma de Power Fx (`X`/`Width`/padding). Se a geometria pode ser expressa uma vez
+   no HTML e herdada pelos dois, é assim que ela tem que ser expressa.
+2. **Testar em 100 %/1× não prova alinhamento.** É a condição em que os
+   arredondamentos empatam. O teste tem que varrer zoom e DPI — e a medição é em
+   pixel renderizado (screenshot + varredura de coluna), não em `getBoundingClientRect`,
+   que devolve a caixa de layout e não onde a tinta caiu.

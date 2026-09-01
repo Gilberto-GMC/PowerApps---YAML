@@ -1237,7 +1237,14 @@ Screens:
                                     PaddingRight: =0
                                     PaddingTop: =0
                                     Size: =8
-                                    Text: =If(varDeskRegistroCriado, "O chamado já foi registrado.", "Revise os dados antes de confirmar.")
+                                    Text: |-
+                                      =If(
+                                          varDeskRegistroCriado,
+                                          "O chamado já foi registrado.",
+                                          cmbDeskCategoria.Selected.Ciclo = "DEMANDA",
+                                          "Esta categoria abre um roteiro guiado de 5 passos.",
+                                          "Revise os dados antes de confirmar."
+                                      )
                                     Visible: =Parent.Width >= 650
                                     Width: =270
                                     X: =28
@@ -1289,6 +1296,12 @@ Screens:
                                     Layout: ='ButtonCanvas.Layout'.IconBefore
                                     OnSelect: |-
                                       =If(
+                                          cmbDeskCategoria.Selected.Ciclo = "DEMANDA",
+                                          Navigate(
+                                              ScreenNovoModuloWizard,
+                                              ScreenTransition.Fade
+                                          ),
+
                                           varDeskRegistroCriado,
                                           Notify(
                                               "Este chamado já foi registrado. Utilize Voltar.",
@@ -1348,7 +1361,7 @@ Screens:
                                               SubmitForm(FormDesk_2)
                                           )
                                       )
-                                    Text: =If(varDeskProcessando, "Enviando...", "Confirmar")
+                                    Text: =If(varDeskProcessando, "Enviando...", If(cmbDeskCategoria.Selected.Ciclo = "DEMANDA", "Continuar no roteiro", "Confirmar"))
                                     Width: =136
                                     X: =Parent.Width - Self.Width - 48
                                     Y: =Parent.Height - 64

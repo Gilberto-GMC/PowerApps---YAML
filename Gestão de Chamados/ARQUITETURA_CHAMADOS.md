@@ -313,8 +313,8 @@ passo 6 da migração.
 | `ScreenServiceDeskForm` | solicitante | ✅ existe, revisada em 2026-08-27 |
 | `ScreenMeusChamados` | solicitante | ✅ entregue — lista, filtros, busca e painel de detalhe |
 | `ScreenChamadoDetalhe` | solicitante + atendente | ✅ entregue — linha do tempo, conversa e ações por papel |
-| `ScreenNovoModuloWizard` | solicitante | 🔜 próxima onda — ver ROTEIRO_NOVO_MODULO |
-| `ScreenFilaAtendimento` | atendente | 🔜 onda 3 |
+| `ScreenNovoModuloWizard` | solicitante | ✅ entregue — roteiro de 5 passos + revisão |
+| `frmServiceDesk` | atendente | ✅ entregue — fila, alvo do ladrilho do `frmAdmin` |
 | `ScreenPainelChamados` | gestor | 🔜 onda 4 |
 
 ### 7.4 Perfis
@@ -340,7 +340,7 @@ real continua sendo a permissão da lista SharePoint.
 | 1 | Colunas novas + carga dos espelhos + `App.Formulas` + `ScreenMeusChamados` | YAML do Login |
 | 2 | ✅ `ScreenChamadoDetalhe` + `tb_chamadoHistorico` + `tb_chamadoInteracao` | onda 1 |
 | 3 | `ScreenNovoModuloWizard` + `tbl_ChamadoDemanda` + ciclo B na fila | onda 2 |
-| 4 | `ScreenFilaAtendimento` + notificações de SLA | onda 3 |
+| 4 | ✅ `frmServiceDesk` (fila) · 🔜 fluxos de notificação e SLA | onda 3 |
 | 5 | `ScreenPainelChamados` | onda 4 |
 
 ### Pendências a validar antes de especificar as ondas 3+

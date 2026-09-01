@@ -1,0 +1,1501 @@
+Screens:
+  ScreenNovoModuloWizard:
+    Properties:
+      Fill: =RGBA(247, 247, 247, 1)
+      LoadingSpinnerColor: =RGBA(96, 70, 237, 1)
+      OnVisible: |-
+        =UpdateContext(
+            {
+                varWizCarregando: true,
+                varWizPasso: 1,
+                varWizTentou: false,
+                varWizOcupadoDesde: Blank()
+            }
+        );
+        Reset(txtWizNome);
+        Reset(cmbWizArea);
+        Reset(cmbWizAeros);
+        Reset(txtWizHoje);
+        Reset(cmbWizFerramenta);
+        Reset(txtWizVolume);
+        Reset(cmbWizTempo);
+        Reset(txtWizQuemExecuta);
+        Reset(txtWizRegistrar);
+        Reset(txtWizConsulta);
+        Reset(txtWizDecisoes);
+        Reset(txtWizIndicadores);
+        Reset(cmbWizRegulatorio);
+        Reset(txtWizNorma);
+        Reset(cmbWizEvidencia);
+        Reset(cmbWizAprovacao);
+        Reset(cmbWizPatrocinador);
+        Reset(dtpWizPrazo);
+        Reset(txtWizImpacto);
+        ClearCollect(
+            colWizPassos,
+            Table(
+                {N: 1, Nome: "O que você precisa"},
+                {N: 2, Nome: "Como é hoje"},
+                {N: 3, Nome: "O que precisa mudar"},
+                {N: 4, Nome: "Regras e obrigações"},
+                {N: 5, Nome: "Patrocínio e urgência"},
+                {N: 6, Nome: "Revisão"}
+            )
+        );
+        ClearCollect(
+            colWizUsuarios,
+            User
+        );
+        ClearCollect(
+            colWizAreas,
+            Sort(
+                Distinct(colWizUsuarios, Area),
+                Value
+            )
+        );
+        ClearCollect(
+            colWizAeros,
+            Sort(
+                Distinct(colWizUsuarios, Aeroporto),
+                Value
+            )
+        );
+        Set(
+            varWizNumChamado,
+            Coalesce(
+                First(
+                    Sort(
+                        tbl_ServiceDesk,
+                        desk_id,
+                        SortOrder.Descending
+                    )
+                ).desk_id + 1,
+                1
+            )
+        );
+        UpdateContext({varWizCarregando: false})
+    Children:
+      - ContainerWiz_1:
+          Control: GroupContainer@1.5.0
+          Variant: ManualLayout
+          Properties:
+            DropShadow: =DropShadow.None
+            Fill: =RGBA(247, 247, 247, 1)
+            Height: =Parent.Height
+            RadiusBottomLeft: =0
+            RadiusBottomRight: =0
+            RadiusTopLeft: =0
+            RadiusTopRight: =0
+            Width: =Parent.Width
+          Children:
+            - HeaderTitleWiz:
+                Control: CanvasComponent
+                ComponentName: HeaderTitle
+                Properties:
+                  Height: =50
+                  IconVisible: =true
+                  ScreenNavigator: =ScreenServiceDeskForm
+                  Width: =Parent.Width
+                  var_subtitulo1: ="Suporte e atendimento"
+                  var_subtitulo2: =""
+                  var_tituloModulo: ="Solicitação de novo módulo"
+            - cntWizMain:
+                Control: GroupContainer@1.5.0
+                Variant: ManualLayout
+                Properties:
+                  DropShadow: =DropShadow.None
+                  Fill: =RGBA(247, 247, 247, 1)
+                  Height: =Parent.Height - HeaderTitleWiz.Height
+                  RadiusBottomLeft: =0
+                  RadiusBottomRight: =0
+                  RadiusTopLeft: =0
+                  RadiusTopRight: =0
+                  Width: =Parent.Width
+                  Y: =HeaderTitleWiz.Height
+                Children:
+                  - cntWizShell:
+                      Control: GroupContainer@1.5.0
+                      Variant: ManualLayout
+                      Properties:
+                        BorderStyle: =BorderStyle.None
+                        DropShadow: =DropShadow.None
+                        Height: =Parent.Height - If(Parent.Height < 700, 16, 48)
+                        RadiusBottomLeft: =0
+                        RadiusBottomRight: =0
+                        RadiusTopLeft: =0
+                        RadiusTopRight: =0
+                        Width: =Max(300, Parent.Width - If(Parent.Width < 700, 16, 64))
+                        X: =(Parent.Width - Self.Width) / 2
+                        Y: =If(Parent.Height < 700, 8, 24)
+                      Children:
+                        - cntWizSidebar:
+                            Control: GroupContainer@1.5.0
+                            Variant: ManualLayout
+                            Properties:
+                              DropShadow: =DropShadow.None
+                              Fill: =RGBA(57, 22, 148, 1)
+                              Height: =Parent.Height-4
+                              RadiusBottomLeft: =0
+                              RadiusBottomRight: =0
+                              RadiusTopLeft: =0
+                              RadiusTopRight: =0
+                              Visible: =Parent.Width >= 900
+                              Width: =300
+                              Y: =2
+                            Children:
+                              - recWizSidebarOverlay:
+                                  Control: Rectangle@2.3.0
+                                  Properties:
+                                    BorderColor: =RGBA(0, 0, 0, 0)
+                                    Fill: =RGBA(0, 38, 255, 0.16)
+                                    Height: =Parent.Height
+                                    Width: =Parent.Width
+                              - lblWizBrand:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    AutoHeight: =true
+                                    Color: =RGBA(255, 255, 255, 1)
+                                    Font: =Font.'Open Sans'
+                                    FontWeight: =FontWeight.Bold
+                                    PaddingBottom: =0
+                                    PaddingLeft: =0
+                                    PaddingRight: =0
+                                    PaddingTop: =0
+                                    Size: =24
+                                    Text: ="Airport Now"
+                                    Width: =240
+                                    X: =28
+                                    Y: =34
+                              - lblWizSideTitle:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    AutoHeight: =true
+                                    Color: =RGBA(255, 255, 255, 0.72)
+                                    Font: =Font.'Open Sans'
+                                    PaddingBottom: =0
+                                    PaddingLeft: =0
+                                    PaddingRight: =0
+                                    PaddingTop: =0
+                                    Size: =11
+                                    Text: ="Roteiro da solicitação"
+                                    Width: =240
+                                    X: =28
+                                    Y: =75
+                              - recWizSideDivider:
+                                  Control: Rectangle@2.3.0
+                                  Properties:
+                                    BorderColor: =RGBA(0, 0, 0, 0)
+                                    Fill: =RGBA(255, 255, 255, 0.18)
+                                    Height: =1
+                                    Width: =244
+                                    X: =28
+                                    Y: =117
+                              - galWizPassos:
+                                  Control: Gallery@2.15.0
+                                  Variant: Vertical
+                                  Properties:
+                                    BorderStyle: =BorderStyle.None
+                                    Fill: =RGBA(0, 0, 0, 0)
+                                    Height: =300
+                                    Items: =colWizPassos
+                                    LayoutMinHeight: =0
+                                    ShowScrollbar: =false
+                                    TemplatePadding: =0
+                                    TemplateSize: =48
+                                    Width: =244
+                                    X: =28
+                                    Y: =144
+                                  Children:
+                                    - htmWizPassoLinha:
+                                        Control: HtmlViewer@2.1.0
+                                        Properties:
+                                          Fill: =RGBA(0, 0, 0, 0)
+                                          Font: =Font.'Open Sans'
+                                          Height: =46
+                                          HtmlText: |-
+                                            ="<table style='width:100%;border-collapse:collapse;font-family:Open Sans,Segoe UI,sans-serif;'><tr>" &
+                                            "<td style='width:32px;'>" &
+                                            "<div style='width:26px;height:26px;line-height:26px;text-align:center;font-size:11px;font-weight:800;color:" &
+                                            If(ThisItem.N <= varWizPasso, "#391694", "rgba(255,255,255,.55)") & ";background:" &
+                                            If(ThisItem.N <= varWizPasso, "#FFFFFF", "rgba(255,255,255,.14)") & ";'>" &
+                                            ThisItem.N & "</div></td>" &
+                                            "<td style='padding-left:12px;font-size:12px;color:" &
+                                            If(ThisItem.N = varWizPasso, "#FFFFFF", "rgba(255,255,255,.62)") & ";font-weight:" &
+                                            If(ThisItem.N = varWizPasso, "800", "400") & ";'>" & ThisItem.Nome & "</td>" &
+                                            "</tr></table>"
+                                          OnSelect: |-
+                                            =UpdateContext(
+                                                {
+                                                    varWizPasso: ThisItem.N,
+                                                    varWizTentou: false
+                                                }
+                                            )
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                          PaddingTop: =0
+                                          Size: =11
+                                          Width: =Parent.Width
+                                          X: =0
+                                          Y: =0
+                              - cntWizAjudaBox:
+                                  Control: GroupContainer@1.5.0
+                                  Variant: ManualLayout
+                                  Properties:
+                                    BorderColor: =RGBA(255, 255, 255, 0.16)
+                                    BorderThickness: =1
+                                    DropShadow: =DropShadow.None
+                                    Fill: =RGBA(255, 255, 255, 0.08)
+                                    Height: =106
+                                    RadiusBottomLeft: =0
+                                    RadiusBottomRight: =0
+                                    RadiusTopLeft: =0
+                                    RadiusTopRight: =0
+                                    Width: =244
+                                    X: =28
+                                    Y: =Parent.Height - 134
+                                  Children:
+                                    - lblWizAjudaTitle:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          Color: =RGBA(255, 255, 255, 1)
+                                          Font: =Font.'Open Sans'
+                                          FontWeight: =FontWeight.Semibold
+                                          Height: =24
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                          PaddingTop: =0
+                                          Size: =10
+                                          Text: ="Nada se perde"
+                                          Width: =204
+                                          X: =18
+                                          Y: =14
+                                    - lblWizAjudaTexto:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          AutoHeight: =true
+                                          Color: =RGBA(255, 255, 255, 0.68)
+                                          Font: =Font.'Open Sans'
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                          PaddingTop: =0
+                                          Size: =9
+                                          Text: ="Você pode voltar e clicar em qualquer etapa. O que já foi digitado continua lá até o envio."
+                                          Width: =204
+                                          X: =18
+                                          Y: =40
+                        - cntWizPanel:
+                            Control: GroupContainer@1.5.0
+                            Variant: ManualLayout
+                            Properties:
+                              BorderColor: =RGBA(226, 232, 240, 1)
+                              BorderThickness: =1
+                              DropShadow: =DropShadow.None
+                              Fill: =RGBA(255, 255, 255, 1)
+                              Height: =Parent.Height-4
+                              RadiusBottomLeft: =0
+                              RadiusBottomRight: =0
+                              RadiusTopLeft: =0
+                              RadiusTopRight: =0
+                              Width: =Parent.Width - Self.X
+                              X: =If(cntWizSidebar.Visible, 324, 0)
+                              Y: =2
+                            Children:
+                              - lblWizEyebrow:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    Color: =RGBA(96, 70, 237, 1)
+                                    Font: =Font.'Open Sans'
+                                    FontWeight: =FontWeight.Bold
+                                    Height: =20
+                                    PaddingBottom: =0
+                                    PaddingLeft: =0
+                                    PaddingRight: =0
+                                    PaddingTop: =0
+                                    Size: =9
+                                    Text: =If(varWizPasso = 6, "REVISÃO", "PASSO " & varWizPasso & " DE 5")
+                                    Width: =260
+                                    X: =28
+                                    Y: =20
+                              - lblWizTitulo:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    AutoHeight: =true
+                                    Color: =RGBA(15, 23, 42, 1)
+                                    Font: =Font.'Open Sans'
+                                    FontWeight: =FontWeight.Bold
+                                    PaddingBottom: =0
+                                    PaddingLeft: =0
+                                    PaddingRight: =0
+                                    PaddingTop: =0
+                                    Size: =22
+                                    Text: =Coalesce(LookUp(colWizPassos, N = varWizPasso, Nome), "Solicitação de novo módulo")
+                                    Width: =Parent.Width - 56
+                                    X: =28
+                                    Y: =42
+                              - lblWizProtocolo:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    Align: =Align.Right
+                                    Color: =RGBA(100, 116, 139, 1)
+                                    Font: =Font.'Open Sans'
+                                    Height: =20
+                                    Size: =9
+                                    Text: ="Protocolo #" & Text(varWizNumChamado, "000000")
+                                    Visible: =Parent.Width >= 620
+                                    Width: =200
+                                    X: =Parent.Width - Self.Width - 28
+                                    Y: =24
+                              - recWizHeaderDivider:
+                                  Control: Rectangle@2.3.0
+                                  Properties:
+                                    BorderColor: =RGBA(0, 0, 0, 0)
+                                    Fill: =RGBA(226, 232, 240, 1)
+                                    Height: =1
+                                    Width: =Parent.Width
+                                    Y: =108
+                              - recWizProgresso:
+                                  Control: Rectangle@2.3.0
+                                  Properties:
+                                    BorderColor: =RGBA(0, 0, 0, 0)
+                                    Fill: =RGBA(96, 70, 237, 1)
+                                    Height: =3
+                                    Width: =Parent.Width * (Min(varWizPasso, 6) / 6)
+                                    Y: =108
+                              - cntWizPasso1:
+                                  Control: GroupContainer@1.5.0
+                                  Variant: ManualLayout
+                                  Properties:
+                                    BorderStyle: =BorderStyle.None
+                                    DropShadow: =DropShadow.None
+                                    Fill: =RGBA(255, 255, 255, 1)
+                                    Height: =Parent.Height - 240
+                                    RadiusBottomLeft: =0
+                                    RadiusBottomRight: =0
+                                    RadiusTopLeft: =0
+                                    RadiusTopRight: =0
+                                    Visible: =varWizPasso = 1
+                                    Width: =Parent.Width - 56
+                                    X: =28
+                                    Y: =150
+                                  Children:
+                                      - lblWizAjuda1:
+                                          Control: Label@2.5.1
+                                          Properties:
+                                            AutoHeight: =true
+                                            Color: =RGBA(100, 116, 139, 1)
+                                            Fill: =RGBA(248, 250, 252, 1)
+                                            Font: =Font.'Open Sans'
+                                            PaddingBottom: =10
+                                            PaddingLeft: =12
+                                            PaddingRight: =12
+                                            PaddingTop: =10
+                                            Size: =9
+                                            Text: '="Dê um nome ao que você imagina. Não precisa ser o nome final, precisa ser reconhecível. Ex.: Controle de Ordens de Serviço da Manutenção."'
+                                            Width: =Parent.Width
+                                            X: =0
+                                            Y: =0
+                                      - lblWizNomeR:
+                                          Control: Label@2.5.1
+                                          Properties:
+                                            Color: =RGBA(30, 41, 59, 1)
+                                            Font: =Font.'Open Sans'
+                                            FontWeight: =FontWeight.Semibold
+                                            Height: =18
+                                            PaddingBottom: =0
+                                            PaddingLeft: =0
+                                            PaddingRight: =0
+                                            PaddingTop: =0
+                                            Size: =9
+                                            Text: ="Nome do módulo *"
+                                            Width: =Parent.Width
+                                            X: =0
+                                            Y: =58
+                                      - txtWizNome:
+                                          Control: Classic/TextInput@2.3.2
+                                          Properties:
+                                            BorderColor: =If(varWizTentou && IsBlank(Trim(Self.Text)), RGBA(220, 38, 38, 1), RGBA(203, 213, 225, 1))
+                                            BorderThickness: =1
+                                            Default: =""
+                                            Fill: =RGBA(248, 250, 252, 1)
+                                            Font: =Font.'Open Sans'
+                                            Height: =32
+                                            HintText: '="Ex.: Controle de Ordens de Serviço da Manutenção"'
+                                            HoverBorderColor: =RGBA(96, 70, 237, 1)
+                                            PaddingLeft: =10
+                                            RadiusBottomLeft: =0
+                                            RadiusBottomRight: =0
+                                            RadiusTopLeft: =0
+                                            RadiusTopRight: =0
+                                            Size: =10
+                                            Width: =Parent.Width
+                                            X: =0
+                                            Y: =78
+                                      - lblWizAreaR:
+                                          Control: Label@2.5.1
+                                          Properties:
+                                            Color: =RGBA(30, 41, 59, 1)
+                                            Font: =Font.'Open Sans'
+                                            FontWeight: =FontWeight.Semibold
+                                            Height: =18
+                                            PaddingBottom: =0
+                                            PaddingLeft: =0
+                                            PaddingRight: =0
+                                            PaddingTop: =0
+                                            Size: =9
+                                            Text: ="Área solicitante *"
+                                            Width: =(Parent.Width - 12) / 2
+                                            X: =0
+                                            Y: =126
+                                      - cmbWizArea:
+                                          Control: Classic/ComboBox@2.4.0
+                                          Properties:
+                                            BorderColor: =If(varWizTentou && IsBlank(Self.Selected.Value), RGBA(220, 38, 38, 1), RGBA(203, 213, 225, 1))
+                                            BorderThickness: =1
+                                            ChevronFill: =RGBA(255, 255, 255, 1)
+                                            ChevronHoverFill: =RGBA(96, 70, 237, 1)
+                                            DefaultSelectedItems: =LookUp(colWizAreas, Value = userRecord.Area)
+                                            DisplayFields: =["Value"]
+                                            Fill: =RGBA(248, 250, 252, 1)
+                                            Height: =32
+                                            HoverBorderColor: =RGBA(96, 70, 237, 1)
+                                            Items: =colWizAreas
+                                            PaddingLeft: =10
+                                            SearchFields: =["Value"]
+                                            SelectMultiple: =false
+                                            SelectionColor: =RGBA(255, 255, 255, 1)
+                                            SelectionFill: =RGBA(96, 70, 237, 1)
+                                            Size: =10
+                                            Width: =(Parent.Width - 12) / 2
+                                            X: =0
+                                            Y: =146
+                                      - lblWizAerosR:
+                                          Control: Label@2.5.1
+                                          Properties:
+                                            Color: =RGBA(30, 41, 59, 1)
+                                            Font: =Font.'Open Sans'
+                                            FontWeight: =FontWeight.Semibold
+                                            Height: =18
+                                            PaddingBottom: =0
+                                            PaddingLeft: =0
+                                            PaddingRight: =0
+                                            PaddingTop: =0
+                                            Size: =9
+                                            Text: ="Aeroportos impactados *"
+                                            Width: =(Parent.Width - 12) / 2
+                                            X: =(Parent.Width + 12) / 2
+                                            Y: =126
+                                      - cmbWizAeros:
+                                          Control: Classic/ComboBox@2.4.0
+                                          Properties:
+                                            BorderColor: =If(varWizTentou && IsBlank(Self.Selected.Value), RGBA(220, 38, 38, 1), RGBA(203, 213, 225, 1))
+                                            BorderThickness: =1
+                                            ChevronFill: =RGBA(255, 255, 255, 1)
+                                            ChevronHoverFill: =RGBA(96, 70, 237, 1)
+                                            DisplayFields: =["Value"]
+                                            Fill: =RGBA(248, 250, 252, 1)
+                                            Height: =32
+                                            HoverBorderColor: =RGBA(96, 70, 237, 1)
+                                            Items: =colWizAeros
+                                            PaddingLeft: =10
+                                            SearchFields: =["Value"]
+                                            SelectMultiple: =true
+                                            SelectionColor: =RGBA(255, 255, 255, 1)
+                                            SelectionFill: =RGBA(96, 70, 237, 1)
+                                            Size: =10
+                                            Width: =(Parent.Width - 12) / 2
+                                            X: =(Parent.Width + 12) / 2
+                                            Y: =146
+                              - cntWizPasso2:
+                                  Control: GroupContainer@1.5.0
+                                  Variant: ManualLayout
+                                  Properties:
+                                    BorderStyle: =BorderStyle.None
+                                    DropShadow: =DropShadow.None
+                                    Fill: =RGBA(255, 255, 255, 1)
+                                    Height: =Parent.Height - 240
+                                    RadiusBottomLeft: =0
+                                    RadiusBottomRight: =0
+                                    RadiusTopLeft: =0
+                                    RadiusTopRight: =0
+                                    Visible: =varWizPasso = 2
+                                    Width: =Parent.Width - 56
+                                    X: =28
+                                    Y: =150
+                                  Children:
+                                      - lblWizAjuda2:
+                                          Control: Label@2.5.1
+                                          Properties:
+                                            AutoHeight: =true
+                                            Color: =RGBA(100, 116, 139, 1)
+                                            Fill: =RGBA(248, 250, 252, 1)
+                                            Font: =Font.'Open Sans'
+                                            PaddingBottom: =10
+                                            PaddingLeft: =12
+                                            PaddingRight: =12
+                                            PaddingTop: =10
+                                            Size: =9
+                                            Text: '="Descreva o caminho que o dado faz hoje, do início ao fim. Se hoje não existe nada, escreva que não existe. Ex.: o encarregado anota num caderno, digita numa planilha no fim do turno e envia por e-mail para a coordenação."'
+                                            Width: =Parent.Width
+                                            X: =0
+                                            Y: =0
+                                      - lblWizHojeR:
+                                          Control: Label@2.5.1
+                                          Properties:
+                                            Color: =RGBA(30, 41, 59, 1)
+                                            Font: =Font.'Open Sans'
+                                            FontWeight: =FontWeight.Semibold
+                                            Height: =18
+                                            PaddingBottom: =0
+                                            PaddingLeft: =0
+                                            PaddingRight: =0
+                                            PaddingTop: =0
+                                            Size: =9
+                                            Text: ="Como é feito hoje *"
+                                            Width: =Parent.Width
+                                            X: =0
+                                            Y: =78
+                                      - txtWizHoje:
+                                          Control: Classic/TextInput@2.3.2
+                                          Properties:
+                                            BorderColor: =If(varWizTentou && IsBlank(Trim(Self.Text)), RGBA(220, 38, 38, 1), RGBA(203, 213, 225, 1))
+                                            BorderThickness: =1
+                                            Default: =""
+                                            Fill: =RGBA(248, 250, 252, 1)
+                                            Font: =Font.'Open Sans'
+                                            Height: =96
+                                            HoverBorderColor: =RGBA(96, 70, 237, 1)
+                                            Mode: =TextMode.MultiLine
+                                            PaddingBottom: =10
+                                            PaddingLeft: =10
+                                            PaddingTop: =10
+                                            RadiusBottomLeft: =0
+                                            RadiusBottomRight: =0
+                                            RadiusTopLeft: =0
+                                            RadiusTopRight: =0
+                                            Size: =10
+                                            Width: =Parent.Width
+                                            X: =0
+                                            Y: =98
+                                      - lblWizFerrR:
+                                          Control: Label@2.5.1
+                                          Properties:
+                                            Color: =RGBA(30, 41, 59, 1)
+                                            Font: =Font.'Open Sans'
+                                            FontWeight: =FontWeight.Semibold
+                                            Height: =18
+                                            PaddingBottom: =0
+                                            PaddingLeft: =0
+                                            PaddingRight: =0
+                                            PaddingTop: =0
+                                            Size: =9
+                                            Text: ="Ferramenta atual *"
+                                            Width: =(Parent.Width - 12) / 2
+                                            X: =0
+                                            Y: =206
+                                      - cmbWizFerramenta:
+                                          Control: Classic/DropDown@2.3.1
+                                          Properties:
+                                            AllowEmptySelection: =true
+                                            BorderColor: =If(varWizTentou && IsBlank(Self.Selected.Value), RGBA(220, 38, 38, 1), RGBA(203, 213, 225, 1))
+                                            ChevronFill: =RGBA(255, 255, 255, 1)
+                                            ChevronHoverFill: =RGBA(96, 70, 237, 1)
+                                            Default: =Blank()
+                                            Fill: =RGBA(248, 250, 252, 1)
+                                            Font: =Font.'Open Sans'
+                                            Height: =32
+                                            Items: =["Excel","Papel","E-mail","Outro sistema","Não existe"]
+                                            SelectionColor: =RGBA(255, 255, 255, 1)
+                                            SelectionFill: =RGBA(96, 70, 237, 1)
+                                            Size: =10
+                                            Width: =(Parent.Width - 12) / 2
+                                            X: =0
+                                            Y: =226
+                                      - lblWizVolR:
+                                          Control: Label@2.5.1
+                                          Properties:
+                                            Color: =RGBA(30, 41, 59, 1)
+                                            Font: =Font.'Open Sans'
+                                            FontWeight: =FontWeight.Semibold
+                                            Height: =18
+                                            PaddingBottom: =0
+                                            PaddingLeft: =0
+                                            PaddingRight: =0
+                                            PaddingTop: =0
+                                            Size: =9
+                                            Text: ="Volume mensal aproximado"
+                                            Width: =(Parent.Width - 12) / 2
+                                            X: =(Parent.Width + 12) / 2
+                                            Y: =206
+                                      - txtWizVolume:
+                                          Control: Classic/TextInput@2.3.2
+                                          Properties:
+                                            BorderColor: =RGBA(203, 213, 225, 1)
+                                            BorderThickness: =1
+                                            Default: =""
+                                            Fill: =RGBA(248, 250, 252, 1)
+                                            Font: =Font.'Open Sans'
+                                            Format: =TextFormat.Number
+                                            Height: =32
+                                            HintText: ="Quantos registros por mês"
+                                            HoverBorderColor: =RGBA(96, 70, 237, 1)
+                                            PaddingLeft: =10
+                                            RadiusBottomLeft: =0
+                                            RadiusBottomRight: =0
+                                            RadiusTopLeft: =0
+                                            RadiusTopRight: =0
+                                            Size: =10
+                                            Width: =(Parent.Width - 12) / 2
+                                            X: =(Parent.Width + 12) / 2
+                                            Y: =226
+                                      - lblWizTempoR:
+                                          Control: Label@2.5.1
+                                          Properties:
+                                            Color: =RGBA(30, 41, 59, 1)
+                                            Font: =Font.'Open Sans'
+                                            FontWeight: =FontWeight.Semibold
+                                            Height: =18
+                                            PaddingBottom: =0
+                                            PaddingLeft: =0
+                                            PaddingRight: =0
+                                            PaddingTop: =0
+                                            Size: =9
+                                            Text: ="Tempo gasto por registro"
+                                            Width: =(Parent.Width - 12) / 2
+                                            X: =0
+                                            Y: =274
+                                      - cmbWizTempo:
+                                          Control: Classic/DropDown@2.3.1
+                                          Properties:
+                                            AllowEmptySelection: =true
+                                            BorderColor: =RGBA(203, 213, 225, 1)
+                                            ChevronFill: =RGBA(255, 255, 255, 1)
+                                            ChevronHoverFill: =RGBA(96, 70, 237, 1)
+                                            Default: =Blank()
+                                            Fill: =RGBA(248, 250, 252, 1)
+                                            Font: =Font.'Open Sans'
+                                            Height: =32
+                                            Items: =["Menos de 5 min","5 a 15 min","15 a 60 min","Mais de 1 h"]
+                                            SelectionColor: =RGBA(255, 255, 255, 1)
+                                            SelectionFill: =RGBA(96, 70, 237, 1)
+                                            Size: =10
+                                            Width: =(Parent.Width - 12) / 2
+                                            X: =0
+                                            Y: =294
+                                      - lblWizQuemR:
+                                          Control: Label@2.5.1
+                                          Properties:
+                                            Color: =RGBA(30, 41, 59, 1)
+                                            Font: =Font.'Open Sans'
+                                            FontWeight: =FontWeight.Semibold
+                                            Height: =18
+                                            PaddingBottom: =0
+                                            PaddingLeft: =0
+                                            PaddingRight: =0
+                                            PaddingTop: =0
+                                            Size: =9
+                                            Text: ="Quem executa hoje"
+                                            Width: =(Parent.Width - 12) / 2
+                                            X: =(Parent.Width + 12) / 2
+                                            Y: =274
+                                      - txtWizQuemExecuta:
+                                          Control: Classic/TextInput@2.3.2
+                                          Properties:
+                                            BorderColor: =RGBA(203, 213, 225, 1)
+                                            BorderThickness: =1
+                                            Default: =""
+                                            Fill: =RGBA(248, 250, 252, 1)
+                                            Font: =Font.'Open Sans'
+                                            Height: =32
+                                            HoverBorderColor: =RGBA(96, 70, 237, 1)
+                                            PaddingLeft: =10
+                                            RadiusBottomLeft: =0
+                                            RadiusBottomRight: =0
+                                            RadiusTopLeft: =0
+                                            RadiusTopRight: =0
+                                            Size: =10
+                                            Width: =(Parent.Width - 12) / 2
+                                            X: =(Parent.Width + 12) / 2
+                                            Y: =294
+                              - cntWizPasso3:
+                                  Control: GroupContainer@1.5.0
+                                  Variant: ManualLayout
+                                  Properties:
+                                    BorderStyle: =BorderStyle.None
+                                    DropShadow: =DropShadow.None
+                                    Fill: =RGBA(255, 255, 255, 1)
+                                    Height: =Parent.Height - 240
+                                    RadiusBottomLeft: =0
+                                    RadiusBottomRight: =0
+                                    RadiusTopLeft: =0
+                                    RadiusTopRight: =0
+                                    Visible: =varWizPasso = 3
+                                    Width: =Parent.Width - 56
+                                    X: =28
+                                    Y: =150
+                                  Children:
+                                      - lblWizAjuda3:
+                                          Control: Label@2.5.1
+                                          Properties:
+                                            AutoHeight: =true
+                                            Color: =RGBA(100, 116, 139, 1)
+                                            Fill: =RGBA(248, 250, 252, 1)
+                                            Font: =Font.'Open Sans'
+                                            PaddingBottom: =10
+                                            PaddingLeft: =12
+                                            PaddingRight: =12
+                                            PaddingTop: =10
+                                            Size: =9
+                                            Text: ="Liste as informações que precisam ficar registradas e quem vai consultá-las. Pense em quem lê, não em quem digita."
+                                            Width: =Parent.Width
+                                            X: =0
+                                            Y: =0
+                                      - lblWizRegR:
+                                          Control: Label@2.5.1
+                                          Properties:
+                                            Color: =RGBA(30, 41, 59, 1)
+                                            Font: =Font.'Open Sans'
+                                            FontWeight: =FontWeight.Semibold
+                                            Height: =18
+                                            PaddingBottom: =0
+                                            PaddingLeft: =0
+                                            PaddingRight: =0
+                                            PaddingTop: =0
+                                            Size: =9
+                                            Text: ="O que precisa ser registrado *"
+                                            Width: =Parent.Width
+                                            X: =0
+                                            Y: =58
+                                      - txtWizRegistrar:
+                                          Control: Classic/TextInput@2.3.2
+                                          Properties:
+                                            BorderColor: =If(varWizTentou && IsBlank(Trim(Self.Text)), RGBA(220, 38, 38, 1), RGBA(203, 213, 225, 1))
+                                            BorderThickness: =1
+                                            Default: =""
+                                            Fill: =RGBA(248, 250, 252, 1)
+                                            Font: =Font.'Open Sans'
+                                            Height: =84
+                                            HoverBorderColor: =RGBA(96, 70, 237, 1)
+                                            Mode: =TextMode.MultiLine
+                                            PaddingBottom: =10
+                                            PaddingLeft: =10
+                                            PaddingTop: =10
+                                            RadiusBottomLeft: =0
+                                            RadiusBottomRight: =0
+                                            RadiusTopLeft: =0
+                                            RadiusTopRight: =0
+                                            Size: =10
+                                            Width: =Parent.Width
+                                            X: =0
+                                            Y: =78
+                                      - lblWizConsR:
+                                          Control: Label@2.5.1
+                                          Properties:
+                                            Color: =RGBA(30, 41, 59, 1)
+                                            Font: =Font.'Open Sans'
+                                            FontWeight: =FontWeight.Semibold
+                                            Height: =18
+                                            PaddingBottom: =0
+                                            PaddingLeft: =0
+                                            PaddingRight: =0
+                                            PaddingTop: =0
+                                            Size: =9
+                                            Text: ="Quem consulta *"
+                                            Width: =Parent.Width
+                                            X: =0
+                                            Y: =174
+                                      - txtWizConsulta:
+                                          Control: Classic/TextInput@2.3.2
+                                          Properties:
+                                            BorderColor: =If(varWizTentou && IsBlank(Trim(Self.Text)), RGBA(220, 38, 38, 1), RGBA(203, 213, 225, 1))
+                                            BorderThickness: =1
+                                            Default: =""
+                                            Fill: =RGBA(248, 250, 252, 1)
+                                            Font: =Font.'Open Sans'
+                                            Height: =64
+                                            HoverBorderColor: =RGBA(96, 70, 237, 1)
+                                            Mode: =TextMode.MultiLine
+                                            PaddingBottom: =10
+                                            PaddingLeft: =10
+                                            PaddingTop: =10
+                                            RadiusBottomLeft: =0
+                                            RadiusBottomRight: =0
+                                            RadiusTopLeft: =0
+                                            RadiusTopRight: =0
+                                            Size: =10
+                                            Width: =Parent.Width
+                                            X: =0
+                                            Y: =194
+                                      - lblWizDecR:
+                                          Control: Label@2.5.1
+                                          Properties:
+                                            Color: =RGBA(30, 41, 59, 1)
+                                            Font: =Font.'Open Sans'
+                                            FontWeight: =FontWeight.Semibold
+                                            Height: =18
+                                            PaddingBottom: =0
+                                            PaddingLeft: =0
+                                            PaddingRight: =0
+                                            PaddingTop: =0
+                                            Size: =9
+                                            Text: ="Decisões que dependem disso"
+                                            Width: =(Parent.Width - 12) / 2
+                                            X: =0
+                                            Y: =270
+                                      - txtWizDecisoes:
+                                          Control: Classic/TextInput@2.3.2
+                                          Properties:
+                                            BorderColor: =RGBA(203, 213, 225, 1)
+                                            BorderThickness: =1
+                                            Default: =""
+                                            Fill: =RGBA(248, 250, 252, 1)
+                                            Font: =Font.'Open Sans'
+                                            Height: =64
+                                            HoverBorderColor: =RGBA(96, 70, 237, 1)
+                                            Mode: =TextMode.MultiLine
+                                            PaddingBottom: =10
+                                            PaddingLeft: =10
+                                            PaddingTop: =10
+                                            RadiusBottomLeft: =0
+                                            RadiusBottomRight: =0
+                                            RadiusTopLeft: =0
+                                            RadiusTopRight: =0
+                                            Size: =10
+                                            Width: =(Parent.Width - 12) / 2
+                                            X: =0
+                                            Y: =290
+                                      - lblWizIndR:
+                                          Control: Label@2.5.1
+                                          Properties:
+                                            Color: =RGBA(30, 41, 59, 1)
+                                            Font: =Font.'Open Sans'
+                                            FontWeight: =FontWeight.Semibold
+                                            Height: =18
+                                            PaddingBottom: =0
+                                            PaddingLeft: =0
+                                            PaddingRight: =0
+                                            PaddingTop: =0
+                                            Size: =9
+                                            Text: ="Indicadores esperados"
+                                            Width: =(Parent.Width - 12) / 2
+                                            X: =(Parent.Width + 12) / 2
+                                            Y: =270
+                                      - txtWizIndicadores:
+                                          Control: Classic/TextInput@2.3.2
+                                          Properties:
+                                            BorderColor: =RGBA(203, 213, 225, 1)
+                                            BorderThickness: =1
+                                            Default: =""
+                                            Fill: =RGBA(248, 250, 252, 1)
+                                            Font: =Font.'Open Sans'
+                                            Height: =64
+                                            HoverBorderColor: =RGBA(96, 70, 237, 1)
+                                            Mode: =TextMode.MultiLine
+                                            PaddingBottom: =10
+                                            PaddingLeft: =10
+                                            PaddingTop: =10
+                                            RadiusBottomLeft: =0
+                                            RadiusBottomRight: =0
+                                            RadiusTopLeft: =0
+                                            RadiusTopRight: =0
+                                            Size: =10
+                                            Width: =(Parent.Width - 12) / 2
+                                            X: =(Parent.Width + 12) / 2
+                                            Y: =290
+                              - cntWizPasso4:
+                                  Control: GroupContainer@1.5.0
+                                  Variant: ManualLayout
+                                  Properties:
+                                    BorderStyle: =BorderStyle.None
+                                    DropShadow: =DropShadow.None
+                                    Fill: =RGBA(255, 255, 255, 1)
+                                    Height: =Parent.Height - 240
+                                    RadiusBottomLeft: =0
+                                    RadiusBottomRight: =0
+                                    RadiusTopLeft: =0
+                                    RadiusTopRight: =0
+                                    Visible: =varWizPasso = 4
+                                    Width: =Parent.Width - 56
+                                    X: =28
+                                    Y: =150
+                                  Children:
+                                      - lblWizAjuda4:
+                                          Control: Label@2.5.1
+                                          Properties:
+                                            AutoHeight: =true
+                                            Color: =RGBA(100, 116, 139, 1)
+                                            Fill: =RGBA(248, 250, 252, 1)
+                                            Font: =Font.'Open Sans'
+                                            PaddingBottom: =10
+                                            PaddingLeft: =12
+                                            PaddingRight: =12
+                                            PaddingTop: =10
+                                            Size: =9
+                                            Text: ="Se existe norma, auditoria ou prazo legal por trás, diga qual. Isso muda a prioridade da demanda."
+                                            Width: =Parent.Width
+                                            X: =0
+                                            Y: =0
+                                      - lblWizRegulR:
+                                          Control: Label@2.5.1
+                                          Properties:
+                                            Color: =RGBA(30, 41, 59, 1)
+                                            Font: =Font.'Open Sans'
+                                            FontWeight: =FontWeight.Semibold
+                                            Height: =18
+                                            PaddingBottom: =0
+                                            PaddingLeft: =0
+                                            PaddingRight: =0
+                                            PaddingTop: =0
+                                            Size: =9
+                                            Text: ="É exigência regulatória? *"
+                                            Width: =(Parent.Width - 12) / 2
+                                            X: =0
+                                            Y: =78
+                                      - cmbWizRegulatorio:
+                                          Control: Classic/DropDown@2.3.1
+                                          Properties:
+                                            AllowEmptySelection: =true
+                                            BorderColor: =If(varWizTentou && IsBlank(Self.Selected.Value), RGBA(220, 38, 38, 1), RGBA(203, 213, 225, 1))
+                                            ChevronFill: =RGBA(255, 255, 255, 1)
+                                            ChevronHoverFill: =RGBA(96, 70, 237, 1)
+                                            Default: =Blank()
+                                            Fill: =RGBA(248, 250, 252, 1)
+                                            Font: =Font.'Open Sans'
+                                            Height: =32
+                                            Items: =["NAO","SIM"]
+                                            SelectionColor: =RGBA(255, 255, 255, 1)
+                                            SelectionFill: =RGBA(96, 70, 237, 1)
+                                            Size: =10
+                                            Width: =(Parent.Width - 12) / 2
+                                            X: =0
+                                            Y: =98
+                                      - lblWizNormaR:
+                                          Control: Label@2.5.1
+                                          Properties:
+                                            Color: =RGBA(30, 41, 59, 1)
+                                            Font: =Font.'Open Sans'
+                                            FontWeight: =FontWeight.Semibold
+                                            Height: =18
+                                            PaddingBottom: =0
+                                            PaddingLeft: =0
+                                            PaddingRight: =0
+                                            PaddingTop: =0
+                                            Size: =9
+                                            Text: ="Norma ou referência"
+                                            Width: =(Parent.Width - 12) / 2
+                                            X: =(Parent.Width + 12) / 2
+                                            Y: =78
+                                      - txtWizNorma:
+                                          Control: Classic/TextInput@2.3.2
+                                          Properties:
+                                            BorderColor: =RGBA(203, 213, 225, 1)
+                                            BorderThickness: =1
+                                            Default: =""
+                                            Fill: =RGBA(248, 250, 252, 1)
+                                            Font: =Font.'Open Sans'
+                                            Height: =32
+                                            HintText: ="Obrigatório se for regulatória"
+                                            HoverBorderColor: =RGBA(96, 70, 237, 1)
+                                            PaddingLeft: =10
+                                            RadiusBottomLeft: =0
+                                            RadiusBottomRight: =0
+                                            RadiusTopLeft: =0
+                                            RadiusTopRight: =0
+                                            Size: =10
+                                            Width: =(Parent.Width - 12) / 2
+                                            X: =(Parent.Width + 12) / 2
+                                            Y: =98
+                                      - lblWizEvidR:
+                                          Control: Label@2.5.1
+                                          Properties:
+                                            Color: =RGBA(30, 41, 59, 1)
+                                            Font: =Font.'Open Sans'
+                                            FontWeight: =FontWeight.Semibold
+                                            Height: =18
+                                            PaddingBottom: =0
+                                            PaddingLeft: =0
+                                            PaddingRight: =0
+                                            PaddingTop: =0
+                                            Size: =9
+                                            Text: ="Exige evidência ou anexo?"
+                                            Width: =(Parent.Width - 12) / 2
+                                            X: =0
+                                            Y: =146
+                                      - cmbWizEvidencia:
+                                          Control: Classic/DropDown@2.3.1
+                                          Properties:
+                                            AllowEmptySelection: =true
+                                            BorderColor: =RGBA(203, 213, 225, 1)
+                                            ChevronFill: =RGBA(255, 255, 255, 1)
+                                            ChevronHoverFill: =RGBA(96, 70, 237, 1)
+                                            Default: =Blank()
+                                            Fill: =RGBA(248, 250, 252, 1)
+                                            Font: =Font.'Open Sans'
+                                            Height: =32
+                                            Items: =["NAO","SIM"]
+                                            SelectionColor: =RGBA(255, 255, 255, 1)
+                                            SelectionFill: =RGBA(96, 70, 237, 1)
+                                            Size: =10
+                                            Width: =(Parent.Width - 12) / 2
+                                            X: =0
+                                            Y: =166
+                                      - lblWizAprovR:
+                                          Control: Label@2.5.1
+                                          Properties:
+                                            Color: =RGBA(30, 41, 59, 1)
+                                            Font: =Font.'Open Sans'
+                                            FontWeight: =FontWeight.Semibold
+                                            Height: =18
+                                            PaddingBottom: =0
+                                            PaddingLeft: =0
+                                            PaddingRight: =0
+                                            PaddingTop: =0
+                                            Size: =9
+                                            Text: ="Exige aprovação no fluxo?"
+                                            Width: =(Parent.Width - 12) / 2
+                                            X: =(Parent.Width + 12) / 2
+                                            Y: =146
+                                      - cmbWizAprovacao:
+                                          Control: Classic/DropDown@2.3.1
+                                          Properties:
+                                            AllowEmptySelection: =true
+                                            BorderColor: =RGBA(203, 213, 225, 1)
+                                            ChevronFill: =RGBA(255, 255, 255, 1)
+                                            ChevronHoverFill: =RGBA(96, 70, 237, 1)
+                                            Default: =Blank()
+                                            Fill: =RGBA(248, 250, 252, 1)
+                                            Font: =Font.'Open Sans'
+                                            Height: =32
+                                            Items: =["NAO","SIM"]
+                                            SelectionColor: =RGBA(255, 255, 255, 1)
+                                            SelectionFill: =RGBA(96, 70, 237, 1)
+                                            Size: =10
+                                            Width: =(Parent.Width - 12) / 2
+                                            X: =(Parent.Width + 12) / 2
+                                            Y: =166
+                              - cntWizPasso5:
+                                  Control: GroupContainer@1.5.0
+                                  Variant: ManualLayout
+                                  Properties:
+                                    BorderStyle: =BorderStyle.None
+                                    DropShadow: =DropShadow.None
+                                    Fill: =RGBA(255, 255, 255, 1)
+                                    Height: =Parent.Height - 240
+                                    RadiusBottomLeft: =0
+                                    RadiusBottomRight: =0
+                                    RadiusTopLeft: =0
+                                    RadiusTopRight: =0
+                                    Visible: =varWizPasso = 5
+                                    Width: =Parent.Width - 56
+                                    X: =28
+                                    Y: =150
+                                  Children:
+                                      - lblWizAjuda5:
+                                          Control: Label@2.5.1
+                                          Properties:
+                                            AutoHeight: =true
+                                            Color: =RGBA(100, 116, 139, 1)
+                                            Fill: =RGBA(248, 250, 252, 1)
+                                            Font: =Font.'Open Sans'
+                                            PaddingBottom: =10
+                                            PaddingLeft: =12
+                                            PaddingRight: =12
+                                            PaddingTop: =10
+                                            Size: =9
+                                            Text: ="O patrocinador é quem responde pela demanda quando a TI precisar decidir escopo. Ele precisa saber que foi indicado."
+                                            Width: =Parent.Width
+                                            X: =0
+                                            Y: =0
+                                      - lblWizPatR:
+                                          Control: Label@2.5.1
+                                          Properties:
+                                            Color: =RGBA(30, 41, 59, 1)
+                                            Font: =Font.'Open Sans'
+                                            FontWeight: =FontWeight.Semibold
+                                            Height: =18
+                                            PaddingBottom: =0
+                                            PaddingLeft: =0
+                                            PaddingRight: =0
+                                            PaddingTop: =0
+                                            Size: =9
+                                            Text: ="Patrocinador *"
+                                            Width: =(Parent.Width - 12) / 2
+                                            X: =0
+                                            Y: =78
+                                      - cmbWizPatrocinador:
+                                          Control: Classic/ComboBox@2.4.0
+                                          Properties:
+                                            BorderColor: =If(varWizTentou && IsBlank(Self.Selected.Value), RGBA(220, 38, 38, 1), RGBA(203, 213, 225, 1))
+                                            BorderThickness: =1
+                                            ChevronFill: =RGBA(255, 255, 255, 1)
+                                            ChevronHoverFill: =RGBA(96, 70, 237, 1)
+                                            DisplayFields: =["usrNome","Email"]
+                                            Fill: =RGBA(248, 250, 252, 1)
+                                            Height: =32
+                                            HoverBorderColor: =RGBA(96, 70, 237, 1)
+                                            Items: =colWizUsuarios
+                                            PaddingLeft: =10
+                                            SearchFields: =["usrNome","Email"]
+                                            SelectMultiple: =false
+                                            SelectionColor: =RGBA(255, 255, 255, 1)
+                                            SelectionFill: =RGBA(96, 70, 237, 1)
+                                            Size: =10
+                                            Width: =(Parent.Width - 12) / 2
+                                            X: =0
+                                            Y: =98
+                                      - lblWizPrazoR:
+                                          Control: Label@2.5.1
+                                          Properties:
+                                            Color: =RGBA(30, 41, 59, 1)
+                                            Font: =Font.'Open Sans'
+                                            FontWeight: =FontWeight.Semibold
+                                            Height: =18
+                                            PaddingBottom: =0
+                                            PaddingLeft: =0
+                                            PaddingRight: =0
+                                            PaddingTop: =0
+                                            Size: =9
+                                            Text: ="Prazo desejado"
+                                            Width: =(Parent.Width - 12) / 2
+                                            X: =(Parent.Width + 12) / 2
+                                            Y: =78
+                                      - dtpWizPrazo:
+                                          Control: Classic/DatePicker@2.6.0
+                                          Properties:
+                                            BorderColor: =RGBA(203, 213, 225, 1)
+                                            BorderThickness: =1
+                                            DefaultDate: =Blank()
+                                            Fill: =RGBA(248, 250, 252, 1)
+                                            Font: =Font.'Open Sans'
+                                            Height: =32
+                                            Size: =10
+                                            Width: =(Parent.Width - 12) / 2
+                                            X: =(Parent.Width + 12) / 2
+                                            Y: =98
+                                      - lblWizImpR:
+                                          Control: Label@2.5.1
+                                          Properties:
+                                            Color: =RGBA(30, 41, 59, 1)
+                                            Font: =Font.'Open Sans'
+                                            FontWeight: =FontWeight.Semibold
+                                            Height: =18
+                                            PaddingBottom: =0
+                                            PaddingLeft: =0
+                                            PaddingRight: =0
+                                            PaddingTop: =0
+                                            Size: =9
+                                            Text: ="Impacto se não for feito *"
+                                            Width: =Parent.Width
+                                            X: =0
+                                            Y: =146
+                                      - txtWizImpacto:
+                                          Control: Classic/TextInput@2.3.2
+                                          Properties:
+                                            BorderColor: =If(varWizTentou && IsBlank(Trim(Self.Text)), RGBA(220, 38, 38, 1), RGBA(203, 213, 225, 1))
+                                            BorderThickness: =1
+                                            Default: =""
+                                            Fill: =RGBA(248, 250, 252, 1)
+                                            Font: =Font.'Open Sans'
+                                            Height: =104
+                                            HoverBorderColor: =RGBA(96, 70, 237, 1)
+                                            Mode: =TextMode.MultiLine
+                                            PaddingBottom: =10
+                                            PaddingLeft: =10
+                                            PaddingTop: =10
+                                            RadiusBottomLeft: =0
+                                            RadiusBottomRight: =0
+                                            RadiusTopLeft: =0
+                                            RadiusTopRight: =0
+                                            Size: =10
+                                            Width: =Parent.Width
+                                            X: =0
+                                            Y: =166
+                              - cntWizPasso6:
+                                  Control: GroupContainer@1.5.0
+                                  Variant: ManualLayout
+                                  Properties:
+                                    BorderStyle: =BorderStyle.None
+                                    DropShadow: =DropShadow.None
+                                    Fill: =RGBA(255, 255, 255, 1)
+                                    Height: =Parent.Height - 240
+                                    RadiusBottomLeft: =0
+                                    RadiusBottomRight: =0
+                                    RadiusTopLeft: =0
+                                    RadiusTopRight: =0
+                                    Visible: =varWizPasso = 6
+                                    Width: =Parent.Width - 56
+                                    X: =28
+                                    Y: =150
+                                  Children:
+                                      - htmWizRevisao:
+                                          Control: HtmlViewer@2.1.0
+                                          Properties:
+                                            Fill: =RGBA(255, 255, 255, 1)
+                                            Font: =Font.'Open Sans'
+                                            Height: =Parent.Height
+                                            HtmlText: |-
+                                              ="<div style='font-family:Open Sans,Segoe UI,sans-serif;color:#334155;'>" &
+                                              "<table style='width:100%;border-collapse:collapse;font-size:11px;'>" &
+                                              "<tr><td style='padding:6px 0;width:210px;color:#64748B;'>Nome do módulo</td><td style='padding:6px 0;font-weight:700;color:#0F172A;'>" & Coalesce(txtWizNome.Text, "—") & "</td></tr>" &
+                                              "<tr><td style='padding:6px 0;color:#64748B;'>Área</td><td style='padding:6px 0;'>" & Coalesce(cmbWizArea.Selected.Value, "—") & "</td></tr>" &
+                                              "<tr><td style='padding:6px 0;color:#64748B;'>Aeroportos</td><td style='padding:6px 0;'>" & Coalesce(Concat(cmbWizAeros.SelectedItems, Value, "; "), "—") & "</td></tr>" &
+                                              "<tr><td colspan='2' style='padding:12px 0 4px 0;font-weight:800;color:#391694;font-size:10px;letter-spacing:.06em;'>COMO É HOJE</td></tr>" &
+                                              "<tr><td style='padding:6px 0;color:#64748B;'>Situação atual</td><td style='padding:6px 0;'>" & Left(Substitute(Coalesce(txtWizHoje.Text, "—"), "<", " "), 300) & "</td></tr>" &
+                                              "<tr><td style='padding:6px 0;color:#64748B;'>Ferramenta</td><td style='padding:6px 0;'>" & Coalesce(cmbWizFerramenta.Selected.Value, "—") & "</td></tr>" &
+                                              "<tr><td style='padding:6px 0;color:#64748B;'>Volume / tempo</td><td style='padding:6px 0;'>" &
+                                              Coalesce(txtWizVolume.Text, "—") & " por mês &middot; " & Coalesce(cmbWizTempo.Selected.Value, "—") & "</td></tr>" &
+                                              "<tr><td colspan='2' style='padding:12px 0 4px 0;font-weight:800;color:#391694;font-size:10px;letter-spacing:.06em;'>O QUE PRECISA MUDAR</td></tr>" &
+                                              "<tr><td style='padding:6px 0;color:#64748B;'>Registrar</td><td style='padding:6px 0;'>" & Left(Substitute(Coalesce(txtWizRegistrar.Text, "—"), "<", " "), 300) & "</td></tr>" &
+                                              "<tr><td style='padding:6px 0;color:#64748B;'>Quem consulta</td><td style='padding:6px 0;'>" & Left(Substitute(Coalesce(txtWizConsulta.Text, "—"), "<", " "), 200) & "</td></tr>" &
+                                              "<tr><td colspan='2' style='padding:12px 0 4px 0;font-weight:800;color:#391694;font-size:10px;letter-spacing:.06em;'>REGRAS E PATROCÍNIO</td></tr>" &
+                                              "<tr><td style='padding:6px 0;color:#64748B;'>Regulatória</td><td style='padding:6px 0;'>" &
+                                              Coalesce(cmbWizRegulatorio.Selected.Value, "NAO") &
+                                              If(cmbWizRegulatorio.Selected.Value = "SIM", " &middot; " & Coalesce(txtWizNorma.Text, "norma não informada"), "") & "</td></tr>" &
+                                              "<tr><td style='padding:6px 0;color:#64748B;'>Patrocinador</td><td style='padding:6px 0;font-weight:700;color:#0F172A;'>" &
+                                              Coalesce(cmbWizPatrocinador.Selected.usrNome, "—") & "</td></tr>" &
+                                              "<tr><td style='padding:6px 0;color:#64748B;'>Prazo desejado</td><td style='padding:6px 0;'>" &
+                                              If(IsBlank(dtpWizPrazo.SelectedDate), "sem prazo definido", Text(dtpWizPrazo.SelectedDate, "dd/mm/yyyy")) & "</td></tr>" &
+                                              "<tr><td style='padding:6px 0;color:#64748B;'>Impacto se não fizer</td><td style='padding:6px 0;'>" & Left(Substitute(Coalesce(txtWizImpacto.Text, "—"), "<", " "), 300) & "</td></tr>" &
+                                              "</table></div>"
+                                            PaddingBottom: =0
+                                            PaddingLeft: =0
+                                            PaddingRight: =0
+                                            PaddingTop: =0
+                                            Size: =10
+                                            Width: =Parent.Width
+                                            X: =0
+                                            Y: =0
+                              - recWizFooterDivider:
+                                  Control: Rectangle@2.3.0
+                                  Properties:
+                                    BorderColor: =RGBA(0, 0, 0, 0)
+                                    Fill: =RGBA(226, 232, 240, 1)
+                                    Height: =1
+                                    Width: =Parent.Width
+                                    Y: =Parent.Height - 84
+                              - lblWizRodape:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    Color: =RGBA(100, 116, 139, 1)
+                                    Font: =Font.'Open Sans'
+                                    Height: =38
+                                    Size: =9
+                                    Text: =If(varWizPasso = 6, "Confira e envie. Depois disso o acompanhamento é por Meus chamados.", "Passo " & varWizPasso & " de 5 — os campos com * são obrigatórios.")
+                                    Visible: =Parent.Width >= 700
+                                    Width: =Parent.Width - 420
+                                    X: =28
+                                    Y: =Parent.Height - 62
+                              - btnWizVoltar:
+                                  Control: Button@0.0.45
+                                  Properties:
+                                    Appearance: ='ButtonCanvas.Appearance'.Secondary
+                                    BorderRadius: =0
+                                    DisplayMode: =If(IsBlank(varWizOcupadoDesde), DisplayMode.Edit, DisplayMode.Disabled)
+                                    FontSize: =11
+                                    Height: =40
+                                    Icon: ="ChevronLeft"
+                                    IconStyle: ='ButtonCanvas.IconStyle'.Outline
+                                    Layout: ='ButtonCanvas.Layout'.IconBefore
+                                    OnSelect: |-
+                                      =If(
+                                          varWizPasso > 1,
+                                          UpdateContext(
+                                              {
+                                                  varWizPasso: varWizPasso - 1,
+                                                  varWizTentou: false
+                                              }
+                                          ),
+                                          Navigate(
+                                              ScreenServiceDeskForm,
+                                              ScreenTransition.Fade
+                                          )
+                                      )
+                                    Text: =If(varWizPasso > 1, "Voltar", "Cancelar")
+                                    Width: =130
+                                    X: =Parent.Width - 320
+                                    Y: =Parent.Height - 62
+                              - btnWizAvancar:
+                                  Control: Button@0.0.45
+                                  Properties:
+                                    BorderRadius: =0
+                                    DisplayMode: =If(IsBlank(varWizOcupadoDesde), DisplayMode.Edit, DisplayMode.Disabled)
+                                    FontSize: =11
+                                    FontWeight: =FontWeight.Semibold
+                                    Height: =40
+                                    Icon: ="ChevronRight"
+                                    IconStyle: ='ButtonCanvas.IconStyle'.Filled
+                                    OnSelect: |-
+                                      =UpdateContext({varWizTentou: true});
+                                      If(
+                                          (varWizPasso = 1 && (IsBlank(Trim(txtWizNome.Text)) || IsBlank(cmbWizArea.Selected.Value) || CountRows(cmbWizAeros.SelectedItems) = 0)) ||
+                                          (varWizPasso = 2 && (IsBlank(Trim(txtWizHoje.Text)) || IsBlank(cmbWizFerramenta.Selected.Value))) ||
+                                          (varWizPasso = 3 && (IsBlank(Trim(txtWizRegistrar.Text)) || IsBlank(Trim(txtWizConsulta.Text)))) ||
+                                          (varWizPasso = 4 && (IsBlank(cmbWizRegulatorio.Selected.Value) || (cmbWizRegulatorio.Selected.Value = "SIM" && IsBlank(Trim(txtWizNorma.Text))))) ||
+                                          (varWizPasso = 5 && (IsBlank(cmbWizPatrocinador.Selected.Email) || IsBlank(Trim(txtWizImpacto.Text)))),
+                                          Notify(
+                                              "Preencha os campos obrigatórios deste passo antes de avançar.",
+                                              NotificationType.Warning,
+                                              4000
+                                          ),
+                                          UpdateContext(
+                                              {
+                                                  varWizPasso: varWizPasso + 1,
+                                                  varWizTentou: false
+                                              }
+                                          )
+                                      )
+                                    Text: ="Avançar"
+                                    Visible: =varWizPasso < 6
+                                    Width: =160
+                                    X: =Parent.Width - 188
+                                    Y: =Parent.Height - 62
+                              - btnWizEnviar:
+                                  Control: Button@0.0.45
+                                  Properties:
+                                    BorderRadius: =0
+                                    DisplayMode: =If(IsBlank(varWizOcupadoDesde), DisplayMode.Edit, DisplayMode.Disabled)
+                                    FontSize: =11
+                                    FontWeight: =FontWeight.Semibold
+                                    Height: =40
+                                    Icon: ="Send"
+                                    IconStyle: ='ButtonCanvas.IconStyle'.Filled
+                                    Layout: ='ButtonCanvas.Layout'.IconBefore
+                                    OnSelect: |-
+                                      =If(
+                                          !IsBlank(varWizOcupadoDesde) && DateDiff(varWizOcupadoDesde, Now(), TimeUnit.Seconds) < 30,
+                                          Notify(
+                                              "Aguarde: o envio anterior ainda está sendo processado.",
+                                              NotificationType.Warning,
+                                              3000
+                                          ),
+
+                                          UpdateContext({varWizOcupadoDesde: Now()});
+                                          Set(
+                                              varWizNumChamado,
+                                              Coalesce(
+                                                  First(
+                                                      Sort(
+                                                          tbl_ServiceDesk,
+                                                          desk_id,
+                                                          SortOrder.Descending
+                                                      )
+                                                  ).desk_id + 1,
+                                                  1
+                                              )
+                                          );
+                                          IfError(
+                                              Patch(
+                                                  tbl_ServiceDesk,
+                                                  Defaults(tbl_ServiceDesk),
+                                                  {
+                                                      desk_id: varWizNumChamado,
+                                                      desk_categoria: "Solicitação de novo módulo",
+                                                      desk_categoria_chave: "NOVO_MODULO",
+                                                      desk_ciclo: "DEMANDA",
+                                                      desk_status: "Aberto",
+                                                      desk_prioridade: If(cmbWizRegulatorio.Selected.Value = "SIM", "ALTA", "MEDIA"),
+                                                      desk_solicitante_email: varEmailUser,
+                                                      desk_descricao:
+                                                          "MÓDULO: " & Trim(txtWizNome.Text) & Char(10) &
+                                                          "ÁREA: " & cmbWizArea.Selected.Value & Char(10) &
+                                                          "AEROPORTOS: " & Concat(cmbWizAeros.SelectedItems, Value, "; ") & Char(10) & Char(10) &
+                                                          "COMO É HOJE: " & Trim(txtWizHoje.Text) & Char(10) &
+                                                          "FERRAMENTA ATUAL: " & cmbWizFerramenta.Selected.Value & Char(10) & Char(10) &
+                                                          "O QUE PRECISA REGISTRAR: " & Trim(txtWizRegistrar.Text) & Char(10) &
+                                                          "QUEM CONSULTA: " & Trim(txtWizConsulta.Text) & Char(10) & Char(10) &
+                                                          "REGULATÓRIA: " & Coalesce(cmbWizRegulatorio.Selected.Value, "NAO") & Char(10) &
+                                                          "PATROCINADOR: " & cmbWizPatrocinador.Selected.usrNome & Char(10) &
+                                                          "IMPACTO SE NÃO FIZER: " & Trim(txtWizImpacto.Text)
+                                                  }
+                                              );
+                                              Patch(
+                                                  tb_chamadoDemanda,
+                                                  Defaults(tb_chamadoDemanda),
+                                                  {
+                                                      id_fk_chamado: varWizNumChamado,
+                                                      nome_modulo: Trim(txtWizNome.Text),
+                                                      area: cmbWizArea.Selected.Value,
+                                                      aeroportos: Concat(cmbWizAeros.SelectedItems, Value, "; "),
+                                                      como_e_hoje: Trim(txtWizHoje.Text),
+                                                      ferramenta_atual: cmbWizFerramenta.Selected.Value,
+                                                      volume_mensal: Value(txtWizVolume.Text),
+                                                      tempo_gasto: cmbWizTempo.Selected.Value,
+                                                      quem_executa: Trim(txtWizQuemExecuta.Text),
+                                                      o_que_registrar: Trim(txtWizRegistrar.Text),
+                                                      quem_consulta: Trim(txtWizConsulta.Text),
+                                                      decisoes: Trim(txtWizDecisoes.Text),
+                                                      indicadores: Trim(txtWizIndicadores.Text),
+                                                      regulatorio: If(cmbWizRegulatorio.Selected.Value = "SIM", 1, 0),
+                                                      norma: Trim(txtWizNorma.Text),
+                                                      exige_evidencia: If(cmbWizEvidencia.Selected.Value = "SIM", 1, 0),
+                                                      exige_aprovacao: If(cmbWizAprovacao.Selected.Value = "SIM", 1, 0),
+                                                      patrocinador_email: cmbWizPatrocinador.Selected.Email,
+                                                      prazo_desejado: dtpWizPrazo.SelectedDate,
+                                                      impacto_sem: Trim(txtWizImpacto.Text)
+                                                  }
+                                              );
+                                              Patch(
+                                                  tb_chamadoHistorico,
+                                                  Defaults(tb_chamadoHistorico),
+                                                  {
+                                                      id_fk_chamado: varWizNumChamado,
+                                                      status_para: "Aberto",
+                                                      autor_email: varEmailUser,
+                                                      observacao: "Demanda aberta pelo roteiro guiado de novo módulo."
+                                                  }
+                                              );
+                                              Notify(
+                                                  "Demanda #" & Text(varWizNumChamado, "000000") & " registrada. Acompanhe em Meus chamados.",
+                                                  NotificationType.Success,
+                                                  6000
+                                              );
+                                              Set(
+                                                  varWizNumChamado,
+                                                  Blank()
+                                              );
+                                              Navigate(
+                                                  ScreenMeusChamados,
+                                                  ScreenTransition.Fade
+                                              ),
+                                              Notify(
+                                                  "Não foi possível registrar a demanda. Confira a conexão e tente novamente.",
+                                                  NotificationType.Error,
+                                                  6000
+                                              )
+                                          );
+                                          UpdateContext({varWizOcupadoDesde: Blank()})
+                                      )
+                                    Text: ="Enviar solicitação"
+                                    Visible: =varWizPasso = 6
+                                    Width: =188
+                                    X: =Parent.Width - 216
+                                    Y: =Parent.Height - 62
+                              - cntWizLoading:
+                                  Control: GroupContainer@1.5.0
+                                  Variant: ManualLayout
+                                  Properties:
+                                    DropShadow: =DropShadow.None
+                                    Fill: =RGBA(255, 255, 255, 0.9)
+                                    Height: =Parent.Height
+                                    RadiusBottomLeft: =0
+                                    RadiusBottomRight: =0
+                                    RadiusTopLeft: =0
+                                    RadiusTopRight: =0
+                                    Visible: =Or(varWizCarregando, Not(IsBlank(varWizOcupadoDesde)))
+                                    Width: =Parent.Width
+                                  Children:
+                                    - lblWizLoading:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          Align: =Align.Center
+                                          Color: =RGBA(57, 22, 148, 1)
+                                          Font: =Font.'Open Sans'
+                                          FontWeight: =FontWeight.Bold
+                                          Height: =28
+                                          Size: =13
+                                          Text: =If(varWizCarregando, "Preparando o roteiro...", "Registrando a demanda...")
+                                          Width: =Parent.Width - 32
+                                          X: =16
+                                          Y: =(Parent.Height - Self.Height) / 2

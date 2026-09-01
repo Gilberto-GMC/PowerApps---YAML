@@ -1,6 +1,7 @@
 Screens:
   scrMapaPatio:
     Properties:
+      OnHidden: =Set(varMapaVisivel, false)
       OnVisible: |-
         =Set(varMapaVisivel, true);
         Set(varPainelAberto, false);
@@ -210,10 +211,8 @@ Screens:
                 Properties:
                   DropShadow: =DropShadow.None
                   Fill: =thmFundo
-                  FillPortions: =1
                   LayoutAlignItems: =LayoutAlignItems.Stretch
                   LayoutDirection: =LayoutDirection.Vertical
-                  LayoutGap: =0
                   LayoutMinHeight: =0
                   LayoutMinWidth: =0
                   RadiusBottomLeft: =0
@@ -265,7 +264,6 @@ Screens:
                               AutoHeight: =true
                               Color: =thmTextoBarra
                               Fill: =thmPrimaria
-                              FillPortions: =0
                               Font: =thmFonte
                               HtmlText: |-
                                 ="<table style='" & htmlFonte & "color:" & hxTextoBarra & ";border-spacing:14px 0;text-align:right;'><tr>" &
@@ -303,8 +301,7 @@ Screens:
                               Fill: =thmAmbar
                               FillPortions: =1
                               Font: =thmFonte
-                              HtmlText: |-
-                                ="<div style='" & htmlFonte & "color:" & hxTextoBarra & ";font-size:12px;font-weight:700;'>A programação deste dia foi alterada por outra pessoa. Atualize para ver a versão mais recente.</div>"
+                              HtmlText: ="<div style='" & htmlFonte & "color:" & hxTextoBarra & ";font-size:12px;font-weight:700;'>A programação deste dia foi alterada por outra pessoa. Atualize para ver a versão mais recente.</div>"
                               LayoutMinWidth: =0
                               Size: =12
                         - btnVerNovoMap:
@@ -313,7 +310,6 @@ Screens:
                               Appearance: ='ButtonCanvas.Appearance'.Primary
                               BasePaletteColor: =thmPrimaria
                               BorderRadius: =0
-                              FillPortions: =0
                               FontColor: =thmTextoBarra
                               FontSize: =12
                               FontWeight: =FontWeight.Semibold
@@ -349,7 +345,6 @@ Screens:
                             Control: DatePicker@0.0.46
                             Properties:
                               AccessibleLabel: ="Data da operação"
-                              FillPortions: =0
                               Format: =DateTimeFormat.ShortDate
                               SelectedDate: =varData
                               Width: =150
@@ -359,7 +354,6 @@ Screens:
                               Appearance: ='ButtonCanvas.Appearance'.Primary
                               BasePaletteColor: =thmPrimaria
                               BorderRadius: =0
-                              FillPortions: =0
                               FontColor: =thmTextoBarra
                               FontSize: =13
                               FontWeight: =FontWeight.Semibold
@@ -380,7 +374,6 @@ Screens:
                               Appearance: ='ButtonCanvas.Appearance'.Secondary
                               BasePaletteColor: =thmPrimaria
                               BorderRadius: =0
-                              FillPortions: =0
                               FontColor: =thmPrimaria
                               FontSize: =12
                               FontWeight: =FontWeight.Semibold
@@ -399,7 +392,6 @@ Screens:
                               Appearance: ='ButtonCanvas.Appearance'.Secondary
                               BasePaletteColor: =thmPrimaria
                               BorderRadius: =0
-                              FillPortions: =0
                               FontColor: =thmPrimaria
                               FontSize: =12
                               FontWeight: =FontWeight.Semibold
@@ -418,7 +410,6 @@ Screens:
                               Appearance: ='ButtonCanvas.Appearance'.Secondary
                               BasePaletteColor: =thmPrimaria
                               BorderRadius: =0
-                              FillPortions: =0
                               FontColor: =thmPrimaria
                               FontSize: =12
                               FontWeight: =FontWeight.Semibold
@@ -430,12 +421,10 @@ Screens:
                               PaddingLeft: =12
                               PaddingRight: =12
                               Text: ="AMANHÃ"
-                              Width: =96
                         - drpPatioMap:
                             Control: DropDown@0.0.45
                             Properties:
-                              DefaultSelectedItems: |-
-                                =[Coalesce(LookUp(colPatiosAero As _q, _q.patio = locPatio).nome_patio, "TODOS OS PÁTIOS")]
+                              DefaultSelectedItems: =[Coalesce(LookUp(colPatiosAero As _q, _q.patio = locPatio).nome_patio, "TODOS OS PÁTIOS")]
                               Height: =40
                               Items: =Filter(colPatiosSel, locNonce >= 0)
                               Width: =210
@@ -445,7 +434,6 @@ Screens:
                               Appearance: ='ButtonCanvas.Appearance'.Secondary
                               BasePaletteColor: =thmPrimaria
                               BorderRadius: =0
-                              FillPortions: =0
                               FontColor: =thmPrimaria
                               FontSize: =12
                               FontWeight: =FontWeight.Semibold
@@ -474,7 +462,6 @@ Screens:
                               Appearance: ='ButtonCanvas.Appearance'.Secondary
                               BasePaletteColor: =thmOperacional
                               BorderRadius: =0
-                              FillPortions: =0
                               FontColor: =thmOperacional
                               FontSize: =12
                               FontWeight: =FontWeight.Semibold
@@ -487,7 +474,7 @@ Screens:
                                     colDia,
                                     ForAll(
                                         Filter(
-                                            'tb_alocacoesMapa',
+                                            tb_alocacoesMapa,
                                             aeroporto = varAero And data_operacao = varData And ativo = 1
                                         ) As _r,
                                         {
@@ -519,91 +506,115 @@ Screens:
                                         Sort(colPosicoesAero, ordem, SortOrder.Ascending) As _p,
                                         With(
                                             {
-                                                _bl: Sort(Filter(colDia, id_posicao = _p.id), ini, SortOrder.Ascending)
+                                                _bl: Sort(Filter(colDia, id_posicao = _p.id), ini, SortOrder.Ascending),
+                                                _corPatio: Switch(_p.patio, "PRINCIPAL", hxPrimaria, "PATIO3", hxOperacional, hxVerde),
+                                                _restricao: If(
+                                                    !IsBlank(_p.aeronave_max),
+                                                    _p.aeronave_max,
+                                                    If(_p.classe = "HELICOPTERO", "HELICÓPTERO", "CLASSE " & _p.classe)
+                                                ),
+                                                _topo: If(
+                                                    _p.ordem = Min(Filter(colPosicoesAero As _q, _q.patio = _p.patio), ordem),
+                                                    "2px solid " & hxBorda,
+                                                    "1px solid " & hxGradeLinha
+                                                )
                                             },
                                             {
                                                 id_posicao: _p.id,
                                                 posicao: _p.posicao,
                                                 patio: _p.patio,
                                                 qtd: CountRows(_bl),
-                                                restricao: If(
-                                                    !IsBlank(_p.aeronave_max),
-                                                    _p.aeronave_max,
-                                                    If(_p.classe = "HELICOPTERO", "HELICÓPTERO", "CLASSE " & _p.classe)
-                                                ),
-                                                cor_patio: Switch(
-                                                    _p.patio,
-                                                    "PRINCIPAL", hxPrimaria,
-                                                    "PATIO3", hxOperacional,
-                                                    hxVerde
-                                                ),
-                                                html: "<div style='height:" & (mapAlturaLinha - 2) & "px;overflow:hidden;'><table style='width:100%;table-layout:fixed;border-collapse:collapse;background-image:repeating-linear-gradient(to right," & hxGradeLinha & " 0," & hxGradeLinha & " 1px,transparent 1px,transparent 4.1666%);" & htmlFonte & "'><tr>" &
+                                                restricao: _restricao,
+                                                cor_patio: _corPatio,
+                                                html: "<table style='width:100%;table-layout:fixed;border-collapse:separate;border-spacing:0;" & htmlFonte & "'><tr>" &
+                                                "<td style='width:" & mapLarguraRotulo & "px;height:" & mapAlturaLinha & "px;box-sizing:border-box;padding:6px 8px;vertical-align:middle;border-top:" & _topo & ";border-left:4px solid " & _corPatio & ";border-right:1px solid " & hxGradeLinha & ";'>" &
+                                                "<div style='font-size:15px;font-weight:800;color:" & hxPrimaria & ";line-height:1.05;'>" & _p.posicao & "</div>" &
+                                                "<div style='font-size:8px;font-weight:700;letter-spacing:.08em;color:" & hxTextoFraco & ";margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;'>" & _restricao & "</div>" &
+                                                "</td>" &
+                                                "<td style='height:" & mapAlturaLinha & "px;box-sizing:border-box;padding:0;border-top:" & _topo & ";" & mapFundoHoras & "'>" &
                                                 If(
                                                     CountRows(_bl) = 0,
-                                                    Concat(
-                                                        Sequence(24) As _h24,
-                                                        "<td style='box-sizing:border-box;width:4.1666%;height:" & (mapAlturaLinha - 2) & "px;border-right:1px solid " & hxGradeLinha & ";border-bottom:2px solid " & hxTexto & ";'>&nbsp;</td>"
-                                                    ),
+                                                    "",
+                                                    "<table style='width:100%;table-layout:fixed;border-collapse:separate;border-spacing:0;'><tr>" &
                                                     Concat(
                                                         Sequence(CountRows(_bl)) As _i,
                                                         With(
                                                             {
                                                                 _b: Index(_bl, _i.Value),
-                                                                _ant: If(_i.Value = 1, 0, Index(_bl, _i.Value - 1).fim)
+                                                                _ant: Min(Max(Coalesce(Max(FirstN(_bl, _i.Value - 1), Max(ini, fim)), 0), 0), mapMinutosDia)
                                                             },
                                                             With(
                                                                 {
-                                                                    _cia: LookUp(colCias As _cc, _cc.sigla = _b.cia),
-                                                                    _prt: LookUp(colPortoes As _pp, _pp.portao = _b.portao),
-                                                                    _bloq: _b.tipo <> "VOO"
+                                                                    _a: Min(Max(_b.ini, _ant), mapMinutosDia)
                                                                 },
-                                                                If(
-                                                                    _b.ini > _ant,
-                                                                    "<td style='width:" & Text((_b.ini - _ant) * 100 / mapMinutosDia, "0.000", "en-US") & "%;border-bottom:2px solid " & hxTexto & ";'>&nbsp;</td>",
-                                                                    ""
-                                                                ) &
-                                                                "<td style='box-sizing:border-box;width:" & Text((_b.fim - _b.ini) * 100 / mapMinutosDia, "0.000", "en-US") & "%;height:" & (mapAlturaLinha - 2) & "px;" &
-                                                                "background:" & If(_bloq, hxTextoFraco, If(_b.pesq = 1, hxVermelho, Coalesce(_cia.cor_hex, hxBorda))) & ";" &
-                                                                "color:" & If(_bloq Or _b.pesq = 1, hxTextoBarra, Coalesce(_cia.cor_texto, hxTexto)) & ";" &
-                                                                "border:2px solid " & Coalesce(_prt.cor_hex, hxBorda) & ";" &
-                                                                "font-size:10px;font-weight:700;line-height:1.2;padding:1px 2px;text-align:center;'>" &
-                                                                "<div style='overflow:hidden;white-space:nowrap;'>" &
-                                                                If(
-                                                                    _b.pesq = 1,
-                                                                    "<span style='background:" & hxTextoBarra & ";color:" & hxVermelho & ";padding:0 3px;margin-right:3px;'>P</span>",
-                                                                    ""
-                                                                ) &
-                                                                If(
-                                                                    _bloq,
-                                                                    If(_b.tipo = "INTERDICAO", "INTERDITADO", "RESERVADO"),
-                                                                    Trim(Coalesce(_b.cia, "") & " " & Coalesce(_b.prefixo, "")) & " " & Coalesce(_b.voo_ida, "") &
-                                                                    If(!IsBlank(_b.voo_volta), "/" & _b.voo_volta, "")
-                                                                ) &
-                                                                "</div>" &
-                                                                "<div style='font-size:8px;font-weight:600;opacity:.85;overflow:hidden;white-space:nowrap;'>" &
-                                                                Text(Int(_b.ini / 60), "00") & ":" & Text(Mod(_b.ini, 60), "00") & "&ndash;" &
-                                                                Text(Int(_b.fim / 60), "00") & ":" & Text(Mod(_b.fim, 60), "00") &
-                                                                If(!IsBlank(_b.portao), " &middot; P" & _b.portao, "") &
-                                                                "</div></td>"
+                                                                With(
+                                                                    {
+                                                                        _z: Min(Max(_b.fim, _a), mapMinutosDia),
+                                                                        _cia: LookUp(colCias As _cc, _cc.sigla = _b.cia),
+                                                                        _prt: LookUp(colPortoes As _pp, _pp.portao = _b.portao),
+                                                                        _bloq: _b.tipo <> "VOO"
+                                                                    },
+                                                                    If(
+                                                                        _a > _ant,
+                                                                        "<td style='width:" & Text((_a - _ant) * 100 / mapMinutosDia, "0.000", "en-US") & "%;'>&nbsp;</td>",
+                                                                        ""
+                                                                    ) &
+                                                                    "<td style='box-sizing:border-box;width:" & Text((_z - _a) * 100 / mapMinutosDia, "0.000", "en-US") & "%;height:" & (mapAlturaLinha - 14) & "px;" &
+                                                                    "background:" & If(_bloq, hxTextoFraco, If(_b.pesq = 1, hxVermelho, Coalesce(_cia.cor_hex, hxBorda))) & ";" &
+                                                                    "color:" & If(_bloq Or _b.pesq = 1, hxTextoBarra, Coalesce(_cia.cor_texto, hxTexto)) & ";" &
+                                                                    "border:3px solid " & Coalesce(_prt.cor_hex, hxBorda) & ";" &
+                                                                    "font-size:10px;font-weight:700;line-height:1.15;padding:0 3px;text-align:center;overflow:hidden;'>" &
+                                                                    "<div style='white-space:nowrap;overflow:hidden;text-overflow:ellipsis;'>" &
+                                                                    If(
+                                                                        _b.pesq = 1,
+                                                                        "<span style='background:" & hxTextoBarra & ";color:" & hxVermelho & ";padding:0 3px;margin-right:3px;'>P</span>",
+                                                                        ""
+                                                                    ) &
+                                                                    If(
+                                                                        _bloq,
+                                                                        If(_b.tipo = "INTERDICAO", "INTERDITADO", "RESERVADO"),
+                                                                        Trim(
+                                                                            Coalesce(_b.cia, "") & " " &
+                                                                            If(
+                                                                                IsBlank(_b.voo_ida) And IsBlank(_b.voo_volta),
+                                                                                Coalesce(_b.prefixo, ""),
+                                                                                Coalesce(_b.voo_ida, "") &
+                                                                                If(
+                                                                                    !IsBlank(_b.voo_volta),
+                                                                                    If(IsBlank(_b.voo_ida), "", "/") & _b.voo_volta,
+                                                                                    ""
+                                                                                )
+                                                                            )
+                                                                        )
+                                                                    ) &
+                                                                    "</div>" &
+                                                                    "<div style='font-size:8px;font-weight:600;opacity:.85;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;'>" &
+                                                                    Text(Int(_b.ini / 60), "00") & ":" & Text(Mod(_b.ini, 60), "00") & "&ndash;" &
+                                                                    Text(Int(_b.fim / 60), "00") & ":" & Text(Mod(_b.fim, 60), "00") &
+                                                                    If(!IsBlank(_b.portao), " &middot; P" & _b.portao, "") &
+                                                                    "</div></td>"
+                                                                )
                                                             )
                                                         )
                                                     ) &
                                                     With(
                                                         {
-                                                            _ult: Coalesce(Last(_bl).fim, 0)
+                                                            _ult: Min(Max(Coalesce(Max(_bl, Max(ini, fim)), 0), 0), mapMinutosDia)
                                                         },
                                                         If(
                                                             _ult < mapMinutosDia,
-                                                            "<td style='width:" & Text((mapMinutosDia - _ult) * 100 / mapMinutosDia, "0.000", "en-US") & "%;border-bottom:2px solid " & hxTexto & ";'>&nbsp;</td>",
+                                                            "<td style='width:" & Text((mapMinutosDia - _ult) * 100 / mapMinutosDia, "0.000", "en-US") & "%;'>&nbsp;</td>",
                                                             ""
                                                         )
-                                                    )
+                                                    ) &
+                                                    "</tr></table>"
                                                 ) &
-                                                "</tr></table></div>"
+                                                "</td></tr></table>"
                                             }
                                         )
                                     )
                                 );
+                                Set(varPosSel, LookUp(colGrade As _g, _g.id_posicao = varPosSel.id_posicao));
                                 UpdateContext({locDesatualizado: false})
                               PaddingLeft: =12
                               PaddingRight: =12
@@ -616,7 +627,6 @@ Screens:
                               BasePaletteColor: =thmAcao
                               BorderRadius: =0
                               DisplayMode: =If(varPodeEditar, DisplayMode.Edit, DisplayMode.Disabled)
-                              FillPortions: =0
                               FontColor: =thmTextoBarra
                               FontSize: =13
                               FontWeight: =FontWeight.Semibold
@@ -650,888 +660,89 @@ Screens:
                               PaddingRight: =14
                               Text: ="NOVO REGISTRO"
                               Width: =186
-                  - cntCorpoMap:
+                  - cntGradeMap:
                       Control: GroupContainer@1.5.0
                       Variant: AutoLayout
                       Properties:
                         DropShadow: =DropShadow.None
-                        Fill: =thmFundo
-                        FillPortions: =1
+                        Fill: =thmSuperficie
                         LayoutAlignItems: =LayoutAlignItems.Stretch
-                        LayoutDirection: =LayoutDirection.Horizontal
-                        LayoutGap: =0
+                        LayoutDirection: =LayoutDirection.Vertical
                         LayoutMinHeight: =0
                         LayoutMinWidth: =0
+                        PaddingLeft: =14
+                        PaddingRight: =14
+                        PaddingTop: =10
                         RadiusBottomLeft: =0
                         RadiusBottomRight: =0
                         RadiusTopLeft: =0
                         RadiusTopRight: =0
                       Children:
-                        - cntGradeMap:
-                            Control: GroupContainer@1.5.0
-                            Variant: AutoLayout
+                        - htmReguaMap:
+                            Control: HtmlViewer@2.1.0
                             Properties:
-                              DropShadow: =DropShadow.None
+                              AutoHeight: =true
+                              Color: =thmTexto
                               Fill: =thmSuperficie
-                              FillPortions: =1
-                              LayoutAlignItems: =LayoutAlignItems.Stretch
-                              LayoutDirection: =LayoutDirection.Vertical
-                              LayoutGap: =0
+                              Font: =thmFonte
+                              HtmlText: |-
+                                ="<table style='width:99.3%;table-layout:fixed;border-collapse:separate;border-spacing:0;" & htmlFonte & "'><tr>" & "<td style='width:" & mapLarguraRotulo & "px;box-sizing:border-box;padding:0 8px 6px 12px;vertical-align:bottom;font-size:9px;font-weight:700;letter-spacing:.14em;color:" & hxTextoFraco & ";'>POSIÇÃO</td>" & "<td style='box-sizing:border-box;padding:0;" & mapFundoHoras & "'>" & "<table style='width:100%;table-layout:fixed;border-collapse:separate;border-spacing:0;'><tr>" & Concat(
+                                    colHoras As _h,
+                                    "<td style='box-sizing:border-box;width:" & mapPctHora & "%;padding:2px 0 6px 4px;font-size:9px;font-weight:700;color:" & hxTextoFraco & ";'>" & If(
+                                        varData = Today() And !IsBlank(varCarregadoEm) And Hour(varCarregadoEm) = _h.hora,
+                                        "<span style='background:" & hxPrimaria & ";color:" & hxTextoBarra & ";padding:1px 4px;'>" & Text(
+                                            _h.hora,
+                                            "00"
+                                        ) & "</span>",
+                                        Text(
+                                            _h.hora,
+                                            "00"
+                                        )
+                                    ) & "</td>"
+                                ) & "</tr></table></td></tr></table>"
+                              PaddingBottom: =0
+                              PaddingLeft: =0
+                              PaddingRight: =mapLarguraBarra
+                              PaddingTop: =0
+                              Size: =9
+                        - galPosicoesMap:
+                            Control: Gallery@2.15.0
+                            Variant: Vertical
+                            Properties:
+                              BorderColor: =thmBorda
+                              BorderStyle: =BorderStyle.None
+                              Fill: =thmSuperficie
+                              Items: =Filter(colGrade, locPatio = "TODOS" Or patio = locPatio)
                               LayoutMinHeight: =0
                               LayoutMinWidth: =0
-                              PaddingBottom: =0
-                              PaddingLeft: =14
-                              PaddingRight: =14
-                              PaddingTop: =10
-                              RadiusBottomLeft: =0
-                              RadiusBottomRight: =0
-                              RadiusTopLeft: =0
-                              RadiusTopRight: =0
+                              TemplatePadding: =0
+                              TemplateSize: =mapAlturaLinha
                             Children:
-                              - htmReguaMap:
+                              - htmLinhaMap:
                                   Control: HtmlViewer@2.1.0
                                   Properties:
-                                    AutoHeight: =true
                                     Color: =thmTexto
-                                    Fill: =thmSuperficie
+                                    Fill: =If(varPosSel.id_posicao = ThisItem.id_posicao, thmPrimariaClara, thmSuperficie)
                                     Font: =thmFonte
-                                    HtmlText: |-
-                                      ="<table style='width:100%;table-layout:fixed;border-collapse:collapse;" & htmlFonte & "'><tr>" &
-                                      Concat(
-                                          colHoras As _h,
-                                          "<td style='box-sizing:border-box;width:4.1666%;font-size:9px;font-weight:700;color:" & hxTextoFraco &
-                                          ";border-right:1px solid " & hxGradeLinha & ";padding:2px 0 4px 2px;'>" &
-                                          Text(_h.hora, "00") & "</td>"
-                                      ) &
-                                      "</tr></table>"
-                                    PaddingLeft: =Parent.Width - (Parent.Width - mapLarguraRotulo)
-                                    PaddingRight: =32
-                                    Size: =9
-                              - galPosicoesMap:
-                                  Control: Gallery@2.15.0
-                                  Variant: Vertical
-                                  Properties:
-                                    BorderColor: =thmBorda
-                                    BorderStyle: =BorderStyle.None
-                                    Fill: =thmSuperficie
-                                    FillPortions: =1
-                                    Items: =Filter(colGrade, locPatio = "TODOS" Or patio = locPatio)
-                                    LayoutMinHeight: =0
-                                    LayoutMinWidth: =0
-                                    ShowNavigation: =false
-                                    ShowScrollbar: =true
-                                    TemplatePadding: =0
-                                    TemplateSize: =mapAlturaLinha
-                                  Children:
-                                    - htmTrilhoMap:
-                                        Control: HtmlViewer@2.1.0
-                                        Properties:
-                                          AutoHeight: =true
-                                          Color: =thmTexto
-                                          Fill: =thmSuperficie
-                                          Height: =mapAlturaLinha - 2
-                                          HtmlText: =ThisItem.html
-                                          OnSelect: |-
-                                            =Set(varPosSel, ThisItem);
-                                            Set(varAlocSel, Blank());
-                                            Set(varPainelAberto, true);
-                                            UpdateContext({locConfirmaExcluir: 0, locConfirmaConting: 0, locNonce: locNonce + 1})
-                                          Size: =10
-                                          Width: =galPosicoesMap.Width - mapLarguraRotulo - 32
-                                          X: =galPosicoesMap.Width - galPosicoesMap.Width + mapLarguraRotulo
-                                    - htmRotuloMap:
-                                        Control: HtmlViewer@2.1.0
-                                        Properties:
-                                          Color: =thmTexto
-                                          Fill: =thmSuperficie
-                                          Height: =mapAlturaLinha - 2
-                                          HtmlText: |-
-                                            ="<div style='" & htmlFonte & "border-left:4px solid " & ThisItem.cor_patio &
-                                            ";padding:5px 6px 5px 8px;height:100%;box-sizing:border-box;background:" &
-                                            If(varPosSel.id_posicao = ThisItem.id_posicao, hxPrimariaClara, hxFundo) & ";'>" &
-                                            "<div style='font-size:15px;font-weight:800;color:" & hxPrimaria & ";line-height:1.05;'>" & ThisItem.posicao & "</div>" &
-                                            "<div style='font-size:8px;font-weight:700;letter-spacing:.08em;color:" & hxTextoFraco & ";margin-top:2px;'>" & ThisItem.restricao & "</div>" &
-                                            "</div>"
-                                          OnSelect: |-
-                                            =Set(varPosSel, ThisItem);
-                                            Set(varAlocSel, Blank());
-                                            Set(varPainelAberto, true);
-                                            UpdateContext({locConfirmaExcluir: 0, locConfirmaConting: 0, locNonce: locNonce + 1})
-                                          Size: =11
-                                          Width: =Min(mapLarguraRotulo, Parent.Width)
-                                          X: =0
-                        - cntPainelMap:
-                            Control: GroupContainer@1.5.0
-                            Variant: AutoLayout
-                            Properties:
-                              DropShadow: =DropShadow.None
-                              Fill: =thmFundo
-                              FillPortions: =0
-                              LayoutAlignItems: =LayoutAlignItems.Stretch
-                              LayoutDirection: =LayoutDirection.Vertical
-                              LayoutGap: =0
-                              LayoutMinHeight: =0
-                              PaddingBottom: =0
-                              PaddingLeft: =16
-                              PaddingRight: =16
-                              PaddingTop: =12
-                              RadiusBottomLeft: =0
-                              RadiusBottomRight: =0
-                              RadiusTopLeft: =0
-                              RadiusTopRight: =0
-                              Visible: =true
-                              Width: =392
-                            Children:
-                              - htmPainelVazioMap:
-                                  Control: HtmlViewer@2.1.0
-                                  Properties:
-                                    AutoHeight: =true
-                                    Color: =thmTextoFraco
-                                    Fill: =thmFundo
-                                    Font: =thmFonte
-                                    HtmlText: |-
-                                      ="<div style='" & htmlFonte & "color:" & hxTextoFraco & ";font-size:12px;line-height:1.5;padding-top:24px;text-align:center;'>" &
-                                      "Toque em uma posição no mapa para ver ou lançar um registro." &
-                                      "</div>"
-                                    Size: =12
-                                    Visible: =!varPainelAberto
-                              - htmPainelCabMap:
-                                  Control: HtmlViewer@2.1.0
-                                  Properties:
-                                    AutoHeight: =true
-                                    Color: =thmTexto
-                                    Fill: =thmFundo
-                                    Font: =thmFonte
-                                    HtmlText: |-
-                                      ="<div style='" & htmlFonte & "background:" & hxSuperficie & ";border:1px solid " & hxBorda &
-                                      ";border-top:3px solid " & Coalesce(varPosSel.cor_patio, hxPrimaria) & ";padding:12px 14px;'>" &
-                                      "<div style='font-size:10px;font-weight:700;letter-spacing:.14em;color:" & hxTextoFraco & ";'>POSIÇÃO SELECIONADA</div>" &
-                                      "<div style='font-size:26px;font-weight:800;color:" & hxPrimaria & ";line-height:1.15;margin-top:4px;'>" &
-                                      Coalesce(varPosSel.posicao, "&mdash;") & "</div>" &
-                                      "<div style='font-size:11px;color:" & hxTexto & ";margin-top:2px;'>" &
-                                      Coalesce(varPosSel.restricao, "") & " &nbsp;&middot;&nbsp; " & Coalesce(varPosSel.qtd, 0) & " registro(s) no dia</div>" &
-                                      If(
-                                          IsBlank(varAlocSel.id),
-                                          "",
-                                          "<div style='font-size:10px;color:" & hxTextoFraco & ";margin-top:8px;border-top:1px solid " & hxBorda & ";padding-top:8px;'>" &
-                                          "Última alteração: " & Text(varAlocSel.alterado_em, "dd/mm/yyyy HH:mm") & " por " & Coalesce(varAlocSel.alterado_por, "&mdash;") & "</div>"
-                                      ) &
-                                      "</div>"
-                                    Size: =11
-                                    Visible: =varPainelAberto
-                              - galVoosMap:
-                                  Control: Gallery@2.15.0
-                                  Variant: Vertical
-                                  Properties:
-                                    BorderColor: =thmBorda
-                                    BorderStyle: =BorderStyle.None
-                                    Fill: =thmFundo
-                                    FillPortions: =0
-                                    Height: =156
-                                    Items: =Sort(Filter(colDia, id_posicao = varPosSel.id_posicao), ini, SortOrder.Ascending)
-                                    LayoutMinWidth: =0
-                                    ShowNavigation: =false
-                                    ShowScrollbar: =true
-                                    TemplatePadding: =0
-                                    TemplateSize: =46
-                                    Visible: =varPainelAberto
-                                  Children:
-                                    - btnVooMap:
-                                        Control: Button@0.0.45
-                                        Properties:
-                                          Align: =Align.Left
-                                          Appearance: =If(varAlocSel.id = ThisItem.id, 'ButtonCanvas.Appearance'.Primary, 'ButtonCanvas.Appearance'.Secondary)
-                                          BasePaletteColor: =ColorValue(Coalesce(LookUp(colCias As _c, _c.sigla = ThisItem.cia).cor_hex, hxTextoFraco))
-                                          BorderRadius: =0
-                                          FontSize: =11
-                                          FontWeight: =FontWeight.Semibold
-                                          Height: =44
-                                          LayoutMinWidth: =0
-                                          OnSelect: |-
-                                            =Set(varAlocSel, ThisItem);
-                                            Set(
-                                                varForm,
-                                                {
-                                                    tipo: Coalesce(LookUp(colTiposReg As _t, _t.tipo = ThisItem.tipo).rotulo, "Voo"),
-                                                    posicao: ThisItem.posicao_txt,
-                                                    data: varData,
-                                                    cia: If(IsBlank(ThisItem.cia), "—", ThisItem.cia),
-                                                    voo_ida: ThisItem.voo_ida,
-                                                    voo_volta: ThisItem.voo_volta,
-                                                    prefixo: ThisItem.prefixo,
-                                                    portao: If(IsBlank(ThisItem.portao), "—", ThisItem.portao),
-                                                    ini: Text(Int(ThisItem.ini / 60), "00") & ":" & Text(Mod(ThisItem.ini, 60), "00"),
-                                                    fim: Text(Int(ThisItem.fim / 60), "00") & ":" & Text(Mod(ThisItem.fim, 60), "00"),
-                                                    env: If(Value(ThisItem.env) > 0, Text(ThisItem.env), ""),
-                                                    obs: ThisItem.obs,
-                                                    pesq: ThisItem.pesq = 1
-                                                }
-                                            );
-                                            UpdateContext({locConfirmaExcluir: 0, locConfirmaConting: 0, locNonce: locNonce + 1})
-                                          PaddingLeft: =10
-                                          PaddingRight: =10
-                                          Text: |-
-                                            =Trim(Coalesce(ThisItem.cia, "") & " " & Coalesce(ThisItem.prefixo, "")) & " " & Coalesce(ThisItem.voo_ida, "") &
-                                            If(!IsBlank(ThisItem.voo_volta), "/" & ThisItem.voo_volta, "") &
-                                            If(ThisItem.tipo <> "VOO", " · " & ThisItem.tipo, "") &
-                                            "   " &
-                                            Text(Int(ThisItem.ini / 60), "00") & ":" & Text(Mod(ThisItem.ini, 60), "00") & "–" &
-                                            Text(Int(ThisItem.fim / 60), "00") & ":" & Text(Mod(ThisItem.fim, 60), "00") &
-                                            If(!IsBlank(ThisItem.portao), "   PORTÃO " & ThisItem.portao, "") &
-                                            If(ThisItem.pesq = 1, "   PESQUISADO", "")
-                                          Width: =Parent.Width - 18
-                                          X: =0
-                              - cntFormMap:
-                                  Control: GroupContainer@1.5.0
-                                  Variant: AutoLayout
-                                  Properties:
-                                    DropShadow: =DropShadow.None
-                                    Fill: =thmSuperficie
-                                    FillPortions: =1
-                                    LayoutAlignItems: =LayoutAlignItems.Stretch
-                                    LayoutDirection: =LayoutDirection.Vertical
-                                    LayoutGap: =4
-                                    LayoutMinHeight: =0
-                                    LayoutMinWidth: =0
-                                    LayoutOverflowY: =LayoutOverflow.Scroll
-                                    PaddingBottom: =12
-                                    PaddingLeft: =14
-                                    PaddingRight: =14
-                                    PaddingTop: =12
-                                    RadiusBottomLeft: =0
-                                    RadiusBottomRight: =0
-                                    RadiusTopLeft: =0
-                                    RadiusTopRight: =0
-                                    Visible: =varPainelAberto
-                                  Children:
-                                    - lblTipoMap:
-                                        Control: Label@2.5.1
-                                        Properties:
-                                          Color: =thmTextoFraco
-                                          Font: =thmFonte
-                                          FontWeight: =FontWeight.Bold
-                                          Height: =18
-                                          Size: =10
-                                          Text: ="TIPO DE REGISTRO *"
-                                    - drpTipoMap:
-                                        Control: DropDown@0.0.45
-                                        Properties:
-                                          DefaultSelectedItems: =[Coalesce(varForm.tipo, "Voo")]
-                                          DisplayMode: =If(varPodeEditar, DisplayMode.Edit, DisplayMode.View)
-                                          Height: =40
-                                          Items: =Filter(colTiposSel, locNonce >= 0)
-                                    - lblPosicaoMap:
-                                        Control: Label@2.5.1
-                                        Properties:
-                                          Color: =thmTextoFraco
-                                          Font: =thmFonte
-                                          FontWeight: =FontWeight.Bold
-                                          Height: =18
-                                          Size: =10
-                                          Text: ="POSIÇÃO *"
-                                    - drpPosicaoMap:
-                                        Control: DropDown@0.0.45
-                                        Properties:
-                                          DefaultSelectedItems: =[Coalesce(varForm.posicao, "T1")]
-                                          DisplayMode: =If(varPodeEditar, DisplayMode.Edit, DisplayMode.View)
-                                          Height: =40
-                                          Items: =Filter(colPosicoesSel, locNonce >= 0)
-                                    - lblDataFormMap:
-                                        Control: Label@2.5.1
-                                        Properties:
-                                          Color: =thmTextoFraco
-                                          Font: =thmFonte
-                                          FontWeight: =FontWeight.Bold
-                                          Height: =18
-                                          Size: =10
-                                          Text: ="DATA DA OPERAÇÃO *"
-                                    - dtpDataFormMap:
-                                        Control: DatePicker@0.0.46
-                                        Properties:
-                                          AccessibleLabel: ="Data da operação deste registro"
-                                          DisplayMode: =If(varPodeEditar, DisplayMode.Edit, DisplayMode.View)
-                                          Format: =DateTimeFormat.ShortDate
-                                          Height: =40
-                                          SelectedDate: =Coalesce(varForm.data, varData)
-                                    - cntHorasMap:
-                                        Control: GroupContainer@1.5.0
-                                        Variant: AutoLayout
-                                        Properties:
-                                          DropShadow: =DropShadow.None
-                                          Fill: =thmSuperficie
-                                          FillPortions: =0
-                                          Height: =62
-                                          LayoutAlignItems: =LayoutAlignItems.Stretch
-                                          LayoutDirection: =LayoutDirection.Horizontal
-                                          LayoutGap: =10
-                                          LayoutMinWidth: =0
-                                          RadiusBottomLeft: =0
-                                          RadiusBottomRight: =0
-                                          RadiusTopLeft: =0
-                                          RadiusTopRight: =0
-                                        Children:
-                                          - cntIniMap:
-                                              Control: GroupContainer@1.5.0
-                                              Variant: AutoLayout
-                                              Properties:
-                                                DropShadow: =DropShadow.None
-                                                Fill: =thmSuperficie
-                                                FillPortions: =1
-                                                LayoutAlignItems: =LayoutAlignItems.Stretch
-                                                LayoutDirection: =LayoutDirection.Vertical
-                                                LayoutGap: =4
-                                                LayoutMinHeight: =0
-                                                LayoutMinWidth: =0
-                                                RadiusBottomLeft: =0
-                                                RadiusBottomRight: =0
-                                                RadiusTopLeft: =0
-                                                RadiusTopRight: =0
-                                              Children:
-                                                - lblIniMap:
-                                                    Control: Label@2.5.1
-                                                    Properties:
-                                                      Color: =thmTextoFraco
-                                                      Font: =thmFonte
-                                                      FontWeight: =FontWeight.Bold
-                                                      Height: =18
-                                                      Size: =10
-                                                      Text: ="CHEGADA (HH:MM) *"
-                                                - txtIniMap:
-                                                    Control: TextInput@0.0.54
-                                                    Properties:
-                                                      AccessibleLabel: ="Hora de chegada"
-                                                      DisplayMode: =If(varPodeEditar, DisplayMode.Edit, DisplayMode.View)
-                                                      Height: =40
-                                                      Placeholder: ="09:00"
-                                                      Value: =Coalesce(varForm.ini, "")
-                                          - cntFimMap:
-                                              Control: GroupContainer@1.5.0
-                                              Variant: AutoLayout
-                                              Properties:
-                                                DropShadow: =DropShadow.None
-                                                Fill: =thmSuperficie
-                                                FillPortions: =1
-                                                LayoutAlignItems: =LayoutAlignItems.Stretch
-                                                LayoutDirection: =LayoutDirection.Vertical
-                                                LayoutGap: =4
-                                                LayoutMinHeight: =0
-                                                LayoutMinWidth: =0
-                                                RadiusBottomLeft: =0
-                                                RadiusBottomRight: =0
-                                                RadiusTopLeft: =0
-                                                RadiusTopRight: =0
-                                              Children:
-                                                - lblFimMap:
-                                                    Control: Label@2.5.1
-                                                    Properties:
-                                                      Color: =thmTextoFraco
-                                                      Font: =thmFonte
-                                                      FontWeight: =FontWeight.Bold
-                                                      Height: =18
-                                                      Size: =10
-                                                      Text: ="SAÍDA (HH:MM) *"
-                                                - txtFimMap:
-                                                    Control: TextInput@0.0.54
-                                                    Properties:
-                                                      AccessibleLabel: ="Hora de saída"
-                                                      DisplayMode: =If(varPodeEditar, DisplayMode.Edit, DisplayMode.View)
-                                                      Height: =40
-                                                      Placeholder: ="09:40"
-                                                      Value: =Coalesce(varForm.fim, "")
-                                    - lblCiaMap:
-                                        Control: Label@2.5.1
-                                        Properties:
-                                          Color: =thmTextoFraco
-                                          Font: =thmFonte
-                                          FontWeight: =FontWeight.Bold
-                                          Height: =18
-                                          Size: =10
-                                          Text: ="COMPANHIA"
-                                    - drpCiaMap:
-                                        Control: DropDown@0.0.45
-                                        Properties:
-                                          DefaultSelectedItems: =[Coalesce(varForm.cia, "—")]
-                                          DisplayMode: =If(varPodeEditar, DisplayMode.Edit, DisplayMode.View)
-                                          Height: =40
-                                          Items: =Filter(colCiasSel, locNonce >= 0)
-                                    - cntVoosMap:
-                                        Control: GroupContainer@1.5.0
-                                        Variant: AutoLayout
-                                        Properties:
-                                          DropShadow: =DropShadow.None
-                                          Fill: =thmSuperficie
-                                          FillPortions: =0
-                                          Height: =62
-                                          LayoutAlignItems: =LayoutAlignItems.Stretch
-                                          LayoutDirection: =LayoutDirection.Horizontal
-                                          LayoutGap: =10
-                                          LayoutMinWidth: =0
-                                          RadiusBottomLeft: =0
-                                          RadiusBottomRight: =0
-                                          RadiusTopLeft: =0
-                                          RadiusTopRight: =0
-                                        Children:
-                                          - cntVooIdaMap:
-                                              Control: GroupContainer@1.5.0
-                                              Variant: AutoLayout
-                                              Properties:
-                                                DropShadow: =DropShadow.None
-                                                Fill: =thmSuperficie
-                                                FillPortions: =1
-                                                LayoutAlignItems: =LayoutAlignItems.Stretch
-                                                LayoutDirection: =LayoutDirection.Vertical
-                                                LayoutGap: =4
-                                                LayoutMinHeight: =0
-                                                LayoutMinWidth: =0
-                                                RadiusBottomLeft: =0
-                                                RadiusBottomRight: =0
-                                                RadiusTopLeft: =0
-                                                RadiusTopRight: =0
-                                              Children:
-                                                - lblVooIdaMap:
-                                                    Control: Label@2.5.1
-                                                    Properties:
-                                                      Color: =thmTextoFraco
-                                                      Font: =thmFonte
-                                                      FontWeight: =FontWeight.Bold
-                                                      Height: =18
-                                                      Size: =10
-                                                      Text: ="VOO DE CHEGADA"
-                                                - txtVooIdaMap:
-                                                    Control: TextInput@0.0.54
-                                                    Properties:
-                                                      AccessibleLabel: ="Número do voo de chegada"
-                                                      DisplayMode: =If(varPodeEditar, DisplayMode.Edit, DisplayMode.View)
-                                                      Height: =40
-                                                      Placeholder: ="1214"
-                                                      Value: =Coalesce(varForm.voo_ida, "")
-                                          - cntVooVoltaMap:
-                                              Control: GroupContainer@1.5.0
-                                              Variant: AutoLayout
-                                              Properties:
-                                                DropShadow: =DropShadow.None
-                                                Fill: =thmSuperficie
-                                                FillPortions: =1
-                                                LayoutAlignItems: =LayoutAlignItems.Stretch
-                                                LayoutDirection: =LayoutDirection.Vertical
-                                                LayoutGap: =4
-                                                LayoutMinHeight: =0
-                                                LayoutMinWidth: =0
-                                                RadiusBottomLeft: =0
-                                                RadiusBottomRight: =0
-                                                RadiusTopLeft: =0
-                                                RadiusTopRight: =0
-                                              Children:
-                                                - lblVooVoltaMap:
-                                                    Control: Label@2.5.1
-                                                    Properties:
-                                                      Color: =thmTextoFraco
-                                                      Font: =thmFonte
-                                                      FontWeight: =FontWeight.Bold
-                                                      Height: =18
-                                                      Size: =10
-                                                      Text: ="VOO DE SAÍDA"
-                                                - txtVooVoltaMap:
-                                                    Control: TextInput@0.0.54
-                                                    Properties:
-                                                      AccessibleLabel: ="Número do voo de saída"
-                                                      DisplayMode: =If(varPodeEditar, DisplayMode.Edit, DisplayMode.View)
-                                                      Height: =40
-                                                      Placeholder: ="1217"
-                                                      Value: =Coalesce(varForm.voo_volta, "")
-                                    - lblPortaoMap:
-                                        Control: Label@2.5.1
-                                        Properties:
-                                          Color: =thmTextoFraco
-                                          Font: =thmFonte
-                                          FontWeight: =FontWeight.Bold
-                                          Height: =18
-                                          Size: =10
-                                          Text: ="PORTÃO"
-                                    - drpPortaoMap:
-                                        Control: DropDown@0.0.45
-                                        Properties:
-                                          DefaultSelectedItems: =[Coalesce(varForm.portao, "—")]
-                                          DisplayMode: =If(varPodeEditar, DisplayMode.Edit, DisplayMode.View)
-                                          Height: =40
-                                          Items: =Filter(colPortoesSel, locNonce >= 0)
-                                    - cntExtraMap:
-                                        Control: GroupContainer@1.5.0
-                                        Variant: AutoLayout
-                                        Properties:
-                                          DropShadow: =DropShadow.None
-                                          Fill: =thmSuperficie
-                                          FillPortions: =0
-                                          Height: =62
-                                          LayoutAlignItems: =LayoutAlignItems.Stretch
-                                          LayoutDirection: =LayoutDirection.Horizontal
-                                          LayoutGap: =10
-                                          LayoutMinWidth: =0
-                                          RadiusBottomLeft: =0
-                                          RadiusBottomRight: =0
-                                          RadiusTopLeft: =0
-                                          RadiusTopRight: =0
-                                        Children:
-                                          - cntPrefixoMap:
-                                              Control: GroupContainer@1.5.0
-                                              Variant: AutoLayout
-                                              Properties:
-                                                DropShadow: =DropShadow.None
-                                                Fill: =thmSuperficie
-                                                FillPortions: =1
-                                                LayoutAlignItems: =LayoutAlignItems.Stretch
-                                                LayoutDirection: =LayoutDirection.Vertical
-                                                LayoutGap: =4
-                                                LayoutMinHeight: =0
-                                                LayoutMinWidth: =0
-                                                RadiusBottomLeft: =0
-                                                RadiusBottomRight: =0
-                                                RadiusTopLeft: =0
-                                                RadiusTopRight: =0
-                                              Children:
-                                                - lblPrefixoMap:
-                                                    Control: Label@2.5.1
-                                                    Properties:
-                                                      Color: =thmTextoFraco
-                                                      Font: =thmFonte
-                                                      FontWeight: =FontWeight.Bold
-                                                      Height: =18
-                                                      Size: =10
-                                                      Text: ="PREFIXO"
-                                                - txtPrefixoMap:
-                                                    Control: TextInput@0.0.54
-                                                    Properties:
-                                                      AccessibleLabel: ="Prefixo da aeronave"
-                                                      DisplayMode: =If(varPodeEditar, DisplayMode.Edit, DisplayMode.View)
-                                                      Height: =40
-                                                      Placeholder: ="PSESP"
-                                                      Value: =Coalesce(varForm.prefixo, "")
-                                          - cntEnvMap:
-                                              Control: GroupContainer@1.5.0
-                                              Variant: AutoLayout
-                                              Properties:
-                                                DropShadow: =DropShadow.None
-                                                Fill: =thmSuperficie
-                                                FillPortions: =1
-                                                LayoutAlignItems: =LayoutAlignItems.Stretch
-                                                LayoutDirection: =LayoutDirection.Vertical
-                                                LayoutGap: =4
-                                                LayoutMinHeight: =0
-                                                LayoutMinWidth: =0
-                                                RadiusBottomLeft: =0
-                                                RadiusBottomRight: =0
-                                                RadiusTopLeft: =0
-                                                RadiusTopRight: =0
-                                              Children:
-                                                - lblEnvMap:
-                                                    Control: Label@2.5.1
-                                                    Properties:
-                                                      Color: =thmTextoFraco
-                                                      Font: =thmFonte
-                                                      FontWeight: =FontWeight.Bold
-                                                      Height: =18
-                                                      Size: =10
-                                                      Text: ="ENVERGADURA (M)"
-                                                - txtEnvergaduraMap:
-                                                    Control: TextInput@0.0.54
-                                                    Properties:
-                                                      AccessibleLabel: ="Envergadura em metros"
-                                                      DisplayMode: =If(varPodeEditar, DisplayMode.Edit, DisplayMode.View)
-                                                      Height: =40
-                                                      Placeholder: ="35,79"
-                                                      Value: =Coalesce(varForm.env, "")
-                                    - tglPesquisadoMap:
-                                        Control: Toggle@1.1.5
-                                        Properties:
-                                          AccessibleLabel: ="Voo pesquisado"
-                                          BasePaletteColor: =thmVermelho
-                                          Checked: =Coalesce(varForm.pesq, false)
-                                          DisplayMode: =If(varPodeEditar, DisplayMode.Edit, DisplayMode.View)
-                                          FontColor: =thmTexto
-                                          Height: =44
-                                          Label: ="Voo pesquisado (pinta o bloco de vermelho)"
-                                          LabelPosition: ='Toggle.LabelPosition'.Before
-                                    - lblObsMap:
-                                        Control: Label@2.5.1
-                                        Properties:
-                                          Color: =thmTextoFraco
-                                          Font: =thmFonte
-                                          FontWeight: =FontWeight.Bold
-                                          Height: =18
-                                          Size: =10
-                                          Text: ="OBSERVAÇÃO"
-                                    - txtObsMap:
-                                        Control: TextInput@0.0.54
-                                        Properties:
-                                          AccessibleLabel: ="Observação"
-                                          DisplayMode: =If(varPodeEditar, DisplayMode.Edit, DisplayMode.View)
-                                          Height: =84
-                                          Mode: ='TextInputCanvas.Mode'.Multiline
-                                          Placeholder: ="Missão presidencial, obra, retorno ao hangar…"
-                                          Value: =Coalesce(varForm.obs, "")
-                              - cntAcoesMap:
-                                  Control: GroupContainer@1.5.0
-                                  Variant: AutoLayout
-                                  Properties:
-                                    DropShadow: =DropShadow.None
-                                    Fill: =thmFundo
-                                    FillPortions: =0
-                                    Height: =64
-                                    LayoutAlignItems: =LayoutAlignItems.Center
-                                    LayoutDirection: =LayoutDirection.Horizontal
-                                    LayoutGap: =8
-                                    LayoutMinWidth: =0
-                                    PaddingBottom: =12
-                                    PaddingTop: =10
-                                    RadiusBottomLeft: =0
-                                    RadiusBottomRight: =0
-                                    RadiusTopLeft: =0
-                                    RadiusTopRight: =0
-                                    Visible: =varPainelAberto
-                                  Children:
-                                    - btnSalvarMap:
-                                        Control: Button@0.0.45
-                                        Properties:
-                                          Appearance: ='ButtonCanvas.Appearance'.Primary
-                                          BasePaletteColor: =thmPrimaria
-                                          BorderRadius: =0
-                                          DisplayMode: =If(varPodeEditar And !locSalvando, DisplayMode.Edit, DisplayMode.Disabled)
-                                          FillPortions: =1
-                                          FontColor: =thmTextoBarra
-                                          FontSize: =13
-                                          FontWeight: =FontWeight.Semibold
-                                          Height: =44
-                                          Icon: ="Save"
-                                          IconStyle: ='ButtonCanvas.IconStyle'.Filled
-                                          LayoutMinWidth: =0
-                                          OnSelect: |-
-                                            =If(
-                                                !IsBlank(locOcupado) And DateDiff(locOcupado, Now(), TimeUnit.Seconds) < mapTravaSegundos,
-                                                Notify("Aguarde: a ação anterior ainda está sendo processada.", NotificationType.Warning, 3000),
-                                                UpdateContext(
-                                                    {
-                                                        locOcupado: Now(),
-                                                        locSalvando: true,
-                                                        locData: Coalesce(dtpDataFormMap.SelectedDate, varData),
-                                                        locIdEdit: Coalesce(varAlocSel.id, 0),
-                                                        locRegistroBase: If(
-                                                            Coalesce(varAlocSel.id, 0) = 0,
-                                                            Blank(),
-                                                            LookUp('tb_alocacoesMapa', ID = Coalesce(varAlocSel.id, 0))
-                                                        ),
-                                                        locPos: LookUp(colPosicoesAero As _p, _p.posicao = drpPosicaoMap.Selected.Value),
-                                                        locTipo: Coalesce(LookUp(colTiposReg As _t, _t.rotulo = drpTipoMap.Selected.Value).tipo, "VOO"),
-                                                        locCia: If(drpCiaMap.Selected.Value = "—", "", drpCiaMap.Selected.Value),
-                                                        locPortao: If(drpPortaoMap.Selected.Value = "—", "", drpPortaoMap.Selected.Value),
-                                                        locEnv: If(IsNumeric(txtEnvergaduraMap.Value), Value(txtEnvergaduraMap.Value), 0),
-                                                        locIni: If(
-                                                            IsMatch(txtIniMap.Value, "^(([01][0-9]|2[0-3]):[0-5][0-9]|24:00)$"),
-                                                            Value(Left(txtIniMap.Value, 2)) * 60 + Value(Right(txtIniMap.Value, 2)),
-                                                            -1
-                                                        ),
-                                                        locFim: If(
-                                                            IsMatch(txtFimMap.Value, "^(([01][0-9]|2[0-3]):[0-5][0-9]|24:00)$"),
-                                                            Value(Left(txtFimMap.Value, 2)) * 60 + Value(Right(txtFimMap.Value, 2)),
-                                                            -1
-                                                        )
-                                                    }
-                                                );
-                                                UpdateContext(
-                                                    {
-                                                        locConflito: If(
-                                                            locData = varData,
-                                                            LookUp(
-                                                                colDia As _o,
-                                                                _o.id_posicao = locPos.id And _o.id <> locIdEdit And _o.ini < locFim And _o.fim > locIni
-                                                            )
-                                                        ),
-                                                        locConflitoPortao: If(
-                                                            locData = varData,
-                                                            LookUp(
-                                                                colDia As _g,
-                                                                locPortao <> "" And _g.portao = locPortao And _g.id <> locIdEdit And _g.ini < locFim And _g.fim > locIni
-                                                            )
-                                                        )
-                                                    }
-                                                );
-                                                If(
-                                                    locIni < 0 Or locFim < 0,
-                                                    Notify("Horário inválido. Use HH:mm, entre 00:00 e 24:00.", NotificationType.Error, 5000);
-                                                    UpdateContext({locSalvando: false, locOcupado: Blank()}),
-                                                    locFim <= locIni,
-                                                    Notify("A saída tem que ser depois da chegada. Voo que vira o dia é lançado em dois registros, um até 24:00 e outro no dia seguinte.", NotificationType.Error, 7000);
-                                                    UpdateContext({locSalvando: false, locOcupado: Blank()}),
-                                                    IsBlank(locPos.id),
-                                                    Notify("Escolha a posição.", NotificationType.Error, 5000);
-                                                    UpdateContext({locSalvando: false, locOcupado: Blank()}),
-                                                    locIdEdit <> 0 And IsBlank(locRegistroBase),
-                                                    Notify("Este registro não existe mais na lista — provavelmente foi excluído ou alterado por outra pessoa. Toque em ATUALIZAR e tente de novo.", NotificationType.Error, 8000);
-                                                    UpdateContext({locSalvando: false, locOcupado: Blank()}),
-                                                    !IsBlank(locConflito.id),
-                                                    Notify(
-                                                        "Posição " & locPos.posicao & " já ocupada das " &
-                                                        Text(Int(locConflito.ini / 60), "00") & ":" & Text(Mod(locConflito.ini, 60), "00") & " às " &
-                                                        Text(Int(locConflito.fim / 60), "00") & ":" & Text(Mod(locConflito.fim, 60), "00") & " por " &
-                                                        Trim(Coalesce(locConflito.cia, "") & " " & Coalesce(locConflito.prefixo, "") & " " & Coalesce(locConflito.voo_ida, "")) &
-                                                        ". Mude o horário ou a posição.",
-                                                        NotificationType.Error,
-                                                        8000
-                                                    );
-                                                    UpdateContext({locSalvando: false, locOcupado: Blank()}),
-                                                    !IsBlank(locConflitoPortao.id),
-                                                    Notify(
-                                                        "Portão " & locPortao & " já está em uso das " &
-                                                        Text(Int(locConflitoPortao.ini / 60), "00") & ":" & Text(Mod(locConflitoPortao.ini, 60), "00") & " às " &
-                                                        Text(Int(locConflitoPortao.fim / 60), "00") & ":" & Text(Mod(locConflitoPortao.fim, 60), "00") &
-                                                        " na posição " & locConflitoPortao.posicao_txt & ".",
-                                                        NotificationType.Error,
-                                                        8000
-                                                    );
-                                                    UpdateContext({locSalvando: false, locOcupado: Blank()}),
-                                                    locPos.env_max > 0 And locEnv > locPos.env_max,
-                                                    Notify(
-                                                        "Envergadura de " & Text(locEnv) & " m acima do limite da posição " & locPos.posicao &
-                                                        " (" & Text(locPos.env_max) & " m).",
-                                                        NotificationType.Error,
-                                                        7000
-                                                    );
-                                                    UpdateContext({locSalvando: false, locOcupado: Blank()}),
-                                                    locPos.contingencia = 1 And locConfirmaConting <> locPos.id,
-                                                    Notify(
-                                                        "A posição " & locPos.posicao & " é de contingência. Toque em SALVAR de novo para confirmar.",
-                                                        NotificationType.Warning,
-                                                        7000
-                                                    );
-                                                    UpdateContext({locConfirmaConting: locPos.id, locSalvando: false, locOcupado: Blank()}),
-                                                    UpdateContext(
-                                                        {
-                                                            locErro: IsError(
-                                                                Patch(
-                                                                    'tb_alocacoesMapa',
-                                                                    If(
-                                                                        locIdEdit = 0,
-                                                                        Defaults('tb_alocacoesMapa'),
-                                                                        locRegistroBase
-                                                                    ),
-                                                                    {
-                                                                        aeroporto: varAero,
-                                                                        data_operacao: locData,
-                                                                        id_posicao: locPos.id,
-                                                                        posicao_txt: locPos.posicao,
-                                                                        patio_txt: locPos.patio,
-                                                                        cia_sigla: locCia,
-                                                                        voo_chegada: txtVooIdaMap.Value,
-                                                                        voo_saida: txtVooVoltaMap.Value,
-                                                                        prefixo: txtPrefixoMap.Value,
-                                                                        hora_inicio: locIni,
-                                                                        hora_fim: locFim,
-                                                                        portao: locPortao,
-                                                                        tipo_registro: locTipo,
-                                                                        pesquisado: If(tglPesquisadoMap.Checked, 1, 0),
-                                                                        envergadura_m: locEnv,
-                                                                        observacao: txtObsMap.Value,
-                                                                        ativo: 1
-                                                                    }
-                                                                )
-                                                            )
-                                                        }
-                                                    );
-                                                    UpdateContext({locSalvando: false, locOcupado: Blank()});
-                                                    If(
-                                                        locErro,
-                                                        Notify("Não foi possível gravar. Nada foi alterado.", NotificationType.Error, 7000),
-                                                        UpdateContext({locConfirmaConting: 0, locConfirmaExcluir: 0});
-                                                        Select(btnAtualizarMap);
-                                                        Set(varAlocSel, Blank());
-                                                        Notify(
-                                                            If(
-                                                                locData = varData,
-                                                                "Alocação gravada.",
-                                                                "Alocação gravada em " & Text(locData, "dd/mm/yyyy") & ". Como é outro dia, confira conflitos de posição e portão manualmente nessa data."
-                                                            ),
-                                                            NotificationType.Success,
-                                                            If(locData = varData, 2500, 7000)
-                                                        )
-                                                    )
-                                                )
-                                            )
-                                          PaddingLeft: =14
-                                          PaddingRight: =14
-                                          Text: =If(locSalvando, "GRAVANDO…", "SALVAR")
-                                    - btnExcluirMap:
-                                        Control: Button@0.0.45
-                                        Properties:
-                                          Appearance: ='ButtonCanvas.Appearance'.Secondary
-                                          BasePaletteColor: =thmVermelho
-                                          BorderRadius: =0
-                                          DisplayMode: =If(varPodeEditar And !IsBlank(varAlocSel.id), DisplayMode.Edit, DisplayMode.Disabled)
-                                          FillPortions: =1
-                                          FontColor: =thmVermelho
-                                          FontSize: =13
-                                          FontWeight: =FontWeight.Semibold
-                                          Height: =44
-                                          Icon: ="Delete"
-                                          IconStyle: ='ButtonCanvas.IconStyle'.Filled
-                                          LayoutMinWidth: =0
-                                          OnSelect: |-
-                                            =If(
-                                                IsBlank(varAlocSel.id),
-                                                Notify("Selecione um registro da lista acima para excluir.", NotificationType.Warning, 4000),
-                                                locConfirmaExcluir <> varAlocSel.id,
-                                                UpdateContext({locConfirmaExcluir: varAlocSel.id});
-                                                Notify("Toque em EXCLUIR de novo para confirmar a remoção.", NotificationType.Warning, 5000),
-                                                UpdateContext(
-                                                    {
-                                                        locErro: IsError(
-                                                            Patch(
-                                                                'tb_alocacoesMapa',
-                                                                LookUp('tb_alocacoesMapa', ID = varAlocSel.id),
-                                                                {ativo: 0}
-                                                            )
-                                                        )
-                                                    }
-                                                );
-                                                UpdateContext({locConfirmaExcluir: 0});
-                                                If(
-                                                    locErro,
-                                                    Notify("Não foi possível excluir. Nada foi alterado.", NotificationType.Error, 7000),
-                                                    Select(btnAtualizarMap);
-                                                    Set(varAlocSel, Blank());
-                                                    Set(varPainelAberto, false);
-                                                    Notify("Registro removido do mapa.", NotificationType.Success, 2500)
-                                                )
-                                            )
-                                          PaddingLeft: =12
-                                          PaddingRight: =12
-                                          Text: =If(locConfirmaExcluir = Coalesce(varAlocSel.id, -1), "CONFIRMAR", "EXCLUIR")
-                                    - btnFecharMap:
-                                        Control: Button@0.0.45
-                                        Properties:
-                                          Appearance: ='ButtonCanvas.Appearance'.Secondary
-                                          BasePaletteColor: =thmTextoFraco
-                                          BorderRadius: =0
-                                          FillPortions: =1
-                                          FontColor: =thmTextoFraco
-                                          FontSize: =13
-                                          FontWeight: =FontWeight.Semibold
-                                          Height: =44
-                                          Icon: ="DismissCircle"
-                                          IconStyle: ='ButtonCanvas.IconStyle'.Filled
-                                          LayoutMinWidth: =0
-                                          OnSelect: |-
-                                            =Set(varPainelAberto, false);
-                                            Set(varAlocSel, Blank());
-                                            UpdateContext({locConfirmaExcluir: 0, locConfirmaConting: 0, locNonce: locNonce + 1})
-                                          PaddingLeft: =12
-                                          PaddingRight: =12
-                                          Text: ="FECHAR"
+                                    Height: =mapAlturaLinha
+                                    HtmlText: =ThisItem.html
+                                    OnSelect: |-
+                                      =Set(varPosSel, ThisItem);
+                                      Set(varAlocSel, Blank());
+                                      Set(varPainelAberto, true);
+                                      UpdateContext({locConfirmaExcluir: 0, locConfirmaConting: 0, locNonce: locNonce + 1})
+                                    PaddingBottom: =0
+                                    PaddingLeft: =0
+                                    PaddingRight: =0
+                                    PaddingTop: =0
+                                    Size: =10
+                                    Width: =galPosicoesMap.Width - mapLarguraBarra
                   - htmLegendaMap:
                       Control: HtmlViewer@2.1.0
                       Properties:
                         AutoHeight: =true
                         Color: =thmTexto
                         Fill: =thmSuperficie
-                        FillPortions: =0
                         Font: =thmFonte
                         HtmlText: |-
                           ="<table style='width:100%;border-collapse:collapse;" & htmlFonte & "border-top:1px solid " & hxBorda & ";'><tr>" &
@@ -1570,7 +781,7 @@ Screens:
                                       locServidorAlt: First(
                                           Sort(
                                               Filter(
-                                                  'tb_alocacoesMapa',
+                                                  tb_alocacoesMapa,
                                                   aeroporto = varAero And data_operacao = varData And ativo = 1
                                               ),
                                               Modificado,
@@ -1583,3 +794,748 @@ Screens:
                           )
                         Repeat: =true
                         Visible: =false
+      - recVeuMap:
+          Control: Rectangle@2.3.0
+          Properties:
+            BorderStyle: =BorderStyle.None
+            Fill: =thmVeu
+            Height: =Parent.Height
+            OnSelect: =Set(varPainelAberto, false)
+            Visible: =varPainelAberto
+            Width: =Parent.Width
+      - cntPainelMap:
+          Control: GroupContainer@1.5.0
+          Variant: AutoLayout
+          Properties:
+            BorderColor: =thmBorda
+            BorderThickness: =1
+            DropShadow: =DropShadow.None
+            Fill: =thmFundo
+            Height: =Parent.Height
+            LayoutAlignItems: =LayoutAlignItems.Stretch
+            LayoutDirection: =LayoutDirection.Vertical
+            PaddingLeft: =16
+            PaddingRight: =16
+            PaddingTop: =12
+            RadiusBottomLeft: =0
+            RadiusBottomRight: =0
+            RadiusTopLeft: =0
+            RadiusTopRight: =0
+            Visible: =varPainelAberto
+            Width: =Min(mapLarguraPainel, Parent.Width)
+            X: =Parent.Width - Self.Width
+          Children:
+            - htmPainelCabMap:
+                Control: HtmlViewer@2.1.0
+                Properties:
+                  AutoHeight: =true
+                  Color: =thmTexto
+                  Fill: =thmFundo
+                  Font: =thmFonte
+                  HtmlText: |-
+                    ="<div style='" & htmlFonte & "background:" & hxSuperficie & ";border:1px solid " & hxBorda &
+                    ";border-top:3px solid " & Coalesce(varPosSel.cor_patio, hxPrimaria) & ";padding:12px 14px;'>" &
+                    "<div style='font-size:10px;font-weight:700;letter-spacing:.14em;color:" & hxTextoFraco & ";'>POSIÇÃO SELECIONADA</div>" &
+                    "<div style='font-size:26px;font-weight:800;color:" & hxPrimaria & ";line-height:1.15;margin-top:4px;'>" &
+                    Coalesce(varPosSel.posicao, "&mdash;") & "</div>" &
+                    "<div style='font-size:11px;color:" & hxTexto & ";margin-top:2px;'>" &
+                    Coalesce(varPosSel.restricao, "") & " &nbsp;&middot;&nbsp; " & Coalesce(varPosSel.qtd, 0) & " registro(s) no dia</div>" &
+                    If(
+                        IsBlank(varAlocSel.id),
+                        "",
+                        "<div style='font-size:10px;color:" & hxTextoFraco & ";margin-top:8px;border-top:1px solid " & hxBorda & ";padding-top:8px;'>" &
+                        "Última alteração: " & Text(varAlocSel.alterado_em, "dd/mm/yyyy HH:mm") & " por " & Coalesce(varAlocSel.alterado_por, "&mdash;") & "</div>"
+                    ) &
+                    "</div>"
+                  Size: =11
+            - galVoosMap:
+                Control: Gallery@2.15.0
+                Variant: Vertical
+                Properties:
+                  BorderColor: =thmBorda
+                  BorderStyle: =BorderStyle.None
+                  Fill: =thmFundo
+                  FillPortions: =0
+                  Height: =156
+                  Items: =Sort(Filter(colDia, id_posicao = varPosSel.id_posicao), ini, SortOrder.Ascending)
+                  LayoutMinWidth: =0
+                  TemplatePadding: =0
+                  TemplateSize: =46
+                Children:
+                  - btnVooMap:
+                      Control: Button@0.0.45
+                      Properties:
+                        Align: =Align.Left
+                        Appearance: =If(varAlocSel.id = ThisItem.id, 'ButtonCanvas.Appearance'.Primary, 'ButtonCanvas.Appearance'.Secondary)
+                        BasePaletteColor: =ColorValue(Coalesce(LookUp(colCias As _c, _c.sigla = ThisItem.cia).cor_hex, hxTextoFraco))
+                        BorderRadius: =0
+                        FontSize: =11
+                        FontWeight: =FontWeight.Semibold
+                        Height: =44
+                        OnSelect: |-
+                          =Set(varAlocSel, ThisItem);
+                          Set(
+                              varForm,
+                              {
+                                  tipo: Coalesce(LookUp(colTiposReg As _t, _t.tipo = ThisItem.tipo).rotulo, "Voo"),
+                                  posicao: ThisItem.posicao_txt,
+                                  data: varData,
+                                  cia: If(IsBlank(ThisItem.cia), "—", ThisItem.cia),
+                                  voo_ida: ThisItem.voo_ida,
+                                  voo_volta: ThisItem.voo_volta,
+                                  prefixo: ThisItem.prefixo,
+                                  portao: If(IsBlank(ThisItem.portao), "—", ThisItem.portao),
+                                  ini: Text(Int(ThisItem.ini / 60), "00") & ":" & Text(Mod(ThisItem.ini, 60), "00"),
+                                  fim: Text(Int(ThisItem.fim / 60), "00") & ":" & Text(Mod(ThisItem.fim, 60), "00"),
+                                  env: If(Value(ThisItem.env) > 0, Text(ThisItem.env), ""),
+                                  obs: ThisItem.obs,
+                                  pesq: ThisItem.pesq = 1
+                              }
+                          );
+                          UpdateContext({locConfirmaExcluir: 0, locConfirmaConting: 0, locNonce: locNonce + 1})
+                        PaddingLeft: =10
+                        PaddingRight: =10
+                        Text: |-
+                          =Trim(Coalesce(ThisItem.cia, "") & " " & Coalesce(ThisItem.prefixo, "")) & " " & Coalesce(ThisItem.voo_ida, "") &
+                          If(!IsBlank(ThisItem.voo_volta), "/" & ThisItem.voo_volta, "") &
+                          If(ThisItem.tipo <> "VOO", " · " & ThisItem.tipo, "") &
+                          "   " &
+                          Text(Int(ThisItem.ini / 60), "00") & ":" & Text(Mod(ThisItem.ini, 60), "00") & "–" &
+                          Text(Int(ThisItem.fim / 60), "00") & ":" & Text(Mod(ThisItem.fim, 60), "00") &
+                          If(!IsBlank(ThisItem.portao), "   PORTÃO " & ThisItem.portao, "") &
+                          If(ThisItem.pesq = 1, "   PESQUISADO", "")
+                        Width: =Parent.Width - 18
+            - cntFormMap:
+                Control: GroupContainer@1.5.0
+                Variant: AutoLayout
+                Properties:
+                  DropShadow: =DropShadow.None
+                  Fill: =thmSuperficie
+                  LayoutAlignItems: =LayoutAlignItems.Stretch
+                  LayoutDirection: =LayoutDirection.Vertical
+                  LayoutGap: =4
+                  LayoutMinHeight: =0
+                  LayoutMinWidth: =0
+                  LayoutOverflowY: =LayoutOverflow.Scroll
+                  PaddingBottom: =12
+                  PaddingLeft: =14
+                  PaddingRight: =14
+                  PaddingTop: =12
+                  RadiusBottomLeft: =0
+                  RadiusBottomRight: =0
+                  RadiusTopLeft: =0
+                  RadiusTopRight: =0
+                Children:
+                  - lblTipoMap:
+                      Control: Label@2.5.1
+                      Properties:
+                        Color: =thmTextoFraco
+                        Font: =thmFonte
+                        FontWeight: =FontWeight.Bold
+                        Height: =18
+                        Size: =10
+                        Text: ="TIPO DE REGISTRO *"
+                  - drpTipoMap:
+                      Control: DropDown@0.0.45
+                      Properties:
+                        DefaultSelectedItems: =[Coalesce(varForm.tipo, "Voo")]
+                        DisplayMode: =If(varPodeEditar, DisplayMode.Edit, DisplayMode.View)
+                        Height: =40
+                        Items: =Filter(colTiposSel, locNonce >= 0)
+                  - lblPosicaoMap:
+                      Control: Label@2.5.1
+                      Properties:
+                        Color: =thmTextoFraco
+                        Font: =thmFonte
+                        FontWeight: =FontWeight.Bold
+                        Height: =18
+                        Size: =10
+                        Text: ="POSIÇÃO *"
+                  - drpPosicaoMap:
+                      Control: DropDown@0.0.45
+                      Properties:
+                        DefaultSelectedItems: =[Coalesce(varForm.posicao, "T1")]
+                        DisplayMode: =If(varPodeEditar, DisplayMode.Edit, DisplayMode.View)
+                        Height: =40
+                        Items: =Filter(colPosicoesSel, locNonce >= 0)
+                  - lblDataFormMap:
+                      Control: Label@2.5.1
+                      Properties:
+                        Color: =thmTextoFraco
+                        Font: =thmFonte
+                        FontWeight: =FontWeight.Bold
+                        Height: =18
+                        Size: =10
+                        Text: ="DATA DA OPERAÇÃO *"
+                  - dtpDataFormMap:
+                      Control: DatePicker@0.0.46
+                      Properties:
+                        AccessibleLabel: ="Data da operação deste registro"
+                        DisplayMode: =If(varPodeEditar, DisplayMode.Edit, DisplayMode.View)
+                        Format: =DateTimeFormat.ShortDate
+                        SelectedDate: =Coalesce(varForm.data, varData)
+                  - cntHorasMap:
+                      Control: GroupContainer@1.5.0
+                      Variant: AutoLayout
+                      Properties:
+                        DropShadow: =DropShadow.None
+                        Fill: =thmSuperficie
+                        FillPortions: =0
+                        Height: =62
+                        LayoutAlignItems: =LayoutAlignItems.Stretch
+                        LayoutDirection: =LayoutDirection.Horizontal
+                        LayoutGap: =10
+                        LayoutMinWidth: =0
+                        RadiusBottomLeft: =0
+                        RadiusBottomRight: =0
+                        RadiusTopLeft: =0
+                        RadiusTopRight: =0
+                      Children:
+                        - cntIniMap:
+                            Control: GroupContainer@1.5.0
+                            Variant: AutoLayout
+                            Properties:
+                              DropShadow: =DropShadow.None
+                              Fill: =thmSuperficie
+                              LayoutAlignItems: =LayoutAlignItems.Stretch
+                              LayoutDirection: =LayoutDirection.Vertical
+                              LayoutGap: =4
+                              LayoutMinHeight: =0
+                              LayoutMinWidth: =0
+                              RadiusBottomLeft: =0
+                              RadiusBottomRight: =0
+                              RadiusTopLeft: =0
+                              RadiusTopRight: =0
+                            Children:
+                              - lblIniMap:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    Color: =thmTextoFraco
+                                    Font: =thmFonte
+                                    FontWeight: =FontWeight.Bold
+                                    Height: =18
+                                    Size: =10
+                                    Text: ="CHEGADA (HH:MM) *"
+                              - txtIniMap:
+                                  Control: TextInput@0.0.54
+                                  Properties:
+                                    AccessibleLabel: ="Hora de chegada"
+                                    DisplayMode: =If(varPodeEditar, DisplayMode.Edit, DisplayMode.View)
+                                    Height: =40
+                                    Placeholder: ="09:00"
+                                    Value: =Coalesce(varForm.ini, "")
+                        - cntFimMap:
+                            Control: GroupContainer@1.5.0
+                            Variant: AutoLayout
+                            Properties:
+                              DropShadow: =DropShadow.None
+                              Fill: =thmSuperficie
+                              LayoutAlignItems: =LayoutAlignItems.Stretch
+                              LayoutDirection: =LayoutDirection.Vertical
+                              LayoutGap: =4
+                              LayoutMinHeight: =0
+                              LayoutMinWidth: =0
+                              RadiusBottomLeft: =0
+                              RadiusBottomRight: =0
+                              RadiusTopLeft: =0
+                              RadiusTopRight: =0
+                            Children:
+                              - lblFimMap:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    Color: =thmTextoFraco
+                                    Font: =thmFonte
+                                    FontWeight: =FontWeight.Bold
+                                    Height: =18
+                                    Size: =10
+                                    Text: ="SAÍDA (HH:MM) *"
+                              - txtFimMap:
+                                  Control: TextInput@0.0.54
+                                  Properties:
+                                    AccessibleLabel: ="Hora de saída"
+                                    DisplayMode: =If(varPodeEditar, DisplayMode.Edit, DisplayMode.View)
+                                    Height: =40
+                                    Placeholder: ="09:40"
+                                    Value: =Coalesce(varForm.fim, "")
+                  - lblCiaMap:
+                      Control: Label@2.5.1
+                      Properties:
+                        Color: =thmTextoFraco
+                        Font: =thmFonte
+                        FontWeight: =FontWeight.Bold
+                        Height: =18
+                        Size: =10
+                        Text: ="COMPANHIA"
+                  - drpCiaMap:
+                      Control: DropDown@0.0.45
+                      Properties:
+                        DefaultSelectedItems: =[Coalesce(varForm.cia, "—")]
+                        DisplayMode: =If(varPodeEditar, DisplayMode.Edit, DisplayMode.View)
+                        Height: =40
+                        Items: =Filter(colCiasSel, locNonce >= 0)
+                  - cntVoosMap:
+                      Control: GroupContainer@1.5.0
+                      Variant: AutoLayout
+                      Properties:
+                        DropShadow: =DropShadow.None
+                        Fill: =thmSuperficie
+                        FillPortions: =0
+                        Height: =62
+                        LayoutAlignItems: =LayoutAlignItems.Stretch
+                        LayoutDirection: =LayoutDirection.Horizontal
+                        LayoutGap: =10
+                        LayoutMinWidth: =0
+                        RadiusBottomLeft: =0
+                        RadiusBottomRight: =0
+                        RadiusTopLeft: =0
+                        RadiusTopRight: =0
+                      Children:
+                        - cntVooIdaMap:
+                            Control: GroupContainer@1.5.0
+                            Variant: AutoLayout
+                            Properties:
+                              DropShadow: =DropShadow.None
+                              Fill: =thmSuperficie
+                              LayoutAlignItems: =LayoutAlignItems.Stretch
+                              LayoutDirection: =LayoutDirection.Vertical
+                              LayoutGap: =4
+                              LayoutMinHeight: =0
+                              LayoutMinWidth: =0
+                              RadiusBottomLeft: =0
+                              RadiusBottomRight: =0
+                              RadiusTopLeft: =0
+                              RadiusTopRight: =0
+                            Children:
+                              - lblVooIdaMap:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    Color: =thmTextoFraco
+                                    Font: =thmFonte
+                                    FontWeight: =FontWeight.Bold
+                                    Height: =18
+                                    Size: =10
+                                    Text: ="VOO DE CHEGADA"
+                              - txtVooIdaMap:
+                                  Control: TextInput@0.0.54
+                                  Properties:
+                                    AccessibleLabel: ="Número do voo de chegada"
+                                    DisplayMode: =If(varPodeEditar, DisplayMode.Edit, DisplayMode.View)
+                                    Height: =40
+                                    Placeholder: ="1214"
+                                    Value: =Coalesce(varForm.voo_ida, "")
+                        - cntVooVoltaMap:
+                            Control: GroupContainer@1.5.0
+                            Variant: AutoLayout
+                            Properties:
+                              DropShadow: =DropShadow.None
+                              Fill: =thmSuperficie
+                              LayoutAlignItems: =LayoutAlignItems.Stretch
+                              LayoutDirection: =LayoutDirection.Vertical
+                              LayoutGap: =4
+                              LayoutMinHeight: =0
+                              LayoutMinWidth: =0
+                              RadiusBottomLeft: =0
+                              RadiusBottomRight: =0
+                              RadiusTopLeft: =0
+                              RadiusTopRight: =0
+                            Children:
+                              - lblVooVoltaMap:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    Color: =thmTextoFraco
+                                    Font: =thmFonte
+                                    FontWeight: =FontWeight.Bold
+                                    Height: =18
+                                    Size: =10
+                                    Text: ="VOO DE SAÍDA"
+                              - txtVooVoltaMap:
+                                  Control: TextInput@0.0.54
+                                  Properties:
+                                    AccessibleLabel: ="Número do voo de saída"
+                                    DisplayMode: =If(varPodeEditar, DisplayMode.Edit, DisplayMode.View)
+                                    Height: =40
+                                    Placeholder: ="1217"
+                                    Value: =Coalesce(varForm.voo_volta, "")
+                  - lblPortaoMap:
+                      Control: Label@2.5.1
+                      Properties:
+                        Color: =thmTextoFraco
+                        Font: =thmFonte
+                        FontWeight: =FontWeight.Bold
+                        Height: =18
+                        Size: =10
+                        Text: ="PORTÃO"
+                  - drpPortaoMap:
+                      Control: DropDown@0.0.45
+                      Properties:
+                        DefaultSelectedItems: =[Coalesce(varForm.portao, "—")]
+                        DisplayMode: =If(varPodeEditar, DisplayMode.Edit, DisplayMode.View)
+                        Height: =40
+                        Items: =Filter(colPortoesSel, locNonce >= 0)
+                  - cntExtraMap:
+                      Control: GroupContainer@1.5.0
+                      Variant: AutoLayout
+                      Properties:
+                        DropShadow: =DropShadow.None
+                        Fill: =thmSuperficie
+                        FillPortions: =0
+                        Height: =62
+                        LayoutAlignItems: =LayoutAlignItems.Stretch
+                        LayoutDirection: =LayoutDirection.Horizontal
+                        LayoutGap: =10
+                        LayoutMinWidth: =0
+                        RadiusBottomLeft: =0
+                        RadiusBottomRight: =0
+                        RadiusTopLeft: =0
+                        RadiusTopRight: =0
+                      Children:
+                        - cntPrefixoMap:
+                            Control: GroupContainer@1.5.0
+                            Variant: AutoLayout
+                            Properties:
+                              DropShadow: =DropShadow.None
+                              Fill: =thmSuperficie
+                              LayoutAlignItems: =LayoutAlignItems.Stretch
+                              LayoutDirection: =LayoutDirection.Vertical
+                              LayoutGap: =4
+                              LayoutMinHeight: =0
+                              LayoutMinWidth: =0
+                              RadiusBottomLeft: =0
+                              RadiusBottomRight: =0
+                              RadiusTopLeft: =0
+                              RadiusTopRight: =0
+                            Children:
+                              - lblPrefixoMap:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    Color: =thmTextoFraco
+                                    Font: =thmFonte
+                                    FontWeight: =FontWeight.Bold
+                                    Height: =18
+                                    Size: =10
+                                    Text: ="PREFIXO"
+                              - txtPrefixoMap:
+                                  Control: TextInput@0.0.54
+                                  Properties:
+                                    AccessibleLabel: ="Prefixo da aeronave"
+                                    DisplayMode: =If(varPodeEditar, DisplayMode.Edit, DisplayMode.View)
+                                    Height: =40
+                                    Placeholder: ="PSESP"
+                                    Value: =Coalesce(varForm.prefixo, "")
+                        - cntEnvMap:
+                            Control: GroupContainer@1.5.0
+                            Variant: AutoLayout
+                            Properties:
+                              DropShadow: =DropShadow.None
+                              Fill: =thmSuperficie
+                              LayoutAlignItems: =LayoutAlignItems.Stretch
+                              LayoutDirection: =LayoutDirection.Vertical
+                              LayoutGap: =4
+                              LayoutMinHeight: =0
+                              LayoutMinWidth: =0
+                              RadiusBottomLeft: =0
+                              RadiusBottomRight: =0
+                              RadiusTopLeft: =0
+                              RadiusTopRight: =0
+                            Children:
+                              - lblEnvMap:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    Color: =thmTextoFraco
+                                    Font: =thmFonte
+                                    FontWeight: =FontWeight.Bold
+                                    Height: =18
+                                    Size: =10
+                                    Text: ="ENVERGADURA (M)"
+                              - txtEnvergaduraMap:
+                                  Control: TextInput@0.0.54
+                                  Properties:
+                                    AccessibleLabel: ="Envergadura em metros"
+                                    DisplayMode: =If(varPodeEditar, DisplayMode.Edit, DisplayMode.View)
+                                    Height: =40
+                                    Placeholder: ="35,79"
+                                    Value: =Coalesce(varForm.env, "")
+                  - tglPesquisadoMap:
+                      Control: Toggle@1.1.5
+                      Properties:
+                        AccessibleLabel: ="Voo pesquisado"
+                        BasePaletteColor: =thmVermelho
+                        Checked: =Coalesce(varForm.pesq, false)
+                        DisplayMode: =If(varPodeEditar, DisplayMode.Edit, DisplayMode.View)
+                        FontColor: =thmTexto
+                        Height: =44
+                        Label: ="Voo pesquisado (pinta o bloco de vermelho)"
+                        LabelPosition: ='Toggle.LabelPosition'.Before
+                  - lblObsMap:
+                      Control: Label@2.5.1
+                      Properties:
+                        Color: =thmTextoFraco
+                        Font: =thmFonte
+                        FontWeight: =FontWeight.Bold
+                        Height: =18
+                        Size: =10
+                        Text: ="OBSERVAÇÃO"
+                  - txtObsMap:
+                      Control: TextInput@0.0.54
+                      Properties:
+                        AccessibleLabel: ="Observação"
+                        DisplayMode: =If(varPodeEditar, DisplayMode.Edit, DisplayMode.View)
+                        Height: =84
+                        Mode: ='TextInputCanvas.Mode'.Multiline
+                        Placeholder: ="Missão presidencial, obra, retorno ao hangar…"
+                        Value: =Coalesce(varForm.obs, "")
+            - cntAcoesMap:
+                Control: GroupContainer@1.5.0
+                Variant: AutoLayout
+                Properties:
+                  DropShadow: =DropShadow.None
+                  Fill: =thmFundo
+                  FillPortions: =0
+                  Height: =64
+                  LayoutAlignItems: =LayoutAlignItems.Center
+                  LayoutDirection: =LayoutDirection.Horizontal
+                  LayoutGap: =8
+                  LayoutMinWidth: =0
+                  PaddingBottom: =12
+                  PaddingTop: =10
+                  RadiusBottomLeft: =0
+                  RadiusBottomRight: =0
+                  RadiusTopLeft: =0
+                  RadiusTopRight: =0
+                Children:
+                  - btnSalvarMap:
+                      Control: Button@0.0.45
+                      Properties:
+                        Appearance: ='ButtonCanvas.Appearance'.Primary
+                        BasePaletteColor: =thmPrimaria
+                        BorderRadius: =0
+                        DisplayMode: =If(varPodeEditar And !locSalvando, DisplayMode.Edit, DisplayMode.Disabled)
+                        FillPortions: =1
+                        FontColor: =thmTextoBarra
+                        FontSize: =13
+                        FontWeight: =FontWeight.Semibold
+                        Height: =44
+                        Icon: ="Save"
+                        IconStyle: ='ButtonCanvas.IconStyle'.Filled
+                        LayoutMinWidth: =0
+                        OnSelect: |-
+                          =If(
+                              !IsBlank(locOcupado) And DateDiff(locOcupado, Now(), TimeUnit.Seconds) < mapTravaSegundos,
+                              Notify("Aguarde: a ação anterior ainda está sendo processada.", NotificationType.Warning, 3000),
+                              UpdateContext(
+                                  {
+                                      locOcupado: Now(),
+                                      locSalvando: true,
+                                      locData: Coalesce(dtpDataFormMap.SelectedDate, varData),
+                                      locIdEdit: Coalesce(varAlocSel.id, 0),
+                                      locRegistroBase: If(
+                                          Coalesce(varAlocSel.id, 0) = 0,
+                                          Blank(),
+                                          LookUp(tb_alocacoesMapa, ID = Coalesce(varAlocSel.id, 0))
+                                      ),
+                                      locPos: LookUp(colPosicoesAero As _p, _p.posicao = drpPosicaoMap.Selected.Value),
+                                      locTipo: Coalesce(LookUp(colTiposReg As _t, _t.rotulo = drpTipoMap.Selected.Value).tipo, "VOO"),
+                                      locCia: If(drpCiaMap.Selected.Value = "—", "", drpCiaMap.Selected.Value),
+                                      locPortao: If(drpPortaoMap.Selected.Value = "—", "", drpPortaoMap.Selected.Value),
+                                      locEnv: If(IsNumeric(txtEnvergaduraMap.Value), Value(txtEnvergaduraMap.Value), 0),
+                                      locIni: If(
+                                          IsMatch(txtIniMap.Value, "^(([01][0-9]|2[0-3]):[0-5][0-9]|24:00)$"),
+                                          Value(Left(txtIniMap.Value, 2)) * 60 + Value(Right(txtIniMap.Value, 2)),
+                                          -1
+                                      ),
+                                      locFim: If(
+                                          IsMatch(txtFimMap.Value, "^(([01][0-9]|2[0-3]):[0-5][0-9]|24:00)$"),
+                                          Value(Left(txtFimMap.Value, 2)) * 60 + Value(Right(txtFimMap.Value, 2)),
+                                          -1
+                                      )
+                                  }
+                              );
+                              UpdateContext(
+                                  {
+                                      locConflito: If(
+                                          locData = varData,
+                                          LookUp(
+                                              colDia As _o,
+                                              _o.id_posicao = locPos.id And _o.id <> locIdEdit And _o.ini < locFim And _o.fim > locIni
+                                          )
+                                      ),
+                                      locConflitoPortao: If(
+                                          locData = varData,
+                                          LookUp(
+                                              colDia As _g,
+                                              locPortao <> "" And _g.portao = locPortao And _g.id <> locIdEdit And _g.ini < locFim And _g.fim > locIni
+                                          )
+                                      )
+                                  }
+                              );
+                              If(
+                                  locIni < 0 Or locFim < 0,
+                                  Notify("Horário inválido. Use HH:mm, entre 00:00 e 24:00.", NotificationType.Error, 5000);
+                                  UpdateContext({locSalvando: false, locOcupado: Blank()}),
+                                  locFim <= locIni,
+                                  Notify("A saída tem que ser depois da chegada. Voo que vira o dia é lançado em dois registros, um até 24:00 e outro no dia seguinte.", NotificationType.Error, 7000);
+                                  UpdateContext({locSalvando: false, locOcupado: Blank()}),
+                                  IsBlank(locPos.id),
+                                  Notify("Escolha a posição.", NotificationType.Error, 5000);
+                                  UpdateContext({locSalvando: false, locOcupado: Blank()}),
+                                  locIdEdit <> 0 And IsBlank(locRegistroBase),
+                                  Notify("Este registro não existe mais na lista — provavelmente foi excluído ou alterado por outra pessoa. Toque em ATUALIZAR e tente de novo.", NotificationType.Error, 8000);
+                                  UpdateContext({locSalvando: false, locOcupado: Blank()}),
+                                  !IsBlank(locConflito.id),
+                                  Notify(
+                                      "Posição " & locPos.posicao & " já ocupada das " &
+                                      Text(Int(locConflito.ini / 60), "00") & ":" & Text(Mod(locConflito.ini, 60), "00") & " às " &
+                                      Text(Int(locConflito.fim / 60), "00") & ":" & Text(Mod(locConflito.fim, 60), "00") & " por " &
+                                      Trim(Coalesce(locConflito.cia, "") & " " & Coalesce(locConflito.prefixo, "") & " " & Coalesce(locConflito.voo_ida, "")) &
+                                      ". Mude o horário ou a posição.",
+                                      NotificationType.Error,
+                                      8000
+                                  );
+                                  UpdateContext({locSalvando: false, locOcupado: Blank()}),
+                                  !IsBlank(locConflitoPortao.id),
+                                  Notify(
+                                      "Portão " & locPortao & " já está em uso das " &
+                                      Text(Int(locConflitoPortao.ini / 60), "00") & ":" & Text(Mod(locConflitoPortao.ini, 60), "00") & " às " &
+                                      Text(Int(locConflitoPortao.fim / 60), "00") & ":" & Text(Mod(locConflitoPortao.fim, 60), "00") &
+                                      " na posição " & locConflitoPortao.posicao_txt & ".",
+                                      NotificationType.Error,
+                                      8000
+                                  );
+                                  UpdateContext({locSalvando: false, locOcupado: Blank()}),
+                                  locPos.env_max > 0 And locEnv > locPos.env_max,
+                                  Notify(
+                                      "Envergadura de " & Text(locEnv) & " m acima do limite da posição " & locPos.posicao &
+                                      " (" & Text(locPos.env_max) & " m).",
+                                      NotificationType.Error,
+                                      7000
+                                  );
+                                  UpdateContext({locSalvando: false, locOcupado: Blank()}),
+                                  locPos.contingencia = 1 And locConfirmaConting <> locPos.id,
+                                  Notify(
+                                      "A posição " & locPos.posicao & " é de contingência. Toque em SALVAR de novo para confirmar.",
+                                      NotificationType.Warning,
+                                      7000
+                                  );
+                                  UpdateContext({locConfirmaConting: locPos.id, locSalvando: false, locOcupado: Blank()}),
+                                  UpdateContext(
+                                      {
+                                          locErro: IsError(
+                                              Patch(
+                                                  tb_alocacoesMapa,
+                                                  If(
+                                                      locIdEdit = 0,
+                                                      Defaults(tb_alocacoesMapa),
+                                                      locRegistroBase
+                                                  ),
+                                                  {
+                                                      aeroporto: varAero,
+                                                      data_operacao: locData,
+                                                      id_posicao: locPos.id,
+                                                      posicao_txt: locPos.posicao,
+                                                      patio_txt: locPos.patio,
+                                                      cia_sigla: locCia,
+                                                      voo_chegada: txtVooIdaMap.Value,
+                                                      voo_saida: txtVooVoltaMap.Value,
+                                                      prefixo: txtPrefixoMap.Value,
+                                                      hora_inicio: locIni,
+                                                      hora_fim: locFim,
+                                                      portao: locPortao,
+                                                      tipo_registro: locTipo,
+                                                      pesquisado: If(tglPesquisadoMap.Checked, 1, 0),
+                                                      envergadura_m: locEnv,
+                                                      observacao: txtObsMap.Value,
+                                                      ativo: 1
+                                                  }
+                                              )
+                                          )
+                                      }
+                                  );
+                                  UpdateContext({locSalvando: false, locOcupado: Blank()});
+                                  If(
+                                      locErro,
+                                      Notify("Não foi possível gravar. Nada foi alterado.", NotificationType.Error, 7000),
+                                      UpdateContext({locConfirmaConting: 0, locConfirmaExcluir: 0});
+                                      Select(btnAtualizarMap);
+                                      Set(varAlocSel, Blank());
+                                      Notify(
+                                          If(
+                                              locData = varData,
+                                              "Alocação gravada.",
+                                              "Alocação gravada em " & Text(locData, "dd/mm/yyyy") & ". Como é outro dia, confira conflitos de posição e portão manualmente nessa data."
+                                          ),
+                                          NotificationType.Success,
+                                          If(locData = varData, 2500, 7000)
+                                      )
+                                  )
+                              )
+                          )
+                        PaddingLeft: =14
+                        PaddingRight: =14
+                        Text: =If(locSalvando, "GRAVANDO…", "SALVAR")
+                  - btnExcluirMap:
+                      Control: Button@0.0.45
+                      Properties:
+                        Appearance: ='ButtonCanvas.Appearance'.Secondary
+                        BasePaletteColor: =thmVermelho
+                        BorderRadius: =0
+                        DisplayMode: =If(varPodeEditar And !IsBlank(varAlocSel.id), DisplayMode.Edit, DisplayMode.Disabled)
+                        FillPortions: =1
+                        FontColor: =thmVermelho
+                        FontSize: =13
+                        FontWeight: =FontWeight.Semibold
+                        Height: =44
+                        Icon: ="Delete"
+                        IconStyle: ='ButtonCanvas.IconStyle'.Filled
+                        LayoutMinWidth: =0
+                        OnSelect: |-
+                          =If(
+                              IsBlank(varAlocSel.id),
+                              Notify("Selecione um registro da lista acima para excluir.", NotificationType.Warning, 4000),
+                              locConfirmaExcluir <> varAlocSel.id,
+                              UpdateContext({locConfirmaExcluir: varAlocSel.id});
+                              Notify("Toque em EXCLUIR de novo para confirmar a remoção.", NotificationType.Warning, 5000),
+                              UpdateContext(
+                                  {
+                                      locErro: IsError(
+                                          Patch(
+                                              tb_alocacoesMapa,
+                                              LookUp(tb_alocacoesMapa, ID = varAlocSel.id),
+                                              {ativo: 0}
+                                          )
+                                      )
+                                  }
+                              );
+                              UpdateContext({locConfirmaExcluir: 0});
+                              If(
+                                  locErro,
+                                  Notify("Não foi possível excluir. Nada foi alterado.", NotificationType.Error, 7000),
+                                  Select(btnAtualizarMap);
+                                  Set(varAlocSel, Blank());
+                                  Set(varPainelAberto, false);
+                                  Notify("Registro removido do mapa.", NotificationType.Success, 2500)
+                              )
+                          )
+                        PaddingLeft: =12
+                        PaddingRight: =12
+                        Text: =If(locConfirmaExcluir = Coalesce(varAlocSel.id, -1), "CONFIRMAR", "EXCLUIR")
+                  - btnFecharMap:
+                      Control: Button@0.0.45
+                      Properties:
+                        Appearance: ='ButtonCanvas.Appearance'.Secondary
+                        BasePaletteColor: =thmTextoFraco
+                        BorderRadius: =0
+                        FillPortions: =1
+                        FontColor: =thmTextoFraco
+                        FontSize: =13
+                        FontWeight: =FontWeight.Semibold
+                        Height: =44
+                        Icon: ="DismissCircle"
+                        IconStyle: ='ButtonCanvas.IconStyle'.Filled
+                        LayoutMinWidth: =0
+                        OnSelect: |-
+                          =Set(varPainelAberto, false);
+                          Set(varAlocSel, Blank());
+                          UpdateContext({locConfirmaExcluir: 0, locConfirmaConting: 0, locNonce: locNonce + 1})
+                        PaddingLeft: =12
+                        PaddingRight: =12
+                        Text: ="FECHAR"
