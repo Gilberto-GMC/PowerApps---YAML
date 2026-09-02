@@ -62,9 +62,9 @@ Table(
 // aeroporto: ICAO dono do pátio — filtro para quando entrar um segundo aeroporto
 colPatios =
 Table(
-    { aeroporto: "SBNF"; patio: "PRINCIPAL";  nome_patio: "PÁTIO PRINCIPAL"; ordem: 1 };
-    { aeroporto: "SBNF"; patio: "PATIO3";     nome_patio: "PÁTIO 3";         ordem: 2 };
-    { aeroporto: "SBNF"; patio: "HELIPONTOS"; nome_patio: "PÁTIO 2";         ordem: 3 }
+    { aeroporto: "NAVEGANTES"; patio: "PRINCIPAL";  nome_patio: "PÁTIO PRINCIPAL"; ordem: 1 };
+    { aeroporto: "NAVEGANTES"; patio: "PATIO3";     nome_patio: "PÁTIO 3";         ordem: 2 };
+    { aeroporto: "NAVEGANTES"; patio: "HELIPONTOS"; nome_patio: "PÁTIO 2";         ordem: 3 }
 );;
 ```
 
@@ -94,31 +94,32 @@ As 25 posições do SBNF **na ordem visual exata da planilha** (`Mapa de Alocaç
 // aeroporto: ICAO dono da posição — filtro para quando entrar um segundo aeroporto
 colPosicoes =
 Table(
-    { aeroporto: "SBNF"; id: 1;  patio: "PRINCIPAL";  posicao: "T1";  ordem: 1;  aeronave_max: "B-738";    classe: "";            env_max: 0; tipo: "PONTE";     contingencia: 0 };
-    { aeroporto: "SBNF"; id: 2;  patio: "PRINCIPAL";  posicao: "T2";  ordem: 2;  aeronave_max: "EMB. E-2"; classe: "";            env_max: 0; tipo: "PONTE";     contingencia: 0 };
-    { aeroporto: "SBNF"; id: 3;  patio: "PRINCIPAL";  posicao: "T3";  ordem: 3;  aeronave_max: "EMB. E-2"; classe: "";            env_max: 0; tipo: "PONTE";     contingencia: 1 };
-    { aeroporto: "SBNF"; id: 4;  patio: "PRINCIPAL";  posicao: "T4";  ordem: 4;  aeronave_max: "B-738";    classe: "";            env_max: 0; tipo: "PONTE";     contingencia: 0 };
-    { aeroporto: "SBNF"; id: 5;  patio: "PRINCIPAL";  posicao: "T5";  ordem: 5;  aeronave_max: "B-738";    classe: "";            env_max: 0; tipo: "PONTE";     contingencia: 0 };
-    { aeroporto: "SBNF"; id: 6;  patio: "PRINCIPAL";  posicao: "T6";  ordem: 6;  aeronave_max: "B-738";    classe: "";            env_max: 0; tipo: "PONTE";     contingencia: 0 };
-    { aeroporto: "SBNF"; id: 7;  patio: "PRINCIPAL";  posicao: "T7";  ordem: 7;  aeronave_max: "B-738";    classe: "";            env_max: 0; tipo: "PONTE";     contingencia: 0 };
-    { aeroporto: "SBNF"; id: 8;  patio: "PATIO3";    posicao: "A6";  ordem: 8;  aeronave_max: "";         classe: "A";           env_max: 0; tipo: "REMOTA";    contingencia: 0 };
-    { aeroporto: "SBNF"; id: 9;  patio: "PATIO3";    posicao: "7";   ordem: 9;  aeronave_max: "";         classe: "B";           env_max: 0; tipo: "REMOTA";    contingencia: 0 };
-    { aeroporto: "SBNF"; id: 10; patio: "PATIO3";    posicao: "A10"; ordem: 10; aeronave_max: "";         classe: "A";           env_max: 0; tipo: "REMOTA";    contingencia: 0 };
-    { aeroporto: "SBNF"; id: 11; patio: "PATIO3";    posicao: "A7";  ordem: 11; aeronave_max: "";         classe: "A";           env_max: 0; tipo: "REMOTA";    contingencia: 0 };
-    { aeroporto: "SBNF"; id: 12; patio: "PATIO3";    posicao: "A8";  ordem: 12; aeronave_max: "";         classe: "A";           env_max: 0; tipo: "REMOTA";    contingencia: 0 };
-    { aeroporto: "SBNF"; id: 13; patio: "PATIO3";    posicao: "8";   ordem: 13; aeronave_max: "";         classe: "B";           env_max: 0; tipo: "REMOTA";    contingencia: 0 };
-    { aeroporto: "SBNF"; id: 14; patio: "PATIO3";    posicao: "A9";  ordem: 14; aeronave_max: "";         classe: "A";           env_max: 0; tipo: "REMOTA";    contingencia: 0 };
-    { aeroporto: "SBNF"; id: 15; patio: "PATIO3";    posicao: "A5";  ordem: 15; aeronave_max: "";         classe: "A";           env_max: 0; tipo: "REMOTA";    contingencia: 0 };
-    { aeroporto: "SBNF"; id: 16; patio: "PATIO3";    posicao: "6A";  ordem: 16; aeronave_max: "";         classe: "B";           env_max: 0; tipo: "REMOTA";    contingencia: 0 };
-    { aeroporto: "SBNF"; id: 17; patio: "PATIO3";    posicao: "A1";  ordem: 17; aeronave_max: "";         classe: "A";           env_max: 0; tipo: "REMOTA";    contingencia: 0 };
-    { aeroporto: "SBNF"; id: 18; patio: "PATIO3";    posicao: "A2";  ordem: 18; aeronave_max: "";         classe: "A";           env_max: 0; tipo: "REMOTA";    contingencia: 0 };
-    { aeroporto: "SBNF"; id: 19; patio: "PATIO3";    posicao: "A3";  ordem: 19; aeronave_max: "";         classe: "A";           env_max: 0; tipo: "REMOTA";    contingencia: 0 };
-    { aeroporto: "SBNF"; id: 20; patio: "PATIO3";    posicao: "6B";  ordem: 20; aeronave_max: "";         classe: "B";           env_max: 0; tipo: "REMOTA";    contingencia: 0 };
-    { aeroporto: "SBNF"; id: 21; patio: "PATIO3";    posicao: "A4";  ordem: 21; aeronave_max: "";         classe: "A";           env_max: 0; tipo: "REMOTA";    contingencia: 0 };
-    { aeroporto: "SBNF"; id: 22; patio: "HELIPONTOS"; posicao: "H1";  ordem: 22; aeronave_max: "";         classe: "HELICOPTERO"; env_max: 0; tipo: "HELIPONTO"; contingencia: 0 };
-    { aeroporto: "SBNF"; id: 23; patio: "HELIPONTOS"; posicao: "H2";  ordem: 23; aeronave_max: "";         classe: "HELICOPTERO"; env_max: 0; tipo: "HELIPONTO"; contingencia: 0 };
-    { aeroporto: "SBNF"; id: 24; patio: "HELIPONTOS"; posicao: "H3";  ordem: 24; aeronave_max: "";         classe: "HELICOPTERO"; env_max: 0; tipo: "HELIPONTO"; contingencia: 0 };
-    { aeroporto: "SBNF"; id: 25; patio: "HELIPONTOS"; posicao: "H4";  ordem: 25; aeronave_max: "";         classe: "HELICOPTERO"; env_max: 0; tipo: "HELIPONTO"; contingencia: 0 }
+    { aeroporto: "NAVEGANTES"; id: 1;  patio: "PRINCIPAL";  posicao: "T1";  ordem: 1;  aeronave_max: "B-738";    classe: "";            env_max: 0; tipo: "PONTE";     contingencia: 0; ocupa: "" };
+    { aeroporto: "NAVEGANTES"; id: 2;  patio: "PRINCIPAL";  posicao: "T2";  ordem: 2;  aeronave_max: "EMB. E-2"; classe: "";            env_max: 0; tipo: "PONTE";     contingencia: 0; ocupa: "" };
+    { aeroporto: "NAVEGANTES"; id: 3;  patio: "PRINCIPAL";  posicao: "T3";  ordem: 3;  aeronave_max: "EMB. E-2"; classe: "";            env_max: 0; tipo: "PONTE";     contingencia: 1; ocupa: "" };
+    { aeroporto: "NAVEGANTES"; id: 4;  patio: "PRINCIPAL";  posicao: "T4";  ordem: 4;  aeronave_max: "B-738";    classe: "";            env_max: 0; tipo: "PONTE";     contingencia: 0; ocupa: "" };
+    { aeroporto: "NAVEGANTES"; id: 5;  patio: "PRINCIPAL";  posicao: "T5";  ordem: 5;  aeronave_max: "B-738";    classe: "";            env_max: 0; tipo: "PONTE";     contingencia: 0; ocupa: "" };
+    { aeroporto: "NAVEGANTES"; id: 6;  patio: "PRINCIPAL";  posicao: "T6";  ordem: 6;  aeronave_max: "B-738";    classe: "";            env_max: 0; tipo: "PONTE";     contingencia: 0; ocupa: "" };
+    { aeroporto: "NAVEGANTES"; id: 26; patio: "PRINCIPAL";  posicao: "T6C"; ordem: 6.5; aeronave_max: "B-767 CARGO"; classe: "";            env_max: 0; tipo: "REMOTA";    contingencia: 0; ocupa: "T5,T6" };
+    { aeroporto: "NAVEGANTES"; id: 7;  patio: "PRINCIPAL";  posicao: "T7";  ordem: 7;  aeronave_max: "B-738";    classe: "";            env_max: 0; tipo: "PONTE";     contingencia: 0; ocupa: "" };
+    { aeroporto: "NAVEGANTES"; id: 8;  patio: "PATIO3";    posicao: "A6";  ordem: 8;  aeronave_max: "";         classe: "A";           env_max: 0; tipo: "REMOTA";    contingencia: 0; ocupa: "" };
+    { aeroporto: "NAVEGANTES"; id: 9;  patio: "PATIO3";    posicao: "7";   ordem: 9;  aeronave_max: "";         classe: "B";           env_max: 0; tipo: "REMOTA";    contingencia: 0; ocupa: "" };
+    { aeroporto: "NAVEGANTES"; id: 10; patio: "PATIO3";    posicao: "A10"; ordem: 10; aeronave_max: "";         classe: "A";           env_max: 0; tipo: "REMOTA";    contingencia: 0; ocupa: "" };
+    { aeroporto: "NAVEGANTES"; id: 11; patio: "PATIO3";    posicao: "A7";  ordem: 11; aeronave_max: "";         classe: "A";           env_max: 0; tipo: "REMOTA";    contingencia: 0; ocupa: "" };
+    { aeroporto: "NAVEGANTES"; id: 12; patio: "PATIO3";    posicao: "A8";  ordem: 12; aeronave_max: "";         classe: "A";           env_max: 0; tipo: "REMOTA";    contingencia: 0; ocupa: "" };
+    { aeroporto: "NAVEGANTES"; id: 13; patio: "PATIO3";    posicao: "8";   ordem: 13; aeronave_max: "";         classe: "B";           env_max: 0; tipo: "REMOTA";    contingencia: 0; ocupa: "" };
+    { aeroporto: "NAVEGANTES"; id: 14; patio: "PATIO3";    posicao: "A9";  ordem: 14; aeronave_max: "";         classe: "A";           env_max: 0; tipo: "REMOTA";    contingencia: 0; ocupa: "" };
+    { aeroporto: "NAVEGANTES"; id: 15; patio: "PATIO3";    posicao: "A5";  ordem: 15; aeronave_max: "";         classe: "A";           env_max: 0; tipo: "REMOTA";    contingencia: 0; ocupa: "" };
+    { aeroporto: "NAVEGANTES"; id: 16; patio: "PATIO3";    posicao: "6A";  ordem: 16; aeronave_max: "";         classe: "B";           env_max: 0; tipo: "REMOTA";    contingencia: 0; ocupa: "" };
+    { aeroporto: "NAVEGANTES"; id: 17; patio: "PATIO3";    posicao: "A1";  ordem: 17; aeronave_max: "";         classe: "A";           env_max: 0; tipo: "REMOTA";    contingencia: 0; ocupa: "" };
+    { aeroporto: "NAVEGANTES"; id: 18; patio: "PATIO3";    posicao: "A2";  ordem: 18; aeronave_max: "";         classe: "A";           env_max: 0; tipo: "REMOTA";    contingencia: 0; ocupa: "" };
+    { aeroporto: "NAVEGANTES"; id: 19; patio: "PATIO3";    posicao: "A3";  ordem: 19; aeronave_max: "";         classe: "A";           env_max: 0; tipo: "REMOTA";    contingencia: 0; ocupa: "" };
+    { aeroporto: "NAVEGANTES"; id: 20; patio: "PATIO3";    posicao: "6B";  ordem: 20; aeronave_max: "";         classe: "B";           env_max: 0; tipo: "REMOTA";    contingencia: 0; ocupa: "" };
+    { aeroporto: "NAVEGANTES"; id: 21; patio: "PATIO3";    posicao: "A4";  ordem: 21; aeronave_max: "";         classe: "A";           env_max: 0; tipo: "REMOTA";    contingencia: 0; ocupa: "" };
+    { aeroporto: "NAVEGANTES"; id: 22; patio: "HELIPONTOS"; posicao: "H1";  ordem: 22; aeronave_max: "";         classe: "HELICOPTERO"; env_max: 0; tipo: "HELIPONTO"; contingencia: 0; ocupa: "" };
+    { aeroporto: "NAVEGANTES"; id: 23; patio: "HELIPONTOS"; posicao: "H2";  ordem: 23; aeronave_max: "";         classe: "HELICOPTERO"; env_max: 0; tipo: "HELIPONTO"; contingencia: 0; ocupa: "" };
+    { aeroporto: "NAVEGANTES"; id: 24; patio: "HELIPONTOS"; posicao: "H3";  ordem: 24; aeronave_max: "";         classe: "HELICOPTERO"; env_max: 0; tipo: "HELIPONTO"; contingencia: 0; ocupa: "" };
+    { aeroporto: "NAVEGANTES"; id: 25; patio: "HELIPONTOS"; posicao: "H4";  ordem: 25; aeronave_max: "";         classe: "HELICOPTERO"; env_max: 0; tipo: "HELIPONTO"; contingencia: 0; ocupa: "" }
 );;
 ```
 
@@ -184,7 +185,19 @@ Table(
     { sigla: "TAM"; nome_cia: "LATAM";    cor_hex: "#FF99CC"; cor_texto: "#1E293B"; ordem: 3 };
     { sigla: "ONE"; nome_cia: "ONE";      cor_hex: "#C9C5E6"; cor_texto: "#1E293B"; ordem: 4 };
     { sigla: "FAB"; nome_cia: "FAB";      cor_hex: "#92D050"; cor_texto: "#1E293B"; ordem: 5 };
-    { sigla: "GER"; nome_cia: "AV. GERAL"; cor_hex: "#E2E8F0"; cor_texto: "#1E293B"; ordem: 6 }
+    { sigla: "GER"; nome_cia: "AV. GERAL"; cor_hex: "#E2E8F0"; cor_texto: "#1E293B"; ordem: 6 };
+    { sigla: "ABS"; nome_cia: "ABSA";     cor_hex: "#6B4423"; cor_texto: "#D6DDE0"; ordem: 7 }
+);;
+// 🅿️ Pré-lançamento: por onde a importação começa a tentar, em ordem de preferência.
+// Não é regra de negócio — é chute educado. O importador só usa a primeira livre, e depois
+// alguém confere posição e portão na tela. Portão vazio significa "esta companhia não usa portão".
+colPrefPosicao =
+Table(
+    { aeroporto: "NAVEGANTES"; cia: "GLO"; posicoes: "T4,T3,T5,T2"; portoes: "4,5" };
+    { aeroporto: "NAVEGANTES"; cia: "TAM"; posicoes: "T6,T5,T4,T3"; portoes: "1,2,3,5" };
+    { aeroporto: "NAVEGANTES"; cia: "AZU"; posicoes: "T5,T3,T2,T6"; portoes: "3,2,4,1" };
+    { aeroporto: "NAVEGANTES"; cia: "ABS"; posicoes: "T6C";         portoes: "" };
+    { aeroporto: "NAVEGANTES"; cia: "*";   posicoes: "T6,T5,T4,T3,T2,T1"; portoes: "1,2,3,4,5" }
 );;
 ```
 
@@ -270,6 +283,16 @@ mapLarguraBarra  = 16;;    // px reservados à direita para a barra de rolagem d
                            // régua e linhas descontam o MESMO valor, é isso que mantém as colunas alinhadas
 mapLarguraPainel = 420;;   // px do painel de edição, que abre sobre a grade
 mapPctHora       = "4.1666";;   // 100/24 truncado: 24 colunas somam 99,998% e nunca estouram os 100%
+mapDiasMax       = 90;;    // duração máxima de um registro, em dias — trava contra data final digitada errada
+mapDuracaoPadrao = 40;;    // minutos entre chegada e saída sugeridos no registro novo aberto pelo clique
+                           // na grade — é só o padrão do formulário, o usuário sobrescreve digitando
+
+// 📅 Época para converter (data; minuto) em minuto absoluto na linha do tempo.
+// É o que permite comparar sobreposição entre registros de dias diferentes com uma
+// única comparação de inteiros, do mesmo jeito que hora_inicio/hora_fim já fazem dentro do dia.
+// Data fixa e antiga de propósito: o valor só precisa ser o MESMO para todos os registros.
+// O Brasil não tem horário de verão desde 2019, então DateDiff em dias é exato aqui.
+mapDataBase      = Date(2020; 1; 1);;
 
 // 🕘 Linhas verticais de hora — UMA definição, dois consumidores (a régua e cada linha da grade).
 // Tem que ser o mesmo mecanismo nos dois: borda de célula encaixa em pixel inteiro, gradiente rasteriza
@@ -285,6 +308,33 @@ mapFundoHoras =
 > Frotas. O código correspondente volta por `LookUp` na tabela de origem, em memória.
 >
 > `"—"` é o rótulo de *sem companhia* e *sem portão*: a tela grava `""` quando o usuário deixa esse valor.
+
+> **Por que `mapDataBase` existe.** Dentro de um dia, sobreposição é `a.ini < b.fim And a.fim > b.ini` —
+> comparação de inteiros, barata e sem fuso. Quando o registro passou a poder cruzar dias, essa conta deixou
+> de fechar: `22:00` do dia 3 é *maior* que `06:00` do dia 4 se você olhar só o minuto. Somando
+> `DateDiff(mapDataBase; data; Days) * mapMinutosDia` ao minuto, o dia entra no mesmo número e a comparação
+> volta a ser a mesma de sempre — só que sem o teto de 1440. A época em si é arbitrária: o que importa é ser
+> **a mesma** para os dois lados da comparação. Ela nunca é gravada; existe só em memória, no instante da
+> validação e na montagem de `colDia`.
+
+> **`ocupa` declara posição que consome posição.** `T6C` é a área de carga sobre `T5` e `T6`. Só a
+> `T6C` carrega o texto; quem lê resolve nos dois sentidos. Para criar outra assim, basta preencher
+> `ocupa` na posição maior — nada muda nas menores.
+
+> **A linha `cia: "*"` é a queda, não uma companhia.** Quando a preferência da companhia está toda
+> ocupada, o importador tenta essa ordem geral antes de desistir. Portão vazio incomoda mais que
+> portão fora do habitual, então ali a queda vale sempre; posição, não — **se as duas listas falharem,
+> o voo vai para pendência em vez de para um lugar qualquer.** Posição inventada vira avião no lugar
+> errado, e ninguém teria como saber que foi chute.
+
+> **`colPrefPosicao` é chute educado, não regra.** É por onde a importação de programação começa a
+> tentar, na ordem declarada, e o que ela produz é **pré-lançamento**: alguém confere posição e portão
+> na tela antes de valer. Por isso mora aqui e não numa lista editável — muda pouco, e mudança errada
+> aqui não corrompe dado, só piora um palpite que já vai ser revisado.
+
+> **`mapDiasMax` é trava de digitação, não regra de negócio.** Nada impede uma interdição de obra de durar
+> três meses; o que ela pega é a DATA FINAL escolhida no ano errado no seletor de data, que geraria um
+> registro aparecendo em todas as grades por anos. Subir o limite é trocar este número.
 
 ---
 
@@ -310,6 +360,7 @@ hxAmbar           = "#B45309";;
 hxVermelho        = "#B91C1C";;
 hxVermelhoSuave   = "#FEF2F2";;
 hxAmbarSuave      = "#FFFBEB";;
+hxInternacional   = "#FFD400";;   // amarelo do selo I — fundo do selo de voo internacional
 hxGradeLinha      = "#E2E8F0";;   // linha vertical de hora no trilho
 hxTextoBarra      = "#D6DDE0";;   // texto sobre fundo escuro — nunca branco puro
 hxBordaBarra      = "rgba(214,221,224,.28)";;

@@ -6,6 +6,7 @@ Screens:
         =Set(varMapaVisivel, true);
         Set(varPainelAberto, false);
         Set(varAlocSel, Blank());
+        Set(varNovoIni, -1);
         UpdateContext(
             {
                 locPatio: "TODOS",
@@ -17,8 +18,89 @@ Screens:
                 locOcupado: Blank()
             }
         );
+        ClearCollect(colEquip, Sort(Filter(tb_equipamentos, ativo = 1), ordem, SortOrder.Ascending));
+        ClearCollect(colRegras, Filter(tb_regrasPosicao, aeroporto = varAero And ativo = 1));
+        ClearCollect(colEquipSel, Table({ Value: "—" }));
+        Collect(colEquipSel, ForAll(colEquip As _e, { Value: _e.nome_equip }));
         Select(btnAtualizarMap)
     Children:
+      - btnAbrirEdicaoMap:
+          Control: Button@0.0.45
+          Properties:
+            Height: =1
+            OnSelect: |-
+              =Set(
+                  varForm,
+                  {
+                      tipo: Coalesce(LookUp(colTiposReg As _t, _t.tipo = varAlocSel.tipo).rotulo, "Voo"),
+                      posicao: varAlocSel.posicao_txt,
+                      data: varAlocSel.data_ini,
+                      dataf: varAlocSel.data_f,
+                      cia: If(IsBlank(varAlocSel.cia), "—", varAlocSel.cia),
+                      voo_ida: varAlocSel.voo_ida,
+                      voo_volta: varAlocSel.voo_volta,
+                      prefixo: varAlocSel.prefixo,
+                      portao: If(IsBlank(varAlocSel.portao), "—", varAlocSel.portao),
+                      ini: Text(Int(varAlocSel.h_ini / 60), "00") & ":" & Text(Mod(varAlocSel.h_ini, 60), "00"),
+                      fim: Text(Int(varAlocSel.h_fim / 60), "00") & ":" & Text(Mod(varAlocSel.h_fim, 60), "00"),
+                      equip: Coalesce(LookUp(colEquip As _e, _e.equip = varAlocSel.equip).nome_equip, "—"),
+                      env: If(Value(Text(varAlocSel.env)) > 0, Text(varAlocSel.env), ""),
+                      obs: varAlocSel.obs,
+                      pesq: varAlocSel.pesq = 1,
+                      intl: varAlocSel.intl = 1
+                  }
+              );
+              Set(varPosSel, LookUp(colGrade As _g, _g.id_posicao = varAlocSel.id_posicao));
+              UpdateContext({locConfirmaExcluir: 0, locConfirmaConting: 0, locNonce: locNonce + 1});
+              Set(varPainelAberto, true)
+            Text: =""
+            Visible: =true
+            Width: =1
+            X: =0
+            Y: =0
+      - btnAbrirNovoMap:
+          Control: Button@0.0.45
+          Properties:
+            Height: =1
+            OnSelect: |-
+              =Set(varAlocSel, Blank());
+              Set(
+                  varForm,
+                  {
+                      tipo: "Voo",
+                      posicao: Coalesce(varPosSel.posicao, "T1"),
+                      data: varData,
+                      dataf: varData,
+                      cia: "—",
+                      voo_ida: "",
+                      voo_volta: "",
+                      prefixo: "",
+                      portao: "—",
+                      ini: If(
+                          varNovoIni < 0,
+                          "",
+                          Text(Int(varNovoIni / 60), "00") & ":" & Text(Mod(varNovoIni, 60), "00")
+                      ),
+                      fim: If(
+                          varNovoIni < 0,
+                          "",
+                          Text(Int((varNovoIni + mapDuracaoPadrao) / 60), "00") & ":" &
+                          Text(Mod(varNovoIni + mapDuracaoPadrao, 60), "00")
+                      ),
+                      equip: "—",
+                      env: "",
+                      obs: "",
+                      pesq: false,
+                      intl: false
+                  }
+              );
+              UpdateContext({locConfirmaExcluir: 0, locConfirmaConting: 0, locNonce: locNonce + 1});
+              Set(varPainelAberto, true)
+            Text: =""
+            Visible: =true
+            Width: =1
+            X: =0
+            Y: =0
       - cntShellMap:
           Control: GroupContainer@1.5.0
           Variant: AutoLayout
@@ -131,6 +213,42 @@ Screens:
                                 Navigate(scrMapaReferencia, ScreenTransition.Fade)
                               PaddingLeft: =18
                               Text: =If(varMenuAberto, "POSIÇÕES E CORES", "")
+                        - btnNavEqpMap:
+                            Control: Button@0.0.45
+                            Properties:
+                              Align: =Align.Left
+                              AlignInContainer: =AlignInContainer.Stretch
+                              Appearance: ='ButtonCanvas.Appearance'.Secondary
+                              BasePaletteColor: =thmTextoBarra
+                              BorderRadius: =0
+                              FontColor: =thmTextoBarra
+                              FontSize: =14
+                              FontWeight: =FontWeight.Semibold
+                              Height: =44
+                              Icon: ="Airplane"
+                              IconStyle: ='ButtonCanvas.IconStyle'.Filled
+                              LayoutMinWidth: =0
+                              OnSelect: =Navigate(scrMapaEquip, ScreenTransition.Fade)
+                              PaddingLeft: =18
+                              Text: =If(varMenuAberto, "EQUIPAMENTOS", "")
+                        - btnNavRgrMap:
+                            Control: Button@0.0.45
+                            Properties:
+                              Align: =Align.Left
+                              AlignInContainer: =AlignInContainer.Stretch
+                              Appearance: ='ButtonCanvas.Appearance'.Secondary
+                              BasePaletteColor: =thmTextoBarra
+                              BorderRadius: =0
+                              FontColor: =thmTextoBarra
+                              FontSize: =14
+                              FontWeight: =FontWeight.Semibold
+                              Height: =44
+                              Icon: ="LockClosed"
+                              IconStyle: ='ButtonCanvas.IconStyle'.Filled
+                              LayoutMinWidth: =0
+                              OnSelect: =Navigate(scrMapaRegra, ScreenTransition.Fade)
+                              PaddingLeft: =18
+                              Text: =If(varMenuAberto, "RESTRIÇÕES", "")
                         - btnNavInicioMap:
                             Control: Button@0.0.45
                             Properties:
@@ -475,27 +593,104 @@ Screens:
                                     ForAll(
                                         Filter(
                                             tb_alocacoesMapa,
-                                            aeroporto = varAero And data_operacao = varData And ativo = 1
+                                            aeroporto = varAero And data_operacao <= varData And data_fim >= varData And ativo = 1
                                         ) As _r,
-                                        {
-                                            id: _r.ID,
-                                            id_posicao: _r.id_posicao,
-                                            posicao_txt: _r.posicao_txt,
-                                            patio_txt: _r.patio_txt,
-                                            cia: _r.cia_sigla,
-                                            voo_ida: _r.voo_chegada,
-                                            voo_volta: _r.voo_saida,
-                                            prefixo: _r.prefixo,
-                                            ini: _r.hora_inicio,
-                                            fim: _r.hora_fim,
-                                            portao: _r.portao,
-                                            tipo: _r.tipo_registro,
-                                            pesq: _r.pesquisado,
-                                            env: _r.envergadura_m,
-                                            obs: _r.observacao,
-                                            alterado_em: _r.Modificado,
-                                            alterado_por: _r.'Modificado por'.DisplayName
-                                        }
+                                        With(
+                                            {
+                                                _dias: DateDiff(_r.data_operacao, _r.data_fim, TimeUnit.Days),
+                                                _cia: LookUp(colCias As _cd, _cd.sigla = _r.cia_sigla),
+                                                _pat: LookUp(colPatiosAero As _pt, _pt.patio = _r.patio_txt)
+                                            },
+                                            With(
+                                                {
+                                                    _dica: _r.posicao_txt & " - " & Coalesce(_pat.nome_patio, _r.patio_txt) & Char(10) &
+                                                        Switch(
+                                                            _r.tipo_registro,
+                                                            "INTERDICAO", "POSIÇÃO INTERDITADA",
+                                                            "RESERVA", "POSIÇÃO RESERVADA",
+                                                            Trim(
+                                                                Coalesce(_cia.nome_cia, _r.cia_sigla) & " " &
+                                                                Coalesce(_r.voo_chegada, "") &
+                                                                If(
+                                                                    !IsBlank(_r.voo_saida),
+                                                                    If(IsBlank(_r.voo_chegada), "", "/") & _r.voo_saida,
+                                                                    ""
+                                                                )
+                                                            )
+                                                        ) &
+                                                        If(!IsBlank(_r.prefixo), Char(10) & "Prefixo " & _r.prefixo, "") &
+                                                        If(
+                                                            !IsBlank(_r.equipamento),
+                                                            Char(10) & "Equipamento " & Coalesce(LookUp(colEquip As _eq, _eq.equip = _r.equipamento).nome_equip, _r.equipamento),
+                                                            ""
+                                                        ) &
+                                                        If(Value(Text(_r.envergadura_m)) > 0, Char(10) & "Envergadura " & Text(_r.envergadura_m) & " m", "") &
+                                                        Char(10) & "De " & Text(_r.data_operacao, "dd/mm/yyyy") & " " &
+                                                        Text(Int(_r.hora_inicio / 60), "00") & ":" & Text(Mod(_r.hora_inicio, 60), "00") &
+                                                        " ate " & Text(_r.data_fim, "dd/mm/yyyy") & " " &
+                                                        Text(Int(_r.hora_fim / 60), "00") & ":" & Text(Mod(_r.hora_fim, 60), "00") &
+                                                        If(_dias > 0, "   (" & Text(_dias + 1) & " dias)", "") &
+                                                        If(!IsBlank(_r.portao), Char(10) & "Portão " & _r.portao, "") &
+                                                        If(_r.pesquisado = 1, Char(10) & "VOO PESQUISADO", "") &
+                                                        If(_r.internacional = 1, Char(10) & "VOO INTERNACIONAL", "") &
+                                                        If(!IsBlank(_r.observacao), Char(10) & "Obs: " & _r.observacao, "") &
+                                                        Char(10) & "Alterado por " & Coalesce(_r.'Modificado por'.DisplayName, "-") &
+                                                        " em " & Text(_r.Modificado, "dd/mm/yyyy") & " " &
+                                                        Text(Hour(_r.Modificado), "00") & ":" & Text(Minute(_r.Modificado), "00")
+                                                },
+                                                {
+                                                    id: _r.ID,
+                                                id_posicao: _r.id_posicao,
+                                                posicao_txt: _r.posicao_txt,
+                                                patio_txt: _r.patio_txt,
+                                                cia: _r.cia_sigla,
+                                                voo_ida: _r.voo_chegada,
+                                                voo_volta: _r.voo_saida,
+                                                prefixo: _r.prefixo,
+                                                ini: If(_r.data_operacao < varData, 0, _r.hora_inicio),
+                                                fim: If(_r.data_fim > varData, mapMinutosDia, _r.hora_fim),
+                                                data_ini: _r.data_operacao,
+                                                data_f: _r.data_fim,
+                                                h_ini: _r.hora_inicio,
+                                                h_fim: _r.hora_fim,
+                                                de_antes: If(_r.data_operacao < varData, 1, 0),
+                                                para_depois: If(_r.data_fim > varData, 1, 0),
+                                                abs_ini: DateDiff(mapDataBase, _r.data_operacao, TimeUnit.Days) * mapMinutosDia + _r.hora_inicio,
+                                                abs_fim: DateDiff(mapDataBase, _r.data_fim, TimeUnit.Days) * mapMinutosDia + _r.hora_fim,
+                                                portao: _r.portao,
+                                                tipo: _r.tipo_registro,
+                                                pesq: _r.pesquisado,
+                                                intl: _r.internacional,
+                                                equip: _r.equipamento,
+                                                env: _r.envergadura_m,
+                                                obs: _r.observacao,
+                                                alterado_em: _r.Modificado,
+                                                alterado_por: _r.'Modificado por'.DisplayName,
+                                                    dica_txt: _dica,
+                                                    dica: Substitute(
+                                                    Substitute(
+                                                        Substitute(
+                                                            Substitute(
+                                                                Substitute(
+                                                                    _dica,
+                                                                    "&",
+                                                                    "&amp;"
+                                                                ),
+                                                                "<",
+                                                                "&lt;"
+                                                            ),
+                                                            ">",
+                                                            "&gt;"
+                                                        ),
+                                                        "'",
+                                                        "&#39;"
+                                                    ),
+                                                    Char(10),
+                                                    "&#10;"
+                                                )
+                                            }
+                                            )
+                                        )
                                     )
                                 );
                                 Set(varUltimaAlt, Max(colDia, alterado_em));
@@ -503,10 +698,31 @@ Screens:
                                 ClearCollect(
                                     colGrade,
                                     ForAll(
-                                        Sort(colPosicoesAero, ordem, SortOrder.Ascending) As _p,
+                                        Sort(Filter(colPosicoesAero, IsBlank(ocupa)), ordem, SortOrder.Ascending) As _p,
                                         With(
                                             {
-                                                _bl: Sort(Filter(colDia, id_posicao = _p.id), ini, SortOrder.Ascending),
+                                                _bl: Sort(
+                                                    Filter(
+                                                        colDia,
+                                                        id_posicao = _p.id Or
+                                                        !IsBlank(
+                                                            Find(
+                                                                "," & _p.posicao & ",",
+                                                                "," &
+                                                                Substitute(
+                                                                    Coalesce(
+                                                                        LookUp(colPosicoesAero As _q, _q.posicao = posicao_txt).ocupa,
+                                                                        ""
+                                                                    ),
+                                                                    " ",
+                                                                    ""
+                                                                ) & ","
+                                                            )
+                                                        )
+                                                    ),
+                                                    ini,
+                                                    SortOrder.Ascending
+                                                ),
                                                 _corPatio: Switch(_p.patio, "PRINCIPAL", hxPrimaria, "PATIO3", hxOperacional, hxVerde),
                                                 _restricao: If(
                                                     !IsBlank(_p.aeronave_max),
@@ -519,24 +735,9 @@ Screens:
                                                     "1px solid " & hxGradeLinha
                                                 )
                                             },
-                                            {
-                                                id_posicao: _p.id,
-                                                posicao: _p.posicao,
-                                                patio: _p.patio,
-                                                qtd: CountRows(_bl),
-                                                restricao: _restricao,
-                                                cor_patio: _corPatio,
-                                                html: "<table style='width:100%;table-layout:fixed;border-collapse:separate;border-spacing:0;" & htmlFonte & "'><tr>" &
-                                                "<td style='width:" & mapLarguraRotulo & "px;height:" & mapAlturaLinha & "px;box-sizing:border-box;padding:6px 8px;vertical-align:middle;border-top:" & _topo & ";border-left:4px solid " & _corPatio & ";border-right:1px solid " & hxGradeLinha & ";'>" &
-                                                "<div style='font-size:15px;font-weight:800;color:" & hxPrimaria & ";line-height:1.05;'>" & _p.posicao & "</div>" &
-                                                "<div style='font-size:8px;font-weight:700;letter-spacing:.08em;color:" & hxTextoFraco & ";margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;'>" & _restricao & "</div>" &
-                                                "</td>" &
-                                                "<td style='height:" & mapAlturaLinha & "px;box-sizing:border-box;padding:0;border-top:" & _topo & ";" & mapFundoHoras & "'>" &
-                                                If(
-                                                    CountRows(_bl) = 0,
-                                                    "",
-                                                    "<table style='width:100%;table-layout:fixed;border-collapse:separate;border-spacing:0;'><tr>" &
-                                                    Concat(
+                                            With(
+                                                {
+                                                    _trechos: ForAll(
                                                         Sequence(CountRows(_bl)) As _i,
                                                         With(
                                                             {
@@ -554,63 +755,95 @@ Screens:
                                                                         _prt: LookUp(colPortoes As _pp, _pp.portao = _b.portao),
                                                                         _bloq: _b.tipo <> "VOO"
                                                                     },
-                                                                    If(
-                                                                        _a > _ant,
-                                                                        "<td style='width:" & Text((_a - _ant) * 100 / mapMinutosDia, "0.000", "en-US") & "%;'>&nbsp;</td>",
-                                                                        ""
-                                                                    ) &
-                                                                    "<td style='box-sizing:border-box;width:" & Text((_z - _a) * 100 / mapMinutosDia, "0.000", "en-US") & "%;height:" & (mapAlturaLinha - 14) & "px;" &
-                                                                    "background:" & If(_bloq, hxTextoFraco, If(_b.pesq = 1, hxVermelho, Coalesce(_cia.cor_hex, hxBorda))) & ";" &
-                                                                    "color:" & If(_bloq Or _b.pesq = 1, hxTextoBarra, Coalesce(_cia.cor_texto, hxTexto)) & ";" &
-                                                                    "border:3px solid " & Coalesce(_prt.cor_hex, hxBorda) & ";" &
-                                                                    "font-size:10px;font-weight:700;line-height:1.15;padding:0 3px;text-align:center;overflow:hidden;'>" &
-                                                                    "<div style='white-space:nowrap;overflow:hidden;text-overflow:ellipsis;'>" &
-                                                                    If(
-                                                                        _b.pesq = 1,
-                                                                        "<span style='background:" & hxTextoBarra & ";color:" & hxVermelho & ";padding:0 3px;margin-right:3px;'>P</span>",
-                                                                        ""
-                                                                    ) &
-                                                                    If(
-                                                                        _bloq,
-                                                                        If(_b.tipo = "INTERDICAO", "INTERDITADO", "RESERVADO"),
-                                                                        Trim(
-                                                                            Coalesce(_b.cia, "") & " " &
-                                                                            If(
-                                                                                IsBlank(_b.voo_ida) And IsBlank(_b.voo_volta),
-                                                                                Coalesce(_b.prefixo, ""),
-                                                                                Coalesce(_b.voo_ida, "") &
+                                                                    {
+                                                                        ord: _i.Value,
+                                                    id: _b.id,
+                                                                        ini: _a,
+                                                                        fim: _z,
+                                                                        dur: _z - _a,
+                                                                        dica_txt: _b.dica_txt,
+                                                                        html: If(
+                                                                            _a > _ant,
+                                                                            "<td style='width:" & Text((_a - _ant) * 100 / mapMinutosDia, "0.000", "en-US") & "%;'>&nbsp;</td>",
+                                                                            ""
+                                                                        ) &
+                                                                        "<td title='" & _b.dica & "' style='box-sizing:border-box;width:" & Text((_z - _a) * 100 / mapMinutosDia, "0.000", "en-US") & "%;height:" & (mapAlturaLinha - 14) & "px;" &
+                                                                        "background:" & If(_bloq, hxTextoFraco, If(_b.pesq = 1, hxVermelho, Coalesce(_cia.cor_hex, hxBorda))) & ";" &
+                                                                        "color:" & If(_bloq Or _b.pesq = 1, hxTextoBarra, Coalesce(_cia.cor_texto, hxTexto)) & ";" &
+                                                                        "border:3px solid " & Coalesce(_prt.cor_hex, hxBorda) & ";" &
+                                                                        "font-size:10px;font-weight:700;line-height:1.15;padding:0 3px;text-align:center;overflow:hidden;'>" &
+                                                                        "<div style='white-space:nowrap;overflow:hidden;text-overflow:ellipsis;'>" &
+                                                                        If(_b.de_antes = 1, "&laquo;&nbsp;", "") &
+                                                                        If(
+                                                                            _b.pesq = 1,
+                                                                            "<span style='background:" & hxTextoBarra & ";color:" & hxVermelho & ";padding:0 3px;margin-right:3px;'>P</span>",
+                                                                            ""
+                                                                        ) &
+                                                                        If(
+                                                                            _b.intl = 1,
+                                                                            "<span style='background:" & hxInternacional & ";color:" & hxTexto & ";padding:0 3px;margin-right:3px;'>I</span>",
+                                                                            ""
+                                                                        ) &
+                                                                        If(
+                                                                            _bloq,
+                                                                            If(_b.tipo = "INTERDICAO", "INTERDITADO", "RESERVADO"),
+                                                                            Trim(
+                                                                                Coalesce(_b.cia, "") & " " &
                                                                                 If(
-                                                                                    !IsBlank(_b.voo_volta),
-                                                                                    If(IsBlank(_b.voo_ida), "", "/") & _b.voo_volta,
-                                                                                    ""
+                                                                                    IsBlank(_b.voo_ida) And IsBlank(_b.voo_volta),
+                                                                                    Coalesce(_b.prefixo, ""),
+                                                                                    Coalesce(_b.voo_ida, "") &
+                                                                                    If(
+                                                                                        !IsBlank(_b.voo_volta),
+                                                                                        If(IsBlank(_b.voo_ida), "", "/") & _b.voo_volta,
+                                                                                        ""
+                                                                                    )
                                                                                 )
                                                                             )
-                                                                        )
-                                                                    ) &
-                                                                    "</div>" &
-                                                                    "<div style='font-size:8px;font-weight:600;opacity:.85;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;'>" &
-                                                                    Text(Int(_b.ini / 60), "00") & ":" & Text(Mod(_b.ini, 60), "00") & "&ndash;" &
-                                                                    Text(Int(_b.fim / 60), "00") & ":" & Text(Mod(_b.fim, 60), "00") &
-                                                                    If(!IsBlank(_b.portao), " &middot; P" & _b.portao, "") &
-                                                                    "</div></td>"
+                                                                        ) &
+                                                                        If(_b.para_depois = 1, "&nbsp;&raquo;", "") &
+                                                                        "</div>" &
+                                                                        "<div style='font-size:8px;font-weight:600;opacity:.85;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;'>" &
+                                                                        Text(Int(_b.ini / 60), "00") & ":" & Text(Mod(_b.ini, 60), "00") & "&ndash;" &
+                                                                        Text(Int(_b.fim / 60), "00") & ":" & Text(Mod(_b.fim, 60), "00") &
+                                                                        If(!IsBlank(_b.portao), " &middot; P" & _b.portao, "") &
+                                                                        "</div></td>"
+                                                                    }
                                                                 )
                                                             )
                                                         )
-                                                    ) &
-                                                    With(
-                                                        {
-                                                            _ult: Min(Max(Coalesce(Max(_bl, Max(ini, fim)), 0), 0), mapMinutosDia)
-                                                        },
+                                                    ),
+                                                    _ult: Min(Max(Coalesce(Max(_bl, Max(ini, fim)), 0), 0), mapMinutosDia)
+                                                },
+                                                {
+                                                    id_posicao: _p.id,
+                                                    posicao: _p.posicao,
+                                                    patio: _p.patio,
+                                                    qtd: CountRows(_bl),
+                                                    restricao: _restricao,
+                                                    cor_patio: _corPatio,
+                                                    trechos: _trechos,
+                                                    html: "<table style='width:100%;table-layout:fixed;border-collapse:separate;border-spacing:0;" & htmlFonte & "'><tr>" &
+                                                    "<td style='width:" & mapLarguraRotulo & "px;height:" & mapAlturaLinha & "px;box-sizing:border-box;padding:6px 8px;vertical-align:middle;border-top:" & _topo & ";border-left:4px solid " & _corPatio & ";border-right:1px solid " & hxGradeLinha & ";'>" &
+                                                    "<div style='font-size:15px;font-weight:800;color:" & hxPrimaria & ";line-height:1.05;'>" & _p.posicao & "</div>" &
+                                                    "<div style='font-size:8px;font-weight:700;letter-spacing:.08em;color:" & hxTextoFraco & ";margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;'>" & _restricao & "</div>" &
+                                                    "</td>" &
+                                                    "<td style='height:" & mapAlturaLinha & "px;box-sizing:border-box;padding:0;border-top:" & _topo & ";" & mapFundoHoras & "'>" &
+                                                    If(
+                                                        CountRows(_bl) = 0,
+                                                        "",
+                                                        "<table style='width:100%;table-layout:fixed;border-collapse:separate;border-spacing:0;'><tr>" &
+                                                        Concat(_trechos As _t, _t.html) &
                                                         If(
                                                             _ult < mapMinutosDia,
                                                             "<td style='width:" & Text((mapMinutosDia - _ult) * 100 / mapMinutosDia, "0.000", "en-US") & "%;'>&nbsp;</td>",
                                                             ""
-                                                        )
+                                                        ) &
+                                                        "</tr></table>"
                                                     ) &
-                                                    "</tr></table>"
-                                                ) &
-                                                "</td></tr></table>"
-                                            }
+                                                    "</td></tr></table>"
+                                                }
+                                            )
                                         )
                                     )
                                 );
@@ -635,27 +868,8 @@ Screens:
                               IconStyle: ='ButtonCanvas.IconStyle'.Filled
                               LayoutMinWidth: =0
                               OnSelect: |-
-                                =Set(varAlocSel, Blank());
-                                Set(
-                                    varForm,
-                                    {
-                                        tipo: "Voo",
-                                        posicao: Coalesce(varPosSel.posicao, "T1"),
-                                        data: varData,
-                                        cia: "—",
-                                        voo_ida: "",
-                                        voo_volta: "",
-                                        prefixo: "",
-                                        portao: "—",
-                                        ini: "",
-                                        fim: "",
-                                        env: "",
-                                        obs: "",
-                                        pesq: false
-                                    }
-                                );
-                                UpdateContext({locConfirmaExcluir: 0, locConfirmaConting: 0, locNonce: locNonce + 1});
-                                Set(varPainelAberto, true)
+                                =Set(varNovoIni, -1);
+                                Select(btnAbrirNovoMap)
                               PaddingLeft: =14
                               PaddingRight: =14
                               Text: ="NOVO REGISTRO"
@@ -728,15 +942,452 @@ Screens:
                                     HtmlText: =ThisItem.html
                                     OnSelect: |-
                                       =Set(varPosSel, ThisItem);
-                                      Set(varAlocSel, Blank());
-                                      Set(varPainelAberto, true);
-                                      UpdateContext({locConfirmaExcluir: 0, locConfirmaConting: 0, locNonce: locNonce + 1})
+                                      Set(varNovoIni, -1);
+                                      Select(btnAbrirNovoMap)
                                     PaddingBottom: =0
                                     PaddingLeft: =0
                                     PaddingRight: =0
                                     PaddingTop: =0
                                     Size: =10
                                     Width: =galPosicoesMap.Width - mapLarguraBarra
+                              - cntFaixaMap:
+                                  Control: GroupContainer@1.5.0
+                                  Variant: AutoLayout
+                                  Properties:
+                                    DropShadow: =DropShadow.None
+                                    Fill: =thmTransparente
+                                    Height: =mapAlturaLinha
+                                    LayoutAlignItems: =LayoutAlignItems.Stretch
+                                    LayoutDirection: =LayoutDirection.Horizontal
+                                    LayoutGap: =0
+                                    LayoutMinHeight: =0
+                                    LayoutMinWidth: =0
+                                    RadiusBottomLeft: =0
+                                    RadiusBottomRight: =0
+                                    RadiusTopLeft: =0
+                                    RadiusTopRight: =0
+                                    Width: =galPosicoesMap.Width - mapLarguraBarra
+                                  Children:
+                                    - lblFaixaRotuloMap:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          Fill: =thmTransparente
+                                          FillPortions: =0
+                                          LayoutMinWidth: =0
+                                          OnSelect: |-
+                                            =Set(varPosSel, ThisItem);
+                                            Set(varNovoIni, -1);
+                                            Select(btnAbrirNovoMap)
+                                          Text: =""
+                                          Width: =mapLarguraRotulo
+                                    - lblHora0Map:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          Fill: =thmTransparente
+                                          FillPortions: =1
+                                          LayoutMinWidth: =0
+                                          OnSelect: |-
+                                            =If(
+                                                IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < 60 And _t.fim > 0).id),
+                                                Set(varPosSel, ThisItem);
+                                                Set(varNovoIni, 0);
+                                                Select(btnAbrirNovoMap),
+                                                Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < 60 And _t.fim > 0).id));
+                                                Select(btnAbrirEdicaoMap)
+                                            )
+                                          Text: =""
+                                          Tooltip: =Coalesce(LookUp(ThisItem.trechos As _t, _t.ini < 60 And _t.fim > 0).dica_txt, "")
+                                    - lblHora1Map:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          Fill: =thmTransparente
+                                          FillPortions: =1
+                                          LayoutMinWidth: =0
+                                          OnSelect: |-
+                                            =If(
+                                                IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < 120 And _t.fim > 60).id),
+                                                Set(varPosSel, ThisItem);
+                                                Set(varNovoIni, 60);
+                                                Select(btnAbrirNovoMap),
+                                                Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < 120 And _t.fim > 60).id));
+                                                Select(btnAbrirEdicaoMap)
+                                            )
+                                          Text: =""
+                                          Tooltip: =Coalesce(LookUp(ThisItem.trechos As _t, _t.ini < 120 And _t.fim > 60).dica_txt, "")
+                                    - lblHora2Map:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          Fill: =thmTransparente
+                                          FillPortions: =1
+                                          LayoutMinWidth: =0
+                                          OnSelect: |-
+                                            =If(
+                                                IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < 180 And _t.fim > 120).id),
+                                                Set(varPosSel, ThisItem);
+                                                Set(varNovoIni, 120);
+                                                Select(btnAbrirNovoMap),
+                                                Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < 180 And _t.fim > 120).id));
+                                                Select(btnAbrirEdicaoMap)
+                                            )
+                                          Text: =""
+                                          Tooltip: =Coalesce(LookUp(ThisItem.trechos As _t, _t.ini < 180 And _t.fim > 120).dica_txt, "")
+                                    - lblHora3Map:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          Fill: =thmTransparente
+                                          FillPortions: =1
+                                          LayoutMinWidth: =0
+                                          OnSelect: |-
+                                            =If(
+                                                IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < 240 And _t.fim > 180).id),
+                                                Set(varPosSel, ThisItem);
+                                                Set(varNovoIni, 180);
+                                                Select(btnAbrirNovoMap),
+                                                Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < 240 And _t.fim > 180).id));
+                                                Select(btnAbrirEdicaoMap)
+                                            )
+                                          Text: =""
+                                          Tooltip: =Coalesce(LookUp(ThisItem.trechos As _t, _t.ini < 240 And _t.fim > 180).dica_txt, "")
+                                    - lblHora4Map:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          Fill: =thmTransparente
+                                          FillPortions: =1
+                                          LayoutMinWidth: =0
+                                          OnSelect: |-
+                                            =If(
+                                                IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < 300 And _t.fim > 240).id),
+                                                Set(varPosSel, ThisItem);
+                                                Set(varNovoIni, 240);
+                                                Select(btnAbrirNovoMap),
+                                                Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < 300 And _t.fim > 240).id));
+                                                Select(btnAbrirEdicaoMap)
+                                            )
+                                          Text: =""
+                                          Tooltip: =Coalesce(LookUp(ThisItem.trechos As _t, _t.ini < 300 And _t.fim > 240).dica_txt, "")
+                                    - lblHora5Map:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          Fill: =thmTransparente
+                                          FillPortions: =1
+                                          LayoutMinWidth: =0
+                                          OnSelect: |-
+                                            =If(
+                                                IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < 360 And _t.fim > 300).id),
+                                                Set(varPosSel, ThisItem);
+                                                Set(varNovoIni, 300);
+                                                Select(btnAbrirNovoMap),
+                                                Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < 360 And _t.fim > 300).id));
+                                                Select(btnAbrirEdicaoMap)
+                                            )
+                                          Text: =""
+                                          Tooltip: =Coalesce(LookUp(ThisItem.trechos As _t, _t.ini < 360 And _t.fim > 300).dica_txt, "")
+                                    - lblHora6Map:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          Fill: =thmTransparente
+                                          FillPortions: =1
+                                          LayoutMinWidth: =0
+                                          OnSelect: |-
+                                            =If(
+                                                IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < 420 And _t.fim > 360).id),
+                                                Set(varPosSel, ThisItem);
+                                                Set(varNovoIni, 360);
+                                                Select(btnAbrirNovoMap),
+                                                Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < 420 And _t.fim > 360).id));
+                                                Select(btnAbrirEdicaoMap)
+                                            )
+                                          Text: =""
+                                          Tooltip: =Coalesce(LookUp(ThisItem.trechos As _t, _t.ini < 420 And _t.fim > 360).dica_txt, "")
+                                    - lblHora7Map:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          Fill: =thmTransparente
+                                          FillPortions: =1
+                                          LayoutMinWidth: =0
+                                          OnSelect: |-
+                                            =If(
+                                                IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < 480 And _t.fim > 420).id),
+                                                Set(varPosSel, ThisItem);
+                                                Set(varNovoIni, 420);
+                                                Select(btnAbrirNovoMap),
+                                                Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < 480 And _t.fim > 420).id));
+                                                Select(btnAbrirEdicaoMap)
+                                            )
+                                          Text: =""
+                                          Tooltip: =Coalesce(LookUp(ThisItem.trechos As _t, _t.ini < 480 And _t.fim > 420).dica_txt, "")
+                                    - lblHora8Map:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          Fill: =thmTransparente
+                                          FillPortions: =1
+                                          LayoutMinWidth: =0
+                                          OnSelect: |-
+                                            =If(
+                                                IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < 540 And _t.fim > 480).id),
+                                                Set(varPosSel, ThisItem);
+                                                Set(varNovoIni, 480);
+                                                Select(btnAbrirNovoMap),
+                                                Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < 540 And _t.fim > 480).id));
+                                                Select(btnAbrirEdicaoMap)
+                                            )
+                                          Text: =""
+                                          Tooltip: =Coalesce(LookUp(ThisItem.trechos As _t, _t.ini < 540 And _t.fim > 480).dica_txt, "")
+                                    - lblHora9Map:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          Fill: =thmTransparente
+                                          FillPortions: =1
+                                          LayoutMinWidth: =0
+                                          OnSelect: |-
+                                            =If(
+                                                IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < 600 And _t.fim > 540).id),
+                                                Set(varPosSel, ThisItem);
+                                                Set(varNovoIni, 540);
+                                                Select(btnAbrirNovoMap),
+                                                Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < 600 And _t.fim > 540).id));
+                                                Select(btnAbrirEdicaoMap)
+                                            )
+                                          Text: =""
+                                          Tooltip: =Coalesce(LookUp(ThisItem.trechos As _t, _t.ini < 600 And _t.fim > 540).dica_txt, "")
+                                    - lblHora10Map:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          Fill: =thmTransparente
+                                          FillPortions: =1
+                                          LayoutMinWidth: =0
+                                          OnSelect: |-
+                                            =If(
+                                                IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < 660 And _t.fim > 600).id),
+                                                Set(varPosSel, ThisItem);
+                                                Set(varNovoIni, 600);
+                                                Select(btnAbrirNovoMap),
+                                                Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < 660 And _t.fim > 600).id));
+                                                Select(btnAbrirEdicaoMap)
+                                            )
+                                          Text: =""
+                                          Tooltip: =Coalesce(LookUp(ThisItem.trechos As _t, _t.ini < 660 And _t.fim > 600).dica_txt, "")
+                                    - lblHora11Map:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          Fill: =thmTransparente
+                                          FillPortions: =1
+                                          LayoutMinWidth: =0
+                                          OnSelect: |-
+                                            =If(
+                                                IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < 720 And _t.fim > 660).id),
+                                                Set(varPosSel, ThisItem);
+                                                Set(varNovoIni, 660);
+                                                Select(btnAbrirNovoMap),
+                                                Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < 720 And _t.fim > 660).id));
+                                                Select(btnAbrirEdicaoMap)
+                                            )
+                                          Text: =""
+                                          Tooltip: =Coalesce(LookUp(ThisItem.trechos As _t, _t.ini < 720 And _t.fim > 660).dica_txt, "")
+                                    - lblHora12Map:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          Fill: =thmTransparente
+                                          FillPortions: =1
+                                          LayoutMinWidth: =0
+                                          OnSelect: |-
+                                            =If(
+                                                IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < 780 And _t.fim > 720).id),
+                                                Set(varPosSel, ThisItem);
+                                                Set(varNovoIni, 720);
+                                                Select(btnAbrirNovoMap),
+                                                Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < 780 And _t.fim > 720).id));
+                                                Select(btnAbrirEdicaoMap)
+                                            )
+                                          Text: =""
+                                          Tooltip: =Coalesce(LookUp(ThisItem.trechos As _t, _t.ini < 780 And _t.fim > 720).dica_txt, "")
+                                    - lblHora13Map:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          Fill: =thmTransparente
+                                          FillPortions: =1
+                                          LayoutMinWidth: =0
+                                          OnSelect: |-
+                                            =If(
+                                                IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < 840 And _t.fim > 780).id),
+                                                Set(varPosSel, ThisItem);
+                                                Set(varNovoIni, 780);
+                                                Select(btnAbrirNovoMap),
+                                                Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < 840 And _t.fim > 780).id));
+                                                Select(btnAbrirEdicaoMap)
+                                            )
+                                          Text: =""
+                                          Tooltip: =Coalesce(LookUp(ThisItem.trechos As _t, _t.ini < 840 And _t.fim > 780).dica_txt, "")
+                                    - lblHora14Map:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          Fill: =thmTransparente
+                                          FillPortions: =1
+                                          LayoutMinWidth: =0
+                                          OnSelect: |-
+                                            =If(
+                                                IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < 900 And _t.fim > 840).id),
+                                                Set(varPosSel, ThisItem);
+                                                Set(varNovoIni, 840);
+                                                Select(btnAbrirNovoMap),
+                                                Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < 900 And _t.fim > 840).id));
+                                                Select(btnAbrirEdicaoMap)
+                                            )
+                                          Text: =""
+                                          Tooltip: =Coalesce(LookUp(ThisItem.trechos As _t, _t.ini < 900 And _t.fim > 840).dica_txt, "")
+                                    - lblHora15Map:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          Fill: =thmTransparente
+                                          FillPortions: =1
+                                          LayoutMinWidth: =0
+                                          OnSelect: |-
+                                            =If(
+                                                IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < 960 And _t.fim > 900).id),
+                                                Set(varPosSel, ThisItem);
+                                                Set(varNovoIni, 900);
+                                                Select(btnAbrirNovoMap),
+                                                Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < 960 And _t.fim > 900).id));
+                                                Select(btnAbrirEdicaoMap)
+                                            )
+                                          Text: =""
+                                          Tooltip: =Coalesce(LookUp(ThisItem.trechos As _t, _t.ini < 960 And _t.fim > 900).dica_txt, "")
+                                    - lblHora16Map:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          Fill: =thmTransparente
+                                          FillPortions: =1
+                                          LayoutMinWidth: =0
+                                          OnSelect: |-
+                                            =If(
+                                                IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < 1020 And _t.fim > 960).id),
+                                                Set(varPosSel, ThisItem);
+                                                Set(varNovoIni, 960);
+                                                Select(btnAbrirNovoMap),
+                                                Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < 1020 And _t.fim > 960).id));
+                                                Select(btnAbrirEdicaoMap)
+                                            )
+                                          Text: =""
+                                          Tooltip: =Coalesce(LookUp(ThisItem.trechos As _t, _t.ini < 1020 And _t.fim > 960).dica_txt, "")
+                                    - lblHora17Map:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          Fill: =thmTransparente
+                                          FillPortions: =1
+                                          LayoutMinWidth: =0
+                                          OnSelect: |-
+                                            =If(
+                                                IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < 1080 And _t.fim > 1020).id),
+                                                Set(varPosSel, ThisItem);
+                                                Set(varNovoIni, 1020);
+                                                Select(btnAbrirNovoMap),
+                                                Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < 1080 And _t.fim > 1020).id));
+                                                Select(btnAbrirEdicaoMap)
+                                            )
+                                          Text: =""
+                                          Tooltip: =Coalesce(LookUp(ThisItem.trechos As _t, _t.ini < 1080 And _t.fim > 1020).dica_txt, "")
+                                    - lblHora18Map:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          Fill: =thmTransparente
+                                          FillPortions: =1
+                                          LayoutMinWidth: =0
+                                          OnSelect: |-
+                                            =If(
+                                                IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < 1140 And _t.fim > 1080).id),
+                                                Set(varPosSel, ThisItem);
+                                                Set(varNovoIni, 1080);
+                                                Select(btnAbrirNovoMap),
+                                                Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < 1140 And _t.fim > 1080).id));
+                                                Select(btnAbrirEdicaoMap)
+                                            )
+                                          Text: =""
+                                          Tooltip: =Coalesce(LookUp(ThisItem.trechos As _t, _t.ini < 1140 And _t.fim > 1080).dica_txt, "")
+                                    - lblHora19Map:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          Fill: =thmTransparente
+                                          FillPortions: =1
+                                          LayoutMinWidth: =0
+                                          OnSelect: |-
+                                            =If(
+                                                IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < 1200 And _t.fim > 1140).id),
+                                                Set(varPosSel, ThisItem);
+                                                Set(varNovoIni, 1140);
+                                                Select(btnAbrirNovoMap),
+                                                Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < 1200 And _t.fim > 1140).id));
+                                                Select(btnAbrirEdicaoMap)
+                                            )
+                                          Text: =""
+                                          Tooltip: =Coalesce(LookUp(ThisItem.trechos As _t, _t.ini < 1200 And _t.fim > 1140).dica_txt, "")
+                                    - lblHora20Map:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          Fill: =thmTransparente
+                                          FillPortions: =1
+                                          LayoutMinWidth: =0
+                                          OnSelect: |-
+                                            =If(
+                                                IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < 1260 And _t.fim > 1200).id),
+                                                Set(varPosSel, ThisItem);
+                                                Set(varNovoIni, 1200);
+                                                Select(btnAbrirNovoMap),
+                                                Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < 1260 And _t.fim > 1200).id));
+                                                Select(btnAbrirEdicaoMap)
+                                            )
+                                          Text: =""
+                                          Tooltip: =Coalesce(LookUp(ThisItem.trechos As _t, _t.ini < 1260 And _t.fim > 1200).dica_txt, "")
+                                    - lblHora21Map:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          Fill: =thmTransparente
+                                          FillPortions: =1
+                                          LayoutMinWidth: =0
+                                          OnSelect: |-
+                                            =If(
+                                                IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < 1320 And _t.fim > 1260).id),
+                                                Set(varPosSel, ThisItem);
+                                                Set(varNovoIni, 1260);
+                                                Select(btnAbrirNovoMap),
+                                                Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < 1320 And _t.fim > 1260).id));
+                                                Select(btnAbrirEdicaoMap)
+                                            )
+                                          Text: =""
+                                          Tooltip: =Coalesce(LookUp(ThisItem.trechos As _t, _t.ini < 1320 And _t.fim > 1260).dica_txt, "")
+                                    - lblHora22Map:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          Fill: =thmTransparente
+                                          FillPortions: =1
+                                          LayoutMinWidth: =0
+                                          OnSelect: |-
+                                            =If(
+                                                IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < 1380 And _t.fim > 1320).id),
+                                                Set(varPosSel, ThisItem);
+                                                Set(varNovoIni, 1320);
+                                                Select(btnAbrirNovoMap),
+                                                Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < 1380 And _t.fim > 1320).id));
+                                                Select(btnAbrirEdicaoMap)
+                                            )
+                                          Text: =""
+                                          Tooltip: =Coalesce(LookUp(ThisItem.trechos As _t, _t.ini < 1380 And _t.fim > 1320).dica_txt, "")
+                                    - lblHora23Map:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          Fill: =thmTransparente
+                                          FillPortions: =1
+                                          LayoutMinWidth: =0
+                                          OnSelect: |-
+                                            =If(
+                                                IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < 1440 And _t.fim > 1380).id),
+                                                Set(varPosSel, ThisItem);
+                                                Set(varNovoIni, 1380);
+                                                Select(btnAbrirNovoMap),
+                                                Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < 1440 And _t.fim > 1380).id));
+                                                Select(btnAbrirEdicaoMap)
+                                            )
+                                          Text: =""
+                                          Tooltip: =Coalesce(LookUp(ThisItem.trechos As _t, _t.ini < 1440 And _t.fim > 1380).dica_txt, "")
                   - htmLegendaMap:
                       Control: HtmlViewer@2.1.0
                       Properties:
@@ -764,7 +1415,9 @@ Screens:
                           "</td>" &
                           "<td style='padding:8px 26px 8px 0;font-size:9px;color:" & hxTextoFraco & ";white-space:nowrap;'>" &
                           "<span style='background:" & hxVermelho & ";color:" & hxTextoBarra & ";padding:0 4px;font-weight:700;'>P</span> voo pesquisado &nbsp;&middot;&nbsp; " &
-                          "<span style='background:" & hxTextoFraco & ";color:" & hxTextoBarra & ";padding:0 4px;font-weight:700;'>INTERDITADO</span> posição bloqueada</td>" &
+                          "<span style='background:" & hxInternacional & ";color:" & hxTexto & ";padding:0 4px;font-weight:700;'>I</span> voo internacional &nbsp;&middot;&nbsp; " &
+                          "<span style='background:" & hxTextoFraco & ";color:" & hxTextoBarra & ";padding:0 4px;font-weight:700;'>INTERDITADO</span> posição bloqueada &nbsp;&middot;&nbsp; " &
+                          "<span style='font-weight:700;color:" & hxTexto & ";'>&laquo;&nbsp;&raquo;</span> continua noutro dia</td>" &
                           "</tr></table>"
                         Size: =10
                   - tmrSyncMap:
@@ -782,7 +1435,7 @@ Screens:
                                           Sort(
                                               Filter(
                                                   tb_alocacoesMapa,
-                                                  aeroporto = varAero And data_operacao = varData And ativo = 1
+                                                  aeroporto = varAero And data_operacao <= varData And data_fim >= varData And ativo = 1
                                               ),
                                               Modificado,
                                               SortOrder.Descending
@@ -856,9 +1509,32 @@ Screens:
                   BorderStyle: =BorderStyle.None
                   Fill: =thmFundo
                   FillPortions: =0
-                  Height: =156
-                  Items: =Sort(Filter(colDia, id_posicao = varPosSel.id_posicao), ini, SortOrder.Ascending)
+                  Height: =138
+                  Items: |-
+                    =Sort(
+                        Filter(
+                            colDia,
+                            id_posicao = varPosSel.id_posicao Or
+                            !IsBlank(
+                                Find(
+                                    "," & varPosSel.posicao & ",",
+                                    "," &
+                                    Substitute(
+                                        Coalesce(
+                                            LookUp(colPosicoesAero As _q, _q.posicao = posicao_txt).ocupa,
+                                            ""
+                                        ),
+                                        " ",
+                                        ""
+                                    ) & ","
+                                )
+                            )
+                        ),
+                        ini,
+                        SortOrder.Ascending
+                    )
                   LayoutMinWidth: =0
+                  ShowScrollbar: =true
                   TemplatePadding: =0
                   TemplateSize: =46
                 Children:
@@ -874,25 +1550,7 @@ Screens:
                         Height: =44
                         OnSelect: |-
                           =Set(varAlocSel, ThisItem);
-                          Set(
-                              varForm,
-                              {
-                                  tipo: Coalesce(LookUp(colTiposReg As _t, _t.tipo = ThisItem.tipo).rotulo, "Voo"),
-                                  posicao: ThisItem.posicao_txt,
-                                  data: varData,
-                                  cia: If(IsBlank(ThisItem.cia), "—", ThisItem.cia),
-                                  voo_ida: ThisItem.voo_ida,
-                                  voo_volta: ThisItem.voo_volta,
-                                  prefixo: ThisItem.prefixo,
-                                  portao: If(IsBlank(ThisItem.portao), "—", ThisItem.portao),
-                                  ini: Text(Int(ThisItem.ini / 60), "00") & ":" & Text(Mod(ThisItem.ini, 60), "00"),
-                                  fim: Text(Int(ThisItem.fim / 60), "00") & ":" & Text(Mod(ThisItem.fim, 60), "00"),
-                                  env: If(Value(ThisItem.env) > 0, Text(ThisItem.env), ""),
-                                  obs: ThisItem.obs,
-                                  pesq: ThisItem.pesq = 1
-                              }
-                          );
-                          UpdateContext({locConfirmaExcluir: 0, locConfirmaConting: 0, locNonce: locNonce + 1})
+                          Select(btnAbrirEdicaoMap)
                         PaddingLeft: =10
                         PaddingRight: =10
                         Text: |-
@@ -900,10 +1558,12 @@ Screens:
                           If(!IsBlank(ThisItem.voo_volta), "/" & ThisItem.voo_volta, "") &
                           If(ThisItem.tipo <> "VOO", " · " & ThisItem.tipo, "") &
                           "   " &
-                          Text(Int(ThisItem.ini / 60), "00") & ":" & Text(Mod(ThisItem.ini, 60), "00") & "–" &
-                          Text(Int(ThisItem.fim / 60), "00") & ":" & Text(Mod(ThisItem.fim, 60), "00") &
+                          Text(Int(ThisItem.h_ini / 60), "00") & ":" & Text(Mod(ThisItem.h_ini, 60), "00") & "–" &
+                          Text(Int(ThisItem.h_fim / 60), "00") & ":" & Text(Mod(ThisItem.h_fim, 60), "00") &
+                          If(ThisItem.data_f <> ThisItem.data_ini, "   " & Text(ThisItem.data_ini, "dd/mm") & " → " & Text(ThisItem.data_f, "dd/mm"), "") &
                           If(!IsBlank(ThisItem.portao), "   PORTÃO " & ThisItem.portao, "") &
-                          If(ThisItem.pesq = 1, "   PESQUISADO", "")
+                          If(ThisItem.pesq = 1, "   PESQUISADO", "") &
+                          If(ThisItem.intl = 1, "   INTERNACIONAL", "")
                         Width: =Parent.Width - 18
             - cntFormMap:
                 Control: GroupContainer@1.5.0
@@ -958,22 +1618,89 @@ Screens:
                         DisplayMode: =If(varPodeEditar, DisplayMode.Edit, DisplayMode.View)
                         Height: =40
                         Items: =Filter(colPosicoesSel, locNonce >= 0)
-                  - lblDataFormMap:
-                      Control: Label@2.5.1
+                  - cntDatasMap:
+                      Control: GroupContainer@1.5.0
+                      Variant: AutoLayout
                       Properties:
-                        Color: =thmTextoFraco
-                        Font: =thmFonte
-                        FontWeight: =FontWeight.Bold
-                        Height: =18
-                        Size: =10
-                        Text: ="DATA DA OPERAÇÃO *"
-                  - dtpDataFormMap:
-                      Control: DatePicker@0.0.46
-                      Properties:
-                        AccessibleLabel: ="Data da operação deste registro"
-                        DisplayMode: =If(varPodeEditar, DisplayMode.Edit, DisplayMode.View)
-                        Format: =DateTimeFormat.ShortDate
-                        SelectedDate: =Coalesce(varForm.data, varData)
+                        DropShadow: =DropShadow.None
+                        Fill: =thmSuperficie
+                        FillPortions: =0
+                        Height: =62
+                        LayoutAlignItems: =LayoutAlignItems.Stretch
+                        LayoutDirection: =LayoutDirection.Horizontal
+                        LayoutGap: =10
+                        LayoutMinWidth: =0
+                        RadiusBottomLeft: =0
+                        RadiusBottomRight: =0
+                        RadiusTopLeft: =0
+                        RadiusTopRight: =0
+                      Children:
+                        - cntDataIniMap:
+                            Control: GroupContainer@1.5.0
+                            Variant: AutoLayout
+                            Properties:
+                              DropShadow: =DropShadow.None
+                              Fill: =thmSuperficie
+                              LayoutAlignItems: =LayoutAlignItems.Stretch
+                              LayoutDirection: =LayoutDirection.Vertical
+                              LayoutGap: =4
+                              LayoutMinHeight: =0
+                              LayoutMinWidth: =0
+                              RadiusBottomLeft: =0
+                              RadiusBottomRight: =0
+                              RadiusTopLeft: =0
+                              RadiusTopRight: =0
+                            Children:
+                              - lblDataFormMap:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    Color: =thmTextoFraco
+                                    Font: =thmFonte
+                                    FontWeight: =FontWeight.Bold
+                                    Height: =18
+                                    Size: =10
+                                    Text: ="DATA INICIAL *"
+                              - dtpDataFormMap:
+                                  Control: DatePicker@0.0.46
+                                  Properties:
+                                    AccessibleLabel: ="Data de entrada deste registro"
+                                    DisplayMode: =If(varPodeEditar, DisplayMode.Edit, DisplayMode.View)
+                                    Format: =DateTimeFormat.ShortDate
+                                    Height: =40
+                                    SelectedDate: =Coalesce(varForm.data, varData)
+                        - cntDataFimMap:
+                            Control: GroupContainer@1.5.0
+                            Variant: AutoLayout
+                            Properties:
+                              DropShadow: =DropShadow.None
+                              Fill: =thmSuperficie
+                              LayoutAlignItems: =LayoutAlignItems.Stretch
+                              LayoutDirection: =LayoutDirection.Vertical
+                              LayoutGap: =4
+                              LayoutMinHeight: =0
+                              LayoutMinWidth: =0
+                              RadiusBottomLeft: =0
+                              RadiusBottomRight: =0
+                              RadiusTopLeft: =0
+                              RadiusTopRight: =0
+                            Children:
+                              - lblDataFimMap:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    Color: =thmTextoFraco
+                                    Font: =thmFonte
+                                    FontWeight: =FontWeight.Bold
+                                    Height: =18
+                                    Size: =10
+                                    Text: ="DATA FINAL *"
+                              - dtpDataFimMap:
+                                  Control: DatePicker@0.0.46
+                                  Properties:
+                                    AccessibleLabel: ="Data de saída — igual à inicial quando entra e sai no mesmo dia"
+                                    DisplayMode: =If(varPodeEditar, DisplayMode.Edit, DisplayMode.View)
+                                    Format: =DateTimeFormat.ShortDate
+                                    Height: =40
+                                    SelectedDate: =Coalesce(varForm.dataf, varForm.data, varData)
                   - cntHorasMap:
                       Control: GroupContainer@1.5.0
                       Variant: AutoLayout
@@ -1022,7 +1749,7 @@ Screens:
                                     AccessibleLabel: ="Hora de chegada"
                                     DisplayMode: =If(varPodeEditar, DisplayMode.Edit, DisplayMode.View)
                                     Height: =40
-                                    Placeholder: ="09:00"
+                                    Placeholder: ="ex. 09:00"
                                     Value: =Coalesce(varForm.ini, "")
                         - cntFimMap:
                             Control: GroupContainer@1.5.0
@@ -1055,7 +1782,7 @@ Screens:
                                     AccessibleLabel: ="Hora de saída"
                                     DisplayMode: =If(varPodeEditar, DisplayMode.Edit, DisplayMode.View)
                                     Height: =40
-                                    Placeholder: ="09:40"
+                                    Placeholder: ="ex. 09:40"
                                     Value: =Coalesce(varForm.fim, "")
                   - lblCiaMap:
                       Control: Label@2.5.1
@@ -1121,7 +1848,7 @@ Screens:
                                     AccessibleLabel: ="Número do voo de chegada"
                                     DisplayMode: =If(varPodeEditar, DisplayMode.Edit, DisplayMode.View)
                                     Height: =40
-                                    Placeholder: ="1214"
+                                    Placeholder: ="ex. 1214"
                                     Value: =Coalesce(varForm.voo_ida, "")
                         - cntVooVoltaMap:
                             Control: GroupContainer@1.5.0
@@ -1154,7 +1881,7 @@ Screens:
                                     AccessibleLabel: ="Número do voo de saída"
                                     DisplayMode: =If(varPodeEditar, DisplayMode.Edit, DisplayMode.View)
                                     Height: =40
-                                    Placeholder: ="1217"
+                                    Placeholder: ="ex. 1217"
                                     Value: =Coalesce(varForm.voo_volta, "")
                   - lblPortaoMap:
                       Control: Label@2.5.1
@@ -1172,6 +1899,22 @@ Screens:
                         DisplayMode: =If(varPodeEditar, DisplayMode.Edit, DisplayMode.View)
                         Height: =40
                         Items: =Filter(colPortoesSel, locNonce >= 0)
+                  - lblEquipMap:
+                      Control: Label@2.5.1
+                      Properties:
+                        Color: =thmTextoFraco
+                        Font: =thmFonte
+                        FontWeight: =FontWeight.Bold
+                        Height: =18
+                        Size: =10
+                        Text: ="EQUIPAMENTO *"
+                  - drpEquipMap:
+                      Control: DropDown@0.0.45
+                      Properties:
+                        DefaultSelectedItems: =[Coalesce(varForm.equip, "—")]
+                        DisplayMode: =If(varPodeEditar, DisplayMode.Edit, DisplayMode.View)
+                        Height: =40
+                        Items: =Filter(colEquipSel, locNonce >= 0)
                   - cntExtraMap:
                       Control: GroupContainer@1.5.0
                       Variant: AutoLayout
@@ -1220,7 +1963,7 @@ Screens:
                                     AccessibleLabel: ="Prefixo da aeronave"
                                     DisplayMode: =If(varPodeEditar, DisplayMode.Edit, DisplayMode.View)
                                     Height: =40
-                                    Placeholder: ="PSESP"
+                                    Placeholder: ="ex. PSESP"
                                     Value: =Coalesce(varForm.prefixo, "")
                         - cntEnvMap:
                             Control: GroupContainer@1.5.0
@@ -1253,7 +1996,7 @@ Screens:
                                     AccessibleLabel: ="Envergadura em metros"
                                     DisplayMode: =If(varPodeEditar, DisplayMode.Edit, DisplayMode.View)
                                     Height: =40
-                                    Placeholder: ="35,79"
+                                    Placeholder: ="vazio usa a do equipamento"
                                     Value: =Coalesce(varForm.env, "")
                   - tglPesquisadoMap:
                       Control: Toggle@1.1.5
@@ -1265,6 +2008,17 @@ Screens:
                         FontColor: =thmTexto
                         Height: =44
                         Label: ="Voo pesquisado (pinta o bloco de vermelho)"
+                        LabelPosition: ='Toggle.LabelPosition'.Before
+                  - tglInternacionalMap:
+                      Control: Toggle@1.1.5
+                      Properties:
+                        AccessibleLabel: ="Voo internacional"
+                        BasePaletteColor: =thmAmbar
+                        Checked: =Coalesce(varForm.intl, false)
+                        DisplayMode: =If(varPodeEditar, DisplayMode.Edit, DisplayMode.View)
+                        FontColor: =thmTexto
+                        Height: =44
+                        Label: ="Voo internacional (selo I amarelo no bloco)"
                         LabelPosition: ='Toggle.LabelPosition'.Before
                   - lblObsMap:
                       Control: Label@2.5.1
@@ -1326,7 +2080,8 @@ Screens:
                                   {
                                       locOcupado: Now(),
                                       locSalvando: true,
-                                      locData: Coalesce(dtpDataFormMap.SelectedDate, varData),
+                                      locDataIni: Coalesce(dtpDataFormMap.SelectedDate, varData),
+                                      locDataFim: Coalesce(dtpDataFimMap.SelectedDate, dtpDataFormMap.SelectedDate, varData),
                                       locIdEdit: Coalesce(varAlocSel.id, 0),
                                       locRegistroBase: If(
                                           Coalesce(varAlocSel.id, 0) = 0,
@@ -1337,7 +2092,12 @@ Screens:
                                       locTipo: Coalesce(LookUp(colTiposReg As _t, _t.rotulo = drpTipoMap.Selected.Value).tipo, "VOO"),
                                       locCia: If(drpCiaMap.Selected.Value = "—", "", drpCiaMap.Selected.Value),
                                       locPortao: If(drpPortaoMap.Selected.Value = "—", "", drpPortaoMap.Selected.Value),
-                                      locEnv: If(IsNumeric(txtEnvergaduraMap.Value), Value(txtEnvergaduraMap.Value), 0),
+                                      locEquip: If(
+                                          drpEquipMap.Selected.Value = "—",
+                                          "",
+                                          Coalesce(LookUp(colEquip As _e, _e.nome_equip = drpEquipMap.Selected.Value).equip, "")
+                                      ),
+                                      locEnvDigitada: If(IsNumeric(txtEnvergaduraMap.Value), Value(txtEnvergaduraMap.Value), -1),
                                       locIni: If(
                                           IsMatch(txtIniMap.Value, "^(([01][0-9]|2[0-3]):[0-5][0-9]|24:00)$"),
                                           Value(Left(txtIniMap.Value, 2)) * 60 + Value(Right(txtIniMap.Value, 2)),
@@ -1352,51 +2112,180 @@ Screens:
                               );
                               UpdateContext(
                                   {
-                                      locConflito: If(
-                                          locData = varData,
-                                          LookUp(
-                                              colDia As _o,
-                                              _o.id_posicao = locPos.id And _o.id <> locIdEdit And _o.ini < locFim And _o.fim > locIni
-                                          )
+                                      locEnv: If(
+                                          locEnvDigitada >= 0,
+                                          locEnvDigitada,
+                                          Coalesce(LookUp(colEquip As _e, _e.equip = locEquip).envergadura_m, 0)
                                       ),
-                                      locConflitoPortao: If(
-                                          locData = varData,
-                                          LookUp(
-                                              colDia As _g,
-                                              locPortao <> "" And _g.portao = locPortao And _g.id <> locIdEdit And _g.ini < locFim And _g.fim > locIni
+                                      locDias: DateDiff(locDataIni, locDataFim, TimeUnit.Days),
+                                      locAbsIni: DateDiff(mapDataBase, locDataIni, TimeUnit.Days) * mapMinutosDia + locIni,
+                                      locAbsFim: DateDiff(mapDataBase, locDataFim, TimeUnit.Days) * mapMinutosDia + locFim
+                                  }
+                              );
+                              ClearCollect(
+                                  colValida,
+                                  ForAll(
+                                      Filter(
+                                          tb_alocacoesMapa,
+                                          aeroporto = varAero And data_operacao <= locDataFim And data_fim >= locDataIni And ativo = 1
+                                      ) As _v,
+                                      {
+                                          id: _v.ID,
+                                          id_posicao: _v.id_posicao,
+                                          posicao_txt: _v.posicao_txt,
+                                          portao: _v.portao,
+                                          cia: _v.cia_sigla,
+                                          prefixo: _v.prefixo,
+                                          voo_ida: _v.voo_chegada,
+                                          data_ini: _v.data_operacao,
+                                          data_f: _v.data_fim,
+                                          h_ini: _v.hora_inicio,
+                                          h_fim: _v.hora_fim,
+                                          abs_ini: DateDiff(mapDataBase, _v.data_operacao, TimeUnit.Days) * mapMinutosDia + _v.hora_inicio,
+                                          abs_fim: DateDiff(mapDataBase, _v.data_fim, TimeUnit.Days) * mapMinutosDia + _v.hora_fim,
+                                          equip: _v.equipamento
+                                      }
+                                  )
+                              );
+                              UpdateContext(
+                                  {
+                                      locBloqueio: "," & locPos.posicao & "," &
+                                          "," & Substitute(Coalesce(locPos.ocupa, ""), " ", "") & "," &
+                                          Concat(
+                                              Filter(
+                                                  colPosicoesAero As _q,
+                                                  !IsBlank(
+                                                      Find(
+                                                          "," & locPos.posicao & ",",
+                                                          "," & Substitute(Coalesce(_q.ocupa, ""), " ", "") & ","
+                                                      )
+                                                  )
+                                              ) As _q2,
+                                              _q2.posicao & ","
                                           )
+                                  }
+                              );
+                              UpdateContext(
+                                  {
+                                      locConflito: LookUp(
+                                          colValida As _o,
+                                          !IsBlank(Find("," & _o.posicao_txt & ",", locBloqueio)) And _o.id <> locIdEdit And
+                                          _o.abs_ini < locAbsFim And _o.abs_fim > locAbsIni
+                                      ),
+                                      locConflitoPortao: LookUp(
+                                          colValida As _g,
+                                          locPortao <> "" And _g.portao = locPortao And _g.id <> locIdEdit And _g.abs_ini < locAbsFim And _g.abs_fim > locAbsIni
+                                      ),
+                                      locVetoProprio: LookUp(
+                                          colRegras As _r,
+                                          locEquip <> "" And _r.posicao = locPos.posicao And IsBlank(_r.vizinha) And
+                                          !IsBlank(Find("," & locEquip & ",", "," & Substitute(_r.equip_a, " ", "") & ","))
                                       )
                                   }
                               );
+                              ClearCollect(
+                                  colVetoPar,
+                                  Filter(
+                                      ForAll(
+                                          Filter(colRegras, !IsBlank(vizinha)) As _r,
+                                          {
+                                              mensagem: _r.mensagem,
+                                              bate: If(
+                                                  locEquip <> "" And
+                                                  (
+                                                      (
+                                                          _r.posicao = locPos.posicao And
+                                                          !IsBlank(Find("," & locEquip & ",", "," & Substitute(_r.equip_a, " ", "") & ",")) And
+                                                          !IsBlank(
+                                                              LookUp(
+                                                                  colValida As _o,
+                                                                  _o.posicao_txt = _r.vizinha And _o.id <> locIdEdit And
+                                                                  _o.abs_ini < locAbsFim And _o.abs_fim > locAbsIni And
+                                                                  !IsBlank(Find("," & _o.equip & ",", "," & Substitute(_r.equip_b, " ", "") & ","))
+                                                              ).id
+                                                          )
+                                                      ) Or (
+                                                          _r.vizinha = locPos.posicao And
+                                                          !IsBlank(Find("," & locEquip & ",", "," & Substitute(_r.equip_b, " ", "") & ",")) And
+                                                          !IsBlank(
+                                                              LookUp(
+                                                                  colValida As _o,
+                                                                  _o.posicao_txt = _r.posicao And _o.id <> locIdEdit And
+                                                                  _o.abs_ini < locAbsFim And _o.abs_fim > locAbsIni And
+                                                                  !IsBlank(Find("," & _o.equip & ",", "," & Substitute(_r.equip_a, " ", "") & ","))
+                                                              ).id
+                                                          )
+                                                      )
+                                                  ),
+                                                  1,
+                                                  0
+                                              )
+                                          }
+                                      ),
+                                      bate = 1
+                                  )
+                              );
+                              UpdateContext({locVetoPar: First(colVetoPar)});
                               If(
                                   locIni < 0 Or locFim < 0,
                                   Notify("Horário inválido. Use HH:mm, entre 00:00 e 24:00.", NotificationType.Error, 5000);
                                   UpdateContext({locSalvando: false, locOcupado: Blank()}),
-                                  locFim <= locIni,
-                                  Notify("A saída tem que ser depois da chegada. Voo que vira o dia é lançado em dois registros, um até 24:00 e outro no dia seguinte.", NotificationType.Error, 7000);
+                                  locIni >= mapMinutosDia,
+                                  Notify("A chegada tem que ser entre 00:00 e 23:59. Para uma ocupação que começa à meia-noite, use 00:00 no dia seguinte.", NotificationType.Error, 7000);
+                                  UpdateContext({locSalvando: false, locOcupado: Blank()}),
+                                  locDias < 0,
+                                  Notify("A DATA FINAL não pode ser anterior à DATA INICIAL.", NotificationType.Error, 5000);
+                                  UpdateContext({locSalvando: false, locOcupado: Blank()}),
+                                  locDias > mapDiasMax,
+                                  Notify(
+                                      "Período de " & Text(locDias) & " dias acima do limite de " & Text(mapDiasMax) &
+                                      " dias. Confira a DATA FINAL.",
+                                      NotificationType.Error,
+                                      7000
+                                  );
+                                  UpdateContext({locSalvando: false, locOcupado: Blank()}),
+                                  locAbsFim <= locAbsIni,
+                                  Notify("A saída tem que ser depois da chegada. Se a ocupação vira o dia, coloque a DATA FINAL no dia da saída.", NotificationType.Error, 7000);
                                   UpdateContext({locSalvando: false, locOcupado: Blank()}),
                                   IsBlank(locPos.id),
                                   Notify("Escolha a posição.", NotificationType.Error, 5000);
+                                  UpdateContext({locSalvando: false, locOcupado: Blank()}),
+                                  locTipo = "VOO" And locEquip = "",
+                                  Notify("Escolha o equipamento do voo.", NotificationType.Error, 5000);
+                                  UpdateContext({locSalvando: false, locOcupado: Blank()}),
+                                  !IsBlank(locVetoProprio.mensagem),
+                                  Notify(locVetoProprio.mensagem, NotificationType.Error, 8000);
+                                  UpdateContext({locSalvando: false, locOcupado: Blank()}),
+                                  !IsBlank(locVetoPar.mensagem),
+                                  Notify(locVetoPar.mensagem, NotificationType.Error, 8000);
                                   UpdateContext({locSalvando: false, locOcupado: Blank()}),
                                   locIdEdit <> 0 And IsBlank(locRegistroBase),
                                   Notify("Este registro não existe mais na lista — provavelmente foi excluído ou alterado por outra pessoa. Toque em ATUALIZAR e tente de novo.", NotificationType.Error, 8000);
                                   UpdateContext({locSalvando: false, locOcupado: Blank()}),
                                   !IsBlank(locConflito.id),
                                   Notify(
-                                      "Posição " & locPos.posicao & " já ocupada das " &
-                                      Text(Int(locConflito.ini / 60), "00") & ":" & Text(Mod(locConflito.ini, 60), "00") & " às " &
-                                      Text(Int(locConflito.fim / 60), "00") & ":" & Text(Mod(locConflito.fim, 60), "00") & " por " &
+                                      "Posição " & locConflito.posicao_txt & " já ocupada de " &
+                                      Text(locConflito.data_ini, "dd/mm") & " " &
+                                      Text(Int(locConflito.h_ini / 60), "00") & ":" & Text(Mod(locConflito.h_ini, 60), "00") & " até " &
+                                      Text(locConflito.data_f, "dd/mm") & " " &
+                                      Text(Int(locConflito.h_fim / 60), "00") & ":" & Text(Mod(locConflito.h_fim, 60), "00") & " por " &
                                       Trim(Coalesce(locConflito.cia, "") & " " & Coalesce(locConflito.prefixo, "") & " " & Coalesce(locConflito.voo_ida, "")) &
-                                      ". Mude o horário ou a posição.",
+                                      If(
+                                          locConflito.posicao_txt = locPos.posicao,
+                                          ". Mude o horário ou a posição.",
+                                          " — e ela ocupa o mesmo espaço físico de " & locPos.posicao & "."
+                                      ),
                                       NotificationType.Error,
                                       8000
                                   );
                                   UpdateContext({locSalvando: false, locOcupado: Blank()}),
                                   !IsBlank(locConflitoPortao.id),
                                   Notify(
-                                      "Portão " & locPortao & " já está em uso das " &
-                                      Text(Int(locConflitoPortao.ini / 60), "00") & ":" & Text(Mod(locConflitoPortao.ini, 60), "00") & " às " &
-                                      Text(Int(locConflitoPortao.fim / 60), "00") & ":" & Text(Mod(locConflitoPortao.fim, 60), "00") &
+                                      "Portão " & locPortao & " já está em uso de " &
+                                      Text(locConflitoPortao.data_ini, "dd/mm") & " " &
+                                      Text(Int(locConflitoPortao.h_ini / 60), "00") & ":" & Text(Mod(locConflitoPortao.h_ini, 60), "00") & " até " &
+                                      Text(locConflitoPortao.data_f, "dd/mm") & " " &
+                                      Text(Int(locConflitoPortao.h_fim / 60), "00") & ":" & Text(Mod(locConflitoPortao.h_fim, 60), "00") &
                                       " na posição " & locConflitoPortao.posicao_txt & ".",
                                       NotificationType.Error,
                                       8000
@@ -1429,7 +2318,8 @@ Screens:
                                                   ),
                                                   {
                                                       aeroporto: varAero,
-                                                      data_operacao: locData,
+                                                      data_operacao: locDataIni,
+                                                      data_fim: locDataFim,
                                                       id_posicao: locPos.id,
                                                       posicao_txt: locPos.posicao,
                                                       patio_txt: locPos.patio,
@@ -1442,6 +2332,8 @@ Screens:
                                                       portao: locPortao,
                                                       tipo_registro: locTipo,
                                                       pesquisado: If(tglPesquisadoMap.Checked, 1, 0),
+                                                      internacional: If(tglInternacionalMap.Checked, 1, 0),
+                                                      equipamento: locEquip,
                                                       envergadura_m: locEnv,
                                                       observacao: txtObsMap.Value,
                                                       ativo: 1
@@ -1457,14 +2349,17 @@ Screens:
                                       UpdateContext({locConfirmaConting: 0, locConfirmaExcluir: 0});
                                       Select(btnAtualizarMap);
                                       Set(varAlocSel, Blank());
+                                      Set(varPainelAberto, false);
                                       Notify(
                                           If(
-                                              locData = varData,
+                                              locDataIni <= varData And locDataFim >= varData,
                                               "Alocação gravada.",
-                                              "Alocação gravada em " & Text(locData, "dd/mm/yyyy") & ". Como é outro dia, confira conflitos de posição e portão manualmente nessa data."
+                                              "Alocação gravada em " & Text(locDataIni, "dd/mm/yyyy") &
+                                              If(locDias > 0, " a " & Text(locDataFim, "dd/mm/yyyy"), "") &
+                                              ", fora da data aberta na grade."
                                           ),
                                           NotificationType.Success,
-                                          If(locData = varData, 2500, 7000)
+                                          If(locDataIni <= varData And locDataFim >= varData, 2500, 6000)
                                       )
                                   )
                               )
@@ -1493,7 +2388,7 @@ Screens:
                               Notify("Selecione um registro da lista acima para excluir.", NotificationType.Warning, 4000),
                               locConfirmaExcluir <> varAlocSel.id,
                               UpdateContext({locConfirmaExcluir: varAlocSel.id});
-                              Notify("Toque em EXCLUIR de novo para confirmar a remoção.", NotificationType.Warning, 5000),
+                              Notify("Toque em CONFIRMAR para remover este registro do mapa.", NotificationType.Warning, 5000),
                               UpdateContext(
                                   {
                                       locErro: IsError(

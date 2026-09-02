@@ -1504,3 +1504,317 @@ Duas regras que valem para qualquer grade montada em HTML no Power Apps:
    arredondamentos empatam. O teste tem que varrer zoom e DPI — e a medição é em
    pixel renderizado (screenshot + varredura de coluna), não em `getBoundingClientRect`,
    que devolve a caixa de layout e não onde a tinta caiu.
+
+## Texto do usuário dentro de atributo HTML: uma aspa desmonta a linha inteira (2026-09-01)
+
+Mapa de Alocação, `scrMapaPatio`. A grade é montada como string HTML e jogada
+num `HtmlViewer`. Até aqui, tudo que entrava na string vinha de enumeração:
+sigla de companhia escolhida em dropdown, número de portão, número de voo. Ao
+acrescentar a dica de mouse (`title='…'`), entrou pela primeira vez **campo
+de texto livre** — `observacao` e `prefixo`, digitados pelo operador.
+
+O atributo é delimitado por aspa simples (é a convenção do arquivo, porque a
+aspa dupla é o delimitador de string do Power Fx). Uma observação como
+`manutenção d'asa` fecha o atributo no meio, e o resto do texto vira atributo
+solto: o navegador descarta a célula, o `table-layout:fixed` redistribui a
+linha e **a linha inteira da grade sai errada**. Sem erro no Studio, sem erro
+no console — só o desenho errado, e só para o registro que tem a aspa.
+
+**A correção é escapar, e a ordem do escape é parte da correção:**
+
+```
+&  ->  &amp;     PRIMEIRO, sempre
+<  ->  &lt;
+>  ->  &gt;
+'  ->  &#39;
+Char(10) -> &#10;   POR ÚLTIMO, sempre
+```
+
+Escapar `&` depois de `<` transforma o `&lt;` recém-criado em `&amp;lt;` e o
+usuário lê `&lt;` na tela. Converter `Char(10)` antes de escapar `&`
+transforma o `&#10;` em `&amp;#10;` e a quebra de linha vira texto. As duas
+inversões produzem lixo visível, não erro — que é o que faz elas passarem em
+revisão.
+
+**Onde escapar:** na projeção da coleção, não na montagem do HTML. Uma vez por
+registro no carregamento em vez de uma vez por render, e um ponto só para
+auditar em vez de um por campo.
+
+**Validação preventiva:** teste dirigido com `'`, `&`, `<` e quebra de linha na
+observação, conferindo que a linha continua inteira. Vale para qualquer tela do
+workspace que monte HTML com campo de texto livre — hoje `DueDiligence` e
+`Mapa de Alocação`.
+
+## Coluna obrigatória nova num filtro de faixa: o registro some sem erro (2026-09-01)
+
+Mapa de Alocação. A grade passou a aceitar registro que cruza dias, e o filtro
+do dia mudou de
+
+```
+data_operacao = varData
+```
+
+para
+
+```
+data_operacao <= varData And data_fim >= varData
+```
+
+`data_fim` é coluna nova. Numa lista que já tem dados, ela nasce **nula** em
+todos os registros existentes — e `NULL >= data` não casa. Resultado: a grade
+abre **vazia**, com zero registro, sem nenhum erro na tela, no Studio ou no
+Monitor. É o mesmo mecanismo do Sim/Não que já está registrado neste documento
+(`NULL` não casa com `eq false`), só que agora numa coluna de data e num filtro
+de faixa.
+
+**A ordem de implantação é a correção:**
+
+1. Criar a coluna **opcional**.
+2. Preencher em 100% dos itens — inclusive os inativos, que o expurgo lê.
+3. Conferir zero itens em branco.
+4. **Só então** marcar obrigatória, indexar e publicar a tela que usa o filtro novo.
+
+Publicar a tela antes do passo 3 é apagar a grade de todo mundo até alguém
+perceber.
+
+**Dois efeitos colaterais na mesma mudança, ambos silenciosos:**
+
+- **A validação de lista do SharePoint rejeitava todo pernoite.** Era
+  `=[hora_fim]>[hora_inicio]`. Um voo que chega 22:00 e sai 06:10 do dia
+  seguinte grava `1320` e `370` — fim menor que início. A gravação é barrada
+  pelo SharePoint, e o app só consegue reportar "não foi possível gravar",
+  porque `IsError(Patch(...))` não devolve a mensagem da validação de coluna.
+  Correção: `=OU([data_fim]>[data_operacao];[hora_fim]>[hora_inicio])`.
+- **O expurgo agendado apagaria interdição em vigor.** O fluxo filtrava por
+  `data_operacao lt hoje-30`. Uma interdição lançada há 40 dias que termina
+  amanhã casa com esse filtro. O fluxo roda verde, e o bloco some da grade.
+  Correção: filtrar por `data_fim`.
+
+**A regra geral:** quando uma coluna passa a participar do filtro que decide o
+que aparece na tela, ela vira dependência de **tudo** que lê ou apaga a lista —
+validação de coluna, validação de lista, views, fluxo agendado. Trocar o filtro
+sem varrer esses quatro é deixar bug silencioso plantado.
+
+## Coleção recortada para exibição não pode alimentar o formulário (2026-09-01)
+
+Ainda no Mapa de Alocação. `colDia` passou a trazer duas versões do horário: a
+**real** (`h_ini`/`h_fim`, com as datas) e a **recortada ao dia desenhado**
+(`ini`/`fim`, que é `0` quando o registro começou ontem e `1440` quando termina
+amanhã). A recortada existe porque a grade é uma régua de 24 h e o bloco tem
+que caber nela.
+
+O painel de edição lia `ThisItem.ini`/`ThisItem.fim` — que antes eram a mesma
+coisa que o valor real. Depois do recorte, abrir um pernoite **pelo dia**
+**seguinte** carregaria `00:00` no formulário, e salvar gravaria `00:00`:
+**a edição destrói o registro**, e o operador não tem como perceber, porque
+`00:00` é exatamente o que o bloco daquele dia mostra.
+
+**A regra:** valor derivado para desenho e valor de origem para edição são
+colunas diferentes, com nomes diferentes, na mesma coleção. Quando uma coleção
+ganha uma projeção "para exibir", varrer **todo** consumidor dela e decidir, um
+por um, qual das duas ele quer — o compilador não ajuda, porque os dois campos
+existem e os dois são números.
+
+## "Esperando: Number, Date, Time, DateTime" não é só do `Text()` — comparação também (2026-09-02)
+
+Mapa de Alocação. A tela nova não compilava: *"Tipo de argumento inválido.
+Esperando um dos seguintes: Number, Date, Time, DateTime, Dynamic"*, dentro do
+`ClearCollect(colDia; ...)` do `btnAtualizarMap.OnSelect` — uma expressão de
+~60 linhas com `Text()`, `DateDiff()`, `Int()`, `Mod()`, `Hour()` e comparações.
+
+Eu deduzi que aquela lista de tipos era a assinatura do `Text(valor; formato)` e
+apontei para o `Text(_r.data_fim; "dd/mm/yyyy")`, por ser o token novo da entrega.
+**Estava errado.** O culpado era
+
+```
+If(_r.envergadura_m > 0; ...)
+```
+
+e a correção foi `If(Value(Text(_r.envergadura_m)) > 0; ...)`.
+
+**A lição de diagnóstico:** essa mesma lista de tipos é emitida por *dois*
+lugares diferentes — o primeiro argumento do `Text(valor; formato)` **e os
+operadores de comparação** (`>` `<` `>=` `<=`). Deduzir a função a partir da
+lista de tipos estreita menos do que parece: num bloco grande, todo `>` contra
+literal numérico é suspeito no mesmo nível que todo `Text()`.
+
+**A lição de código:** `envergadura_m` é `Number` no esquema do SharePoint
+(`Decimals=2`, `Required=FALSE`), e ainda assim a comparação direta não passou.
+A própria tela já tinha o precedente três telas abaixo — `If(Value(ThisItem.env) > 0; ...)`
+no painel de edição — escrito na mesma entrega, por ter batido no mesmo
+problema. **Precedente de coerção dentro do próprio arquivo é sinal, não
+coincidência:** quando uma coluna já aparece envolvida em `Value()` num ponto,
+todo novo consumidor dela precisa da mesma coerção, e vale varrer o arquivo
+por outros usos crus da mesma coluna antes de colar no Studio.
+
+## O `HtmlViewer` preserva o atributo `title`: dica de mouse é viável (2026-09-02)
+
+Confirmado no app, no Mapa de Alocação: o sanitizador do `HtmlViewer` **não**
+remove o atributo `title` do `<td>`, e o navegador desenha o balão normalmente.
+Até 01/09/2026 não havia precedente disso em nenhum módulo do repositório, e a
+funcionalidade inteira dependia de uma premissa que só o Studio responderia.
+
+**Por que isso destrava mais do que uma tela:** o `HtmlViewer` não devolve evento
+por elemento — nem clique nem `hover` —, então o Power Fx nunca sabe sobre qual
+pedaço do HTML está o ponteiro. Balão em CSS (`:hover` + filho absoluto) também
+não resolve quando o controle é baixo, porque o balão é **recortado na borda do
+controle**. O `title` nativo é desenhado pelo navegador **fora** da caixa da
+página e escapa do recorte. É a única forma de detalhar um elemento de HTML
+gerado sem abrir painel — vale para qualquer grade, timeline ou cartão montado
+em `HtmlViewer`, não só para este módulo.
+
+**O preço:** todo campo livre do usuário passa a viver dentro de um atributo
+HTML, e uma aspa simples fecha o atributo e desmonta a linha inteira. A ordem de
+escape (`&` primeiro, depois `<`, `>`, `'`, e `Char(10)` → `&#10;` por último) é
+obrigatória — ver a lição de 01/09/2026 sobre texto do usuário dentro de atributo
+HTML.
+
+## `X` de filho de galeria não sobrevive à colagem da tela (2026-09-02)
+
+Mapa de Alocação, camada de clique sobre a grade. Colei 33 rótulos transparentes por linha da
+galeria, cada um com `X` e `Width` calculados, para virar caixa de clique de cada bloco e de cada
+hora. Nada funcionava: o clique caía sempre no mesmo rótulo.
+
+No Studio, com o controle selecionado, o `Width` estava com a fórmula que eu tinha escrito e o **`X`
+estava com o literal `1`**. Mesma colagem, mesmas referências (`galPosicoesMap.Width`,
+`mapLarguraRotulo`), mesmo controle: um sobreviveu, o outro foi descartado. Com todos os `X` valendo
+`1`, os 33 rótulos empilharam no canto esquerdo da linha.
+
+Digitando a **mesma** fórmula à mão na barra de fórmulas, ela é aceita, persiste e o controle vai
+para o lugar certo. Ou seja: não é fórmula inválida, não é referência circular, não é a largura do
+pai vista de dentro do template. **É a colagem que descarta o `X` dos filhos do template da galeria.**
+
+**Como aplicar:** dentro de template de galeria, não entregar posição por `X` num arquivo colado —
+vale para qualquer camada, sobreposição ou timeline. Usar container **AutoLayout** e deixar a posição
+sair de `FillPortions`, que é da mesma família do `Width` e sobrevive. Custa precisão (a célula passa
+a ser de largura fixa em vez de recorte ao minuto), e essa troca tem que ser assumida no desenho da
+interação, não descoberta depois.
+
+**O que mais custou aqui foi diagnosticar, não consertar.** Três hipóteses erradas antes desta —
+ordem dos filhos na árvore, rótulo transparente não receber clique, e `UpdateContext` não propagar
+antes do `Select()` — todas plausíveis e todas com o mesmo sintoma. O que resolveu foi parar de
+remendar e pedir **duas leituras diretas no Studio**: onde a seleção do controle cai na tela, e o que
+a barra de fórmulas mostra para aquela propriedade. Num controle colado à mão, o que o Studio tem
+pode não ser o que o arquivo diz — e é o Studio que manda.
+
+## O aeroporto se identifica pelo nome, não pelo ICAO (2026-09-02)
+
+**Regra do repositório, para todo módulo novo:** a chave do aeroporto gravada em lista e carregada
+em variável é o **nome** — `NAVEGANTES` —, não o código ICAO — `SBNF`. ICAO e IATA continuam
+existindo como referência na tabela de aeroportos, mas não são chave de nada.
+
+> **Não sair convertendo módulo antigo por causa desta regra.** `Frotas`, `Gestão de Chamados` e
+> `SAFETY` gravam ICAO e **continuam assim** — decisão do Douglas em 02/09/2026. Cada um tem acervo
+> próprio, e a conversão exige migrar o dado antes de colar o app: feita de enfiada, derruba três
+> aplicações de uma vez. A regra vale para módulo novo e para quem for migrado sob pedido, um a um.
+> No Mapa de Alocação ela já está aplicada.
+
+**Por quê.** O nome é o que o usuário escolhe no seletor e o que toda tela já exibia. Usar ICAO por
+baixo criava uma camada de tradução em duas direções — nome → ICAO ao entrar, ICAO → nome ao
+exibir — que existia só para ser mantida, e que obrigava a carregar **duas** variáveis (`varAero` e
+`varAeroNome`) para o mesmo conceito. Some a tradução, some a chance de as duas divergirem.
+
+É também a mesma razão que já tinha feito `posicao_txt` e `patio_txt` serem texto redundante em
+`tb_alocacoesMapa`: **a lista tem que ser legível sem o app**. Com ICAO gravado, toda exportação,
+view do SharePoint e relatório de Power BI precisava do dicionário para dizer de que aeroporto é a
+linha.
+
+**A armadilha ao migrar, e ela é silenciosa.** Trocar a chave sem converter o acervo faz **todo
+registro antigo sumir da tela sem erro nenhum** — o filtro `aeroporto = varAero` simplesmente não
+casa mais. É a mesma classe de falha da coluna obrigatória nova num filtro de faixa. A ordem é:
+converter o dado primeiro, **conferir zero linhas com o valor antigo**, e só então colar o app.
+
+**Confira o tamanho da coluna antes.** `aeroporto` era `Text` com `MaxLength=10`: `NAVEGANTES` tem
+exatamente 10 caracteres e passaria raspando, mas `FLORIANOPOLIS` não entraria. Trocar de código de
+4 letras para nome livre é mudança de domínio, não só de conteúdo — a coluna foi para 60.
+
+## Carga de dados antes da inicialização de estado derruba a tela inteira (2026-09-02)
+
+Mapa de Alocação. A grade abriu **vazia**, sem erro nenhum no Studio, com o cabeçalho dizendo
+"4 registro(s)". As coleções contavam a história: `colDia` 4 linhas, `colGrade` **25 linhas** — e a
+galeria mostrando zero.
+
+O `OnVisible` tinha ficado assim, com a carga dos catálogos novos colocada logo no começo:
+
+```
+Set(varMapaVisivel; true);
+ClearCollect(colEquip; ...);        // <- falhou aqui
+ClearCollect(colEquipSel; ...);
+UpdateContext({ locPatio: "TODOS"; ... });   // <- nunca rodou
+Select(btnAtualizarMap)
+```
+
+**Quando uma instrução da cadeia falha, o que vem depois não roda.** `locPatio` ficou em branco, e
+`Filter(colGrade; locPatio = "TODOS" Or patio = locPatio)` não casa com nada quando `locPatio` é
+branco — 25 linhas na coleção, nenhuma na tela. O `colDia`/`colGrade` populados vieram de o operador
+ter clicado em ATUALIZAR, que é caminho separado. Nada disso aparece como erro: o Studio não acusa
+falha de execução, só de compilação.
+
+**A regra:** no `OnVisible`, **estado primeiro, carga de dados depois**. Variável que a tela usa para
+filtrar, mostrar ou habilitar precisa nascer antes de qualquer coisa que possa falhar — conector,
+coleção derivada, o que for. Inverter a ordem transforma qualquer falha de carga em tela vazia sem
+explicação, que é o pior modo de falhar: parece que não há dado.
+
+**O diagnóstico veio de contar linhas, não de ler fórmula.** `colEquipSel` estava com **0 linhas**
+e por construção nunca pode ter menos de 1 — ele começa com o item `"—"`. Coleção com contagem
+impossível é a evidência mais barata que existe: aponta a instrução exata que morreu, sem depender
+de reproduzir o erro. Vale abrir **Configurações → Coleções** antes de reler qualquer expressão.
+
+**De quebra, o padrão que falhou tinha um índice inútil.** `ForAll(Sequence(CountRows(col) + 1) As _i;
+{ Value: If(_i.Value = 1; "—"; Index(col; _i.Value - 1).campo) })` existe para pôr um "—" na frente
+de uma lista. Em named formula com tabela fixa ele funciona; em coleção que pode vir vazia, não vale
+o risco. `ClearCollect(colSel; Table({ Value: "—" })); Collect(colSel; ForAll(col As _e; ...))` faz o
+mesmo sem `Sequence` e sem `Index`.
+
+## Um precedente só não é garantia: o corolário do dicionário (2026-09-02)
+
+A regra do dicionário de propriedades dizia *ausência não é permissão*. Faltava o outro lado:
+**presença em um único export não é garantia**.
+
+Caso: a tela de restrições precisava escolher vários equipamentos de uma vez. `ComboBox@0.0.51` não
+tem `SelectMultiple` em lugar nenhum do repositório, mas `Classic/ComboBox@2.4.0` tem — em **um**
+controle, o `cmbWizAeros` do Service Desk. Copiei o padrão. O controle abriu com as 25 linhas (dava
+para ver a barra de rolagem e a linha destacada) e **nenhum texto**: o `DisplayFields` não renderizou.
+
+Gastei três colagens do Douglas nisso:
+
+1. `DisplayFields: =["nome_equip"]` com coleção vinda do SharePoint — nada.
+2. Alinhado ao precedente: coleção local com coluna `Value`, `DisplayFields: =["Value"]`, `Items` sem
+   `Filter` por cima — nada.
+3. Troquei de abordagem: `DropDown` + botão adicionar + galeria dos escolhidos, tudo com controle de
+   uso corriqueiro. Funcionou.
+
+**O erro foi insistir na segunda.** Quando a cópia fiel de um precedente único não funciona, a
+hipótese mais provável deixa de ser *eu copiei errado* e passa a ser *aquele precedente depende de
+algo que não está no YAML* — versão do controle no ambiente, ordem de propriedades no export
+original, ou simplesmente sorte. Insistir é apostar contra a evidência.
+
+**Como aplicar:** ao montar o dicionário, contar **em quantos arquivos distintos** cada propriedade
+aparece, não só se aparece. Propriedade com contagem 1 é sinal amarelo: ou se escolhe outro caminho
+desde o começo, ou se tem o plano B pronto **antes** da primeira colagem. Se o controle está no
+caminho crítico da tela — como estava aqui, sem ele não dá para cadastrar regra — vale ir direto no
+caminho corriqueiro, mesmo que a interface fique com mais cliques.
+
+É a mesma família da lição do `X` em filho de galeria: as duas são sobre confiar demais num export
+isolado. A diferença é que lá o Studio descartava a propriedade em silêncio, e aqui ele a aceitou e
+não a honrou — que é pior, porque não há nada para inspecionar.
+
+## Carga em massa não pode depender de default de coluna (2026-09-02)
+
+Gerei um CSV de 698 registros para colar na exibição em grade da lista e **omiti a coluna `ativo`**,
+confiando no `<Default>1</Default>` que está no `schemaXml` do repositório. As linhas entraram com
+**`ativo = 0`** e **sumiram do app sem erro nenhum** — o filtro do dia exige `ativo = 1`.
+
+A causa raiz não é o CSV: é que **o JSON do repositório descreve a lista que documentamos, não a que
+existe no tenant.** A `tb_alocacoesMapa` foi criada antes desse arquivo, com `Default 0`. Os dois
+divergiram e ninguém tinha por que notar, porque o app sempre gravou `ativo` explicitamente.
+
+**A regra:** em carga em massa — colagem em grade, fluxo, script — **escreva todo campo que o filtro
+da tela lê**, mesmo os que têm default. O que vale é a coluna que existe, não a documentada. Custa uma
+coluna a mais no arquivo e elimina uma classe inteira de falha silenciosa.
+
+**E o sintoma vale registrar:** flag errada não dá erro, só torna o registro invisível. É a mesma
+família do `data_fim` em branco e do `aeroporto` gravado com ICAO depois da troca para nome — três
+vezes na mesma entrega, sempre igual: **o dado entra, o filtro não casa, e a tela abre vazia como se
+não houvesse nada para mostrar.** Quando algo não aparece e não há erro, o primeiro lugar a olhar é
+cada termo do filtro contra o valor real gravado, um por um.

@@ -88,7 +88,7 @@ republicar, cada uma vira lista trocando **só a definição em `App.Formulas`**
 
 | Coleção | Origem | Recalculada quando | Tamanho |
 |---|---|---|---|
-| `colDia` | Uma consulta delegável a `tb_alocacoesMapa` | Carregar o dia · salvar · excluir · ATUALIZAR | ~40 |
+| `colDia` | Uma consulta delegável a `tb_alocacoesMapa` — `data_operacao <= dia And data_fim >= dia` | Carregar o dia · salvar · excluir · ATUALIZAR | ~40 |
 | `colGrade` | `colPosicoes` × `colDia`, em memória | Sempre que `colDia` muda | 25 (uma por posição) |
 
 `colDia` é projetada com `ForAll(… As _r, {…})` — não `ShowColumns("…")`, que é erro de parsing e derruba a
@@ -194,6 +194,107 @@ separados, e é isso que torna a solução simples:
   junto confundiria as duas informações (decisão da operação, 31/08/2026). Quando `pesquisado = 1`, o `background`
   vira `hxVermelho` com selo `P`; quando o tipo não é `VOO`, vira cinza `hxTextoFraco` + `INTERDITADO`. **Nenhuma
   cor literal entra no `.pa.yaml`** (regra 16).
+- **`varForm` é montado em um lugar só, por dois botões-função.** `btnAbrirEdicaoMap` traduz `varAlocSel`
+  em formulário; `btnAbrirNovoMap` monta o formulário em branco com a posição e, se houver, o `HH:00` que
+  veio de `varNovoIni`. Os quatro pontos de entrada (bloco na grade, hora livre na grade, NOVO REGISTRO,
+  item da lista do painel) só preparam a variável e chamam `Select`. Antes disso, o clique na linha abria o
+  painel **sem tocar em `varForm`** e o formulário mostrava o que tivesse sobrado da edição anterior.
+  `varNovoIni` é **global de propósito**, e não variável de contexto: numa mesma fórmula, `Set` chega ao
+  `OnSelect` chamado por `Select()` e `UpdateContext` **não** chega — o alvo lê o valor anterior. Foi
+  exatamente esse o defeito da primeira versão: a posição (via `Set`) vinha, a hora (via `UpdateContext`)
+  vinha sempre `-1`.
+  Os dois botões são `Visible: =true` de propósito, com 1×1 px atrás do container da tela: **`Select()` num
+  controle invisível é no-op** — erro já cometido no PlemPrai (`ScreenAcionamentosPlemPraiV2.pa.yaml`).
+- **A dica de mouse é o atributo `title` do `<td>`, e é a única forma que existe.** O `HtmlViewer` não devolve
+  evento por elemento — nem clique nem `hover` —, então não há como o Power Fx saber sobre qual bloco o
+  ponteiro está. Balão em CSS (`:hover` + filho absoluto) também não serve: cada linha da grade é um
+  `HtmlViewer` de `mapAlturaLinha` px de altura e o balão seria **recortado na borda do controle**. O
+  `title` nativo é desenhado pelo navegador **fora** da caixa da página, e é o que escapa do recorte.
+  **Confirmado no app em 02/09/2026:** o sanitizador do `HtmlViewer` **preserva** o atributo `title` do
+  `<td>`, e o balão aparece. Era a única premissa da funcionalidade que não dava para provar fora do
+  Studio; até então não havia precedente de atributo `title` em nenhum módulo do repositório.
+- **O texto da dica é montado em `colDia`, não no HTML.** Uma vez por registro no carregamento, em vez de
+  uma vez por render — e é o que permite escapar o conteúdo num ponto só. Todo campo livre
+  (`observacao`, `prefixo`, `voo_*`, nome de quem alterou) entra escapado: `&` → `&amp;` **primeiro**,
+  depois `<`, `>` e `'` → `&#39;`, e por último `Char(10)` → `&#10;`, que é o que quebra linha dentro do
+  `title`. A ordem não é estética: escapar `&` depois de `<` transformaria o `&lt;` recém-criado em
+  `&amp;lt;`, e converter `Char(10)` antes de escapar `&` transformaria o `&#10;` em `&amp;#10;`.
+  Sem isso, **uma aspa simples digitada na observação fecha o atributo e desmonta a linha inteira da grade**.
+- **O clique sabe onde caiu por uma camada de células de hora, não pelo HTML.** O `HtmlViewer` devolve um
+  único `OnSelect` por linha, sem coordenada — ele diz *qual posição*, nunca *que hora*. Por cima de cada
+  linha fica `cntFaixaMap`, um container **AutoLayout** com um vão fixo da largura da coluna de rótulo e
+  **24 células iguais**, uma por hora. Cada célula pergunta a `trechos` se algum bloco cruza aquela hora:
+  se cruza, o clique abre **aquele** registro com o formulário preenchido; se não cruza, abre registro novo
+  já com a posição e `HH:00`.
+- **A camada é AutoLayout porque `X` não sobrevive à colagem.** A primeira versão posicionava um rótulo por
+  bloco em absoluto, com `X` calculado de `trechos` — exato ao minuto. O Studio **descarta o `X` dos filhos
+  do template da galeria ao colar a tela** e grava `1` no lugar (o `Width`, na mesma colagem, é mantido).
+  Os 33 rótulos empilhavam no canto esquerdo e o clique caía sempre no mesmo. Digitado à mão no Studio o
+  `X` funciona e persiste — o que não dá é entregá-lo por YAML. Em AutoLayout a posição vem de
+  `FillPortions`, que é da mesma família do `Width` e sobrevive.
+- **A compatibilidade do equipamento é checada em três degraus, nesta ordem.** `EQUIPAMENTO` é
+  obrigatório para `tipo_registro = "VOO"`; depois vem o **veto da própria posição**
+  (`tb_regrasPosicao` com `vizinha` vazia), depois o **veto de par** — que só dispara quando a posição
+  vizinha está ocupada por um equipamento da lista `equip_b` **e** os dois períodos se cruzam em
+  minutos absolutos. A envergadura é o último degrau, e não o primeiro, porque existe regra que
+  nenhuma medida produz: T4 aceita um 737-800 de 35,79 m e recusa um E195-E2 de 35,10 m.
+- **`envergadura_m` virou derivada.** No salvar vale o que foi digitado; em branco, herda
+  `tb_equipamentos[equipamento].envergadura_m`. O campo continua editável para cauda fora do padrão.
+  Enquanto `env_max` estiver `0` em todas as posições, esse degrau não recusa nada — está ligado e
+  inerte, esperando o dado.
+- **As regras não são delegáveis e não precisam ser.** `colEquip` e `colRegras` são carregadas uma vez
+  no `OnVisible` da tela, não a cada ATUALIZAR — é o que mantém a invariante de que abrir um dia
+  continua sendo uma única chamada ao SharePoint. O veto de par lê `colValida`, que o salvar já monta.
+- **Registro novo aberto pelo clique já vem com chegada e saída.** A chegada é o `HH:00` da célula; a
+  saída é `chegada + mapDuracaoPadrao`. É sugestão de formulário, não regra: quem digita sobrescreve, e a
+  validação de conflito continua sendo a mesma na hora de salvar. Aberto pelo botão NOVO REGISTRO ou pela
+  coluna de rótulo — onde não há hora nenhuma — os dois campos continuam vazios.
+- **`TextInput@0.0.54` não tem cor de placeholder.** Só `FontColor`, que pinta também o valor digitado. Por
+  isso o placeholder que parecia dado preenchido virou `ex. 09:00`, `ex. PSESP`: o prefixo é o que separa
+  exemplo de valor, já que a cor não separa. Cuidado ao editar: `ex.: 09:00` **quebra o YAML** — dois-pontos
+  seguido de espaço num escalar simples abre um mapeamento.
+- **O preço da célula de hora:** a hora que contém qualquer parte de um bloco pertence a ele por inteiro, e
+  dois registros dentro da mesma hora abrem o mais cedo. É deliberado: o erro cai sempre para o lado de
+  *abrir um registro existente*, nunca para o de criar um novo por cima de um bloco visível. Em troca, não
+  há teto de blocos por posição — a busca varre `trechos` inteiro.
+- **`trechos` é a mesma conta que pinta e que recebe o clique.** A geometria de cada bloco (recorte ao dia,
+  clamp em 0 e 1440, telescopagem quando dois registros se sobrepõem) é calculada **uma vez** em `colGrade`,
+  e dali sai tanto o `<td>` pintado quanto a resposta de *que bloco está nesta hora* que cada célula da
+  camada faz. Recalcular a geometria dos dois lados faria a pintura e o clique divergirem no primeiro
+  arredondamento diferente.
+- **O rótulo de bloco carrega a dica em `Tooltip`, não no `title` do `<td>`.** Cobrindo o HTML, ele passaria
+  a frente do `title` e a dica sumiria. `Label@2.5.1` tem `Tooltip` comprovado (`Rectangle@2.3.0` **não**
+  tem — foi o que decidiu o tipo de controle da camada). Por isso `colDia` publica a dica em duas versões:
+  `dica_txt` crua para o `Tooltip` e `dica` escapada para o `title`, que continua no HTML e volta a valer
+  quando a camada se desliga.
+- **Posição pode consumir outra: a coluna `ocupa` em `colPosicoes`.** `T6C` é a área de carga que
+  ocupa fisicamente `T5` e `T6`, e declara isso em `ocupa: "T5,T6"`. **O fato é declarado num lugar
+  só** — `T5` e `T6` não têm nada escrito — porque a gravação resolve nos dois sentidos: quem eu
+  consumo e quem me consome. Declarar dos dois lados criaria duas verdades para manter, e a que
+  ficasse desatualizada silenciaria o bloqueio.
+- **Posição composta não vira linha da grade.** `colGrade` desenha só `Filter(colPosicoesAero,
+  IsBlank(ocupa))`. O registro que está no `T6C` é desenhado **como bloco normal nas linhas do `T5` e
+  do `T6`** — na tela isso lê como um retângulo único cobrindo as duas, que é o que fisicamente
+  acontece no pátio. Ela continua no seletor do formulário: some do desenho, não do cadastro.
+- **A primeira tentativa foi linha própria com bloco-sombra e foi descartada** (02/09/2026): a `T6C`
+  aparecia como faixa e cada ocupação era desenhada duas vezes, uma real e uma tracejada, nos dois
+  sentidos. Ficou mais poluído do que informativo. **Uma posição que é o mesmo espaço físico de outras
+  duas não é uma terceira linha — é o mesmo lugar.** O desenho tinha que dizer isso.
+- **A mensagem de conflito nomeia a posição que conflitou, não a escolhida.** Quando o choque é
+  cruzado, ela acrescenta *e ela ocupa o mesmo espaço físico de T5* — senão o operador leria
+  "T6C já ocupada" tendo escolhido `T5`, e não entenderia.
+- **Dois selos convivem no bloco: `P` de pesquisado e `I` de internacional.** São marcas independentes
+  — um voo pode ter as duas. A diferença de tratamento é deliberada: **pesquisado repinta o bloco**
+  inteiro de vermelho, porque é condição operacional que muda a leitura da grade inteira;
+  **internacional é só o selo amarelo**, porque é atributo do voo e não deve competir com a cor da
+  companhia, que é o que a legenda promete. Se os dois pintassem o fundo, a grade perderia a regra de
+  que preenchimento = companhia.
+- **Internacional tem padrão, pesquisado não.** `internacional` é obrigatória com `Default 0`: todo voo
+  é doméstico até dizerem o contrário, e o acervo antigo já nasce correto sem migração nenhuma.
+- **Bloco que continua noutro dia leva `«` na entrada e `»` na saída**, e o rótulo de horas mostra o
+  intervalo **recortado ao dia** (`22:00–24:00»`, `«00:00–06:10`), nunca o intervalo real. É o que mantém o
+  bloco coerente com a régua: o desenho e o texto dizem a mesma coisa. O intervalo real, com as duas datas,
+  está na dica e no painel.
 
 ### Como se edita — os dois cliques pedidos
 
@@ -217,15 +318,26 @@ novo é igual ao que ele já mostrava.
 
 ### Validação ao salvar
 
-Toda sobre `colDia`, em memória — custo zero:
+Uma consulta por salvamento — não por render:
 
-1. `HH:mm` válido, entre `00:00` e `24:00`.
-2. Saída depois da chegada. Voo que vira o dia é lançado em **dois registros**, um até `24:00` e outro no dia
-   seguinte — é como a planilha já faz.
-3. **Sobreposição na posição** — bloqueia e nomeia o voo conflitante com horário e prefixo.
-4. **Portão ocupado** no mesmo intervalo, em qualquer posição — bloqueia.
-5. **Envergadura** acima do `env_max` da posição — **dormente**, ver abaixo.
-6. **Posição de contingência** (o T3) — pede confirmação, não bloqueia.
+1. `HH:mm` válido, entre `00:00` e `24:00`; chegada obrigatoriamente antes de `24:00`.
+2. `data_fim >= data_operacao`, e o intervalo total dentro de `mapDiasMax`.
+3. Saída depois da chegada **na linha do tempo absoluta** — pernoite é um registro só, com a DATA FINAL no
+   dia da saída.
+4. **Sobreposição na posição** — bloqueia e nomeia o registro conflitante com data, horário e prefixo.
+5. **Portão ocupado** no mesmo intervalo, em qualquer posição — bloqueia.
+6. **Envergadura** acima do `env_max` da posição — **dormente**, ver abaixo.
+7. **Posição de contingência** (o T3) — pede confirmação, não bloqueia.
+
+**Por que deixou de ser custo zero.** Sobreposição só é comparável entre registros que estejam na mesma
+linha do tempo, e `colDia` só tem o dia carregado. Um registro que vai de 03/09 a 07/09 tem que ser
+confrontado com o que existe nos cinco dias, e quatro deles não estão em memória. Validar só contra
+`colDia` seria uma **validação furada silenciosa** — o app deixaria gravar em cima de uma interdição que
+ele simplesmente não carregou. Então o SALVAR faz uma consulta delegável pela faixa
+(`data_operacao <= fim And data_fim >= ini`), projeta em `colValida` e compara tudo em **minutos absolutos**
+(`DateDiff(mapDataBase; data; Days) * 1440 + minuto`), que é a mesma aritmética de inteiros de antes, só que
+sem o teto de 1440. Uma chamada a mais numa ação que já fazia duas (o `Patch` e a recarga); a **renderização**
+continua com uma consulta por dia carregado, que é onde o custo importava.
 
 A regra 5 nasce desligada por decisão da operação (28/08/2026): a planilha registra a classe A/B do pátio 2/3
 por cor, não por metragem, e ninguém tem os números. Todas as 25 posições têm `env_max: 0`, e a regra só compara
@@ -260,6 +372,8 @@ Trilha de auditoria: **versionamento nativo** (50 versões), ligado antes da pri
 | Decisão | Porquê |
 |---|---|
 | Hora em **minutos desde 00:00** (`0`–`1440`) | A grade é aritmética pura; elimina fuso, elimina conversão a cada render, delega com `>=`/`<=`, e sobreposição vira comparação de inteiros |
+| **Intervalo em duas datas** (`data_operacao`+`hora_inicio` → `data_fim`+`hora_fim`) | Pernoite e interdição de vários dias são **um** registro, não N. Editar é editar um item; excluir é excluir um item; o histórico do Power BI não precisa reagrupar nada. A alternativa — gerar um registro por dia — multiplicaria a gravação por N sem transação, e deixaria a edição dependente de um `grupo_id` |
+| **A grade recorta o registro ao dia** (`ini`/`fim` calculados) | A régua é de 24 h por definição do produto: coluna é hora do dia. Um registro de 5 dias vira 5 barras, uma por grade, com `«`/`»` nas pontas. As colunas cruas (`h_ini`/`h_fim`/`data_*`) andam junto em `colDia` porque o **painel de edição tem que mostrar o valor real**, não o recortado — editar a partir do dia do meio e gravar `00:00` seria destruir o registro |
 | **Sem coluna Sim/Não** | Nasce nula e `NULL` não casa com `eq false` no OData — `!coluna` devolve zero linhas sem erro. Flags são Número, positivo `= 1`, negativo `<> 1`, nunca `= 0` |
 | **Sem coluna Escolha** | Enumeração local + coluna Texto: grava o texto direto, sem `Choices()`, sem `.Value` no `Patch`, indexável, filtro `=` delegável |
 | **Sem coluna Pesquisa** | Limita a 12 por view, quebra delegação e trava exclusão do pai. Relacionamento por `id_posicao` numérico |
@@ -353,3 +467,67 @@ regras 21, 22, 23, 25, 26 e 27 deste app.
     baixo de quem está editando.
 13. Testar com **limite de delegação = 1** → a grade continua completa.
 14. Rodar o expurgo manualmente com data forjada e conferir as duas fases.
+15. **Dica de mouse:** parar o ponteiro sobre um bloco → aparece o balão com posição, pátio, companhia por
+    extenso, prefixo, envergadura, período com as duas datas, portão, observação e quem alterou. Confirmado
+    em 02/09/2026. **Se o balão parar de aparecer depois de alguma atualização da plataforma, é o sanitizador
+    do `HtmlViewer` removendo o `title`** — testar isso antes de procurar erro na montagem do texto.
+16. **Clique no bloco:** clicar em cima de um bloco abre o painel com **aquele** registro marcado na lista e
+    o formulário preenchido — tipo, posição, as duas datas, chegada e saída reais, companhia, voos, portão,
+    envergadura e observação. Com dois blocos na mesma hora, conferir que abre o que está debaixo do ponteiro,
+    não o primeiro da hora. Num pernoite aberto **pelo dia seguinte**, conferir que a chegada mostra `22:00`
+    e não `00:00` (o formulário lê `h_ini`/`h_fim`, não o recorte do dia).
+17. **Clique em espaço livre:** clicar numa hora vaga abre registro novo com a posição da linha e a chegada
+    em `HH:00` daquela faixa. Testar também numa **posição vazia o dia inteiro** — clicar às 14h tem que
+    trazer `14:00`, não `00:00`. Clicar na coluna de rótulo (à esquerda) abre registro novo **sem** hora.
+18. **Posição cheia:** numa posição com muitos blocos no dia, conferir que **todos** abrem pelo clique — a
+    camada não tem teto de blocos. Conferir também que hora com dois registros abre o mais cedo.
+19. **Alinhamento da camada:** clicar bem na borda esquerda e na borda direita de um bloco. Se o clique na
+    borda abrir *novo registro* em vez do bloco, a camada está deslocada do HTML — conferir
+    `mapLarguraRotulo` e `mapLarguraBarra`, que são o que as duas geometrias têm em comum.
+20. **Dica com aspa:** gravar uma observação contendo `'` e `&` (por exemplo `manutenção d'asa & motor`) e
+    conferir que a linha da grade **continua inteira** e o balão mostra o texto literal. É o teste que pega
+    escape faltando — sem ele o atributo fecha no meio e a linha se desmonta.
+21. **Pernoite:** lançar T4 chegada 22:00 com DATA FINAL no dia seguinte, saída 06:10. No dia D o bloco vai de
+    22:00 até a borda direita com `»`; no dia D+1 começa na borda esquerda com `«` e termina 06:10. Abrir o
+    registro pelo painel **no dia D+1** e conferir que o formulário mostra `22:00`/`06:10` e as duas datas —
+    não `00:00`. Salvar sem mudar nada e conferir que o desenho não se altera.
+22. **Interdição de vários dias:** `INTERDICAO` em A5 de D a D+4, 08:00 → 17:00. Conferir os cinco dias: D com
+    `»`, D+1 a D+3 cheios com `«`…`»`, D+4 com `«`. Tentar lançar um voo em A5 em D+2 → **bloqueia**, mesmo
+    com o dia D+2 nunca tendo sido aberto na sessão.
+23. **Conflito só visível fora do dia carregado:** com a grade aberta em D, lançar um registro em D+3 que
+    conflita com algo que só existe em D+3 → bloqueia. É o teste que prova que a validação consulta a faixa e
+    não `colDia`.
+24. **DATA FINAL antes da inicial** e **período acima de `mapDiasMax`** → bloqueia nos dois casos.
+25. Conferir no Monitor que **abrir um dia continua sendo uma única chamada**, e que o SALVAR faz três
+    (validação, `Patch`, recarga) — não uma por dia do intervalo.
+
+## Telas de cadastro: `scrMapaEquip` e `scrMapaRegra`
+
+O SharePoint já dá CRUD de graça nas duas listas. **Estas telas não existem pelo formulário, existem
+pelas travas** — sem elas, um código de equipamento digitado errado em `tb_regrasPosicao` produz uma
+regra que nunca dispara, e isso é indistinguível de *não há regra*. Ninguém percebe até o dia em que
+a alocação proibida passa e o sistema não reclama.
+
+O que as telas garantem e a interface do SharePoint não:
+
+| trava | onde | por quê |
+|---|---|---|
+| equipamento escolhido em `ComboBox`, nunca digitado | `cmbEqaRgr` / `cmbEqbRgr` | código inexistente = regra morta |
+| posição escolhida em `DropDown` de `colPosicoesAero` | `drpPosRgr` / `drpVizRgr` | idem, e impede posição de outro aeroporto |
+| código de equipamento duplicado é recusado | `btnSalvarEqp` | o contrato do `List_Generator` não carrega `EnforceUniqueValues`; duplicata faz o `LookUp` depender da ordem de inserção |
+| regra de par sem os dois lados é recusada | `btnSalvarRgr` | regra pela metade nunca dispara |
+| vizinha igual à própria posição é recusada | `btnSalvarRgr` | regra que se auto-satisfaz |
+| mensagem obrigatória | `btnSalvarRgr` | é o texto que o operador lê quando o salvar é recusado; sem ele a recusa fica muda |
+
+**Nada é apagado: `ativo` faz o desligamento.** Equipamento inativo some do seletor sem quebrar
+registro antigo que o referencia; regra inativa para de valer sem perder o histórico de que existiu.
+
+**Quem pode editar é o SharePoint que decide.** `varPodeCatalogo` sai de
+`DataSourceInfo(<lista>; DataSourceInfo.EditPermission)`, então a permissão de cada lista controla o
+acesso — não há papel replicado dentro do app. Sem permissão, as telas abrem em somente leitura e a
+barra diz isso.
+
+**O que ainda não existe, e é o próximo passo natural:** um botão *testar regra*, que varreria os
+registros já gravados e diria quantos aquela regra teria recusado. É o que pega regra larga demais
+**antes** de ela travar a operação. Ficou de fora desta entrega de propósito, para não estrear duas
+coisas ao mesmo tempo.

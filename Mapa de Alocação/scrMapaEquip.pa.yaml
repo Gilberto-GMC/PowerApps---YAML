@@ -1,0 +1,708 @@
+Screens:
+  scrMapaEquip:
+    Properties:
+      OnVisible: |-
+        =Set(varMapaVisivel, false);
+        Set(varPodeCatalogo, DataSourceInfo('tb_equipamentos', DataSourceInfo.EditPermission));
+        Set(varEquipSel, Blank());
+        UpdateContext({locNonceEq: 0, locAjudaEq: false});
+        Select(btnRecarregarEqp);
+        Set(varFormEq, { cod: "", nome: "", env: "", ativo: true })
+    Children:
+      - btnRecarregarEqp:
+          Control: Button@0.0.45
+          Properties:
+            Height: =1
+            OnSelect: |-
+              =ClearCollect(colEquipTodos, Sort(tb_equipamentos, ordem, SortOrder.Ascending));
+              ClearCollect(colEquip, Sort(Filter(tb_equipamentos, ativo = 1), ordem, SortOrder.Ascending));
+              ClearCollect(colEquipSel, Table({ Value: "—" }));
+              Collect(colEquipSel, ForAll(colEquip As _e, { Value: _e.nome_equip }))
+            Text: =""
+            Visible: =true
+            Width: =1
+            X: =0
+            Y: =0
+      - cntShellEqp:
+          Control: GroupContainer@1.5.0
+          Variant: AutoLayout
+          Properties:
+            DropShadow: =DropShadow.None
+            Fill: =thmFundo
+            Height: =Parent.Height
+            LayoutAlignItems: =LayoutAlignItems.Stretch
+            LayoutDirection: =LayoutDirection.Horizontal
+            RadiusBottomLeft: =0
+            RadiusBottomRight: =0
+            RadiusTopLeft: =0
+            RadiusTopRight: =0
+            Width: =Parent.Width
+          Children:
+            - cntMenuEqp:
+                Control: GroupContainer@1.5.0
+                Variant: AutoLayout
+                Properties:
+                  DropShadow: =DropShadow.None
+                  Fill: =thmPrimariaEscura
+                  FillPortions: =0
+                  LayoutAlignItems: =LayoutAlignItems.Stretch
+                  LayoutDirection: =LayoutDirection.Vertical
+                  LayoutGap: =10
+                  LayoutMinHeight: =0
+                  PaddingBottom: =14
+                  PaddingLeft: =12
+                  PaddingRight: =12
+                  PaddingTop: =16
+                  RadiusBottomLeft: =0
+                  RadiusBottomRight: =0
+                  RadiusTopLeft: =0
+                  RadiusTopRight: =0
+                  Width: =If(varMenuAberto, 236, 76)
+                Children:
+                  - htmMarcaEqp:
+                      Control: HtmlViewer@2.1.0
+                      Properties:
+                        AlignInContainer: =AlignInContainer.Start
+                        AutoHeight: =true
+                        Color: =thmTextoBarra
+                        Fill: =thmPrimariaEscura
+                        Font: =thmFonte
+                        HtmlText: |-
+                          ="<div style='" & htmlFonte & "color:" & hxTextoBarra & ";'>" &
+                          If(
+                              varMenuAberto,
+                              "<div style='font-size:10px;letter-spacing:.24em;font-weight:700;opacity:.6;'>MOTIVA</div><div style='font-size:16px;font-weight:800;letter-spacing:.01em;margin-top:2px;'>MAPA DE ALOCAÇÃO</div>",
+                              "<div style='font-size:17px;font-weight:800;text-align:left;margin-left:12px;'>MA</div>"
+                          ) &
+                          "</div>"
+                        PaddingBottom: =14
+                        PaddingLeft: =4
+                        PaddingRight: =0
+                        PaddingTop: =0
+                        Size: =11
+                  - cntNavEqp:
+                      Control: GroupContainer@1.5.0
+                      Variant: AutoLayout
+                      Properties:
+                        DropShadow: =DropShadow.None
+                        Fill: =thmPrimariaEscura
+                        LayoutAlignItems: =LayoutAlignItems.Stretch
+                        LayoutDirection: =LayoutDirection.Vertical
+                        LayoutGap: =10
+                        LayoutMinHeight: =0
+                        LayoutMinWidth: =0
+                        LayoutOverflowY: =LayoutOverflow.Scroll
+                        RadiusBottomLeft: =0
+                        RadiusBottomRight: =0
+                        RadiusTopLeft: =0
+                        RadiusTopRight: =0
+                      Children:
+                        - btnNavMapaEqp:
+                            Control: Button@0.0.45
+                            Properties:
+                              Align: =Align.Left
+                              AlignInContainer: =AlignInContainer.Stretch
+                              Appearance: ='ButtonCanvas.Appearance'.Secondary
+                              BasePaletteColor: =thmTextoBarra
+                              BorderRadius: =0
+                              FontColor: =thmTextoBarra
+                              FontSize: =14
+                              FontWeight: =FontWeight.Semibold
+                              Height: =44
+                              Icon: ="Eye"
+                              IconStyle: ='ButtonCanvas.IconStyle'.Filled
+                              LayoutMinWidth: =0
+                              OnSelect: =Navigate(scrMapaPatio, ScreenTransition.Fade)
+                              PaddingLeft: =18
+                              Text: =If(varMenuAberto, "MAPA DO DIA", "")
+                        - btnNavRefEqp:
+                            Control: Button@0.0.45
+                            Properties:
+                              Align: =Align.Left
+                              AlignInContainer: =AlignInContainer.Stretch
+                              Appearance: ='ButtonCanvas.Appearance'.Secondary
+                              BasePaletteColor: =thmTextoBarra
+                              BorderRadius: =0
+                              FontColor: =thmTextoBarra
+                              FontSize: =14
+                              FontWeight: =FontWeight.Semibold
+                              Height: =44
+                              Icon: ="Search"
+                              IconStyle: ='ButtonCanvas.IconStyle'.Filled
+                              LayoutMinWidth: =0
+                              OnSelect: =Navigate(scrMapaReferencia, ScreenTransition.Fade)
+                              PaddingLeft: =18
+                              Text: =If(varMenuAberto, "POSIÇÕES E CORES", "")
+                        - btnNavEqpEqp:
+                            Control: Button@0.0.45
+                            Properties:
+                              Align: =Align.Left
+                              AlignInContainer: =AlignInContainer.Stretch
+                              Appearance: ='ButtonCanvas.Appearance'.Primary
+                              BasePaletteColor: =thmPrimaria
+                              BorderRadius: =0
+                              FontColor: =thmTextoBarra
+                              FontSize: =14
+                              FontWeight: =FontWeight.Semibold
+                              Height: =44
+                              Icon: ="Airplane"
+                              IconStyle: ='ButtonCanvas.IconStyle'.Filled
+                              LayoutMinWidth: =0
+                              PaddingLeft: =18
+                              Text: =If(varMenuAberto, "EQUIPAMENTOS", "")
+                        - btnNavRgrEqp:
+                            Control: Button@0.0.45
+                            Properties:
+                              Align: =Align.Left
+                              AlignInContainer: =AlignInContainer.Stretch
+                              Appearance: ='ButtonCanvas.Appearance'.Secondary
+                              BasePaletteColor: =thmTextoBarra
+                              BorderRadius: =0
+                              FontColor: =thmTextoBarra
+                              FontSize: =14
+                              FontWeight: =FontWeight.Semibold
+                              Height: =44
+                              Icon: ="LockClosed"
+                              IconStyle: ='ButtonCanvas.IconStyle'.Filled
+                              LayoutMinWidth: =0
+                              OnSelect: =Navigate(scrMapaRegra, ScreenTransition.Fade)
+                              PaddingLeft: =18
+                              Text: =If(varMenuAberto, "RESTRIÇÕES", "")
+                        - btnNavInicioEqp:
+                            Control: Button@0.0.45
+                            Properties:
+                              Align: =Align.Left
+                              AlignInContainer: =AlignInContainer.Stretch
+                              Appearance: ='ButtonCanvas.Appearance'.Secondary
+                              BasePaletteColor: =thmTextoBarra
+                              BorderRadius: =0
+                              FontColor: =thmTextoBarra
+                              FontSize: =14
+                              FontWeight: =FontWeight.Semibold
+                              Height: =44
+                              Icon: ="ArrowExit"
+                              IconStyle: ='ButtonCanvas.IconStyle'.Filled
+                              LayoutMinWidth: =0
+                              OnSelect: =Navigate(scrMapaInicio, ScreenTransition.Fade)
+                              PaddingLeft: =18
+                              Text: =If(varMenuAberto, "TROCAR CONTEXTO", "")
+                  - btnRecolherEqp:
+                      Control: Button@0.0.45
+                      Properties:
+                        Align: =Align.Left
+                        AlignInContainer: =AlignInContainer.Stretch
+                        Appearance: ='ButtonCanvas.Appearance'.Secondary
+                        BasePaletteColor: =thmBotaoBarra
+                        BorderRadius: =0
+                        FillPortions: =0
+                        FontColor: =thmTextoBarra
+                        FontSize: =12
+                        FontWeight: =FontWeight.Semibold
+                        Height: =40
+                        Icon: ="ChevronRight"
+                        IconStyle: ='ButtonCanvas.IconStyle'.Filled
+                        LayoutMinWidth: =0
+                        OnSelect: =Set(varMenuAberto, !varMenuAberto)
+                        PaddingLeft: =18
+                        Text: =If(varMenuAberto, "RECOLHER", "")
+            - cntRaizEqp:
+                Control: GroupContainer@1.5.0
+                Variant: AutoLayout
+                Properties:
+                  DropShadow: =DropShadow.None
+                  Fill: =thmFundo
+                  FillPortions: =1
+                  LayoutAlignItems: =LayoutAlignItems.Stretch
+                  LayoutDirection: =LayoutDirection.Vertical
+                  LayoutGap: =0
+                  LayoutMinHeight: =0
+                  LayoutMinWidth: =0
+                  RadiusBottomLeft: =0
+                  RadiusBottomRight: =0
+                  RadiusTopLeft: =0
+                  RadiusTopRight: =0
+                Children:
+                  - cntBarraEqp:
+                      Control: GroupContainer@1.5.0
+                      Variant: AutoLayout
+                      Properties:
+                        DropShadow: =DropShadow.None
+                        Fill: =thmPrimaria
+                        FillPortions: =0
+                        Height: =thmAlturaBarra
+                        LayoutAlignItems: =LayoutAlignItems.Center
+                        LayoutDirection: =LayoutDirection.Horizontal
+                        LayoutGap: =12
+                        LayoutMinWidth: =0
+                        PaddingLeft: =26
+                        PaddingRight: =26
+                        RadiusBottomLeft: =0
+                        RadiusBottomRight: =0
+                        RadiusTopLeft: =0
+                        RadiusTopRight: =0
+                      Children:
+                        - htmTituloEqp:
+                            Control: HtmlViewer@2.1.0
+                            Properties:
+                              AutoHeight: =true
+                              Color: =thmTextoBarra
+                              Fill: =thmPrimaria
+                              FillPortions: =1
+                              Font: =thmFonte
+                              HtmlText: |-
+                                ="<div style='" & htmlFonte & "color:" & hxTextoBarra & ";'>" &
+                                "<div style='font-size:19px;font-weight:800;letter-spacing:.02em;line-height:1.1;'>CATÁLOGO DE EQUIPAMENTOS</div>" &
+                                "<div style='font-size:11px;opacity:.75;margin-top:3px;'>" &
+                                CountRows(colEquipTodos) & " tipo(s) &nbsp;&middot;&nbsp; " & CountRows(colEquip) & " ativo(s)" & If(varPodeCatalogo, "", " &nbsp;&middot;&nbsp; SOMENTE LEITURA") & "</div></div>"
+                              LayoutMinWidth: =0
+                              Size: =11
+                  - cntConteudoEqp:
+                      Control: GroupContainer@1.5.0
+                      Variant: AutoLayout
+                      Properties:
+                        DropShadow: =DropShadow.None
+                        Fill: =thmFundo
+                        FillPortions: =1
+                        LayoutAlignItems: =LayoutAlignItems.Stretch
+                        LayoutDirection: =LayoutDirection.Horizontal
+                        LayoutGap: =20
+                        LayoutMinHeight: =0
+                        LayoutMinWidth: =0
+                        PaddingBottom: =20
+                        PaddingLeft: =26
+                        PaddingRight: =26
+                        PaddingTop: =20
+                        RadiusBottomLeft: =0
+                        RadiusBottomRight: =0
+                        RadiusTopLeft: =0
+                        RadiusTopRight: =0
+                      Children:
+                        - cntListaEqp:
+                            Control: GroupContainer@1.5.0
+                            Variant: AutoLayout
+                            Properties:
+                              DropShadow: =DropShadow.None
+                              Fill: =thmSuperficie
+                              FillPortions: =1
+                              LayoutAlignItems: =LayoutAlignItems.Stretch
+                              LayoutDirection: =LayoutDirection.Vertical
+                              LayoutMinHeight: =0
+                              LayoutMinWidth: =0
+                              PaddingBottom: =8
+                              PaddingLeft: =8
+                              PaddingRight: =8
+                              PaddingTop: =8
+                              RadiusBottomLeft: =0
+                              RadiusBottomRight: =0
+                              RadiusTopLeft: =0
+                              RadiusTopRight: =0
+                            Children:
+                              - cntCabEqp:
+                                  Control: GroupContainer@1.5.0
+                                  Variant: AutoLayout
+                                  Properties:
+                                    DropShadow: =DropShadow.None
+                                    Fill: =thmSuperficie
+                                    FillPortions: =0
+                                    Height: =38
+                                    LayoutAlignItems: =LayoutAlignItems.Center
+                                    LayoutDirection: =LayoutDirection.Horizontal
+                                    LayoutGap: =6
+                                    LayoutMinWidth: =0
+                                    PaddingLeft: =4
+                                    RadiusBottomLeft: =0
+                                    RadiusBottomRight: =0
+                                    RadiusTopLeft: =0
+                                    RadiusTopRight: =0
+                                  Children:
+                                    - lblCabEqp:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          Color: =thmTextoFraco
+                                          FillPortions: =1
+                                          Font: =thmFonte
+                                          FontWeight: =FontWeight.Bold
+                                          Height: =20
+                                          LayoutMinWidth: =0
+                                          Size: =10
+                                          Text: ="NA ORDEM EM QUE APARECEM NO SELETOR"
+                                    - btnAjudaEqp:
+                                        Control: Button@0.0.45
+                                        Properties:
+                                          Appearance: ='ButtonCanvas.Appearance'.Secondary
+                                          BasePaletteColor: =thmOperacional
+                                          BorderRadius: =0
+                                          FillPortions: =0
+                                          FontColor: =thmOperacional
+                                          Height: =30
+                                          Icon: ="Info"
+                                          IconStyle: ='ButtonCanvas.IconStyle'.Filled
+                                          LayoutMinWidth: =0
+                                          OnSelect: |-
+                                            =UpdateContext({locAjudaEq: !locAjudaEq})
+                                          Text: =""
+                                          Width: =34
+                              - htmAjudaEqp:
+                                  Control: HtmlViewer@2.1.0
+                                  Properties:
+                                    AutoHeight: =true
+                                    Color: =thmTexto
+                                    Fill: =thmSuperficie
+                                    FillPortions: =0
+                                    Font: =thmFonte
+                                    HtmlText: |-
+                                      ="<div style='" & htmlFonte & "background:" & hxPrimariaClara & ";padding:10px 12px;font-size:11px;" &
+                                      "line-height:1.5;color:" & hxTexto & ";margin-bottom:8px;'>" &
+                                      "<b>Para que serve a ordem.</b> Ela decide <b>só</b> a sequência em que os equipamentos aparecem " &
+                                      "no seletor da tela de alocação — nada mais. Não entra em nenhuma regra, não afeta a checagem de " &
+                                      "compatibilidade e não muda registro nenhum já gravado.<br><br>" &
+                                      "Serve para deixar em cima o que a operação usa todo dia e empurrar para baixo o que é raro, " &
+                                      "poupando rolagem de quem lança voo. Use as setas &#9650; &#9660; para trocar um equipamento " &
+                                      "de lugar com o vizinho. Equipamento novo entra no fim da lista." &
+                                      "</div>"
+                                    Size: =11
+                                    Visible: =locAjudaEq
+                              - galEquipEqp:
+                                  Control: Gallery@2.15.0
+                                  Variant: Vertical
+                                  Properties:
+                                    BorderColor: =thmBorda
+                                    BorderStyle: =BorderStyle.None
+                                    Fill: =thmSuperficie
+                                    FillPortions: =1
+                                    Items: =colEquipTodos
+                                    LayoutMinHeight: =0
+                                    LayoutMinWidth: =0
+                                    TemplatePadding: =0
+                                    TemplateSize: =46
+                                  Children:
+                                    - cntLinhaEqp:
+                                        Control: GroupContainer@1.5.0
+                                        Variant: AutoLayout
+                                        Properties:
+                                          DropShadow: =DropShadow.None
+                                          Fill: =thmTransparente
+                                          Height: =44
+                                          LayoutAlignItems: =LayoutAlignItems.Stretch
+                                          LayoutDirection: =LayoutDirection.Horizontal
+                                          LayoutGap: =4
+                                          LayoutMinHeight: =0
+                                          LayoutMinWidth: =0
+                                          RadiusBottomLeft: =0
+                                          RadiusBottomRight: =0
+                                          RadiusTopLeft: =0
+                                          RadiusTopRight: =0
+                                          Width: =Parent.Width - 18
+                                        Children:
+                                          - btnItemEqp:
+                                              Control: Button@0.0.45
+                                              Properties:
+                                                Align: =Align.Left
+                                                Appearance: =If(varEquipSel.ID = ThisItem.ID, 'ButtonCanvas.Appearance'.Primary, 'ButtonCanvas.Appearance'.Secondary)
+                                                BasePaletteColor: =If(ThisItem.ativo = 1, thmPrimaria, thmTextoFraco)
+                                                BorderRadius: =0
+                                                FontSize: =12
+                                                FontWeight: =FontWeight.Semibold
+                                                Height: =44
+                                                OnSelect: |-
+                                                  =Set(varEquipSel, ThisItem);
+                                                  Set(
+                                                      varFormEq,
+                                                      {
+                                                          cod: ThisItem.equip,
+                                                          nome: ThisItem.nome_equip,
+                                                          env: Text(ThisItem.envergadura_m),
+                                                          ativo: ThisItem.ativo = 1
+                                                      }
+                                                  );
+                                                  UpdateContext({locNonceEq: locNonceEq + 1})
+                                                PaddingLeft: =12
+                                                PaddingRight: =12
+                                                Text: |-
+                                                  =ThisItem.equip & "   " & ThisItem.nome_equip & "   " & Text(ThisItem.envergadura_m) & " m" &
+                                                  If(ThisItem.ativo = 1, "", "   (INATIVO)")
+                                                FillPortions: =1
+                                          - btnSubirEqp:
+                                              Control: Button@0.0.45
+                                              Properties:
+                                                Appearance: ='ButtonCanvas.Appearance'.Secondary
+                                                BasePaletteColor: =thmTextoFraco
+                                                BorderRadius: =0
+                                                DisplayMode: =If(varPodeCatalogo, DisplayMode.Edit, DisplayMode.Disabled)
+                                                FillPortions: =0
+                                                FontColor: =thmTextoFraco
+                                                Height: =44
+                                                Icon: ="ChevronUp"
+                                                IconStyle: ='ButtonCanvas.IconStyle'.Filled
+                                                LayoutMinWidth: =0
+                                                OnSelect: |-
+                                                  =If(
+                                                      CountRows(Filter(colEquipTodos, ordem < ThisItem.ordem)) = 0,
+                                                      Notify("Já é o primeiro da lista.", NotificationType.Warning, 2000),
+                                                      Patch(
+                                                          tb_equipamentos,
+                                                          LookUp(tb_equipamentos, ID = First(Sort(Filter(colEquipTodos, ordem < ThisItem.ordem), ordem, SortOrder.Descending)).ID),
+                                                          { ordem: ThisItem.ordem }
+                                                      );
+                                                      Patch(
+                                                          tb_equipamentos,
+                                                          LookUp(tb_equipamentos, ID = ThisItem.ID),
+                                                          { ordem: First(Sort(Filter(colEquipTodos, ordem < ThisItem.ordem), ordem, SortOrder.Descending)).ordem }
+                                                      );
+                                                      Select(btnRecarregarEqp)
+                                                  )
+                                                Text: =""
+                                                Width: =40
+                                          - btnDescerEqp:
+                                              Control: Button@0.0.45
+                                              Properties:
+                                                Appearance: ='ButtonCanvas.Appearance'.Secondary
+                                                BasePaletteColor: =thmTextoFraco
+                                                BorderRadius: =0
+                                                DisplayMode: =If(varPodeCatalogo, DisplayMode.Edit, DisplayMode.Disabled)
+                                                FillPortions: =0
+                                                FontColor: =thmTextoFraco
+                                                Height: =44
+                                                Icon: ="ChevronDown"
+                                                IconStyle: ='ButtonCanvas.IconStyle'.Filled
+                                                LayoutMinWidth: =0
+                                                OnSelect: |-
+                                                  =If(
+                                                      CountRows(Filter(colEquipTodos, ordem > ThisItem.ordem)) = 0,
+                                                      Notify("Já é o último da lista.", NotificationType.Warning, 2000),
+                                                      Patch(
+                                                          tb_equipamentos,
+                                                          LookUp(tb_equipamentos, ID = First(Sort(Filter(colEquipTodos, ordem > ThisItem.ordem), ordem, SortOrder.Ascending)).ID),
+                                                          { ordem: ThisItem.ordem }
+                                                      );
+                                                      Patch(
+                                                          tb_equipamentos,
+                                                          LookUp(tb_equipamentos, ID = ThisItem.ID),
+                                                          { ordem: First(Sort(Filter(colEquipTodos, ordem > ThisItem.ordem), ordem, SortOrder.Ascending)).ordem }
+                                                      );
+                                                      Select(btnRecarregarEqp)
+                                                  )
+                                                Text: =""
+                                                Width: =40
+                        - cntFormEqp:
+                            Control: GroupContainer@1.5.0
+                            Variant: AutoLayout
+                            Properties:
+                              DropShadow: =DropShadow.None
+                              Fill: =thmSuperficie
+                              FillPortions: =0
+                              LayoutAlignItems: =LayoutAlignItems.Stretch
+                              LayoutDirection: =LayoutDirection.Vertical
+                              LayoutGap: =4
+                              LayoutMinHeight: =0
+                              LayoutMinWidth: =0
+                              LayoutOverflowY: =LayoutOverflow.Scroll
+                              PaddingBottom: =14
+                              PaddingLeft: =16
+                              PaddingRight: =16
+                              PaddingTop: =14
+                              RadiusBottomLeft: =0
+                              RadiusBottomRight: =0
+                              RadiusTopLeft: =0
+                              RadiusTopRight: =0
+                              Width: =380
+                            Children:
+                              - lblCodEqp:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    Color: =thmTextoFraco
+                                    Font: =thmFonte
+                                    FontWeight: =FontWeight.Bold
+                                    Height: =18
+                                    Size: =10
+                                    Text: ="CÓDIGO *"
+                              - txtCodEqp:
+                                  Control: TextInput@0.0.54
+                                  Properties:
+                                    AccessibleLabel: ="Código do tipo de aeronave"
+                                    DisplayMode: =If(varPodeCatalogo, DisplayMode.Edit, DisplayMode.View)
+                                    Height: =40
+                                    Placeholder: ="ex. B38M"
+                                    Value: =Coalesce(varFormEq.cod, "")
+                              - lblNomeEqp:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    Color: =thmTextoFraco
+                                    Font: =thmFonte
+                                    FontWeight: =FontWeight.Bold
+                                    Height: =18
+                                    Size: =10
+                                    Text: ="NOME *"
+                              - txtNomeEqp:
+                                  Control: TextInput@0.0.54
+                                  Properties:
+                                    AccessibleLabel: ="Nome do tipo de aeronave"
+                                    DisplayMode: =If(varPodeCatalogo, DisplayMode.Edit, DisplayMode.View)
+                                    Height: =40
+                                    Placeholder: ="ex. Boeing 737-8 MAX"
+                                    Value: =Coalesce(varFormEq.nome, "")
+                              - lblEnvEqp:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    Color: =thmTextoFraco
+                                    Font: =thmFonte
+                                    FontWeight: =FontWeight.Bold
+                                    Height: =18
+                                    Size: =10
+                                    Text: ="ENVERGADURA (M) *"
+                              - txtEnvEqp:
+                                  Control: TextInput@0.0.54
+                                  Properties:
+                                    AccessibleLabel: ="Envergadura em metros"
+                                    DisplayMode: =If(varPodeCatalogo, DisplayMode.Edit, DisplayMode.View)
+                                    Height: =40
+                                    Placeholder: ="ex. 35,92"
+                                    Value: =Coalesce(varFormEq.env, "")
+                              - tglAtivoEqp:
+                                  Control: Toggle@1.1.5
+                                  Properties:
+                                    AccessibleLabel: ="Ativo — inativo some do seletor sem apagar histórico"
+                                    BasePaletteColor: =thmVerde
+                                    Checked: =Coalesce(varFormEq.ativo, true)
+                                    DisplayMode: =If(varPodeCatalogo, DisplayMode.Edit, DisplayMode.View)
+                                    FontColor: =thmTexto
+                                    Height: =44
+                                    Label: ="Ativo — inativo some do seletor sem apagar histórico"
+                                    LabelPosition: ='Toggle.LabelPosition'.Before
+                              - cntAcoesEqp:
+                                  Control: GroupContainer@1.5.0
+                                  Variant: AutoLayout
+                                  Properties:
+                                    DropShadow: =DropShadow.None
+                                    Fill: =thmSuperficie
+                                    FillPortions: =0
+                                    Height: =64
+                                    LayoutAlignItems: =LayoutAlignItems.Center
+                                    LayoutDirection: =LayoutDirection.Horizontal
+                                    LayoutGap: =8
+                                    LayoutMinWidth: =0
+                                    PaddingTop: =12
+                                    RadiusBottomLeft: =0
+                                    RadiusBottomRight: =0
+                                    RadiusTopLeft: =0
+                                    RadiusTopRight: =0
+                                  Children:
+                                    - btnNovoEqp:
+                                        Control: Button@0.0.45
+                                        Properties:
+                                          Appearance: ='ButtonCanvas.Appearance'.Secondary
+                                          BasePaletteColor: =thmAcao
+                                          BorderRadius: =0
+                                          DisplayMode: =If(varPodeCatalogo, DisplayMode.Edit, DisplayMode.Disabled)
+                                          FillPortions: =1
+                                          FontColor: =thmAcao
+                                          FontSize: =13
+                                          FontWeight: =FontWeight.Semibold
+                                          Height: =44
+                                          Icon: ="Add"
+                                          IconStyle: ='ButtonCanvas.IconStyle'.Filled
+                                          LayoutMinWidth: =0
+                                          OnSelect: |-
+                                            =Set(varEquipSel, Blank());
+                                            Set(varFormEq, { cod: "", nome: "", env: "", ativo: true });
+                                            UpdateContext({locNonceEq: locNonceEq + 1})
+                                          PaddingLeft: =12
+                                          PaddingRight: =12
+                                          Text: ="NOVO"
+                                    - btnCancelarEqp:
+                                        Control: Button@0.0.45
+                                        Properties:
+                                          Appearance: ='ButtonCanvas.Appearance'.Secondary
+                                          BasePaletteColor: =thmTextoFraco
+                                          BorderRadius: =0
+                                          DisplayMode: =If(varPodeCatalogo, DisplayMode.Edit, DisplayMode.Disabled)
+                                          FillPortions: =1
+                                          FontColor: =thmTextoFraco
+                                          FontSize: =13
+                                          FontWeight: =FontWeight.Semibold
+                                          Height: =44
+                                          Icon: ="DismissCircle"
+                                          IconStyle: ='ButtonCanvas.IconStyle'.Filled
+                                          LayoutMinWidth: =0
+                                          OnSelect: |-
+                                            =If(
+                                                IsBlank(varEquipSel.ID),
+                                                Set(varFormEq, { cod: "", nome: "", env: "", ativo: true }),
+                                                Set(
+                                                    varFormEq,
+                                                    {
+                                                        cod: varEquipSel.equip,
+                                                        nome: varEquipSel.nome_equip,
+                                                        env: Text(varEquipSel.envergadura_m),
+                                                        ativo: varEquipSel.ativo = 1
+                                                    }
+                                                )
+                                            );
+                                            UpdateContext({locNonceEq: locNonceEq + 1})
+                                          PaddingLeft: =12
+                                          PaddingRight: =12
+                                          Text: ="CANCELAR"
+                                    - btnSalvarEqp:
+                                        Control: Button@0.0.45
+                                        Properties:
+                                          Appearance: ='ButtonCanvas.Appearance'.Primary
+                                          BasePaletteColor: =thmPrimaria
+                                          BorderRadius: =0
+                                          DisplayMode: =If(varPodeCatalogo, DisplayMode.Edit, DisplayMode.Disabled)
+                                          FillPortions: =1
+                                          FontColor: =thmTextoBarra
+                                          FontSize: =13
+                                          FontWeight: =FontWeight.Semibold
+                                          Height: =44
+                                          Icon: ="Save"
+                                          IconStyle: ='ButtonCanvas.IconStyle'.Filled
+                                          LayoutMinWidth: =0
+                                          OnSelect: |-
+                                            =If(
+                                                IsBlank(Trim(txtCodEqp.Value)),
+                                                Notify("Informe o código do equipamento.", NotificationType.Error, 5000),
+                                                IsBlank(Trim(txtNomeEqp.Value)),
+                                                Notify("Informe o nome do equipamento.", NotificationType.Error, 5000),
+                                                !IsNumeric(txtEnvEqp.Value) Or Value(txtEnvEqp.Value) <= 0,
+                                                Notify("Informe a envergadura em metros, maior que zero.", NotificationType.Error, 5000),
+                                                !IsBlank(
+                                                    LookUp(
+                                                        colEquipTodos As _e,
+                                                        Upper(_e.equip) = Upper(Trim(txtCodEqp.Value)) And _e.ID <> Coalesce(varEquipSel.ID, 0)
+                                                    ).ID
+                                                ),
+                                                Notify("Já existe equipamento com esse código. O código é a chave que as regras referenciam — duplicado, a regra passa a depender da ordem de inserção.", NotificationType.Error, 9000),
+                                                UpdateContext(
+                                                    {
+                                                        locErroEq: IsError(
+                                                            Patch(
+                                                                tb_equipamentos,
+                                                                If(
+                                                                    IsBlank(varEquipSel.ID),
+                                                                    Defaults(tb_equipamentos),
+                                                                    LookUp(tb_equipamentos, ID = varEquipSel.ID)
+                                                                ),
+                                                                {
+                                                                    equip: Upper(Trim(txtCodEqp.Value)),
+                                                                    nome_equip: Trim(txtNomeEqp.Value),
+                                                                    envergadura_m: Value(txtEnvEqp.Value),
+                                                                    ordem: If(IsBlank(varEquipSel.ID), CountRows(colEquipTodos) * 10 + 10, varEquipSel.ordem),
+                                                                    ativo: If(tglAtivoEqp.Checked, 1, 0)
+                                                                }
+                                                            )
+                                                        )
+                                                    }
+                                                );
+                                                If(
+                                                    locErroEq,
+                                                    Notify("Não foi possível gravar. Nada foi alterado.", NotificationType.Error, 7000),
+                                                    Select(btnRecarregarEqp);
+                                                    Set(varEquipSel, Blank());
+                                                    Set(varFormEq, { cod: "", nome: "", env: "", ativo: true });
+                                                    UpdateContext({locNonceEq: locNonceEq + 1});
+                                                    Notify("Equipamento gravado.", NotificationType.Success, 2500)
+                                                )
+                                            )
+                                          PaddingLeft: =12
+                                          PaddingRight: =12
+                                          Text: ="SALVAR"
