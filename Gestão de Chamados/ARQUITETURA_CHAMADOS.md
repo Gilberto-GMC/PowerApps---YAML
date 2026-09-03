@@ -326,7 +326,7 @@ pessoa errada** — a mesma coerção da lição `Blank() = 0`, aplicada a texto
 | `ScreenChamadoDetalhe` | solicitante + atendente | ✅ entregue — linha do tempo, conversa e ações por papel |
 | `ScreenNovoModuloWizard` | solicitante | ✅ entregue — roteiro de 5 passos + revisão |
 | `frmServiceDesk` | atendente | ✅ entregue — fila, alvo do ladrilho do `frmAdmin` |
-| `ScreenPainelChamados` | gestor | 🔜 onda 4 |
+| `ScreenPainelChamados` | gestor | ✅ entregue — KPIs, distribuição por status e backlog por idade, alvo do ladrilho do `frmAdmin` |
 
 ### 7.4 Perfis
 

@@ -1,0 +1,728 @@
+Screens:
+  ScreenPainelChamados:
+    Properties:
+      Fill: =RGBA(247, 247, 247, 1)
+      LoadingSpinnerColor: =RGBA(96, 70, 237, 1)
+      OnVisible: |-
+        =UpdateContext(
+            {
+                varPainelCarregando: true,
+                varPainelCiclo: "TODOS",
+                varPainelPapel: Switch(
+                    Upper(Trim(Coalesce(userRecord.usr_papel_chamados, ""))),
+                    "GESTOR",
+                    "GESTOR",
+                    "ATENDENTE",
+                    "ATENDENTE",
+                    "SOLICITANTE"
+                )
+            }
+        );
+        ClearCollect(
+            colChamStatus,
+            Table(
+                {Status: "Aberto",                 Hex: "#6046ED", Fundo: "#EEF2FF", Aberto: "SIM"},
+                {Status: "Em atendimento",         Hex: "#0284C7", Fundo: "#E0F2FE", Aberto: "SIM"},
+                {Status: "Aguardando usuário",     Hex: "#B45309", Fundo: "#FFF7ED", Aberto: "SIM"},
+                {Status: "Reaberto",               Hex: "#BE185D", Fundo: "#FDF2F8", Aberto: "SIM"},
+                {Status: "Em análise",             Hex: "#0284C7", Fundo: "#E0F2FE", Aberto: "SIM"},
+                {Status: "Aguardando informações", Hex: "#B45309", Fundo: "#FFF7ED", Aberto: "SIM"},
+                {Status: "Aguardando aprovação",   Hex: "#6D28D9", Fundo: "#F5F3FF", Aberto: "SIM"},
+                {Status: "Em backlog",             Hex: "#475569", Fundo: "#F1F5F9", Aberto: "SIM"},
+                {Status: "Em desenvolvimento",     Hex: "#0284C7", Fundo: "#E0F2FE", Aberto: "SIM"},
+                {Status: "Em homologação",         Hex: "#B45309", Fundo: "#FFF7ED", Aberto: "SIM"},
+                {Status: "Ajustes solicitados",    Hex: "#BE185D", Fundo: "#FDF2F8", Aberto: "SIM"},
+                {Status: "Resolvido",              Hex: "#15803D", Fundo: "#DCFCE7", Aberto: "NAO"},
+                {Status: "Entregue",               Hex: "#15803D", Fundo: "#DCFCE7", Aberto: "NAO"},
+                {Status: "Reprovado",              Hex: "#B91C1C", Fundo: "#FEF2F2", Aberto: "NAO"},
+                {Status: "Cancelado",              Hex: "#64748B", Fundo: "#F1F5F9", Aberto: "NAO"},
+                {Status: "Fechado",                Hex: "#64748B", Fundo: "#F1F5F9", Aberto: "NAO"}
+            )
+        );
+        If(
+            varPainelPapel = "GESTOR",
+            ClearCollect(
+                colPainel,
+                tbl_ServiceDesk
+            ),
+            Clear(colPainel)
+        );
+        UpdateContext({varPainelCarregando: false})
+    Children:
+      - ContainerPainel_1:
+          Control: GroupContainer@1.5.0
+          Variant: ManualLayout
+          Properties:
+            DropShadow: =DropShadow.None
+            Fill: =RGBA(247, 247, 247, 1)
+            Height: =Parent.Height
+            RadiusBottomLeft: =0
+            RadiusBottomRight: =0
+            RadiusTopLeft: =0
+            RadiusTopRight: =0
+            Width: =Parent.Width
+          Children:
+            - HeaderTitlePainel:
+                Control: CanvasComponent
+                ComponentName: HeaderTitle
+                Properties:
+                  Height: =50
+                  IconVisible: =true
+                  ScreenNavigator: =frmAdmin
+                  Width: =Parent.Width
+                  var_subtitulo1: ="Administração"
+                  var_subtitulo2: =""
+                  var_tituloModulo: ="Painel de Chamados"
+            - cntPainelMain:
+                Control: GroupContainer@1.5.0
+                Variant: ManualLayout
+                Properties:
+                  DropShadow: =DropShadow.None
+                  Fill: =RGBA(247, 247, 247, 1)
+                  Height: =Parent.Height - HeaderTitlePainel.Height
+                  RadiusBottomLeft: =0
+                  RadiusBottomRight: =0
+                  RadiusTopLeft: =0
+                  RadiusTopRight: =0
+                  Width: =Parent.Width
+                  Y: =HeaderTitlePainel.Height
+                Children:
+                  - cntPainelShell:
+                      Control: GroupContainer@1.5.0
+                      Variant: ManualLayout
+                      Properties:
+                        BorderStyle: =BorderStyle.None
+                        DropShadow: =DropShadow.None
+                        Height: =Parent.Height - If(Parent.Height < 700, 16, 48)
+                        RadiusBottomLeft: =0
+                        RadiusBottomRight: =0
+                        RadiusTopLeft: =0
+                        RadiusTopRight: =0
+                        Width: =Max(300, Parent.Width - If(Parent.Width < 700, 16, 64))
+                        X: =(Parent.Width - Self.Width) / 2
+                        Y: =If(Parent.Height < 700, 8, 24)
+                      Children:
+                        - cntPainelSidebar:
+                            Control: GroupContainer@1.5.0
+                            Variant: ManualLayout
+                            Properties:
+                              DropShadow: =DropShadow.None
+                              Fill: =RGBA(57, 22, 148, 1)
+                              Height: =Parent.Height-4
+                              RadiusBottomLeft: =0
+                              RadiusBottomRight: =0
+                              RadiusTopLeft: =0
+                              RadiusTopRight: =0
+                              Visible: =Parent.Width >= 900
+                              Width: =300
+                              Y: =2
+                            Children:
+                              - recPainelSidebarOverlay:
+                                  Control: Rectangle@2.3.0
+                                  Properties:
+                                    BorderColor: =RGBA(0, 0, 0, 0)
+                                    Fill: =RGBA(0, 38, 255, 0.16)
+                                    Height: =Parent.Height
+                                    Width: =Parent.Width
+                              - lblPainelBrand:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    AutoHeight: =true
+                                    Color: =RGBA(255, 255, 255, 1)
+                                    Font: =Font.'Open Sans'
+                                    FontWeight: =FontWeight.Bold
+                                    PaddingBottom: =0
+                                    PaddingLeft: =0
+                                    PaddingRight: =0
+                                    PaddingTop: =0
+                                    Size: =24
+                                    Text: ="Airport Now"
+                                    Width: =240
+                                    X: =28
+                                    Y: =34
+                              - lblPainelSideTitle:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    AutoHeight: =true
+                                    Color: =RGBA(255, 255, 255, 0.72)
+                                    Font: =Font.'Open Sans'
+                                    PaddingBottom: =0
+                                    PaddingLeft: =0
+                                    PaddingRight: =0
+                                    PaddingTop: =0
+                                    Size: =11
+                                    Text: ="Painel do gestor"
+                                    Width: =240
+                                    X: =28
+                                    Y: =75
+                              - recPainelSideDivider:
+                                  Control: Rectangle@2.3.0
+                                  Properties:
+                                    BorderColor: =RGBA(0, 0, 0, 0)
+                                    Fill: =RGBA(255, 255, 255, 0.18)
+                                    Height: =1
+                                    Width: =244
+                                    X: =28
+                                    Y: =117
+                              - htmPainelResumo:
+                                  Control: HtmlViewer@2.1.0
+                                  Properties:
+                                    Font: =Font.'Open Sans'
+                                    Height: =230
+                                    HtmlText: |-
+                                      ="<div style='font-family:Open Sans,Segoe UI,sans-serif;'>" &
+                                      "<div style='font-size:12px;font-weight:600;color:rgba(255,255,255,.92);margin-bottom:14px;'>Visão geral</div>" &
+                                      "<table style='width:100%;border-collapse:collapse;'>" &
+                                      "<tr><td style='padding:9px 0;font-size:12px;color:rgba(255,255,255,.78);'>Em aberto</td>" &
+                                      "<td style='text-align:right;font-size:20px;font-weight:800;color:#FFFFFF;'>" &
+                                      CountRows(Filter(colPainel As _c, LookUp(colChamStatus, Status = _c.desk_status, Aberto) = "SIM")) & "</td></tr>" &
+                                      "<tr><td style='padding:9px 0;font-size:12px;color:rgba(255,255,255,.78);'>Sem atendente</td>" &
+                                      "<td style='text-align:right;font-size:20px;font-weight:800;color:#FDBA74;'>" &
+                                      CountRows(Filter(colPainel As _c, LookUp(colChamStatus, Status = _c.desk_status, Aberto) = "SIM", IsBlank(_c.desk_atendente_email))) & "</td></tr>" &
+                                      "<tr><td style='padding:9px 0;font-size:12px;color:rgba(255,255,255,.78);'>SLA estourado</td>" &
+                                      "<td style='text-align:right;font-size:20px;font-weight:800;color:#FCA5A5;'>" &
+                                      CountRows(Filter(colPainel As _c, LookUp(colChamStatus, Status = _c.desk_status, Aberto) = "SIM", Not(IsBlank(_c.desk_data_limite)), _c.desk_data_limite < Now())) & "</td></tr>" &
+                                      "<tr><td style='padding:9px 0;border-top:1px solid rgba(255,255,255,.18);font-size:12px;color:rgba(255,255,255,.6);'>Aguardando aprovação</td>" &
+                                      "<td style='text-align:right;border-top:1px solid rgba(255,255,255,.18);font-size:20px;font-weight:800;color:rgba(255,255,255,.72);'>" &
+                                      CountRows(Filter(colPainel, desk_status = "Aguardando aprovação")) & "</td></tr>" &
+                                      "</table></div>"
+                                    PaddingBottom: =0
+                                    PaddingLeft: =0
+                                    PaddingRight: =0
+                                    PaddingTop: =0
+                                    Size: =11
+                                    Width: =244
+                                    X: =28
+                                    Y: =144
+                              - btnPainelFila:
+                                  Control: Button@0.0.45
+                                  Properties:
+                                    Appearance: ='ButtonCanvas.Appearance'.Secondary
+                                    BorderRadius: =0
+                                    FontSize: =11
+                                    Height: =38
+                                    Icon: ="Filter"
+                                    IconStyle: ='ButtonCanvas.IconStyle'.Outline
+                                    Layout: ='ButtonCanvas.Layout'.IconBefore
+                                    OnSelect: |-
+                                      =Navigate(
+                                          frmServiceDesk,
+                                          ScreenTransition.Fade
+                                      )
+                                    Text: ="Fila de atendimento"
+                                    Width: =244
+                                    X: =28
+                                    Y: =390
+                              - btnPainelMeusChamados:
+                                  Control: Button@0.0.45
+                                  Properties:
+                                    Appearance: ='ButtonCanvas.Appearance'.Secondary
+                                    BorderRadius: =0
+                                    FontSize: =11
+                                    Height: =38
+                                    Icon: ="Person"
+                                    IconStyle: ='ButtonCanvas.IconStyle'.Outline
+                                    Layout: ='ButtonCanvas.Layout'.IconBefore
+                                    OnSelect: |-
+                                      =Navigate(
+                                          ScreenMeusChamados,
+                                          ScreenTransition.Fade
+                                      )
+                                    Text: ="Meus chamados"
+                                    Width: =244
+                                    X: =28
+                                    Y: =438
+                        - cntPainelPanel:
+                            Control: GroupContainer@1.5.0
+                            Variant: ManualLayout
+                            Properties:
+                              BorderColor: =RGBA(226, 232, 240, 1)
+                              BorderThickness: =1
+                              DropShadow: =DropShadow.None
+                              Fill: =RGBA(255, 255, 255, 1)
+                              Height: =Parent.Height-4
+                              RadiusBottomLeft: =0
+                              RadiusBottomRight: =0
+                              RadiusTopLeft: =0
+                              RadiusTopRight: =0
+                              Width: =Parent.Width - Self.X
+                              X: =If(cntPainelSidebar.Visible, 324, 0)
+                              Y: =2
+                            Children:
+                              - lblPainelEyebrow:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    Color: =RGBA(96, 70, 237, 1)
+                                    Font: =Font.'Open Sans'
+                                    FontWeight: =FontWeight.Bold
+                                    Height: =20
+                                    PaddingBottom: =0
+                                    PaddingLeft: =0
+                                    PaddingRight: =0
+                                    PaddingTop: =0
+                                    Size: =9
+                                    Text: ="GESTÃO"
+                                    Width: =260
+                                    X: =If(Parent.Width < 600, 18, 28)
+                                    Y: =20
+                              - lblPainelTitulo:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    AutoHeight: =true
+                                    Color: =RGBA(15, 23, 42, 1)
+                                    Font: =Font.'Open Sans'
+                                    FontWeight: =FontWeight.Bold
+                                    PaddingBottom: =0
+                                    PaddingLeft: =0
+                                    PaddingRight: =0
+                                    PaddingTop: =0
+                                    Size: =22
+                                    Text: ="Painel de Chamados"
+                                    Width: =Parent.Width - (2 * Self.X)
+                                    X: =If(Parent.Width < 600, 18, 28)
+                                    Y: =42
+                              - lblPainelSubtitulo:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    AutoHeight: =true
+                                    Color: =RGBA(100, 116, 139, 1)
+                                    Font: =Font.'Open Sans'
+                                    PaddingBottom: =0
+                                    PaddingLeft: =0
+                                    PaddingRight: =0
+                                    PaddingTop: =0
+                                    Size: =10
+                                    Text: ="Visão consolidada dos dois ciclos. Toque em um chamado para abrir o detalhe."
+                                    Width: =Parent.Width - (2 * Self.X)
+                                    X: =If(Parent.Width < 600, 18, 28)
+                                    Y: =76
+                              - recPainelHeaderDivider:
+                                  Control: Rectangle@2.3.0
+                                  Properties:
+                                    BorderColor: =RGBA(0, 0, 0, 0)
+                                    Fill: =RGBA(226, 232, 240, 1)
+                                    Height: =1
+                                    Width: =Parent.Width
+                                    Y: =108
+                              - btnPainelCicloTodos:
+                                  Control: Button@0.0.45
+                                  Properties:
+                                    Appearance: =If(varPainelCiclo = "TODOS", 'ButtonCanvas.Appearance'.Primary, 'ButtonCanvas.Appearance'.Secondary)
+                                    BorderRadius: =0
+                                    FontSize: =11
+                                    Height: =34
+                                    OnSelect: |-
+                                      =UpdateContext({varPainelCiclo: "TODOS"})
+                                    Text: ="Todos os ciclos"
+                                    Width: =140
+                                    X: =If(Parent.Width < 600, 18, 28)
+                                    Y: =126
+                              - btnPainelCicloSuporte:
+                                  Control: Button@0.0.45
+                                  Properties:
+                                    Appearance: =If(varPainelCiclo = "SUPORTE", 'ButtonCanvas.Appearance'.Primary, 'ButtonCanvas.Appearance'.Secondary)
+                                    BorderRadius: =0
+                                    FontSize: =11
+                                    Height: =34
+                                    OnSelect: |-
+                                      =UpdateContext({varPainelCiclo: "SUPORTE"})
+                                    Text: ="Suporte"
+                                    Width: =110
+                                    X: =btnPainelCicloTodos.X + btnPainelCicloTodos.Width + 8
+                                    Y: =126
+                              - btnPainelCicloDemanda:
+                                  Control: Button@0.0.45
+                                  Properties:
+                                    Appearance: =If(varPainelCiclo = "DEMANDA", 'ButtonCanvas.Appearance'.Primary, 'ButtonCanvas.Appearance'.Secondary)
+                                    BorderRadius: =0
+                                    FontSize: =11
+                                    Height: =34
+                                    OnSelect: |-
+                                      =UpdateContext({varPainelCiclo: "DEMANDA"})
+                                    Text: ="Demanda"
+                                    Width: =110
+                                    X: =btnPainelCicloSuporte.X + btnPainelCicloSuporte.Width + 8
+                                    Y: =126
+                              - htmPainelKpis:
+                                  Control: HtmlViewer@2.1.0
+                                  Properties:
+                                    Font: =Font.'Open Sans'
+                                    Height: =104
+                                    HtmlText: |-
+                                      =With(
+                                          {
+                                              colEsc: Filter(
+                                                  colPainel,
+                                                  varPainelCiclo = "TODOS" Or desk_ciclo = varPainelCiclo
+                                              )
+                                          },
+                                          "<div style='display:flex;gap:12px;font-family:Open Sans,Segoe UI,sans-serif;'>" &
+                                          "<div style='flex:1;background:#F8FAFC;border:1px solid #E2E8F0;padding:14px;'>" &
+                                          "<div style='font-size:10px;font-weight:700;color:#64748B;letter-spacing:.03em;'>EM ABERTO</div>" &
+                                          "<div style='font-size:26px;font-weight:800;color:#0F172A;margin-top:6px;'>" &
+                                          CountRows(Filter(colEsc As _c, LookUp(colChamStatus, Status = _c.desk_status, Aberto) = "SIM")) & "</div></div>" &
+                                          "<div style='flex:1;background:#FFF7ED;border:1px solid #FED7AA;padding:14px;'>" &
+                                          "<div style='font-size:10px;font-weight:700;color:#B45309;letter-spacing:.03em;'>SEM ATENDENTE</div>" &
+                                          "<div style='font-size:26px;font-weight:800;color:#B45309;margin-top:6px;'>" &
+                                          CountRows(Filter(colEsc As _c, LookUp(colChamStatus, Status = _c.desk_status, Aberto) = "SIM", IsBlank(_c.desk_atendente_email))) & "</div></div>" &
+                                          "<div style='flex:1;background:#FEF2F2;border:1px solid #FECACA;padding:14px;'>" &
+                                          "<div style='font-size:10px;font-weight:700;color:#B91C1C;letter-spacing:.03em;'>SLA ESTOURADO</div>" &
+                                          "<div style='font-size:26px;font-weight:800;color:#B91C1C;margin-top:6px;'>" &
+                                          CountRows(Filter(colEsc As _c, LookUp(colChamStatus, Status = _c.desk_status, Aberto) = "SIM", Not(IsBlank(_c.desk_data_limite)), _c.desk_data_limite < Now())) & "</div></div>" &
+                                          "<div style='flex:1;background:#F5F3FF;border:1px solid #DDD6FE;padding:14px;'>" &
+                                          "<div style='font-size:10px;font-weight:700;color:#6D28D9;letter-spacing:.03em;'>AGUARD. APROVAÇÃO</div>" &
+                                          "<div style='font-size:26px;font-weight:800;color:#6D28D9;margin-top:6px;'>" &
+                                          CountRows(Filter(colEsc, desk_status = "Aguardando aprovação")) & "</div></div>" &
+                                          "<div style='flex:1;background:#FDF2F8;border:1px solid #FBCFE8;padding:14px;'>" &
+                                          "<div style='font-size:10px;font-weight:700;color:#BE185D;letter-spacing:.03em;'>REABERTOS</div>" &
+                                          "<div style='font-size:26px;font-weight:800;color:#BE185D;margin-top:6px;'>" &
+                                          CountRows(Filter(colEsc, desk_status = "Reaberto")) & "</div></div>" &
+                                          "<div style='flex:1;background:#E0F2FE;border:1px solid #BAE6FD;padding:14px;'>" &
+                                          "<div style='font-size:10px;font-weight:700;color:#0284C7;letter-spacing:.03em;'>DEMANDA EM CURSO</div>" &
+                                          "<div style='font-size:26px;font-weight:800;color:#0284C7;margin-top:6px;'>" &
+                                          CountRows(Filter(colEsc, desk_status in ["Em backlog", "Em desenvolvimento", "Em homologação", "Ajustes solicitados"])) & "</div></div>" &
+                                          "</div>"
+                                      )
+                                    PaddingBottom: =0
+                                    PaddingLeft: =0
+                                    PaddingRight: =0
+                                    PaddingTop: =0
+                                    Size: =10
+                                    Visible: =And(Not(varPainelCarregando), varPainelPapel = "GESTOR")
+                                    Width: =Parent.Width - (2 * Self.X)
+                                    X: =If(Parent.Width < 600, 18, 28)
+                                    Y: =172
+                              - lblPainelBreakdownTitulo:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    Color: =RGBA(15, 23, 42, 1)
+                                    Font: =Font.'Open Sans'
+                                    FontWeight: =FontWeight.Semibold
+                                    Height: =20
+                                    PaddingBottom: =0
+                                    PaddingLeft: =0
+                                    PaddingRight: =0
+                                    PaddingTop: =0
+                                    Size: =11
+                                    Text: ="Distribuição por status"
+                                    Visible: =And(Not(varPainelCarregando), varPainelPapel = "GESTOR")
+                                    Width: =340
+                                    X: =If(Parent.Width < 600, 18, 28)
+                                    Y: =292
+                              - galPainelStatus:
+                                  Control: Gallery@2.15.0
+                                  Variant: Vertical
+                                  Properties:
+                                    BorderStyle: =BorderStyle.None
+                                    Fill: =RGBA(255, 255, 255, 1)
+                                    Height: =240
+                                    Items: |-
+                                      =Sort(
+                                          Filter(
+                                              AddColumns(
+                                                  colChamStatus As _stat,
+                                                  "Qtde",
+                                                  CountRows(
+                                                      Filter(
+                                                          colPainel,
+                                                          desk_status = _stat.Status And
+                                                          (varPainelCiclo = "TODOS" Or desk_ciclo = varPainelCiclo)
+                                                      )
+                                                  ),
+                                                  "Total",
+                                                  Max(
+                                                      1,
+                                                      CountRows(
+                                                          Filter(
+                                                              colPainel,
+                                                              varPainelCiclo = "TODOS" Or desk_ciclo = varPainelCiclo
+                                                          )
+                                                      )
+                                                  )
+                                              ),
+                                              Qtde > 0
+                                          ),
+                                          Qtde,
+                                          SortOrder.Descending
+                                      )
+                                    LayoutMinHeight: =0
+                                    ShowScrollbar: =true
+                                    TemplatePadding: =0
+                                    TemplateSize: =30
+                                    Visible: =And(Not(varPainelCarregando), varPainelPapel = "GESTOR")
+                                    Width: =Parent.Width - (2 * Self.X)
+                                    X: =If(Parent.Width < 600, 18, 28)
+                                    Y: =316
+                                  Children:
+                                    - htmPainelBarra:
+                                        Control: HtmlViewer@2.1.0
+                                        Properties:
+                                          Fill: =RGBA(255, 255, 255, 1)
+                                          Font: =Font.'Open Sans'
+                                          Height: =28
+                                          HtmlText: |-
+                                            ="<table style='width:100%;border-collapse:collapse;font-family:Open Sans,Segoe UI,sans-serif;'><tr>" &
+                                            "<td style='width:180px;font-size:10px;color:#334155;padding:4px 8px 4px 0;white-space:nowrap;'>" &
+                                            ThisItem.Status & "</td>" &
+                                            "<td style='vertical-align:middle;padding:4px 0;'>" &
+                                            "<div style='background:#F1F5F9;height:14px;width:100%;'>" &
+                                            "<div style='background:" & ThisItem.Hex & ";height:14px;width:" &
+                                            Round(ThisItem.Qtde / ThisItem.Total * 100, 0) & "%;'></div></div></td>" &
+                                            "<td style='width:36px;text-align:right;font-size:11px;font-weight:700;color:#0F172A;padding:4px 0 4px 8px;'>" &
+                                            ThisItem.Qtde & "</td>" &
+                                            "</tr></table>"
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                          PaddingTop: =0
+                                          Size: =10
+                                          Width: =Parent.Width
+                                          X: =0
+                                          Y: =0
+                              - lblPainelBacklogTitulo:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    Color: =RGBA(15, 23, 42, 1)
+                                    Font: =Font.'Open Sans'
+                                    FontWeight: =FontWeight.Semibold
+                                    Height: =20
+                                    PaddingBottom: =0
+                                    PaddingLeft: =0
+                                    PaddingRight: =0
+                                    PaddingTop: =0
+                                    Size: =11
+                                    Text: ="Chamados abertos há mais tempo"
+                                    Visible: =And(Not(varPainelCarregando), varPainelPapel = "GESTOR")
+                                    Width: =340
+                                    X: =If(Parent.Width < 600, 18, 28)
+                                    Y: =572
+                              - galPainelBacklog:
+                                  Control: Gallery@2.15.0
+                                  Variant: Vertical
+                                  Properties:
+                                    BorderColor: =RGBA(226, 232, 240, 1)
+                                    BorderStyle: =BorderStyle.None
+                                    Fill: =RGBA(255, 255, 255, 1)
+                                    Height: =Parent.Height - Self.Y - 20
+                                    Items: |-
+                                      =Sort(
+                                          Filter(
+                                              colPainel As _c,
+                                              LookUp(colChamStatus, Status = _c.desk_status, Aberto) = "SIM" And
+                                              (varPainelCiclo = "TODOS" Or _c.desk_ciclo = varPainelCiclo)
+                                          ),
+                                          Created,
+                                          SortOrder.Ascending
+                                      )
+                                    LayoutMinHeight: =0
+                                    ShowScrollbar: =true
+                                    TemplatePadding: =0
+                                    TemplateSize: =96
+                                    Visible: =And(Not(varPainelCarregando), varPainelPapel = "GESTOR", Self.AllItemsCount > 0)
+                                    Width: =Parent.Width - (2 * Self.X)
+                                    X: =If(Parent.Width < 600, 18, 28)
+                                    Y: =596
+                                  Children:
+                                    - htmPainelLinha:
+                                        Control: HtmlViewer@2.1.0
+                                        Properties:
+                                          Fill: =RGBA(255, 255, 255, 1)
+                                          Font: =Font.'Open Sans'
+                                          Height: =94
+                                          HtmlText: |-
+                                            ="<table style='width:100%;border-collapse:collapse;border-left:3px solid " &
+                                            Coalesce(LookUp(colChamStatus, Status = ThisItem.desk_status, Hex), "#CBD5E1") &
+                                            ";border-bottom:1px solid #E2E8F0;font-family:Open Sans,Segoe UI,sans-serif;'><tr>" &
+                                            "<td style='width:104px;vertical-align:top;padding:14px 0 0 12px;'>" &
+                                            "<div style='font-size:15px;font-weight:800;color:#391694;'>#" & Text(ThisItem.desk_id, "000000") & "</div>" &
+                                            "<div style='font-size:10px;color:#64748B;margin-top:4px;'>" &
+                                            Text(ThisItem.Created, "dd/mm/yyyy") & "</div>" &
+                                            "<div style='font-size:10px;font-weight:700;color:" &
+                                            If(DateDiff(ThisItem.Created, Now(), TimeUnit.Days) > 5, "#B91C1C", "#94A3B8") &
+                                            ";margin-top:2px;'>" & DateDiff(ThisItem.Created, Now(), TimeUnit.Days) & " dia(s)</div></td>" &
+                                            "<td style='vertical-align:top;padding:14px 12px 0 4px;'>" &
+                                            "<div style='font-size:13px;font-weight:700;color:#0F172A;'>" & Coalesce(ThisItem.desk_categoria, "Sem categoria") & "</div>" &
+                                            "<div style='font-size:10px;color:#64748B;margin-top:3px;'>" &
+                                            Coalesce(ThisItem.desk_usuario.DisplayName, ThisItem.desk_solicitante_email, "—") & "</div>" &
+                                            "<div style='font-size:11px;color:#334155;margin-top:5px;line-height:1.4;'>" &
+                                            Left(Substitute(Substitute(Coalesce(ThisItem.desk_descricao, ""), "<", " "), Char(10), " "), 110) &
+                                            If(Len(Coalesce(ThisItem.desk_descricao, "")) > 110, "...", "") &
+                                            "</div></td>" &
+                                            "<td style='width:190px;vertical-align:top;text-align:right;padding:14px 12px 0 0;'>" &
+                                            "<span style='display:inline-block;background:" &
+                                            Coalesce(LookUp(colChamStatus, Status = ThisItem.desk_status, Fundo), "#F1F5F9") &
+                                            ";color:" & Coalesce(LookUp(colChamStatus, Status = ThisItem.desk_status, Hex), "#64748B") &
+                                            ";padding:5px 10px;font-size:10px;font-weight:700;letter-spacing:.03em;'>" &
+                                            Upper(Coalesce(ThisItem.desk_status, "SEM STATUS")) & "</span>" &
+                                            "<div style='font-size:10px;color:" &
+                                            If(IsBlank(ThisItem.desk_atendente_email), "#B45309", "#64748B") &
+                                            ";font-weight:" & If(IsBlank(ThisItem.desk_atendente_email), "700", "400") & ";margin-top:7px;'>" &
+                                            If(IsBlank(ThisItem.desk_atendente_email), "SEM ATENDENTE", Coalesce(ThisItem.desk_atendente_nome, ThisItem.desk_atendente_email)) &
+                                            "</div>" &
+                                            If(
+                                                ThisItem.desk_ciclo = "DEMANDA",
+                                                "<div style='font-size:10px;font-weight:700;color:#6D28D9;margin-top:4px;'>DEMANDA</div>",
+                                                ""
+                                            ) &
+                                            "</td></tr></table>"
+                                          OnSelect: |-
+                                            =Set(
+                                                varChamado,
+                                                ThisItem
+                                            );
+                                            Set(
+                                                varChamadoOrigem,
+                                                "PAINEL"
+                                            );
+                                            Navigate(
+                                                ScreenChamadoDetalhe,
+                                                ScreenTransition.CoverRight
+                                            )
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                          PaddingTop: =0
+                                          Size: =11
+                                          Width: =Parent.Width
+                                          X: =0
+                                          Y: =0
+                              - cntPainelVazio:
+                                  Control: GroupContainer@1.5.0
+                                  Variant: ManualLayout
+                                  Properties:
+                                    BorderColor: =RGBA(226, 232, 240, 1)
+                                    BorderThickness: =1
+                                    DropShadow: =DropShadow.None
+                                    Fill: =RGBA(248, 250, 252, 1)
+                                    Height: =184
+                                    RadiusBottomLeft: =0
+                                    RadiusBottomRight: =0
+                                    RadiusTopLeft: =0
+                                    RadiusTopRight: =0
+                                    Visible: =And(Not(varPainelCarregando), varPainelPapel = "GESTOR", galPainelBacklog.AllItemsCount = 0)
+                                    Width: =Parent.Width - (2 * Self.X)
+                                    X: =If(Parent.Width < 600, 18, 28)
+                                    Y: =596
+                                  Children:
+                                    - lblPainelVazioTitulo:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          Align: =Align.Center
+                                          Color: =RGBA(15, 23, 42, 1)
+                                          Font: =Font.'Open Sans'
+                                          FontWeight: =FontWeight.Semibold
+                                          Height: =28
+                                          Size: =13
+                                          Text: ="Nenhum chamado em aberto neste recorte"
+                                          Width: =Parent.Width - 48
+                                          X: =24
+                                          Y: =52
+                                    - lblPainelVazioTexto:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          Align: =Align.Center
+                                          AutoHeight: =true
+                                          Color: =RGBA(100, 116, 139, 1)
+                                          Font: =Font.'Open Sans'
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                          PaddingTop: =0
+                                          Size: =10
+                                          Text: ="Tente outro ciclo na barra de filtros acima."
+                                          Width: =Parent.Width - 96
+                                          X: =48
+                                          Y: =90
+                              - cntPainelSemAcesso:
+                                  Control: GroupContainer@1.5.0
+                                  Variant: ManualLayout
+                                  Properties:
+                                    BorderColor: =RGBA(253, 186, 116, 1)
+                                    BorderThickness: =1
+                                    DropShadow: =DropShadow.None
+                                    Fill: =RGBA(255, 247, 237, 1)
+                                    Height: =210
+                                    RadiusBottomLeft: =0
+                                    RadiusBottomRight: =0
+                                    RadiusTopLeft: =0
+                                    RadiusTopRight: =0
+                                    Visible: =And(Not(varPainelCarregando), varPainelPapel <> "GESTOR")
+                                    Width: =Parent.Width - (2 * Self.X)
+                                    X: =If(Parent.Width < 600, 18, 28)
+                                    Y: =140
+                                  Children:
+                                    - lblPainelSemAcessoTitulo:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          Align: =Align.Center
+                                          Color: =RGBA(154, 52, 18, 1)
+                                          Font: =Font.'Open Sans'
+                                          FontWeight: =FontWeight.Bold
+                                          Height: =30
+                                          Size: =14
+                                          Text: ="Painel restrito a gestores"
+                                          Width: =Parent.Width - 48
+                                          X: =24
+                                          Y: =34
+                                    - lblPainelSemAcessoTexto:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          Align: =Align.Center
+                                          AutoHeight: =true
+                                          Color: =RGBA(154, 52, 18, 0.86)
+                                          Font: =Font.'Open Sans'
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                          PaddingTop: =0
+                                          Size: =10
+                                          Text: ="Esta visão consolida todos os chamados do Service Desk e é restrita a quem tem papel de gestor. Para atender chamados, use a fila."
+                                          Width: =Parent.Width - 140
+                                          X: =70
+                                          Y: =74
+                                    - btnPainelSemAcessoIr:
+                                        Control: Button@0.0.45
+                                        Properties:
+                                          BorderRadius: =0
+                                          FontSize: =11
+                                          FontWeight: =FontWeight.Semibold
+                                          Height: =40
+                                          Icon: ="Filter"
+                                          IconStyle: ='ButtonCanvas.IconStyle'.Filled
+                                          Layout: ='ButtonCanvas.Layout'.IconBefore
+                                          OnSelect: |-
+                                            =Navigate(
+                                                frmServiceDesk,
+                                                ScreenTransition.Fade
+                                            )
+                                          Text: ="Ir para a fila"
+                                          Width: =210
+                                          X: =(Parent.Width - Self.Width) / 2
+                                          Y: =140
+                              - cntPainelLoading:
+                                  Control: GroupContainer@1.5.0
+                                  Variant: ManualLayout
+                                  Properties:
+                                    DropShadow: =DropShadow.None
+                                    Fill: =RGBA(255, 255, 255, 0.9)
+                                    Height: =Parent.Height
+                                    RadiusBottomLeft: =0
+                                    RadiusBottomRight: =0
+                                    RadiusTopLeft: =0
+                                    RadiusTopRight: =0
+                                    Visible: =varPainelCarregando
+                                    Width: =Parent.Width
+                                  Children:
+                                    - lblPainelLoading:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          Align: =Align.Center
+                                          Color: =RGBA(57, 22, 148, 1)
+                                          Font: =Font.'Open Sans'
+                                          FontWeight: =FontWeight.Bold
+                                          Height: =28
+                                          Size: =13
+                                          Text: ="Carregando o painel..."
+                                          Width: =Parent.Width - 32
+                                          X: =16
+                                          Y: =(Parent.Height - Self.Height) / 2
