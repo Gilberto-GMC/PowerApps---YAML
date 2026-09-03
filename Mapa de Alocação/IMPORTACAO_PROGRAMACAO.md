@@ -17,6 +17,26 @@ como execução falhada num histórico, sem ponto de parada e sem como reproduzi
 
 ---
 
+## ⚠️ `List_Generator` não aceita aspas duplas dentro de `Validation`
+
+A coluna `status` de `tb_importacaoMapa` tinha uma validação comparando texto —
+`=OU([status]="RASCUNHO";[status]="PRONTO";...)`. O fluxo `List_Generator` recusou com
+*"Sequência JSON formatada incorretamente"*, erro vindo da própria API REST do SharePoint: o corpo
+HTTP que o fluxo monta para `CreateFieldAsXml` quebra quando o `schemaXml` tem aspas duplas literais
+dentro do texto.
+
+**Nenhuma outra lista do repositório usa esse padrão** — todas as validações existentes comparam
+número (`=0`, `=1`) ou data (`>=`), nunca string entre aspas. Zero precedente é sinal pior que um
+precedente só: aqui, a ausência apontou direto para o defeito.
+
+**Solução aplicada:** a validação de `status` foi removida do `schemaXml`. Quem controla os valores
+válidos (`RASCUNHO`, `PRONTO`, `PROCESSANDO`, `CONCLUIDO`, `ERRO`) é o app e o fluxo, não a lista —
+perda aceitável, porque ninguém edita `status` direto na grade do SharePoint no uso normal.
+
+**Se algum dia precisar de validação de texto numa lista nova**, não repita o padrão: ou evita
+comparar string na `Validation` do `schemaXml`, ou testa a criação isolada dessa coluna antes de
+rodar a lista inteira pelo `List_Generator`.
+
 ## O script
 
 ### Como testar sem fluxo nenhum
