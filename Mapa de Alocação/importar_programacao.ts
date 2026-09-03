@@ -216,8 +216,18 @@ function main(workbook: ExcelScript.Workbook, mesRef: string = ""): Resultado {
     const ini = par.p.abs;
     const fim = par.d.abs;
 
-    // posição: preferência da companhia, depois a queda geral. Cargueiro não cai — só T6C serve.
-    const candidatas = pref.portoes.length ? pref.posicoes.concat(QUEDA_POSICOES) : pref.posicoes;
+    // Posição: preferência da companhia, depois a queda geral — para todas, cargueiro incluído.
+    //
+    // O cargueiro ficava restrito à T6C, e como ela consome T5+T6 bastava uma delas em uso para o voo
+    // não entrar. Virava pendência e sumia do mapa, que é pior: o pátio mostrava livre uma posição
+    // ocupada. A decisão do Douglas é preencher e deixar alguém conferir.
+    //
+    // ⚠️ Sem checagem física. A T6C existe porque o 767 cargueiro precisa do espaço de duas posições,
+    // e as posições declaram aeronave_max — mas env_max está zerado em todas, então não há como o
+    // código saber se cabe. Por isso quem cai fora da preferência sai dizendo isso na observação, que
+    // o balão do mapa mostra. O cargueiro forçado para uma T ainda por cima fica sem portão numa
+    // posição de ponte, que é a condição do contorno tracejado — aparece na grade sem precisar de nada.
+    const candidatas = pref.posicoes.concat(QUEDA_POSICOES);
     let posicao = "";
     for (const c of candidatas) {
       let cabe = true;
@@ -228,6 +238,7 @@ function main(workbook: ExcelScript.Workbook, mesRef: string = ""): Resultado {
       pendencias.push(pendencia("SEM POSICAO", par.p, par.d, "nenhuma posição livre na preferência nem na queda"));
       continue;
     }
+    const foraPreferencia = pref.posicoes.indexOf(posicao) < 0;
     for (const b of bloqueadasPor(posicao)) marcar(ocupPosicao, b, ini, fim);
 
     // portão: preferência, depois qualquer um livre. Melhor um portão fora do habitual que nenhum.
@@ -261,7 +272,8 @@ function main(workbook: ExcelScript.Workbook, mesRef: string = ""): Resultado {
       tipo_registro: "VOO",
       pesquisado: 0,
       internacional: internacional,
-      observacao: "IMPORTACAO " + (mesRef || dataIso(par.p.serial).substring(0, 7)),
+      observacao: "IMPORTACAO " + (mesRef || dataIso(par.p.serial).substring(0, 7)) +
+        (foraPreferencia ? " - POSICAO FORA DA PREFERENCIA, CONFERIR" : ""),
       origem: "IMPORTACAO " + (mesRef || dataIso(par.p.serial).substring(0, 7)),
       ativo: 1,
     });
