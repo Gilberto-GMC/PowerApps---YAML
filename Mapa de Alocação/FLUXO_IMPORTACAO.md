@@ -23,7 +23,7 @@ relacionados*, clicar na conexão do SharePoint e selecioná-la → **Importar**
 
 > ⚠️ **O pacote tem que entrar como "Criar como novo", não como "Update".** O Power Automate não
 > atualiza um fluxo existente por pacote quando a definição mudou — falha com *"To import this flow
-> you+ll need to save it as a new flow first"*. O `.zip` do repositório já vem marcado assim
+> you'll need to save it as a new flow first"*. O `.zip` do repositório já vem marcado assim
 > (`suggestedCreationType: New` no manifesto). Se algum dia reaparecer marcado como Update, a
 > correção é a chave inglesa (🔧) na linha do fluxo → trocar o **IMPORT SETUP**.
 
