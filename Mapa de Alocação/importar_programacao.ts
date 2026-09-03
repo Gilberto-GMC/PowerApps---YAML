@@ -191,10 +191,34 @@ function main(workbook: ExcelScript.Workbook, mesRef: string = ""): Resultado {
     else { usada[melhor] = true; pares.push({ p: p, d: decolagens[melhor] }); }
   }
 
+  // --- movimento sem par vira estadia truncada na virada do dia, em vez de sumir
+  //
+  // Pouso do dia 30 cuja decolagem cai em outubro nao pareia, e antes virava pendencia: a aeronave
+  // pernoitava no patio e o mapa mostrava a posicao livre. Sao ~6 por mes, sempre no dia 1o e no
+  // ultimo, ~70 por ano, e ninguem saberia.
+  //
+  // Nao ha como inventar o horario que falta, mas da para gravar o pedaco conhecido: pouso solto
+  // ocupa da chegada ate a meia-noite; decolagem solta, da meia-noite ate a saida. E limite inferior
+  // verdadeiro, nao chute. E a borda fecha sozinha entre meses: o outro lado do 30/09 vira a
+  // decolagem solta de 01/10 quando outubro for importado.
+  const estadias: { p: Movimento; d: Movimento; soltoP?: boolean; soltoD?: boolean }[] = pares.slice();
+  const fimDoDia = (m: Movimento): Movimento => ({
+    serial: m.serial, min: 1439, abs: m.abs - m.min + 1439,
+    cia: m.cia, voo: m.voo, rota: m.rota, aeronave: m.aeronave, movimento: m.movimento,
+  });
+  const inicioDoDia = (m: Movimento): Movimento => ({
+    serial: m.serial, min: 0, abs: m.abs - m.min,
+    cia: m.cia, voo: m.voo, rota: m.rota, aeronave: m.aeronave, movimento: m.movimento,
+  });
+  for (const p of pousoSolto) estadias.push({ p: p, d: fimDoDia(p), soltoD: true });
+  for (let i = 0; i < decolagens.length; i++) {
+    if (!usada[i]) estadias.push({ p: inicioDoDia(decolagens[i]), d: decolagens[i], soltoP: true });
+  }
+
   // --- mês escolhido: filtra pela data do POUSO, para o pernoite não se partir ao meio
   const paresDoMes = mesRef
-    ? pares.filter(x => dataIso(x.p.serial).substring(0, 7) === mesRef)
-    : pares;
+    ? estadias.filter(x => dataIso(x.p.serial).substring(0, 7) === mesRef)
+    : estadias;
 
   // --- alocação
   const ocupPosicao: { [k: string]: number[][] } = {};
@@ -272,8 +296,9 @@ function main(workbook: ExcelScript.Workbook, mesRef: string = ""): Resultado {
       posicao_txt: posicao,
       patio_txt: POSICAO[posicao].patio,
       cia_sigla: pref.sigla,
-      voo_chegada: par.p.voo,
-      voo_saida: par.d.voo,
+      // sem par, o voo do outro lado nao existe: deixa em branco em vez de repetir o que se tem
+      voo_chegada: par.soltoP ? "" : par.p.voo,
+      voo_saida: par.soltoD ? "" : par.d.voo,
       equipamento: EQUIPAMENTO[par.p.aeronave] || "",
       hora_inicio: par.p.min,
       hora_fim: par.d.min,
@@ -281,24 +306,19 @@ function main(workbook: ExcelScript.Workbook, mesRef: string = ""): Resultado {
       tipo_registro: "VOO",
       pesquisado: 0,
       internacional: internacional,
+      // "CONFERIR" e a marca unica do que o operador precisa olhar — a grade desenha esses blocos
+      // com contorno tracejado procurando justamente essa palavra
       observacao: "IMPORTACAO " + (mesRef || dataIso(par.p.serial).substring(0, 7)) +
-        (foraPreferencia ? " - POSICAO FORA DA PREFERENCIA, CONFERIR" : ""),
+        (foraPreferencia ? " - POSICAO FORA DA PREFERENCIA, CONFERIR" : "") +
+        (par.soltoD ? " - SEM DECOLAGEM NA PLANILHA, CONFERIR HORARIO DE SAIDA" : "") +
+        (par.soltoP ? " - SEM POUSO NA PLANILHA, CONFERIR HORARIO DE ENTRADA" : ""),
       origem: "IMPORTACAO " + (mesRef || dataIso(par.p.serial).substring(0, 7)),
       ativo: 1,
     });
   }
 
-  // --- o que não pareou entra como pendência: nada some em silêncio
-  for (const p of pousoSolto) {
-    if (mesRef && dataIso(p.serial).substring(0, 7) !== mesRef) continue;
-    pendencias.push(pendencia("POUSO SEM PAR", p, p, "decolagem fora do arquivo ou do período"));
-  }
-  for (let i = 0; i < decolagens.length; i++) {
-    if (usada[i]) continue;
-    const d = decolagens[i];
-    if (mesRef && dataIso(d.serial).substring(0, 7) !== mesRef) continue;
-    pendencias.push(pendencia("DECOLAGEM SEM PAR", d, d, "pouso fora do arquivo ou do período"));
-  }
+  // Movimento sem par nao vira mais pendencia: entra como estadia truncada na virada do dia, la em
+  // cima. Pendencia ficou so para o que realmente nao entrou no mapa — hoje, SEM POSICAO.
 
   const semEquip = registros.filter(r => !r.equipamento).length;
   const avisos: string[] = [];
