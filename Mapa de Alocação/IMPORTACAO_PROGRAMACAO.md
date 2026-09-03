@@ -137,32 +137,23 @@ andamento.
 
 ---
 
-## O fluxo, ação por ação
+## O fluxo
 
-Gatilho: **SharePoint — quando um item é criado ou modificado** em `tb_importacaoMapa`,
-com condição `status = PRONTO`.
+O passo a passo completo, ação por ação e campo por campo, está em **`FLUXO_IMPORTACAO.md`**.
 
-1. **Atualizar item** → `status = PROCESSANDO`.
-2. **Obter anexos** e **Obter conteúdo do anexo** do item.
-3. Gravar o anexo numa biblioteca (o conector do Excel precisa de um arquivo com caminho).
-4. **Excel Online — Executar script** → `Importar programacao`, passando `mesRef` no formato `aaaa-MM`.
-5. **Atualizar item** → `total` = `total` do retorno.
-6. **Aplicar a cada** sobre `registros` → **Criar item** em `tb_alocacoesMapa`.
-   - A cada 25 itens, **Atualizar item** com `processados`. É isso que move a barra.
-   - **Grave `ativo` explicitamente como 1.** O default da coluna em produção é `0`, e registro com
-     `ativo = 0` some do app sem erro nenhum.
-7. **Atualizar item** → `status = CONCLUIDO`, `criados`, `pendencias`, e `mensagem` com o resumo.
-8. Em caso de erro: `status = ERRO` e a mensagem no campo `mensagem`.
+Resumo: gatilho em item modificado com `status = PRONTO`, salva o anexo numa biblioteca, roda o script,
+apaga a importação anterior do mês pela coluna `origem`, grava os registros num laço sequencial
+atualizando `processados` de 25 em 25, e fecha com `CONCLUIDO`.
 
-> **Reimportação.** Todo registro nasce com `IMPORTACAO aaaa-MM` na coluna **`origem`**. Antes do passo
-> 6, o fluxo apaga o que já foi importado daquele mês:
->
-> - **Obter itens** em `tb_alocacoesMapa` com filtro `origem eq 'IMPORTACAO 2026-09'`
-> - **Aplicar a cada** → **Excluir item**
->
-> Sem isso, rodar duas vezes duplica ~700 registros. E tem que ser pela `origem`, não pela `observacao`:
-> `observacao` é coluna Nota, e **o SharePoint não aceita filtro OData em coluna de várias linhas**.
-> O filtro por data seria pior ainda — apagaria também o que foi lançado à mão.
+As três armadilhas que o documento detalha, e que não são óbvias:
+
+1. **Condição de gatilho é obrigatória.** O fluxo altera o item que o dispara — sem a condição
+   `status = PRONTO` no gatilho, ele entra em laço infinito. Condição no corpo do fluxo não resolve:
+   ali o gatilho já executou.
+2. **O laço tem que ser sequencial** (simultaneidade = 1). Em paralelo o contador da barra vira
+   corrida entre ramos. Custa 8 a 12 minutos para ~700 itens, e é o preço da barra funcionar.
+3. **`ativo` tem que ser mapeado explicitamente.** O default em produção é `0`, e registro com
+   `ativo = 0` some do app sem erro nenhum.
 
 ---
 
