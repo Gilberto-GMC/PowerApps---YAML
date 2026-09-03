@@ -61,6 +61,35 @@ sozinho.
 > registros e escreve o motivo no campo `mensagem` do item. Foi de propósito — falha barulhenta e
 > inofensiva é melhor que falha silenciosa.
 
+### O `operationId` não é o nome que aparece na tela
+
+A importação do pacote **valida cada `operationId` contra o conector** e para no primeiro que não
+existir, dizendo qual é:
+
+```
+The API operation GetAttachments could not be found in API sharepointonline
+```
+
+A ação chamada **"Obter anexos"** tem `operationId` **`GetItemAttachments`** — e os parâmetros dela
+são `itemId`/`attachmentId`, não `id`/`fileId`. O nome visível e o nome interno divergem, e não há
+como adivinhar qual dos dois é.
+
+A tabela real, conferida em `learn.microsoft.com/connectors/sharepointonline`:
+
+| ação na tela | operationId | parâmetros |
+|---|---|---|
+| Obter anexos | `GetItemAttachments` | `dataset`, `table`, `itemId` |
+| Obter conteúdo do anexo | `GetAttachmentContent` | `dataset`, `table`, `itemId`, `attachmentId` |
+| Criar arquivo | `CreateFile` | `dataset`, `folderPath`, `name`, `body` |
+| Obter itens | `GetItems` | `dataset`, `table`, `$filter`, `$top` |
+| Criar item | `PostItem` | `dataset`, `table`, `item/<coluna>` |
+| Atualizar item | `PatchItem` | `dataset`, `table`, `id`, `item/<coluna>` |
+| Excluir item | `DeleteItem` | `dataset`, `table`, `id` |
+
+**Montando pelo designer isso não importa** — ele escreve o nome interno sozinho. Só pesa para quem
+edita a definição fora da ferramenta. A lição é a mesma de sempre neste repositório: nome de
+propriedade se confere na fonte, não se deduz do rótulo.
+
 ### O que eu não consegui verificar daqui
 
 - **`tb_alocacoesMapa` está referenciada pelo título, não pelo GUID** — eu só tinha o GUID de
