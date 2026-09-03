@@ -482,12 +482,36 @@ Só depois solte o mês completo.
 
 ---
 
-## O que ainda não existe
+## As pendências aparecem para o operador
 
-**Pendências não são gravadas em lugar nenhum.** O script devolve a lista com data, voo, rota e motivo,
-e o fluxo só conta quantas são. O operador vê o número na tela, mas não *quais*. Para resolver de
-verdade faltaria uma lista `tb_pendenciaImportacao` e um laço a mais no fluxo.
+Pendência não vira registro nenhum — é justamente o voo que **não** entrou no mapa. O operador via só
+o número e, para saber quais, tinha que abrir o histórico do fluxo.
 
-Ficou de fora de propósito: são 7 pendências em 700 registros, e enquanto a operação for uma importação
-por mês dá para olhar o retorno do script no histórico do fluxo. Se a importação virar rotina de várias
-pessoas, isso passa a incomodar rápido.
+A ação `Fechar` agora monta a lista dentro do próprio campo `mensagem`, que a tela já exibia:
+
+```
+@{concat(outputs('Resultado_script')?['mensagem'], if(empty(outputs('Resultado_script')?['pendencias']), '', concat('<br><br><b>NAO ENTRARAM NO MAPA:</b><br>', join(select(outputs('Resultado_script')?['pendencias'], concat(item()['data'], ' ', item()['hora'], ' - ', item()['empresa'], ' ', item()['voo'], ' - ', item()['rota'], ' - ', item()['motivo'])), '<br>'))))}
+```
+
+Uma expressão, num campo que já existia, sem lista nova nem ação a mais. Escolhido assim porque são
+~6 por mês e quase sempre as mesmas: o alvo é o operador ler e resolver, não o sistema rastrear.
+Separa com `<br>` porque quem exibe é um `HtmlViewer`.
+
+**O que isso não faz:** não é clicável, não sobrevive à importação seguinte e não aparece no Mapa do
+Dia. Se a importação virar rotina de várias pessoas, o caminho é uma lista `tb_pendenciaImportacao` e
+um aviso na grade do dia, com o formulário de novo registro já preenchido.
+
+---
+
+## ⚠️ Toda virada de mês perde ~6 voos
+
+Das sete pendências de setembro, **seis eram borda do mês**: pousos do dia 30 cuja decolagem é em
+outubro, e decolagens do dia 1º cujo pouso foi em agosto.
+
+**Importar outubro não recupera nada disso.** O script filtra pela data do *pouso*, então um pouso de
+30/09 não cai no mês de outubro — ele fica sem par para sempre, nos dois arquivos. São aeronaves que
+pernoitaram no pátio e que o mapa não mostra: a posição aparece livre e não estava.
+
+São uns 70 por ano, sempre no dia 1º e no último, e ninguém saberia sem olhar. A correção seria o
+script ler alguns dias além da borda só para fechar os pares, sem gerar registro fora do mês pedido.
+**Ainda não foi feita.**

@@ -396,7 +396,7 @@
               "item/processados": "@variables('contador')",
               "item/criados": "@variables('contador')",
               "item/pendencias": "@length(coalesce(outputs('Resultado_script')?['pendencias'], json('[]')))",
-              "item/mensagem": "@outputs('Resultado_script')?['mensagem']"
+              "item/mensagem": "@{concat(outputs('Resultado_script')?['mensagem'], if(empty(outputs('Resultado_script')?['pendencias']), '', concat('<br><br><b>NAO ENTRARAM NO MAPA:</b><br>', join(select(outputs('Resultado_script')?['pendencias'], concat(item()['data'], ' ', item()['hora'], ' - ', item()['empresa'], ' ', item()['voo'], ' - ', item()['rota'], ' - ', item()['motivo'])), '<br>'))))}"
             },
             "host": {
               "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
