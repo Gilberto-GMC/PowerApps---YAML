@@ -120,6 +120,51 @@ O gerador `montar_fluxo.js` confere isso sozinho: a cada geração ele varre tod
 `PostItem` e lista qualquer obrigatória ausente. Era verificação que dava para fazer daqui e eu não
 estava fazendo.
 
+### O script mora no OneDrive pessoal, e isso é uma dívida
+
+A ação do Excel é **`Run script`**, não `Run script from SharePoint library`: a diferença entre as
+duas não é onde está a *planilha*, é onde está o *script*. Criado por Excel Online → Automatizar →
+Novo Script, ele fica em `personal › <usuário> › Scripts do Office`, no OneDrive de quem criou.
+
+**Se o dropdown de scripts vier vazio ("Nenhum item"), quase sempre são duas contas diferentes.** A
+conexão do Excel na ação e a conta dona do script têm que ser a mesma — aqui a conexão era
+`processos.aeroservice@grupoccr.com.br` e o script estava no OneDrive de `douglas_nardelli`. O
+conserto imediato é *Alterar conexão*.
+
+**A dívida:** um script que a operação roda todo mês não deveria morar no OneDrive pessoal de uma
+pessoa. Quando essa pessoa sair ou perder acesso, o fluxo para, e o erro aparece como "script não
+encontrado" para quem não faz ideia de onde ele estava. O caminho durável é salvar o script numa
+biblioteca do SharePoint (arquivo `.osts`) e trocar a ação por **Run script from SharePoint
+library**. Ficou para depois por escolha consciente, para destravar o teste.
+
+### Detalhes que dependem do ambiente, não da definição
+
+Duas coisas o pacote não tem como acertar sozinho, e ambas travam a primeira execução:
+
+- **A pasta da biblioteca precisa existir e o caminho tem que bater.** O `Salvar planilha` grava numa
+  pasta que o SharePoint **não cria sozinho**. Aqui a pasta real é `Documentos › Importar`, não o
+  `/Documentos Compartilhados/importacoes` que eu havia chutado. Navegue pelo ícone de pasta em vez
+  de digitar: o caminho interno de biblioteca em site português nem sempre é o que aparece na tela.
+- **O campo `Arquivo` do Run script quer `corpo/ID`**, não `corpo/ItemId`. O `ItemId` é o ID do item
+  de lista que representa o arquivo, usado para mexer em metadados; o conector do Excel quer o
+  identificador do arquivo em si.
+
+### Os 5 avisos de "loop circular" são esperados
+
+O Verificador de fluxo acusa **loop circular em todas as ações que escrevem em `tb_importacaoMapa`**
+— cinco delas. É falso positivo: o verificador não enxerga condições de gatilho, e a condição é
+justamente a proteção. O fluxo *tem* que escrever na lista que o dispara, porque é de lá que a barra
+de progresso lê.
+
+**Mas o aviso vira verdade se a condição sumir.** Depois de qualquer importação de pacote ou
+restauração, confira no gatilho → Configurações → Condições de gatilho:
+
+```
+@equals(triggerBody()?[status], PRONTO)
+```
+
+Erros (0) é o que importa. Avisos (5) é o normal deste fluxo.
+
 ### O que eu não consegui verificar daqui
 
 - **`tb_alocacoesMapa` está referenciada pelo título, não pelo GUID** — eu só tinha o GUID de
