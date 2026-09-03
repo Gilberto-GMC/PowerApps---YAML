@@ -12,6 +12,7 @@ Screens:
                 locPatio: "TODOS",
                 locNonce: 0,
                 locConfirmaConting: 0,
+                locConfirmaPortao: "",
                 locConfirmaExcluir: 0,
                 locDesatualizado: false,
                 locSalvando: false,
@@ -51,7 +52,7 @@ Screens:
                   }
               );
               Set(varPosSel, LookUp(colGrade As _g, _g.id_posicao = varAlocSel.id_posicao));
-              UpdateContext({locConfirmaExcluir: 0, locConfirmaConting: 0, locNonce: locNonce + 1});
+              UpdateContext({locConfirmaExcluir: 0, locConfirmaConting: 0, locConfirmaPortao: "", locNonce: locNonce + 1});
               Set(varPainelAberto, true)
             Text: =""
             Visible: =true
@@ -94,7 +95,7 @@ Screens:
                       intl: false
                   }
               );
-              UpdateContext({locConfirmaExcluir: 0, locConfirmaConting: 0, locNonce: locNonce + 1});
+              UpdateContext({locConfirmaExcluir: 0, locConfirmaConting: 0, locConfirmaPortao: "", locNonce: locNonce + 1});
               Set(varPainelAberto, true)
             Text: =""
             Visible: =true
@@ -2315,18 +2316,18 @@ Screens:
                                       8000
                                   );
                                   UpdateContext({locSalvando: false, locOcupado: Blank()}),
-                                  !IsBlank(locConflitoPortao.id),
+                                  !IsBlank(locConflitoPortao.id) And locConfirmaPortao <> locPortao & "-" & Text(locConflitoPortao.id),
                                   Notify(
                                       "Portão " & locPortao & " já está em uso de " &
                                       Text(locConflitoPortao.data_ini, "dd/mm") & " " &
                                       Text(Int(locConflitoPortao.h_ini / 60), "00") & ":" & Text(Mod(locConflitoPortao.h_ini, 60), "00") & " até " &
                                       Text(locConflitoPortao.data_f, "dd/mm") & " " &
                                       Text(Int(locConflitoPortao.h_fim / 60), "00") & ":" & Text(Mod(locConflitoPortao.h_fim, 60), "00") &
-                                      " na posição " & locConflitoPortao.posicao_txt & ".",
-                                      NotificationType.Error,
+                                      " na posição " & locConflitoPortao.posicao_txt & ". Toque em SALVAR de novo para confirmar.",
+                                      NotificationType.Warning,
                                       8000
                                   );
-                                  UpdateContext({locSalvando: false, locOcupado: Blank()}),
+                                  UpdateContext({locConfirmaPortao: locPortao & "-" & Text(locConflitoPortao.id), locSalvando: false, locOcupado: Blank()}),
                                   locPos.env_max > 0 And locEnv > locPos.env_max,
                                   Notify(
                                       "Envergadura de " & Text(locEnv) & " m acima do limite da posição " & locPos.posicao &
@@ -2382,7 +2383,7 @@ Screens:
                                   If(
                                       locErro,
                                       Notify("Não foi possível gravar. Nada foi alterado.", NotificationType.Error, 7000),
-                                      UpdateContext({locConfirmaConting: 0, locConfirmaExcluir: 0});
+                                      UpdateContext({locConfirmaConting: 0, locConfirmaExcluir: 0, locConfirmaPortao: ""});
                                       Select(btnAtualizarMap);
                                       Set(varAlocSel, Blank());
                                       Set(varPainelAberto, false);
@@ -2466,7 +2467,7 @@ Screens:
                         OnSelect: |-
                           =Set(varPainelAberto, false);
                           Set(varAlocSel, Blank());
-                          UpdateContext({locConfirmaExcluir: 0, locConfirmaConting: 0, locNonce: locNonce + 1})
+                          UpdateContext({locConfirmaExcluir: 0, locConfirmaConting: 0, locConfirmaPortao: "", locNonce: locNonce + 1})
                         PaddingLeft: =12
                         PaddingRight: =12
                         Text: ="FECHAR"

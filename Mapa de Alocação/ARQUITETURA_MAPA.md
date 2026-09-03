@@ -325,9 +325,9 @@ Uma consulta por salvamento — não por render:
 3. Saída depois da chegada **na linha do tempo absoluta** — pernoite é um registro só, com a DATA FINAL no
    dia da saída.
 4. **Sobreposição na posição** — bloqueia e nomeia o registro conflitante com data, horário e prefixo.
-5. **Portão ocupado** no mesmo intervalo, em qualquer posição — bloqueia.
+5. **Portão ocupado** no mesmo intervalo, em qualquer posição — **avisa e pede confirmação** no segundo toque em SALVAR. Era bloqueio; virou aviso em 03/09/2026, porque a operação reaproveita portão e o bloqueio impedia lançamento legítimo. Conflito de *posição* continua bloqueando: dois aviões não cabem no mesmo lugar, mas dois voos podem compartilhar um portão.
 6. **Envergadura** acima do `env_max` da posição — **dormente**, ver abaixo.
-7. **Posição de contingência** (o T3) — pede confirmação, não bloqueia.
+7. **Posição de contingência** — pede confirmação, não bloqueia. **Nenhuma posição está marcada hoje**: a T3 era a única e saiu em 03/09/2026, então este degrau está ligado e inerte, como o da envergadura.
 
 **Por que deixou de ser custo zero.** Sobreposição só é comparável entre registros que estejam na mesma
 linha do tempo, e `colDia` só tem o dia carregado. Um registro que vai de 03/09 a 07/09 tem que ser
@@ -458,8 +458,8 @@ regras 21, 22, 23, 25, 26 e 27 deste app.
    **nenhuma** chamada nova.
 6. Lançar T4 09:00→09:40, portão 4. Reabrir e conferir.
 7. Lançar T4 09:20→10:00 → **bloqueia** nomeando o conflitante.
-8. Mesmo horário, outra posição, **mesmo portão** → bloqueia.
-9. Lançar em T3 → pede confirmação de contingência no segundo toque em SALVAR.
+8. Mesmo horário, outra posição, **mesmo portão** → avisa; segundo toque em SALVAR grava.
+9. ~~Lançar em T3 → pede confirmação de contingência.~~ Sem posição de contingência, não há o que testar. Para exercitar o degrau, marcar `contingencia: 1` numa posição no `App.Formulas` antes.
 10. Realocar um voo pelo painel; a grade redesenha e o painel mostra quem alterou e quando.
 11. Marcar como pesquisado → selo `P` e borda vermelha. Criar `INTERDICAO` em A5 das 08:00 às 18:00 → faixa
     cinza e voo naquele intervalo bloqueado.
