@@ -1,0 +1,591 @@
+Screens:
+  scrMapaImport:
+    Properties:
+      OnVisible: |-
+        =Set(varMapaVisivel, false);
+        Set(varPodeCatalogo, DataSourceInfo('tb_importacaoMapa', DataSourceInfo.EditPermission));
+        Set(varImportId, Blank());
+        UpdateContext({locImp: Blank()});
+        ResetForm(frmImportImp)
+    Children:
+      - cntShellImp:
+          Control: GroupContainer@1.5.0
+          Variant: AutoLayout
+          Properties:
+            DropShadow: =DropShadow.None
+            Fill: =thmFundo
+            Height: =Parent.Height
+            LayoutAlignItems: =LayoutAlignItems.Stretch
+            LayoutDirection: =LayoutDirection.Horizontal
+            RadiusBottomLeft: =0
+            RadiusBottomRight: =0
+            RadiusTopLeft: =0
+            RadiusTopRight: =0
+            Width: =Parent.Width
+          Children:
+            - cntMenuImp:
+                Control: GroupContainer@1.5.0
+                Variant: AutoLayout
+                Properties:
+                  DropShadow: =DropShadow.None
+                  Fill: =thmPrimariaEscura
+                  FillPortions: =0
+                  LayoutAlignItems: =LayoutAlignItems.Stretch
+                  LayoutDirection: =LayoutDirection.Vertical
+                  LayoutGap: =10
+                  LayoutMinHeight: =0
+                  PaddingBottom: =14
+                  PaddingLeft: =12
+                  PaddingRight: =12
+                  PaddingTop: =16
+                  RadiusBottomLeft: =0
+                  RadiusBottomRight: =0
+                  RadiusTopLeft: =0
+                  RadiusTopRight: =0
+                  Width: =If(varMenuAberto, 236, 76)
+                Children:
+                  - htmMarcaImp:
+                      Control: HtmlViewer@2.1.0
+                      Properties:
+                        AlignInContainer: =AlignInContainer.Start
+                        AutoHeight: =true
+                        Color: =thmTextoBarra
+                        Fill: =thmPrimariaEscura
+                        Font: =thmFonte
+                        HtmlText: |-
+                          ="<div style='" & htmlFonte & "color:" & hxTextoBarra & ";'>" &
+                          If(
+                              varMenuAberto,
+                              "<div style='font-size:10px;letter-spacing:.24em;font-weight:700;opacity:.6;'>MOTIVA</div><div style='font-size:16px;font-weight:800;letter-spacing:.01em;margin-top:2px;'>MAPA DE ALOCAÇÃO</div>",
+                              "<div style='font-size:17px;font-weight:800;text-align:left;margin-left:12px;'>MA</div>"
+                          ) &
+                          "</div>"
+                        PaddingBottom: =14
+                        PaddingLeft: =4
+                        PaddingRight: =0
+                        PaddingTop: =0
+                        Size: =11
+                  - cntNavImp:
+                      Control: GroupContainer@1.5.0
+                      Variant: AutoLayout
+                      Properties:
+                        DropShadow: =DropShadow.None
+                        Fill: =thmPrimariaEscura
+                        LayoutAlignItems: =LayoutAlignItems.Stretch
+                        LayoutDirection: =LayoutDirection.Vertical
+                        LayoutGap: =10
+                        LayoutMinHeight: =0
+                        LayoutMinWidth: =0
+                        LayoutOverflowY: =LayoutOverflow.Scroll
+                        RadiusBottomLeft: =0
+                        RadiusBottomRight: =0
+                        RadiusTopLeft: =0
+                        RadiusTopRight: =0
+                      Children:
+                        - btnNavMapaImp:
+                            Control: Button@0.0.45
+                            Properties:
+                              Align: =Align.Left
+                              AlignInContainer: =AlignInContainer.Stretch
+                              Appearance: ='ButtonCanvas.Appearance'.Secondary
+                              BasePaletteColor: =thmTextoBarra
+                              BorderRadius: =0
+                              FontColor: =thmTextoBarra
+                              FontSize: =14
+                              FontWeight: =FontWeight.Semibold
+                              Height: =44
+                              Icon: ="Eye"
+                              IconStyle: ='ButtonCanvas.IconStyle'.Filled
+                              LayoutMinWidth: =0
+                              OnSelect: =Navigate(scrMapaPatio, ScreenTransition.Fade)
+                              PaddingLeft: =18
+                              Text: =If(varMenuAberto, "MAPA DO DIA", "")
+                        - btnNavRefImp:
+                            Control: Button@0.0.45
+                            Properties:
+                              Align: =Align.Left
+                              AlignInContainer: =AlignInContainer.Stretch
+                              Appearance: ='ButtonCanvas.Appearance'.Secondary
+                              BasePaletteColor: =thmTextoBarra
+                              BorderRadius: =0
+                              FontColor: =thmTextoBarra
+                              FontSize: =14
+                              FontWeight: =FontWeight.Semibold
+                              Height: =44
+                              Icon: ="Search"
+                              IconStyle: ='ButtonCanvas.IconStyle'.Filled
+                              LayoutMinWidth: =0
+                              OnSelect: =Navigate(scrMapaReferencia, ScreenTransition.Fade)
+                              PaddingLeft: =18
+                              Text: =If(varMenuAberto, "POSIÇÕES E CORES", "")
+                        - btnNavEqpImp:
+                            Control: Button@0.0.45
+                            Properties:
+                              Align: =Align.Left
+                              AlignInContainer: =AlignInContainer.Stretch
+                              Appearance: ='ButtonCanvas.Appearance'.Secondary
+                              BasePaletteColor: =thmTextoBarra
+                              BorderRadius: =0
+                              FontColor: =thmTextoBarra
+                              FontSize: =14
+                              FontWeight: =FontWeight.Semibold
+                              Height: =44
+                              Icon: ="Airplane"
+                              IconStyle: ='ButtonCanvas.IconStyle'.Filled
+                              LayoutMinWidth: =0
+                              OnSelect: =Navigate(scrMapaEquip, ScreenTransition.Fade)
+                              PaddingLeft: =18
+                              Text: =If(varMenuAberto, "EQUIPAMENTOS", "")
+                        - btnNavRgrImp:
+                            Control: Button@0.0.45
+                            Properties:
+                              Align: =Align.Left
+                              AlignInContainer: =AlignInContainer.Stretch
+                              Appearance: ='ButtonCanvas.Appearance'.Secondary
+                              BasePaletteColor: =thmTextoBarra
+                              BorderRadius: =0
+                              FontColor: =thmTextoBarra
+                              FontSize: =14
+                              FontWeight: =FontWeight.Semibold
+                              Height: =44
+                              Icon: ="LockClosed"
+                              IconStyle: ='ButtonCanvas.IconStyle'.Filled
+                              LayoutMinWidth: =0
+                              OnSelect: =Navigate(scrMapaRegra, ScreenTransition.Fade)
+                              PaddingLeft: =18
+                              Text: =If(varMenuAberto, "RESTRIÇÕES", "")
+                        - btnNavImpImp:
+                            Control: Button@0.0.45
+                            Properties:
+                              Align: =Align.Left
+                              AlignInContainer: =AlignInContainer.Stretch
+                              Appearance: ='ButtonCanvas.Appearance'.Primary
+                              BasePaletteColor: =thmPrimaria
+                              BorderRadius: =0
+                              FontColor: =thmTextoBarra
+                              FontSize: =14
+                              FontWeight: =FontWeight.Semibold
+                              Height: =44
+                              Icon: ="Upload"
+                              IconStyle: ='ButtonCanvas.IconStyle'.Filled
+                              LayoutMinWidth: =0
+                              PaddingLeft: =18
+                              Text: =If(varMenuAberto, "IMPORTAR PROGRAMAÇÃO", "")
+                        - btnNavInicioImp:
+                            Control: Button@0.0.45
+                            Properties:
+                              Align: =Align.Left
+                              AlignInContainer: =AlignInContainer.Stretch
+                              Appearance: ='ButtonCanvas.Appearance'.Secondary
+                              BasePaletteColor: =thmTextoBarra
+                              BorderRadius: =0
+                              FontColor: =thmTextoBarra
+                              FontSize: =14
+                              FontWeight: =FontWeight.Semibold
+                              Height: =44
+                              Icon: ="ArrowExit"
+                              IconStyle: ='ButtonCanvas.IconStyle'.Filled
+                              LayoutMinWidth: =0
+                              OnSelect: =Navigate(scrMapaInicio, ScreenTransition.Fade)
+                              PaddingLeft: =18
+                              Text: =If(varMenuAberto, "TROCAR CONTEXTO", "")
+                  - btnRecolherImp:
+                      Control: Button@0.0.45
+                      Properties:
+                        Align: =Align.Left
+                        AlignInContainer: =AlignInContainer.Stretch
+                        Appearance: ='ButtonCanvas.Appearance'.Secondary
+                        BasePaletteColor: =thmBotaoBarra
+                        BorderRadius: =0
+                        FillPortions: =0
+                        FontColor: =thmTextoBarra
+                        FontSize: =12
+                        FontWeight: =FontWeight.Semibold
+                        Height: =40
+                        Icon: ="ChevronRight"
+                        IconStyle: ='ButtonCanvas.IconStyle'.Filled
+                        LayoutMinWidth: =0
+                        OnSelect: =Set(varMenuAberto, !varMenuAberto)
+                        PaddingLeft: =18
+                        Text: =If(varMenuAberto, "RECOLHER", "")
+            - cntRaizImp:
+                Control: GroupContainer@1.5.0
+                Variant: AutoLayout
+                Properties:
+                  DropShadow: =DropShadow.None
+                  Fill: =thmFundo
+                  FillPortions: =1
+                  LayoutAlignItems: =LayoutAlignItems.Stretch
+                  LayoutDirection: =LayoutDirection.Vertical
+                  LayoutGap: =0
+                  LayoutMinHeight: =0
+                  LayoutMinWidth: =0
+                  RadiusBottomLeft: =0
+                  RadiusBottomRight: =0
+                  RadiusTopLeft: =0
+                  RadiusTopRight: =0
+                Children:
+                  - cntBarraImp:
+                      Control: GroupContainer@1.5.0
+                      Variant: AutoLayout
+                      Properties:
+                        DropShadow: =DropShadow.None
+                        Fill: =thmPrimaria
+                        FillPortions: =0
+                        Height: =thmAlturaBarra
+                        LayoutAlignItems: =LayoutAlignItems.Center
+                        LayoutDirection: =LayoutDirection.Horizontal
+                        LayoutGap: =12
+                        LayoutMinWidth: =0
+                        PaddingLeft: =26
+                        PaddingRight: =26
+                        RadiusBottomLeft: =0
+                        RadiusBottomRight: =0
+                        RadiusTopLeft: =0
+                        RadiusTopRight: =0
+                      Children:
+                        - htmTituloImp:
+                            Control: HtmlViewer@2.1.0
+                            Properties:
+                              AutoHeight: =true
+                              Color: =thmTextoBarra
+                              Fill: =thmPrimaria
+                              FillPortions: =1
+                              Font: =thmFonte
+                              HtmlText: |-
+                                ="<div style='" & htmlFonte & "color:" & hxTextoBarra & ";'>" &
+                                "<div style='font-size:19px;font-weight:800;letter-spacing:.02em;line-height:1.1;'>IMPORTAR PROGRAMAÇÃO</div>" &
+                                "<div style='font-size:11px;opacity:.75;margin-top:3px;'>" &
+                                varAeroNome & " &nbsp;&middot;&nbsp; " & If(varPodeCatalogo, "pré-lançamento do mês a partir da planilha", "SOMENTE LEITURA") & "</div></div>"
+                              LayoutMinWidth: =0
+                              Size: =11
+                  - cntConteudoImp:
+                      Control: GroupContainer@1.5.0
+                      Variant: AutoLayout
+                      Properties:
+                        DropShadow: =DropShadow.None
+                        Fill: =thmFundo
+                        FillPortions: =1
+                        LayoutAlignItems: =LayoutAlignItems.Stretch
+                        LayoutDirection: =LayoutDirection.Vertical
+                        LayoutGap: =12
+                        LayoutMinHeight: =0
+                        LayoutMinWidth: =0
+                        LayoutOverflowY: =LayoutOverflow.Scroll
+                        PaddingBottom: =20
+                        PaddingLeft: =26
+                        PaddingRight: =26
+                        PaddingTop: =20
+                        RadiusBottomLeft: =0
+                        RadiusBottomRight: =0
+                        RadiusTopLeft: =0
+                        RadiusTopRight: =0
+                      Children:
+                        - htmAjudaImp:
+                            Control: HtmlViewer@2.1.0
+                            Properties:
+                              AutoHeight: =true
+                              Color: =thmTexto
+                              Fill: =thmSuperficie
+                              FillPortions: =0
+                              Font: =thmFonte
+                              HtmlText: |-
+                                ="<div style='" & htmlFonte & "background:" & hxPrimariaClara & ";padding:12px 14px;font-size:11px;" &
+                                "line-height:1.6;color:" & hxTexto & ";'>" &
+                                "<b>Como funciona.</b> Anexe a planilha de programação do mês, escolha o mês e toque em GERAR. " &
+                                "O pareamento de pouso com decolagem e a alocação de posição e portão são feitos automaticamente." &
+                                "<br><br>" &
+                                "O que entra é <b>pré-lançamento</b>: alguém deve conferir posição e portão na grade depois. " &
+                                "Voo que não achar posição livre não é inventado — vira pendência e aparece no resumo." &
+                                "</div>"
+                              Size: =11
+                        - cntEntradaImp:
+                            Control: GroupContainer@1.5.0
+                            Variant: AutoLayout
+                            Properties:
+                              DropShadow: =DropShadow.None
+                              Fill: =thmSuperficie
+                              FillPortions: =0
+                              LayoutAlignItems: =LayoutAlignItems.Stretch
+                              LayoutDirection: =LayoutDirection.Vertical
+                              LayoutGap: =4
+                              LayoutMinHeight: =0
+                              LayoutMinWidth: =0
+                              PaddingBottom: =14
+                              PaddingLeft: =16
+                              PaddingRight: =16
+                              PaddingTop: =14
+                              RadiusBottomLeft: =0
+                              RadiusBottomRight: =0
+                              RadiusTopLeft: =0
+                              RadiusTopRight: =0
+                            Children:
+                              - lblMesImp:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    Color: =thmTextoFraco
+                                    Font: =thmFonte
+                                    FontWeight: =FontWeight.Bold
+                                    Height: =18
+                                    Size: =10
+                                    Text: ="MÊS DE REFERÊNCIA *"
+                              - dtpMesImp:
+                                  Control: DatePicker@0.0.46
+                                  Properties:
+                                    AccessibleLabel: ="Mês da programação a importar"
+                                    DisplayMode: =If(varPodeCatalogo And IsBlank(varImportId), DisplayMode.Edit, DisplayMode.View)
+                                    FillPortions: =0
+                                    Format: =DateTimeFormat.ShortDate
+                                    Height: =40
+                                    SelectedDate: =Coalesce(varMesImp, DateAdd(Date(Year(Today()), Month(Today()), 1), 1, TimeUnit.Months))
+                                    Width: =200
+                              - lblArqImp:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    Color: =thmTextoFraco
+                                    Font: =thmFonte
+                                    FontWeight: =FontWeight.Bold
+                                    Height: =18
+                                    Size: =10
+                                    Text: ="PLANILHA DE PROGRAMAÇÃO *"
+                              - frmImportImp:
+                                  Control: Form@2.4.4
+                                  Layout: Vertical
+                                  Properties:
+                                    BorderColor: =thmBorda
+                                    DataSource: =tb_importacaoMapa
+                                    DefaultMode: =FormMode.New
+                                    Fill: =thmSuperficie
+                                    FillPortions: =0
+                                    Height: =210
+                                    LayoutMinHeight: =0
+                                    NumberOfColumns: =1
+                                    OnFailure: |-
+                                      =Notify(
+                                          "Não foi possível enviar o arquivo. Confira se a planilha está anexada e tente de novo.",
+                                          NotificationType.Error,
+                                          7000
+                                      )
+                                    OnSuccess: |-
+                                      =Set(varImportId, Self.LastSubmit.ID);
+                                      Set(varMesImp, Date(Year(dtpMesImp.SelectedDate), Month(dtpMesImp.SelectedDate), 1));
+                                      Patch(
+                                          tb_importacaoMapa,
+                                          LookUp(tb_importacaoMapa, ID = Self.LastSubmit.ID),
+                                          {
+                                              aeroporto: varAero,
+                                              mes_ref: varMesImp,
+                                              status: "PRONTO",
+                                              total: 0,
+                                              processados: 0,
+                                              criados: 0,
+                                              pendencias: 0,
+                                              ativo: 1
+                                          }
+                                      );
+                                      UpdateContext({locImp: LookUp(tb_importacaoMapa, ID = varImportId)});
+                                      Notify("Arquivo enviado. O processamento começa em instantes.", NotificationType.Success, 4000)
+                                    Width: =Parent.Width - 32
+                                  Children:
+                                    - cardAeroImp:
+                                        Control: TypedDataCard@1.0.7
+                                        Variant: TextualEdit
+                                        Properties:
+                                          BorderColor: =thmBorda
+                                          DataField: ="aeroporto"
+                                          Default: =ThisItem.aeroporto
+                                          DisplayName: ="aeroporto"
+                                          Height: =1
+                                          Required: =true
+                                          Update: =varAero
+                                          Visible: =false
+                                          Width: =Parent.Width
+                                          X: =0
+                                          Y: =0
+                                    - cardMesImp:
+                                        Control: TypedDataCard@1.0.7
+                                        Variant: DateTimeEdit
+                                        Properties:
+                                          BorderColor: =thmBorda
+                                          DataField: ="mes_ref"
+                                          Default: =ThisItem.mes_ref
+                                          DisplayName: ="mes_ref"
+                                          Height: =1
+                                          Required: =true
+                                          Update: =Date(Year(dtpMesImp.SelectedDate), Month(dtpMesImp.SelectedDate), 1)
+                                          Visible: =false
+                                          Width: =Parent.Width
+                                          X: =0
+                                          Y: =1
+                                    - cardAnexoImp:
+                                        Control: TypedDataCard@1.0.7
+                                        Variant: ClassicAttachmentsEdit
+                                        Properties:
+                                          BorderColor: =thmBorda
+                                          DataField: ="{Attachments}"
+                                          Default: =ThisItem.Anexos
+                                          DisplayMode: =If(varPodeCatalogo And IsBlank(varImportId), DisplayMode.Edit, DisplayMode.View)
+                                          DisplayName: ="Anexos"
+                                          Height: =190
+                                          Required: =true
+                                          Update: =attImportImp.Attachments
+                                          Width: =Parent.Width
+                                          X: =0
+                                          Y: =2
+                                        Children:
+                                          - lblCardAnexoImp:
+                                              Control: Label@2.5.1
+                                              MetadataKey: FieldName
+                                              Properties:
+                                                AutoHeight: =true
+                                                Color: =thmTextoFraco
+                                                Font: =thmFonte
+                                                FontWeight: =FontWeight.Bold
+                                                Height: =20
+                                                PaddingLeft: =0
+                                                Size: =10
+                                                Text: ="arraste o .xlsx aqui ou use Anexar arquivo"
+                                                Width: =Parent.Width - 60
+                                                Wrap: =false
+                                                Y: =0
+                                          - attImportImp:
+                                              Control: Attachments@2.3.0
+                                              MetadataKey: FieldValue
+                                              Properties:
+                                                BorderColor: =thmBorda
+                                                BorderThickness: =1
+                                                DisplayMode: =Parent.DisplayMode
+                                                Fill: =thmSuperficie
+                                                Font: =thmFonte
+                                                Height: =150
+                                                ItemColor: =thmTexto
+                                                ItemFill: =thmSuperficie
+                                                Items: =Parent.Default
+                                                MaxAttachments: =1
+                                                NoAttachmentsText: ="nenhum arquivo anexado"
+                                                Size: =11
+                                                Width: =Parent.Width - 20
+                                                X: =10
+                                                Y: =24
+                        - cntAcoesImp:
+                            Control: GroupContainer@1.5.0
+                            Variant: AutoLayout
+                            Properties:
+                              DropShadow: =DropShadow.None
+                              Fill: =thmFundo
+                              FillPortions: =0
+                              Height: =64
+                              LayoutAlignItems: =LayoutAlignItems.Center
+                              LayoutDirection: =LayoutDirection.Horizontal
+                              LayoutGap: =8
+                              LayoutMinWidth: =0
+                              RadiusBottomLeft: =0
+                              RadiusBottomRight: =0
+                              RadiusTopLeft: =0
+                              RadiusTopRight: =0
+                            Children:
+                              - btnGerarImp:
+                                  Control: Button@0.0.45
+                                  Properties:
+                                    Appearance: ='ButtonCanvas.Appearance'.Primary
+                                    BasePaletteColor: =thmPrimaria
+                                    BorderRadius: =0
+                                    DisplayMode: =If(varPodeCatalogo, DisplayMode.Edit, DisplayMode.Disabled)
+                                    FillPortions: =1
+                                    FontColor: =thmTextoBarra
+                                    FontSize: =13
+                                    FontWeight: =FontWeight.Semibold
+                                    Height: =44
+                                    Icon: ="Play"
+                                    IconStyle: ='ButtonCanvas.IconStyle'.Filled
+                                    LayoutMinWidth: =0
+                                    OnSelect: |-
+                                      =If(
+                                          IsBlank(dtpMesImp.SelectedDate),
+                                          Notify("Escolha o mês de referência.", NotificationType.Error, 5000),
+                                          CountRows(attImportImp.Attachments) = 0,
+                                          Notify("Anexe a planilha de programação antes de gerar.", NotificationType.Error, 5000),
+                                          SubmitForm(frmImportImp)
+                                      )
+                                    PaddingLeft: =12
+                                    PaddingRight: =12
+                                    Text: =If(IsBlank(varImportId), "GERAR", "AGUARDE…")
+                              - btnNovaImp:
+                                  Control: Button@0.0.45
+                                  Properties:
+                                    Appearance: ='ButtonCanvas.Appearance'.Secondary
+                                    BasePaletteColor: =thmTextoFraco
+                                    BorderRadius: =0
+                                    DisplayMode: =If(varPodeCatalogo, DisplayMode.Edit, DisplayMode.Disabled)
+                                    FillPortions: =1
+                                    FontColor: =thmTextoFraco
+                                    FontSize: =13
+                                    FontWeight: =FontWeight.Semibold
+                                    Height: =44
+                                    Icon: ="Add"
+                                    IconStyle: ='ButtonCanvas.IconStyle'.Filled
+                                    LayoutMinWidth: =0
+                                    OnSelect: |-
+                                      =Set(varImportId, Blank());
+                                      UpdateContext({locImp: Blank()});
+                                      ResetForm(frmImportImp)
+                                    PaddingLeft: =12
+                                    PaddingRight: =12
+                                    Text: ="NOVA IMPORTAÇÃO"
+                        - htmProgressoImp:
+                            Control: HtmlViewer@2.1.0
+                            Properties:
+                              AutoHeight: =true
+                              Color: =thmTexto
+                              Fill: =thmFundo
+                              FillPortions: =0
+                              Font: =thmFonte
+                              HtmlText: |-
+                                ="<div style='" & htmlFonte & "background:" & hxSuperficie & ";padding:14px 16px;'>" &
+                                "<div style='font-size:11px;font-weight:700;letter-spacing:.1em;color:" & hxTextoFraco & ";'>" &
+                                Upper(Switch(Coalesce(locImp.status, "-"), "PRONTO", "Na fila", "PROCESSANDO", "Gravando registros", "CONCLUIDO", "Concluído", "ERRO", "Erro", "Aguardando envio do arquivo")) & "</div>" &
+                                "<div style='margin-top:8px;background:" & hxBorda & ";height:24px;'>" &
+                                "<div style='background:" & hxPrimaria & ";height:24px;width:" & If(Coalesce(locImp.total, 0) = 0, 0, RoundDown(locImp.processados * 100 / locImp.total, 0)) & "%;'></div>" &
+                                "</div>" &
+                                "<div style='margin-top:6px;font-size:11px;color:" & hxTextoFraco & ";'>" &
+                                Coalesce(locImp.processados, 0) & " de " & Coalesce(locImp.total, 0) & " registro(s) &nbsp;&middot;&nbsp; " &
+                                If(Coalesce(locImp.total, 0) = 0, 0, RoundDown(locImp.processados * 100 / locImp.total, 0)) & "%</div>" &
+                                "</div>"
+                              Size: =11
+                              Visible: =!IsBlank(varImportId)
+                        - htmResultadoImp:
+                            Control: HtmlViewer@2.1.0
+                            Properties:
+                              AutoHeight: =true
+                              Color: =thmTexto
+                              Fill: =thmFundo
+                              FillPortions: =0
+                              Font: =thmFonte
+                              HtmlText: |-
+                                ="<div style='" & htmlFonte & "background:" &
+                                If(locImp.status = "ERRO", hxVermelhoSuave, hxAmbarSuave) &
+                                ";border-left:4px solid " & If(locImp.status = "ERRO", hxVermelho, hxVerde) &
+                                ";padding:12px 14px;font-size:11px;line-height:1.6;color:" & hxTexto & ";'>" &
+                                "<b>" & Coalesce(locImp.criados, 0) & " registro(s) criado(s)</b>" &
+                                If(
+                                    Coalesce(locImp.pendencias, 0) > 0,
+                                    " &nbsp;&middot;&nbsp; <b>" & locImp.pendencias & " pendência(s)</b> — voos sem par ou sem posição livre, que não entraram",
+                                    " &nbsp;&middot;&nbsp; sem pendências"
+                                ) &
+                                If(IsBlank(locImp.mensagem), "", "<br><br>" & locImp.mensagem) &
+                                "</div>"
+                              Size: =11
+                              Visible: =locImp.status = "CONCLUIDO" Or locImp.status = "ERRO"
+                        - tmrImportImp:
+                            Control: Timer@2.1.0
+                            Properties:
+                              AutoPause: =false
+                              AutoStart: =true
+                              Duration: =3000
+                              OnTimerEnd: |-
+                                =If(
+                                    !IsBlank(varImportId),
+                                    UpdateContext({locImp: LookUp(tb_importacaoMapa, ID = varImportId)})
+                                )
+                              Repeat: =true
+                              Visible: =false

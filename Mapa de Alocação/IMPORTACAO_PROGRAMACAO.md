@@ -108,6 +108,35 @@ SharePoint que as duas pontas leem — vale trocar se as preferências começare
 
 ---
 
+## A tela `scrMapaImport`
+
+Anexa a planilha, escolhe o mês, dispara e acompanha. Duas restrições de plataforma moldaram o
+desenho, e vale saber quais são antes de mexer:
+
+**Campo obrigatório sem default precisa de card, mesmo invisível.** O formulário começou com um card
+só, o do anexo, e o `SubmitForm` falhava: `aeroporto` e `mes_ref` são obrigatórias na lista e não têm
+valor padrão, então o SharePoint recusava a criação. Preencher por `Patch` no `OnSuccess` não resolve —
+o `Patch` só roda **depois** de o item existir, e ele nunca chegava a existir.
+
+A correção são dois `TypedDataCard` com `Visible: =false`, carregando só o `Update` (`varAero` e a data
+normalizada para o dia 1º). Card invisível continua submetendo — é a técnica padrão para campo que o
+app preenche sozinho.
+
+**`Attachments` só existe dentro de `DataCard` de `Form`.** Não dá para anexar arquivo solto no Power
+Apps. O formulário aqui tem **um card só**, o do anexo; mês, aeroporto e status entram por `Patch` no
+`OnSuccess`. Menos card, menos coisa para dar errado — e o `DefaultMode: =FormMode.New` evita ter que
+chamar `NewForm` na abertura.
+
+**Não existe progresso real de fluxo.** A barra lê `processados / total` do próprio item, e um `Timer`
+de 3 segundos reconsulta — mesmo mecanismo do `tmrSyncMap` da grade. Quem conta é o fluxo escrevendo;
+a tela só lê. A barra reflete o que o fluxo **já contou**, não o que ele está fazendo agora.
+
+O botão GERAR valida mês e anexo antes de submeter. Depois de enviado, mês e anexo ficam em modo
+leitura até o operador tocar em NOVA IMPORTAÇÃO — evita reenviar por cima de um processamento em
+andamento.
+
+---
+
 ## O fluxo, ação por ação
 
 Gatilho: **SharePoint — quando um item é criado ou modificado** em `tb_importacaoMapa`,
