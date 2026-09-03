@@ -132,9 +132,14 @@ autenticada numa conta diferente da dona do script.
 
 **A correção, em três passos:**
 
-1. No editor do Office Scripts, **⋯ → Salvar como**, e escolher uma pasta do site. Sugestão:
-   `Documentos › Scripts`, **separada da pasta onde o fluxo grava as planilhas** — ali entra um
-   arquivo por importação, e código no meio de dados convida a exclusão acidental.
+1. No painel Scripts do Office, no **⋯ do cartão do script → Mover script** (não *Fazer uma cópia*:
+   mover não deixa gêmeo para trás, e gêmeo é justamente o que queremos evitar).
+
+   ⚠️ **Ele ignora a pasta que você escolher e usa a pasta padrão localizada — em português,
+   `Documentos › Roteiros`.** Criar uma pasta `Scripts` antes não adianta; o arquivo não vai para
+   ela. Foi o que aconteceu aqui, e custou duas rodadas procurando no lugar errado. O seletor do
+   fluxo também chama o campo de *Roteiro*: a interface traduz "Script" por "Roteiro" em todo lugar,
+   e é por aí que se acha o arquivo.
 2. No fluxo, trocar a ação **`Run script`** por **`Run script from SharePoint library`**. Ela pede
    seis campos, porque separa onde está a planilha de onde está o script:
 
@@ -145,18 +150,20 @@ autenticada numa conta diferente da dona do script.
 | Workbook | `corpo/ID` do `Salvar planilha` |
 | Script Location | `Group - AIRPORT NOW` |
 | Script Library | `Documentos` |
-| Script | `Importar programacao.osts` |
+| Script | `Roteiros › Importar programacao.osts` |
 | mesRef | `@{formatDateTime(triggerBody()?[mes_ref], yyyy-MM)}` |
 
 3. **Corrigir o `Resultado_script`.** O nome interno da ação muda, e o `Compose` aponta para o antigo.
    Trocar para `@outputs(Run_script_from_SharePoint_library)?[body/result]` — ou renomear a ação
    nova para `Run script`, aí a expressão continua valendo.
 
-⚠️ **`Salvar como` faz uma cópia, não move.** O original continua no OneDrive, e a partir daí existem
-dois scripts iguais que vão divergir na primeira manutenção — editar o errado não dá erro nenhum, só
-produz alocação diferente da que o fluxo aplica. **Depois de confirmar que a versão do SharePoint
-roda, apague a pessoal.** É a mesma família da duplicação `App.Formulas` ↔ script, e é o motivo de
-não bastar copiar: tem que sobrar um só.
+⚠️ **Antes de mover, confira quantas cópias já existem.** Aqui havia quatro no OneDrive pessoal —
+duas `Importar programa…` de dias diferentes, uma `Script` e uma `Cópia de Importar…`. Mover a errada
+faria o fluxo rodar uma versão que não é a validada, **sem erro nenhum**, só com resultado diferente.
+
+**Como distinguir:** abra cada uma e procure a palavra `origem`. Só a versão atual escreve essa
+coluna — foi a última alteração feita, e é o que o fluxo mapeia. As que não têm são anteriores e
+produziriam registros que o passo de limpeza não consegue apagar depois.
 
 **Limitação que não nos afeta:** script salvo no SharePoint não pode fazer chamadas de rede. O
 `importar_programacao.ts` só lê a planilha e devolve JSON — conferido, nenhum `fetch`.
