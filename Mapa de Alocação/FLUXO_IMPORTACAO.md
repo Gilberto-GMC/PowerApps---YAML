@@ -120,22 +120,46 @@ O gerador `montar_fluxo.js` confere isso sozinho: a cada geração ele varre tod
 `PostItem` e lista qualquer obrigatória ausente. Era verificação que dava para fazer daqui e eu não
 estava fazendo.
 
-### O script mora no OneDrive pessoal, e isso é uma dívida
+### Tirar o script do OneDrive pessoal
 
-A ação do Excel é **`Run script`**, não `Run script from SharePoint library`: a diferença entre as
-duas não é onde está a *planilha*, é onde está o *script*. Criado por Excel Online → Automatizar →
-Novo Script, ele fica em `personal › <usuário> › Scripts do Office`, no OneDrive de quem criou.
+A ação padrão do Excel, **`Run script`**, só enxerga os scripts pessoais da conta conectada — eles
+ficam em `personal › <usuário> › Scripts do Office`, no OneDrive de quem criou. Isso torna o script
+**intransferível**: quando essa pessoa sai ou perde acesso, o fluxo mensal para, e o erro aparece
+como "script não encontrado" para quem não faz ideia de onde ele estava.
 
-**Se o dropdown de scripts vier vazio ("Nenhum item"), quase sempre são duas contas diferentes.** A
-conexão do Excel na ação e a conta dona do script têm que ser a mesma — aqui a conexão era
-`processos.aeroservice@grupoccr.com.br` e o script estava no OneDrive de `douglas_nardelli`. O
-conserto imediato é *Alterar conexão*.
+**Sintoma correlato:** dropdown de scripts vazio ("Nenhum item") quase sempre é a conexão do Excel
+autenticada numa conta diferente da dona do script.
 
-**A dívida:** um script que a operação roda todo mês não deveria morar no OneDrive pessoal de uma
-pessoa. Quando essa pessoa sair ou perder acesso, o fluxo para, e o erro aparece como "script não
-encontrado" para quem não faz ideia de onde ele estava. O caminho durável é salvar o script numa
-biblioteca do SharePoint (arquivo `.osts`) e trocar a ação por **Run script from SharePoint
-library**. Ficou para depois por escolha consciente, para destravar o teste.
+**A correção, em três passos:**
+
+1. No editor do Office Scripts, **⋯ → Salvar como**, e escolher uma pasta do site. Sugestão:
+   `Documentos › Scripts`, **separada da pasta onde o fluxo grava as planilhas** — ali entra um
+   arquivo por importação, e código no meio de dados convida a exclusão acidental.
+2. No fluxo, trocar a ação **`Run script`** por **`Run script from SharePoint library`**. Ela pede
+   seis campos, porque separa onde está a planilha de onde está o script:
+
+| campo | valor |
+|---|---|
+| Workbook Location | `Group - AIRPORT NOW` |
+| Workbook Library | `Documentos` |
+| Workbook | `corpo/ID` do `Salvar planilha` |
+| Script Location | `Group - AIRPORT NOW` |
+| Script Library | `Documentos` |
+| Script | `Importar programacao.osts` |
+| mesRef | `@{formatDateTime(triggerBody()?[mes_ref], yyyy-MM)}` |
+
+3. **Corrigir o `Resultado_script`.** O nome interno da ação muda, e o `Compose` aponta para o antigo.
+   Trocar para `@outputs(Run_script_from_SharePoint_library)?[body/result]` — ou renomear a ação
+   nova para `Run script`, aí a expressão continua valendo.
+
+⚠️ **`Salvar como` faz uma cópia, não move.** O original continua no OneDrive, e a partir daí existem
+dois scripts iguais que vão divergir na primeira manutenção — editar o errado não dá erro nenhum, só
+produz alocação diferente da que o fluxo aplica. **Depois de confirmar que a versão do SharePoint
+roda, apague a pessoal.** É a mesma família da duplicação `App.Formulas` ↔ script, e é o motivo de
+não bastar copiar: tem que sobrar um só.
+
+**Limitação que não nos afeta:** script salvo no SharePoint não pode fazer chamadas de rede. O
+`importar_programacao.ts` só lê a planilha e devolve JSON — conferido, nenhum `fetch`.
 
 ### Detalhes que dependem do ambiente, não da definição
 
