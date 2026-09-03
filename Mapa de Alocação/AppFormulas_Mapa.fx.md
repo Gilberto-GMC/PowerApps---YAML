@@ -100,7 +100,7 @@ Table(
     { aeroporto: "NAVEGANTES"; id: 4;  patio: "PRINCIPAL";  posicao: "T4";  ordem: 4;  aeronave_max: "B-738";    classe: "";            env_max: 0; tipo: "PONTE";     contingencia: 0; ocupa: "" };
     { aeroporto: "NAVEGANTES"; id: 5;  patio: "PRINCIPAL";  posicao: "T5";  ordem: 5;  aeronave_max: "B-738";    classe: "";            env_max: 0; tipo: "PONTE";     contingencia: 0; ocupa: "" };
     { aeroporto: "NAVEGANTES"; id: 6;  patio: "PRINCIPAL";  posicao: "T6";  ordem: 6;  aeronave_max: "B-738";    classe: "";            env_max: 0; tipo: "PONTE";     contingencia: 0; ocupa: "" };
-    { aeroporto: "NAVEGANTES"; id: 26; patio: "PRINCIPAL";  posicao: "T6C"; ordem: 6.5; aeronave_max: "B-767 CARGO"; classe: "";            env_max: 0; tipo: "REMOTA";    contingencia: 0; ocupa: "T5,T6" };
+    { aeroporto: "NAVEGANTES"; id: 26; patio: "PRINCIPAL";  posicao: "T6C"; ordem: 6,5; aeronave_max: "B-767 CARGO"; classe: "";            env_max: 0; tipo: "REMOTA";    contingencia: 0; ocupa: "T5,T6" };
     { aeroporto: "NAVEGANTES"; id: 7;  patio: "PRINCIPAL";  posicao: "T7";  ordem: 7;  aeronave_max: "B-738";    classe: "";            env_max: 0; tipo: "PONTE";     contingencia: 1; ocupa: "" };
     { aeroporto: "NAVEGANTES"; id: 8;  patio: "PATIO3";    posicao: "A6";  ordem: 8;  aeronave_max: "";         classe: "A";           env_max: 0; tipo: "REMOTA";    contingencia: 0; ocupa: "" };
     { aeroporto: "NAVEGANTES"; id: 9;  patio: "PATIO3";    posicao: "7";   ordem: 9;  aeronave_max: "";         classe: "B";           env_max: 0; tipo: "REMOTA";    contingencia: 0; ocupa: "" };

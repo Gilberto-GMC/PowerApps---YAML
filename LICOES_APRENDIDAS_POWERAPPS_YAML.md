@@ -1856,3 +1856,32 @@ do formulário. Preservar o formulário junto trouxe de brinde um anexo velho qu
 validação `CountRows(attImportImp.Attachments) = 0`, deixando o `GERAR` submeter achando que havia
 planilha. Ao decidir "isto tem que sobreviver", vale nomear exatamente o quê — preservar demais tem
 efeitos que preservar de menos não tem.
+
+---
+
+## `App.Formulas` é pt-BR inteiro, decimal incluído
+
+O `App.Formulas` do Studio usa o idioma do autor. Em pt-BR isso já era conhecido para o separador de
+argumentos — é por isso que o arquivo usa `;` e termina definição com `;;`. **O que passou
+despercebido é que o separador decimal muda junto.**
+
+Escrevi `ordem: 6.5` para a posição T6C. O Studio recusou; o Douglas corrigiu para `ordem: 6,5`.
+
+O erro é sutil porque o arquivo *parecia* consistente: `;` por toda parte, dialeto pt-BR à vista. Um
+único número decimal escrito no dialeto invariante bastou para quebrar. **Não existe "meio pt-BR"** —
+escolhido o idioma, ele vale para vírgula decimal, separador de argumentos e terminador.
+
+**A exceção que confunde:** `mapPctHora = "4.1666"` continua com ponto, e está certo. É uma *string*
+montada dentro de CSS, e CSS exige ponto. A regra é pelo tipo, não pela aparência: **número Power Fx
+segue o idioma do Studio; texto que vai virar CSS, HTML ou parâmetro de outra linguagem segue as
+regras daquela linguagem.**
+
+Vale a mesma vigilância para qualquer `Text(v; "0.000"; "en-US")` do repositório — ali o `"en-US"`
+explícito é justamente o que garante ponto na saída, independentemente do idioma do autor.
+
+**Como conferir antes de colar:** procurar `[0-9]+\.[0-9]+` no arquivo, depois de remover o conteúdo
+das strings. Sobrando alguma coisa, é decimal no dialeto errado.
+
+**Detalhe que não é erro:** `ocupa: "T5,T6"` tem vírgula dentro de aspas e é conteúdo, não sintaxe. O
+`.pa.yaml` das telas, por outro lado, é invariante e usa `,` de separador — as duas metades do mesmo
+projeto falam dialetos diferentes, e é preciso saber em qual arquivo se está.
