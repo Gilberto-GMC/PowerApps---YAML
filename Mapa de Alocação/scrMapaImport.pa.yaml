@@ -4,9 +4,11 @@ Screens:
       OnVisible: |-
         =Set(varMapaVisivel, false);
         Set(varPodeCatalogo, DataSourceInfo('tb_importacaoMapa', DataSourceInfo.EditPermission));
-        Set(varImportId, Blank());
-        UpdateContext({locImp: Blank()});
-        ResetForm(frmImportImp)
+        If(
+            IsBlank(varImportId),
+            ResetForm(frmImportImp),
+            UpdateContext({locImp: LookUp(tb_importacaoMapa, ID = varImportId)})
+        )
     Children:
       - cntShellImp:
           Control: GroupContainer@1.5.0
@@ -490,7 +492,7 @@ Screens:
                                     Appearance: ='ButtonCanvas.Appearance'.Primary
                                     BasePaletteColor: =thmPrimaria
                                     BorderRadius: =0
-                                    DisplayMode: =If(varPodeCatalogo, DisplayMode.Edit, DisplayMode.Disabled)
+                                    DisplayMode: =If(varPodeCatalogo And IsBlank(varImportId), DisplayMode.Edit, DisplayMode.Disabled)
                                     FillPortions: =1
                                     FontColor: =thmTextoBarra
                                     FontSize: =13
