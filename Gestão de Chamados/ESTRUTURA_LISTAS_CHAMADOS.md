@@ -279,7 +279,7 @@ coluna nativa `Created`.
 - [ ] `desk_id` indexado nas quatro listas.
 - [ ] `desk_solicitante_email` e `desk_status` indexados na mestre.
 - [ ] Nenhuma coluna nova marcada como obrigatória na mestre antes do passo 7.
-- [ ] Versionamento ligado na mestre e em `tbl_ChamadoDemanda`, desligado no histórico.
+- [ ] Versionamento ligado na mestre e em `tb_chamadoDemanda`, desligado no histórico.
 - [ ] Nenhuma coluna Pesquisa (Lookup) apontando para a mestre.
 - [ ] Carga dos espelhos concluída **antes** de publicar `ScreenMeusChamados` —
       senão o usuário abre a tela e não vê o próprio histórico.

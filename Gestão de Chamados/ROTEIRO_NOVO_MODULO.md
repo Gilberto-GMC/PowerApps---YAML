@@ -2,7 +2,7 @@
 
 O que o usuário preenche, o que ele vê depois e o que se espera dele em cada
 etapa. Complementa [ARQUITETURA_CHAMADOS.md](ARQUITETURA_CHAMADOS.md) §4.2 e as
-colunas de `tbl_ChamadoDemanda` em
+colunas de `tb_chamadoDemanda` em
 [ESTRUTURA_LISTAS_CHAMADOS.md](ESTRUTURA_LISTAS_CHAMADOS.md).
 
 ---
@@ -123,7 +123,7 @@ Os três toggles gravam **Texto** `"SIM"`/`"NAO"`, nunca Sim/Não do SharePoint.
 | Patrocinador | ComboBox de pessoas | sim | `dem_patrocinador_email` |
 | Prazo desejado | DatePicker | não | `dem_prazo_desejado` |
 | Impacto se não for feito | Texto multilinha (1000) | sim | `dem_impacto_sem` |
-| Anexos | Attachments | não | anexos de `tbl_ChamadoDemanda` |
+| Anexos | Attachments | não | anexos de `tb_chamadoDemanda` |
 
 ### Revisão e envio
 
@@ -132,8 +132,8 @@ Tela final somente-leitura com tudo o que foi respondido, cada bloco com um link
 
 1. Grava o chamado em `tbl_ServiceDesk` com `desk_ciclo = "DEMANDA"`,
    `desk_status = "Aberto"`, `desk_etapa = 1`.
-2. Grava o registro 1-para-1 em `tbl_ChamadoDemanda`.
-3. Grava a abertura em `tbl_ChamadoHistorico`.
+2. Grava o registro 1-para-1 em `tb_chamadoDemanda`.
+3. Grava a abertura em `tb_chamadoHistorico`.
 4. Envia e-mail ao solicitante **e ao patrocinador**.
 
 Os quatro passos numa ordem que resiste a falha: o chamado primeiro. Se a gravação
@@ -176,8 +176,8 @@ Além da trilha, três blocos fixos:
    (TI ou o próprio usuário, quando está *Aguardando informações* ou
    *Em homologação*). Deixar explícito que a bola está com o usuário é o que faz
    a demanda andar.
-2. **Linha do tempo** — de `tbl_ChamadoHistorico`, mais recente no topo.
-3. **Conversa** — de `tbl_ChamadoInteracao`, com campo para responder e anexar.
+2. **Linha do tempo** — de `tb_chamadoHistorico`, mais recente no topo.
+3. **Conversa** — de `tb_chamadoInteracao`, com campo para responder e anexar.
 
 ---
 

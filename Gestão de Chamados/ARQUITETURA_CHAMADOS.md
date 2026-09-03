@@ -78,7 +78,7 @@ a existir duas fontes da verdade que divergem em silêncio. `desk_categoria`,
 tbl_ServiceDesk  (mestre — um registro por chamado)
 ├── tb_chamadoHistorico     N:1  toda transição de status (imutável)
 ├── tb_chamadoInteracao     N:1  mensagens entre solicitante e atendente
-└── tbl_ChamadoDemanda       1:1  respostas do roteiro (só ciclo B)
+└── tb_chamadoDemanda       1:1  respostas do roteiro (só ciclo B)
 ```
 
 ### 3.2 Padrão obrigatório de toda lista-filha
@@ -345,16 +345,22 @@ real continua sendo a permissão da lista SharePoint.
 
 ## 8. Roteiro das ondas
 
-| Onda | Entrega | Depende de |
-|---|---|---|
-| 0 | Correção da tela de abertura | ✅ concluída |
-| 1 | Colunas novas + carga dos espelhos + `App.Formulas` + `ScreenMeusChamados` | YAML do Login |
-| 2 | ✅ `ScreenChamadoDetalhe` + `tb_chamadoHistorico` + `tb_chamadoInteracao` | onda 1 |
-| 3 | `ScreenNovoModuloWizard` + `tbl_ChamadoDemanda` + ciclo B na fila | onda 2 |
-| 4 | ✅ `frmServiceDesk` (fila) · 🔜 fluxos de notificação e SLA | onda 3 |
-| 5 | `ScreenPainelChamados` | onda 4 |
+| Onda | Entrega | Depende de | Estado |
+|---|---|---|---|
+| 0 | Correção da tela de abertura | — | ✅ concluída |
+| 1 | Colunas novas + carga dos espelhos + `App.Formulas` + `ScreenMeusChamados` | YAML do Login | 🟡 YAML pronto · **SharePoint pendente** |
+| 2 | `ScreenChamadoDetalhe` + `tb_chamadoHistorico` + `tb_chamadoInteracao` | onda 1 | 🟡 YAML e JSONs prontos · **SharePoint pendente** |
+| 3 | `ScreenNovoModuloWizard` + `tb_chamadoDemanda` + ciclo B na fila | onda 2 | 🟡 YAML e JSON prontos · **SharePoint pendente** |
+| 4 | `frmServiceDesk` (fila) + fluxos de notificação e SLA | onda 3 | 🟡 fila ✅ · fluxos especificados em [FLUXOS_NOTIFICACAO_SLA.md](FLUXOS_NOTIFICACAO_SLA.md), **não construídos** |
+| 5 | `ScreenPainelChamados` | onda 4 | 🟡 YAML pronto · **SharePoint pendente** |
 
-### Pendências a validar antes de especificar as ondas 3+
+> **O gargalo real do módulo não é tela — é a migração.** Cinco telas e quatro
+> listas estão prontas em YAML/JSON e nenhuma roda antes de a
+> [ordem de execução do ESTRUTURA_LISTAS](ESTRUTURA_LISTAS_CHAMADOS.md#ordem-de-execução-recomendada)
+> ser cumprida no tenant. Colar qualquer uma dessas telas no Studio **antes** de
+> as colunas existirem derruba a tela inteira, não só o controle que falta.
+
+### Pendências de negócio ainda abertas (travam a construção dos fluxos)
 
 - Quem aprova demanda de módulo: gestor de TI, comitê, ou o patrocinador da área?
 - SLA de demanda tem prazo contratual ou só previsão?
