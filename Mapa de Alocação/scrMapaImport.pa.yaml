@@ -5,23 +5,17 @@ Screens:
         =Set(varMapaVisivel, false);
         Set(varPodeCatalogo, DataSourceInfo('tb_importacaoMapa', DataSourceInfo.EditPermission));
         ResetForm(frmImportImp);
-        If(
-            IsBlank(varImportId),
-            Set(
-                varImportId,
-                First(
-                    Sort(
-                        Filter(tb_importacaoMapa, aeroporto = varAero And (status = "PRONTO" Or status = "PROCESSANDO")),
-                        ID,
-                        SortOrder.Descending
-                    )
-                ).ID
-            )
+        Set(
+            varImportId,
+            First(
+                Sort(
+                    Filter(tb_importacaoMapa, aeroporto = varAero And status = "PROCESSANDO"),
+                    ID,
+                    SortOrder.Descending
+                )
+            ).ID
         );
-        If(
-            !IsBlank(varImportId),
-            UpdateContext({locImp: LookUp(tb_importacaoMapa, ID = varImportId)})
-        )
+        UpdateContext({locImp: LookUp(tb_importacaoMapa, ID = varImportId)})
     Children:
       - cntShellImp:
           Control: GroupContainer@1.5.0
@@ -530,28 +524,6 @@ Screens:
                                           Coalesce(locImp.status, "") in ["CONCLUIDO", "ERRO"], "IMPORTAÇÃO ENCERRADA",
                                           "AGUARDE…"
                                       )
-                              - btnNovaImp:
-                                  Control: Button@0.0.45
-                                  Properties:
-                                    Appearance: ='ButtonCanvas.Appearance'.Secondary
-                                    BasePaletteColor: =thmTextoFraco
-                                    BorderRadius: =0
-                                    DisplayMode: =If(varPodeCatalogo, DisplayMode.Edit, DisplayMode.Disabled)
-                                    FillPortions: =1
-                                    FontColor: =thmTextoFraco
-                                    FontSize: =13
-                                    FontWeight: =FontWeight.Semibold
-                                    Height: =44
-                                    Icon: ="Add"
-                                    IconStyle: ='ButtonCanvas.IconStyle'.Filled
-                                    LayoutMinWidth: =0
-                                    OnSelect: |-
-                                      =Set(varImportId, Blank());
-                                      UpdateContext({locImp: Blank()});
-                                      ResetForm(frmImportImp)
-                                    PaddingLeft: =12
-                                    PaddingRight: =12
-                                    Text: ="NOVA IMPORTAÇÃO"
                         - htmProgressoImp:
                             Control: HtmlViewer@2.1.0
                             Properties:
