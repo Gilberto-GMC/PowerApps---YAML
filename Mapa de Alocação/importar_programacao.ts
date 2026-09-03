@@ -23,11 +23,16 @@
 const AEROPORTO = "NAVEGANTES";
 
 /** Preferência por companhia: espelha colPrefPosicao. */
-const PREF: { [nomePlanilha: string]: { sigla: string; posicoes: string[]; portoes: string[] } } = {
+const PREF: {
+  [nomePlanilha: string]: { sigla: string; posicoes: string[]; portoes: string[]; prioridade?: boolean };
+} = {
   GOL: { sigla: "GLO", posicoes: ["T4", "T3", "T5", "T2"], portoes: ["4", "5"] },
   LATAM: { sigla: "TAM", posicoes: ["T6", "T5", "T4", "T3"], portoes: ["1", "2", "3", "5"] },
   AZUL: { sigla: "AZU", posicoes: ["T5", "T3", "T2", "T6"], portoes: ["3", "2", "4", "1"] },
-  ABSA: { sigla: "ABS", posicoes: ["T6C"], portoes: [] },
+  // prioridade: alocada antes das demais. A T6C é a única que comporta o cargueiro, e consome T5+T6;
+  // quem cede é quem tem para onde ir. Sem isso o cargueiro perdia a posição dele para um 737 que
+  // chegou antes no relógio, e caía numa T que não o comporta.
+  ABSA: { sigla: "ABS", posicoes: ["T6C"], portoes: [], prioridade: true },
 };
 
 /** Queda quando a preferência está toda ocupada: a linha cia "*" de colPrefPosicao. */
@@ -207,7 +212,11 @@ function main(workbook: ExcelScript.Workbook, mesRef: string = ""): Resultado {
 
   const registros: Registro[] = [];
   const pendencias: Pendencia[] = [];
-  for (const par of paresDoMes.sort((a, b) => a.p.abs - b.p.abs)) {
+  // Companhia com prioridade aloca antes das demais, e só depois vale a ordem do relógio. É o que
+  // garante a T6C ao cargueiro: alocada primeiro, ela marca T5 e T6 como ocupadas e os voos seguintes
+  // se desviam sozinhos. Deslocar depois exigiria refazer alocação já feita, sem ganho nenhum.
+  const prio = (x: { p: Movimento }): number => (PREF[x.p.cia] && PREF[x.p.cia].prioridade ? 0 : 1);
+  for (const par of paresDoMes.sort((a, b) => prio(a) - prio(b) || a.p.abs - b.p.abs)) {
     const pref = PREF[par.p.cia];
     if (!pref) {
       pendencias.push(pendencia("EMPRESA DESCONHECIDA", par.p, par.d, "empresa sem preferência cadastrada"));
