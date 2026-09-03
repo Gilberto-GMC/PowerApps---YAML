@@ -6,6 +6,19 @@ Screens:
         Set(varPodeCatalogo, DataSourceInfo('tb_importacaoMapa', DataSourceInfo.EditPermission));
         ResetForm(frmImportImp);
         If(
+            IsBlank(varImportId),
+            Set(
+                varImportId,
+                First(
+                    Sort(
+                        Filter(tb_importacaoMapa, aeroporto = varAero And (status = "PRONTO" Or status = "PROCESSANDO")),
+                        ID,
+                        SortOrder.Descending
+                    )
+                ).ID
+            )
+        );
+        If(
             !IsBlank(varImportId),
             UpdateContext({locImp: LookUp(tb_importacaoMapa, ID = varImportId)})
         )
