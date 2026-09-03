@@ -90,6 +90,36 @@ A tabela real, conferida em `learn.microsoft.com/connectors/sharepointonline`:
 edita a definição fora da ferramenta. A lição é a mesma de sempre neste repositório: nome de
 propriedade se confere na fonte, não se deduz do rótulo.
 
+### `PatchItem` exige todas as colunas obrigatórias, mesmo as que não mudam
+
+`tb_importacaoMapa` tem **8 de 9 colunas obrigatórias** — só `mensagem` é opcional. O conector
+valida o item inteiro contra o esquema da lista, então uma atualização que mexe só no `status`
+é recusada:
+
+```
+The API operation PatchItem is missing required property item/aeroporto
+```
+
+É o mesmo fato que obrigou os dois `TypedDataCard` invisíveis na tela de importação: **campo
+obrigatório sem valor padrão precisa ser preenchido, mesmo quando ninguém quer mudá-lo.** Lá era o
+`SubmitForm`, aqui é o `PatchItem`.
+
+As colunas não alteradas vão com o valor de origem — mas **não dá para pegar todas do gatilho**. O
+`total` no instante do gatilho é `0`; puxá-lo de lá nas ações que rodam depois do script zeraria o
+denominador da barra bem no meio da importação. Cada ação declara de onde vem o que ela não muda:
+
+| ação | de onde vem o `total` |
+|---|---|
+| `Marcar_processando` | gatilho — roda antes do script, ainda é 0 mesmo |
+| `Guardar_total` | do script |
+| `Gravar_processados` | do script |
+| `Fechar` | do script |
+| `Marcar_erro` | gatilho — o contador pode nem ter sido inicializado |
+
+O gerador `montar_fluxo.js` confere isso sozinho: a cada geração ele varre todo `PatchItem` e
+`PostItem` e lista qualquer obrigatória ausente. Era verificação que dava para fazer daqui e eu não
+estava fazendo.
+
 ### O que eu não consegui verificar daqui
 
 - **`tb_alocacoesMapa` está referenciada pelo título, não pelo GUID** — eu só tinha o GUID de
