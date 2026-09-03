@@ -21,6 +21,15 @@ exportou do próprio ambiente, então site e GUID de `tb_importacaoMapa` são os
 **Power Automate → Meus fluxos → Importar → Pacote (herdado)** → escolher o `.zip` → em *Recursos
 relacionados*, clicar na conexão do SharePoint e selecioná-la → **Importar**.
 
+> ⚠️ **O pacote tem que entrar como "Criar como novo", não como "Update".** O Power Automate não
+> atualiza um fluxo existente por pacote quando a definição mudou — falha com *"To import this flow
+> you+ll need to save it as a new flow first"*. O `.zip` do repositório já vem marcado assim
+> (`suggestedCreationType: New` no manifesto). Se algum dia reaparecer marcado como Update, a
+> correção é a chave inglesa (🔧) na linha do fluxo → trocar o **IMPORT SETUP**.
+
+> Como entra como fluxo novo, sobra o fluxo vazio original com o mesmo nome. Apague um dos dois
+> depois de confirmar qual é qual — dois fluxos homônimos disparando na mesma lista seria ruim.
+
 Depois da importação faltam **dois ajustes** — ver "A costura" logo abaixo.
 
 O passo a passo manual que vem em seguida continua valendo: é ele que explica *por que* cada ação
