@@ -124,6 +124,13 @@ precisa ser vista por todo mundo ao mesmo tempo. Falha nos três testes de dado 
 | 10 | `envergadura_m` | Envergadura (m) | Número | Não | 2 casas decimais |
 | 19 | `equipamento` | Equipamento | Texto (uma linha) | Não | código de `tb_equipamentos.equip` — ver `ESTRUTURA_LISTAS_REGRAS.md` |
 | 20 | `internacional` | Internacional | Número | Sim | 0 casas · `1` internacional · `0` doméstico · **Default `0`** |
+| 21 | `origem` | Origem | Texto (uma linha) | Não | **Indexada** · `IMPORTACAO aaaa-MM` no registro que veio de importação · vazio no lançado à mão |
+
+> **Por que `origem` existe além da `observacao`.** As duas guardam a mesma marca, mas só a `origem`
+> serve para **achar** os registros: `observacao` é coluna Nota, e o SharePoint **não aceita filtro
+> OData em coluna de várias linhas**. Sem uma coluna Texto indexada, o fluxo não tem como apagar a
+> importação anterior antes de regravar — e reimportar um mês duplicaria ~700 registros sem forma
+> segura de desfazer. A `observacao` continua porque é o que a pessoa lê no painel.
 
 > ⚠️ **O `ativo` da lista em produção tem `Default 0`, não `1`.** O `schemaXml` deste repositório diz
 > `1`, e a lista real foi criada antes dele — as duas divergem. Descoberto em 02/09/2026 colando

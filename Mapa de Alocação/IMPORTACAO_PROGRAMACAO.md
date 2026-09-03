@@ -154,9 +154,15 @@ com condição `status = PRONTO`.
 7. **Atualizar item** → `status = CONCLUIDO`, `criados`, `pendencias`, e `mensagem` com o resumo.
 8. Em caso de erro: `status = ERRO` e a mensagem no campo `mensagem`.
 
-> **Reimportação.** Todo registro nasce com `IMPORTACAO aaaa-MM` na observação. Antes do passo 6, o
-> fluxo deve apagar o que já foi importado daquele mês, senão rodar duas vezes duplica tudo. Um campo
-> próprio de origem seria melhor que a observação — fica para quando a importação sair do piloto.
+> **Reimportação.** Todo registro nasce com `IMPORTACAO aaaa-MM` na coluna **`origem`**. Antes do passo
+> 6, o fluxo apaga o que já foi importado daquele mês:
+>
+> - **Obter itens** em `tb_alocacoesMapa` com filtro `origem eq 'IMPORTACAO 2026-09'`
+> - **Aplicar a cada** → **Excluir item**
+>
+> Sem isso, rodar duas vezes duplica ~700 registros. E tem que ser pela `origem`, não pela `observacao`:
+> `observacao` é coluna Nota, e **o SharePoint não aceita filtro OData em coluna de várias linhas**.
+> O filtro por data seria pior ainda — apagaria também o que foi lançado à mão.
 
 ---
 

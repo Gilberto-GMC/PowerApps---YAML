@@ -73,7 +73,7 @@ interface Registro {
   cia_sigla: string; voo_chegada: string; voo_saida: string;
   equipamento: string; hora_inicio: number; hora_fim: number;
   portao: string; tipo_registro: string; pesquisado: number;
-  internacional: number; observacao: string; ativo: number;
+  internacional: number; observacao: string; origem: string; ativo: number;
 }
 interface Pendencia {
   tipo: string; data: string; hora: string; empresa: string;
@@ -262,6 +262,7 @@ function main(workbook: ExcelScript.Workbook, mesRef: string = ""): Resultado {
       pesquisado: 0,
       internacional: internacional,
       observacao: "IMPORTACAO " + (mesRef || dataIso(par.p.serial).substring(0, 7)),
+      origem: "IMPORTACAO " + (mesRef || dataIso(par.p.serial).substring(0, 7)),
       ativo: 1,
     });
   }
