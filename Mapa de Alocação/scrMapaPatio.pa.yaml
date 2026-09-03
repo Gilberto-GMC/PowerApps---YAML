@@ -643,6 +643,13 @@ Screens:
                                                             ""
                                                         ) &
                                                         If(Value(Text(_r.envergadura_m)) > 0, Char(10) & "Envergadura " & Text(_r.envergadura_m) & " m", "") &
+                                                        If(_r.tipo_registro = "VOO" And IsBlank(_r.equipamento), Char(10) & "ATENCAO - sem equipamento", "") &
+                                                        If(
+                                                            _r.tipo_registro = "VOO" And IsBlank(_r.portao) And
+                                                            LookUp(colPosicoesAero As _pw, _pw.id = _r.id_posicao).tipo = "PONTE",
+                                                            Char(10) & "ATENCAO - sem portao",
+                                                            ""
+                                                        ) &
                                                         Char(10) & "De " & Text(_r.data_operacao, "dd/mm/yyyy") & " " &
                                                         Text(Int(_r.hora_inicio / 60), "00") & ":" & Text(Mod(_r.hora_inicio, 60), "00") &
                                                         " ate " & Text(_r.data_fim, "dd/mm/yyyy") & " " &
@@ -771,7 +778,16 @@ Screens:
                                                                         _z: Min(Max(_b.fim, _a), mapMinutosDia),
                                                                         _cia: LookUp(colCias As _cc, _cc.sigla = _b.cia),
                                                                         _prt: LookUp(colPortoes As _pp, _pp.portao = _b.portao),
-                                                                        _bloq: _b.tipo <> "VOO"
+                                                                        _bloq: _b.tipo <> "VOO",
+                                                                        _pend:
+                                                                            _b.tipo = "VOO" And
+                                                                            (
+                                                                                IsBlank(_b.equip) Or
+                                                                                (
+                                                                                    IsBlank(_b.portao) And
+                                                                                    LookUp(colPosicoesAero As _pz, _pz.id = _b.id_posicao).tipo = "PONTE"
+                                                                                )
+                                                                            )
                                                                     },
                                                                     {
                                                                         ord: _i.Value,
@@ -788,7 +804,8 @@ Screens:
                                                                         "<td title='" & _b.dica & "' style='box-sizing:border-box;width:" & Text((_z - _a) * 100 / mapMinutosDia, "0.000", "en-US") & "%;height:" & (mapAlturaLinha - 14) & "px;" &
                                                                         "background:" & If(_bloq, hxTextoFraco, If(_b.pesq = 1, hxVermelho, Coalesce(_cia.cor_hex, hxBorda))) & ";" &
                                                                         "color:" & If(_bloq Or _b.pesq = 1, hxTextoBarra, Coalesce(_cia.cor_texto, hxTexto)) & ";" &
-                                                                        "border:3px solid " & Coalesce(_prt.cor_hex, hxBorda) & ";" &
+                                                                        "border:3px " & If(_pend, "dashed", "solid") & " " &
+                                                                        If(_pend And IsBlank(_b.portao), hxAmbar, Coalesce(_prt.cor_hex, hxBorda)) & ";" &
                                                                         "font-size:10px;font-weight:700;line-height:1.15;padding:0 3px;text-align:center;overflow:hidden;'>" &
                                                                         "<div style='white-space:nowrap;overflow:hidden;text-overflow:ellipsis;'>" &
                                                                         If(_b.de_antes = 1, "&laquo;&nbsp;", "") &
