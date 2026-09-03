@@ -37,6 +37,19 @@ perda aceitável, porque ninguém edita `status` direto na grade do SharePoint n
 comparar string na `Validation` do `schemaXml`, ou testa a criação isolada dessa coluna antes de
 rodar a lista inteira pelo `List_Generator`.
 
+## Índice em lista de controle é peso morto
+
+Depois da correção das aspas o fluxo passou a falhar com **`BadGateway`**, gastando 13 minutos em 9
+colunas — tempo de retentativa com backoff, não de trabalho. As três primeiras colunas eram as únicas
+indexadas, e criação de índice é a operação mais pesada do `CreateFieldAsXml`.
+
+**Os índices foram removidos.** `tb_importacaoMapa` guarda uma linha por importação — talvez uma dúzia
+por ano. Índice numa lista desse tamanho não acelera nada; foi hábito copiado das listas operacionais,
+onde ele faz sentido porque há milhares de registros e filtro delegável.
+
+A regra da skill já dizia: *indexar só o que é realmente usado em filtro delegável*. Vale reler antes
+de copiar o padrão de uma lista para outra de natureza diferente.
+
 ## O script
 
 ### Como testar sem fluxo nenhum
