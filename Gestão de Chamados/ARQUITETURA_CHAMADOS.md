@@ -298,13 +298,24 @@ Propriedades desta escolha:
 não precisa ver a fila da Sede) — e, se ali também atrapalhar, ganha coluna
 própria pelo mesmo critério.
 
-### Correção pendente na tela de abertura
+### Casamento do solicitante na tela de abertura — ✅ corrigido em 2026-09-02
 
-`ScreenServiceDeskForm` casa o solicitante por `LookUp(User; usrNome = <DisplayName do campo Pessoa>)`.
-Nome de exibição do AAD e `usrNome` da lista são duas grafias diferentes da mesma
-pessoa e divergem com frequência. Com `Email` disponível nas duas pontas, o
-casamento correto é `LookUp(User; Email = varDeskUsuEmail)`. Entra junto com o
-passo 6 da migração.
+`ScreenServiceDeskForm` casava o solicitante por
+`LookUp(User; usrNome = <DisplayName do campo Pessoa>)`. Nome de exibição do AAD e
+`usrNome` da lista são duas grafias diferentes da mesma pessoa e divergem com
+frequência — quando divergem, o reset de senha aborta com "usuário não localizado"
+depois de o chamado já estar gravado.
+
+Passou a ser `LookUp(User; Email = varDeskUsuEmail)`, com **a guarda de e-mail em
+branco antes da guarda do registro**:
+
+```powerfx
+If(IsBlank(varDeskUsuEmail) Or IsBlank(locUsr); Error(...); Patch(User; locUsr; ...))
+```
+
+Sem a primeira metade da guarda, `Email = Blank()` casaria com qualquer registro de
+`User` que estivesse com o e-mail vazio e a senha temporária seria aplicada **na
+pessoa errada** — a mesma coerção da lição `Blank() = 0`, aplicada a texto.
 
 ### 7.3 Telas
 
