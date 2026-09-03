@@ -1818,3 +1818,41 @@ família do `data_fim` em branco e do `aeroporto` gravado com ICAO depois da tro
 vezes na mesma entrega, sempre igual: **o dado entra, o filtro não casa, e a tela abre vazia como se
 não houvesse nada para mostrar.** Quando algo não aparece e não há erro, o primeiro lugar a olhar é
 cada termo do filtro contra o valor real gravado, um por um.
+
+---
+
+## Não desabilite a saída de emergência
+
+Na tela de importação eu desabilitei o botão **NOVA IMPORTAÇÃO** enquanto o status fosse `PRONTO` ou
+`PROCESSANDO`. O raciocínio parecia bom: tocá-lo durante uma execução limpa o acompanhamento, e o
+operador ficaria sem a barra sem entender por quê.
+
+Junto disso, o `OnVisible` tinha deixado de resetar o formulário, para o progresso sobreviver à
+navegação entre telas.
+
+**As duas mudanças combinadas criaram um beco sem saída.** Um item que ficasse em `PRONTO` sem ser
+processado travava a tela inteira: `GERAR` desabilitado porque `varImportId` existe, `NOVA IMPORTAÇÃO`
+desabilitado porque o status é `PRONTO`. E sair e voltar não devolvia o controle, porque o `OnVisible`
+não resetava mais nada.
+
+O erro de julgamento foi comparar mal os dois custos. **Perder o acompanhamento de algo que continua
+rodando no servidor é um aborrecimento; não conseguir recomeçar é um bloqueio.** Botão que devolve a
+tela ao estado inicial é a saída de emergência da tela — desabilitá-lo remove a única coisa que
+socorre quando o resto deu errado.
+
+**A correção certa não foi escolher entre os dois, foi tirar o caráter destrutivo do botão.** Ele
+voltou a ficar sempre disponível, e o `OnVisible` passou a procurar uma importação em `PRONTO` ou
+`PROCESSANDO` quando abre sem acompanhamento, reconectando-se a ela. Tocar o botão por engano deixou
+de custar qualquer coisa: sair da tela e voltar traz a barra de volta.
+
+**Regra prática:** antes de desabilitar um controle por causa de um estado, pergunte o que acontece se
+esse estado ficar preso. Se a resposta for "o usuário não tem mais o que fazer nesta tela", o controle
+não pode ser desabilitado — no máximo pedir confirmação. E prefira sempre tornar a ação recuperável a
+impedi-la.
+
+**Recorte do que preservar.** A raiz do problema foi eu ter preservado o estado errado. O que precisava
+sobreviver à navegação era o **painel de progresso** (`varImportId` e `locImp`), não o estado inteiro
+do formulário. Preservar o formulário junto trouxe de brinde um anexo velho que continuava contando na
+validação `CountRows(attImportImp.Attachments) = 0`, deixando o `GERAR` submeter achando que havia
+planilha. Ao decidir "isto tem que sobreviver", vale nomear exatamente o quê — preservar demais tem
+efeitos que preservar de menos não tem.
