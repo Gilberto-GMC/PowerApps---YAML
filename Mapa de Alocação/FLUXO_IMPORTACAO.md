@@ -12,6 +12,56 @@ grava os registros em `tb_alocacoesMapa`, atualizando o progresso que a barra da
 
 ---
 
+## Atalho: importar o pacote pronto
+
+`Importarprogramacao_COMPLETO.zip` traz as **16 ações já montadas e ligadas**, com a condição de
+gatilho, a simultaneidade 1 e as 19 colunas mapeadas. Foi construído sobre o pacote que o Douglas
+exportou do próprio ambiente, então site e GUID de `tb_importacaoMapa` são os reais.
+
+**Power Automate → Meus fluxos → Importar → Pacote (herdado)** → escolher o `.zip` → em *Recursos
+relacionados*, clicar na conexão do SharePoint e selecioná-la → **Importar**.
+
+Depois da importação faltam **dois ajustes** — ver "A costura" logo abaixo.
+
+O passo a passo manual que vem em seguida continua valendo: é ele que explica *por que* cada ação
+está do jeito que está, e é o caminho se a importação não pegar.
+
+### A costura
+
+O pacote exportado declara **só** a conexão do SharePoint. Acrescentar o conector do Excel exigiria
+inventar entradas no manifesto, e erro ali derruba a importação inteira — sem mensagem útil. Então a
+chamada do Office Script ficou como uma junta que você liga na mão:
+
+1. **Adicione a ação do Excel** entre `Salvar_planilha` e `Resultado_script`:
+   **Excel Online (Business) → Executar script**, com os parâmetros do passo 5. O **Arquivo** é o
+   `Id` da ação `Salvar_planilha`.
+2. **Abra a ação `Resultado_script`** (é um *Compose* com um JSON de aviso dentro), apague o
+   conteúdo e ponha a expressão:
+
+```
+@outputs('Executar_script')?['body/result']
+```
+
+Ajuste `Executar_script` para o nome interno real da ação que você acabou de criar — espaço vira
+sublinhado.
+
+Todas as ações seguintes já leem de `outputs('Resultado_script')`. Ligando essa junta, o resto anda
+sozinho.
+
+> Se você rodar sem ligar a costura, o fluxo **não quebra e não estraga nada**: importa zero
+> registros e escreve o motivo no campo `mensagem` do item. Foi de propósito — falha barulhenta e
+> inofensiva é melhor que falha silenciosa.
+
+### O que eu não consegui verificar daqui
+
+- **`tb_alocacoesMapa` está referenciada pelo título, não pelo GUID** — eu só tinha o GUID de
+  `tb_importacaoMapa`, que veio no gatilho exportado. Se alguma ação daquela lista abrir com o campo
+  *Nome da lista* em branco ou com erro, é só reescolher a lista no dropdown.
+- **Se a importação do pacote for recusada**, não insista: monte pelo passo a passo manual. O
+  formato de pacote do Power Automate é malcriado com definição editada fora da ferramenta.
+
+---
+
 ## ⚠️ Leia isto antes de começar
 
 **O fluxo altera o item que o dispara.** Sem trava, ele se redispara em laço infinito: grava
