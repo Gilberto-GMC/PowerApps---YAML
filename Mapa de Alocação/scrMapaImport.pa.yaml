@@ -518,7 +518,7 @@ Screens:
                                     Appearance: ='ButtonCanvas.Appearance'.Secondary
                                     BasePaletteColor: =thmTextoFraco
                                     BorderRadius: =0
-                                    DisplayMode: =If(varPodeCatalogo, DisplayMode.Edit, DisplayMode.Disabled)
+                                    DisplayMode: =If(varPodeCatalogo And !(Coalesce(locImp.status, "") in ["PRONTO", "PROCESSANDO"]), DisplayMode.Edit, DisplayMode.Disabled)
                                     FillPortions: =1
                                     FontColor: =thmTextoFraco
                                     FontSize: =13
@@ -586,7 +586,7 @@ Screens:
                               Duration: =3000
                               OnTimerEnd: |-
                                 =If(
-                                    !IsBlank(varImportId),
+                                    !IsBlank(varImportId) And !(Coalesce(locImp.status, "") in ["CONCLUIDO", "ERRO"]),
                                     UpdateContext({locImp: LookUp(tb_importacaoMapa, ID = varImportId)})
                                 )
                               Repeat: =true
