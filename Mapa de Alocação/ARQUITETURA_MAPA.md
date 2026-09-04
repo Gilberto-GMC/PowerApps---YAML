@@ -695,3 +695,47 @@ com a geometria como dado na posição — ver o plano da unificação.
 O croqui e o modelo de perfil por aeroporto (`varAeroUser`, `varPerfilUser`, `varBlocoUser`). Os dois
 dependem do cadastro de posições virar lista, porque exigem campo novo por posição — é a mesma obra
 que o lembrete de 19/09 trata.
+
+---
+
+## `ocupa` e `bloqueia`: duas coisas parecidas que não são a mesma
+
+O Mapa tinha `ocupa` — uma posição que **substitui** outras. A T6C é a única: ela consome T5 e T6, e
+por isso **não é desenhada como linha da grade**; o retângulo aparece sobre as duas que ela consome.
+
+A aviação geral pede outra coisa. Uma aeronave grande numa posição **classe B** inutiliza as **classe
+A** vizinhas enquanto estiver lá — mas as duas continuam sendo posições de verdade, e as duas
+precisam continuar aparecendo na grade para o operador poder alocar nelas.
+
+Por isso a coluna **`bloqueia`**, separada do `ocupa`:
+
+| coluna | significa | efeito na grade |
+|---|---|---|
+| `ocupa` | esta posição **substitui** as listadas | some da grade; o bloco é desenhado sobre as outras |
+| `bloqueia` | esta posição **inutiliza** as listadas enquanto ocupada | todas continuam na grade; a impedida ganha um bloco cinza `INDISPONÍVEL` |
+
+As duas são **bidirecionais**: declarar num lado basta. Ocupar A2 impede a 6A, e ocupar a 6A impede
+A2 — sem precisar escrever a relação duas vezes.
+
+**Como o operador vê.** O bloco cinza `INDISPONÍVEL &middot; 6A` aparece na linha da posição impedida,
+no intervalo exato, e clicar nele abre o registro que causa o impedimento. É a mesma máquina do bloco
+da T6C: geometria, `trechos` e camada de clique, sem nada novo.
+
+### ⚠️ As relações precisam ser confirmadas
+
+Foram extraídas do croqui do app de reserva, e **a fonte se contradiz**. Lá a regra vivia na
+visibilidade de imagens: `block_P3_7` dizia que a `7` é impedida por A6, A7, A9 e A10, mas `block_P3_A9`
+dizia que A9 só é impedida pela `8`. Três posições — A1, A3, A6 — tinham a regra comentada.
+
+Foi semeada a direção que é internamente consistente (`block_P3_6A/6B/7/8`), porque o mecanismo é
+bidirecional e um lado basta:
+
+| posição | inutiliza |
+|---|---|
+| `6A` | A1, A2, A4, A5 |
+| `6B` | A2, A3, A4, A5 |
+| `7` | A6, A7, A9, A10 |
+| `8` | A7, A8, A9, A10 |
+
+O Douglas descreveu **duas** posições classe A por classe B; o croqui declara **quatro**. Isso precisa
+ser conferido no pátio. Não bloqueia nada hoje: a importação não usa nenhuma posição de aviação geral.

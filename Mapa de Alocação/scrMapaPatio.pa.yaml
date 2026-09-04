@@ -787,6 +787,26 @@ Screens:
                                                                     ""
                                                                 ) & ","
                                                             )
+                                                        ) Or
+                                                        !IsBlank(
+                                                            Find(
+                                                                "," & _p.posicao & ",",
+                                                                "," &
+                                                                Substitute(
+                                                                    Coalesce(
+                                                                        LookUp(colPosicoesAero As _qb, _qb.posicao = posicao_txt).bloqueia,
+                                                                        ""
+                                                                    ),
+                                                                    " ",
+                                                                    ""
+                                                                ) & ","
+                                                            )
+                                                        ) Or
+                                                        !IsBlank(
+                                                            Find(
+                                                                "," & posicao_txt & ",",
+                                                                "," & Substitute(Coalesce(_p.bloqueia, ""), " ", "") & ","
+                                                            )
                                                         )
                                                     ),
                                                     ini,
@@ -823,6 +843,27 @@ Screens:
                                                                         _cia: LookUp(colCias As _cc, _cc.sigla = _b.cia),
                                                                         _prt: LookUp(colPortoes As _pp, _pp.portao = _b.portao),
                                                                         _bloq: _b.tipo <> "VOO",
+                                                                        _imped:
+                                                                            _b.posicao_txt <> _p.posicao And
+                                                                            (
+                                                                                !IsBlank(
+                                                                                    Find(
+                                                                                        "," & _b.posicao_txt & ",",
+                                                                                        "," & Substitute(Coalesce(_p.bloqueia, ""), " ", "") & ","
+                                                                                    )
+                                                                                ) Or
+                                                                                !IsBlank(
+                                                                                    Find(
+                                                                                        "," & _p.posicao & ",",
+                                                                                        "," &
+                                                                                        Substitute(
+                                                                                            Coalesce(LookUp(colPosicoesAero As _qi, _qi.posicao = _b.posicao_txt).bloqueia, ""),
+                                                                                            " ",
+                                                                                            ""
+                                                                                        ) & ","
+                                                                                    )
+                                                                                )
+                                                                            ),
                                                                         _pend:
                                                                             _b.tipo = "VOO" And
                                                                             (
@@ -847,32 +888,34 @@ Screens:
                                                                             ""
                                                                         ) &
                                                                         "<td title='" & _b.dica & "' style='box-sizing:border-box;width:" & Text((_z - _a) * 100 / mapMinutosDia, "0.000", "en-US") & "%;height:" & (mapAlturaLinha - 14) & "px;" &
-                                                                        "background:" & If(_bloq, hxTextoFraco, If(_b.pesq = 1, hxVermelho, Coalesce(_cia.cor_hex, hxBorda))) & ";" &
-                                                                        "color:" & If(_bloq Or _b.pesq = 1, hxTextoBarra, Coalesce(_cia.cor_texto, hxTexto)) & ";" &
-                                                                        "border:3px " & If(_pend, "dashed", "solid") & " " &
-                                                                        If(_pend And IsBlank(_b.portao), hxAmbar, Coalesce(_prt.cor_hex, hxBorda)) & ";" &
+                                                                        "background:" & If(_imped, hxGradeLinha, _bloq, hxTextoFraco, _b.pesq = 1, hxVermelho, Coalesce(_cia.cor_hex, hxBorda)) & ";" &
+                                                                        "color:" & If(_imped, hxTextoFraco, _bloq Or _b.pesq = 1, hxTextoBarra, Coalesce(_cia.cor_texto, hxTexto)) & ";" &
+                                                                        "border:3px " & If(_imped, "dashed", _pend, "dashed", "solid") & " " &
+                                                                        If(_imped, hxTextoFraco, _pend And IsBlank(_b.portao), hxAmbar, Coalesce(_prt.cor_hex, hxBorda)) & ";" &
                                                                         "font-size:10px;font-weight:700;line-height:1.15;padding:0 3px;text-align:center;overflow:hidden;'>" &
                                                                         "<div style='white-space:nowrap;overflow:hidden;text-overflow:ellipsis;'>" &
                                                                         If(_b.de_antes = 1, "&laquo;&nbsp;", "") &
                                                                         If(
-                                                                            _b.pesq = 1,
+                                                                            !_imped And _b.pesq = 1,
                                                                             "<span style='background:" & hxTextoBarra & ";color:" & hxVermelho & ";padding:0 3px;margin-right:3px;'>P</span>",
                                                                             ""
                                                                         ) &
                                                                         If(
-                                                                            _b.intl = 1,
+                                                                            !_imped And _b.intl = 1,
                                                                             "<span style='background:" & hxInternacional & ";color:" & hxTexto & ";padding:0 3px;margin-right:3px;'>I</span>",
                                                                             ""
                                                                         ) &
                                                                         With(
                                                                             { _cd: LookUp(colCondicoes As _cc, _cc.cond = _b.cond) },
                                                                             If(
-                                                                                IsBlank(_cd.cor_hex) Or _cd.cor_hex = "",
+                                                                                _imped Or IsBlank(_cd.cor_hex) Or _cd.cor_hex = "",
                                                                                 "",
                                                                                 "<span style='background:" & _cd.cor_hex & ";color:" & hxTextoBarra & ";padding:0 3px;margin-right:3px;'>" & _cd.selo & "</span>"
                                                                             )
                                                                         ) &
                                                                         If(
+                                                                            _imped,
+                                                                            "INDISPONÍVEL &middot; " & _b.posicao_txt,
                                                                             _bloq,
                                                                             If(_b.tipo = "INTERDICAO", "INTERDITADO", "RESERVADO"),
                                                                             Trim(
@@ -2313,6 +2356,19 @@ Screens:
                                                   )
                                               ) As _q2,
                                               _q2.posicao & ","
+                                          ) &
+                                          "," & Substitute(Coalesce(locPos.bloqueia, ""), " ", "") & "," &
+                                          Concat(
+                                              Filter(
+                                                  colPosicoesAero As _q3,
+                                                  !IsBlank(
+                                                      Find(
+                                                          "," & locPos.posicao & ",",
+                                                          "," & Substitute(Coalesce(_q3.bloqueia, ""), " ", "") & ","
+                                                      )
+                                                  )
+                                              ) As _q4,
+                                              _q4.posicao & ","
                                           )
                                   }
                               );
