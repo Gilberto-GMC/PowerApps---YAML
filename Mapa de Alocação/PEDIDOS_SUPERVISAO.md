@@ -28,6 +28,33 @@ Hoje clicar às 09h40 propõe 09:00.
 
 ---
 
+## 1b. Bloco pequeno demais: rolagem horizontal em vez do dia inteiro na página
+
+Acrescentado depois, e **é o mesmo problema do item 1 visto pelo outro lado.** Hoje as 24 horas cabem
+numa página só, e o retângulo do voo fica pequeno. Passar para colunas de 10 minutos na mesma largura
+deixaria menor ainda. **Os dois têm que ser feitos juntos** — separados, o primeiro piora o segundo.
+
+O pedido: bloco maior, **rolagem horizontal embaixo** para andar nos horários, e a rolagem
+**acompanhando a passagem da hora** sozinha.
+
+**O que a plataforma permite, e o que não permite:**
+
+`LayoutOverflowX: =LayoutOverflow.Scroll` **tem 19 precedentes** no repositório, então rolar
+horizontalmente é seguro. O problema é a segunda metade do pedido: **o Power Apps não expõe a posição
+de rolagem de um container.** Não dá para dizer "role até as 14h" — quem rola é o usuário, e o app não
+lê nem escreve essa posição.
+
+**Alternativa que entrega o pedido inteiro sem depender disso:** em vez de rolar, a grade desenha uma
+**janela de horas** — 6 ou 8 em vez de 24 — e a janela anda. Setas para mover, e um `Timer` que avança
+a janela quando o relógio vira a hora. Como a largura de tudo já é calculada sobre `mapMinutosDia`,
+passar a calcular sobre `mapJanelaMin` é mudar o denominador, não a arquitetura.
+
+Vantagens sobre a rolagem: o bloco fica maior **e** o app controla onde a janela está, que é
+justamente o que a rolagem não permite. Desvantagem: perde-se a visão do dia inteiro de relance — vale
+perguntar ao supervisor se ele quer poder voltar a ver 24 horas com um toque.
+
+---
+
 ## 2. Explicar o formato da planilha de importação
 
 **O que existe hoje:** a regra está no `importar_programacao.ts` e descrita em
