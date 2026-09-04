@@ -665,15 +665,19 @@ Screens:
                                                             "RESERVA", "POSIÇÃO RESERVADA",
                                                             Trim(
                                                                 Coalesce(_cia.nome_cia, _r.cia_sigla) & " " &
-                                                                Coalesce(_r.voo_chegada, "") &
                                                                 If(
-                                                                    !IsBlank(_r.voo_saida),
-                                                                    If(IsBlank(_r.voo_chegada), "", "/") & _r.voo_saida,
-                                                                    ""
+                                                                    IsBlank(_r.voo_chegada) And IsBlank(_r.voo_saida),
+                                                                    Coalesce(_r.prefixo, ""),
+                                                                    Coalesce(_r.voo_chegada, "") &
+                                                                    If(
+                                                                        !IsBlank(_r.voo_saida),
+                                                                        If(IsBlank(_r.voo_chegada), "", "/") & _r.voo_saida,
+                                                                        ""
+                                                                    )
                                                                 )
                                                             )
                                                         ) &
-                                                        If(!IsBlank(_r.prefixo), Char(10) & "Prefixo " & _r.prefixo, "") &
+                                                        If(!IsBlank(_r.prefixo) And !(IsBlank(_r.voo_chegada) And IsBlank(_r.voo_saida)), Char(10) & "Prefixo " & _r.prefixo, "") &
                                                         If(
                                                             Coalesce(_r.condicao, "PREVISTO") <> "PREVISTO",
                                                             Char(10) & Coalesce(LookUp(colCondicoes As _cq, _cq.cond = _r.condicao).rotulo, ""),
