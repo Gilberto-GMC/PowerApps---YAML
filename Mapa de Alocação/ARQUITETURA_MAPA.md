@@ -831,6 +831,22 @@ A lista de voos do painel ganhou dois botões por linha: **avião** alterna prev
 **visto** alterna para finalizado. Os dois gravam direto e recarregam a grade; a cor do ícone diz o
 estado atual. Ambos são alternadores, não ações de mão única — errar o toque se desfaz com outro.
 
+Os ícones são `Classic/Icon@2.5.0`, **não o botão moderno** — `Button@0.0.45` não tem `Tooltip`, e sem
+balão dois ícones sem rótulo não dizem o que fazem. `Classic/Icon` tem a propriedade, com 35
+precedentes, e 173 usos dentro de container moderno.
+
+### Finalizado sai do mapa
+
+Marcar como finalizado tira o registro da grade **e libera a posição**: o filtro do `colDia` e o do
+`colValida` excluem `condicao = "FINALIZADO"`. Movimento encerrado não disputa espaço com o próximo.
+
+O detector de alteração no servidor **não** filtra, de propósito: alguém finalizando noutra máquina é
+exatamente o tipo de mudança que a grade precisa sinalizar como desatualizada.
+
+⚠️ **Consequência a conhecer:** o registro some da grade e da lista do painel, e não há como
+alcançá-lo de volta pelo app. Um toque errado no visto só se desfaz pelo SharePoint. O botão é
+alternador, mas depois do primeiro toque não há mais onde tocar.
+
 **A linha virou container AutoLayout** para isso. Não dá para posicionar os botões com `X` dentro de
 galeria: o Studio descarta a propriedade ao colar a tela, e todos empilhariam no canto. É o mesmo
 desenho da camada de clique da grade, e pelo mesmo motivo.

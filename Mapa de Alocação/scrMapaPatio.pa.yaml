@@ -649,7 +649,8 @@ Screens:
                                     ForAll(
                                         Filter(
                                             tb_alocacoesMapa,
-                                            aeroporto = varAero And data_operacao <= varData And data_fim >= varData And ativo = 1
+                                            aeroporto = varAero And data_operacao <= varData And data_fim >= varData And ativo = 1 And
+                                            condicao <> "FINALIZADO"
                                         ) As _r,
                                         With(
                                             {
@@ -1724,19 +1725,18 @@ Screens:
                                 If(!IsBlank(ThisItem.portao), "   PORTÃO " & ThisItem.portao, "") &
                                 If(ThisItem.pesq = 1, "   PESQUISADO", "") &
                                 If(ThisItem.intl = 1, "   INTERNACIONAL", "")
-                        - btnNoPatioMap:
-                            Control: Button@0.0.45
+                        - icoNoPatioMap:
+                            Control: Classic/Icon@2.5.0
                             Properties:
-                              Appearance: ='ButtonCanvas.Appearance'.Secondary
-                              BasePaletteColor: =If(ThisItem.cond = "NO PATIO", thmVerde, thmTextoFraco)
-                              BorderRadius: =0
+                              AlignInContainer: =AlignInContainer.Center
+                              BorderColor: =thmBorda
+                              Color: =If(ThisItem.cond = "NO PATIO", thmVerde, thmTextoFraco)
+                              DisabledColor: =thmBorda
                               DisplayMode: =If(varPodeEditar, DisplayMode.Edit, DisplayMode.Disabled)
                               FillPortions: =0
-                              FontColor: =If(ThisItem.cond = "NO PATIO", thmVerde, thmTextoFraco)
-                              Height: =44
-                              Icon: ="Airplane"
-                              IconStyle: ='ButtonCanvas.IconStyle'.Filled
-                              LayoutMinWidth: =0
+                              Height: =40
+                              HoverColor: =thmVerde
+                              Icon: =Icon.Airplane
                               OnSelect: |-
                                 =UpdateContext(
                                     {
@@ -1752,23 +1752,27 @@ Screens:
                                 If(
                                     locErroCond,
                                     Notify("Não foi possível mudar a condição. Nada foi alterado.", NotificationType.Error, 6000),
-                                    Select(btnAtualizarMap)
+                                    Select(btnAtualizarMap);
+                                    Set(varPainelAberto, false)
                                 )
-                              Text: =""
+                              PaddingBottom: =10
+                              PaddingLeft: =10
+                              PaddingRight: =10
+                              PaddingTop: =10
+                              Tooltip: =If(ThisItem.cond = "NO PATIO", "Aeronave no pátio — toque para voltar a previsto", "Marcar como aeronave no pátio")
                               Width: =42
-                        - btnConcluidoMap:
-                            Control: Button@0.0.45
+                        - icoConcluidoMap:
+                            Control: Classic/Icon@2.5.0
                             Properties:
-                              Appearance: ='ButtonCanvas.Appearance'.Secondary
-                              BasePaletteColor: =If(ThisItem.cond = "FINALIZADO", thmPrimaria, thmTextoFraco)
-                              BorderRadius: =0
+                              AlignInContainer: =AlignInContainer.Center
+                              BorderColor: =thmBorda
+                              Color: =If(ThisItem.cond = "FINALIZADO", thmPrimaria, thmTextoFraco)
+                              DisabledColor: =thmBorda
                               DisplayMode: =If(varPodeEditar, DisplayMode.Edit, DisplayMode.Disabled)
                               FillPortions: =0
-                              FontColor: =If(ThisItem.cond = "FINALIZADO", thmPrimaria, thmTextoFraco)
-                              Height: =44
-                              Icon: ="Checkmark"
-                              IconStyle: ='ButtonCanvas.IconStyle'.Filled
-                              LayoutMinWidth: =0
+                              Height: =40
+                              HoverColor: =thmPrimaria
+                              Icon: =Icon.Check
                               OnSelect: |-
                                 =UpdateContext(
                                     {
@@ -1784,9 +1788,14 @@ Screens:
                                 If(
                                     locErroCond,
                                     Notify("Não foi possível mudar a condição. Nada foi alterado.", NotificationType.Error, 6000),
-                                    Select(btnAtualizarMap)
+                                    Select(btnAtualizarMap);
+                                    Set(varPainelAberto, false)
                                 )
-                              Text: =""
+                              PaddingBottom: =10
+                              PaddingLeft: =10
+                              PaddingRight: =10
+                              PaddingTop: =10
+                              Tooltip: =If(ThisItem.cond = "FINALIZADO", "Movimento finalizado — toque para voltar a previsto", "Marcar movimento como finalizado")
                               Width: =42
             - cntFormMap:
                 Control: GroupContainer@1.5.0
@@ -2421,7 +2430,8 @@ Screens:
                                   ForAll(
                                       Filter(
                                           tb_alocacoesMapa,
-                                          aeroporto = varAero And data_operacao <= locDataFim And data_fim >= locDataIni And ativo = 1
+                                          aeroporto = varAero And data_operacao <= locDataFim And data_fim >= locDataIni And ativo = 1 And
+                                          condicao <> "FINALIZADO"
                                       ) As _v,
                                       {
                                           id: _v.ID,
