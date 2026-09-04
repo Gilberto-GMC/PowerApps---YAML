@@ -5,11 +5,15 @@
   "colunas": [
     {
       "internalName": "aeroporto",
-      "schemaXml": "<Field Type='Text' MaxLength='10' Required='TRUE' Indexed='TRUE' DisplayName='aeroporto' Name='aeroporto' StaticName='aeroporto' Group='AirportNow'/>"
+      "schemaXml": "<Field Type='Text' MaxLength='60' Required='TRUE' Indexed='TRUE' DisplayName='aeroporto' Name='aeroporto' StaticName='aeroporto' Group='AirportNow'/>"
     },
     {
       "internalName": "data_operacao",
       "schemaXml": "<Field Type='DateTime' Format='DateOnly' Required='TRUE' Indexed='TRUE' DisplayName='data_operacao' Name='data_operacao' StaticName='data_operacao' Group='AirportNow'/>"
+    },
+    {
+      "internalName": "data_fim",
+      "schemaXml": "<Field Type='DateTime' Format='DateOnly' Required='TRUE' Indexed='TRUE' DisplayName='data_fim' Name='data_fim' StaticName='data_fim' Group='AirportNow'><Validation Message='a data final nao pode ser anterior a data inicial'>=[data_fim]&gt;=[data_operacao]</Validation></Field>"
     },
     {
       "internalName": "id_posicao",
@@ -40,6 +44,10 @@
       "schemaXml": "<Field Type='Text' MaxLength='20' Required='FALSE' DisplayName='prefixo' Name='prefixo' StaticName='prefixo' Group='AirportNow'/>"
     },
     {
+      "internalName": "equipamento",
+      "schemaXml": "<Field Type='Text' MaxLength='10' Required='FALSE' DisplayName='equipamento' Name='equipamento' StaticName='equipamento' Group='AirportNow'/>"
+    },
+    {
       "internalName": "envergadura_m",
       "schemaXml": "<Field Type='Number' Decimals='2' Min='0' Required='FALSE' DisplayName='envergadura_m' Name='envergadura_m' StaticName='envergadura_m' Group='AirportNow'/>"
     },
@@ -64,8 +72,28 @@
       "schemaXml": "<Field Type='Number' Decimals='0' Min='0' Required='TRUE' DisplayName='pesquisado' Name='pesquisado' StaticName='pesquisado' Group='AirportNow'><Default>0</Default><Validation Message='use 1 ou 0'>=OU([pesquisado]=0;[pesquisado]=1)</Validation></Field>"
     },
     {
+      "internalName": "internacional",
+      "schemaXml": "<Field Type='Number' Decimals='0' Min='0' Required='TRUE' DisplayName='internacional' Name='internacional' StaticName='internacional' Group='AirportNow'><Default>0</Default><Validation Message='use 1 ou 0'>=OU([internacional]=0;[internacional]=1)</Validation></Field>"
+    },
+    {
       "internalName": "observacao",
       "schemaXml": "<Field Type='Note' RichText='FALSE' AppendOnly='FALSE' NumLines='4' Required='FALSE' DisplayName='observacao' Name='observacao' StaticName='observacao' Group='AirportNow'/>"
+    },
+    {
+      "internalName": "origem",
+      "schemaXml": "<Field Type='Text' DisplayName='origem' Name='origem' StaticName='origem' Group='AirportNow' MaxLength='30' Required='FALSE' Indexed='TRUE'/>"
+    },
+    {
+      "internalName": "responsavel",
+      "schemaXml": "<Field Type='Text' MaxLength='100' Required='FALSE' DisplayName='responsavel' Name='responsavel' StaticName='responsavel' Group='AirportNow'/>"
+    },
+    {
+      "internalName": "contato",
+      "schemaXml": "<Field Type='Text' MaxLength='60' Required='FALSE' DisplayName='contato' Name='contato' StaticName='contato' Group='AirportNow'/>"
+    },
+    {
+      "internalName": "condicao",
+      "schemaXml": "<Field Type='Text' MaxLength='20' Required='FALSE' DisplayName='condicao' Name='condicao' StaticName='condicao' Group='AirportNow'><Default>PREVISTO</Default></Field>"
     },
     {
       "internalName": "ativo",
@@ -74,7 +102,7 @@
   ],
   "registrosIniciais": [],
   "validacaoLista": {
-    "formula": "=[hora_fim]>[hora_inicio]",
-    "mensagem": "o fim tem que ser maior que o inicio"
+    "formula": "=OU([data_fim]>[data_operacao];[hora_fim]>[hora_inicio])",
+    "mensagem": "quando entra e sai no mesmo dia, o fim tem que ser maior que o inicio"
   }
 }

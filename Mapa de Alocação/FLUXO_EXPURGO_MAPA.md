@@ -8,8 +8,14 @@ conexão, com o Studio renomeando o fluxo para `_1` e quebrando o YAML.
 
 | Fase | Condição | Ação | Efeito |
 |---|---|---|---|
-| 1 — ocultar | `data_operacao` < hoje − **7 dias** e `ativo` = 1 | `ativo` = 0 | Sai do app; ainda recuperável pela view `⚠ Inativos` |
-| 2 — apagar | `data_operacao` < hoje − **30 dias** | Excluir item | Sai de vez |
+| 1 — ocultar | `data_fim` < hoje − **7 dias** e `ativo` = 1 | `ativo` = 0 | Sai do app; ainda recuperável pela view `⚠ Inativos` |
+| 2 — apagar | `data_fim` < hoje − **30 dias** | Excluir item | Sai de vez |
+
+> ⚠️ **A janela conta pela `data_fim`, nunca pela `data_operacao`.** Desde que o registro passou a poder
+> cruzar dias, `data_operacao` é só o começo da ocupação: uma interdição lançada há 40 dias que termina
+> amanhã ainda está valendo. Filtrar por `data_operacao` apagaria essa interdição enquanto ela ainda está
+> em vigor, **sem erro nenhum** — o fluxo roda verde e o bloco some da grade de todo mundo. Para o registro
+> de um dia só as duas colunas são iguais e o comportamento não muda.
 
 A janela de 7 dias dá margem para desfazer um engano; a de 30 mantém a lista em torno de **1.500 itens**,
 folgadamente abaixo do limite de 5.000 da view, e o filtro do dia continua rápido.
@@ -26,7 +32,7 @@ fuso `(UTC-03:00) Brasília`.
 - Nome da lista: `tb_alocacoesMapa`
 - **Consulta de filtro:**
   ```
-  ativo eq 1 and data_operacao lt '@{formatDateTime(addDays(utcNow(), -7), 'yyyy-MM-dd')}'
+  ativo eq 1 and data_fim lt '@{formatDateTime(addDays(utcNow(), -7), 'yyyy-MM-dd')}'
   ```
 - Configurações → **Paginação ligada**, limite `5000`
 
@@ -44,7 +50,7 @@ fuso `(UTC-03:00) Brasília`.
 - Nome da lista: `tb_alocacoesMapa`
 - **Consulta de filtro:**
   ```
-  data_operacao lt '@{formatDateTime(addDays(utcNow(), -30), 'yyyy-MM-dd')}'
+  data_fim lt '@{formatDateTime(addDays(utcNow(), -30), 'yyyy-MM-dd')}'
   ```
 - Paginação ligada, limite `5000`
 
@@ -67,6 +73,8 @@ silêncio por semanas sem ninguém notar — até a lista passar de 5.000 itens 
 - [ ] Conferir que o app não exibe o item oculto (o filtro do dia é `ativo = 1`)
 - [ ] Deixar rodar uma noite e conferir o histórico de execuções
 - [ ] Conferir que ninguém recebeu a faixa "a programação foi alterada" na manhã seguinte
+- [ ] Forjar uma interdição com `data_operacao` de 40 dias atrás e `data_fim` de amanhã, rodar o fluxo e
+      confirmar que ela **continua na lista** — é o teste que pega o filtro trocado para `data_operacao`
 
 ## Se um dia a retenção mudar
 

@@ -1,0 +1,982 @@
+Screens:
+  scrMapaRegra:
+    Properties:
+      OnVisible: |-
+        =If(IsBlank(varAero), Set(varAero, First(colAerosMapa).Aeroporto));
+        If(IsBlank(varAeroNome), Set(varAeroNome, First(colAerosMapa).Aeroporto));
+        Set(varMenuConfig, true);
+        Set(varMapaVisivel, false);
+        Set(varPodeCatalogo, DataSourceInfo('tb_regrasPosicao', DataSourceInfo.EditPermission));
+        Set(varRegraSel, Blank());
+        UpdateContext({locNonceRg: 0});
+        Select(btnRecarregarRgr);
+        Set(varFormRg, { pos: Coalesce(First(colPosicoesSel).Value, ""), viz: "—", msg: "", ativo: true }); Clear(colEqaSel); Clear(colEqbSel)
+    Children:
+      - btnRecarregarRgr:
+          Control: Button@0.0.45
+          Properties:
+            Height: =1
+            OnSelect: |-
+              =ClearCollect(colRegrasTodas, Sort(Filter(tb_regrasPosicao, aeroporto = varAero), posicao, SortOrder.Ascending));
+              ClearCollect(colRegras, Filter(tb_regrasPosicao, aeroporto = varAero And ativo = 1));
+              ClearCollect(colEquipRg, Sort(Filter(tb_equipamentos, ativo = 1), ordem, SortOrder.Ascending));
+              ClearCollect(colEquipSelRg, ForAll(colEquipRg As _e, { Value: _e.nome_equip }));
+              ClearCollect(colVizSel, Table({ Value: "—" }));
+              Collect(colVizSel, ForAll(Sort(colPosicoesAero, ordem, SortOrder.Ascending) As _p, { Value: _p.posicao }))
+            Text: =""
+            Visible: =true
+            Width: =1
+            X: =0
+            Y: =0
+      - cntShellRgr:
+          Control: GroupContainer@1.5.0
+          Variant: AutoLayout
+          Properties:
+            DropShadow: =DropShadow.None
+            Fill: =thmFundo
+            Height: =Parent.Height
+            LayoutAlignItems: =LayoutAlignItems.Stretch
+            LayoutDirection: =LayoutDirection.Horizontal
+            RadiusBottomLeft: =0
+            RadiusBottomRight: =0
+            RadiusTopLeft: =0
+            RadiusTopRight: =0
+            Width: =Parent.Width
+          Children:
+            - cntMenuRgr:
+                Control: GroupContainer@1.5.0
+                Variant: AutoLayout
+                Properties:
+                  DropShadow: =DropShadow.None
+                  Fill: =thmPrimariaEscura
+                  FillPortions: =0
+                  LayoutAlignItems: =LayoutAlignItems.Stretch
+                  LayoutDirection: =LayoutDirection.Vertical
+                  LayoutGap: =10
+                  LayoutMinHeight: =0
+                  PaddingBottom: =14
+                  PaddingLeft: =12
+                  PaddingRight: =12
+                  PaddingTop: =16
+                  RadiusBottomLeft: =0
+                  RadiusBottomRight: =0
+                  RadiusTopLeft: =0
+                  RadiusTopRight: =0
+                  Width: =If(varMenuAberto, 236, 76)
+                Children:
+                  - htmMarcaRgr:
+                      Control: HtmlViewer@2.1.0
+                      Properties:
+                        AlignInContainer: =AlignInContainer.Start
+                        AutoHeight: =true
+                        Color: =thmTextoBarra
+                        Fill: =thmPrimariaEscura
+                        Font: =thmFonte
+                        HtmlText: |-
+                          ="<div style='" & htmlFonte & "color:" & hxTextoBarra & ";'>" &
+                          If(
+                              varMenuAberto,
+                              "<div style='font-size:10px;letter-spacing:.24em;font-weight:700;opacity:.6;'>MOTIVA</div><div style='font-size:16px;font-weight:800;letter-spacing:.01em;margin-top:2px;'>MAPA DE ALOCAÇÃO</div>",
+                              "<div style='font-size:17px;font-weight:800;text-align:left;margin-left:12px;'>MA</div>"
+                          ) &
+                          "</div>"
+                        PaddingBottom: =14
+                        PaddingLeft: =4
+                        PaddingRight: =0
+                        PaddingTop: =0
+                        Size: =11
+                  - cntNavRgr:
+                      Control: GroupContainer@1.5.0
+                      Variant: AutoLayout
+                      Properties:
+                        DropShadow: =DropShadow.None
+                        Fill: =thmPrimariaEscura
+                        LayoutAlignItems: =LayoutAlignItems.Stretch
+                        LayoutDirection: =LayoutDirection.Vertical
+                        LayoutGap: =10
+                        LayoutMinHeight: =0
+                        LayoutMinWidth: =0
+                        LayoutOverflowY: =LayoutOverflow.Scroll
+                        RadiusBottomLeft: =0
+                        RadiusBottomRight: =0
+                        RadiusTopLeft: =0
+                        RadiusTopRight: =0
+                      Children:
+                        - btnNavMapaRgr:
+                            Control: Button@0.0.45
+                            Properties:
+                              Align: =Align.Left
+                              AlignInContainer: =AlignInContainer.Stretch
+                              Appearance: ='ButtonCanvas.Appearance'.Secondary
+                              BasePaletteColor: =thmTextoBarra
+                              BorderRadius: =0
+                              FontColor: =thmTextoBarra
+                              FontSize: =14
+                              FontWeight: =FontWeight.Semibold
+                              Height: =44
+                              Icon: ="Eye"
+                              IconStyle: ='ButtonCanvas.IconStyle'.Filled
+                              LayoutMinWidth: =0
+                              OnSelect: =Navigate(scrMapaPatio, ScreenTransition.Fade)
+                              PaddingLeft: =18
+                              Text: =If(varMenuAberto, "MAPA DO DIA", "")
+                        - btnNavCfgRgr:
+                            Control: Button@0.0.45
+                            Properties:
+                              Align: =Align.Left
+                              AlignInContainer: =AlignInContainer.Stretch
+                              Appearance: ='ButtonCanvas.Appearance'.Secondary
+                              BasePaletteColor: =thmTextoBarra
+                              BorderRadius: =0
+                              FontColor: =thmTextoBarra
+                              FontSize: =14
+                              FontWeight: =FontWeight.Semibold
+                              Height: =44
+                              Icon: ="Settings"
+                              IconStyle: ='ButtonCanvas.IconStyle'.Filled
+                              LayoutMinWidth: =0
+                              OnSelect: =Set(varMenuConfig, !varMenuConfig)
+                              PaddingLeft: =18
+                              Text: =If(varMenuAberto, If(varMenuConfig, "CONFIGURAÇÕES  ▾", "CONFIGURAÇÕES  ▸"), "")
+                        - btnNavRefRgr:
+                            Control: Button@0.0.45
+                            Properties:
+                              Align: =Align.Left
+                              AlignInContainer: =AlignInContainer.End
+                              Width: =If(varMenuAberto, 180, 52)
+                              Appearance: ='ButtonCanvas.Appearance'.Secondary
+                              BasePaletteColor: =thmTextoBarra
+                              BorderRadius: =0
+                              FontColor: =thmTextoBarra
+                              FontSize: =14
+                              FontWeight: =FontWeight.Semibold
+                              Height: =44
+                              Icon: ="Search"
+                              IconStyle: ='ButtonCanvas.IconStyle'.Filled
+                              LayoutMinWidth: =0
+                              OnSelect: =Navigate(scrMapaReferencia, ScreenTransition.Fade)
+                              PaddingLeft: =18
+                              Visible: =varMenuConfig
+                              Text: =If(varMenuAberto, "POSIÇÕES E CORES", "")
+                        - btnNavEqpRgr:
+                            Control: Button@0.0.45
+                            Properties:
+                              Align: =Align.Left
+                              AlignInContainer: =AlignInContainer.End
+                              Width: =If(varMenuAberto, 180, 52)
+                              Appearance: ='ButtonCanvas.Appearance'.Secondary
+                              BasePaletteColor: =thmTextoBarra
+                              BorderRadius: =0
+                              FontColor: =thmTextoBarra
+                              FontSize: =14
+                              FontWeight: =FontWeight.Semibold
+                              Height: =44
+                              Icon: ="Airplane"
+                              IconStyle: ='ButtonCanvas.IconStyle'.Filled
+                              LayoutMinWidth: =0
+                              OnSelect: =Navigate(scrMapaEquip, ScreenTransition.Fade)
+                              PaddingLeft: =18
+                              Visible: =varMenuConfig
+                              Text: =If(varMenuAberto, "EQUIPAMENTOS", "")
+                        - btnNavRgrRgr:
+                            Control: Button@0.0.45
+                            Properties:
+                              Align: =Align.Left
+                              AlignInContainer: =AlignInContainer.End
+                              Width: =If(varMenuAberto, 180, 52)
+                              Appearance: ='ButtonCanvas.Appearance'.Primary
+                              BasePaletteColor: =thmPrimaria
+                              BorderRadius: =0
+                              FontColor: =thmTextoBarra
+                              FontSize: =14
+                              FontWeight: =FontWeight.Semibold
+                              Height: =44
+                              Icon: ="LockClosed"
+                              IconStyle: ='ButtonCanvas.IconStyle'.Filled
+                              LayoutMinWidth: =0
+                              PaddingLeft: =18
+                              Visible: =varMenuConfig
+                              Text: =If(varMenuAberto, "RESTRIÇÕES", "")
+                        - btnNavImpRgr:
+                            Control: Button@0.0.45
+                            Properties:
+                              Align: =Align.Left
+                              AlignInContainer: =AlignInContainer.End
+                              Width: =If(varMenuAberto, 180, 52)
+                              Appearance: ='ButtonCanvas.Appearance'.Secondary
+                              BasePaletteColor: =thmTextoBarra
+                              BorderRadius: =0
+                              FontColor: =thmTextoBarra
+                              FontSize: =14
+                              FontWeight: =FontWeight.Semibold
+                              Height: =44
+                              Icon: ="Upload"
+                              IconStyle: ='ButtonCanvas.IconStyle'.Filled
+                              LayoutMinWidth: =0
+                              OnSelect: =Navigate(scrMapaImport, ScreenTransition.Fade)
+                              PaddingLeft: =18
+                              Visible: =varMenuConfig
+                              Text: =If(varMenuAberto, "IMPORTAR PROGRAMAÇÃO", "")
+                        - btnNavInicioRgr:
+                            Control: Button@0.0.45
+                            Properties:
+                              Align: =Align.Left
+                              AlignInContainer: =AlignInContainer.Stretch
+                              Appearance: ='ButtonCanvas.Appearance'.Secondary
+                              BasePaletteColor: =thmTextoBarra
+                              BorderRadius: =0
+                              FontColor: =thmTextoBarra
+                              FontSize: =14
+                              FontWeight: =FontWeight.Semibold
+                              Height: =44
+                              Icon: ="ArrowExit"
+                              IconStyle: ='ButtonCanvas.IconStyle'.Filled
+                              LayoutMinWidth: =0
+                              OnSelect: =Navigate(scrMapaInicio, ScreenTransition.Fade)
+                              PaddingLeft: =18
+                              Text: =If(varMenuAberto, "TROCAR CONTEXTO", "")
+                  - btnRecolherRgr:
+                      Control: Button@0.0.45
+                      Properties:
+                        Align: =Align.Left
+                        AlignInContainer: =AlignInContainer.Stretch
+                        Appearance: ='ButtonCanvas.Appearance'.Secondary
+                        BasePaletteColor: =thmBotaoBarra
+                        BorderRadius: =0
+                        FillPortions: =0
+                        FontColor: =thmTextoBarra
+                        FontSize: =11
+                        FontWeight: =FontWeight.Semibold
+                        Height: =36
+                        LayoutMinHeight: =36
+                        Icon: ="ChevronRight"
+                        IconStyle: ='ButtonCanvas.IconStyle'.Filled
+                        LayoutMinWidth: =0
+                        OnSelect: =Set(varMenuAberto, !varMenuAberto)
+                        PaddingLeft: =18
+                        Text: =If(varMenuAberto, "RECOLHER", "")
+            - cntRaizRgr:
+                Control: GroupContainer@1.5.0
+                Variant: AutoLayout
+                Properties:
+                  DropShadow: =DropShadow.None
+                  Fill: =thmFundo
+                  FillPortions: =1
+                  LayoutAlignItems: =LayoutAlignItems.Stretch
+                  LayoutDirection: =LayoutDirection.Vertical
+                  LayoutGap: =0
+                  LayoutMinHeight: =0
+                  LayoutMinWidth: =0
+                  RadiusBottomLeft: =0
+                  RadiusBottomRight: =0
+                  RadiusTopLeft: =0
+                  RadiusTopRight: =0
+                Children:
+                  - cntBarraRgr:
+                      Control: GroupContainer@1.5.0
+                      Variant: AutoLayout
+                      Properties:
+                        DropShadow: =DropShadow.None
+                        Fill: =thmPrimaria
+                        FillPortions: =0
+                        Height: =thmAlturaBarra
+                        LayoutAlignItems: =LayoutAlignItems.Center
+                        LayoutDirection: =LayoutDirection.Horizontal
+                        LayoutGap: =12
+                        LayoutMinWidth: =0
+                        PaddingLeft: =26
+                        PaddingRight: =26
+                        RadiusBottomLeft: =0
+                        RadiusBottomRight: =0
+                        RadiusTopLeft: =0
+                        RadiusTopRight: =0
+                      Children:
+                        - htmTituloRgr:
+                            Control: HtmlViewer@2.1.0
+                            Properties:
+                              AutoHeight: =true
+                              Color: =thmTextoBarra
+                              Fill: =thmPrimaria
+                              FillPortions: =1
+                              Font: =thmFonte
+                              HtmlText: |-
+                                ="<div style='" & htmlFonte & "color:" & hxTextoBarra & ";'>" &
+                                "<div style='font-size:19px;font-weight:800;letter-spacing:.02em;line-height:1.1;'>RESTRIÇÕES DE POSIÇÃO</div>" &
+                                "<div style='font-size:11px;opacity:.75;margin-top:3px;'>" &
+                                varAeroNome & " &nbsp;&middot;&nbsp; " & CountRows(colRegrasTodas) & " regra(s) &nbsp;&middot;&nbsp; " & CountRows(colRegras) & " ativa(s)" & If(varPodeCatalogo, "", " &nbsp;&middot;&nbsp; SOMENTE LEITURA") & "</div></div>"
+                              LayoutMinWidth: =0
+                              Size: =11
+                  - cntConteudoRgr:
+                      Control: GroupContainer@1.5.0
+                      Variant: AutoLayout
+                      Properties:
+                        DropShadow: =DropShadow.None
+                        Fill: =thmFundo
+                        FillPortions: =1
+                        LayoutAlignItems: =LayoutAlignItems.Stretch
+                        LayoutDirection: =LayoutDirection.Horizontal
+                        LayoutGap: =20
+                        LayoutMinHeight: =0
+                        LayoutMinWidth: =0
+                        PaddingBottom: =20
+                        PaddingLeft: =26
+                        PaddingRight: =26
+                        PaddingTop: =20
+                        RadiusBottomLeft: =0
+                        RadiusBottomRight: =0
+                        RadiusTopLeft: =0
+                        RadiusTopRight: =0
+                      Children:
+                        - cntListaRgr:
+                            Control: GroupContainer@1.5.0
+                            Variant: AutoLayout
+                            Properties:
+                              DropShadow: =DropShadow.None
+                              Fill: =thmSuperficie
+                              FillPortions: =1
+                              LayoutAlignItems: =LayoutAlignItems.Stretch
+                              LayoutDirection: =LayoutDirection.Vertical
+                              LayoutMinHeight: =0
+                              LayoutMinWidth: =0
+                              PaddingBottom: =8
+                              PaddingLeft: =8
+                              PaddingRight: =8
+                              PaddingTop: =8
+                              RadiusBottomLeft: =0
+                              RadiusBottomRight: =0
+                              RadiusTopLeft: =0
+                              RadiusTopRight: =0
+                            Children:
+                              - htmVazioRgr:
+                                  Control: HtmlViewer@2.1.0
+                                  Properties:
+                                    AutoHeight: =true
+                                    Color: =thmTexto
+                                    Fill: =thmSuperficie
+                                    FillPortions: =0
+                                    Font: =thmFonte
+                                    HtmlText: |-
+                                      ="<div style='" & htmlFonte & "background:" & hxAmbarSuave & ";border-left:4px solid " & hxAmbar &
+                                      ";padding:10px 12px;font-size:11px;color:" & hxTexto & ";'>" &
+                                      "Nenhuma restrição cadastrada: <b>nada é proibido por equipamento</b>. A checagem por envergadura continua valendo sozinha." &
+                                      "</div>"
+                                    Size: =11
+                                    Visible: =CountRows(colRegrasTodas) = 0
+                              - galRegraRgr:
+                                  Control: Gallery@2.15.0
+                                  Variant: Vertical
+                                  Properties:
+                                    BorderColor: =thmBorda
+                                    BorderStyle: =BorderStyle.None
+                                    Fill: =thmSuperficie
+                                    FillPortions: =1
+                                    Items: =colRegrasTodas
+                                    LayoutMinHeight: =0
+                                    LayoutMinWidth: =0
+                                    TemplatePadding: =0
+                                    TemplateSize: =52
+                                  Children:
+                                    - btnItemRgr:
+                                        Control: Button@0.0.45
+                                        Properties:
+                                          Align: =Align.Left
+                                          Appearance: =If(varRegraSel.ID = ThisItem.ID, 'ButtonCanvas.Appearance'.Primary, 'ButtonCanvas.Appearance'.Secondary)
+                                          BasePaletteColor: =If(ThisItem.ativo = 1, thmVermelho, thmTextoFraco)
+                                          BorderRadius: =0
+                                          FontSize: =12
+                                          FontWeight: =FontWeight.Semibold
+                                          Height: =50
+                                          OnSelect: |-
+                                            =Set(varRegraSel, ThisItem);
+                                            Set(
+                                                varFormRg,
+                                                {
+                                                    pos: ThisItem.posicao,
+                                                    viz: If(IsBlank(ThisItem.vizinha), "—", ThisItem.vizinha),
+                                                    eqa: Substitute(Coalesce(ThisItem.equip_a, ""), " ", ""),
+                                                    eqb: Substitute(Coalesce(ThisItem.equip_b, ""), " ", ""),
+                                                    msg: ThisItem.mensagem,
+                                                    ativo: ThisItem.ativo = 1
+                                                }
+                                            );
+                                            Clear(colEqaSel);
+                                            If(
+                                                !IsBlank(ThisItem.equip_a),
+                                                Collect(
+                                                    colEqaSel,
+                                                    ForAll(
+                                                        Split(Substitute(ThisItem.equip_a, " ", ""), ",") As _s,
+                                                        {
+                                                            equip: _s.Value,
+                                                            nome: Coalesce(LookUp(colEquipRg As _e, _e.equip = _s.Value).nome_equip, _s.Value)
+                                                        }
+                                                    )
+                                                )
+                                            );
+                                            Clear(colEqbSel);
+                                            If(
+                                                !IsBlank(ThisItem.equip_b),
+                                                Collect(
+                                                    colEqbSel,
+                                                    ForAll(
+                                                        Split(Substitute(ThisItem.equip_b, " ", ""), ",") As _s,
+                                                        {
+                                                            equip: _s.Value,
+                                                            nome: Coalesce(LookUp(colEquipRg As _e, _e.equip = _s.Value).nome_equip, _s.Value)
+                                                        }
+                                                    )
+                                                )
+                                            );
+                                            UpdateContext({locNonceRg: locNonceRg + 1})
+                                          PaddingLeft: =12
+                                          PaddingRight: =12
+                                          Text: |-
+                                            =ThisItem.posicao & If(!IsBlank(ThisItem.vizinha), "  +  " & ThisItem.vizinha, "") & "      " &
+                                            ThisItem.equip_a & If(!IsBlank(ThisItem.equip_b), "   /   " & ThisItem.equip_b, "") &
+                                            If(ThisItem.ativo = 1, "", "      (INATIVA)")
+                                          Width: =Parent.Width - 18
+                        - cntFormRgr:
+                            Control: GroupContainer@1.5.0
+                            Variant: AutoLayout
+                            Properties:
+                              DropShadow: =DropShadow.None
+                              Fill: =thmSuperficie
+                              FillPortions: =0
+                              LayoutAlignItems: =LayoutAlignItems.Stretch
+                              LayoutDirection: =LayoutDirection.Vertical
+                              LayoutGap: =4
+                              LayoutMinHeight: =0
+                              LayoutMinWidth: =0
+                              LayoutOverflowY: =LayoutOverflow.Scroll
+                              PaddingBottom: =14
+                              PaddingLeft: =16
+                              PaddingRight: =16
+                              PaddingTop: =14
+                              RadiusBottomLeft: =0
+                              RadiusBottomRight: =0
+                              RadiusTopLeft: =0
+                              RadiusTopRight: =0
+                              Width: =440
+                            Children:
+                              - htmAjudaRgr:
+                                  Control: HtmlViewer@2.1.0
+                                  Properties:
+                                    AutoHeight: =true
+                                    Color: =thmTexto
+                                    Fill: =thmSuperficie
+                                    FillPortions: =0
+                                    Font: =thmFonte
+                                    HtmlText: |-
+                                      ="<div style='" & htmlFonte & "background:" & hxPrimariaClara & ";padding:8px 10px;font-size:10px;" &
+                                      "line-height:1.45;color:" & hxTexto & ";margin-bottom:6px;'>" &
+                                      "É proibido ter <b>os equipamentos de cima</b> nesta posição junto dos <b>de baixo</b> na vizinha, " &
+                                      "quando os dois períodos se cruzam. Deixando a vizinha em <b>—</b>, a proibição é só desta posição." &
+                                      "</div>"
+                                    Size: =10
+                              - lblPosRgr:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    Color: =thmTextoFraco
+                                    Font: =thmFonte
+                                    FontWeight: =FontWeight.Bold
+                                    Height: =18
+                                    Size: =10
+                                    Text: ="POSIÇÃO *"
+                              - drpPosRgr:
+                                  Control: DropDown@0.0.45
+                                  Properties:
+                                    DefaultSelectedItems: =[Coalesce(varFormRg.pos, "")]
+                                    DisplayMode: =If(varPodeCatalogo, DisplayMode.Edit, DisplayMode.View)
+                                    Height: =40
+                                    Items: =Filter(colPosicoesSel, locNonceRg >= 0)
+                              - lblEqaRgr:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    Color: =thmTextoFraco
+                                    Font: =thmFonte
+                                    FontWeight: =FontWeight.Bold
+                                    Height: =18
+                                    Size: =10
+                                    Text: ="EQUIPAMENTOS PROIBIDOS AQUI *"
+                              - cntAddEqaRgr:
+                                  Control: GroupContainer@1.5.0
+                                  Variant: AutoLayout
+                                  Properties:
+                                    DropShadow: =DropShadow.None
+                                    Fill: =thmSuperficie
+                                    FillPortions: =0
+                                    Height: =46
+                                    LayoutAlignItems: =LayoutAlignItems.Center
+                                    LayoutDirection: =LayoutDirection.Horizontal
+                                    LayoutGap: =6
+                                    LayoutMinWidth: =0
+                                    RadiusBottomLeft: =0
+                                    RadiusBottomRight: =0
+                                    RadiusTopLeft: =0
+                                    RadiusTopRight: =0
+                                  Children:
+                                    - drpAddEqaRgr:
+                                        Control: DropDown@0.0.45
+                                        Properties:
+                                          DisplayMode: =If(varPodeCatalogo, DisplayMode.Edit, DisplayMode.View)
+                                          Height: =40
+                                          Items: =Filter(colEquipSelRg, locNonceRg >= 0)
+                                    - btnAddEqaRgr:
+                                        Control: Button@0.0.45
+                                        Properties:
+                                          Appearance: ='ButtonCanvas.Appearance'.Secondary
+                                          BasePaletteColor: =thmOperacional
+                                          BorderRadius: =0
+                                          DisplayMode: =If(varPodeCatalogo, DisplayMode.Edit, DisplayMode.Disabled)
+                                          FillPortions: =0
+                                          FontColor: =thmOperacional
+                                          Height: =40
+                                          Icon: ="Add"
+                                          IconStyle: ='ButtonCanvas.IconStyle'.Filled
+                                          LayoutMinWidth: =0
+                                          OnSelect: |-
+                                            =If(
+                                                CountRows(Filter(colEqaSel, nome = drpAddEqaRgr.Selected.Value)) > 0,
+                                                Notify("Esse equipamento já está na lista.", NotificationType.Warning, 2000),
+                                                Collect(
+                                                    colEqaSel,
+                                                    {
+                                                        equip: LookUp(colEquipRg As _e, _e.nome_equip = drpAddEqaRgr.Selected.Value).equip,
+                                                        nome: drpAddEqaRgr.Selected.Value
+                                                    }
+                                                )
+                                            )
+                                          Text: =""
+                                          Width: =44
+                              - galEqaRgr:
+                                  Control: Gallery@2.15.0
+                                  Variant: Vertical
+                                  Properties:
+                                    BorderColor: =thmBorda
+                                    BorderStyle: =BorderStyle.None
+                                    Fill: =thmSuperficie
+                                    FillPortions: =0
+                                    Height: =96
+                                    Items: =colEqaSel
+                                    LayoutMinWidth: =0
+                                    TemplatePadding: =0
+                                    TemplateSize: =30
+                                  Children:
+                                    - btnTiraEqaRgr:
+                                        Control: Button@0.0.45
+                                        Properties:
+                                          Align: =Align.Left
+                                          Appearance: ='ButtonCanvas.Appearance'.Secondary
+                                          BasePaletteColor: =thmVermelho
+                                          BorderRadius: =0
+                                          DisplayMode: =If(varPodeCatalogo, DisplayMode.Edit, DisplayMode.Disabled)
+                                          FontColor: =thmTexto
+                                          FontSize: =11
+                                          Height: =28
+                                          Icon: ="Dismiss"
+                                          IconStyle: ='ButtonCanvas.IconStyle'.Filled
+                                          LayoutMinWidth: =0
+                                          OnSelect: =Remove(colEqaSel, ThisItem)
+                                          PaddingLeft: =8
+                                          Text: =ThisItem.nome
+                                          Width: =Parent.Width - 18
+                              - lblVazioEqaRgr:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    Color: =thmTextoFraco
+                                    Font: =thmFonte
+                                    Height: =16
+                                    Italic: =true
+                                    Size: =9
+                                    Text: =If(CountRows(colEqaSel) = 0, "nenhum escolhido — use o + acima", "toque num item para tirar da lista")
+                              - lblVizRgr:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    Color: =thmTextoFraco
+                                    Font: =thmFonte
+                                    FontWeight: =FontWeight.Bold
+                                    Height: =18
+                                    Size: =10
+                                    Text: ="POSIÇÃO VIZINHA"
+                              - drpVizRgr:
+                                  Control: DropDown@0.0.45
+                                  Properties:
+                                    DefaultSelectedItems: =[Coalesce(varFormRg.viz, "—")]
+                                    DisplayMode: =If(varPodeCatalogo, DisplayMode.Edit, DisplayMode.View)
+                                    Height: =40
+                                    Items: =Filter(colVizSel, locNonceRg >= 0)
+                              - lblEqbRgr:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    Color: =thmTextoFraco
+                                    Font: =thmFonte
+                                    FontWeight: =FontWeight.Bold
+                                    Height: =18
+                                    Size: =10
+                                    Text: ="EQUIPAMENTOS NA VIZINHA"
+                              - cntAddEqbRgr:
+                                  Control: GroupContainer@1.5.0
+                                  Variant: AutoLayout
+                                  Properties:
+                                    DropShadow: =DropShadow.None
+                                    Fill: =thmSuperficie
+                                    FillPortions: =0
+                                    Height: =46
+                                    LayoutAlignItems: =LayoutAlignItems.Center
+                                    LayoutDirection: =LayoutDirection.Horizontal
+                                    LayoutGap: =6
+                                    LayoutMinWidth: =0
+                                    RadiusBottomLeft: =0
+                                    RadiusBottomRight: =0
+                                    RadiusTopLeft: =0
+                                    RadiusTopRight: =0
+                                  Children:
+                                    - drpAddEqbRgr:
+                                        Control: DropDown@0.0.45
+                                        Properties:
+                                          DisplayMode: =If(varPodeCatalogo, DisplayMode.Edit, DisplayMode.View)
+                                          Height: =40
+                                          Items: =Filter(colEquipSelRg, locNonceRg >= 0)
+                                    - btnAddEqbRgr:
+                                        Control: Button@0.0.45
+                                        Properties:
+                                          Appearance: ='ButtonCanvas.Appearance'.Secondary
+                                          BasePaletteColor: =thmOperacional
+                                          BorderRadius: =0
+                                          DisplayMode: =If(varPodeCatalogo, DisplayMode.Edit, DisplayMode.Disabled)
+                                          FillPortions: =0
+                                          FontColor: =thmOperacional
+                                          Height: =40
+                                          Icon: ="Add"
+                                          IconStyle: ='ButtonCanvas.IconStyle'.Filled
+                                          LayoutMinWidth: =0
+                                          OnSelect: |-
+                                            =If(
+                                                CountRows(Filter(colEqbSel, nome = drpAddEqbRgr.Selected.Value)) > 0,
+                                                Notify("Esse equipamento já está na lista.", NotificationType.Warning, 2000),
+                                                Collect(
+                                                    colEqbSel,
+                                                    {
+                                                        equip: LookUp(colEquipRg As _e, _e.nome_equip = drpAddEqbRgr.Selected.Value).equip,
+                                                        nome: drpAddEqbRgr.Selected.Value
+                                                    }
+                                                )
+                                            )
+                                          Text: =""
+                                          Width: =44
+                              - galEqbRgr:
+                                  Control: Gallery@2.15.0
+                                  Variant: Vertical
+                                  Properties:
+                                    BorderColor: =thmBorda
+                                    BorderStyle: =BorderStyle.None
+                                    Fill: =thmSuperficie
+                                    FillPortions: =0
+                                    Height: =96
+                                    Items: =colEqbSel
+                                    LayoutMinWidth: =0
+                                    TemplatePadding: =0
+                                    TemplateSize: =30
+                                  Children:
+                                    - btnTiraEqbRgr:
+                                        Control: Button@0.0.45
+                                        Properties:
+                                          Align: =Align.Left
+                                          Appearance: ='ButtonCanvas.Appearance'.Secondary
+                                          BasePaletteColor: =thmVermelho
+                                          BorderRadius: =0
+                                          DisplayMode: =If(varPodeCatalogo, DisplayMode.Edit, DisplayMode.Disabled)
+                                          FontColor: =thmTexto
+                                          FontSize: =11
+                                          Height: =28
+                                          Icon: ="Dismiss"
+                                          IconStyle: ='ButtonCanvas.IconStyle'.Filled
+                                          LayoutMinWidth: =0
+                                          OnSelect: =Remove(colEqbSel, ThisItem)
+                                          PaddingLeft: =8
+                                          Text: =ThisItem.nome
+                                          Width: =Parent.Width - 18
+                              - lblVazioEqbRgr:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    Color: =thmTextoFraco
+                                    Font: =thmFonte
+                                    Height: =16
+                                    Italic: =true
+                                    Size: =9
+                                    Text: =If(CountRows(colEqbSel) = 0, "nenhum escolhido — use o + acima", "toque num item para tirar da lista")
+                              - lblMsgRgr:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    Color: =thmTextoFraco
+                                    Font: =thmFonte
+                                    FontWeight: =FontWeight.Bold
+                                    Height: =18
+                                    Size: =10
+                                    Text: ="MENSAGEM AO OPERADOR *"
+                              - txtMsgRgr:
+                                  Control: TextInput@0.0.54
+                                  Properties:
+                                    AccessibleLabel: ="Mensagem mostrada quando a gravação for recusada"
+                                    DisplayMode: =If(varPodeCatalogo, DisplayMode.Edit, DisplayMode.View)
+                                    Height: =84
+                                    Mode: ='TextInputCanvas.Mode'.Multiline
+                                    Placeholder: ="ex. T3 e T4 não comportam dois 737 MAX ao mesmo tempo."
+                                    Value: =Coalesce(varFormRg.msg, "")
+                              - tglAtivoRgr:
+                                  Control: Toggle@1.1.5
+                                  Properties:
+                                    AccessibleLabel: ="Ativa — inativa para de valer sem apagar histórico"
+                                    BasePaletteColor: =thmVerde
+                                    Checked: =Coalesce(varFormRg.ativo, true)
+                                    DisplayMode: =If(varPodeCatalogo, DisplayMode.Edit, DisplayMode.View)
+                                    FontColor: =thmTexto
+                                    Height: =44
+                                    Label: ="Ativa — inativa para de valer sem apagar histórico"
+                                    LabelPosition: ='Toggle.LabelPosition'.Before
+                              - cntAcoesRgr:
+                                  Control: GroupContainer@1.5.0
+                                  Variant: AutoLayout
+                                  Properties:
+                                    DropShadow: =DropShadow.None
+                                    Fill: =thmSuperficie
+                                    FillPortions: =0
+                                    Height: =64
+                                    LayoutAlignItems: =LayoutAlignItems.Center
+                                    LayoutDirection: =LayoutDirection.Horizontal
+                                    LayoutGap: =8
+                                    LayoutMinWidth: =0
+                                    PaddingTop: =12
+                                    RadiusBottomLeft: =0
+                                    RadiusBottomRight: =0
+                                    RadiusTopLeft: =0
+                                    RadiusTopRight: =0
+                                  Children:
+                                    - btnNovaRgr:
+                                        Control: Button@0.0.45
+                                        Properties:
+                                          Appearance: ='ButtonCanvas.Appearance'.Secondary
+                                          BasePaletteColor: =thmAcao
+                                          BorderRadius: =0
+                                          DisplayMode: =If(varPodeCatalogo, DisplayMode.Edit, DisplayMode.Disabled)
+                                          FillPortions: =1
+                                          FontColor: =thmAcao
+                                          FontSize: =13
+                                          FontWeight: =FontWeight.Semibold
+                                          Height: =44
+                                          Icon: ="Add"
+                                          IconStyle: ='ButtonCanvas.IconStyle'.Filled
+                                          LayoutMinWidth: =0
+                                          OnSelect: |-
+                                            =Set(varRegraSel, Blank());
+                                            Set(varFormRg, { pos: Coalesce(First(colPosicoesSel).Value, ""), viz: "—", msg: "", ativo: true }); Clear(colEqaSel); Clear(colEqbSel);
+                                            UpdateContext({locNonceRg: locNonceRg + 1})
+                                          PaddingLeft: =12
+                                          PaddingRight: =12
+                                          Text: ="NOVA"
+                                    - btnCancelarRgr:
+                                        Control: Button@0.0.45
+                                        Properties:
+                                          Appearance: ='ButtonCanvas.Appearance'.Secondary
+                                          BasePaletteColor: =thmTextoFraco
+                                          BorderRadius: =0
+                                          DisplayMode: =If(varPodeCatalogo, DisplayMode.Edit, DisplayMode.Disabled)
+                                          FillPortions: =1
+                                          FontColor: =thmTextoFraco
+                                          FontSize: =13
+                                          FontWeight: =FontWeight.Semibold
+                                          Height: =44
+                                          Icon: ="DismissCircle"
+                                          IconStyle: ='ButtonCanvas.IconStyle'.Filled
+                                          LayoutMinWidth: =0
+                                          OnSelect: |-
+                                            =If(
+                                                IsBlank(varRegraSel.ID),
+                                                Set(varFormRg, { pos: Coalesce(First(colPosicoesSel).Value, ""), viz: "—", msg: "", ativo: true }); Clear(colEqaSel); Clear(colEqbSel),
+                                                Set(
+                                                    varFormRg,
+                                                    {
+                                                        pos: varRegraSel.posicao,
+                                                        viz: If(IsBlank(varRegraSel.vizinha), "—", varRegraSel.vizinha),
+                                                        msg: varRegraSel.mensagem,
+                                                        ativo: varRegraSel.ativo = 1
+                                                    }
+                                                )
+                                            );
+                                            Clear(colEqaSel);
+                                            Clear(colEqbSel);
+                                            If(
+                                                !IsBlank(varRegraSel.equip_a),
+                                                Collect(colEqaSel, ForAll(Split(Substitute(varRegraSel.equip_a, " ", ""), ",") As _s, { equip: _s.Value, nome: Coalesce(LookUp(colEquipRg As _e, _e.equip = _s.Value).nome_equip, _s.Value) }))
+                                            );
+                                            If(
+                                                !IsBlank(varRegraSel.equip_b),
+                                                Collect(colEqbSel, ForAll(Split(Substitute(varRegraSel.equip_b, " ", ""), ",") As _s, { equip: _s.Value, nome: Coalesce(LookUp(colEquipRg As _e, _e.equip = _s.Value).nome_equip, _s.Value) }))
+                                            );
+                                            UpdateContext({locNonceRg: locNonceRg + 1})
+                                          PaddingLeft: =12
+                                          PaddingRight: =12
+                                          Text: ="CANCELAR"
+                                    - btnTestarRgr:
+                                        Control: Button@0.0.45
+                                        Properties:
+                                          Appearance: ='ButtonCanvas.Appearance'.Secondary
+                                          BasePaletteColor: =thmTextoFraco
+                                          BorderRadius: =0
+                                          DisplayMode: =If(CountRows(colEqaSel) > 0, DisplayMode.Edit, DisplayMode.Disabled)
+                                          FillPortions: =1
+                                          FontColor: =thmTextoFraco
+                                          FontSize: =13
+                                          FontWeight: =FontWeight.Semibold
+                                          Height: =44
+                                          Icon: ="Search"
+                                          IconStyle: ='ButtonCanvas.IconStyle'.Filled
+                                          LayoutMinWidth: =0
+                                          OnSelect: |-
+                                            =UpdateContext({ locTesteDe: DateAdd(Today(), -mapTesteRegraDias, TimeUnit.Days) });
+                                            ClearCollect(
+                                                colTesteRg,
+                                                ForAll(
+                                                    Filter(
+                                                        tb_alocacoesMapa,
+                                                        aeroporto = varAero And ativo = 1 And tipo_registro = "VOO" And
+                                                        data_operacao >= locTesteDe
+                                                    ) As _v,
+                                                    {
+                                                        id: _v.ID,
+                                                        pos: _v.posicao_txt,
+                                                        equip: _v.equipamento,
+                                                        abs_ini: DateDiff(mapDataBase, _v.data_operacao, TimeUnit.Days) * mapMinutosDia + _v.hora_inicio,
+                                                        abs_fim: DateDiff(mapDataBase, _v.data_fim, TimeUnit.Days) * mapMinutosDia + _v.hora_fim
+                                                    }
+                                                )
+                                            );
+                                            ClearCollect(
+                                                colTesteA,
+                                                Filter(
+                                                    colTesteRg,
+                                                    pos = drpPosRgr.Selected.Value And
+                                                    !IsBlank(Find("," & equip & ",", "," & Concat(colEqaSel, equip, ",") & ","))
+                                                )
+                                            );
+                                            ClearCollect(
+                                                colTesteB,
+                                                Filter(
+                                                    colTesteRg,
+                                                    drpVizRgr.Selected.Value <> "—" And pos = drpVizRgr.Selected.Value And
+                                                    !IsBlank(Find("," & equip & ",", "," & Concat(colEqbSel, equip, ",") & ","))
+                                                )
+                                            );
+                                            UpdateContext(
+                                                {
+                                                    locTesteAlvo: CountRows(colTesteA),
+                                                    locTesteN: If(
+                                                        drpVizRgr.Selected.Value = "—",
+                                                        CountRows(colTesteA),
+                                                        CountRows(
+                                                            Filter(
+                                                                ForAll(
+                                                                    colTesteA As _a,
+                                                                    {
+                                                                        bate: If(
+                                                                            !IsBlank(
+                                                                                LookUp(
+                                                                                    colTesteB As _b,
+                                                                                    _b.abs_ini < _a.abs_fim And _b.abs_fim > _a.abs_ini
+                                                                                ).id
+                                                                            ),
+                                                                            1,
+                                                                            0
+                                                                        )
+                                                                    }
+                                                                ),
+                                                                bate = 1
+                                                            )
+                                                        )
+                                                    )
+                                                }
+                                            );
+                                            Notify(
+                                                If(
+                                                    locTesteAlvo = 0,
+                                                    "Nenhum lançamento dos últimos " & mapTesteRegraDias & " dias tem esses equipamentos na posição " &
+                                                    drpPosRgr.Selected.Value & ". A regra não pegaria nada — confira se os códigos estão certos.",
+                                                    locTesteN = 0,
+                                                    "Esta regra não recusaria nenhum dos " & locTesteAlvo & " lançamento(s) dos últimos " &
+                                                    mapTesteRegraDias & " dias que têm esses equipamentos na posição " & drpPosRgr.Selected.Value & ".",
+                                                    "Esta regra teria recusado " & locTesteN & " de " & locTesteAlvo & " lançamento(s) dos últimos " &
+                                                    mapTesteRegraDias & " dias."
+                                                ),
+                                                If(locTesteAlvo = 0, NotificationType.Warning, NotificationType.Information),
+                                                10000
+                                            )
+                                          PaddingLeft: =12
+                                          PaddingRight: =12
+                                          Text: ="TESTAR"
+                                    - btnSalvarRgr:
+                                        Control: Button@0.0.45
+                                        Properties:
+                                          Appearance: ='ButtonCanvas.Appearance'.Primary
+                                          BasePaletteColor: =thmPrimaria
+                                          BorderRadius: =0
+                                          DisplayMode: =If(varPodeCatalogo, DisplayMode.Edit, DisplayMode.Disabled)
+                                          FillPortions: =1
+                                          FontColor: =thmTextoBarra
+                                          FontSize: =13
+                                          FontWeight: =FontWeight.Semibold
+                                          Height: =44
+                                          Icon: ="Save"
+                                          IconStyle: ='ButtonCanvas.IconStyle'.Filled
+                                          LayoutMinWidth: =0
+                                          OnSelect: |-
+                                            =If(
+                                                IsBlank(drpPosRgr.Selected.Value),
+                                                Notify("Escolha a posição.", NotificationType.Error, 5000),
+                                                CountRows(colEqaSel) = 0,
+                                                Notify("Escolha ao menos um equipamento para a posição.", NotificationType.Error, 5000),
+                                                drpVizRgr.Selected.Value <> "—" And drpVizRgr.Selected.Value = drpPosRgr.Selected.Value,
+                                                Notify("A vizinha tem que ser diferente da posição da regra.", NotificationType.Error, 5000),
+                                                drpVizRgr.Selected.Value <> "—" And CountRows(colEqbSel) = 0,
+                                                Notify("Regra de par precisa de equipamento nos dois lados. Com um lado vazio ela nunca dispara, e some igual a regra nenhuma.", NotificationType.Error, 9000),
+                                                IsBlank(Trim(txtMsgRgr.Value)),
+                                                Notify("Escreva a mensagem que o operador vai ler quando a gravação for recusada.", NotificationType.Error, 6000),
+                                                UpdateContext(
+                                                    {
+                                                        locErroRg: IsError(
+                                                            Patch(
+                                                                tb_regrasPosicao,
+                                                                If(
+                                                                    IsBlank(varRegraSel.ID),
+                                                                    Defaults(tb_regrasPosicao),
+                                                                    LookUp(tb_regrasPosicao, ID = varRegraSel.ID)
+                                                                ),
+                                                                {
+                                                                    aeroporto: varAero,
+                                                                    posicao: drpPosRgr.Selected.Value,
+                                                                    equip_a: Concat(colEqaSel, equip, ","),
+                                                                    vizinha: If(drpVizRgr.Selected.Value = "—", "", drpVizRgr.Selected.Value),
+                                                                    equip_b: If(
+                                                                        drpVizRgr.Selected.Value = "—",
+                                                                        "",
+                                                                        Concat(colEqbSel, equip, ",")
+                                                                    ),
+                                                                    mensagem: Trim(txtMsgRgr.Value),
+                                                                    ativo: If(tglAtivoRgr.Checked, 1, 0)
+                                                                }
+                                                            )
+                                                        )
+                                                    }
+                                                );
+                                                If(
+                                                    locErroRg,
+                                                    Notify("Não foi possível gravar. Nada foi alterado.", NotificationType.Error, 7000),
+                                                    Select(btnRecarregarRgr);
+                                                    Set(varRegraSel, Blank());
+                                                    Set(varFormRg, { pos: Coalesce(First(colPosicoesSel).Value, ""), viz: "—", msg: "", ativo: true }); Clear(colEqaSel); Clear(colEqbSel);
+                                                    UpdateContext({locNonceRg: locNonceRg + 1});
+                                                    Notify("Restrição gravada.", NotificationType.Success, 2500)
+                                                )
+                                            )
+                                          PaddingLeft: =12
+                                          PaddingRight: =12
+                                          Text: ="SALVAR"

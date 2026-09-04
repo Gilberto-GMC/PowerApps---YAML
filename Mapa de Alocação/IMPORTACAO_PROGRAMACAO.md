@@ -1,0 +1,167 @@
+# Importação da programação de voos
+
+Substitui o trabalho de recriar ~700 registros por mês copiando as caixas do mês anterior.
+
+## As três peças, e por que a inteligência não está no fluxo
+
+| peça | onde | faz |
+|---|---|---|
+| `importar_programacao.ts` | Office Script, no Excel Online | lê a planilha, pareia pouso com decolagem, aloca posição e portão, devolve JSON |
+| fluxo `Importar programacao` | Power Automate | chama o script e grava o que voltou, atualizando o progresso |
+| `scrMapaImport` | Power Apps | anexa o arquivo, escolhe o mês, dispara e mostra a barra |
+
+**O fluxo é o pedaço mais burro de propósito.** Ele não pareia, não aloca e não decide nada — só
+transporta. Toda a lógica está no script, que é a única das três peças que dá para **rodar sozinha e
+conferir a saída** antes de existir o resto. Fluxo é a peça mais cara de depurar: erro nele aparece
+como execução falhada num histórico, sem ponto de parada e sem como reproduzir com os mesmos dados.
+
+---
+
+## ⚠️ `List_Generator` não aceita aspas duplas dentro de `Validation`
+
+A coluna `status` de `tb_importacaoMapa` tinha uma validação comparando texto —
+`=OU([status]="RASCUNHO";[status]="PRONTO";...)`. O fluxo `List_Generator` recusou com
+*"Sequência JSON formatada incorretamente"*, erro vindo da própria API REST do SharePoint: o corpo
+HTTP que o fluxo monta para `CreateFieldAsXml` quebra quando o `schemaXml` tem aspas duplas literais
+dentro do texto.
+
+**Nenhuma outra lista do repositório usa esse padrão** — todas as validações existentes comparam
+número (`=0`, `=1`) ou data (`>=`), nunca string entre aspas. Zero precedente é sinal pior que um
+precedente só: aqui, a ausência apontou direto para o defeito.
+
+**Solução aplicada:** a validação de `status` foi removida do `schemaXml`. Quem controla os valores
+válidos (`RASCUNHO`, `PRONTO`, `PROCESSANDO`, `CONCLUIDO`, `ERRO`) é o app e o fluxo, não a lista —
+perda aceitável, porque ninguém edita `status` direto na grade do SharePoint no uso normal.
+
+**Se algum dia precisar de validação de texto numa lista nova**, não repita o padrão: ou evita
+comparar string na `Validation` do `schemaXml`, ou testa a criação isolada dessa coluna antes de
+rodar a lista inteira pelo `List_Generator`.
+
+## Índice em lista de controle é peso morto
+
+Depois da correção das aspas o fluxo passou a falhar com **`BadGateway`**, gastando 13 minutos em 9
+colunas — tempo de retentativa com backoff, não de trabalho. As três primeiras colunas eram as únicas
+indexadas, e criação de índice é a operação mais pesada do `CreateFieldAsXml`.
+
+**Os índices foram removidos.** `tb_importacaoMapa` guarda uma linha por importação — talvez uma dúzia
+por ano. Índice numa lista desse tamanho não acelera nada; foi hábito copiado das listas operacionais,
+onde ele faz sentido porque há milhares de registros e filtro delegável.
+
+A regra da skill já dizia: *indexar só o que é realmente usado em filtro delegável*. Vale reler antes
+de copiar o padrão de uma lista para outra de natureza diferente.
+
+## O script
+
+### Como testar sem fluxo nenhum
+
+1. Abra a planilha no **Excel Online** → **Automatizar** → **Novo Script**.
+2. Cole o conteúdo de `importar_programacao.ts` e salve como `Importar programacao`.
+3. **Executar**. O painel mostra o retorno: `ok`, `mensagem`, `total`, `registros` e `pendencias`.
+
+Rodando contra `Programação set.26.xlsx` o esperado é **698 registros e 7 pendências**. Esse número é
+o teste de regressão do script: se mudar sem a planilha ter mudado, alguma configuração foi mexida.
+
+### O pareamento
+
+A planilha traz pousos e decolagens em linhas separadas, sem nada que ligue um ao outro. A numeração
+**não serve**: GOL `1212`→`1215` é +3, `1224`→`1225` é +1, `2165`→`1471` não tem relação, e a LATAM
+mistura +1 com saltos grandes.
+
+O que pareia é **mesma empresa + menor tempo em solo**, com rota e tipo de aeronave como desempate:
+
+```
+custo = minutos em solo + 90 se a rota difere + 30 se a aeronave difere
+```
+
+Contra setembro/26 isso pareia **699 de 702** pousos. Os 3 que sobram de cada lado são a borda do mês:
+pousos do dia 30 cuja decolagem é em outubro, e decolagens do dia 1º cujo pouso foi em agosto. **Não é
+falha do algoritmo — é o arquivo começando e terminando no meio de uma rotação de aeronave.**
+
+O tempo em solo mediano é de 45 minutos. Por isso ele domina o custo: um voo que sai 40 minutos depois
+por outra rota é quase sempre a mesma aeronave; um que sai 4 horas depois pela mesma rota quase nunca é.
+
+### A alocação
+
+Duas tentativas, nesta ordem: a preferência da companhia, depois a queda geral. Se as duas falharem,
+**o voo vira pendência em vez de ir para um lugar qualquer** — posição inventada vira avião no lugar
+errado, e ninguém teria como saber que foi chute.
+
+Portão é diferente: cai para qualquer um livre, porque **portão fora do habitual incomoda menos que
+portão vazio**. Cargueiro fica sem portão de propósito — não é falta de portão livre.
+
+`T6C` consome `T5` e `T6`: ocupar uma bloqueia as outras, nos dois sentidos. É o mesmo fato que a
+coluna `ocupa` de `colPosicoes` declara para a tela.
+
+---
+
+## ⚠️ A duplicação que não dá erro
+
+As tabelas no topo do script — preferências, `id_posicao`, `ocupa`, equivalência IATA — são um
+**espelho do `App.Formulas`**. O Office Script não consegue ler o app, então as duas convivem.
+
+**Divergência entre elas não gera erro nenhum.** Produz alocação que a tela recusaria depois, ou pior,
+que ela aceita mas que não é a que a operação combinou. Mexeu em `colPrefPosicao`, `colPosicoes` ou
+`colCias`, abra o script e confira o bloco de configuração.
+
+É o preço de ter escolhido guardar as preferências no `App.Formulas`. A alternativa seria uma lista do
+SharePoint que as duas pontas leem — vale trocar se as preferências começarem a mudar com frequência.
+
+---
+
+## A tela `scrMapaImport`
+
+Anexa a planilha, escolhe o mês, dispara e acompanha. Duas restrições de plataforma moldaram o
+desenho, e vale saber quais são antes de mexer:
+
+**Campo obrigatório sem default precisa de card, mesmo invisível.** O formulário começou com um card
+só, o do anexo, e o `SubmitForm` falhava: `aeroporto` e `mes_ref` são obrigatórias na lista e não têm
+valor padrão, então o SharePoint recusava a criação. Preencher por `Patch` no `OnSuccess` não resolve —
+o `Patch` só roda **depois** de o item existir, e ele nunca chegava a existir.
+
+A correção são dois `TypedDataCard` com `Visible: =false`, carregando só o `Update` (`varAero` e a data
+normalizada para o dia 1º). Card invisível continua submetendo — é a técnica padrão para campo que o
+app preenche sozinho.
+
+**`Attachments` só existe dentro de `DataCard` de `Form`.** Não dá para anexar arquivo solto no Power
+Apps. O formulário aqui tem **um card só**, o do anexo; mês, aeroporto e status entram por `Patch` no
+`OnSuccess`. Menos card, menos coisa para dar errado — e o `DefaultMode: =FormMode.New` evita ter que
+chamar `NewForm` na abertura.
+
+**Não existe progresso real de fluxo.** A barra lê `processados / total` do próprio item, e um `Timer`
+de 3 segundos reconsulta — mesmo mecanismo do `tmrSyncMap` da grade. Quem conta é o fluxo escrevendo;
+a tela só lê. A barra reflete o que o fluxo **já contou**, não o que ele está fazendo agora.
+
+O botão GERAR valida mês e anexo antes de submeter. Depois de enviado, mês e anexo ficam em modo
+leitura até o operador tocar em NOVA IMPORTAÇÃO — evita reenviar por cima de um processamento em
+andamento.
+
+---
+
+## O fluxo
+
+O passo a passo completo, ação por ação e campo por campo, está em **`FLUXO_IMPORTACAO.md`**.
+
+Resumo: gatilho em item modificado com `status = PRONTO`, salva o anexo numa biblioteca, roda o script,
+apaga a importação anterior do mês pela coluna `origem`, grava os registros num laço sequencial
+atualizando `processados` de 25 em 25, e fecha com `CONCLUIDO`.
+
+As três armadilhas que o documento detalha, e que não são óbvias:
+
+1. **Condição de gatilho é obrigatória.** O fluxo altera o item que o dispara — sem a condição
+   `status = PRONTO` no gatilho, ele entra em laço infinito. Condição no corpo do fluxo não resolve:
+   ali o gatilho já executou.
+2. **O laço tem que ser sequencial** (simultaneidade = 1). Em paralelo o contador da barra vira
+   corrida entre ramos. Custa 8 a 12 minutos para ~700 itens, e é o preço da barra funcionar.
+3. **`ativo` tem que ser mapeado explicitamente.** O default em produção é `0`, e registro com
+   `ativo = 0` some do app sem erro nenhum.
+
+---
+
+## Antes da primeira importação
+
+1. Criar `tb_importacaoMapa` (`lista_tb_importacaoMapa.json`) e **habilitar anexos** nela — o
+   `List_Generator` cria listas com anexos desabilitados, e o anexo é o ponto central desta.
+2. Cadastrar o **`B763`** em `tb_equipamentos` (Boeing 767-300F). Sem ele os voos da ABSA entram sem
+   equipamento e o app recusa quando alguém for editar.
+3. Conferir as envergaduras do catálogo — foram montadas de valores publicados de fabricante, não de
+   fonte aeronáutica, e variante com winglet muda o número.

@@ -6,7 +6,7 @@ Screens:
         Set(varUsuarioNome, User().FullName);
         Set(varPodeEditar, DataSourceInfo('tb_alocacoesMapa', DataSourceInfo.EditPermission));
         Set(varMenuAberto, Coalesce(varMenuAberto, true));
-        If(IsBlank(varAero), Set(varAero, First(colAerosMapa).ICAO));
+        If(IsBlank(varAero), Set(varAero, First(colAerosMapa).Aeroporto));
         If(IsBlank(varAeroNome), Set(varAeroNome, First(colAerosMapa).Aeroporto));
         If(IsBlank(varData), Set(varData, Today()))
     Children:
@@ -60,8 +60,7 @@ Screens:
                           "<div style='font-size:11px;letter-spacing:.28em;font-weight:700;opacity:.6;'>MOTIVA AEROPORTOS</div>" &
                           "<div style='font-size:38px;font-weight:800;letter-spacing:.01em;line-height:1.05;margin-top:8px;'>MAPA DE ALOCAÇÃO DE PÁTIO</div>" &
                           "<div style='font-size:14px;opacity:.72;margin-top:10px;max-width:640px;line-height:1.5;'>" &
-                          "A programação diária do pátio, com as posições nas linhas e o dia inteiro nas colunas — " &
-                          "a mesma leitura da planilha, agora compartilhada, validada e sempre atualizada." &
+                          "Quem está em cada posição, a que horas, em qual portão — o dia inteiro numa tela só." &
                           "</div></div>"
                         Size: =12
                   - htmCartoesIni:
@@ -77,8 +76,9 @@ Screens:
                           "<div style='font-size:10px;font-weight:700;letter-spacing:.14em;opacity:.6;'>COMO LER A GRADE</div>" &
                           "<div style='font-size:13px;line-height:1.6;margin-top:6px;'>" &
                           "Cada linha é uma posição do pátio e cada coluna é uma hora do dia. " &
-                          "O <b>preenchimento</b> do bloco diz a companhia, o <b>contorno</b> diz o portão de embarque, " &
-                          "o selo <b>P</b> marca o voo pesquisado e o bloco cinza marca posição interditada." &
+                          "O <b>preenchimento</b> do bloco diz a companhia e o <b>contorno</b> diz o portão de embarque — " &
+                          "<b>tracejado</b> quando falta portão ou equipamento. " &
+                          "O selo <b>P</b> marca o voo pesquisado e o bloco cinza marca posição interditada." &
                           "</div></td></tr>" &
                           "<tr><td style='vertical-align:top;border-left:3px solid " & hxTextoBarra & ";padding:2px 0 2px 16px;'>" &
                           "<div style='font-size:10px;font-weight:700;letter-spacing:.14em;opacity:.6;'>COMO ALTERAR</div>" &
@@ -87,11 +87,11 @@ Screens:
                           "posição, portão, horários e marcadores. Quem alterou por último aparece no topo do painel." &
                           "</div></td></tr>" &
                           "<tr><td style='vertical-align:top;border-left:3px solid " & hxTextoBarra & ";padding:2px 0 2px 16px;'>" &
-                          "<div style='font-size:10px;font-weight:700;letter-spacing:.14em;opacity:.6;'>O QUE MUDOU EM RELAÇÃO À PLANILHA</div>" &
+                          "<div style='font-size:10px;font-weight:700;letter-spacing:.14em;opacity:.6;'>ANTES DE GRAVAR</div>" &
                           "<div style='font-size:13px;line-height:1.6;margin-top:6px;'>" &
-                          "Duas aeronaves não ocupam mais a mesma posição no mesmo horário, nem o mesmo portão. " &
-                          "A restrição de aeronave e de envergadura de cada posição é conferida na hora de gravar. " &
-                          "E todo mundo vê a mesma programação ao mesmo tempo." &
+                          "Toda alteração passa por três checks: check de posição, check de portão e " &
+                          "compatibilidade da aeronave com a posição. O que não passa não é gravado — " &
+                          "e todo mundo vê a mesma programação ao mesmo tempo." &
                           "</div></td></tr>" &
                           "</table>"
                         Size: =12
@@ -146,7 +146,7 @@ Screens:
                       Control: DropDown@0.0.45
                       Properties:
                         DefaultSelectedItems: |-
-                          =[Coalesce(LookUp(colAerosMapa As _a, _a.ICAO = varAero).Aeroporto, First(colAerosMapa).Aeroporto)]
+                          =[Coalesce(LookUp(colAerosMapa As _a, _a.Aeroporto = varAero).Aeroporto, First(colAerosMapa).Aeroporto)]
                         Height: =44
                         Items: =colAerosSel
                   - htmAeroNomeIni:
@@ -158,8 +158,7 @@ Screens:
                         Font: =thmFonte
                         HtmlText: |-
                           ="<div style='" & htmlFonte & "font-size:11px;color:" & hxTextoFraco & ";padding:2px 0 12px 0;'>" &
-                          Coalesce(LookUp(colAerosMapa As _a, _a.Aeroporto = drpAeroIni.Selected.Value).ICAO, "") &
-                          " &nbsp;&middot;&nbsp; " & CountRows(Filter(colPosicoes, aeroporto = LookUp(colAerosMapa As _a, _a.Aeroporto = drpAeroIni.Selected.Value).ICAO)) & " posições cadastradas</div>"
+                          CountRows(Filter(colPosicoes, aeroporto = drpAeroIni.Selected.Value)) & " posições cadastradas</div>"
                         Size: =11
                   - lblDataIni:
                       Control: Label@2.5.1
@@ -192,7 +191,7 @@ Screens:
                         LayoutMinWidth: =0
                         OnSelect: |-
                           =Set(varAeroNome, drpAeroIni.Selected.Value);
-                          Set(varAero, Coalesce(LookUp(colAerosMapa As _a, _a.Aeroporto = drpAeroIni.Selected.Value).ICAO, First(colAerosMapa).ICAO));
+                          Set(varAero, drpAeroIni.Selected.Value);
                           Set(varData, dtpDataIni.SelectedDate);
                           Navigate(scrMapaPatio, ScreenTransition.Fade)
                         PaddingLeft: =18

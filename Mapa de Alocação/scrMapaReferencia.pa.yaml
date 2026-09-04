@@ -1,7 +1,11 @@
 Screens:
   scrMapaReferencia:
     Properties:
-      OnVisible: =Set(varMapaVisivel, false)
+      OnVisible: |-
+        =If(IsBlank(varAero), Set(varAero, First(colAerosMapa).Aeroporto));
+        If(IsBlank(varAeroNome), Set(varAeroNome, First(colAerosMapa).Aeroporto));
+        Set(varMenuConfig, true);
+        Set(varMapaVisivel, false)
     Children:
       - cntShellRef:
           Control: GroupContainer@1.5.0
@@ -95,11 +99,30 @@ Screens:
                               OnSelect: =Navigate(scrMapaPatio, ScreenTransition.Fade)
                               PaddingLeft: =18
                               Text: =If(varMenuAberto, "MAPA DO DIA", "")
-                        - btnNavRefRef:
+                        - btnNavCfgRef:
                             Control: Button@0.0.45
                             Properties:
                               Align: =Align.Left
                               AlignInContainer: =AlignInContainer.Stretch
+                              Appearance: ='ButtonCanvas.Appearance'.Secondary
+                              BasePaletteColor: =thmTextoBarra
+                              BorderRadius: =0
+                              FontColor: =thmTextoBarra
+                              FontSize: =14
+                              FontWeight: =FontWeight.Semibold
+                              Height: =44
+                              Icon: ="Settings"
+                              IconStyle: ='ButtonCanvas.IconStyle'.Filled
+                              LayoutMinWidth: =0
+                              OnSelect: =Set(varMenuConfig, !varMenuConfig)
+                              PaddingLeft: =18
+                              Text: =If(varMenuAberto, If(varMenuConfig, "CONFIGURAÇÕES  ▾", "CONFIGURAÇÕES  ▸"), "")
+                        - btnNavRefRef:
+                            Control: Button@0.0.45
+                            Properties:
+                              Align: =Align.Left
+                              AlignInContainer: =AlignInContainer.End
+                              Width: =If(varMenuAberto, 180, 52)
                               Appearance: ='ButtonCanvas.Appearance'.Primary
                               BasePaletteColor: =thmPrimaria
                               BorderRadius: =0
@@ -111,7 +134,68 @@ Screens:
                               IconStyle: ='ButtonCanvas.IconStyle'.Filled
                               LayoutMinWidth: =0
                               PaddingLeft: =18
+                              Visible: =varMenuConfig
                               Text: =If(varMenuAberto, "POSIÇÕES E CORES", "")
+                        - btnNavEqpRef:
+                            Control: Button@0.0.45
+                            Properties:
+                              Align: =Align.Left
+                              AlignInContainer: =AlignInContainer.End
+                              Width: =If(varMenuAberto, 180, 52)
+                              Appearance: ='ButtonCanvas.Appearance'.Secondary
+                              BasePaletteColor: =thmTextoBarra
+                              BorderRadius: =0
+                              FontColor: =thmTextoBarra
+                              FontSize: =14
+                              FontWeight: =FontWeight.Semibold
+                              Height: =44
+                              Icon: ="Airplane"
+                              IconStyle: ='ButtonCanvas.IconStyle'.Filled
+                              LayoutMinWidth: =0
+                              OnSelect: =Navigate(scrMapaEquip, ScreenTransition.Fade)
+                              PaddingLeft: =18
+                              Visible: =varMenuConfig
+                              Text: =If(varMenuAberto, "EQUIPAMENTOS", "")
+                        - btnNavRgrRef:
+                            Control: Button@0.0.45
+                            Properties:
+                              Align: =Align.Left
+                              AlignInContainer: =AlignInContainer.End
+                              Width: =If(varMenuAberto, 180, 52)
+                              Appearance: ='ButtonCanvas.Appearance'.Secondary
+                              BasePaletteColor: =thmTextoBarra
+                              BorderRadius: =0
+                              FontColor: =thmTextoBarra
+                              FontSize: =14
+                              FontWeight: =FontWeight.Semibold
+                              Height: =44
+                              Icon: ="LockClosed"
+                              IconStyle: ='ButtonCanvas.IconStyle'.Filled
+                              LayoutMinWidth: =0
+                              OnSelect: =Navigate(scrMapaRegra, ScreenTransition.Fade)
+                              PaddingLeft: =18
+                              Visible: =varMenuConfig
+                              Text: =If(varMenuAberto, "RESTRIÇÕES", "")
+                        - btnNavImpRef:
+                            Control: Button@0.0.45
+                            Properties:
+                              Align: =Align.Left
+                              AlignInContainer: =AlignInContainer.End
+                              Width: =If(varMenuAberto, 180, 52)
+                              Appearance: ='ButtonCanvas.Appearance'.Secondary
+                              BasePaletteColor: =thmTextoBarra
+                              BorderRadius: =0
+                              FontColor: =thmTextoBarra
+                              FontSize: =14
+                              FontWeight: =FontWeight.Semibold
+                              Height: =44
+                              Icon: ="Upload"
+                              IconStyle: ='ButtonCanvas.IconStyle'.Filled
+                              LayoutMinWidth: =0
+                              OnSelect: =Navigate(scrMapaImport, ScreenTransition.Fade)
+                              PaddingLeft: =18
+                              Visible: =varMenuConfig
+                              Text: =If(varMenuAberto, "IMPORTAR PROGRAMAÇÃO", "")
                         - btnNavInicioRef:
                             Control: Button@0.0.45
                             Properties:
@@ -140,9 +224,10 @@ Screens:
                         BorderRadius: =0
                         FillPortions: =0
                         FontColor: =thmTextoBarra
-                        FontSize: =12
+                        FontSize: =11
                         FontWeight: =FontWeight.Semibold
-                        Height: =40
+                        Height: =36
+                        LayoutMinHeight: =36
                         Icon: ="ChevronRight"
                         IconStyle: ='ButtonCanvas.IconStyle'.Filled
                         LayoutMinWidth: =0
@@ -253,7 +338,23 @@ Screens:
                                     hxSuperficie & ";color:" & hxTexto & ";border:3px solid " & _p.cor_hex & ";'>" & _p.portao & "</span></td>" &
                                     "<td style='padding:4px 0;font-size:12px;color:" & hxTexto & ";'>PORTÃO " & _p.portao & "</td></tr>"
                                 ) &
+                                "<tr><td style='padding:4px 0;width:78px;'><span style='display:inline-block;min-width:52px;text-align:center;font-size:12px;font-weight:800;padding:4px 10px;background:" &
+                                hxSuperficie & ";color:" & hxTexto & ";border:3px dashed " & hxAmbar & ";'>!</span></td>" &
+                                "<td style='padding:4px 0;font-size:12px;color:" & hxTexto & ";'>PRECISA DE ATENÇÃO</td></tr>" &
                                 "</table>" &
+                                "<div style='font-size:11px;color:" & hxTextoFraco & ";margin-top:12px;line-height:1.5;'>" &
+                                "Bloco cinza escrito <b>INDISPONÍVEL</b> não é um lançamento: é a posição citada nele " &
+                                "ocupando espaço que esta aqui precisaria. Acontece na aviação geral, onde uma aeronave " &
+                                "grande numa posição classe B inutiliza as classe A vizinhas enquanto estiver lá. Clicando " &
+                                "nele, abre o registro que causa o impedimento.<br><br>" &
+                                "Selo <b>&#9992;</b> verde marca aeronave <b>no pátio</b> agora; <b>&#10003;</b> cinza, movimento " &
+                                "<b>finalizado</b>. Previsto é o normal e não ganha selo.<br><br>" &
+                                "Contorno <b>tracejado</b> marca voo que ainda precisa de alguém: sem equipamento, sem portão numa " &
+                                "posição de ponte, ou trazido pela importação com algo a conferir — posição fora da preferência da " &
+                                "companhia, ou horário que a planilha não trazia. O motivo aparece no balão, ao passar o mouse. " &
+                                "Em âmbar quando o portão é o que falta; na cor do portão quando ele já existe. Posição remota sem " &
+                                "portão é o normal e não é marcada." &
+                                "</div>" &
                                 "<div style='font-size:11px;color:" & hxTextoFraco & ";margin-top:12px;line-height:1.5;'>" &
                                 "O portão 4 foi confirmado pela operação. Os demais seguem a ordem do frio para o quente; " &
                                 "se a numeração for outra, é uma linha para corrigir.</div>" &
