@@ -381,14 +381,14 @@ controle nativo, derivada por `ColorValue`). Nenhuma tela declara cor literal.
 
 ```powerfx
 // 🎨 Hex — usados dentro do HTML dos HtmlViewer
-hxPrimaria        = "#391694";;   // roxo institucional Motiva
-hxPrimariaEscura  = "#2A106E";;
-hxPrimariaClara   = "#EDE9FB";;
+hxPrimaria        = "#0E7C8C";;   // teal institucional ASUR — CONFERIR no manual da marca
+hxPrimariaEscura  = "#0A5A66";;
+hxPrimariaClara   = "#E4F2F4";;
 hxAcao            = "#DD511A";;   // laranja de ação
 hxOperacional     = "#0891B2";;
 hxSuperficie      = "#FFFFFF";;
 hxFundo           = "#F8FAFC";;   // slate claro
-hxBorda           = "#C9C5E6";;   // borda institucional clara
+hxBorda           = "#B9D9DE";;   // borda institucional clara
 hxTexto           = "#1E293B";;
 hxTextoFraco      = "#64748B";;
 hxVerde           = "#15803D";;

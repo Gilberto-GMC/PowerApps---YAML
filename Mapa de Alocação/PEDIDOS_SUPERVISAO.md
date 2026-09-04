@@ -156,6 +156,22 @@ fechar. E aí vale reusar o `importacao_set26.csv`, que já tem a ordem de colun
 
 ---
 
+## 7. Filtro "mostrar finalizados" — a fazer
+
+Consequência direta do item 5. Marcar um movimento como finalizado tira o registro da grade e da
+lista do painel, e **não há como alcançá-lo de volta pelo app** — um toque errado no visto só se
+desfaz pelo SharePoint.
+
+O conserto natural é uma opção **mostrar finalizados** junto do botão FILTRAR que já existe na barra
+da grade. Ligada, o `colDia` para de excluir `FINALIZADO`, e os registros voltam a aparecer — cinzas
+pelo selo que já têm — para poderem ser desfeitos.
+
+**O que decidir junto:** finalizado que volta a aparecer deve **voltar a bloquear a posição**? Se sim,
+o `colValida` segue o mesmo interruptor e ver o histórico impede lançar por cima dele. Se não, ver e
+ocupar passam a ser coisas diferentes, o que é mais correto mas menos óbvio.
+
+---
+
 ## Duas decisões anteriores ainda em aberto
 
 Não vieram do supervisor, mas estão paradas esperando o Douglas:
