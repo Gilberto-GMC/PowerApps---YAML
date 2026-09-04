@@ -794,6 +794,27 @@ continuam sendo linhas alocáveis. Confundir os dois faria a 6A desaparecer da g
 
 ### O que falta
 
-A tela de restrições ainda **não sabe cadastrar** esse tipo de regra: `vizinha` é um seletor de uma
-posição só, não há escolha de `BLOQUEIO`/`AVISO`, e deixar equipamento em branco não é oferecido como
-"qualquer aeronave". Enquanto isso, as regras existem pelas sementes, mas só se editam pelo SharePoint.
+A tela de restrições foi reformada em 04/09/2026 e cadastra os dois tipos. O que mudou nela:
+
+- **POSIÇÕES AFETADAS virou lista**, com o mesmo padrão de adicionar-e-remover que os equipamentos já
+  usavam. Substituiu um seletor de posição única.
+- **O QUE A REGRA FAZ**: `Bloqueio` ou `Aviso`.
+- **Equipamento deixou de ser obrigatório.** Vazio significa *qualquer aeronave* — é o que torna a
+  regra de posição expressável sem enumerar a frota.
+
+A validação aceita três formatos, e recusa o resto:
+
+| formato | o que diz |
+|---|---|
+| posição + equipamentos | veto na própria posição |
+| posição + posições afetadas, **sem equipamento** | a posição ocupada inutiliza as afetadas |
+| posição + equipamentos + afetadas + equipamentos da afetada | veto de par, como sempre foi |
+
+O que ela recusa, e por quê: **equipamento de um lado só numa regra de par** nunca dispara e some igual
+a regra nenhuma; **equipamento na afetada sem afetada escolhida** não tem onde valer; e **regra sem
+equipamento e sem afetada** não diz nada.
+
+Uma armadilha que apareceu na reforma e vale saber: `colVizSel` já era o nome de uma coleção — o
+seletor que o dropdown antigo usava, com coluna `Value`. Reusar o nome para a lista de posições
+afetadas teria dado colisão silenciosa, porque o `btnRecarregarRgr` a reconstrói a cada recarga. A nova
+chama-se `colAfetadasRgr`, e o seletor antigo foi removido junto com o dropdown.

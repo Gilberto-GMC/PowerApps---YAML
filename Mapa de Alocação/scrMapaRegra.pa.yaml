@@ -10,7 +10,7 @@ Screens:
         Set(varRegraSel, Blank());
         UpdateContext({locNonceRg: 0});
         Select(btnRecarregarRgr);
-        Set(varFormRg, { pos: Coalesce(First(colPosicoesSel).Value, ""), viz: "—", msg: "", ativo: true }); Clear(colEqaSel); Clear(colEqbSel)
+        Set(varFormRg, { pos: Coalesce(First(colPosicoesSel).Value, ""), tipo: "Bloqueio", msg: "", ativo: true }); Clear(colEqaSel); Clear(colEqbSel); Clear(colAfetadasRgr)
     Children:
       - btnRecarregarRgr:
           Control: Button@0.0.45
@@ -20,9 +20,7 @@ Screens:
               =ClearCollect(colRegrasTodas, Sort(Filter(tb_regrasPosicao, aeroporto = varAero), posicao, SortOrder.Ascending));
               ClearCollect(colRegras, Filter(tb_regrasPosicao, aeroporto = varAero And ativo = 1));
               ClearCollect(colEquipRg, Sort(Filter(tb_equipamentos, ativo = 1), ordem, SortOrder.Ascending));
-              ClearCollect(colEquipSelRg, ForAll(colEquipRg As _e, { Value: _e.nome_equip }));
-              ClearCollect(colVizSel, Table({ Value: "—" }));
-              Collect(colVizSel, ForAll(Sort(colPosicoesAero, ordem, SortOrder.Ascending) As _p, { Value: _p.posicao }))
+              ClearCollect(colEquipSelRg, ForAll(colEquipRg As _e, { Value: _e.nome_equip }))
             Text: =""
             Visible: =true
             Width: =1
@@ -239,7 +237,8 @@ Screens:
                       Control: Button@0.0.45
                       Properties:
                         Align: =Align.Left
-                        AlignInContainer: =AlignInContainer.Stretch
+                        AlignInContainer: =AlignInContainer.Start
+                        Width: =If(varMenuAberto, 180, 52)
                         Appearance: ='ButtonCanvas.Appearance'.Secondary
                         BasePaletteColor: =thmBotaoBarra
                         BorderRadius: =0
@@ -392,12 +391,20 @@ Screens:
                                                 varFormRg,
                                                 {
                                                     pos: ThisItem.posicao,
-                                                    viz: If(IsBlank(ThisItem.vizinha), "—", ThisItem.vizinha),
+                                                    tipo: Coalesce(LookUp(colTiposRegra As _tr, _tr.tipo = ThisItem.tipo_regra).rotulo, "Bloqueio"),
                                                     eqa: Substitute(Coalesce(ThisItem.equip_a, ""), " ", ""),
                                                     eqb: Substitute(Coalesce(ThisItem.equip_b, ""), " ", ""),
                                                     msg: ThisItem.mensagem,
                                                     ativo: ThisItem.ativo = 1
                                                 }
+                                            );
+                                            Clear(colAfetadasRgr);
+                                            If(
+                                                !IsBlank(ThisItem.vizinha),
+                                                Collect(
+                                                    colAfetadasRgr,
+                                                    ForAll(Split(Substitute(ThisItem.vizinha, " ", ""), ",") As _sv, { posicao: _sv.Value })
+                                                )
                                             );
                                             Clear(colEqaSel);
                                             If(
@@ -431,8 +438,13 @@ Screens:
                                           PaddingLeft: =12
                                           PaddingRight: =12
                                           Text: |-
-                                            =ThisItem.posicao & If(!IsBlank(ThisItem.vizinha), "  +  " & ThisItem.vizinha, "") & "      " &
-                                            ThisItem.equip_a & If(!IsBlank(ThisItem.equip_b), "   /   " & ThisItem.equip_b, "") &
+                                            =If(ThisItem.tipo_regra = "AVISO", "AVISO   ", "") & ThisItem.posicao &
+                                            If(!IsBlank(ThisItem.vizinha), "  →  " & ThisItem.vizinha, "") & "      " &
+                                            If(
+                                                IsBlank(ThisItem.equip_a) And IsBlank(ThisItem.equip_b),
+                                                "qualquer aeronave",
+                                                ThisItem.equip_a & If(!IsBlank(ThisItem.equip_b), "   /   " & ThisItem.equip_b, "")
+                                            ) &
                                             If(ThisItem.ativo = 1, "", "      (INATIVA)")
                                           Width: =Parent.Width - 18
                         - cntFormRgr:
@@ -497,7 +509,7 @@ Screens:
                                     FontWeight: =FontWeight.Bold
                                     Height: =18
                                     Size: =10
-                                    Text: ="EQUIPAMENTOS PROIBIDOS AQUI *"
+                                    Text: ="EQUIPAMENTOS — VAZIO É QUALQUER AERONAVE"
                               - cntAddEqaRgr:
                                   Control: GroupContainer@1.5.0
                                   Variant: AutoLayout
@@ -588,7 +600,23 @@ Screens:
                                     Height: =16
                                     Italic: =true
                                     Size: =9
-                                    Text: =If(CountRows(colEqaSel) = 0, "nenhum escolhido — use o + acima", "toque num item para tirar da lista")
+                                    Text: =If(CountRows(colEqaSel) = 0, "nenhum — vale para qualquer aeronave", "toque num item para tirar da lista")
+                              - lblTipoRgr:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    Color: =thmTextoFraco
+                                    Font: =thmFonte
+                                    FontWeight: =FontWeight.Bold
+                                    Height: =18
+                                    Size: =10
+                                    Text: ="O QUE A REGRA FAZ *"
+                              - drpTipoRgr:
+                                  Control: DropDown@0.0.45
+                                  Properties:
+                                    DefaultSelectedItems: =[Coalesce(varFormRg.tipo, "Bloqueio")]
+                                    DisplayMode: =If(varPodeCatalogo, DisplayMode.Edit, DisplayMode.View)
+                                    Height: =40
+                                    Items: =Filter(colTiposRegraSel, locNonceRg >= 0)
                               - lblVizRgr:
                                   Control: Label@2.5.1
                                   Properties:
@@ -597,14 +625,94 @@ Screens:
                                     FontWeight: =FontWeight.Bold
                                     Height: =18
                                     Size: =10
-                                    Text: ="POSIÇÃO VIZINHA"
-                              - drpVizRgr:
-                                  Control: DropDown@0.0.45
+                                    Text: ="POSIÇÕES AFETADAS"
+                              - cntAddVizRgr:
+                                  Control: GroupContainer@1.5.0
+                                  Variant: AutoLayout
                                   Properties:
-                                    DefaultSelectedItems: =[Coalesce(varFormRg.viz, "—")]
-                                    DisplayMode: =If(varPodeCatalogo, DisplayMode.Edit, DisplayMode.View)
-                                    Height: =40
-                                    Items: =Filter(colVizSel, locNonceRg >= 0)
+                                    DropShadow: =DropShadow.None
+                                    Fill: =thmSuperficie
+                                    FillPortions: =0
+                                    Height: =46
+                                    LayoutAlignItems: =LayoutAlignItems.Center
+                                    LayoutDirection: =LayoutDirection.Horizontal
+                                    LayoutGap: =6
+                                    LayoutMinWidth: =0
+                                    RadiusBottomLeft: =0
+                                    RadiusBottomRight: =0
+                                    RadiusTopLeft: =0
+                                    RadiusTopRight: =0
+                                  Children:
+                                    - drpAddVizRgr:
+                                        Control: DropDown@0.0.45
+                                        Properties:
+                                          DisplayMode: =If(varPodeCatalogo, DisplayMode.Edit, DisplayMode.View)
+                                          Height: =40
+                                          Items: =Filter(colPosicoesSel, locNonceRg >= 0)
+                                    - btnAddVizRgr:
+                                        Control: Button@0.0.45
+                                        Properties:
+                                          Appearance: ='ButtonCanvas.Appearance'.Secondary
+                                          BasePaletteColor: =thmOperacional
+                                          BorderRadius: =0
+                                          DisplayMode: =If(varPodeCatalogo, DisplayMode.Edit, DisplayMode.Disabled)
+                                          FillPortions: =0
+                                          FontColor: =thmOperacional
+                                          Height: =40
+                                          Icon: ="Add"
+                                          IconStyle: ='ButtonCanvas.IconStyle'.Filled
+                                          LayoutMinWidth: =0
+                                          OnSelect: |-
+                                            =If(
+                                                drpAddVizRgr.Selected.Value = drpPosRgr.Selected.Value,
+                                                Notify("A posição afetada tem que ser diferente da posição da regra.", NotificationType.Error, 5000),
+                                                CountRows(Filter(colAfetadasRgr, posicao = drpAddVizRgr.Selected.Value)) > 0,
+                                                Notify("Essa posição já está na lista.", NotificationType.Warning, 2000),
+                                                Collect(colAfetadasRgr, { posicao: drpAddVizRgr.Selected.Value })
+                                            )
+                                          Text: =""
+                                          Width: =44
+                              - galVizRgr:
+                                  Control: Gallery@2.15.0
+                                  Variant: Vertical
+                                  Properties:
+                                    BorderColor: =thmBorda
+                                    BorderStyle: =BorderStyle.None
+                                    Fill: =thmSuperficie
+                                    FillPortions: =0
+                                    Height: =96
+                                    Items: =colAfetadasRgr
+                                    LayoutMinWidth: =0
+                                    TemplatePadding: =0
+                                    TemplateSize: =30
+                                  Children:
+                                    - btnTiraVizRgr:
+                                        Control: Button@0.0.45
+                                        Properties:
+                                          Align: =Align.Left
+                                          Appearance: ='ButtonCanvas.Appearance'.Secondary
+                                          BasePaletteColor: =thmVermelho
+                                          BorderRadius: =0
+                                          DisplayMode: =If(varPodeCatalogo, DisplayMode.Edit, DisplayMode.Disabled)
+                                          FontColor: =thmTexto
+                                          FontSize: =11
+                                          Height: =28
+                                          Icon: ="Dismiss"
+                                          IconStyle: ='ButtonCanvas.IconStyle'.Filled
+                                          LayoutMinWidth: =0
+                                          OnSelect: =Remove(colAfetadasRgr, ThisItem)
+                                          PaddingLeft: =8
+                                          Text: =ThisItem.posicao
+                                          Width: =Parent.Width - 18
+                              - lblVazioVizRgr:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    Color: =thmTextoFraco
+                                    Font: =thmFonte
+                                    Height: =16
+                                    Italic: =true
+                                    Size: =9
+                                    Text: =If(CountRows(colAfetadasRgr) = 0, "nenhuma — regra vale só para a posição de cima", "toque num item para tirar da lista")
                               - lblEqbRgr:
                                   Control: Label@2.5.1
                                   Properties:
@@ -704,7 +812,7 @@ Screens:
                                     Height: =16
                                     Italic: =true
                                     Size: =9
-                                    Text: =If(CountRows(colEqbSel) = 0, "nenhum escolhido — use o + acima", "toque num item para tirar da lista")
+                                    Text: =If(CountRows(colEqbSel) = 0, "nenhum — vale para qualquer aeronave", "toque num item para tirar da lista")
                               - lblMsgRgr:
                                   Control: Label@2.5.1
                                   Properties:
@@ -769,7 +877,7 @@ Screens:
                                           LayoutMinWidth: =0
                                           OnSelect: |-
                                             =Set(varRegraSel, Blank());
-                                            Set(varFormRg, { pos: Coalesce(First(colPosicoesSel).Value, ""), viz: "—", msg: "", ativo: true }); Clear(colEqaSel); Clear(colEqbSel);
+                                            Set(varFormRg, { pos: Coalesce(First(colPosicoesSel).Value, ""), tipo: "Bloqueio", msg: "", ativo: true }); Clear(colEqaSel); Clear(colEqbSel); Clear(colAfetadasRgr);
                                             UpdateContext({locNonceRg: locNonceRg + 1})
                                           PaddingLeft: =12
                                           PaddingRight: =12
@@ -792,7 +900,7 @@ Screens:
                                           OnSelect: |-
                                             =If(
                                                 IsBlank(varRegraSel.ID),
-                                                Set(varFormRg, { pos: Coalesce(First(colPosicoesSel).Value, ""), viz: "—", msg: "", ativo: true }); Clear(colEqaSel); Clear(colEqbSel),
+                                                Set(varFormRg, { pos: Coalesce(First(colPosicoesSel).Value, ""), tipo: "Bloqueio", msg: "", ativo: true }); Clear(colEqaSel); Clear(colEqbSel); Clear(colAfetadasRgr),
                                                 Set(
                                                     varFormRg,
                                                     {
@@ -823,7 +931,7 @@ Screens:
                                           Appearance: ='ButtonCanvas.Appearance'.Secondary
                                           BasePaletteColor: =thmTextoFraco
                                           BorderRadius: =0
-                                          DisplayMode: =If(CountRows(colEqaSel) > 0, DisplayMode.Edit, DisplayMode.Disabled)
+                                          DisplayMode: =If(CountRows(colEqaSel) > 0 Or CountRows(colAfetadasRgr) > 0, DisplayMode.Edit, DisplayMode.Disabled)
                                           FillPortions: =1
                                           FontColor: =thmTextoFraco
                                           FontSize: =13
@@ -856,22 +964,29 @@ Screens:
                                                 Filter(
                                                     colTesteRg,
                                                     pos = drpPosRgr.Selected.Value And
-                                                    !IsBlank(Find("," & equip & ",", "," & Concat(colEqaSel, equip, ",") & ","))
+                                                    (
+                                                        CountRows(colEqaSel) = 0 Or
+                                                        !IsBlank(Find("," & equip & ",", "," & Concat(colEqaSel, equip, ",") & ","))
+                                                    )
                                                 )
                                             );
                                             ClearCollect(
                                                 colTesteB,
                                                 Filter(
                                                     colTesteRg,
-                                                    drpVizRgr.Selected.Value <> "—" And pos = drpVizRgr.Selected.Value And
-                                                    !IsBlank(Find("," & equip & ",", "," & Concat(colEqbSel, equip, ",") & ","))
+                                                    CountRows(colAfetadasRgr) > 0 And
+                                                    !IsBlank(Find("," & pos & ",", "," & Concat(colAfetadasRgr, posicao, ",") & ",")) And
+                                                    (
+                                                        CountRows(colEqbSel) = 0 Or
+                                                        !IsBlank(Find("," & equip & ",", "," & Concat(colEqbSel, equip, ",") & ","))
+                                                    )
                                                 )
                                             );
                                             UpdateContext(
                                                 {
                                                     locTesteAlvo: CountRows(colTesteA),
                                                     locTesteN: If(
-                                                        drpVizRgr.Selected.Value = "—",
+                                                        CountRows(colAfetadasRgr) = 0,
                                                         CountRows(colTesteA),
                                                         CountRows(
                                                             Filter(
@@ -932,12 +1047,12 @@ Screens:
                                             =If(
                                                 IsBlank(drpPosRgr.Selected.Value),
                                                 Notify("Escolha a posição.", NotificationType.Error, 5000),
-                                                CountRows(colEqaSel) = 0,
-                                                Notify("Escolha ao menos um equipamento para a posição.", NotificationType.Error, 5000),
-                                                drpVizRgr.Selected.Value <> "—" And drpVizRgr.Selected.Value = drpPosRgr.Selected.Value,
-                                                Notify("A vizinha tem que ser diferente da posição da regra.", NotificationType.Error, 5000),
-                                                drpVizRgr.Selected.Value <> "—" And CountRows(colEqbSel) = 0,
-                                                Notify("Regra de par precisa de equipamento nos dois lados. Com um lado vazio ela nunca dispara, e some igual a regra nenhuma.", NotificationType.Error, 9000),
+                                                CountRows(colEqaSel) = 0 And CountRows(colAfetadasRgr) = 0,
+                                                Notify("A regra não diz nada: escolha equipamentos, ou posições afetadas, ou os dois.", NotificationType.Error, 7000),
+                                                CountRows(colAfetadasRgr) > 0 And CountRows(colEqaSel) > 0 And CountRows(colEqbSel) = 0,
+                                                Notify("Regra de par precisa de equipamento nos dois lados. Com um lado vazio ela nunca dispara, e some igual a regra nenhuma. Para inutilizar a posição afetada com qualquer aeronave, deixe os dois lados vazios.", NotificationType.Error, 12000),
+                                                CountRows(colAfetadasRgr) = 0 And CountRows(colEqbSel) > 0,
+                                                Notify("Há equipamento na vizinha mas nenhuma posição afetada escolhida. Escolha a posição ou tire os equipamentos de baixo.", NotificationType.Error, 9000),
                                                 IsBlank(Trim(txtMsgRgr.Value)),
                                                 Notify("Escreva a mensagem que o operador vai ler quando a gravação for recusada.", NotificationType.Error, 6000),
                                                 UpdateContext(
@@ -954,9 +1069,10 @@ Screens:
                                                                     aeroporto: varAero,
                                                                     posicao: drpPosRgr.Selected.Value,
                                                                     equip_a: Concat(colEqaSel, equip, ","),
-                                                                    vizinha: If(drpVizRgr.Selected.Value = "—", "", drpVizRgr.Selected.Value),
+                                                                    vizinha: Concat(colAfetadasRgr, posicao, ","),
+                                                                    tipo_regra: Coalesce(LookUp(colTiposRegra As _ts, _ts.rotulo = drpTipoRgr.Selected.Value).tipo, "BLOQUEIO"),
                                                                     equip_b: If(
-                                                                        drpVizRgr.Selected.Value = "—",
+                                                                        CountRows(colAfetadasRgr) = 0,
                                                                         "",
                                                                         Concat(colEqbSel, equip, ",")
                                                                     ),
@@ -972,7 +1088,7 @@ Screens:
                                                     Notify("Não foi possível gravar. Nada foi alterado.", NotificationType.Error, 7000),
                                                     Select(btnRecarregarRgr);
                                                     Set(varRegraSel, Blank());
-                                                    Set(varFormRg, { pos: Coalesce(First(colPosicoesSel).Value, ""), viz: "—", msg: "", ativo: true }); Clear(colEqaSel); Clear(colEqbSel);
+                                                    Set(varFormRg, { pos: Coalesce(First(colPosicoesSel).Value, ""), tipo: "Bloqueio", msg: "", ativo: true }); Clear(colEqaSel); Clear(colEqbSel); Clear(colAfetadasRgr);
                                                     UpdateContext({locNonceRg: locNonceRg + 1});
                                                     Notify("Restrição gravada.", NotificationType.Success, 2500)
                                                 )
