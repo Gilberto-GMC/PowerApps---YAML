@@ -1956,3 +1956,29 @@ filtra por aeroporto devolvia zero, sem erro nenhum.
 **O diagnóstico que resolveu**, e vale repetir: um rótulo com `"[" & varAero & "] vs [" &
 First(tb_alocacoesMapa).aeroporto & "]"`. Os colchetes revelam vazio e espaço em branco — as duas
 causas mais comuns de comparação de texto que falha sem erro.
+
+---
+
+## Reusar uma tabela para dois significados exige separar os dois na leitura
+
+`tb_regrasPosicao` passou a guardar duas coisas diferentes:
+
+- **veto por equipamento** — "B38M aqui junto de B38M na vizinha é proibido", checado ao gravar;
+- **bloqueio de posição** — "esta posição ocupada inutiliza aquelas", desenhado na grade.
+
+Os dois usam os mesmos campos `posicao` e `vizinha`. **O que os distingue é `equip_a` e `equip_b`
+estarem vazios.** Eu escrevi a leitura da grade filtrando só por `tipo_regra = "BLOQUEIO"` e esqueci
+essa parte — então as sete regras de par existentes passaram a valer como bloqueio incondicional.
+
+**O sintoma foi imediato e feio:** a grade inundou de blocos `INDISPONÍVEL`, e a geometria dos
+retângulos reais quebrou por cima disso, porque `trechos` pressupõe blocos ordenados e sem
+sobreposição. Uma condição faltando num filtro virou uma tela inutilizável.
+
+**A lição não é "teste mais".** É que **campo reaproveitado precisa de um discriminador explícito em
+toda leitura**, não só na escrita. Ao acrescentar o segundo significado eu ajustei o cadastro e a
+validação, e tratei a grade como se ela lesse a mesma coisa de antes. Quando uma tabela ganha um
+segundo uso, o certo é listar todos os pontos que a leem e decidir, um por um, qual dos dois
+significados cada um quer.
+
+Aqui eram três: `_bl` e `_imped` na grade, e `locBloqueio` no salvar. Os três precisavam de
+`IsBlank(equip_a) And IsBlank(equip_b)`.
