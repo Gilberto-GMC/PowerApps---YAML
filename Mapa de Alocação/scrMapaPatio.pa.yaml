@@ -796,24 +796,20 @@ Screens:
                                                             )
                                                         ) Or
                                                         !IsBlank(
-                                                            Find(
-                                                                "," & _p.posicao & ",",
-                                                                "," &
-                                                                Substitute(
-                                                                    Coalesce(
-                                                                        LookUp(colPosicoesAero As _qb, _qb.posicao = posicao_txt).bloqueia,
-                                                                        ""
-                                                                    ),
-                                                                    " ",
-                                                                    ""
-                                                                ) & ","
-                                                            )
-                                                        ) Or
-                                                        !IsBlank(
-                                                            Find(
-                                                                "," & posicao_txt & ",",
-                                                                "," & Substitute(Coalesce(_p.bloqueia, ""), " ", "") & ","
-                                                            )
+                                                            LookUp(
+                                                                colRegras As _rr,
+                                                                _rr.tipo_regra = "BLOQUEIO" And
+                                                                (
+                                                                    (
+                                                                        _rr.posicao = posicao_txt And
+                                                                        !IsBlank(Find("," & _p.posicao & ",", "," & Substitute(Coalesce(_rr.vizinha, ""), " ", "") & ","))
+                                                                    ) Or
+                                                                    (
+                                                                        _rr.posicao = _p.posicao And
+                                                                        !IsBlank(Find("," & posicao_txt & ",", "," & Substitute(Coalesce(_rr.vizinha, ""), " ", "") & ","))
+                                                                    )
+                                                                )
+                                                            ).posicao
                                                         )
                                                     ),
                                                     ini,
@@ -853,24 +849,21 @@ Screens:
                                                                         _cls: LookUp(colClasses As _kc, _kc.classe = LookUp(colPosicoesAero As _kp, _kp.id = _b.id_posicao).classe),
                                                                         _imped:
                                                                             _b.posicao_txt <> _p.posicao And
-                                                                            (
-                                                                                !IsBlank(
-                                                                                    Find(
-                                                                                        "," & _b.posicao_txt & ",",
-                                                                                        "," & Substitute(Coalesce(_p.bloqueia, ""), " ", "") & ","
+                                                                            !IsBlank(
+                                                                                LookUp(
+                                                                                    colRegras As _ri,
+                                                                                    _ri.tipo_regra = "BLOQUEIO" And
+                                                                                    (
+                                                                                        (
+                                                                                            _ri.posicao = _b.posicao_txt And
+                                                                                            !IsBlank(Find("," & _p.posicao & ",", "," & Substitute(Coalesce(_ri.vizinha, ""), " ", "") & ","))
+                                                                                        ) Or
+                                                                                        (
+                                                                                            _ri.posicao = _p.posicao And
+                                                                                            !IsBlank(Find("," & _b.posicao_txt & ",", "," & Substitute(Coalesce(_ri.vizinha, ""), " ", "") & ","))
+                                                                                        )
                                                                                     )
-                                                                                ) Or
-                                                                                !IsBlank(
-                                                                                    Find(
-                                                                                        "," & _p.posicao & ",",
-                                                                                        "," &
-                                                                                        Substitute(
-                                                                                            Coalesce(LookUp(colPosicoesAero As _qi, _qi.posicao = _b.posicao_txt).bloqueia, ""),
-                                                                                            " ",
-                                                                                            ""
-                                                                                        ) & ","
-                                                                                    )
-                                                                                )
+                                                                                ).posicao
                                                                             ),
                                                                         _pend:
                                                                             _b.tipo = "VOO" And
@@ -2380,18 +2373,22 @@ Screens:
                                               ) As _q2,
                                               _q2.posicao & ","
                                           ) &
-                                          "," & Substitute(Coalesce(locPos.bloqueia, ""), " ", "") & "," &
+                                          Concat(
+                                              Filter(colRegras As _r1, _r1.tipo_regra = "BLOQUEIO" And _r1.posicao = locPos.posicao) As _r1b,
+                                              "," & Substitute(Coalesce(_r1b.vizinha, ""), " ", "") & ","
+                                          ) &
                                           Concat(
                                               Filter(
-                                                  colPosicoesAero As _q3,
+                                                  colRegras As _r2,
+                                                  _r2.tipo_regra = "BLOQUEIO" And
                                                   !IsBlank(
                                                       Find(
                                                           "," & locPos.posicao & ",",
-                                                          "," & Substitute(Coalesce(_q3.bloqueia, ""), " ", "") & ","
+                                                          "," & Substitute(Coalesce(_r2.vizinha, ""), " ", "") & ","
                                                       )
                                                   )
-                                              ) As _q4,
-                                              _q4.posicao & ","
+                                              ) As _r2b,
+                                              _r2b.posicao & ","
                                           )
                                   }
                               );

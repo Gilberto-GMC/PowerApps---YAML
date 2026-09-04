@@ -718,7 +718,7 @@ Por isso a coluna **`bloqueia`**, separada do `ocupa`:
 | coluna | significa | efeito na grade |
 |---|---|---|
 | `ocupa` | esta posição **substitui** as listadas | some da grade; o bloco é desenhado sobre as outras |
-| `bloqueia` | esta posição **inutiliza** as listadas enquanto ocupada | todas continuam na grade; a impedida ganha um bloco cinza `INDISPONÍVEL` |
+| regra `BLOQUEIO` em `tb_regrasPosicao` | esta posição **inutiliza** as listadas enquanto ocupada | todas continuam na grade; a impedida ganha um bloco cinza `INDISPONÍVEL` |
 
 As duas são **bidirecionais**: declarar num lado basta. Ocupar A2 impede a 6A, e ocupar a 6A impede
 A2 — sem precisar escrever a relação duas vezes.
@@ -745,3 +745,55 @@ bidirecional e um lado basta:
 
 O Douglas descreveu **duas** posições classe A por classe B; o croqui declara **quatro**. Isso precisa
 ser conferido no pátio. Não bloqueia nada hoje: a importação não usa nenhuma posição de aviação geral.
+
+---
+
+## O bloqueio entre posições virou regra, não coluna
+
+Em 04/09/2026 a relação saiu de `colPosicoes.bloqueia` — tabela literal no `App.Formulas` — e foi para
+a lista **`tb_regrasPosicao`**, a pedido do Douglas. O motivo é multi-aeroporto: **cada aeroporto tem
+a sua geometria de pátio**, e mudá-la não pode exigir editar fórmula e republicar o app.
+
+A lista já servia para veto por equipamento e passou a servir para os dois casos:
+
+| campo | veto por equipamento (como era) | bloqueio entre posições (novo) |
+|---|---|---|
+| `posicao` | onde está o `equip_a` | a posição que, ocupada, inutiliza outras |
+| `vizinha` | onde está o `equip_b` | **lista** das que ficam indisponíveis |
+| `equip_a` / `equip_b` | os equipamentos proibidos juntos | **em branco: qualquer aeronave** |
+| `tipo_regra` | `BLOQUEIO` | `BLOQUEIO` ou `AVISO` |
+
+Duas mudanças de esquema sustentam isso: `vizinha` foi de 10 para 255 caracteres, para virar lista
+como `equip_a` já era, e entrou `tipo_regra`.
+
+**A regra se escreve numa direção, e vale nas duas.** "6A inutiliza A1, A2, A4, A5" é o que se cadastra;
+o efeito é mútuo, porque é o mesmo espaço físico: com a 6A ocupada não cabe aeronave na A1, e com a A1
+ocupada não cabe a grande na 6A. Escrever num sentido só é mais fácil de manter e não perde nada.
+
+### As regras semeadas para NAVEGANTES
+
+| posição | inutiliza |
+|---|---|
+| `6A` | A1, A2, A4, A5 |
+| `6B` | A2, A3, A4, A5 |
+| `7` | A6, A7, A9, A10 |
+| `8` | A7, A8, A9, A10 |
+| `T6C` | **6A, 6B** |
+
+A da T6C veio do Douglas em 04/09/2026 e **não existia em lugar nenhum antes** — nem no `bloqueia`, nem
+no croqui do app de reserva. O cargueiro consome T5 e T6 pelo `ocupa`, e agora também impede 6A e 6B.
+
+As quatro primeiras continuam **a confirmar**: ele descreveu duas posições classe A por classe B, e o
+croqui declarava quatro.
+
+### `ocupa` continua sendo outra coisa
+
+Não foi absorvido pelas regras, e não deve ser. `ocupa` diz que a posição **substitui** as outras e
+por isso some da grade — é a T6C desenhada sobre T5 e T6. Bloqueio diz que ela **inutiliza**, e todas
+continuam sendo linhas alocáveis. Confundir os dois faria a 6A desaparecer da grade.
+
+### O que falta
+
+A tela de restrições ainda **não sabe cadastrar** esse tipo de regra: `vizinha` é um seletor de uma
+posição só, não há escolha de `BLOQUEIO`/`AVISO`, e deixar equipamento em branco não é oferecido como
+"qualquer aeronave". Enquanto isso, as regras existem pelas sementes, mas só se editam pelo SharePoint.
