@@ -787,6 +787,102 @@ Screens:
                                           PaddingLeft: =12
                                           PaddingRight: =12
                                           Text: ="CANCELAR"
+                                    - btnTestarRgr:
+                                        Control: Button@0.0.45
+                                        Properties:
+                                          Appearance: ='ButtonCanvas.Appearance'.Secondary
+                                          BasePaletteColor: =thmTextoFraco
+                                          BorderRadius: =0
+                                          DisplayMode: =If(CountRows(colEqaSel) > 0, DisplayMode.Edit, DisplayMode.Disabled)
+                                          FillPortions: =1
+                                          FontColor: =thmTextoFraco
+                                          FontSize: =13
+                                          FontWeight: =FontWeight.Semibold
+                                          Height: =44
+                                          Icon: ="Search"
+                                          IconStyle: ='ButtonCanvas.IconStyle'.Filled
+                                          LayoutMinWidth: =0
+                                          OnSelect: |-
+                                            =UpdateContext({ locTesteDe: DateAdd(Today(), -mapTesteRegraDias, TimeUnit.Days) });
+                                            ClearCollect(
+                                                colTesteRg,
+                                                ForAll(
+                                                    Filter(
+                                                        tb_alocacoesMapa,
+                                                        aeroporto = varAero And ativo = 1 And tipo_registro = "VOO" And
+                                                        data_operacao >= locTesteDe
+                                                    ) As _v,
+                                                    {
+                                                        id: _v.ID,
+                                                        pos: _v.posicao_txt,
+                                                        equip: _v.equipamento,
+                                                        abs_ini: DateDiff(mapDataBase, _v.data_operacao, TimeUnit.Days) * mapMinutosDia + _v.hora_inicio,
+                                                        abs_fim: DateDiff(mapDataBase, _v.data_fim, TimeUnit.Days) * mapMinutosDia + _v.hora_fim
+                                                    }
+                                                )
+                                            );
+                                            ClearCollect(
+                                                colTesteA,
+                                                Filter(
+                                                    colTesteRg,
+                                                    pos = drpPosRgr.Selected.Value And
+                                                    !IsBlank(Find("," & equip & ",", "," & Concat(colEqaSel, equip, ",") & ","))
+                                                )
+                                            );
+                                            ClearCollect(
+                                                colTesteB,
+                                                Filter(
+                                                    colTesteRg,
+                                                    drpVizRgr.Selected.Value <> "—" And pos = drpVizRgr.Selected.Value And
+                                                    !IsBlank(Find("," & equip & ",", "," & Concat(colEqbSel, equip, ",") & ","))
+                                                )
+                                            );
+                                            UpdateContext(
+                                                {
+                                                    locTesteAlvo: CountRows(colTesteA),
+                                                    locTesteN: If(
+                                                        drpVizRgr.Selected.Value = "—",
+                                                        CountRows(colTesteA),
+                                                        CountRows(
+                                                            Filter(
+                                                                ForAll(
+                                                                    colTesteA As _a,
+                                                                    {
+                                                                        bate: If(
+                                                                            !IsBlank(
+                                                                                LookUp(
+                                                                                    colTesteB As _b,
+                                                                                    _b.abs_ini < _a.abs_fim And _b.abs_fim > _a.abs_ini
+                                                                                ).id
+                                                                            ),
+                                                                            1,
+                                                                            0
+                                                                        )
+                                                                    }
+                                                                ),
+                                                                bate = 1
+                                                            )
+                                                        )
+                                                    )
+                                                }
+                                            );
+                                            Notify(
+                                                If(
+                                                    locTesteAlvo = 0,
+                                                    "Nenhum lançamento dos últimos " & mapTesteRegraDias & " dias tem esses equipamentos na posição " &
+                                                    drpPosRgr.Selected.Value & ". A regra não pegaria nada — confira se os códigos estão certos.",
+                                                    locTesteN = 0,
+                                                    "Esta regra não recusaria nenhum dos " & locTesteAlvo & " lançamento(s) dos últimos " &
+                                                    mapTesteRegraDias & " dias que têm esses equipamentos na posição " & drpPosRgr.Selected.Value & ".",
+                                                    "Esta regra teria recusado " & locTesteN & " de " & locTesteAlvo & " lançamento(s) dos últimos " &
+                                                    mapTesteRegraDias & " dias."
+                                                ),
+                                                If(locTesteAlvo = 0, NotificationType.Warning, NotificationType.Information),
+                                                10000
+                                            )
+                                          PaddingLeft: =12
+                                          PaddingRight: =12
+                                          Text: ="TESTAR"
                                     - btnSalvarRgr:
                                         Control: Button@0.0.45
                                         Properties:

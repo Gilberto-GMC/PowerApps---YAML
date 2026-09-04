@@ -598,3 +598,29 @@ exatamente derivar limite de rótulo que produziu os 57% de rejeição.
 O catálogo `tb_equipamentos` ganhou **`comprimento_m`**, e a tela de cadastro ganhou o campo. Os 25
 comprimentos vieram de especificação publicada de fabricante — **mesma ressalva das envergaduras**:
 não é fonte aeronáutica, e variante muda o número.
+
+---
+
+## O botão TESTAR da tela de regras
+
+Regra é a única coisa deste app que **falha em silêncio**: um código de equipamento digitado errado
+produz regra que nunca dispara, e nada distingue isso de não haver regra. O botão responde a pergunta
+que o cadastro sozinho não responde — *isso aqui pega alguma coisa?*
+
+Ele varre os lançamentos dos últimos `mapTesteRegraDias` dias (90) e responde em três formas:
+
+| resposta | significa |
+|---|---|
+| *teria recusado N de M* | a regra funciona e tem alcance conhecido |
+| *não recusaria nenhum dos M* | os equipamentos existem na posição, mas a condição nunca se deu |
+| *nenhum lançamento tem esses equipamentos* | ⚠️ provável código errado — a regra é inerte |
+
+A terceira é a que justifica o botão. As outras duas são informação; essa é diagnóstico.
+
+**A conta é a mesma da validação do SALVAR**, de propósito: `Find` sobre a lista de códigos entre
+vírgulas para pertinência, e cruzamento de intervalos (`ini_a < fim_b And fim_a > ini_b`) para
+sobreposição. Se o teste usasse lógica própria, ele poderia dizer que a regra pega algo que na hora de
+gravar não pega.
+
+**Custo:** dois conjuntos pequenos (uma posição cada) cruzados entre si, não a lista inteira ao
+quadrado. A janela de 90 dias é o que mantém isso barato — e é uma constante, não um número solto.

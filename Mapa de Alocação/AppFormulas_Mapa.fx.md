@@ -284,6 +284,7 @@ mapLarguraBarra  = 16;;    // px reservados à direita para a barra de rolagem d
 mapLarguraPainel = 420;;   // px do painel de edição, que abre sobre a grade
 mapPctHora       = "4.1666";;   // 100/24 truncado: 24 colunas somam 99,998% e nunca estouram os 100%
 mapDiasMax       = 90;;    // duração máxima de um registro, em dias — trava contra data final digitada errada
+mapTesteRegraDias = 90;;   // janela do botao TESTAR na tela de regras
 mapDuracaoPadrao = 40;;    // minutos entre chegada e saída sugeridos no registro novo aberto pelo clique
                            // na grade — é só o padrão do formulário, o usuário sobrescreve digitando
 
