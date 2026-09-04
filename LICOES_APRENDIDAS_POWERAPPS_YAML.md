@@ -1885,3 +1885,33 @@ das strings. Sobrando alguma coisa, é decimal no dialeto errado.
 **Detalhe que não é erro:** `ocupa: "T5,T6"` tem vírgula dentro de aspas e é conteúdo, não sintaxe. O
 `.pa.yaml` das telas, por outro lado, é invariante e usa `,` de separador — as duas metades do mesmo
 projeto falam dialetos diferentes, e é preciso saber em qual arquivo se está.
+
+---
+
+## `Button@0.0.45` não tem `Tooltip`
+
+Confirmado em 04/09/2026 pelo Studio:
+
+```
+PA2108 : Unknown property 'Tooltip' for control type 'Button@0.0.45'
+```
+
+O pedido era mostrar o nome de cada item ao passar o mouse, com o menu recolhido em ícones.
+
+**O sinal apareceu antes da colagem, e estava certo.** Uma varredura no repositório mostrou **630
+`Button@0.0.45` e nenhum com `Tooltip`** — enquanto `Label@2.5.1` (36), `Classic/Icon` (35),
+`Classic/Button@2.2.0` (19), `Image`, `HtmlViewer` e `Attachments` usam a propriedade à vontade. Ou
+seja: não é propriedade "clássica", é ausência específica do botão moderno.
+
+**O que a varredura acrescenta à regra antiga.** Já sabíamos que *um precedente não basta*. O caso
+inverso também informa: **num universo de 630 usos do mesmo controle, zero ocorrências é evidência
+forte**, não mera ausência de dados. A distinção prática é o tamanho da amostra — dez botões sem
+`Tooltip` não diriam nada; seiscentos dizem.
+
+**O que salvou a colagem:** testar em **um botão só**, numa tela só, em vez de espalhar por 40 botões
+de cinco telas. O custo do erro foi uma tela recusada e dois minutos.
+
+**Plano B, quando a propriedade não existe:** `AccessibleLabel` existe no controle (31 precedentes)
+mas é para leitor de tela — não desenha balão. O caminho que funcionaria é `HtmlViewer` com atributo
+`title`, já provado neste projeto na dica de mouse da grade, com camada de botões invisíveis por cima
+para o clique — o mesmo desenho da grade. Funciona, mas é caro para um balão de ajuda.
