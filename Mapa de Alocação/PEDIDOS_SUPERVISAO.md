@@ -156,6 +156,28 @@ fechar. E aí vale reusar o `importacao_set26.csv`, que já tem a ordem de colun
 
 ---
 
+## Regra de manutenção: a marca vira ASUR BRASIL, aos poucos
+
+O cabeçalho das seis telas diz **`ASUR`** e deve dizer **`ASUR BRASIL`**.
+
+**Não fazer numa tacada.** Cada tela alterada custa uma colagem no Studio ao Douglas, e trocar um
+rótulo não paga esse custo sozinho. A regra é: **ao mexer numa tela por qualquer outro motivo, trocar
+a marca dela na mesma passada.**
+
+Onde está, uma vez por tela:
+
+```
+<div style='...letter-spacing:.24em...'>ASUR</div>
+```
+
+Falta em: `scrMapaPatio`, `scrMapaInicio`, `scrMapaReferencia`, `scrMapaEquip`, `scrMapaRegra`,
+`scrMapaImport` — todas. Riscar da lista conforme forem saindo.
+
+⚠️ Na `scrMapaInicio` o rótulo tem `letter-spacing` maior e fica sozinho numa linha de 11px; em
+`ASUR BRASIL` vale conferir se ainda cabe sem quebrar.
+
+---
+
 ## 7. Filtro "mostrar finalizados" — a fazer
 
 Consequência direta do item 5. Marcar um movimento como finalizado tira o registro da grade e da
