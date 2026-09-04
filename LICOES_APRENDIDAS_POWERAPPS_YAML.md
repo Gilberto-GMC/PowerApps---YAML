@@ -1918,3 +1918,41 @@ para o clique — o mesmo desenho da grade. Funciona, mas é caro para um balão
 
 **Decidido em 04/09/2026: fica sem tooltip.** O menu recolhido é modo secundário, e refazê-lo em
 HTML só para o balão não se paga. Não reabrir sem pedido novo.
+
+---
+
+## Fallback silencioso esconde exatamente o defeito que se procura
+
+O `colDia` e o `colRegras` vieram vazios com dado gravado nas listas. Passei um bom tempo na hipótese
+errada porque olhei o `colGrade` — 25 linhas, saudável — e concluí que `varAero` estava certo.
+
+Não estava. `colPosicoesAero` é assim:
+
+```
+With(
+    { _f: Filter(colPosicoes; aeroporto = varAero) };
+    If(CountRows(_f) = 0; colPosicoes; _f)
+);;
+```
+
+**Quando o filtro não casa nada, ele devolve tudo.** Com `varAero` em branco, a grade desenhava
+normalmente e só as consultas ao SharePoint vinham vazias. O sintoma ficou parcial, e o pedaço que
+funcionava foi usado como prova de que o pré-requisito estava satisfeito.
+
+**A causa real:** `varAero` só era definido na tela inicial. Entrar direto em qualquer outra tela — o
+Studio previewando a última tela colada, por exemplo — deixava o global vazio, e **toda** consulta que
+filtra por aeroporto devolvia zero, sem erro nenhum.
+
+**Duas lições, e a segunda é a que se leva para outros projetos:**
+
+1. **Tela não deve depender de global que outra tela define.** Cada uma passa a garantir o próprio
+   pré-requisito no `OnVisible`. É barato e elimina uma classe inteira de bug que só aparece quando
+   alguém entra pelo caminho não previsto.
+2. **Fallback que mascara divergência custa mais do que economiza.** O `If(CountRows = 0; tudo)` foi
+   escrito para ser gentil e acabou transformando "não achei nada" em "achei tudo" — que é a resposta
+   mais perigosa possível, porque parece certa. Com um segundo aeroporto entrando, ele mostraria as
+   posições de NAVEGANTES para outro aeroporto e ninguém perceberia.
+
+**O diagnóstico que resolveu**, e vale repetir: um rótulo com `"[" & varAero & "] vs [" &
+First(tb_alocacoesMapa).aeroporto & "]"`. Os colchetes revelam vazio e espaço em branco — as duas
+causas mais comuns de comparação de texto que falha sem erro.
