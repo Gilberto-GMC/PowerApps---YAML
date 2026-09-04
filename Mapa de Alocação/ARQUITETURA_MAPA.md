@@ -569,3 +569,32 @@ distância de ponta de asa**, e esse número tem que vir da operação.
 Enquanto isso: `locEnvMax` fica **calculado** no `btnSalvarMap`, pronto para uso, e a validação segue
 comparando `env_max`, que é `0` em todas as posições — inerte, como antes. Trocar uma linha liga tudo,
 quando os limites existirem.
+
+---
+
+## Dois testes físicos, com pesos diferentes
+
+Enquadramento dado pelo Douglas em 04/09/2026, a partir do **RBAC 154 da ANAC**. Ele corrige a
+premissa da tentativa anterior — que comparava envergadura contra um rótulo de classe e rejeitava 57%
+dos voos reais.
+
+**Comprimento bloqueia.** É limite físico medido do box: cabe ou não cabe. Compara
+`comprimento_m` do catálogo contra `comp_max` da posição.
+
+**Envergadura pergunta.** No pátio principal a restrição do RBAC 154 é sobre **distância entre
+aeronaves lado a lado**, não sobre a aeronave sozinha. Uma aeronave mais larga que o previsto pode
+entrar **desde que a posição vizinha fique livre** — e isso é decisão da operação, não do sistema.
+Então a mensagem diz o que está em jogo e pede confirmação no segundo toque em SALVAR.
+
+Essa é a diferença que a tentativa anterior não tinha: **o limite de envergadura não é uma proibição,
+é uma condição.** Bloquear apagava a única saída legítima que o operador tem.
+
+### Ambos inertes até haver medida
+
+`comp_max` nasce `0` em todas as 25 posições e `env_max` continua `0` — com isso nenhum dos dois
+dispara. **É de propósito:** o número tem que vir de medição do pátio, não de tradução de rótulo. Foi
+exatamente derivar limite de rótulo que produziu os 57% de rejeição.
+
+O catálogo `tb_equipamentos` ganhou **`comprimento_m`**, e a tela de cadastro ganhou o campo. Os 25
+comprimentos vieram de especificação publicada de fabricante — **mesma ressalva das envergaduras**:
+não é fonte aeronáutica, e variante muda o número.

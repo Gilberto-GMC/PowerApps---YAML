@@ -430,6 +430,7 @@ Screens:
                                                           cod: ThisItem.equip,
                                                           nome: ThisItem.nome_equip,
                                                           env: Text(ThisItem.envergadura_m),
+                                                          comp: Text(ThisItem.comprimento_m),
                                                           ativo: ThisItem.ativo = 1
                                                       }
                                                   );
@@ -437,7 +438,7 @@ Screens:
                                                 PaddingLeft: =12
                                                 PaddingRight: =12
                                                 Text: |-
-                                                  =ThisItem.equip & "   " & ThisItem.nome_equip & "   " & Text(ThisItem.envergadura_m) & " m" &
+                                                  =ThisItem.equip & "   " & ThisItem.nome_equip & "   " & Text(ThisItem.envergadura_m) & " x " & Text(ThisItem.comprimento_m) & " m" &
                                                   If(ThisItem.ativo = 1, "", "   (INATIVO)")
                                                 FillPortions: =1
                                           - btnSubirEqp:
@@ -576,6 +577,23 @@ Screens:
                                     Height: =40
                                     Placeholder: ="ex. 35,92"
                                     Value: =Coalesce(varFormEq.env, "")
+                              - lblCompEqp:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    Color: =thmTextoFraco
+                                    Font: =thmFonte
+                                    FontWeight: =FontWeight.Bold
+                                    Height: =18
+                                    Size: =10
+                                    Text: ="COMPRIMENTO (M) *"
+                              - txtCompEqp:
+                                  Control: TextInput@0.0.54
+                                  Properties:
+                                    AccessibleLabel: ="Comprimento em metros"
+                                    DisplayMode: =If(varPodeCatalogo, DisplayMode.Edit, DisplayMode.View)
+                                    Height: =40
+                                    Placeholder: ="ex. 39,52"
+                                    Value: =Coalesce(varFormEq.comp, "")
                               - tglAtivoEqp:
                                   Control: Toggle@1.1.5
                                   Properties:
@@ -652,6 +670,7 @@ Screens:
                                                         cod: varEquipSel.equip,
                                                         nome: varEquipSel.nome_equip,
                                                         env: Text(varEquipSel.envergadura_m),
+                                                comp: Text(varEquipSel.comprimento_m),
                                                         ativo: varEquipSel.ativo = 1
                                                     }
                                                 )
@@ -683,6 +702,8 @@ Screens:
                                                 Notify("Informe o nome do equipamento.", NotificationType.Error, 5000),
                                                 !IsNumeric(txtEnvEqp.Value) Or Value(txtEnvEqp.Value) <= 0,
                                                 Notify("Informe a envergadura em metros, maior que zero.", NotificationType.Error, 5000),
+                                                !IsNumeric(txtCompEqp.Value) Or Value(txtCompEqp.Value) <= 0,
+                                                Notify("Informe o comprimento em metros, maior que zero.", NotificationType.Error, 5000),
                                                 !IsBlank(
                                                     LookUp(
                                                         colEquipTodos As _e,
@@ -704,6 +725,7 @@ Screens:
                                                                     equip: Upper(Trim(txtCodEqp.Value)),
                                                                     nome_equip: Trim(txtNomeEqp.Value),
                                                                     envergadura_m: Value(txtEnvEqp.Value),
+                                                                    comprimento_m: Value(txtCompEqp.Value),
                                                                     ordem: If(IsBlank(varEquipSel.ID), CountRows(colEquipTodos) * 10 + 10, varEquipSel.ordem),
                                                                     ativo: If(tglAtivoEqp.Checked, 1, 0)
                                                                 }

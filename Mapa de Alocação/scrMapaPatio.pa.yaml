@@ -12,7 +12,7 @@ Screens:
                 locPatio: "TODOS",
                 locNonce: 0,
                 locConfirmaConting: 0,
-                locConfirmaPortao: "",
+                locConfirmaPortao: "", locConfirmaEnv: 0,
                 locConfirmaExcluir: 0,
                 locDesatualizado: false,
                 locSalvando: false,
@@ -52,7 +52,7 @@ Screens:
                   }
               );
               Set(varPosSel, LookUp(colGrade As _g, _g.id_posicao = varAlocSel.id_posicao));
-              UpdateContext({locConfirmaExcluir: 0, locConfirmaConting: 0, locConfirmaPortao: "", locNonce: locNonce + 1});
+              UpdateContext({locConfirmaExcluir: 0, locConfirmaConting: 0, locConfirmaPortao: "", locConfirmaEnv: 0, locNonce: locNonce + 1});
               Set(varPainelAberto, true)
             Text: =""
             Visible: =true
@@ -95,7 +95,7 @@ Screens:
                       intl: false
                   }
               );
-              UpdateContext({locConfirmaExcluir: 0, locConfirmaConting: 0, locConfirmaPortao: "", locNonce: locNonce + 1});
+              UpdateContext({locConfirmaExcluir: 0, locConfirmaConting: 0, locConfirmaPortao: "", locConfirmaEnv: 0, locNonce: locNonce + 1});
               Set(varPainelAberto, true)
             Text: =""
             Visible: =true
@@ -2155,6 +2155,11 @@ Screens:
                                           locEnvDigitada,
                                           Coalesce(LookUp(colEquip As _e, _e.equip = locEquip).envergadura_m, 0)
                                       ),
+                                      locComp: Coalesce(LookUp(colEquip As _ec, _ec.equip = locEquip).comprimento_m, 0),
+                                      locCompMax: Coalesce(
+                                          LookUp(colPosicoesAero As _pc, _pc.posicao = drpPosicaoMap.Selected.Value).comp_max,
+                                          0
+                                      ),
                                       locEnvMax: With(
                                           { _pm: LookUp(colPosicoesAero As _pp, _pp.posicao = drpPosicaoMap.Selected.Value) },
                                           If(
@@ -2337,18 +2342,26 @@ Screens:
                                       8000
                                   );
                                   UpdateContext({locConfirmaPortao: locPortao & "-" & Text(locConflitoPortao.id), locSalvando: false, locOcupado: Blank()}),
-                                  // INERTE de proposito. Ligar em locEnvMax rejeitaria 57% dos voos reais
-                                  // (399 de 698 em setembro): aeronave_max nomeia uma CLASSE de porte, nao um
-                                  // teto em centimetros — A320 tem 35,80 m contra os 35,79 do B738. Ver
-                                  // ARQUITETURA_MAPA.md. env_max segue 0 em todas, entao isto nunca dispara.
-                                  locPos.env_max > 0 And locEnv > locPos.env_max,
+                                  // COMPRIMENTO bloqueia: e limite fisico medido do box, cabe ou nao cabe.
+                                  locCompMax > 0 And locComp > locCompMax,
                                   Notify(
-                                      "Envergadura de " & Text(locEnv) & " m acima do limite da posição " & locPos.posicao &
-                                      " (" & Text(locPos.env_max) & " m).",
+                                      "Comprimento de " & Text(locComp) & " m nao cabe na posição " & locPos.posicao &
+                                      " (máximo " & Text(locCompMax) & " m).",
                                       NotificationType.Error,
                                       7000
                                   );
                                   UpdateContext({locSalvando: false, locOcupado: Blank()}),
+                                  // ENVERGADURA pergunta em vez de bloquear: o limite real e distancia de ponta
+                                  // de asa (RBAC 154), e o operador pode autorizar deixando a vizinha vazia.
+                                  locEnvMax > 0 And locEnv > locEnvMax And locConfirmaEnv <> locPos.id,
+                                  Notify(
+                                      "Envergadura de " & Text(locEnv) & " m acima do previsto para a posição " & locPos.posicao &
+                                      " (" & Text(locEnvMax) & " m). Só entra se a posição vizinha ficar livre. " &
+                                      "Toque em SALVAR de novo para confirmar.",
+                                      NotificationType.Warning,
+                                      9000
+                                  );
+                                  UpdateContext({locConfirmaEnv: locPos.id, locSalvando: false, locOcupado: Blank()}),
                                   locPos.contingencia = 1 And locConfirmaConting <> locPos.id,
                                   Notify(
                                       "A posição " & locPos.posicao & " é de contingência. Toque em SALVAR de novo para confirmar.",
@@ -2396,7 +2409,7 @@ Screens:
                                   If(
                                       locErro,
                                       Notify("Não foi possível gravar. Nada foi alterado.", NotificationType.Error, 7000),
-                                      UpdateContext({locConfirmaConting: 0, locConfirmaExcluir: 0, locConfirmaPortao: ""});
+                                      UpdateContext({locConfirmaConting: 0, locConfirmaExcluir: 0, locConfirmaPortao: "", locConfirmaEnv: 0});
                                       Select(btnAtualizarMap);
                                       Set(varAlocSel, Blank());
                                       Set(varPainelAberto, false);
@@ -2480,7 +2493,7 @@ Screens:
                         OnSelect: |-
                           =Set(varPainelAberto, false);
                           Set(varAlocSel, Blank());
-                          UpdateContext({locConfirmaExcluir: 0, locConfirmaConting: 0, locConfirmaPortao: "", locNonce: locNonce + 1})
+                          UpdateContext({locConfirmaExcluir: 0, locConfirmaConting: 0, locConfirmaPortao: "", locConfirmaEnv: 0, locNonce: locNonce + 1})
                         PaddingLeft: =12
                         PaddingRight: =12
                         Text: ="FECHAR"
