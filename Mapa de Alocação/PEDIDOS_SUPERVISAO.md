@@ -70,23 +70,44 @@ informação. O `HtmlViewer` de instruções já existe lá.
 
 ---
 
-## 3. Cores para a aviação geral
+## 3. Cores para a aviação geral — ✅ feito em 04/09/2026
 
-**Como está hoje:** o preenchimento do bloco é a cor da companhia (`colCias`), e a legenda declara
-isso. Aeronave de aviação geral não tem companhia na tabela, então cai na cor de borda padrão — todas
-iguais e sem significado.
+**A raiz do pedido:** existia uma única entrada `GER` — "AV. GERAL" — num cinza-claro lavado
+(`#E2E8F0`). Toda a aviação geral era da mesma cor, e por isso não se distinguia nada.
 
-**⚠️ Precisa ser esclarecido antes de fazer.** "Alternativa e diferentes cores" comporta pelo menos
-duas leituras:
+**O que foi feito:** bloco sem companhia de verdade (`GER` ou em branco) toma a cor da **classe da
+posição** — nova tabela `colClasses`. Na aviação geral quem distingue é o porte, e o porte está na
+classe: A é aeronave pequena, B é grande, mais os helipontos.
 
-- cores por **categoria de aeronave** (executivo, militar, táxi aéreo, helicóptero) para os voos sem
-  companhia; **ou**
-- um **esquema alternativo inteiro**, que o operador liga e desliga, pintando por outro critério.
+| classe | cor |
+|---|---|
+| A | `#0E7490` |
+| B | `#C2410C` |
+| HELICÓPTERO | `#7E22CE` |
 
-A segunda quebraria a regra da legenda de que preenchimento = companhia — regra que já foi defendida
-duas vezes neste projeto. Se for essa, a legenda tem que mudar junto.
+**A regra da legenda continua valendo para quem tem companhia.** Só a aviação geral muda, e a legenda
+diz isso nas duas telas. A classe vem da posição **do bloco**, não da linha — bloco que aparece noutra
+linha por `ocupa` ou `bloqueia` mantém a cor da posição dele.
 
 ---
+
+## 3b. Reserva com o aeroporto como ALTERNATIVA — a fazer
+
+Esclarecido pelo Douglas em 04/09/2026, e **não era o que eu tinha entendido**. Não é opção de cor: é
+o **aeroporto de alternativa do plano de voo**. A aeronave da aviação geral reserva a posição, mas
+declara que só virá se precisar desviar — provavelmente não vem.
+
+**Por que importa:** hoje toda reserva ocupa a posição igual. Uma reserva de alternativa segurando um
+box que provavelmente não será usado tira capacidade real do pátio.
+
+**A desenhar, e a decisão não é de quem programa:**
+
+- coluna nova em `tb_alocacoesMapa` (`alternativa`, 0/1), do mesmo feitio de `pesquisado` e
+  `internacional`, com marca visual própria no bloco;
+- **conflito: bloqueia ou avisa?** Se uma reserva de alternativa impedisse um voo confirmado de
+  entrar, o pátio perderia posição por um voo que provavelmente não vem. O padrão de aviso com
+  confirmação no segundo toque, já usado no portão e na envergadura, parece o caminho — mas é decisão
+  da operação.
 
 ## 4. Matrícula quando não há número de voo
 

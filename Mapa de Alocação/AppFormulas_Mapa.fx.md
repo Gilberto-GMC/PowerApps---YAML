@@ -243,6 +243,16 @@ Table(
     { cond: "FINALIZADO"; rotulo: "Finalizado"; selo: "&#10003;";  cor_hex: hxTextoFraco }
 );;
 
+// 🅰️ Classes de posição — cor do bloco na AVIAÇÃO GERAL, onde a companhia não distingue nada.
+// Toda AV. GERAL era o mesmo cinza-claro; na aviação geral quem distingue é o porte, e o porte está
+// na classe da posição. Companhia continua mandando na cor de quem tem companhia de verdade.
+colClasses =
+Table(
+    { classe: "A";           rotulo: "Classe A";    cor_hex: "#0E7490"; cor_texto: "#D6DDE0" };
+    { classe: "B";           rotulo: "Classe B";    cor_hex: "#C2410C"; cor_texto: "#D6DDE0" };
+    { classe: "HELICOPTERO"; rotulo: "Helicóptero"; cor_hex: "#7E22CE"; cor_texto: "#D6DDE0" }
+);;
+
 // 🔽 Tabelas dos seletores — coluna única `Value`, que é o que o Dropdown moderno exibe.
 // Derivadas das tabelas acima: uma fonte de verdade, sem redigitar nada.
 colAerosSel =

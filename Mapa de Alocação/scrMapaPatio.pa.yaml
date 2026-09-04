@@ -850,6 +850,7 @@ Screens:
                                                                         _cia: LookUp(colCias As _cc, _cc.sigla = _b.cia),
                                                                         _prt: LookUp(colPortoes As _pp, _pp.portao = _b.portao),
                                                                         _bloq: _b.tipo <> "VOO",
+                                                                        _cls: LookUp(colClasses As _kc, _kc.classe = LookUp(colPosicoesAero As _kp, _kp.id = _b.id_posicao).classe),
                                                                         _imped:
                                                                             _b.posicao_txt <> _p.posicao And
                                                                             (
@@ -895,8 +896,8 @@ Screens:
                                                                             ""
                                                                         ) &
                                                                         "<td title='" & _b.dica & "' style='box-sizing:border-box;width:" & Text((_z - _a) * 100 / mapMinutosDia, "0.000", "en-US") & "%;height:" & (mapAlturaLinha - 14) & "px;" &
-                                                                        "background:" & If(_imped, hxGradeLinha, _bloq, hxTextoFraco, _b.pesq = 1, hxVermelho, Coalesce(_cia.cor_hex, hxBorda)) & ";" &
-                                                                        "color:" & If(_imped, hxTextoFraco, _bloq Or _b.pesq = 1, hxTextoBarra, Coalesce(_cia.cor_texto, hxTexto)) & ";" &
+                                                                        "background:" & If(_imped, hxGradeLinha, _bloq, hxTextoFraco, _b.pesq = 1, hxVermelho, IsBlank(_b.cia) Or _b.cia = "GER", Coalesce(_cls.cor_hex, Coalesce(_cia.cor_hex, hxBorda)), Coalesce(_cia.cor_hex, hxBorda)) & ";" &
+                                                                        "color:" & If(_imped, hxTextoFraco, _bloq Or _b.pesq = 1, hxTextoBarra, IsBlank(_b.cia) Or _b.cia = "GER", Coalesce(_cls.cor_texto, Coalesce(_cia.cor_texto, hxTexto)), Coalesce(_cia.cor_texto, hxTexto)) & ";" &
                                                                         "border:3px " & If(_imped, "dashed", _pend, "dashed", "solid") & " " &
                                                                         If(_imped, hxTextoFraco, _pend And IsBlank(_b.portao), hxAmbar, Coalesce(_prt.cor_hex, hxBorda)) & ";" &
                                                                         "font-size:10px;font-weight:700;line-height:1.15;padding:0 3px;text-align:center;overflow:hidden;'>" &
@@ -1541,6 +1542,12 @@ Screens:
                               Sort(colCias, ordem, SortOrder.Ascending) As _lc,
                               "<span style='display:inline-block;font-size:10px;font-weight:700;padding:2px 8px;margin-right:6px;background:" &
                               _lc.cor_hex & ";color:" & _lc.cor_texto & ";'>" & _lc.sigla & "</span>"
+                          ) &
+                          "<span style='font-size:9px;color:" & hxTextoFraco & ";margin:0 10px 0 4px;'>AV. GERAL PELA CLASSE:</span>" &
+                          Concat(
+                              colClasses As _lk,
+                              "<span style='display:inline-block;font-size:10px;font-weight:700;padding:2px 8px;margin-right:6px;background:" &
+                              _lk.cor_hex & ";color:" & _lk.cor_texto & ";'>" & _lk.rotulo & "</span>"
                           ) &
                           "</td>" &
                           "<td style='padding:8px 26px;font-size:9px;font-weight:700;letter-spacing:.12em;color:" & hxTextoFraco & ";white-space:nowrap;'>CONTORNO = PORTÃO</td>" &
