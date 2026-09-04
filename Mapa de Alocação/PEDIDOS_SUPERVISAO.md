@@ -170,8 +170,10 @@ Onde está, uma vez por tela:
 <div style='...letter-spacing:.24em...'>ASUR</div>
 ```
 
-Falta em: `scrMapaPatio`, `scrMapaInicio`, `scrMapaReferencia`, `scrMapaEquip`, `scrMapaRegra`,
-`scrMapaImport` — todas. Riscar da lista conforme forem saindo.
+Falta em: `scrMapaInicio`, `scrMapaReferencia`, `scrMapaEquip`, `scrMapaRegra`, `scrMapaImport`.
+Riscar da lista conforme forem saindo.
+
+- ~~`scrMapaPatio`~~ — feita em 04/09/2026, na passada do botão de recolher a legenda.
 
 ⚠️ Na `scrMapaInicio` o rótulo tem `letter-spacing` maior e fica sozinho numa linha de 11px; em
 `ASUR BRASIL` vale conferir se ainda cabe sem quebrar.

@@ -6,6 +6,7 @@ Screens:
         =If(IsBlank(varAero), Set(varAero, First(colAerosMapa).Aeroporto));
         If(IsBlank(varAeroNome), Set(varAeroNome, First(colAerosMapa).Aeroporto));
         Set(varMapaVisivel, true);
+        Set(varLegendaAberta, Coalesce(varLegendaAberta, true));
         Set(varPainelAberto, false);
         Set(varAlocSel, Blank());
         Set(varNovoIni, -1);
@@ -158,7 +159,7 @@ Screens:
                           ="<div style='" & htmlFonte & "color:" & hxTextoBarra & ";'>" &
                           If(
                               varMenuAberto,
-                              "<div style='font-size:10px;letter-spacing:.24em;font-weight:700;opacity:.6;'>ASUR</div><div style='font-size:16px;font-weight:800;letter-spacing:.01em;margin-top:2px;'>MAPA DE ALOCAÇÃO</div>",
+                              "<div style='font-size:10px;letter-spacing:.24em;font-weight:700;opacity:.6;'>ASUR BRASIL</div><div style='font-size:16px;font-weight:800;letter-spacing:.01em;margin-top:2px;'>MAPA DE ALOCAÇÃO</div>",
                               "<div style='font-size:17px;font-weight:800;text-align:left;margin-left:12px;'>MA</div>"
                           ) &
                           "</div>"
@@ -1523,6 +1524,27 @@ Screens:
                                             )
                                           Text: =""
                                           Tooltip: =Coalesce(LookUp(ThisItem.trechos As _t, _t.ini < 1440 And _t.fim > 1380).dica_txt, "")
+                  - btnLegendaMap:
+                      Control: Button@0.0.45
+                      Properties:
+                        Align: =Align.Left
+                        AlignInContainer: =AlignInContainer.Start
+                        Appearance: ='ButtonCanvas.Appearance'.Secondary
+                        BasePaletteColor: =thmTextoFraco
+                        BorderRadius: =0
+                        FontColor: =thmTextoFraco
+                        FontSize: =10
+                        FontWeight: =FontWeight.Semibold
+                        Height: =28
+                        Icon: =If(varLegendaAberta, "ChevronDown", "ChevronUp")
+                        IconStyle: ='ButtonCanvas.IconStyle'.Filled
+                        LayoutMinHeight: =28
+                        LayoutMinWidth: =0
+                        OnSelect: =Set(varLegendaAberta, !varLegendaAberta)
+                        PaddingLeft: =14
+                        PaddingRight: =14
+                        Text: =If(varLegendaAberta, "OCULTAR LEGENDA", "LEGENDA")
+                        Width: =176
                   - htmLegendaMap:
                       Control: HtmlViewer@2.1.0
                       Properties:
@@ -1532,35 +1554,36 @@ Screens:
                         Font: =thmFonte
                         HtmlText: |-
                           ="<table style='width:100%;border-collapse:collapse;" & htmlFonte & "border-top:1px solid " & hxBorda & ";'><tr>" &
-                          "<td style='padding:8px 26px;font-size:9px;font-weight:700;letter-spacing:.12em;color:" & hxTextoFraco & ";white-space:nowrap;'>PREENCHIMENTO = COMPANHIA</td>" &
-                          "<td style='padding:8px 0;'>" &
+                          "<td style='padding:4px 12px 4px 0;font-size:9px;font-weight:700;letter-spacing:.1em;color:" & hxTextoFraco & ";white-space:nowrap;'>PREENCHIMENTO = COMPANHIA</td>" &
+                          "<td style='padding:4px 0;'>" &
                           Concat(
                               Sort(colCias, ordem, SortOrder.Ascending) As _lc,
-                              "<span style='display:inline-block;font-size:10px;font-weight:700;padding:2px 8px;margin-right:6px;background:" &
+                              "<span style='display:inline-block;font-size:9px;font-weight:700;padding:1px 5px;margin-right:3px;background:" &
                               _lc.cor_hex & ";color:" & _lc.cor_texto & ";'>" & _lc.sigla & "</span>"
                           ) &
-                          "<span style='font-size:9px;color:" & hxTextoFraco & ";margin:0 10px 0 4px;'>AV. GERAL PELA CLASSE:</span>" &
+                          "<span style='font-size:9px;color:" & hxTextoFraco & ";margin:0 5px 0 3px;'>AV. GERAL:</span>" &
                           Concat(
                               colClasses As _lk,
-                              "<span style='display:inline-block;font-size:10px;font-weight:700;padding:2px 8px;margin-right:6px;background:" &
+                              "<span style='display:inline-block;font-size:9px;font-weight:700;padding:1px 5px;margin-right:3px;background:" &
                               _lk.cor_hex & ";color:" & _lk.cor_texto & ";'>" & _lk.rotulo & "</span>"
                           ) &
                           "</td>" &
-                          "<td style='padding:8px 26px;font-size:9px;font-weight:700;letter-spacing:.12em;color:" & hxTextoFraco & ";white-space:nowrap;'>CONTORNO = PORTÃO</td>" &
-                          "<td style='padding:8px 0;'>" &
+                          "<td style='padding:4px 12px;font-size:9px;font-weight:700;letter-spacing:.1em;color:" & hxTextoFraco & ";white-space:nowrap;'>CONTORNO = PORTÃO</td>" &
+                          "<td style='padding:4px 0;'>" &
                           Concat(
                               Sort(colPortoes, ordem, SortOrder.Ascending) As _lp,
-                              "<span style='display:inline-block;font-size:10px;font-weight:700;padding:2px 8px;margin-right:6px;background:" &
-                              hxSuperficie & ";color:" & hxTexto & ";border:3px solid " & _lp.cor_hex & ";'>" & _lp.portao & "</span>"
+                              "<span style='display:inline-block;font-size:9px;font-weight:700;padding:1px 5px;margin-right:3px;background:" &
+                              hxSuperficie & ";color:" & hxTexto & ";border:2px solid " & _lp.cor_hex & ";'>" & _lp.portao & "</span>"
                           ) &
                           "</td>" &
-                          "<td style='padding:8px 26px 8px 0;font-size:9px;color:" & hxTextoFraco & ";white-space:nowrap;'>" &
-                          "<span style='background:" & hxVermelho & ";color:" & hxTextoBarra & ";padding:0 4px;font-weight:700;'>P</span> voo pesquisado &nbsp;&middot;&nbsp; " &
-                          "<span style='background:" & hxInternacional & ";color:" & hxTexto & ";padding:0 4px;font-weight:700;'>I</span> voo internacional &nbsp;&middot;&nbsp; " &
-                          "<span style='background:" & hxTextoFraco & ";color:" & hxTextoBarra & ";padding:0 4px;font-weight:700;'>INTERDITADO</span> posição bloqueada &nbsp;&middot;&nbsp; " &
+                          "<td style='padding:4px 0 4px 12px;font-size:9px;color:" & hxTextoFraco & ";white-space:nowrap;'>" &
+                          "<span style='background:" & hxVermelho & ";color:" & hxTextoBarra & ";padding:0 3px;font-weight:700;'>P</span> pesquisado &nbsp;&middot;&nbsp; " &
+                          "<span style='background:" & hxInternacional & ";color:" & hxTexto & ";padding:0 3px;font-weight:700;'>I</span> internacional &nbsp;&middot;&nbsp; " &
+                          "<span style='background:" & hxTextoFraco & ";color:" & hxTextoBarra & ";padding:0 3px;font-weight:700;'>INTERDITADO</span> posição bloqueada &nbsp;&middot;&nbsp; " &
                           "<span style='font-weight:700;color:" & hxTexto & ";'>&laquo;&nbsp;&raquo;</span> continua noutro dia</td>" &
                           "</tr></table>"
                         Size: =10
+                        Visible: =varLegendaAberta
                   - tmrSyncMap:
                       Control: Timer@2.1.0
                       Properties:
