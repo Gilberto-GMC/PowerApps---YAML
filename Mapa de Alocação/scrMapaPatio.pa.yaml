@@ -1678,33 +1678,116 @@ Screens:
                   TemplatePadding: =0
                   TemplateSize: =46
                 Children:
-                  - btnVooMap:
-                      Control: Button@0.0.45
+                  - cntLinhaVooMap:
+                      Control: GroupContainer@1.5.0
+                      Variant: AutoLayout
                       Properties:
-                        Align: =Align.Left
-                        Appearance: =If(varAlocSel.id = ThisItem.id, 'ButtonCanvas.Appearance'.Primary, 'ButtonCanvas.Appearance'.Secondary)
-                        BasePaletteColor: =ColorValue(Coalesce(LookUp(colCias As _c, _c.sigla = ThisItem.cia).cor_hex, hxTextoFraco))
-                        BorderRadius: =0
-                        FontSize: =11
-                        FontWeight: =FontWeight.Semibold
+                        DropShadow: =DropShadow.None
+                        Fill: =thmTransparente
                         Height: =44
-                        OnSelect: |-
-                          =Set(varAlocSel, ThisItem);
-                          Select(btnAbrirEdicaoMap)
-                        PaddingLeft: =10
-                        PaddingRight: =10
-                        Text: |-
-                          =Trim(Coalesce(ThisItem.cia, "") & " " & Coalesce(ThisItem.prefixo, "")) & " " & Coalesce(ThisItem.voo_ida, "") &
-                          If(!IsBlank(ThisItem.voo_volta), "/" & ThisItem.voo_volta, "") &
-                          If(ThisItem.tipo <> "VOO", " · " & ThisItem.tipo, "") &
-                          "   " &
-                          Text(Int(ThisItem.h_ini / 60), "00") & ":" & Text(Mod(ThisItem.h_ini, 60), "00") & "–" &
-                          Text(Int(ThisItem.h_fim / 60), "00") & ":" & Text(Mod(ThisItem.h_fim, 60), "00") &
-                          If(ThisItem.data_f <> ThisItem.data_ini, "   " & Text(ThisItem.data_ini, "dd/mm") & " → " & Text(ThisItem.data_f, "dd/mm"), "") &
-                          If(!IsBlank(ThisItem.portao), "   PORTÃO " & ThisItem.portao, "") &
-                          If(ThisItem.pesq = 1, "   PESQUISADO", "") &
-                          If(ThisItem.intl = 1, "   INTERNACIONAL", "")
-                        Width: =Parent.Width - 18
+                        LayoutAlignItems: =LayoutAlignItems.Stretch
+                        LayoutDirection: =LayoutDirection.Horizontal
+                        LayoutGap: =2
+                        LayoutMinHeight: =0
+                        LayoutMinWidth: =0
+                        RadiusBottomLeft: =0
+                        RadiusBottomRight: =0
+                        RadiusTopLeft: =0
+                        RadiusTopRight: =0
+                        Width: =galVoosMap.Width - 14
+                      Children:
+                        - btnVooMap:
+                            Control: Button@0.0.45
+                            Properties:
+                              Align: =Align.Left
+                              FillPortions: =1
+                              LayoutMinWidth: =0
+                              Appearance: =If(varAlocSel.id = ThisItem.id, 'ButtonCanvas.Appearance'.Primary, 'ButtonCanvas.Appearance'.Secondary)
+                              BasePaletteColor: =ColorValue(Coalesce(LookUp(colCias As _c, _c.sigla = ThisItem.cia).cor_hex, hxTextoFraco))
+                              BorderRadius: =0
+                              FontSize: =11
+                              FontWeight: =FontWeight.Semibold
+                              Height: =44
+                              OnSelect: |-
+                                =Set(varAlocSel, ThisItem);
+                                Select(btnAbrirEdicaoMap)
+                              PaddingLeft: =10
+                              PaddingRight: =10
+                              Text: |-
+                                =Trim(Coalesce(ThisItem.cia, "") & " " & Coalesce(ThisItem.prefixo, "")) & " " & Coalesce(ThisItem.voo_ida, "") &
+                                If(!IsBlank(ThisItem.voo_volta), "/" & ThisItem.voo_volta, "") &
+                                If(ThisItem.tipo <> "VOO", " · " & ThisItem.tipo, "") &
+                                "   " &
+                                Text(Int(ThisItem.h_ini / 60), "00") & ":" & Text(Mod(ThisItem.h_ini, 60), "00") & "–" &
+                                Text(Int(ThisItem.h_fim / 60), "00") & ":" & Text(Mod(ThisItem.h_fim, 60), "00") &
+                                If(ThisItem.data_f <> ThisItem.data_ini, "   " & Text(ThisItem.data_ini, "dd/mm") & " → " & Text(ThisItem.data_f, "dd/mm"), "") &
+                                If(!IsBlank(ThisItem.portao), "   PORTÃO " & ThisItem.portao, "") &
+                                If(ThisItem.pesq = 1, "   PESQUISADO", "") &
+                                If(ThisItem.intl = 1, "   INTERNACIONAL", "")
+                        - btnNoPatioMap:
+                            Control: Button@0.0.45
+                            Properties:
+                              Appearance: ='ButtonCanvas.Appearance'.Secondary
+                              BasePaletteColor: =If(ThisItem.cond = "NO PATIO", thmVerde, thmTextoFraco)
+                              BorderRadius: =0
+                              DisplayMode: =If(varPodeEditar, DisplayMode.Edit, DisplayMode.Disabled)
+                              FillPortions: =0
+                              FontColor: =If(ThisItem.cond = "NO PATIO", thmVerde, thmTextoFraco)
+                              Height: =44
+                              Icon: ="Airplane"
+                              IconStyle: ='ButtonCanvas.IconStyle'.Filled
+                              LayoutMinWidth: =0
+                              OnSelect: |-
+                                =UpdateContext(
+                                    {
+                                        locErroCond: IsError(
+                                            Patch(
+                                                tb_alocacoesMapa,
+                                                LookUp(tb_alocacoesMapa, ID = ThisItem.id),
+                                                { condicao: If(ThisItem.cond = "NO PATIO", "PREVISTO", "NO PATIO") }
+                                            )
+                                        )
+                                    }
+                                );
+                                If(
+                                    locErroCond,
+                                    Notify("Não foi possível mudar a condição. Nada foi alterado.", NotificationType.Error, 6000),
+                                    Select(btnAtualizarMap)
+                                )
+                              Text: =""
+                              Width: =42
+                        - btnConcluidoMap:
+                            Control: Button@0.0.45
+                            Properties:
+                              Appearance: ='ButtonCanvas.Appearance'.Secondary
+                              BasePaletteColor: =If(ThisItem.cond = "FINALIZADO", thmPrimaria, thmTextoFraco)
+                              BorderRadius: =0
+                              DisplayMode: =If(varPodeEditar, DisplayMode.Edit, DisplayMode.Disabled)
+                              FillPortions: =0
+                              FontColor: =If(ThisItem.cond = "FINALIZADO", thmPrimaria, thmTextoFraco)
+                              Height: =44
+                              Icon: ="Checkmark"
+                              IconStyle: ='ButtonCanvas.IconStyle'.Filled
+                              LayoutMinWidth: =0
+                              OnSelect: |-
+                                =UpdateContext(
+                                    {
+                                        locErroCond: IsError(
+                                            Patch(
+                                                tb_alocacoesMapa,
+                                                LookUp(tb_alocacoesMapa, ID = ThisItem.id),
+                                                { condicao: If(ThisItem.cond = "FINALIZADO", "PREVISTO", "FINALIZADO") }
+                                            )
+                                        )
+                                    }
+                                );
+                                If(
+                                    locErroCond,
+                                    Notify("Não foi possível mudar a condição. Nada foi alterado.", NotificationType.Error, 6000),
+                                    Select(btnAtualizarMap)
+                                )
+                              Text: =""
+                              Width: =42
             - cntFormMap:
                 Control: GroupContainer@1.5.0
                 Variant: AutoLayout

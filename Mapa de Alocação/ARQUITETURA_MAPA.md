@@ -818,3 +818,25 @@ Uma armadilha que apareceu na reforma e vale saber: `colVizSel` já era o nome d
 seletor que o dropdown antigo usava, com coluna `Value`. Reusar o nome para a lista de posições
 afetadas teria dado colisão silenciosa, porque o `btnRecarregarRgr` a reconstrói a cada recarga. A nova
 chama-se `colAfetadasRgr`, e o seletor antigo foi removido junto com o dropdown.
+
+---
+
+## Condição em um toque, na lista do painel
+
+Pedido do supervisor. A condição já existia como campo do formulário, mas mudar "previsto" para "no
+pátio" exigia abrir o registro, trocar no seletor e salvar — três passos para um fato que o operador
+constata olhando pela janela.
+
+A lista de voos do painel ganhou dois botões por linha: **avião** alterna previsto ↔ no pátio, e
+**visto** alterna para finalizado. Os dois gravam direto e recarregam a grade; a cor do ícone diz o
+estado atual. Ambos são alternadores, não ações de mão única — errar o toque se desfaz com outro.
+
+**A linha virou container AutoLayout** para isso. Não dá para posicionar os botões com `X` dentro de
+galeria: o Studio descarta a propriedade ao colar a tela, e todos empilhariam no canto. É o mesmo
+desenho da camada de clique da grade, e pelo mesmo motivo.
+
+**Uma armadilha de edição que apareceu aqui**, e que vale para qualquer transformação parecida: o
+botão da linha tinha uma propriedade `Width` **depois** do bloco multilinha de `Text`. Inserir os
+botões novos ancorando no fim do texto deixou esse `Width` órfão, colado no último botão inserido —
+YAML com chave duplicada, tela quebrada. Ao inserir irmãos depois de um controle, a âncora tem que ser
+o fim do controle, não o fim da propriedade mais visível dele.
