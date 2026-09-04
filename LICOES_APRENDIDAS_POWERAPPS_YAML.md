@@ -1915,3 +1915,6 @@ de cinco telas. O custo do erro foi uma tela recusada e dois minutos.
 mas é para leitor de tela — não desenha balão. O caminho que funcionaria é `HtmlViewer` com atributo
 `title`, já provado neste projeto na dica de mouse da grade, com camada de botões invisíveis por cima
 para o clique — o mesmo desenho da grade. Funciona, mas é caro para um balão de ajuda.
+
+**Decidido em 04/09/2026: fica sem tooltip.** O menu recolhido é modo secundário, e refazê-lo em
+HTML só para o balão não se paga. Não reabrir sem pedido novo.
