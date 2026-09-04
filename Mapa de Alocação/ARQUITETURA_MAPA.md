@@ -531,3 +531,41 @@ barra diz isso.
 registros já gravados e diria quantos aquela regra teria recusado. É o que pega regra larga demais
 **antes** de ela travar a operação. Ficou de fora desta entrega de propósito, para não estrear duas
 coisas ao mesmo tempo.
+
+---
+
+## Por que a checagem de envergadura continua inerte
+
+Tentativa de 04/09/2026, medida e descartada.
+
+A ideia era dispensar o preenchimento de 25 `env_max` à mão: cada posição já declara `aeronave_max`
+em texto (`"B-738"`, `"EMB. E-2"`, `"B-767 CARGO"`), e o catálogo `tb_equipamentos` tem envergadura por
+equipamento. Bastaria cruzar os dois. A coluna **`equip_max`** foi acrescentada a `colPosicoes` com o
+código do catálogo correspondente, e ficou — é dado correto e útil.
+
+**O que a medição mostrou:** ligada assim, a checagem rejeitaria **399 dos 698 voos de setembro, 57%**.
+
+| quantos | caso |
+|---|---|
+| 166 | A320 (35,80 m) na T6, limite B738 = 35,79 m |
+| 125 | B738 (35,79 m) na T3, limite E295 = 35,10 m |
+| 33 | A319 (35,80 m) na T6 |
+| 32 | A320 na T4 |
+| 43 | outros |
+
+São dois defeitos diferentes de premissa:
+
+1. **`aeronave_max` nomeia uma classe de porte, não um teto em centímetros.** A320 e 737-800 diferem
+   em **1 cm** e são operacionalmente do mesmo tamanho. Comparar envergadura exata transforma isso em
+   proibição.
+2. **A T3 recebe 737 rotineiramente** — é a segunda preferência da GOL — mas declara `"EMB. E-2"`. Ou a
+   declaração está errada, ou significa outra coisa que não "maior aeronave aceita".
+
+**O que seria preciso decidir**, e não é decisão de quem programa: uma tolerância resolveria o primeiro
+caso (1 m já bastaria), mas escolher esse número olhando para os dados que se quer aprovar é fabricar
+uma margem de segurança aeronáutica a partir de estatística. **O limite real não é envergadura, é
+distância de ponta de asa**, e esse número tem que vir da operação.
+
+Enquanto isso: `locEnvMax` fica **calculado** no `btnSalvarMap`, pronto para uso, e a validação segue
+comparando `env_max`, que é `0` em todas as posições — inerte, como antes. Trocar uma linha liga tudo,
+quando os limites existirem.

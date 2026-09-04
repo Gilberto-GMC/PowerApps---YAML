@@ -94,32 +94,32 @@ As 25 posições do SBNF **na ordem visual exata da planilha** (`Mapa de Alocaç
 // aeroporto: ICAO dono da posição — filtro para quando entrar um segundo aeroporto
 colPosicoes =
 Table(
-    { aeroporto: "NAVEGANTES"; id: 1;  patio: "PRINCIPAL";  posicao: "T1";  ordem: 1;  aeronave_max: "B-738";    classe: "";            env_max: 0; tipo: "PONTE";     contingencia: 0; ocupa: "" };
-    { aeroporto: "NAVEGANTES"; id: 2;  patio: "PRINCIPAL";  posicao: "T2";  ordem: 2;  aeronave_max: "EMB. E-2"; classe: "";            env_max: 0; tipo: "PONTE";     contingencia: 0; ocupa: "" };
-    { aeroporto: "NAVEGANTES"; id: 3;  patio: "PRINCIPAL";  posicao: "T3";  ordem: 3;  aeronave_max: "EMB. E-2"; classe: "";            env_max: 0; tipo: "PONTE";     contingencia: 0; ocupa: "" };
-    { aeroporto: "NAVEGANTES"; id: 4;  patio: "PRINCIPAL";  posicao: "T4";  ordem: 4;  aeronave_max: "B-738";    classe: "";            env_max: 0; tipo: "PONTE";     contingencia: 0; ocupa: "" };
-    { aeroporto: "NAVEGANTES"; id: 5;  patio: "PRINCIPAL";  posicao: "T5";  ordem: 5;  aeronave_max: "B-738";    classe: "";            env_max: 0; tipo: "PONTE";     contingencia: 0; ocupa: "" };
-    { aeroporto: "NAVEGANTES"; id: 6;  patio: "PRINCIPAL";  posicao: "T6";  ordem: 6;  aeronave_max: "B-738";    classe: "";            env_max: 0; tipo: "PONTE";     contingencia: 0; ocupa: "" };
-    { aeroporto: "NAVEGANTES"; id: 26; patio: "PRINCIPAL";  posicao: "T6C"; ordem: 6,5; aeronave_max: "B-767 CARGO"; classe: "";            env_max: 0; tipo: "REMOTA";    contingencia: 0; ocupa: "T5,T6" };
-    { aeroporto: "NAVEGANTES"; id: 7;  patio: "PRINCIPAL";  posicao: "T7";  ordem: 7;  aeronave_max: "B-738";    classe: "";            env_max: 0; tipo: "PONTE";     contingencia: 1; ocupa: "" };
-    { aeroporto: "NAVEGANTES"; id: 8;  patio: "PATIO3";    posicao: "A6";  ordem: 8;  aeronave_max: "";         classe: "A";           env_max: 0; tipo: "REMOTA";    contingencia: 0; ocupa: "" };
-    { aeroporto: "NAVEGANTES"; id: 9;  patio: "PATIO3";    posicao: "7";   ordem: 9;  aeronave_max: "";         classe: "B";           env_max: 0; tipo: "REMOTA";    contingencia: 0; ocupa: "" };
-    { aeroporto: "NAVEGANTES"; id: 10; patio: "PATIO3";    posicao: "A10"; ordem: 10; aeronave_max: "";         classe: "A";           env_max: 0; tipo: "REMOTA";    contingencia: 0; ocupa: "" };
-    { aeroporto: "NAVEGANTES"; id: 11; patio: "PATIO3";    posicao: "A7";  ordem: 11; aeronave_max: "";         classe: "A";           env_max: 0; tipo: "REMOTA";    contingencia: 0; ocupa: "" };
-    { aeroporto: "NAVEGANTES"; id: 12; patio: "PATIO3";    posicao: "A8";  ordem: 12; aeronave_max: "";         classe: "A";           env_max: 0; tipo: "REMOTA";    contingencia: 0; ocupa: "" };
-    { aeroporto: "NAVEGANTES"; id: 13; patio: "PATIO3";    posicao: "8";   ordem: 13; aeronave_max: "";         classe: "B";           env_max: 0; tipo: "REMOTA";    contingencia: 0; ocupa: "" };
-    { aeroporto: "NAVEGANTES"; id: 14; patio: "PATIO3";    posicao: "A9";  ordem: 14; aeronave_max: "";         classe: "A";           env_max: 0; tipo: "REMOTA";    contingencia: 0; ocupa: "" };
-    { aeroporto: "NAVEGANTES"; id: 15; patio: "PATIO3";    posicao: "A5";  ordem: 15; aeronave_max: "";         classe: "A";           env_max: 0; tipo: "REMOTA";    contingencia: 0; ocupa: "" };
-    { aeroporto: "NAVEGANTES"; id: 16; patio: "PATIO3";    posicao: "6A";  ordem: 16; aeronave_max: "";         classe: "B";           env_max: 0; tipo: "REMOTA";    contingencia: 0; ocupa: "" };
-    { aeroporto: "NAVEGANTES"; id: 17; patio: "PATIO3";    posicao: "A1";  ordem: 17; aeronave_max: "";         classe: "A";           env_max: 0; tipo: "REMOTA";    contingencia: 0; ocupa: "" };
-    { aeroporto: "NAVEGANTES"; id: 18; patio: "PATIO3";    posicao: "A2";  ordem: 18; aeronave_max: "";         classe: "A";           env_max: 0; tipo: "REMOTA";    contingencia: 0; ocupa: "" };
-    { aeroporto: "NAVEGANTES"; id: 19; patio: "PATIO3";    posicao: "A3";  ordem: 19; aeronave_max: "";         classe: "A";           env_max: 0; tipo: "REMOTA";    contingencia: 0; ocupa: "" };
-    { aeroporto: "NAVEGANTES"; id: 20; patio: "PATIO3";    posicao: "6B";  ordem: 20; aeronave_max: "";         classe: "B";           env_max: 0; tipo: "REMOTA";    contingencia: 0; ocupa: "" };
-    { aeroporto: "NAVEGANTES"; id: 21; patio: "PATIO3";    posicao: "A4";  ordem: 21; aeronave_max: "";         classe: "A";           env_max: 0; tipo: "REMOTA";    contingencia: 0; ocupa: "" };
-    { aeroporto: "NAVEGANTES"; id: 22; patio: "HELIPONTOS"; posicao: "H1";  ordem: 22; aeronave_max: "";         classe: "HELICOPTERO"; env_max: 0; tipo: "HELIPONTO"; contingencia: 0; ocupa: "" };
-    { aeroporto: "NAVEGANTES"; id: 23; patio: "HELIPONTOS"; posicao: "H2";  ordem: 23; aeronave_max: "";         classe: "HELICOPTERO"; env_max: 0; tipo: "HELIPONTO"; contingencia: 0; ocupa: "" };
-    { aeroporto: "NAVEGANTES"; id: 24; patio: "HELIPONTOS"; posicao: "H3";  ordem: 24; aeronave_max: "";         classe: "HELICOPTERO"; env_max: 0; tipo: "HELIPONTO"; contingencia: 0; ocupa: "" };
-    { aeroporto: "NAVEGANTES"; id: 25; patio: "HELIPONTOS"; posicao: "H4";  ordem: 25; aeronave_max: "";         classe: "HELICOPTERO"; env_max: 0; tipo: "HELIPONTO"; contingencia: 0; ocupa: "" }
+    { aeroporto: "NAVEGANTES"; id: 1;  patio: "PRINCIPAL";  posicao: "T1";  ordem: 1;  aeronave_max: "B-738"; equip_max: "B738";    classe: "";            env_max: 0; tipo: "PONTE";     contingencia: 0; ocupa: "" };
+    { aeroporto: "NAVEGANTES"; id: 2;  patio: "PRINCIPAL";  posicao: "T2";  ordem: 2;  aeronave_max: "EMB. E-2"; equip_max: "E295"; classe: "";            env_max: 0; tipo: "PONTE";     contingencia: 0; ocupa: "" };
+    { aeroporto: "NAVEGANTES"; id: 3;  patio: "PRINCIPAL";  posicao: "T3";  ordem: 3;  aeronave_max: "EMB. E-2"; equip_max: "E295"; classe: "";            env_max: 0; tipo: "PONTE";     contingencia: 0; ocupa: "" };
+    { aeroporto: "NAVEGANTES"; id: 4;  patio: "PRINCIPAL";  posicao: "T4";  ordem: 4;  aeronave_max: "B-738"; equip_max: "B738";    classe: "";            env_max: 0; tipo: "PONTE";     contingencia: 0; ocupa: "" };
+    { aeroporto: "NAVEGANTES"; id: 5;  patio: "PRINCIPAL";  posicao: "T5";  ordem: 5;  aeronave_max: "B-738"; equip_max: "B738";    classe: "";            env_max: 0; tipo: "PONTE";     contingencia: 0; ocupa: "" };
+    { aeroporto: "NAVEGANTES"; id: 6;  patio: "PRINCIPAL";  posicao: "T6";  ordem: 6;  aeronave_max: "B-738"; equip_max: "B738";    classe: "";            env_max: 0; tipo: "PONTE";     contingencia: 0; ocupa: "" };
+    { aeroporto: "NAVEGANTES"; id: 26; patio: "PRINCIPAL";  posicao: "T6C"; ordem: 6,5; aeronave_max: "B-767 CARGO"; equip_max: "B763"; classe: "";            env_max: 0; tipo: "REMOTA";    contingencia: 0; ocupa: "T5,T6" };
+    { aeroporto: "NAVEGANTES"; id: 7;  patio: "PRINCIPAL";  posicao: "T7";  ordem: 7;  aeronave_max: "B-738"; equip_max: "B738";    classe: "";            env_max: 0; tipo: "PONTE";     contingencia: 1; ocupa: "" };
+    { aeroporto: "NAVEGANTES"; id: 8;  patio: "PATIO3";    posicao: "A6";  ordem: 8;  aeronave_max: ""; equip_max: "";         classe: "A";           env_max: 0; tipo: "REMOTA";    contingencia: 0; ocupa: "" };
+    { aeroporto: "NAVEGANTES"; id: 9;  patio: "PATIO3";    posicao: "7";   ordem: 9;  aeronave_max: ""; equip_max: "";         classe: "B";           env_max: 0; tipo: "REMOTA";    contingencia: 0; ocupa: "" };
+    { aeroporto: "NAVEGANTES"; id: 10; patio: "PATIO3";    posicao: "A10"; ordem: 10; aeronave_max: ""; equip_max: "";         classe: "A";           env_max: 0; tipo: "REMOTA";    contingencia: 0; ocupa: "" };
+    { aeroporto: "NAVEGANTES"; id: 11; patio: "PATIO3";    posicao: "A7";  ordem: 11; aeronave_max: ""; equip_max: "";         classe: "A";           env_max: 0; tipo: "REMOTA";    contingencia: 0; ocupa: "" };
+    { aeroporto: "NAVEGANTES"; id: 12; patio: "PATIO3";    posicao: "A8";  ordem: 12; aeronave_max: ""; equip_max: "";         classe: "A";           env_max: 0; tipo: "REMOTA";    contingencia: 0; ocupa: "" };
+    { aeroporto: "NAVEGANTES"; id: 13; patio: "PATIO3";    posicao: "8";   ordem: 13; aeronave_max: ""; equip_max: "";         classe: "B";           env_max: 0; tipo: "REMOTA";    contingencia: 0; ocupa: "" };
+    { aeroporto: "NAVEGANTES"; id: 14; patio: "PATIO3";    posicao: "A9";  ordem: 14; aeronave_max: ""; equip_max: "";         classe: "A";           env_max: 0; tipo: "REMOTA";    contingencia: 0; ocupa: "" };
+    { aeroporto: "NAVEGANTES"; id: 15; patio: "PATIO3";    posicao: "A5";  ordem: 15; aeronave_max: ""; equip_max: "";         classe: "A";           env_max: 0; tipo: "REMOTA";    contingencia: 0; ocupa: "" };
+    { aeroporto: "NAVEGANTES"; id: 16; patio: "PATIO3";    posicao: "6A";  ordem: 16; aeronave_max: ""; equip_max: "";         classe: "B";           env_max: 0; tipo: "REMOTA";    contingencia: 0; ocupa: "" };
+    { aeroporto: "NAVEGANTES"; id: 17; patio: "PATIO3";    posicao: "A1";  ordem: 17; aeronave_max: ""; equip_max: "";         classe: "A";           env_max: 0; tipo: "REMOTA";    contingencia: 0; ocupa: "" };
+    { aeroporto: "NAVEGANTES"; id: 18; patio: "PATIO3";    posicao: "A2";  ordem: 18; aeronave_max: ""; equip_max: "";         classe: "A";           env_max: 0; tipo: "REMOTA";    contingencia: 0; ocupa: "" };
+    { aeroporto: "NAVEGANTES"; id: 19; patio: "PATIO3";    posicao: "A3";  ordem: 19; aeronave_max: ""; equip_max: "";         classe: "A";           env_max: 0; tipo: "REMOTA";    contingencia: 0; ocupa: "" };
+    { aeroporto: "NAVEGANTES"; id: 20; patio: "PATIO3";    posicao: "6B";  ordem: 20; aeronave_max: ""; equip_max: "";         classe: "B";           env_max: 0; tipo: "REMOTA";    contingencia: 0; ocupa: "" };
+    { aeroporto: "NAVEGANTES"; id: 21; patio: "PATIO3";    posicao: "A4";  ordem: 21; aeronave_max: ""; equip_max: "";         classe: "A";           env_max: 0; tipo: "REMOTA";    contingencia: 0; ocupa: "" };
+    { aeroporto: "NAVEGANTES"; id: 22; patio: "HELIPONTOS"; posicao: "H1";  ordem: 22; aeronave_max: ""; equip_max: "";         classe: "HELICOPTERO"; env_max: 0; tipo: "HELIPONTO"; contingencia: 0; ocupa: "" };
+    { aeroporto: "NAVEGANTES"; id: 23; patio: "HELIPONTOS"; posicao: "H2";  ordem: 23; aeronave_max: ""; equip_max: "";         classe: "HELICOPTERO"; env_max: 0; tipo: "HELIPONTO"; contingencia: 0; ocupa: "" };
+    { aeroporto: "NAVEGANTES"; id: 24; patio: "HELIPONTOS"; posicao: "H3";  ordem: 24; aeronave_max: ""; equip_max: "";         classe: "HELICOPTERO"; env_max: 0; tipo: "HELIPONTO"; contingencia: 0; ocupa: "" };
+    { aeroporto: "NAVEGANTES"; id: 25; patio: "HELIPONTOS"; posicao: "H4";  ordem: 25; aeronave_max: ""; equip_max: "";         classe: "HELICOPTERO"; env_max: 0; tipo: "HELIPONTO"; contingencia: 0; ocupa: "" }
 );;
 ```
 

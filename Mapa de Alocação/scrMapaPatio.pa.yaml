@@ -406,10 +406,11 @@ Screens:
                                 ="<table style='" & htmlFonte & "color:" & hxTextoBarra & ";border-spacing:14px 0;text-align:right;'><tr>" &
                                 "<td><div style='font-size:9px;letter-spacing:.14em;opacity:.7;'>VOOS</div><div style='font-size:22px;font-weight:800;'>" & CountRows(Filter(colDia, tipo = "VOO")) & "</div></td>" &
                                 "<td><div style='font-size:9px;letter-spacing:.14em;opacity:.7;'>PESQUISADOS</div><div style='font-size:22px;font-weight:800;'>" & CountRows(Filter(colDia, pesq = 1)) & "</div></td>" &
+                                "<td><div style='font-size:9px;letter-spacing:.14em;opacity:.7;'>INTERNACIONAIS</div><div style='font-size:22px;font-weight:800;'>" & CountRows(Filter(colDia, intl = 1)) & "</div></td>" &
                                 "<td><div style='font-size:9px;letter-spacing:.14em;opacity:.7;'>BLOQUEIOS</div><div style='font-size:22px;font-weight:800;'>" & CountRows(Filter(colDia, tipo <> "VOO")) & "</div></td>" &
                                 "</tr></table>"
                               Size: =11
-                              Width: =330
+                              Width: =440
                   - cntAvisoMap:
                       Control: GroupContainer@1.5.0
                       Variant: AutoLayout
@@ -2154,6 +2155,14 @@ Screens:
                                           locEnvDigitada,
                                           Coalesce(LookUp(colEquip As _e, _e.equip = locEquip).envergadura_m, 0)
                                       ),
+                                      locEnvMax: With(
+                                          { _pm: LookUp(colPosicoesAero As _pp, _pp.posicao = drpPosicaoMap.Selected.Value) },
+                                          If(
+                                              _pm.env_max > 0,
+                                              _pm.env_max,
+                                              Coalesce(LookUp(colEquip As _em, _em.equip = _pm.equip_max).envergadura_m, 0)
+                                          )
+                                      ),
                                       locDias: DateDiff(locDataIni, locDataFim, TimeUnit.Days),
                                       locAbsIni: DateDiff(mapDataBase, locDataIni, TimeUnit.Days) * mapMinutosDia + locIni,
                                       locAbsFim: DateDiff(mapDataBase, locDataFim, TimeUnit.Days) * mapMinutosDia + locFim
@@ -2328,6 +2337,10 @@ Screens:
                                       8000
                                   );
                                   UpdateContext({locConfirmaPortao: locPortao & "-" & Text(locConflitoPortao.id), locSalvando: false, locOcupado: Blank()}),
+                                  // INERTE de proposito. Ligar em locEnvMax rejeitaria 57% dos voos reais
+                                  // (399 de 698 em setembro): aeronave_max nomeia uma CLASSE de porte, nao um
+                                  // teto em centimetros — A320 tem 35,80 m contra os 35,79 do B738. Ver
+                                  // ARQUITETURA_MAPA.md. env_max segue 0 em todas, entao isto nunca dispara.
                                   locPos.env_max > 0 And locEnv > locPos.env_max,
                                   Notify(
                                       "Envergadura de " & Text(locEnv) & " m acima do limite da posição " & locPos.posicao &
