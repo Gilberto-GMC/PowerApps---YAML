@@ -239,7 +239,13 @@ separados, e é isso que torna a solução simples:
   minutos absolutos. A envergadura é o último degrau, e não o primeiro, porque existe regra que
   nenhuma medida produz: T4 aceita um 737-800 de 35,79 m e recusa um E195-E2 de 35,10 m.
 - **`envergadura_m` virou derivada.** No salvar vale o que foi digitado; em branco, herda
-  `tb_equipamentos[equipamento].envergadura_m`. O campo continua editável para cauda fora do padrão.
+  `tb_equipamentos[equipamento].envergadura_m`. **Desde 04/09/2026 o campo é só de leitura**, a pedido da supervisão: se a envergadura
+  vem do catálogo, o operador não precisa e não deve mexer. Ele mostra a do equipamento escolhido no
+  momento, não a que estava gravada.
+
+  **O que se perdeu:** a saída para cauda fora do padrão. Quem tiver uma corrige a envergadura em
+  `tb_equipamentos`, que é onde ela mora — mais certo que corrigir registro a registro, mas é um passo
+  a mais e vale saber que existe.
   Enquanto `env_max` estiver `0` em todas as posições, esse degrau não recusa nada — está ligado e
   inerte, esperando o dado.
 - **As regras não são delegáveis e não precisam ser.** `colEquip` e `colRegras` são carregadas uma vez
