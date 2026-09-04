@@ -61,6 +61,42 @@ de copiar o padrão de uma lista para outra de natureza diferente.
 Rodando contra `Programação set.26.xlsx` o esperado é **698 registros e 7 pendências**. Esse número é
 o teste de regressão do script: se mudar sem a planilha ter mudado, alguma configuração foi mexida.
 
+### O formato que a planilha precisa ter
+
+Uma linha por movimento, **pousos e decolagens na mesma aba** — é o par entre eles que forma a
+ocupação da posição. Lido da **primeira aba**, títulos na **linha 1**.
+
+| coluna | conteúdo | como é achada |
+|---|---|---|
+| `Data` | data do movimento | título exatamente `data` |
+| `Horário` | hora do movimento | título **contendo** `horario` |
+| `Empresa` | GOL, LATAM, AZUL ou ABSA | título exatamente `empresa` |
+| `Voo` | número do voo | título exatamente `voo` |
+| `Rota` | ex. `NVT - GRU` | título exatamente `rota` |
+| `Aeronave` | IATA: 73H, 7M8, 320, 319, 295, 76V | título exatamente `aeronave` |
+| `Pouso` | a palavra POUSO ou DECOLAGEM | título **contendo** `pouso` |
+
+A comparação é feita sem acento e em minúsculas, então `HORÁRIO`, `Horario` e `horário previsto`
+casam igual. **A ordem das colunas não importa** e colunas a mais são ignoradas — foi feito assim de
+propósito, porque a ordem muda entre meses.
+
+#### ⚠️ Data ou Horário como texto: a linha some sem avisar
+
+```ts
+const serial = Number(linha[col.data]);
+const fracao = Number(linha[col.hora]);
+if (!serial || isNaN(serial) || isNaN(fracao)) continue;
+```
+
+Se a célula não for **data e hora de verdade do Excel**, `Number()` devolve `NaN` e a linha é pulada:
+**não vira pendência, não entra no total, não aparece em lugar nenhum.** Planilha colada de PDF ou de
+outro sistema costuma vir com data em texto, e o sintoma é só um total menor que o esperado.
+
+É o primeiro lugar a olhar quando o número não fecha. Empresa fora da lista e aeronave sem código
+conhecido, ao contrário, aparecem no resumo — `EMPRESA DESCONHECIDA` vira pendência.
+
+O mesmo quadro está na tela de importação, onde o operador está quando precisa dele.
+
 ### O pareamento
 
 A planilha traz pousos e decolagens em linhas separadas, sem nada que ligue um ao outro. A numeração
