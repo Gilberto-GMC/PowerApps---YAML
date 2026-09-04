@@ -856,3 +856,32 @@ botão da linha tinha uma propriedade `Width` **depois** do bloco multilinha de 
 botões novos ancorando no fim do texto deixou esse `Width` órfão, colado no último botão inserido —
 YAML com chave duplicada, tela quebrada. Ao inserir irmãos depois de um controle, a âncora tem que ser
 o fim do controle, não o fim da propriedade mais visível dele.
+## O aviso de "alterado por outra pessoa" saiu (04/09/2026)
+
+A grade tinha um detector de alteração no servidor: um `Timer` invisível relia a lista a cada
+`mapSyncSegundos` e, se o `Modificado` mais recente do servidor não batesse com o `varUltimaAlt`
+guardado na última carga, mostrava a faixa âmbar *"A programação deste dia foi alterada por outra
+pessoa"*.
+
+**Ele passou a alarmar sozinho, e o defeito foi introduzido aqui.** Quando `colDia` ganhou o filtro
+`condicao <> "FINALIZADO"` — para que movimento finalizado saísse do mapa e liberasse a posição —, a
+consulta do detector **não** ganhou o mesmo filtro. A partir daí:
+
+- `varUltimaAlt` = maior `Modificado` **entre os não-finalizados** (vem de `colDia`);
+- `locServidorAlt` = maior `Modificado` **de todos** (vem do servidor).
+
+Basta um registro finalizado ser o mais recentemente alterado — que é o caso normal, já que finalizar
+*é* uma alteração — e os dois nunca mais empatam. O aviso voltava a cada ciclo do timer, logo depois
+de cada ATUALIZAR. Não havia segunda pessoa mexendo; não havia como haver.
+
+**Removido inteiro** em vez de corrigido, por decisão do Douglas: **um operador por aeroporto**. O
+detector defendia contra edição simultânea que a operação não tem. Saíram `cntAvisoMap`, `tmrSyncMap`,
+`varUltimaAlt`, `locDesatualizado` e `locServidorAlt`. O botão ATUALIZAR continua, e é a única forma
+de reler — que é o que já era, na prática.
+
+⚠️ **`mapSyncSegundos` continua no `App.Formulas` e agora não é lido por ninguém.** Ficou de
+propósito: tirá-lo obrigaria a uma colagem do `App.Formulas` no Studio que nada mais justifica. Sai na
+próxima vez que esse arquivo for ao Studio por outro motivo — mesma regra da marca ASUR BRASIL.
+
+Se um dia houver dois operadores no mesmo aeroporto, o detector volta com **a mesma condição de
+`colDia` nos dois lados** — é essa igualdade, e não o timer, que era a parte difícil.

@@ -17,7 +17,6 @@ Screens:
                 locConfirmaConting: 0,
                 locConfirmaPortao: "", locConfirmaEnv: 0,
                 locConfirmaExcluir: 0,
-                locDesatualizado: false,
                 locSalvando: false,
                 locOcupado: Blank()
             }
@@ -448,55 +447,6 @@ Screens:
                                 "</tr></table>"
                               Size: =11
                               Width: =440
-                  - cntAvisoMap:
-                      Control: GroupContainer@1.5.0
-                      Variant: AutoLayout
-                      Properties:
-                        DropShadow: =DropShadow.None
-                        Fill: =thmAmbar
-                        FillPortions: =0
-                        Height: =40
-                        LayoutAlignItems: =LayoutAlignItems.Center
-                        LayoutDirection: =LayoutDirection.Horizontal
-                        LayoutGap: =12
-                        LayoutMinWidth: =0
-                        PaddingLeft: =26
-                        PaddingRight: =26
-                        RadiusBottomLeft: =0
-                        RadiusBottomRight: =0
-                        RadiusTopLeft: =0
-                        RadiusTopRight: =0
-                        Visible: =locDesatualizado
-                      Children:
-                        - htmAvisoMap:
-                            Control: HtmlViewer@2.1.0
-                            Properties:
-                              AutoHeight: =true
-                              Color: =thmTextoBarra
-                              Fill: =thmAmbar
-                              FillPortions: =1
-                              Font: =thmFonte
-                              HtmlText: ="<div style='" & htmlFonte & "color:" & hxTextoBarra & ";font-size:12px;font-weight:700;'>A programação deste dia foi alterada por outra pessoa. Atualize para ver a versão mais recente.</div>"
-                              LayoutMinWidth: =0
-                              Size: =12
-                        - btnVerNovoMap:
-                            Control: Button@0.0.45
-                            Properties:
-                              Appearance: ='ButtonCanvas.Appearance'.Primary
-                              BasePaletteColor: =thmPrimaria
-                              BorderRadius: =0
-                              FontColor: =thmTextoBarra
-                              FontSize: =12
-                              FontWeight: =FontWeight.Semibold
-                              Height: =30
-                              Icon: ="ArrowClockwise"
-                              IconStyle: ='ButtonCanvas.IconStyle'.Filled
-                              LayoutMinWidth: =0
-                              OnSelect: =Select(btnAtualizarMap)
-                              PaddingLeft: =14
-                              PaddingRight: =14
-                              Text: ="ATUALIZAR AGORA"
-                              Width: =190
                   - cntFiltrosMap:
                       Control: GroupContainer@1.5.0
                       Variant: AutoLayout
@@ -772,7 +722,6 @@ Screens:
                                         )
                                     )
                                 );
-                                Set(varUltimaAlt, Max(colDia, alterado_em));
                                 Set(varCarregadoEm, Now());
                                 ClearCollect(
                                     colGrade,
@@ -983,8 +932,7 @@ Screens:
                                         )
                                     )
                                 );
-                                Set(varPosSel, LookUp(colGrade As _g, _g.id_posicao = varPosSel.id_posicao));
-                                UpdateContext({locDesatualizado: false})
+                                Set(varPosSel, LookUp(colGrade As _g, _g.id_posicao = varPosSel.id_posicao))
                               PaddingLeft: =12
                               PaddingRight: =12
                               Text: ="ATUALIZAR"
@@ -1584,33 +1532,6 @@ Screens:
                           "</tr></table>"
                         Size: =10
                         Visible: =varLegendaAberta
-                  - tmrSyncMap:
-                      Control: Timer@2.1.0
-                      Properties:
-                        AutoPause: =false
-                        AutoStart: =true
-                        Duration: =mapSyncSegundos * 1000
-                        OnTimerEnd: |-
-                          =If(
-                              varMapaVisivel,
-                              UpdateContext(
-                                  {
-                                      locServidorAlt: First(
-                                          Sort(
-                                              Filter(
-                                                  tb_alocacoesMapa,
-                                                  aeroporto = varAero And data_operacao <= varData And data_fim >= varData And ativo = 1
-                                              ),
-                                              Modificado,
-                                              SortOrder.Descending
-                                          )
-                                      ).Modificado
-                                  }
-                              );
-                              UpdateContext({locDesatualizado: !IsBlank(locServidorAlt) And locServidorAlt <> varUltimaAlt})
-                          )
-                        Repeat: =true
-                        Visible: =false
       - recVeuMap:
           Control: Rectangle@2.3.0
           Properties:

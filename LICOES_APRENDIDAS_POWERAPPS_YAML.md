@@ -1982,3 +1982,26 @@ significados cada um quer.
 
 Aqui eram três: `_bl` e `_imped` na grade, e `locBloqueio` no salvar. Os três precisavam de
 `IsBlank(equip_a) And IsBlank(equip_b)`.
+
+## Filtrar uma coleção obriga a filtrar quem se compara com ela (2026-09-04)
+
+O Mapa tinha um detector de "alterado por outra pessoa": comparava o `Modificado` mais recente do
+servidor com o guardado na última carga local. Funcionava.
+
+Quando `colDia` ganhou `condicao <> "FINALIZADO"`, o lado local passou a enxergar menos registros que
+o lado do servidor, que continuou sem filtro. Os dois máximos deixaram de poder empatar, e o aviso
+passou a aparecer para sempre — para um usuário que era a única pessoa mexendo no banco.
+
+**A regra:** um filtro novo numa coleção não é uma mudança local. Toda consulta que precisa
+*concordar* com ela — detector de mudança, contador, KPI, validação — é parte do mesmo conjunto e
+tem que receber o mesmo filtro na mesma passada. Onde há duas consultas que devem casar, o filtro é
+propriedade do par, não de cada uma.
+
+**O agravante foi a intenção.** A segunda consulta foi deixada sem o filtro *de propósito*, com o
+raciocínio de que o detector deveria vigiar a lista inteira. O raciocínio estava certo sobre o que
+vigiar e errado sobre com o que comparar: vigiar tudo e comparar com uma parte é alarme garantido.
+Quando duas consultas divergem por decisão, a decisão precisa dizer o que acontece com a comparação.
+
+**Sintoma que identifica esta classe:** um aviso de concorrência que aparece sem concorrência, e que
+volta logo depois de cada atualização manual. Se atualizar não silencia, o que difere não é o dado —
+é a pergunta feita a cada lado.
