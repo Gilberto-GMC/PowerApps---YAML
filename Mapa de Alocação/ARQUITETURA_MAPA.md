@@ -624,3 +624,36 @@ gravar não pega.
 
 **Custo:** dois conjuntos pequenos (uma posição cada) cruzados entre si, não a lista inteira ao
 quadrado. A janela de 90 dias é o que mantém isso barato — e é uma constante, não um número solto.
+
+---
+
+## Por que o menu continua duplicado nas cinco telas
+
+Avaliado e mantido em 04/09/2026, a pedido do Douglas. **Não reabrir sem fato novo.**
+
+O menu lateral é copiado nas cinco telas que o têm, com sufixo por tela (`btnNavRefMap`,
+`btnNavRefEqp`…). Mudar o menu exige colar as cinco. A alternativa óbvia é um componente canvas.
+
+**O que existe de precedente:** `SAFETY/msapp/Src/Components/HeaderTitle.pa.yaml`, com
+`ComponentDefinitions:` / `DefinitionType: CanvasComponent`, e até um `OnSelect: =Back()` dentro. Mas
+YAML exportado prova que alguém *escreveu* aquilo, não que executa.
+
+**A restrição real é da plataforma:** componente canvas não chama `Navigate()`. Os contornos:
+
+| contorno | resolve o problema? |
+|---|---|
+| propriedade de comportamento de saída, ligada ao `Navigate` em cada tela | **não** — acrescentar item ainda toca as cinco telas |
+| componente faz `Set(varDestino, …)` e cada tela tem um gatilho que navega | sim, mas exige um `Timer` observando variável |
+
+**Duas coisas práticas pesaram mais que a teoria:**
+
+1. **Componente não se cola como tela.** Todo o fluxo de trabalho aqui é colar YAML no Studio.
+   Componentes vivem em árvore própria, e não há evidência de que se criem por colagem.
+2. **O custo atual é menor do que parece.** A alteração é aplicada por script nas cinco telas; o custo
+   humano é colar cinco em vez de uma.
+
+**Se for reabrir**, o caminho é medir antes de converter: um componente mínimo com um botão que faz
+`Set` e uma tela que reage, só para ver se navega. Mesmo método que funcionou no pacote do fluxo —
+montar pequeno e medir, em vez de converter e descobrir.
+
+**O gatilho que justificaria reabrir** é o segundo aeroporto: mais telas, mais cópias.
