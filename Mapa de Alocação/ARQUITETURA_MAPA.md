@@ -657,3 +657,41 @@ YAML exportado prova que alguém *escreveu* aquilo, não que executa.
 montar pequeno e medir, em vez de converter e descobrir.
 
 **O gatilho que justificaria reabrir** é o segundo aeroporto: mais telas, mais cópias.
+
+---
+
+## Absorção do app "Reserva e Alocação de Pátios"
+
+Existiam dois aplicativos alocando aeronaves **nas mesmas posições, sem se enxergarem** — risco real
+de dupla marcação que nenhum dos dois detectava. O Douglas decidiu em 04/09/2026 unificar num app só,
+com o Mapa como base: o outro estava parado, sem histórico a migrar nem usuários a mover.
+
+### O que veio de lá
+
+**O ciclo de vida do registro.** Uma aeronave alocada não está só marcada — ela ainda vai chegar,
+está no pátio, ou já saiu. A coluna `condicao` (`PREVISTO` / `NO PATIO` / `FINALIZADO`) e o selo no
+bloco vieram daí, mais `responsavel` e `contato`, que faltavam para reserva pedida por terceiro.
+
+**`PREVISTO` não ganha selo.** É o estado da esmagadora maioria dos registros; marcá-lo seria repetir
+o erro que o tracejado quase cometeu. Selo só para o que foge do esperado.
+
+O `SALVAR` **não** valida `condicao`: é estado, não restrição.
+
+### O que foi deliberadamente deixado para trás
+
+**As restrições codificadas no desenho.** Lá, `block_P3_A2.Visible = If(Cat_B_6A.Visible Or ...)` — a
+regra de bloqueio vivia na visibilidade de uma imagem, por posição, e boa parte estava comentada. O
+`tb_regrasPosicao` já resolve isso como dado, e é o que permite o botão TESTAR.
+
+**A validação de conflito só na criação.** O ramo de edição fazia `SubmitForm` direto, sem checar
+sobreposição. Editar um horário podia produzir o choque que o cadastro tinha impedido.
+
+**O croqui feito de ~100 controles posicionados à mão** por pátio, dois por posição, mais variantes
+por tipo de aeronave. Cada aeroporto novo era recomeçar do zero. O croqui **vai** ser absorvido, mas
+com a geometria como dado na posição — ver o plano da unificação.
+
+### O que ainda não veio
+
+O croqui e o modelo de perfil por aeroporto (`varAeroUser`, `varPerfilUser`, `varBlocoUser`). Os dois
+dependem do cadastro de posições virar lista, porque exigem campo novo por posição — é a mesma obra
+que o lembrete de 19/09 trata.

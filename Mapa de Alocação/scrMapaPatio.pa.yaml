@@ -48,7 +48,10 @@ Screens:
                       env: If(Value(Text(varAlocSel.env)) > 0, Text(varAlocSel.env), ""),
                       obs: varAlocSel.obs,
                       pesq: varAlocSel.pesq = 1,
-                      intl: varAlocSel.intl = 1
+                      intl: varAlocSel.intl = 1,
+                      cond: Coalesce(LookUp(colCondicoes As _c, _c.cond = varAlocSel.cond).rotulo, "Previsto"),
+                      resp: varAlocSel.resp,
+                      contato: varAlocSel.contato
                   }
               );
               Set(varPosSel, LookUp(colGrade As _g, _g.id_posicao = varAlocSel.id_posicao));
@@ -92,7 +95,10 @@ Screens:
                       env: "",
                       obs: "",
                       pesq: false,
-                      intl: false
+                      intl: false,
+                      cond: "Previsto",
+                      resp: "",
+                      contato: ""
                   }
               );
               UpdateContext({locConfirmaExcluir: 0, locConfirmaConting: 0, locConfirmaPortao: "", locConfirmaEnv: 0, locNonce: locNonce + 1});
@@ -666,6 +672,13 @@ Screens:
                                                         ) &
                                                         If(!IsBlank(_r.prefixo), Char(10) & "Prefixo " & _r.prefixo, "") &
                                                         If(
+                                                            Coalesce(_r.condicao, "PREVISTO") <> "PREVISTO",
+                                                            Char(10) & Coalesce(LookUp(colCondicoes As _cq, _cq.cond = _r.condicao).rotulo, ""),
+                                                            ""
+                                                        ) &
+                                                        If(!IsBlank(_r.responsavel), Char(10) & "Reserva de " & _r.responsavel &
+                                                            If(!IsBlank(_r.contato), " - " & _r.contato, ""), "") &
+                                                        If(
                                                             !IsBlank(_r.equipamento),
                                                             Char(10) & "Equipamento " & Coalesce(LookUp(colEquip As _eq, _eq.equip = _r.equipamento).nome_equip, _r.equipamento),
                                                             ""
@@ -714,6 +727,9 @@ Screens:
                                                 tipo: _r.tipo_registro,
                                                 pesq: _r.pesquisado,
                                                 intl: _r.internacional,
+                                                cond: Coalesce(_r.condicao, "PREVISTO"),
+                                                resp: _r.responsavel,
+                                                contato: _r.contato,
                                                 equip: _r.equipamento,
                                                 env: _r.envergadura_m,
                                                 obs: _r.observacao,
@@ -847,6 +863,14 @@ Screens:
                                                                             _b.intl = 1,
                                                                             "<span style='background:" & hxInternacional & ";color:" & hxTexto & ";padding:0 3px;margin-right:3px;'>I</span>",
                                                                             ""
+                                                                        ) &
+                                                                        With(
+                                                                            { _cd: LookUp(colCondicoes As _cc, _cc.cond = _b.cond) },
+                                                                            If(
+                                                                                IsBlank(_cd.cor_hex) Or _cd.cor_hex = "",
+                                                                                "",
+                                                                                "<span style='background:" & _cd.cor_hex & ";color:" & hxTextoBarra & ";padding:0 3px;margin-right:3px;'>" & _cd.selo & "</span>"
+                                                                            )
                                                                         ) &
                                                                         If(
                                                                             _bloq,
@@ -2084,6 +2108,56 @@ Screens:
                         Height: =44
                         Label: ="Voo internacional (selo I amarelo no bloco)"
                         LabelPosition: ='Toggle.LabelPosition'.Before
+                  - lblCondMap:
+                      Control: Label@2.5.1
+                      Properties:
+                        Color: =thmTextoFraco
+                        Font: =thmFonte
+                        FontWeight: =FontWeight.Bold
+                        Height: =18
+                        Size: =10
+                        Text: ="CONDIÇÃO"
+                  - drpCondMap:
+                      Control: DropDown@0.0.45
+                      Properties:
+                        DefaultSelectedItems: =[Coalesce(varForm.cond, "Previsto")]
+                        DisplayMode: =If(varPodeEditar, DisplayMode.Edit, DisplayMode.View)
+                        Height: =40
+                        Items: =Filter(colCondicoesSel, locNonce >= 0)
+                  - lblRespMap:
+                      Control: Label@2.5.1
+                      Properties:
+                        Color: =thmTextoFraco
+                        Font: =thmFonte
+                        FontWeight: =FontWeight.Bold
+                        Height: =18
+                        Size: =10
+                        Text: ="RESPONSÁVEL PELA RESERVA"
+                  - txtRespMap:
+                      Control: TextInput@0.0.54
+                      Properties:
+                        AccessibleLabel: ="Responsável pela reserva"
+                        DisplayMode: =If(varPodeEditar, DisplayMode.Edit, DisplayMode.View)
+                        Height: =40
+                        Placeholder: ="quem pediu a posição"
+                        Value: =Coalesce(varForm.resp, "")
+                  - lblContatoMap:
+                      Control: Label@2.5.1
+                      Properties:
+                        Color: =thmTextoFraco
+                        Font: =thmFonte
+                        FontWeight: =FontWeight.Bold
+                        Height: =18
+                        Size: =10
+                        Text: ="CONTATO"
+                  - txtContatoMap:
+                      Control: TextInput@0.0.54
+                      Properties:
+                        AccessibleLabel: ="Contato do responsável"
+                        DisplayMode: =If(varPodeEditar, DisplayMode.Edit, DisplayMode.View)
+                        Height: =40
+                        Placeholder: ="telefone ou e-mail"
+                        Value: =Coalesce(varForm.contato, "")
                   - lblObsMap:
                       Control: Label@2.5.1
                       Properties:
@@ -2424,6 +2498,9 @@ Screens:
                                                       internacional: If(tglInternacionalMap.Checked, 1, 0),
                                                       equipamento: locEquip,
                                                       envergadura_m: locEnv,
+                                                      condicao: Coalesce(LookUp(colCondicoes As _cs, _cs.rotulo = drpCondMap.Selected.Value).cond, "PREVISTO"),
+                                                      responsavel: txtRespMap.Value,
+                                                      contato: txtContatoMap.Value,
                                                       observacao: txtObsMap.Value,
                                                       ativo: 1
                                                   }

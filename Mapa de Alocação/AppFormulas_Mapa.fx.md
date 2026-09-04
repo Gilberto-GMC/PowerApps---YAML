@@ -232,10 +232,24 @@ Table(
     { tipo: "RESERVA";    rotulo: "Reserva" }
 );;
 
+// 🛬 Condição do registro — em que ponto do ciclo a aeronave está.
+// Veio do app "Reserva e Alocação de Pátios", que o Mapa absorve. PREVISTO é o padrão e NÃO ganha
+// selo: marcar o estado normal em todo bloco viraria ruído, como já aconteceu com o tracejado.
+// O selo vai como entidade numérica de HTML porque é o que o HtmlViewer da grade renderiza sem dúvida.
+colCondicoes =
+Table(
+    { cond: "PREVISTO";   rotulo: "Previsto";   selo: "";          cor_hex: "" };
+    { cond: "NO PATIO";   rotulo: "No pátio";   selo: "&#9992;";   cor_hex: hxVerde };
+    { cond: "FINALIZADO"; rotulo: "Finalizado"; selo: "&#10003;";  cor_hex: hxTextoFraco }
+);;
+
 // 🔽 Tabelas dos seletores — coluna única `Value`, que é o que o Dropdown moderno exibe.
 // Derivadas das tabelas acima: uma fonte de verdade, sem redigitar nada.
 colAerosSel =
 ForAll(colAerosMapa As _a; { Value: _a.Aeroporto });;
+
+colCondicoesSel =
+ForAll(colCondicoes As _c; { Value: _c.rotulo });;
 
 colTiposSel =
 ForAll(colTiposReg As _t; { Value: _t.rotulo });;
