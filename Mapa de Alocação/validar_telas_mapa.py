@@ -3,7 +3,8 @@
 
 Adaptado de Frotas/validar_telas.py. Mantém as regras do
 LICOES_APRENDIDAS_POWERAPPS_YAML.md e acrescenta três regras de performance
-próprias deste app (21, 22 e 23).
+próprias deste app (21, 22 e 23) mais duas de integridade do registro
+multi-dia (28 e 29).
 """
 import re, sys, os, collections, yaml
 
@@ -16,7 +17,7 @@ FX = os.path.join(BASE, 'AppFormulas_Mapa.fx.md')
 FONTE = "'tb_alocacoesMapa'"
 TELAS_NOMES = {'scrMapaInicio', 'scrMapaPatio', 'scrMapaReferencia'}
 # coleções montadas em runtime — não são named formulas
-RUNTIME = {'colDia', 'colGrade'}
+RUNTIME = {'colDia', 'colGrade', 'colValida'}
 
 erros = []
 
@@ -77,6 +78,21 @@ for t in TELAS:
     # 10 locale — .pa.yaml é invariante
     if ';;' in txt:
         erros.append(f'{nome}: ";;" (pt-BR) dentro de YAML invariante')
+
+    # 28 o filtro do dia é por FAIXA — igualdade some com o registro multi-dia
+    if re.search(r'data_operacao\s*=\s*varData', txt):
+        erros.append(f'{nome}: filtro do dia com "data_operacao = varData"; desde o registro '
+                     f'multi-dia tem que ser "data_operacao <= varData And data_fim >= varData", '
+                     f'senão pernoite e interdição de vários dias somem da grade sem erro')
+    if 'data_operacao' in txt and 'data_fim' not in txt:
+        erros.append(f'{nome}: usa data_operacao sem nunca citar data_fim — filtro de faixa incompleto')
+
+    # 29 atributo title do HTML só pode ser alimentado por texto já escapado
+    for i, l in enumerate(linhas, 1):
+        if 'title=' in l and '.dica' not in l:
+            erros.append(f'{nome}:{i}: title do HTML sem o campo .dica; texto livre cru fecha '
+                         f'o atributo numa aspa simples e desmonta a linha inteira da grade — '
+                         f'monte a dica em colDia, com escape de & < > e aspa, e leia _b.dica aqui')
 
     # 3/4/7 propriedades, tipos e ícones comprovados
     cur = None
