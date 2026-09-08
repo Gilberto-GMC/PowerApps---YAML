@@ -90,7 +90,7 @@ linha por `ocupa` ou `bloqueia` mantém a cor da posição dele.
 
 ---
 
-## 3b. Reserva com o aeroporto como ALTERNATIVA — a fazer
+## 3b. Reserva com o aeroporto como ALTERNATIVA — ✅ feito em 05/09/2026
 
 Esclarecido pelo Douglas em 04/09/2026, e **não era o que eu tinha entendido**. Não é opção de cor: é
 o **aeroporto de alternativa do plano de voo**. A aeronave da aviação geral reserva a posição, mas
@@ -99,14 +99,22 @@ declara que só virá se precisar desviar — provavelmente não vem.
 **Por que importa:** hoje toda reserva ocupa a posição igual. Uma reserva de alternativa segurando um
 box que provavelmente não será usado tira capacidade real do pátio.
 
-**A desenhar, e a decisão não é de quem programa:**
+**O que foi feito**, com a decisão tomada pelo Douglas em 05/09/2026 ("faça conforme a sua
+recomendação"):
 
-- coluna nova em `tb_alocacoesMapa` (`alternativa`, 0/1), do mesmo feitio de `pesquisado` e
-  `internacional`, com marca visual própria no bloco;
-- **conflito: bloqueia ou avisa?** Se uma reserva de alternativa impedisse um voo confirmado de
-  entrar, o pátio perderia posição por um voo que provavelmente não vem. O padrão de aviso com
-  confirmação no segundo toque, já usado no portão e na envergadura, parece o caminho — mas é decisão
-  da operação.
+- coluna `alternativa` (Number 0/1, **não obrigatória**, padrão 0) na `tb_alocacoesMapa`. Registro
+  antigo fica em branco e é lido como 0 — ou seja, reserva já existente continua bloqueando como hoje;
+- **selo `A` ardósia** no bloco, na frente do texto junto de `P` e `I`, porque o bloco trunca no fim.
+  O bloco de reserva passa a dizer `ALTERNATIVA` em vez de `RESERVADO`, e a dica de mouse explica;
+- **conflito avisa e pede confirmação no segundo toque**, no mesmo padrão do portão e da envergadura.
+  A trava é por id do registro em conflito, então muda o conflito, volta a perguntar;
+- o KPI **BLOQUEIOS deixou de contar alternativas**, e elas ganharam um KPI próprio.
+
+⚠️ **A relaxação é assimétrica, de propósito.** O aviso só vale quando o que seria dobrado é uma
+reserva de alternativa. Conflito com registro firme continua **bloqueando**, inclusive quando quem
+chega é uma alternativa: segurar um voo confirmado por causa de uma reserva que provavelmente não vem
+seria o inverso do que o pedido quer. A ordem dos ramos no SALVAR é o que garante isso — o ramo do
+aviso só é alcançado quando a busca por conflito firme voltou vazia.
 
 ## 4. Matrícula quando não há número de voo
 

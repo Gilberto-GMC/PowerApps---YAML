@@ -951,3 +951,41 @@ variável, e **fórmulas nomeadas não enxergam variáveis** — foram para a te
 `locPctHora` e `locFundo`, calculados uma vez por desenho. `colHoras` saiu junto: a régua é montada
 sobre a janela. E `mapSyncSegundos`, órfão desde a remoção do aviso de concorrência, saiu de carona —
 era a "próxima vez que o arquivo fosse ao Studio" prometida ontem.
+
+## Reserva de alternativa: a única exceção à regra de que posição ocupada bloqueia (05/09/2026)
+
+Aviação geral pode reservar posição declarando o aeroporto como **alternativa do plano de voo** — a
+aeronave só vem se precisar desviar, e provavelmente não vem. Coluna `alternativa` (0/1, não
+obrigatória) na `tb_alocacoesMapa`.
+
+**Por que mereceu exceção.** Toda reserva ocupava a posição igual. Uma alternativa segurando um box
+que provavelmente não será usado tira capacidade real do pátio — o oposto do que o mapa existe para
+fazer.
+
+**A regra, e a assimetria que ela tem de propósito:**
+
+| conflito com | o que acontece |
+|---|---|
+| registro firme (voo, interdição, reserva comum) | **bloqueia**, como sempre |
+| reserva de alternativa | **avisa e pede confirmação** no segundo toque em SALVAR |
+
+A segunda linha vale independentemente do que está entrando — inclusive quando quem chega é outra
+alternativa. Já a primeira vale **inclusive quando quem chega é uma alternativa**: segurar um voo
+confirmado por causa de uma reserva que provavelmente não vem seria o inverso do pedido.
+
+Isso é implementado pela **ordem dos ramos** no `SALVAR`, não por uma condição composta: `locConflito`
+agora busca só conflitos com `alt <> 1` e bloqueia; `locConflitoAlt` busca os com `alt = 1` e é
+avaliado depois. Se existe conflito firme, o ramo do aviso nunca é alcançado. Ler a ordem é ler a
+regra.
+
+A trava de confirmação (`locConfirmaAlt`) guarda o **id do registro em conflito**, igual à do portão.
+Mudou a posição ou o horário e o conflito passou a ser com outro registro, ele pergunta de novo — o
+operador nunca herda uma confirmação que deu para outra coisa.
+
+**No visual:** selo `A` ardósia (`hxAlternativa`), na frente do texto ao lado de `P` e `I`, porque o
+bloco trunca no fim; o texto do bloco diz `ALTERNATIVA` em vez de `RESERVADO`; a dica de mouse
+explica. O preenchimento **não** muda — a regra de que preenchimento é companhia (ou classe, na
+aviação geral) já foi defendida três vezes e continua valendo.
+
+**No cabeçalho:** `BLOQUEIOS` deixou de contar alternativas e elas ganharam KPI próprio. Misturá-las
+faria o número de bloqueios sugerir uma ocupação que não existe.

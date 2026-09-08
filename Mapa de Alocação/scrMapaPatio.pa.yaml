@@ -15,7 +15,7 @@ Screens:
                 locPatio: "TODOS",
                 locNonce: 0,
                 locConfirmaConting: 0,
-                locConfirmaPortao: "", locConfirmaEnv: 0,
+                locConfirmaPortao: "", locConfirmaEnv: 0, locConfirmaAlt: "",
                 locConfirmaExcluir: 0,
                 locSalvando: false,
                 locOcupado: Blank()
@@ -171,6 +171,11 @@ Screens:
                                                           "<span style='background:" & hxInternacional & ";color:" & hxTexto & ";padding:0 3px;margin-right:3px;'>I</span>",
                                                           ""
                                                       ) &
+                                                      If(
+                                                          !_imped And _b.alt = 1,
+                                                          "<span style='background:" & hxAlternativa & ";color:" & hxTextoBarra & ";padding:0 3px;margin-right:3px;'>A</span>",
+                                                          ""
+                                                      ) &
                                                       With(
                                                           { _cd: LookUp(colCondicoes As _cc, _cc.cond = _b.cond) },
                                                           If(
@@ -184,7 +189,7 @@ Screens:
                                                           "INDISPONÍVEL &middot; " & _b.posicao_txt,
                                                           _bloq,
                                                           If(IsBlank(_b.prefixo), "", _b.prefixo & " &middot; ") &
-                                                          If(_b.tipo = "INTERDICAO", "INTERDITADO", "RESERVADO"),
+                                                          If(_b.tipo = "INTERDICAO", "INTERDITADO", _b.alt = 1, "ALTERNATIVA", "RESERVADO"),
                                                           Trim(
                                                               Coalesce(_b.cia, "") & " " &
                                                               If(
@@ -275,6 +280,7 @@ Screens:
                       obs: varAlocSel.obs,
                       pesq: varAlocSel.pesq = 1,
                       intl: varAlocSel.intl = 1,
+                      alt: varAlocSel.alt = 1,
                       cond: Coalesce(LookUp(colCondicoes As _c, _c.cond = varAlocSel.cond).rotulo, "Previsto"),
                       resp: varAlocSel.resp,
                       contato: varAlocSel.contato
@@ -322,6 +328,7 @@ Screens:
                       obs: "",
                       pesq: false,
                       intl: false,
+                      alt: false,
                       cond: "Previsto",
                       resp: "",
                       contato: ""
@@ -667,10 +674,11 @@ Screens:
                                 "<td style='text-align:center;'><div style='font-size:9px;letter-spacing:.14em;opacity:.7;'>VOOS</div><div style='font-size:22px;font-weight:800;'>" & CountRows(Filter(colDia, tipo = "VOO")) & "</div></td>" &
                                 "<td style='text-align:center;'><div style='font-size:9px;letter-spacing:.14em;opacity:.7;'>PESQUISADOS</div><div style='font-size:22px;font-weight:800;'>" & CountRows(Filter(colDia, pesq = 1)) & "</div></td>" &
                                 "<td style='text-align:center;'><div style='font-size:9px;letter-spacing:.14em;opacity:.7;'>INTERNACIONAIS</div><div style='font-size:22px;font-weight:800;'>" & CountRows(Filter(colDia, intl = 1)) & "</div></td>" &
-                                "<td style='text-align:center;'><div style='font-size:9px;letter-spacing:.14em;opacity:.7;'>BLOQUEIOS</div><div style='font-size:22px;font-weight:800;'>" & CountRows(Filter(colDia, tipo <> "VOO")) & "</div></td>" &
+                                "<td style='text-align:center;'><div style='font-size:9px;letter-spacing:.14em;opacity:.7;'>BLOQUEIOS</div><div style='font-size:22px;font-weight:800;'>" & CountRows(Filter(colDia, tipo <> "VOO" And alt <> 1)) & "</div></td>" &
+                                "<td style='text-align:center;'><div style='font-size:9px;letter-spacing:.14em;opacity:.7;'>ALTERNATIVAS</div><div style='font-size:22px;font-weight:800;'>" & CountRows(Filter(colDia, alt = 1)) & "</div></td>" &
                                 "</tr></table>"
                               Size: =11
-                              Width: =440
+                              Width: =548
                   - cntFiltrosMap:
                       Control: GroupContainer@1.5.0
                       Variant: AutoLayout
@@ -839,7 +847,7 @@ Screens:
                                                         Switch(
                                                             _r.tipo_registro,
                                                             "INTERDICAO", "POSIÇÃO INTERDITADA",
-                                                            "RESERVA", "POSIÇÃO RESERVADA",
+                                                            "RESERVA", If(Coalesce(_r.alternativa, 0) = 1, "RESERVA DE ALTERNATIVA - so vem se desviar", "POSIÇÃO RESERVADA"),
                                                             Trim(
                                                                 Coalesce(_cia.nome_cia, _r.cia_sigla) & " " &
                                                                 If(
@@ -911,6 +919,7 @@ Screens:
                                                 tipo: _r.tipo_registro,
                                                 pesq: _r.pesquisado,
                                                 intl: _r.internacional,
+                                                alt: Coalesce(_r.alternativa, 0),
                                                 cond: Coalesce(_r.condicao, "PREVISTO"),
                                                 resp: _r.responsavel,
                                                 contato: _r.contato,
@@ -1928,6 +1937,7 @@ Screens:
                           "<td style='padding:4px 0 4px 12px;font-size:9px;color:" & hxTextoFraco & ";white-space:nowrap;'>" &
                           "<span style='background:" & hxVermelho & ";color:" & hxTextoBarra & ";padding:0 3px;font-weight:700;'>P</span> pesquisado &nbsp;&middot;&nbsp; " &
                           "<span style='background:" & hxInternacional & ";color:" & hxTexto & ";padding:0 3px;font-weight:700;'>I</span> internacional &nbsp;&middot;&nbsp; " &
+                          "<span style='background:" & hxAlternativa & ";color:" & hxTextoBarra & ";padding:0 3px;font-weight:700;'>A</span> reserva de alternativa &nbsp;&middot;&nbsp; " &
                           "<span style='background:" & hxTextoFraco & ";color:" & hxTextoBarra & ";padding:0 3px;font-weight:700;'>INTERDITADO</span> posição bloqueada &nbsp;&middot;&nbsp; " &
                           "<span style='font-weight:700;color:" & hxTexto & ";'>&laquo;&nbsp;&raquo;</span> continua noutro dia</td>" &
                           "</tr></table>"
@@ -2605,6 +2615,17 @@ Screens:
                         Height: =44
                         Label: ="Voo internacional (selo I amarelo no bloco)"
                         LabelPosition: ='Toggle.LabelPosition'.Before
+                  - tglAlternativaMap:
+                      Control: Toggle@1.1.5
+                      Properties:
+                        AccessibleLabel: ="Reserva de alternativa"
+                        BasePaletteColor: =thmTextoFraco
+                        Checked: =Coalesce(varForm.alt, false)
+                        DisplayMode: =If(varPodeEditar, DisplayMode.Edit, DisplayMode.View)
+                        FontColor: =thmTexto
+                        Height: =44
+                        Label: ="Aeroporto de ALTERNATIVA (só vem se desviar — selo A no bloco)"
+                        LabelPosition: ='Toggle.LabelPosition'.Before
                   - lblCondMap:
                       Control: Label@2.5.1
                       Properties:
@@ -2792,7 +2813,8 @@ Screens:
                                           h_fim: _v.hora_fim,
                                           abs_ini: DateDiff(mapDataBase, _v.data_operacao, TimeUnit.Days) * mapMinutosDia + _v.hora_inicio,
                                           abs_fim: DateDiff(mapDataBase, _v.data_fim, TimeUnit.Days) * mapMinutosDia + _v.hora_fim,
-                                          equip: _v.equipamento
+                                          equip: _v.equipamento,
+                                          alt: Coalesce(_v.alternativa, 0)
                                       }
                                   )
                               );
@@ -2836,7 +2858,12 @@ Screens:
                                       locConflito: LookUp(
                                           colValida As _o,
                                           !IsBlank(Find("," & _o.posicao_txt & ",", locBloqueio)) And _o.id <> locIdEdit And
-                                          _o.abs_ini < locAbsFim And _o.abs_fim > locAbsIni
+                                          _o.abs_ini < locAbsFim And _o.abs_fim > locAbsIni And _o.alt <> 1
+                                      ),
+                                      locConflitoAlt: LookUp(
+                                          colValida As _oa,
+                                          !IsBlank(Find("," & _oa.posicao_txt & ",", locBloqueio)) And _oa.id <> locIdEdit And
+                                          _oa.abs_ini < locAbsFim And _oa.abs_fim > locAbsIni And _oa.alt = 1
                                       ),
                                       locConflitoPortao: LookUp(
                                           colValida As _g,
@@ -2945,6 +2972,23 @@ Screens:
                                       8000
                                   );
                                   UpdateContext({locSalvando: false, locOcupado: Blank()}),
+                                  // ALTERNATIVA avisa em vez de bloquear: a reserva so vira ocupacao real se a aeronave
+                                  // desviar para ca, e bloquear faria o patio perder posicao por um voo que provavelmente
+                                  // nao vem. Conflito com registro FIRME continua bloqueando — a ordem dos ramos garante
+                                  // isso, porque este so e alcancado quando o locConflito firme veio vazio.
+                                  !IsBlank(locConflitoAlt.id) And locConfirmaAlt <> Text(locConflitoAlt.id),
+                                  Notify(
+                                      "Posição " & locConflitoAlt.posicao_txt & " está reservada como ALTERNATIVA por " &
+                                      Trim(Coalesce(locConflitoAlt.cia, "") & " " & Coalesce(locConflitoAlt.prefixo, "")) & " de " &
+                                      Text(locConflitoAlt.data_ini, "dd/mm") & " " &
+                                      Text(Int(locConflitoAlt.h_ini / 60), "00") & ":" & Text(Mod(locConflitoAlt.h_ini, 60), "00") & " até " &
+                                      Text(locConflitoAlt.data_f, "dd/mm") & " " &
+                                      Text(Int(locConflitoAlt.h_fim / 60), "00") & ":" & Text(Mod(locConflitoAlt.h_fim, 60), "00") &
+                                      ". Alternativa só ocupa a posição se a aeronave desviar para cá. Toque em SALVAR de novo para confirmar.",
+                                      NotificationType.Warning,
+                                      8000
+                                  );
+                                  UpdateContext({locConfirmaAlt: Text(locConflitoAlt.id), locSalvando: false, locOcupado: Blank()}),
                                   !IsBlank(locConflitoPortao.id) And locConfirmaPortao <> locPortao & "-" & Text(locConflitoPortao.id),
                                   Notify(
                                       "Portão " & locPortao & " já está em uso de " &
@@ -3011,6 +3055,7 @@ Screens:
                                                       tipo_registro: locTipo,
                                                       pesquisado: If(tglPesquisadoMap.Checked, 1, 0),
                                                       internacional: If(tglInternacionalMap.Checked, 1, 0),
+                                                      alternativa: If(tglAlternativaMap.Checked, 1, 0),
                                                       equipamento: locEquip,
                                                       envergadura_m: locEnv,
                                                       condicao: Coalesce(LookUp(colCondicoes As _cs, _cs.rotulo = drpCondMap.Selected.Value).cond, "PREVISTO"),
