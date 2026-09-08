@@ -18,13 +18,7 @@ Screens:
                 locConfirmaPortao: "", locConfirmaEnv: 0,
                 locConfirmaExcluir: 0,
                 locSalvando: false,
-                locOcupado: Blank(),
-                locJanIni: 0,
-                locJanMin: mapMinutosDia,
-                locJanFim: mapMinutosDia,
-                locPct10: "0.6944",
-                locPctHora: "4.1666",
-                locFundo: ""
+                locOcupado: Blank()
             }
         );
         ClearCollect(colEquip, Sort(Filter(tb_equipamentos, ativo = 1), ordem, SortOrder.Ascending));
@@ -40,27 +34,7 @@ Screens:
           Properties:
             Height: =1
             OnSelect: |-
-              =UpdateContext(
-                  {
-                      locJanIni: varJanelaIni,
-                      locJanMin: varJanelaMin,
-                      locJanFim: varJanelaIni + varJanelaMin
-                  }
-              );
-              UpdateContext(
-                  {
-                      locPct10: Text(RoundDown(1000 / locJanMin, 4), "0.0000", "en-US"),
-                      locPctHora: Text(RoundDown(6000 / locJanMin, 4), "0.0000", "en-US")
-                  }
-              );
-              UpdateContext(
-                  {
-                      locFundo: "background-image:repeating-linear-gradient(to right," & hxGradeLinha & " 0," & hxGradeLinha &
-                      " 1px,transparent 1px,transparent " & locPctHora & "%),repeating-linear-gradient(to right," & hxGradeFina & " 0," &
-                      hxGradeFina & " 1px,transparent 1px,transparent " & locPct10 & "%);"
-                  }
-              );
-              ClearCollect(
+              =ClearCollect(
                   colGrade,
                   ForAll(
                       Sort(Filter(colPosicoesAero, IsBlank(ocupa)), ordem, SortOrder.Ascending) As _p,
@@ -123,15 +97,15 @@ Screens:
                                       With(
                                           {
                                               _b: Index(_bl, _i.Value),
-                                              _ant: Min(Max(Coalesce(Max(FirstN(_bl, _i.Value - 1), Max(ini, fim)), 0), 0), mapMinutosDia)
+                                              _ant: Min(Max(Coalesce(Max(FirstN(_bl, _i.Value - 1), Max(ini, fim)), varJanelaIni), varJanelaIni), (varJanelaIni + varJanelaMin))
                                           },
                                           With(
                                               {
-                                                  _a: Min(Max(_b.ini, _ant), mapMinutosDia)
+                                                  _a: Min(Max(_b.ini, _ant), (varJanelaIni + varJanelaMin))
                                               },
                                               With(
                                                   {
-                                                      _z: Min(Max(_b.fim, _a), mapMinutosDia),
+                                                      _z: Min(Max(_b.fim, _a), (varJanelaIni + varJanelaMin)),
                                                       _cia: LookUp(colCias As _cc, _cc.sigla = _b.cia),
                                                       _prt: LookUp(colPortoes As _pp, _pp.portao = _b.portao),
                                                       _bloq: _b.tipo <> "VOO",
@@ -174,19 +148,19 @@ Screens:
                                                       dica_txt: _b.dica_txt,
                                                       html: If(
                                                           _a > _ant,
-                                                          "<td style='width:" & Text((_a - _ant) * 100 / mapMinutosDia, "0.000", "en-US") & "%;'>&nbsp;</td>",
+                                                          "<td style='width:" & Text((_a - _ant) * 100 / varJanelaMin, "0.000", "en-US") & "%;'>&nbsp;</td>",
                                                           ""
                                                       ) &
                                                       If(
                                                           _z > _a,
-                                                      "<td title='" & _b.dica & "' style='box-sizing:border-box;width:" & Text((_z - _a) * 100 / mapMinutosDia, "0.000", "en-US") & "%;height:" & (mapAlturaLinha - 14) & "px;" &
+                                                      "<td title='" & _b.dica & "' style='box-sizing:border-box;width:" & Text((_z - _a) * 100 / varJanelaMin, "0.000", "en-US") & "%;height:" & (mapAlturaLinha - 14) & "px;" &
                                                       "background:" & If(_imped, hxGradeLinha, _bloq, hxTextoFraco, _b.pesq = 1, hxVermelho, IsBlank(_b.cia) Or _b.cia = "GER", Coalesce(_cls.cor_hex, Coalesce(_cia.cor_hex, hxBorda)), Coalesce(_cia.cor_hex, hxBorda)) & ";" &
                                                       "color:" & If(_imped, hxTextoFraco, _bloq Or _b.pesq = 1, hxTextoBarra, IsBlank(_b.cia) Or _b.cia = "GER", Coalesce(_cls.cor_texto, Coalesce(_cia.cor_texto, hxTexto)), Coalesce(_cia.cor_texto, hxTexto)) & ";" &
                                                       "border:3px " & If(_imped, "dashed", _pend, "dashed", "solid") & " " &
                                                       If(_imped, hxTextoFraco, _pend And IsBlank(_b.portao), hxAmbar, Coalesce(_prt.cor_hex, hxBorda)) & ";" &
                                                       "font-size:10px;font-weight:700;line-height:1.15;padding:0 3px;text-align:center;overflow:hidden;'>" &
                                                       "<div style='white-space:nowrap;overflow:hidden;text-overflow:ellipsis;'>" &
-                                                      If(_b.de_antes = 1 Or _b.ini < locJanIni, "&laquo;&nbsp;", "") &
+                                                      If(_b.de_antes = 1 Or _b.ini < varJanelaIni, "&laquo;&nbsp;", "") &
                                                       If(
                                                           !_imped And _b.pesq = 1,
                                                           "<span style='background:" & hxTextoBarra & ";color:" & hxVermelho & ";padding:0 3px;margin-right:3px;'>P</span>",
@@ -225,7 +199,7 @@ Screens:
                                                               )
                                                           )
                                                       ) &
-                                                      If(_b.para_depois = 1 Or _b.fim > locJanFim, "&nbsp;&raquo;", "") &
+                                                      If(_b.para_depois = 1 Or _b.fim > (varJanelaIni + varJanelaMin), "&nbsp;&raquo;", "") &
                                                       "</div>" &
                                                       "<div style='font-size:8px;font-weight:600;opacity:.85;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;'>" &
                                                       Text(Int(_b.ini / 60), "00") & ":" & Text(Mod(_b.ini, 60), "00") & "&ndash;" &
@@ -239,7 +213,7 @@ Screens:
                                           )
                                       )
                                   ),
-                                  _ult: Min(Max(Coalesce(Max(_bl, Max(ini, fim)), 0), 0), mapMinutosDia)
+                                  _ult: Min(Max(Coalesce(Max(_bl, Max(ini, fim)), varJanelaIni), varJanelaIni), (varJanelaIni + varJanelaMin))
                               },
                               {
                                   id_posicao: _p.id,
@@ -254,15 +228,15 @@ Screens:
                                   "<div style='font-size:15px;font-weight:800;color:" & hxPrimaria & ";line-height:1.05;'>" & _p.posicao & "</div>" &
                                   "<div style='font-size:8px;font-weight:700;letter-spacing:.08em;color:" & hxTextoFraco & ";margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;'>" & _restricao & "</div>" &
                                   "</td>" &
-                                  "<td style='height:" & mapAlturaLinha & "px;box-sizing:border-box;padding:0;border-top:" & _topo & ";" & locFundo & "'>" &
+                                  "<td style='height:" & mapAlturaLinha & "px;box-sizing:border-box;padding:0;border-top:" & _topo & ";" & "background-image:repeating-linear-gradient(to right," & hxGradeLinha & " 0," & hxGradeLinha & " 1px,transparent 1px,transparent " & Text(RoundDown(6000 / varJanelaMin, 4), "0.0000", "en-US") & "%),repeating-linear-gradient(to right," & hxGradeFina & " 0," & hxGradeFina & " 1px,transparent 1px,transparent " & Text(RoundDown(1000 / varJanelaMin, 4), "0.0000", "en-US") & "%);" & "'>" &
                                   If(
                                       CountRows(_bl) = 0,
                                       "",
                                       "<table style='width:100%;table-layout:fixed;border-collapse:separate;border-spacing:0;'><tr>" &
                                       Concat(_trechos As _t, _t.html) &
                                       If(
-                                          _ult < mapMinutosDia,
-                                          "<td style='width:" & Text((mapMinutosDia - _ult) * 100 / mapMinutosDia, "0.000", "en-US") & "%;'>&nbsp;</td>",
+                                          _ult < (varJanelaIni + varJanelaMin),
+                                          "<td style='width:" & Text(((varJanelaIni + varJanelaMin) - _ult) * 100 / varJanelaMin, "0.000", "en-US") & "%;'>&nbsp;</td>",
                                           ""
                                       ) &
                                       "</tr></table>"
@@ -1201,13 +1175,13 @@ Screens:
                               HtmlText: |-
                                 ="<table style='width:99.3%;table-layout:fixed;border-collapse:separate;border-spacing:0;" & htmlFonte & "'><tr>" &
                                 "<td style='width:" & mapLarguraRotulo & "px;box-sizing:border-box;padding:0 8px 6px 12px;vertical-align:bottom;font-size:9px;font-weight:700;letter-spacing:.14em;color:" & hxTextoFraco & ";'>POSIÇÃO</td>" &
-                                "<td style='box-sizing:border-box;padding:0;" & locFundo & "'>" &
+                                "<td style='box-sizing:border-box;padding:0;" & "background-image:repeating-linear-gradient(to right," & hxGradeLinha & " 0," & hxGradeLinha & " 1px,transparent 1px,transparent " & Text(RoundDown(6000 / varJanelaMin, 4), "0.0000", "en-US") & "%),repeating-linear-gradient(to right," & hxGradeFina & " 0," & hxGradeFina & " 1px,transparent 1px,transparent " & Text(RoundDown(1000 / varJanelaMin, 4), "0.0000", "en-US") & "%);" & "'>" &
                                 "<table style='width:100%;table-layout:fixed;border-collapse:separate;border-spacing:0;'><tr>" &
                                 Concat(
-                                    ForAll(Sequence(Max(locJanMin, 60) / 10, 0) As _k, { m: locJanIni + _k.Value * 10 }) As _c,
+                                    ForAll(Sequence(Max(varJanelaMin, 60) / 10, 0) As _k, { m: varJanelaIni + _k.Value * 10 }) As _c,
                                     With(
                                         { _m: _c.m },
-                                        "<td style='box-sizing:border-box;width:" & locPct10 & "%;padding:2px 0 6px 2px;font-size:9px;font-weight:700;color:" & hxTextoFraco & ";white-space:nowrap;'>" &
+                                        "<td style='box-sizing:border-box;width:" & Text(RoundDown(1000 / varJanelaMin, 4), "0.0000", "en-US") & "%;padding:2px 0 6px 2px;font-size:9px;font-weight:700;color:" & hxTextoFraco & ";white-space:nowrap;'>" &
                                         If(
                                             Mod(_m, 60) = 0,
                                             If(
@@ -1215,7 +1189,7 @@ Screens:
                                                 "<span style='background:" & hxPrimaria & ";color:" & hxTextoBarra & ";padding:1px 4px;'>" & Text(RoundDown(_m / 60, 0), "00") & "</span>",
                                                 Text(RoundDown(_m / 60, 0), "00")
                                             ),
-                                            locJanMin <= 720,
+                                            varJanelaMin <= 720,
                                             "<span style='font-size:7px;font-weight:600;opacity:.45;'>" & Text(Mod(_m, 60), "00") & "</span>",
                                             ""
                                         ) & "</td>"
@@ -1295,15 +1269,15 @@ Screens:
                                           LayoutMinWidth: =0
                                           OnSelect: |-
                                             =If(
-                                                IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < locJanIni + 1 * locJanMin / 36 And _t.fim > locJanIni + 0 * locJanMin / 36).id),
+                                                IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 1 * varJanelaMin / 36 And _t.fim > varJanelaIni + 0 * varJanelaMin / 36).id),
                                                 Set(varPosSel, ThisItem);
-                                                Set(varNovoIni, locJanIni + 0 * locJanMin / 36);
+                                                Set(varNovoIni, varJanelaIni + 0 * varJanelaMin / 36);
                                                 Select(btnAbrirNovoMap),
-                                                Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < locJanIni + 1 * locJanMin / 36 And _t.fim > locJanIni + 0 * locJanMin / 36).id));
+                                                Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 1 * varJanelaMin / 36 And _t.fim > varJanelaIni + 0 * varJanelaMin / 36).id));
                                                 Select(btnAbrirEdicaoMap)
                                             )
                                           Text: =""
-                                          Tooltip: =Coalesce(LookUp(ThisItem.trechos As _t, _t.ini < locJanIni + 1 * locJanMin / 36 And _t.fim > locJanIni + 0 * locJanMin / 36).dica_txt, "")
+                                          Tooltip: =Coalesce(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 1 * varJanelaMin / 36 And _t.fim > varJanelaIni + 0 * varJanelaMin / 36).dica_txt, "")
                                     - lblFx1Map:
                                         Control: Label@2.5.1
                                         Properties:
@@ -1312,15 +1286,15 @@ Screens:
                                           LayoutMinWidth: =0
                                           OnSelect: |-
                                             =If(
-                                                IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < locJanIni + 2 * locJanMin / 36 And _t.fim > locJanIni + 1 * locJanMin / 36).id),
+                                                IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 2 * varJanelaMin / 36 And _t.fim > varJanelaIni + 1 * varJanelaMin / 36).id),
                                                 Set(varPosSel, ThisItem);
-                                                Set(varNovoIni, locJanIni + 1 * locJanMin / 36);
+                                                Set(varNovoIni, varJanelaIni + 1 * varJanelaMin / 36);
                                                 Select(btnAbrirNovoMap),
-                                                Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < locJanIni + 2 * locJanMin / 36 And _t.fim > locJanIni + 1 * locJanMin / 36).id));
+                                                Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 2 * varJanelaMin / 36 And _t.fim > varJanelaIni + 1 * varJanelaMin / 36).id));
                                                 Select(btnAbrirEdicaoMap)
                                             )
                                           Text: =""
-                                          Tooltip: =Coalesce(LookUp(ThisItem.trechos As _t, _t.ini < locJanIni + 2 * locJanMin / 36 And _t.fim > locJanIni + 1 * locJanMin / 36).dica_txt, "")
+                                          Tooltip: =Coalesce(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 2 * varJanelaMin / 36 And _t.fim > varJanelaIni + 1 * varJanelaMin / 36).dica_txt, "")
                                     - lblFx2Map:
                                         Control: Label@2.5.1
                                         Properties:
@@ -1329,15 +1303,15 @@ Screens:
                                           LayoutMinWidth: =0
                                           OnSelect: |-
                                             =If(
-                                                IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < locJanIni + 3 * locJanMin / 36 And _t.fim > locJanIni + 2 * locJanMin / 36).id),
+                                                IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 3 * varJanelaMin / 36 And _t.fim > varJanelaIni + 2 * varJanelaMin / 36).id),
                                                 Set(varPosSel, ThisItem);
-                                                Set(varNovoIni, locJanIni + 2 * locJanMin / 36);
+                                                Set(varNovoIni, varJanelaIni + 2 * varJanelaMin / 36);
                                                 Select(btnAbrirNovoMap),
-                                                Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < locJanIni + 3 * locJanMin / 36 And _t.fim > locJanIni + 2 * locJanMin / 36).id));
+                                                Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 3 * varJanelaMin / 36 And _t.fim > varJanelaIni + 2 * varJanelaMin / 36).id));
                                                 Select(btnAbrirEdicaoMap)
                                             )
                                           Text: =""
-                                          Tooltip: =Coalesce(LookUp(ThisItem.trechos As _t, _t.ini < locJanIni + 3 * locJanMin / 36 And _t.fim > locJanIni + 2 * locJanMin / 36).dica_txt, "")
+                                          Tooltip: =Coalesce(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 3 * varJanelaMin / 36 And _t.fim > varJanelaIni + 2 * varJanelaMin / 36).dica_txt, "")
                                     - lblFx3Map:
                                         Control: Label@2.5.1
                                         Properties:
@@ -1346,15 +1320,15 @@ Screens:
                                           LayoutMinWidth: =0
                                           OnSelect: |-
                                             =If(
-                                                IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < locJanIni + 4 * locJanMin / 36 And _t.fim > locJanIni + 3 * locJanMin / 36).id),
+                                                IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 4 * varJanelaMin / 36 And _t.fim > varJanelaIni + 3 * varJanelaMin / 36).id),
                                                 Set(varPosSel, ThisItem);
-                                                Set(varNovoIni, locJanIni + 3 * locJanMin / 36);
+                                                Set(varNovoIni, varJanelaIni + 3 * varJanelaMin / 36);
                                                 Select(btnAbrirNovoMap),
-                                                Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < locJanIni + 4 * locJanMin / 36 And _t.fim > locJanIni + 3 * locJanMin / 36).id));
+                                                Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 4 * varJanelaMin / 36 And _t.fim > varJanelaIni + 3 * varJanelaMin / 36).id));
                                                 Select(btnAbrirEdicaoMap)
                                             )
                                           Text: =""
-                                          Tooltip: =Coalesce(LookUp(ThisItem.trechos As _t, _t.ini < locJanIni + 4 * locJanMin / 36 And _t.fim > locJanIni + 3 * locJanMin / 36).dica_txt, "")
+                                          Tooltip: =Coalesce(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 4 * varJanelaMin / 36 And _t.fim > varJanelaIni + 3 * varJanelaMin / 36).dica_txt, "")
                                     - lblFx4Map:
                                         Control: Label@2.5.1
                                         Properties:
@@ -1363,15 +1337,15 @@ Screens:
                                           LayoutMinWidth: =0
                                           OnSelect: |-
                                             =If(
-                                                IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < locJanIni + 5 * locJanMin / 36 And _t.fim > locJanIni + 4 * locJanMin / 36).id),
+                                                IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 5 * varJanelaMin / 36 And _t.fim > varJanelaIni + 4 * varJanelaMin / 36).id),
                                                 Set(varPosSel, ThisItem);
-                                                Set(varNovoIni, locJanIni + 4 * locJanMin / 36);
+                                                Set(varNovoIni, varJanelaIni + 4 * varJanelaMin / 36);
                                                 Select(btnAbrirNovoMap),
-                                                Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < locJanIni + 5 * locJanMin / 36 And _t.fim > locJanIni + 4 * locJanMin / 36).id));
+                                                Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 5 * varJanelaMin / 36 And _t.fim > varJanelaIni + 4 * varJanelaMin / 36).id));
                                                 Select(btnAbrirEdicaoMap)
                                             )
                                           Text: =""
-                                          Tooltip: =Coalesce(LookUp(ThisItem.trechos As _t, _t.ini < locJanIni + 5 * locJanMin / 36 And _t.fim > locJanIni + 4 * locJanMin / 36).dica_txt, "")
+                                          Tooltip: =Coalesce(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 5 * varJanelaMin / 36 And _t.fim > varJanelaIni + 4 * varJanelaMin / 36).dica_txt, "")
                                     - lblFx5Map:
                                         Control: Label@2.5.1
                                         Properties:
@@ -1380,15 +1354,15 @@ Screens:
                                           LayoutMinWidth: =0
                                           OnSelect: |-
                                             =If(
-                                                IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < locJanIni + 6 * locJanMin / 36 And _t.fim > locJanIni + 5 * locJanMin / 36).id),
+                                                IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 6 * varJanelaMin / 36 And _t.fim > varJanelaIni + 5 * varJanelaMin / 36).id),
                                                 Set(varPosSel, ThisItem);
-                                                Set(varNovoIni, locJanIni + 5 * locJanMin / 36);
+                                                Set(varNovoIni, varJanelaIni + 5 * varJanelaMin / 36);
                                                 Select(btnAbrirNovoMap),
-                                                Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < locJanIni + 6 * locJanMin / 36 And _t.fim > locJanIni + 5 * locJanMin / 36).id));
+                                                Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 6 * varJanelaMin / 36 And _t.fim > varJanelaIni + 5 * varJanelaMin / 36).id));
                                                 Select(btnAbrirEdicaoMap)
                                             )
                                           Text: =""
-                                          Tooltip: =Coalesce(LookUp(ThisItem.trechos As _t, _t.ini < locJanIni + 6 * locJanMin / 36 And _t.fim > locJanIni + 5 * locJanMin / 36).dica_txt, "")
+                                          Tooltip: =Coalesce(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 6 * varJanelaMin / 36 And _t.fim > varJanelaIni + 5 * varJanelaMin / 36).dica_txt, "")
                                     - lblFx6Map:
                                         Control: Label@2.5.1
                                         Properties:
@@ -1397,15 +1371,15 @@ Screens:
                                           LayoutMinWidth: =0
                                           OnSelect: |-
                                             =If(
-                                                IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < locJanIni + 7 * locJanMin / 36 And _t.fim > locJanIni + 6 * locJanMin / 36).id),
+                                                IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 7 * varJanelaMin / 36 And _t.fim > varJanelaIni + 6 * varJanelaMin / 36).id),
                                                 Set(varPosSel, ThisItem);
-                                                Set(varNovoIni, locJanIni + 6 * locJanMin / 36);
+                                                Set(varNovoIni, varJanelaIni + 6 * varJanelaMin / 36);
                                                 Select(btnAbrirNovoMap),
-                                                Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < locJanIni + 7 * locJanMin / 36 And _t.fim > locJanIni + 6 * locJanMin / 36).id));
+                                                Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 7 * varJanelaMin / 36 And _t.fim > varJanelaIni + 6 * varJanelaMin / 36).id));
                                                 Select(btnAbrirEdicaoMap)
                                             )
                                           Text: =""
-                                          Tooltip: =Coalesce(LookUp(ThisItem.trechos As _t, _t.ini < locJanIni + 7 * locJanMin / 36 And _t.fim > locJanIni + 6 * locJanMin / 36).dica_txt, "")
+                                          Tooltip: =Coalesce(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 7 * varJanelaMin / 36 And _t.fim > varJanelaIni + 6 * varJanelaMin / 36).dica_txt, "")
                                     - lblFx7Map:
                                         Control: Label@2.5.1
                                         Properties:
@@ -1414,15 +1388,15 @@ Screens:
                                           LayoutMinWidth: =0
                                           OnSelect: |-
                                             =If(
-                                                IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < locJanIni + 8 * locJanMin / 36 And _t.fim > locJanIni + 7 * locJanMin / 36).id),
+                                                IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 8 * varJanelaMin / 36 And _t.fim > varJanelaIni + 7 * varJanelaMin / 36).id),
                                                 Set(varPosSel, ThisItem);
-                                                Set(varNovoIni, locJanIni + 7 * locJanMin / 36);
+                                                Set(varNovoIni, varJanelaIni + 7 * varJanelaMin / 36);
                                                 Select(btnAbrirNovoMap),
-                                                Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < locJanIni + 8 * locJanMin / 36 And _t.fim > locJanIni + 7 * locJanMin / 36).id));
+                                                Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 8 * varJanelaMin / 36 And _t.fim > varJanelaIni + 7 * varJanelaMin / 36).id));
                                                 Select(btnAbrirEdicaoMap)
                                             )
                                           Text: =""
-                                          Tooltip: =Coalesce(LookUp(ThisItem.trechos As _t, _t.ini < locJanIni + 8 * locJanMin / 36 And _t.fim > locJanIni + 7 * locJanMin / 36).dica_txt, "")
+                                          Tooltip: =Coalesce(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 8 * varJanelaMin / 36 And _t.fim > varJanelaIni + 7 * varJanelaMin / 36).dica_txt, "")
                                     - lblFx8Map:
                                         Control: Label@2.5.1
                                         Properties:
@@ -1431,15 +1405,15 @@ Screens:
                                           LayoutMinWidth: =0
                                           OnSelect: |-
                                             =If(
-                                                IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < locJanIni + 9 * locJanMin / 36 And _t.fim > locJanIni + 8 * locJanMin / 36).id),
+                                                IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 9 * varJanelaMin / 36 And _t.fim > varJanelaIni + 8 * varJanelaMin / 36).id),
                                                 Set(varPosSel, ThisItem);
-                                                Set(varNovoIni, locJanIni + 8 * locJanMin / 36);
+                                                Set(varNovoIni, varJanelaIni + 8 * varJanelaMin / 36);
                                                 Select(btnAbrirNovoMap),
-                                                Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < locJanIni + 9 * locJanMin / 36 And _t.fim > locJanIni + 8 * locJanMin / 36).id));
+                                                Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 9 * varJanelaMin / 36 And _t.fim > varJanelaIni + 8 * varJanelaMin / 36).id));
                                                 Select(btnAbrirEdicaoMap)
                                             )
                                           Text: =""
-                                          Tooltip: =Coalesce(LookUp(ThisItem.trechos As _t, _t.ini < locJanIni + 9 * locJanMin / 36 And _t.fim > locJanIni + 8 * locJanMin / 36).dica_txt, "")
+                                          Tooltip: =Coalesce(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 9 * varJanelaMin / 36 And _t.fim > varJanelaIni + 8 * varJanelaMin / 36).dica_txt, "")
                                     - lblFx9Map:
                                         Control: Label@2.5.1
                                         Properties:
@@ -1448,15 +1422,15 @@ Screens:
                                           LayoutMinWidth: =0
                                           OnSelect: |-
                                             =If(
-                                                IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < locJanIni + 10 * locJanMin / 36 And _t.fim > locJanIni + 9 * locJanMin / 36).id),
+                                                IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 10 * varJanelaMin / 36 And _t.fim > varJanelaIni + 9 * varJanelaMin / 36).id),
                                                 Set(varPosSel, ThisItem);
-                                                Set(varNovoIni, locJanIni + 9 * locJanMin / 36);
+                                                Set(varNovoIni, varJanelaIni + 9 * varJanelaMin / 36);
                                                 Select(btnAbrirNovoMap),
-                                                Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < locJanIni + 10 * locJanMin / 36 And _t.fim > locJanIni + 9 * locJanMin / 36).id));
+                                                Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 10 * varJanelaMin / 36 And _t.fim > varJanelaIni + 9 * varJanelaMin / 36).id));
                                                 Select(btnAbrirEdicaoMap)
                                             )
                                           Text: =""
-                                          Tooltip: =Coalesce(LookUp(ThisItem.trechos As _t, _t.ini < locJanIni + 10 * locJanMin / 36 And _t.fim > locJanIni + 9 * locJanMin / 36).dica_txt, "")
+                                          Tooltip: =Coalesce(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 10 * varJanelaMin / 36 And _t.fim > varJanelaIni + 9 * varJanelaMin / 36).dica_txt, "")
                                     - lblFx10Map:
                                         Control: Label@2.5.1
                                         Properties:
@@ -1465,15 +1439,15 @@ Screens:
                                           LayoutMinWidth: =0
                                           OnSelect: |-
                                             =If(
-                                                IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < locJanIni + 11 * locJanMin / 36 And _t.fim > locJanIni + 10 * locJanMin / 36).id),
+                                                IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 11 * varJanelaMin / 36 And _t.fim > varJanelaIni + 10 * varJanelaMin / 36).id),
                                                 Set(varPosSel, ThisItem);
-                                                Set(varNovoIni, locJanIni + 10 * locJanMin / 36);
+                                                Set(varNovoIni, varJanelaIni + 10 * varJanelaMin / 36);
                                                 Select(btnAbrirNovoMap),
-                                                Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < locJanIni + 11 * locJanMin / 36 And _t.fim > locJanIni + 10 * locJanMin / 36).id));
+                                                Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 11 * varJanelaMin / 36 And _t.fim > varJanelaIni + 10 * varJanelaMin / 36).id));
                                                 Select(btnAbrirEdicaoMap)
                                             )
                                           Text: =""
-                                          Tooltip: =Coalesce(LookUp(ThisItem.trechos As _t, _t.ini < locJanIni + 11 * locJanMin / 36 And _t.fim > locJanIni + 10 * locJanMin / 36).dica_txt, "")
+                                          Tooltip: =Coalesce(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 11 * varJanelaMin / 36 And _t.fim > varJanelaIni + 10 * varJanelaMin / 36).dica_txt, "")
                                     - lblFx11Map:
                                         Control: Label@2.5.1
                                         Properties:
@@ -1482,15 +1456,15 @@ Screens:
                                           LayoutMinWidth: =0
                                           OnSelect: |-
                                             =If(
-                                                IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < locJanIni + 12 * locJanMin / 36 And _t.fim > locJanIni + 11 * locJanMin / 36).id),
+                                                IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 12 * varJanelaMin / 36 And _t.fim > varJanelaIni + 11 * varJanelaMin / 36).id),
                                                 Set(varPosSel, ThisItem);
-                                                Set(varNovoIni, locJanIni + 11 * locJanMin / 36);
+                                                Set(varNovoIni, varJanelaIni + 11 * varJanelaMin / 36);
                                                 Select(btnAbrirNovoMap),
-                                                Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < locJanIni + 12 * locJanMin / 36 And _t.fim > locJanIni + 11 * locJanMin / 36).id));
+                                                Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 12 * varJanelaMin / 36 And _t.fim > varJanelaIni + 11 * varJanelaMin / 36).id));
                                                 Select(btnAbrirEdicaoMap)
                                             )
                                           Text: =""
-                                          Tooltip: =Coalesce(LookUp(ThisItem.trechos As _t, _t.ini < locJanIni + 12 * locJanMin / 36 And _t.fim > locJanIni + 11 * locJanMin / 36).dica_txt, "")
+                                          Tooltip: =Coalesce(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 12 * varJanelaMin / 36 And _t.fim > varJanelaIni + 11 * varJanelaMin / 36).dica_txt, "")
                                     - lblFx12Map:
                                         Control: Label@2.5.1
                                         Properties:
@@ -1499,15 +1473,15 @@ Screens:
                                           LayoutMinWidth: =0
                                           OnSelect: |-
                                             =If(
-                                                IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < locJanIni + 13 * locJanMin / 36 And _t.fim > locJanIni + 12 * locJanMin / 36).id),
+                                                IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 13 * varJanelaMin / 36 And _t.fim > varJanelaIni + 12 * varJanelaMin / 36).id),
                                                 Set(varPosSel, ThisItem);
-                                                Set(varNovoIni, locJanIni + 12 * locJanMin / 36);
+                                                Set(varNovoIni, varJanelaIni + 12 * varJanelaMin / 36);
                                                 Select(btnAbrirNovoMap),
-                                                Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < locJanIni + 13 * locJanMin / 36 And _t.fim > locJanIni + 12 * locJanMin / 36).id));
+                                                Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 13 * varJanelaMin / 36 And _t.fim > varJanelaIni + 12 * varJanelaMin / 36).id));
                                                 Select(btnAbrirEdicaoMap)
                                             )
                                           Text: =""
-                                          Tooltip: =Coalesce(LookUp(ThisItem.trechos As _t, _t.ini < locJanIni + 13 * locJanMin / 36 And _t.fim > locJanIni + 12 * locJanMin / 36).dica_txt, "")
+                                          Tooltip: =Coalesce(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 13 * varJanelaMin / 36 And _t.fim > varJanelaIni + 12 * varJanelaMin / 36).dica_txt, "")
                                     - lblFx13Map:
                                         Control: Label@2.5.1
                                         Properties:
@@ -1516,15 +1490,15 @@ Screens:
                                           LayoutMinWidth: =0
                                           OnSelect: |-
                                             =If(
-                                                IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < locJanIni + 14 * locJanMin / 36 And _t.fim > locJanIni + 13 * locJanMin / 36).id),
+                                                IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 14 * varJanelaMin / 36 And _t.fim > varJanelaIni + 13 * varJanelaMin / 36).id),
                                                 Set(varPosSel, ThisItem);
-                                                Set(varNovoIni, locJanIni + 13 * locJanMin / 36);
+                                                Set(varNovoIni, varJanelaIni + 13 * varJanelaMin / 36);
                                                 Select(btnAbrirNovoMap),
-                                                Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < locJanIni + 14 * locJanMin / 36 And _t.fim > locJanIni + 13 * locJanMin / 36).id));
+                                                Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 14 * varJanelaMin / 36 And _t.fim > varJanelaIni + 13 * varJanelaMin / 36).id));
                                                 Select(btnAbrirEdicaoMap)
                                             )
                                           Text: =""
-                                          Tooltip: =Coalesce(LookUp(ThisItem.trechos As _t, _t.ini < locJanIni + 14 * locJanMin / 36 And _t.fim > locJanIni + 13 * locJanMin / 36).dica_txt, "")
+                                          Tooltip: =Coalesce(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 14 * varJanelaMin / 36 And _t.fim > varJanelaIni + 13 * varJanelaMin / 36).dica_txt, "")
                                     - lblFx14Map:
                                         Control: Label@2.5.1
                                         Properties:
@@ -1533,15 +1507,15 @@ Screens:
                                           LayoutMinWidth: =0
                                           OnSelect: |-
                                             =If(
-                                                IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < locJanIni + 15 * locJanMin / 36 And _t.fim > locJanIni + 14 * locJanMin / 36).id),
+                                                IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 15 * varJanelaMin / 36 And _t.fim > varJanelaIni + 14 * varJanelaMin / 36).id),
                                                 Set(varPosSel, ThisItem);
-                                                Set(varNovoIni, locJanIni + 14 * locJanMin / 36);
+                                                Set(varNovoIni, varJanelaIni + 14 * varJanelaMin / 36);
                                                 Select(btnAbrirNovoMap),
-                                                Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < locJanIni + 15 * locJanMin / 36 And _t.fim > locJanIni + 14 * locJanMin / 36).id));
+                                                Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 15 * varJanelaMin / 36 And _t.fim > varJanelaIni + 14 * varJanelaMin / 36).id));
                                                 Select(btnAbrirEdicaoMap)
                                             )
                                           Text: =""
-                                          Tooltip: =Coalesce(LookUp(ThisItem.trechos As _t, _t.ini < locJanIni + 15 * locJanMin / 36 And _t.fim > locJanIni + 14 * locJanMin / 36).dica_txt, "")
+                                          Tooltip: =Coalesce(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 15 * varJanelaMin / 36 And _t.fim > varJanelaIni + 14 * varJanelaMin / 36).dica_txt, "")
                                     - lblFx15Map:
                                         Control: Label@2.5.1
                                         Properties:
@@ -1550,15 +1524,15 @@ Screens:
                                           LayoutMinWidth: =0
                                           OnSelect: |-
                                             =If(
-                                                IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < locJanIni + 16 * locJanMin / 36 And _t.fim > locJanIni + 15 * locJanMin / 36).id),
+                                                IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 16 * varJanelaMin / 36 And _t.fim > varJanelaIni + 15 * varJanelaMin / 36).id),
                                                 Set(varPosSel, ThisItem);
-                                                Set(varNovoIni, locJanIni + 15 * locJanMin / 36);
+                                                Set(varNovoIni, varJanelaIni + 15 * varJanelaMin / 36);
                                                 Select(btnAbrirNovoMap),
-                                                Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < locJanIni + 16 * locJanMin / 36 And _t.fim > locJanIni + 15 * locJanMin / 36).id));
+                                                Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 16 * varJanelaMin / 36 And _t.fim > varJanelaIni + 15 * varJanelaMin / 36).id));
                                                 Select(btnAbrirEdicaoMap)
                                             )
                                           Text: =""
-                                          Tooltip: =Coalesce(LookUp(ThisItem.trechos As _t, _t.ini < locJanIni + 16 * locJanMin / 36 And _t.fim > locJanIni + 15 * locJanMin / 36).dica_txt, "")
+                                          Tooltip: =Coalesce(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 16 * varJanelaMin / 36 And _t.fim > varJanelaIni + 15 * varJanelaMin / 36).dica_txt, "")
                                     - lblFx16Map:
                                         Control: Label@2.5.1
                                         Properties:
@@ -1567,15 +1541,15 @@ Screens:
                                           LayoutMinWidth: =0
                                           OnSelect: |-
                                             =If(
-                                                IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < locJanIni + 17 * locJanMin / 36 And _t.fim > locJanIni + 16 * locJanMin / 36).id),
+                                                IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 17 * varJanelaMin / 36 And _t.fim > varJanelaIni + 16 * varJanelaMin / 36).id),
                                                 Set(varPosSel, ThisItem);
-                                                Set(varNovoIni, locJanIni + 16 * locJanMin / 36);
+                                                Set(varNovoIni, varJanelaIni + 16 * varJanelaMin / 36);
                                                 Select(btnAbrirNovoMap),
-                                                Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < locJanIni + 17 * locJanMin / 36 And _t.fim > locJanIni + 16 * locJanMin / 36).id));
+                                                Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 17 * varJanelaMin / 36 And _t.fim > varJanelaIni + 16 * varJanelaMin / 36).id));
                                                 Select(btnAbrirEdicaoMap)
                                             )
                                           Text: =""
-                                          Tooltip: =Coalesce(LookUp(ThisItem.trechos As _t, _t.ini < locJanIni + 17 * locJanMin / 36 And _t.fim > locJanIni + 16 * locJanMin / 36).dica_txt, "")
+                                          Tooltip: =Coalesce(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 17 * varJanelaMin / 36 And _t.fim > varJanelaIni + 16 * varJanelaMin / 36).dica_txt, "")
                                     - lblFx17Map:
                                         Control: Label@2.5.1
                                         Properties:
@@ -1584,15 +1558,15 @@ Screens:
                                           LayoutMinWidth: =0
                                           OnSelect: |-
                                             =If(
-                                                IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < locJanIni + 18 * locJanMin / 36 And _t.fim > locJanIni + 17 * locJanMin / 36).id),
+                                                IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 18 * varJanelaMin / 36 And _t.fim > varJanelaIni + 17 * varJanelaMin / 36).id),
                                                 Set(varPosSel, ThisItem);
-                                                Set(varNovoIni, locJanIni + 17 * locJanMin / 36);
+                                                Set(varNovoIni, varJanelaIni + 17 * varJanelaMin / 36);
                                                 Select(btnAbrirNovoMap),
-                                                Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < locJanIni + 18 * locJanMin / 36 And _t.fim > locJanIni + 17 * locJanMin / 36).id));
+                                                Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 18 * varJanelaMin / 36 And _t.fim > varJanelaIni + 17 * varJanelaMin / 36).id));
                                                 Select(btnAbrirEdicaoMap)
                                             )
                                           Text: =""
-                                          Tooltip: =Coalesce(LookUp(ThisItem.trechos As _t, _t.ini < locJanIni + 18 * locJanMin / 36 And _t.fim > locJanIni + 17 * locJanMin / 36).dica_txt, "")
+                                          Tooltip: =Coalesce(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 18 * varJanelaMin / 36 And _t.fim > varJanelaIni + 17 * varJanelaMin / 36).dica_txt, "")
                                     - lblFx18Map:
                                         Control: Label@2.5.1
                                         Properties:
@@ -1601,15 +1575,15 @@ Screens:
                                           LayoutMinWidth: =0
                                           OnSelect: |-
                                             =If(
-                                                IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < locJanIni + 19 * locJanMin / 36 And _t.fim > locJanIni + 18 * locJanMin / 36).id),
+                                                IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 19 * varJanelaMin / 36 And _t.fim > varJanelaIni + 18 * varJanelaMin / 36).id),
                                                 Set(varPosSel, ThisItem);
-                                                Set(varNovoIni, locJanIni + 18 * locJanMin / 36);
+                                                Set(varNovoIni, varJanelaIni + 18 * varJanelaMin / 36);
                                                 Select(btnAbrirNovoMap),
-                                                Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < locJanIni + 19 * locJanMin / 36 And _t.fim > locJanIni + 18 * locJanMin / 36).id));
+                                                Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 19 * varJanelaMin / 36 And _t.fim > varJanelaIni + 18 * varJanelaMin / 36).id));
                                                 Select(btnAbrirEdicaoMap)
                                             )
                                           Text: =""
-                                          Tooltip: =Coalesce(LookUp(ThisItem.trechos As _t, _t.ini < locJanIni + 19 * locJanMin / 36 And _t.fim > locJanIni + 18 * locJanMin / 36).dica_txt, "")
+                                          Tooltip: =Coalesce(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 19 * varJanelaMin / 36 And _t.fim > varJanelaIni + 18 * varJanelaMin / 36).dica_txt, "")
                                     - lblFx19Map:
                                         Control: Label@2.5.1
                                         Properties:
@@ -1618,15 +1592,15 @@ Screens:
                                           LayoutMinWidth: =0
                                           OnSelect: |-
                                             =If(
-                                                IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < locJanIni + 20 * locJanMin / 36 And _t.fim > locJanIni + 19 * locJanMin / 36).id),
+                                                IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 20 * varJanelaMin / 36 And _t.fim > varJanelaIni + 19 * varJanelaMin / 36).id),
                                                 Set(varPosSel, ThisItem);
-                                                Set(varNovoIni, locJanIni + 19 * locJanMin / 36);
+                                                Set(varNovoIni, varJanelaIni + 19 * varJanelaMin / 36);
                                                 Select(btnAbrirNovoMap),
-                                                Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < locJanIni + 20 * locJanMin / 36 And _t.fim > locJanIni + 19 * locJanMin / 36).id));
+                                                Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 20 * varJanelaMin / 36 And _t.fim > varJanelaIni + 19 * varJanelaMin / 36).id));
                                                 Select(btnAbrirEdicaoMap)
                                             )
                                           Text: =""
-                                          Tooltip: =Coalesce(LookUp(ThisItem.trechos As _t, _t.ini < locJanIni + 20 * locJanMin / 36 And _t.fim > locJanIni + 19 * locJanMin / 36).dica_txt, "")
+                                          Tooltip: =Coalesce(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 20 * varJanelaMin / 36 And _t.fim > varJanelaIni + 19 * varJanelaMin / 36).dica_txt, "")
                                     - lblFx20Map:
                                         Control: Label@2.5.1
                                         Properties:
@@ -1635,15 +1609,15 @@ Screens:
                                           LayoutMinWidth: =0
                                           OnSelect: |-
                                             =If(
-                                                IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < locJanIni + 21 * locJanMin / 36 And _t.fim > locJanIni + 20 * locJanMin / 36).id),
+                                                IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 21 * varJanelaMin / 36 And _t.fim > varJanelaIni + 20 * varJanelaMin / 36).id),
                                                 Set(varPosSel, ThisItem);
-                                                Set(varNovoIni, locJanIni + 20 * locJanMin / 36);
+                                                Set(varNovoIni, varJanelaIni + 20 * varJanelaMin / 36);
                                                 Select(btnAbrirNovoMap),
-                                                Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < locJanIni + 21 * locJanMin / 36 And _t.fim > locJanIni + 20 * locJanMin / 36).id));
+                                                Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 21 * varJanelaMin / 36 And _t.fim > varJanelaIni + 20 * varJanelaMin / 36).id));
                                                 Select(btnAbrirEdicaoMap)
                                             )
                                           Text: =""
-                                          Tooltip: =Coalesce(LookUp(ThisItem.trechos As _t, _t.ini < locJanIni + 21 * locJanMin / 36 And _t.fim > locJanIni + 20 * locJanMin / 36).dica_txt, "")
+                                          Tooltip: =Coalesce(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 21 * varJanelaMin / 36 And _t.fim > varJanelaIni + 20 * varJanelaMin / 36).dica_txt, "")
                                     - lblFx21Map:
                                         Control: Label@2.5.1
                                         Properties:
@@ -1652,15 +1626,15 @@ Screens:
                                           LayoutMinWidth: =0
                                           OnSelect: |-
                                             =If(
-                                                IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < locJanIni + 22 * locJanMin / 36 And _t.fim > locJanIni + 21 * locJanMin / 36).id),
+                                                IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 22 * varJanelaMin / 36 And _t.fim > varJanelaIni + 21 * varJanelaMin / 36).id),
                                                 Set(varPosSel, ThisItem);
-                                                Set(varNovoIni, locJanIni + 21 * locJanMin / 36);
+                                                Set(varNovoIni, varJanelaIni + 21 * varJanelaMin / 36);
                                                 Select(btnAbrirNovoMap),
-                                                Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < locJanIni + 22 * locJanMin / 36 And _t.fim > locJanIni + 21 * locJanMin / 36).id));
+                                                Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 22 * varJanelaMin / 36 And _t.fim > varJanelaIni + 21 * varJanelaMin / 36).id));
                                                 Select(btnAbrirEdicaoMap)
                                             )
                                           Text: =""
-                                          Tooltip: =Coalesce(LookUp(ThisItem.trechos As _t, _t.ini < locJanIni + 22 * locJanMin / 36 And _t.fim > locJanIni + 21 * locJanMin / 36).dica_txt, "")
+                                          Tooltip: =Coalesce(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 22 * varJanelaMin / 36 And _t.fim > varJanelaIni + 21 * varJanelaMin / 36).dica_txt, "")
                                     - lblFx22Map:
                                         Control: Label@2.5.1
                                         Properties:
@@ -1669,15 +1643,15 @@ Screens:
                                           LayoutMinWidth: =0
                                           OnSelect: |-
                                             =If(
-                                                IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < locJanIni + 23 * locJanMin / 36 And _t.fim > locJanIni + 22 * locJanMin / 36).id),
+                                                IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 23 * varJanelaMin / 36 And _t.fim > varJanelaIni + 22 * varJanelaMin / 36).id),
                                                 Set(varPosSel, ThisItem);
-                                                Set(varNovoIni, locJanIni + 22 * locJanMin / 36);
+                                                Set(varNovoIni, varJanelaIni + 22 * varJanelaMin / 36);
                                                 Select(btnAbrirNovoMap),
-                                                Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < locJanIni + 23 * locJanMin / 36 And _t.fim > locJanIni + 22 * locJanMin / 36).id));
+                                                Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 23 * varJanelaMin / 36 And _t.fim > varJanelaIni + 22 * varJanelaMin / 36).id));
                                                 Select(btnAbrirEdicaoMap)
                                             )
                                           Text: =""
-                                          Tooltip: =Coalesce(LookUp(ThisItem.trechos As _t, _t.ini < locJanIni + 23 * locJanMin / 36 And _t.fim > locJanIni + 22 * locJanMin / 36).dica_txt, "")
+                                          Tooltip: =Coalesce(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 23 * varJanelaMin / 36 And _t.fim > varJanelaIni + 22 * varJanelaMin / 36).dica_txt, "")
                                     - lblFx23Map:
                                         Control: Label@2.5.1
                                         Properties:
@@ -1686,15 +1660,15 @@ Screens:
                                           LayoutMinWidth: =0
                                           OnSelect: |-
                                             =If(
-                                                IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < locJanIni + 24 * locJanMin / 36 And _t.fim > locJanIni + 23 * locJanMin / 36).id),
+                                                IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 24 * varJanelaMin / 36 And _t.fim > varJanelaIni + 23 * varJanelaMin / 36).id),
                                                 Set(varPosSel, ThisItem);
-                                                Set(varNovoIni, locJanIni + 23 * locJanMin / 36);
+                                                Set(varNovoIni, varJanelaIni + 23 * varJanelaMin / 36);
                                                 Select(btnAbrirNovoMap),
-                                                Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < locJanIni + 24 * locJanMin / 36 And _t.fim > locJanIni + 23 * locJanMin / 36).id));
+                                                Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 24 * varJanelaMin / 36 And _t.fim > varJanelaIni + 23 * varJanelaMin / 36).id));
                                                 Select(btnAbrirEdicaoMap)
                                             )
                                           Text: =""
-                                          Tooltip: =Coalesce(LookUp(ThisItem.trechos As _t, _t.ini < locJanIni + 24 * locJanMin / 36 And _t.fim > locJanIni + 23 * locJanMin / 36).dica_txt, "")
+                                          Tooltip: =Coalesce(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 24 * varJanelaMin / 36 And _t.fim > varJanelaIni + 23 * varJanelaMin / 36).dica_txt, "")
                                     - lblFx24Map:
                                         Control: Label@2.5.1
                                         Properties:
@@ -1703,15 +1677,15 @@ Screens:
                                           LayoutMinWidth: =0
                                           OnSelect: |-
                                             =If(
-                                                IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < locJanIni + 25 * locJanMin / 36 And _t.fim > locJanIni + 24 * locJanMin / 36).id),
+                                                IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 25 * varJanelaMin / 36 And _t.fim > varJanelaIni + 24 * varJanelaMin / 36).id),
                                                 Set(varPosSel, ThisItem);
-                                                Set(varNovoIni, locJanIni + 24 * locJanMin / 36);
+                                                Set(varNovoIni, varJanelaIni + 24 * varJanelaMin / 36);
                                                 Select(btnAbrirNovoMap),
-                                                Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < locJanIni + 25 * locJanMin / 36 And _t.fim > locJanIni + 24 * locJanMin / 36).id));
+                                                Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 25 * varJanelaMin / 36 And _t.fim > varJanelaIni + 24 * varJanelaMin / 36).id));
                                                 Select(btnAbrirEdicaoMap)
                                             )
                                           Text: =""
-                                          Tooltip: =Coalesce(LookUp(ThisItem.trechos As _t, _t.ini < locJanIni + 25 * locJanMin / 36 And _t.fim > locJanIni + 24 * locJanMin / 36).dica_txt, "")
+                                          Tooltip: =Coalesce(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 25 * varJanelaMin / 36 And _t.fim > varJanelaIni + 24 * varJanelaMin / 36).dica_txt, "")
                                     - lblFx25Map:
                                         Control: Label@2.5.1
                                         Properties:
@@ -1720,15 +1694,15 @@ Screens:
                                           LayoutMinWidth: =0
                                           OnSelect: |-
                                             =If(
-                                                IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < locJanIni + 26 * locJanMin / 36 And _t.fim > locJanIni + 25 * locJanMin / 36).id),
+                                                IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 26 * varJanelaMin / 36 And _t.fim > varJanelaIni + 25 * varJanelaMin / 36).id),
                                                 Set(varPosSel, ThisItem);
-                                                Set(varNovoIni, locJanIni + 25 * locJanMin / 36);
+                                                Set(varNovoIni, varJanelaIni + 25 * varJanelaMin / 36);
                                                 Select(btnAbrirNovoMap),
-                                                Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < locJanIni + 26 * locJanMin / 36 And _t.fim > locJanIni + 25 * locJanMin / 36).id));
+                                                Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 26 * varJanelaMin / 36 And _t.fim > varJanelaIni + 25 * varJanelaMin / 36).id));
                                                 Select(btnAbrirEdicaoMap)
                                             )
                                           Text: =""
-                                          Tooltip: =Coalesce(LookUp(ThisItem.trechos As _t, _t.ini < locJanIni + 26 * locJanMin / 36 And _t.fim > locJanIni + 25 * locJanMin / 36).dica_txt, "")
+                                          Tooltip: =Coalesce(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 26 * varJanelaMin / 36 And _t.fim > varJanelaIni + 25 * varJanelaMin / 36).dica_txt, "")
                                     - lblFx26Map:
                                         Control: Label@2.5.1
                                         Properties:
@@ -1737,15 +1711,15 @@ Screens:
                                           LayoutMinWidth: =0
                                           OnSelect: |-
                                             =If(
-                                                IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < locJanIni + 27 * locJanMin / 36 And _t.fim > locJanIni + 26 * locJanMin / 36).id),
+                                                IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 27 * varJanelaMin / 36 And _t.fim > varJanelaIni + 26 * varJanelaMin / 36).id),
                                                 Set(varPosSel, ThisItem);
-                                                Set(varNovoIni, locJanIni + 26 * locJanMin / 36);
+                                                Set(varNovoIni, varJanelaIni + 26 * varJanelaMin / 36);
                                                 Select(btnAbrirNovoMap),
-                                                Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < locJanIni + 27 * locJanMin / 36 And _t.fim > locJanIni + 26 * locJanMin / 36).id));
+                                                Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 27 * varJanelaMin / 36 And _t.fim > varJanelaIni + 26 * varJanelaMin / 36).id));
                                                 Select(btnAbrirEdicaoMap)
                                             )
                                           Text: =""
-                                          Tooltip: =Coalesce(LookUp(ThisItem.trechos As _t, _t.ini < locJanIni + 27 * locJanMin / 36 And _t.fim > locJanIni + 26 * locJanMin / 36).dica_txt, "")
+                                          Tooltip: =Coalesce(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 27 * varJanelaMin / 36 And _t.fim > varJanelaIni + 26 * varJanelaMin / 36).dica_txt, "")
                                     - lblFx27Map:
                                         Control: Label@2.5.1
                                         Properties:
@@ -1754,15 +1728,15 @@ Screens:
                                           LayoutMinWidth: =0
                                           OnSelect: |-
                                             =If(
-                                                IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < locJanIni + 28 * locJanMin / 36 And _t.fim > locJanIni + 27 * locJanMin / 36).id),
+                                                IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 28 * varJanelaMin / 36 And _t.fim > varJanelaIni + 27 * varJanelaMin / 36).id),
                                                 Set(varPosSel, ThisItem);
-                                                Set(varNovoIni, locJanIni + 27 * locJanMin / 36);
+                                                Set(varNovoIni, varJanelaIni + 27 * varJanelaMin / 36);
                                                 Select(btnAbrirNovoMap),
-                                                Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < locJanIni + 28 * locJanMin / 36 And _t.fim > locJanIni + 27 * locJanMin / 36).id));
+                                                Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 28 * varJanelaMin / 36 And _t.fim > varJanelaIni + 27 * varJanelaMin / 36).id));
                                                 Select(btnAbrirEdicaoMap)
                                             )
                                           Text: =""
-                                          Tooltip: =Coalesce(LookUp(ThisItem.trechos As _t, _t.ini < locJanIni + 28 * locJanMin / 36 And _t.fim > locJanIni + 27 * locJanMin / 36).dica_txt, "")
+                                          Tooltip: =Coalesce(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 28 * varJanelaMin / 36 And _t.fim > varJanelaIni + 27 * varJanelaMin / 36).dica_txt, "")
                                     - lblFx28Map:
                                         Control: Label@2.5.1
                                         Properties:
@@ -1771,15 +1745,15 @@ Screens:
                                           LayoutMinWidth: =0
                                           OnSelect: |-
                                             =If(
-                                                IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < locJanIni + 29 * locJanMin / 36 And _t.fim > locJanIni + 28 * locJanMin / 36).id),
+                                                IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 29 * varJanelaMin / 36 And _t.fim > varJanelaIni + 28 * varJanelaMin / 36).id),
                                                 Set(varPosSel, ThisItem);
-                                                Set(varNovoIni, locJanIni + 28 * locJanMin / 36);
+                                                Set(varNovoIni, varJanelaIni + 28 * varJanelaMin / 36);
                                                 Select(btnAbrirNovoMap),
-                                                Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < locJanIni + 29 * locJanMin / 36 And _t.fim > locJanIni + 28 * locJanMin / 36).id));
+                                                Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 29 * varJanelaMin / 36 And _t.fim > varJanelaIni + 28 * varJanelaMin / 36).id));
                                                 Select(btnAbrirEdicaoMap)
                                             )
                                           Text: =""
-                                          Tooltip: =Coalesce(LookUp(ThisItem.trechos As _t, _t.ini < locJanIni + 29 * locJanMin / 36 And _t.fim > locJanIni + 28 * locJanMin / 36).dica_txt, "")
+                                          Tooltip: =Coalesce(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 29 * varJanelaMin / 36 And _t.fim > varJanelaIni + 28 * varJanelaMin / 36).dica_txt, "")
                                     - lblFx29Map:
                                         Control: Label@2.5.1
                                         Properties:
@@ -1788,15 +1762,15 @@ Screens:
                                           LayoutMinWidth: =0
                                           OnSelect: |-
                                             =If(
-                                                IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < locJanIni + 30 * locJanMin / 36 And _t.fim > locJanIni + 29 * locJanMin / 36).id),
+                                                IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 30 * varJanelaMin / 36 And _t.fim > varJanelaIni + 29 * varJanelaMin / 36).id),
                                                 Set(varPosSel, ThisItem);
-                                                Set(varNovoIni, locJanIni + 29 * locJanMin / 36);
+                                                Set(varNovoIni, varJanelaIni + 29 * varJanelaMin / 36);
                                                 Select(btnAbrirNovoMap),
-                                                Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < locJanIni + 30 * locJanMin / 36 And _t.fim > locJanIni + 29 * locJanMin / 36).id));
+                                                Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 30 * varJanelaMin / 36 And _t.fim > varJanelaIni + 29 * varJanelaMin / 36).id));
                                                 Select(btnAbrirEdicaoMap)
                                             )
                                           Text: =""
-                                          Tooltip: =Coalesce(LookUp(ThisItem.trechos As _t, _t.ini < locJanIni + 30 * locJanMin / 36 And _t.fim > locJanIni + 29 * locJanMin / 36).dica_txt, "")
+                                          Tooltip: =Coalesce(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 30 * varJanelaMin / 36 And _t.fim > varJanelaIni + 29 * varJanelaMin / 36).dica_txt, "")
                                     - lblFx30Map:
                                         Control: Label@2.5.1
                                         Properties:
@@ -1805,15 +1779,15 @@ Screens:
                                           LayoutMinWidth: =0
                                           OnSelect: |-
                                             =If(
-                                                IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < locJanIni + 31 * locJanMin / 36 And _t.fim > locJanIni + 30 * locJanMin / 36).id),
+                                                IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 31 * varJanelaMin / 36 And _t.fim > varJanelaIni + 30 * varJanelaMin / 36).id),
                                                 Set(varPosSel, ThisItem);
-                                                Set(varNovoIni, locJanIni + 30 * locJanMin / 36);
+                                                Set(varNovoIni, varJanelaIni + 30 * varJanelaMin / 36);
                                                 Select(btnAbrirNovoMap),
-                                                Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < locJanIni + 31 * locJanMin / 36 And _t.fim > locJanIni + 30 * locJanMin / 36).id));
+                                                Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 31 * varJanelaMin / 36 And _t.fim > varJanelaIni + 30 * varJanelaMin / 36).id));
                                                 Select(btnAbrirEdicaoMap)
                                             )
                                           Text: =""
-                                          Tooltip: =Coalesce(LookUp(ThisItem.trechos As _t, _t.ini < locJanIni + 31 * locJanMin / 36 And _t.fim > locJanIni + 30 * locJanMin / 36).dica_txt, "")
+                                          Tooltip: =Coalesce(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 31 * varJanelaMin / 36 And _t.fim > varJanelaIni + 30 * varJanelaMin / 36).dica_txt, "")
                                     - lblFx31Map:
                                         Control: Label@2.5.1
                                         Properties:
@@ -1822,15 +1796,15 @@ Screens:
                                           LayoutMinWidth: =0
                                           OnSelect: |-
                                             =If(
-                                                IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < locJanIni + 32 * locJanMin / 36 And _t.fim > locJanIni + 31 * locJanMin / 36).id),
+                                                IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 32 * varJanelaMin / 36 And _t.fim > varJanelaIni + 31 * varJanelaMin / 36).id),
                                                 Set(varPosSel, ThisItem);
-                                                Set(varNovoIni, locJanIni + 31 * locJanMin / 36);
+                                                Set(varNovoIni, varJanelaIni + 31 * varJanelaMin / 36);
                                                 Select(btnAbrirNovoMap),
-                                                Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < locJanIni + 32 * locJanMin / 36 And _t.fim > locJanIni + 31 * locJanMin / 36).id));
+                                                Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 32 * varJanelaMin / 36 And _t.fim > varJanelaIni + 31 * varJanelaMin / 36).id));
                                                 Select(btnAbrirEdicaoMap)
                                             )
                                           Text: =""
-                                          Tooltip: =Coalesce(LookUp(ThisItem.trechos As _t, _t.ini < locJanIni + 32 * locJanMin / 36 And _t.fim > locJanIni + 31 * locJanMin / 36).dica_txt, "")
+                                          Tooltip: =Coalesce(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 32 * varJanelaMin / 36 And _t.fim > varJanelaIni + 31 * varJanelaMin / 36).dica_txt, "")
                                     - lblFx32Map:
                                         Control: Label@2.5.1
                                         Properties:
@@ -1839,15 +1813,15 @@ Screens:
                                           LayoutMinWidth: =0
                                           OnSelect: |-
                                             =If(
-                                                IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < locJanIni + 33 * locJanMin / 36 And _t.fim > locJanIni + 32 * locJanMin / 36).id),
+                                                IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 33 * varJanelaMin / 36 And _t.fim > varJanelaIni + 32 * varJanelaMin / 36).id),
                                                 Set(varPosSel, ThisItem);
-                                                Set(varNovoIni, locJanIni + 32 * locJanMin / 36);
+                                                Set(varNovoIni, varJanelaIni + 32 * varJanelaMin / 36);
                                                 Select(btnAbrirNovoMap),
-                                                Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < locJanIni + 33 * locJanMin / 36 And _t.fim > locJanIni + 32 * locJanMin / 36).id));
+                                                Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 33 * varJanelaMin / 36 And _t.fim > varJanelaIni + 32 * varJanelaMin / 36).id));
                                                 Select(btnAbrirEdicaoMap)
                                             )
                                           Text: =""
-                                          Tooltip: =Coalesce(LookUp(ThisItem.trechos As _t, _t.ini < locJanIni + 33 * locJanMin / 36 And _t.fim > locJanIni + 32 * locJanMin / 36).dica_txt, "")
+                                          Tooltip: =Coalesce(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 33 * varJanelaMin / 36 And _t.fim > varJanelaIni + 32 * varJanelaMin / 36).dica_txt, "")
                                     - lblFx33Map:
                                         Control: Label@2.5.1
                                         Properties:
@@ -1856,15 +1830,15 @@ Screens:
                                           LayoutMinWidth: =0
                                           OnSelect: |-
                                             =If(
-                                                IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < locJanIni + 34 * locJanMin / 36 And _t.fim > locJanIni + 33 * locJanMin / 36).id),
+                                                IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 34 * varJanelaMin / 36 And _t.fim > varJanelaIni + 33 * varJanelaMin / 36).id),
                                                 Set(varPosSel, ThisItem);
-                                                Set(varNovoIni, locJanIni + 33 * locJanMin / 36);
+                                                Set(varNovoIni, varJanelaIni + 33 * varJanelaMin / 36);
                                                 Select(btnAbrirNovoMap),
-                                                Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < locJanIni + 34 * locJanMin / 36 And _t.fim > locJanIni + 33 * locJanMin / 36).id));
+                                                Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 34 * varJanelaMin / 36 And _t.fim > varJanelaIni + 33 * varJanelaMin / 36).id));
                                                 Select(btnAbrirEdicaoMap)
                                             )
                                           Text: =""
-                                          Tooltip: =Coalesce(LookUp(ThisItem.trechos As _t, _t.ini < locJanIni + 34 * locJanMin / 36 And _t.fim > locJanIni + 33 * locJanMin / 36).dica_txt, "")
+                                          Tooltip: =Coalesce(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 34 * varJanelaMin / 36 And _t.fim > varJanelaIni + 33 * varJanelaMin / 36).dica_txt, "")
                                     - lblFx34Map:
                                         Control: Label@2.5.1
                                         Properties:
@@ -1873,15 +1847,15 @@ Screens:
                                           LayoutMinWidth: =0
                                           OnSelect: |-
                                             =If(
-                                                IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < locJanIni + 35 * locJanMin / 36 And _t.fim > locJanIni + 34 * locJanMin / 36).id),
+                                                IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 35 * varJanelaMin / 36 And _t.fim > varJanelaIni + 34 * varJanelaMin / 36).id),
                                                 Set(varPosSel, ThisItem);
-                                                Set(varNovoIni, locJanIni + 34 * locJanMin / 36);
+                                                Set(varNovoIni, varJanelaIni + 34 * varJanelaMin / 36);
                                                 Select(btnAbrirNovoMap),
-                                                Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < locJanIni + 35 * locJanMin / 36 And _t.fim > locJanIni + 34 * locJanMin / 36).id));
+                                                Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 35 * varJanelaMin / 36 And _t.fim > varJanelaIni + 34 * varJanelaMin / 36).id));
                                                 Select(btnAbrirEdicaoMap)
                                             )
                                           Text: =""
-                                          Tooltip: =Coalesce(LookUp(ThisItem.trechos As _t, _t.ini < locJanIni + 35 * locJanMin / 36 And _t.fim > locJanIni + 34 * locJanMin / 36).dica_txt, "")
+                                          Tooltip: =Coalesce(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 35 * varJanelaMin / 36 And _t.fim > varJanelaIni + 34 * varJanelaMin / 36).dica_txt, "")
                                     - lblFx35Map:
                                         Control: Label@2.5.1
                                         Properties:
@@ -1890,15 +1864,15 @@ Screens:
                                           LayoutMinWidth: =0
                                           OnSelect: |-
                                             =If(
-                                                IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < locJanIni + 36 * locJanMin / 36 And _t.fim > locJanIni + 35 * locJanMin / 36).id),
+                                                IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 36 * varJanelaMin / 36 And _t.fim > varJanelaIni + 35 * varJanelaMin / 36).id),
                                                 Set(varPosSel, ThisItem);
-                                                Set(varNovoIni, locJanIni + 35 * locJanMin / 36);
+                                                Set(varNovoIni, varJanelaIni + 35 * varJanelaMin / 36);
                                                 Select(btnAbrirNovoMap),
-                                                Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < locJanIni + 36 * locJanMin / 36 And _t.fim > locJanIni + 35 * locJanMin / 36).id));
+                                                Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 36 * varJanelaMin / 36 And _t.fim > varJanelaIni + 35 * varJanelaMin / 36).id));
                                                 Select(btnAbrirEdicaoMap)
                                             )
                                           Text: =""
-                                          Tooltip: =Coalesce(LookUp(ThisItem.trechos As _t, _t.ini < locJanIni + 36 * locJanMin / 36 And _t.fim > locJanIni + 35 * locJanMin / 36).dica_txt, "")
+                                          Tooltip: =Coalesce(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 36 * varJanelaMin / 36 And _t.fim > varJanelaIni + 35 * varJanelaMin / 36).dica_txt, "")
                   - btnLegendaMap:
                       Control: Button@0.0.45
                       Properties:

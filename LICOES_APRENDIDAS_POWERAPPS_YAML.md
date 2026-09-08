@@ -2082,3 +2082,26 @@ escrever o YAML.
 Virou tabela `PROIBIDO` no `fx_check.js`. **Conhecimento que só existe em prosa não sobrevive ao
 próprio autor no dia seguinte**; se um erro pode ser detectado por script, a anotação é o rascunho e o
 script é a entrega.
+
+## Script que aborta não grava nada — o "ok" que ele imprimiu é promessa, não estado (2026-09-05)
+
+O padrão que uso para editar YAML com segurança é: várias substituições exatas em memória, cada uma
+abortando se não achar exatamente uma ocorrência, e **um `writeFileSync` no fim**. O aborto protege
+contra casar a âncora errada — e foi ele que salvou o arquivo várias vezes.
+
+Nesta sessão o script abortou na nona substituição, depois de imprimir oito `ok`. Eu li os oito como
+aplicados e, na rodada seguinte, pulei-os. **Não estavam no arquivo: o `writeFileSync` nunca rodou.**
+Resultado: a grade desenhou as linhas sobre o dia inteiro enquanto a régua usava a janela, e custou
+uma colagem ao Douglas.
+
+Pior, o diagnóstico que dei antes de olhar o arquivo estava errado — atribuí a divergência a ordem de
+`UpdateContext` dentro de um `OnSelect`, uma explicação plausível, coerente com os dois sintomas e
+falsa. O que resolveu foi medir: o bloco `00:00–06:20` ocupava 26,3% do trilho, e 380/1440 = 26,4%.
+
+**Duas regras daí:**
+
+1. O `ok` de um script é registro de intenção. **O estado é o arquivo** — conferir relendo o que foi
+   gravado, com `grep` no disco, nunca na variável em memória que o script achou que escreveu.
+2. Quando dois consumidores do mesmo número discordam, **meça um deles** antes de teorizar sobre
+   semântica da plataforma. A régua contra 1440 era uma conta de dez segundos; a teoria sobre
+   `UpdateContext` teria me custado uma reescrita inteira e não teria consertado nada.
