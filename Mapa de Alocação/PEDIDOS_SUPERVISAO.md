@@ -1,14 +1,13 @@
 # Pedidos da supervisão — 04/09/2026
 
-Levantados pelo supervisor durante a apresentação do sistema pelo Douglas. **Nada aqui foi feito
-ainda.** A ordem abaixo é a que ele indicou; a exportação fica por último por decisão dele.
+Levantados pelo supervisor durante a apresentação do sistema pelo Douglas. A ordem abaixo é a que ele indicou; a exportação fica por último por decisão dele.
 
 Cada item traz o que já existe no app e o que ainda precisa ser decidido — porque metade deles tem
 mais de uma leitura possível, e escolher errado custa mais que perguntar.
 
 ---
 
-## 1. Grade de 10 em 10 minutos
+## 1. Grade de 10 em 10 minutos — ✅ feito em 05/09/2026
 
 Colunas a cada 10 minutos, com o número (`10`, `20`, `30`, `40`, `50`) **bem menor** que o da hora, e
 a **linha do intervalo menos evidente** que a da hora cheia.
@@ -28,7 +27,7 @@ Hoje clicar às 09h40 propõe 09:00.
 
 ---
 
-## 1b. Bloco pequeno demais: rolagem horizontal em vez do dia inteiro na página
+## 1b. Bloco pequeno demais — ✅ feito em 05/09/2026, junto com o 1
 
 Acrescentado depois, e **é o mesmo problema do item 1 visto pelo outro lado.** Hoje as 24 horas cabem
 numa página só, e o retângulo do voo fica pequeno. Passar para colunas de 10 minutos na mesma largura
@@ -204,3 +203,18 @@ Não vieram do supervisor, mas estão paradas esperando o Douglas:
    aeroporto não casa nada. Escondeu um defeito real em 04/09/2026.
 2. **Conferir as relações de `bloqueia`** da aviação geral. Ele descreveu duas posições classe A por
    classe B; o croqui do outro app declarava quatro.
+
+---
+
+## O que a janela entregou do 1 e do 1b, e o que ela trocou
+
+Feito em 05/09/2026. **A rolagem horizontal pedida não foi entregue** — foi trocada por uma janela
+de horas que anda, porque o Power Apps não deixa o app posicionar nem ler a rolagem, e a segunda
+metade do pedido (*acompanhar a passagem da hora*) morria aí. Detalhe do desenho e das trocas em
+`ARQUITETURA_MAPA.md`, seção "A grade virou uma janela de horas".
+
+O que o supervisor vai ver: setas para andar, o rótulo da faixa, **AGORA**, e três botões de zoom —
+**6 HORAS**, **12 HORAS**, **DIA INTEIRO**. O último reproduz a grade anterior, então nada foi perdido.
+A janela abre em 12 horas, começando na hora atual quando a data é hoje.
+
+**Vale confirmar com ele:** se 12 horas é a abertura certa, ou se o dia a dia pede 6.

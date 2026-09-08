@@ -885,3 +885,69 @@ próxima vez que esse arquivo for ao Studio por outro motivo — mesma regra da 
 
 Se um dia houver dois operadores no mesmo aeroporto, o detector volta com **a mesma condição de
 `colDia` nos dois lados** — é essa igualdade, e não o timer, que era a parte difícil.
+
+## A grade virou uma janela de horas (05/09/2026)
+
+Pedidos 1 e 1b da supervisão, que só fazem sentido juntos: colunas de 10 minutos **e** bloco maior.
+Separados, o primeiro piora o segundo — 144 colunas na mesma largura deixariam o retângulo do voo
+menor ainda.
+
+**O pedido literal era rolagem horizontal, e ela não foi entregue.** O Power Apps não expõe a posição
+de rolagem de um container: dá para rolar, não dá para dizer "role até as 14h" nem para ler onde o
+usuário está. Metade do pedido — *a rolagem acompanhando a passagem da hora* — seria impossível assim.
+Pior, régua e linhas vivem em controles diferentes (um `HtmlViewer` e uma `Gallery`), e dois
+containers rolando de forma independente desalinhariam as colunas.
+
+**O que foi feito:** a grade desenha uma **janela** de 6h, 12h ou o dia inteiro, e a janela anda. Como
+toda largura já era calculada em % sobre `mapMinutosDia`, passou a ser calculada sobre `locJanMin` —
+**mudou o denominador, não a arquitetura.** Régua, linhas de fundo, blocos e camada de clique leem os
+mesmos três números (`locJanIni`, `locJanMin`, `locJanFim`), então continuam alinhados por construção.
+
+Ganhos sobre a rolagem: o app **sabe** onde a janela está, então o botão AGORA e o avanço automático
+na virada da hora são possíveis. Perda: não se vê o dia inteiro de relance — por isso o botão
+**DIA INTEIRO**, que reproduz exatamente o comportamento anterior.
+
+### Carregar e desenhar viraram dois botões
+
+`btnAtualizarMap` fazia as duas coisas: ler o SharePoint (`colDia`) e montar o HTML (`colGrade`).
+Andar com a janela precisa **só** da segunda. Sem separar, cada toque na seta releria a lista inteira.
+
+Agora `btnAtualizarMap` lê e chama `btnDesenharMap`; as setas, o zoom e o timer chamam **só**
+`btnDesenharMap`. É a mesma separação que já existia entre dado e desenho em `colDia` → `colGrade`,
+agora também no tempo.
+
+### Camada de clique: 36 células, precisão que acompanha o zoom
+
+O número de controles é fixo no YAML — não dá para gerar 144 células quando a janela abre e 36 quando
+fecha. São **36**, sempre, cada uma cobrindo `locJanMin / 36`:
+
+| janela | minutos por célula |
+|---|---|
+| 6 horas | 10 |
+| 12 horas | 20 |
+| dia inteiro | 40 |
+
+Em 6 horas isso entrega o "ganho de brinde" previsto no pedido: clicar às 09h40 propõe 09:40, não
+09:00. E mesmo no dia inteiro a precisão melhorou — eram 60 minutos por célula.
+
+36 células por linha contra 24 antes: **+50% de controles**, não os +500% que 144 células custariam.
+
+### Três detalhes que só aparecem depois de errados
+
+1. **Ordem dos gradientes.** No CSS, o primeiro `background-image` fica por **cima**. Escrevendo a
+   linha de 10 minutos primeiro, ela apagaria a linha da hora em cada marca de hora cheia. A hora
+   cheia vem primeiro; a fina, depois.
+2. **Bloco fora da janela não pode virar `<td>` de largura zero.** Ele tem `border:3px`, então
+   renderizaria como uma lasca de 6px encostada na borda. O `<td>` do bloco só é emitido quando
+   `_z > _a`; o vão continua sendo emitido, e é ele que mantém a soma em 100%.
+3. **Os chevrons `«` `»` passaram a marcar dois cortes.** Antes só a virada do dia; agora também o
+   corte da janela. É a mesma informação — "isto continua fora do que você está vendo" — e por isso
+   reusa o mesmo símbolo em vez de inventar outro.
+
+### O que saiu do `App.Formulas`
+
+`mapPctHora` e `mapFundoHoras` dependiam de 24 colunas fixas. Agora dependem da janela, que é
+variável, e **fórmulas nomeadas não enxergam variáveis** — foram para a tela como `locPct10`,
+`locPctHora` e `locFundo`, calculados uma vez por desenho. `colHoras` saiu junto: a régua é montada
+sobre a janela. E `mapSyncSegundos`, órfão desde a remoção do aviso de concorrência, saiu de carona —
+era a "próxima vez que o arquivo fosse ao Studio" prometida ontem.

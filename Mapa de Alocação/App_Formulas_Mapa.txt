@@ -182,21 +182,22 @@ With(
     )
 );;
 
-// 🕐 Régua do dia — 24 horas cheias
-colHoras = ForAll(Sequence(24; 0) As _h; { hora: _h.Value });;
-
 // 📏 Constantes da grade
 mapMinutosDia   = 1440;;   // minutos de um dia — denominador de toda largura em %
 mapLarguraRotulo = 132;;   // px da coluna de rótulo, à esquerda do trilho
 mapAlturaLinha   = 56;;    // px de cada linha da grade
-mapSyncSegundos  = 60;;    // intervalo do verificador de alteração de outros usuários
 mapTravaSegundos = 30;;    // validade da trava de reentrância do botão salvar
 mapLarguraBarra  = 16;;    // px reservados à direita para a barra de rolagem da galeria —
                            // régua e linhas descontam o MESMO valor, é isso que mantém as colunas alinhadas
 mapLarguraPainel = 420;;   // px do painel de edição, que abre sobre a grade
-mapPctHora       = "4.1666";;   // 100/24 truncado: 24 colunas somam 99,998% e nunca estouram os 100%
 mapDiasMax       = 90;;    // duração máxima de um registro, em dias — trava contra data final digitada errada
 mapTesteRegraDias = 90;;   // janela do botao TESTAR na tela de regras
+// 🔭 Janela de horas desenhada na grade. A largura de tudo é calculada sobre ela, e não sobre o dia:
+// muda o denominador, não a arquitetura. As linhas verticais, a régua e a camada de clique saíram
+// daqui e foram para a tela (locFundo, locPct10, locPctHora), porque agora dependem de variável.
+mapJanelaPadrao  = 720;;   // 12 horas — meio dia por vez, bloco com o dobro da largura de antes
+mapCelulasClique = 36;;    // células de clique por linha, FIXO: são 36 controles escritos no YAML.
+                           // A precisão acompanha o zoom: 6h dá 10 min, 12h dá 20 min, dia inteiro dá 40
 mapDuracaoPadrao = 40;;    // minutos entre chegada e saída sugeridos no registro novo aberto pelo clique
                            // na grade — é só o padrão do formulário, o usuário sobrescreve digitando
 
@@ -207,13 +208,6 @@ mapDuracaoPadrao = 40;;    // minutos entre chegada e saída sugeridos no regist
 // O Brasil não tem horário de verão desde 2019, então DateDiff em dias é exato aqui.
 mapDataBase      = Date(2020; 1; 1);;
 
-// 🕘 Linhas verticais de hora — UMA definição, dois consumidores (a régua e cada linha da grade).
-// Tem que ser o mesmo mecanismo nos dois: borda de célula encaixa em pixel inteiro, gradiente rasteriza
-// em espaço contínuo, e em zoom ou tela HiDPI os dois arredondam diferente e desalinham ~1px.
-mapFundoHoras =
-"background-image:repeating-linear-gradient(to right," & hxGradeLinha & " 0," & hxGradeLinha &
-" 1px,transparent 1px,transparent " & mapPctHora & "%);";;
-
 // 🎨 Hex — usados dentro do HTML dos HtmlViewer
 hxPrimaria        = "#0E7C8C";;   // teal institucional ASUR — CONFERIR no manual da marca
 hxPrimariaEscura  = "#0A5A66";;
@@ -223,6 +217,8 @@ hxOperacional     = "#0891B2";;
 hxSuperficie      = "#FFFFFF";;
 hxFundo           = "#F8FAFC";;   // slate claro
 hxBorda           = "#B9D9DE";;   // borda institucional clara
+hxGradeFina       = "#EDF3F4";;   // linha dos 10 minutos — de propósito mais fraca que a hxGradeLinha,
+                                  // que continua marcando a hora cheia
 hxTexto           = "#1E293B";;
 hxTextoFraco      = "#64748B";;
 hxVerde           = "#15803D";;

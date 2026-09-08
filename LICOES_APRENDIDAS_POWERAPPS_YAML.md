@@ -2005,3 +2005,56 @@ Quando duas consultas divergem por decisão, a decisão precisa dizer o que acon
 **Sintoma que identifica esta classe:** um aviso de concorrência que aparece sem concorrência, e que
 volta logo depois de cada atualização manual. Se atualizar não silencia, o que difere não é o dado —
 é a pergunta feita a cada lado.
+
+## Um número fixo de controles obriga a pensar a precisão como função do zoom (2026-09-05)
+
+A grade do Mapa precisava de colunas de 10 minutos. A camada de clique tinha 24 células de hora, uma
+por controle escrito no YAML — e **controle não se gera em tempo de execução**. 144 células por linha,
+vezes as linhas visíveis, era o caminho óbvio e o errado.
+
+A saída foi fixar **36** células e fazer cada uma cobrir `janela / 36`: 10 minutos com janela de 6h,
+20 com 12h, 40 com o dia inteiro. A precisão passou a ser função do zoom em vez de constante, e o
+custo ficou em +50% de controles em vez de +500%.
+
+**Generalizando:** quando a densidade desejada varia e o número de controles não pode, não escolha a
+densidade máxima — escolha um número de controles e deixe a *unidade* deles variar. Vale para grades
+de tempo, réguas, paginação e qualquer camada de toque sobre conteúdo desenhado.
+
+## Fórmula nomeada não enxerga variável — o que vira dinâmico tem que descer para a tela (2026-09-05)
+
+`mapPctHora` e `mapFundoHoras` viviam no `App.Formulas` porque a grade tinha 24 colunas fixas. Quando
+a largura passou a depender de uma janela escolhida pelo usuário, elas não podiam continuar lá:
+`App.Formulas` não lê variável de `Set()` nem coleção.
+
+Desceram para a tela como contexto (`locPct10`, `locPctHora`, `locFundo`), calculados **uma vez por
+desenho** em vez de por linha. O sinal de que algo precisa descer é sempre o mesmo: a fórmula nomeada
+passou a precisar de um valor que o usuário escolhe.
+
+## Separe ler de desenhar antes que a navegação obrigue (2026-09-05)
+
+`btnAtualizarMap` lia o SharePoint e montava o HTML no mesmo `OnSelect` — o que era razoável enquanto
+a única forma de mudar a tela era trocar a data. Quando entraram setas de navegação, cada toque
+releria a lista inteira para redesenhar os mesmos dados.
+
+Separar em `btnAtualizarMap` (lê e chama o desenho) e `btnDesenharMap` (só desenha) custou mover um
+bloco. **O sinal de alerta é uma interação nova que muda a apresentação e não o dado** — se ela
+dispara uma consulta, o passo de desenho ainda não existe separado.
+
+## No CSS, o primeiro `background-image` fica por cima (2026-09-05)
+
+Duas linhas de grade empilhadas — hora cheia forte, 10 minutos fraca — em `repeating-linear-gradient`
+dentro de um `HtmlViewer`. Escrita a fraca primeiro, ela apagaria a forte em cada marca de hora, que é
+justamente onde as duas coincidem. A camada mais importante vai primeiro.
+
+Peguei relendo antes de mandar, não no app: em gradiente empilhado a ordem é o oposto da intuição de
+quem pensa em "desenhar por cima depois".
+
+## Largura zero não é invisível quando há borda (2026-09-05)
+
+Bloco fora da janela visível calculava `largura: 0.000%` — e continuaria aparecendo, porque tem
+`border:3px` de cada lado. Seis pixels de lasca encostados na borda da grade, um por registro fora da
+janela.
+
+`<td>` de conteúdo só é emitido quando tem duração de verdade; o `<td>` de vão continua sempre, e é
+ele que mantém a soma das larguras em 100%. **Antes de assumir que largura zero some, pergunte o que
+mais o elemento desenha** — borda, sombra, outline e `min-width` sobrevivem a ela.
