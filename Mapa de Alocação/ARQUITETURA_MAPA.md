@@ -613,7 +613,7 @@ Regra é a única coisa deste app que **falha em silêncio**: um código de equi
 produz regra que nunca dispara, e nada distingue isso de não haver regra. O botão responde a pergunta
 que o cadastro sozinho não responde — *isso aqui pega alguma coisa?*
 
-Ele varre os lançamentos dos últimos `mapTesteRegraDias` dias (90) e responde em três formas:
+Ele varre os lançamentos dos últimos `mapTesteRegraDias` dias (60) e responde em três formas:
 
 | resposta | significa |
 |---|---|
@@ -629,7 +629,11 @@ sobreposição. Se o teste usasse lógica própria, ele poderia dizer que a regr
 gravar não pega.
 
 **Custo:** dois conjuntos pequenos (uma posição cada) cruzados entre si, não a lista inteira ao
-quadrado. A janela de 90 dias é o que mantém isso barato — e é uma constante, não um número solto.
+quadrado. A janela é o que mantém isso barato — e é uma constante, não um número solto.
+
+**Ela caiu de 90 para 60 dias em 05/09/2026**, e não por desempenho: a ~705 voos/mês, 90 dias passam
+dos 2000 registros que o app aceita numa consulta, e o TESTAR responderia um número menor que o real
+**sem dizer que truncou** — que é o pior tipo de resposta para um botão cuja função é dar confiança.
 
 ---
 
@@ -1007,5 +1011,5 @@ já baixada — uma linha depois de cada `ClearCollect`.
 para os registros recentes, o app deixaria gravar duas aeronaves na mesma posição sem avisar. Quem
 for mexer em qualquer um dos dois filtros: o que vai ao servidor tem de continuar 100% delegável.
 
-Ainda não delegado por opção: o botão TESTAR do `scrMapaRegra` varre 90 dias e é consulta delegável,
-mas o volume pode passar do limite de linhas do app. É diagnóstico, não regra de gravação — fica.
+O botão TESTAR do `scrMapaRegra` é consulta delegável, mas o volume podia passar do limite de linhas
+do app. Resolvido pelos dois lados: o limite subiu para 2000 e a janela caiu para 60 dias.
