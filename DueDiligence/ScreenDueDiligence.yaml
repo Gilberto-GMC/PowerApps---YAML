@@ -2,7 +2,7 @@ Screens:
   ScreenDueDiligence:
     Properties:
       Fill: =RGBA(255, 255, 255, 1)
-      LoadingSpinnerColor: =RGBA(96, 70, 237, 1)
+      LoadingSpinnerColor: =RGBA(0, 135, 154, 1)
       OnVisible: |-
         =UpdateContext(
             {
@@ -15,7 +15,12 @@ Screens:
                 varColunaOrdenacaoDd: "ID",
                 varDirecaoOrdenacaoDd: SortOrder.Descending,
                 varPontuacaoSolicitanteForm: 0,
-                varEncerraBaixoForm: false
+                varEncerraBaixoForm: false,
+                varClassificacaoContraparteForm: Blank(),
+                varGatilhoDdForm: Blank(),
+                varFluxoForm: Blank(),
+                varRiscoFinalTextoForm: Blank(),
+                varRiscoFinalCategoriaForm: Blank()
             }
         );
         If(
@@ -25,7 +30,7 @@ Screens:
                 SortByColumns(
                     Filter(
                         tb_dueDiligenceParametros,
-                        ativo = 1 && versao_questionario = 1
+                        ativo = 1 && (versao_questionario = 1 || versao_questionario = 2)
                     ),
                     "ordem",
                     SortOrder.Ascending
@@ -73,7 +78,7 @@ Screens:
                       Properties:
                         AlignInContainer: =AlignInContainer.Stretch
                         Height: =40
-                        Image: =MOTIVA_RGB_Logo_VersaoNegativa_Branca
+                        Image: =ASUR_RGB_Logo_VersaoNegativaBranca
                         LayoutMinHeight: =16
                         LayoutMinWidth: =16
                         PaddingRight: =50
@@ -199,7 +204,7 @@ Screens:
                                     BorderRadius: =0
                                     BorderStyle: =BorderStyle.Solid
                                     BorderThickness: =1
-                                    FontColor: =If(varVisibleDueDiligence = Self.Text, RGBA(57, 22, 148, 1), RGBA(148, 163, 184, 1))
+                                    FontColor: =If(varVisibleDueDiligence = Self.Text, RGBA(0, 135, 154, 1), RGBA(148, 163, 184, 1))
                                     FontSize: =16
                                     Height: =40
                                     Icon: ="Add"
@@ -224,7 +229,7 @@ Screens:
                                     BorderRadius: =0
                                     BorderStyle: =BorderStyle.Solid
                                     BorderThickness: =1
-                                    FontColor: =If(varVisibleDueDiligence = Self.Text, RGBA(57, 22, 148, 1), RGBA(148, 163, 184, 1))
+                                    FontColor: =If(varVisibleDueDiligence = Self.Text, RGBA(0, 135, 154, 1), RGBA(148, 163, 184, 1))
                                     FontSize: =16
                                     Height: =40
                                     Icon: ="History"
@@ -250,7 +255,7 @@ Screens:
                                   Control: Button@0.0.45
                                   Properties:
                                     Appearance: ='ButtonCanvas.Appearance'.Primary
-                                    BasePaletteColor: =RGBA(57, 22, 148, 1)
+                                    BasePaletteColor: =RGBA(0, 135, 154, 1)
                                     BorderRadius: =0
                                     FontSize: =16
                                     Height: =40
@@ -290,6 +295,12 @@ Screens:
                                     AutoHeight: =true
                                     HtmlText: |-
                                       =With(
+                                          {
+                                              _versaoResumo: Coalesce(varRegistroDueDiligence.versao_questionario, 2)
+                                          },
+                                          If(
+                                              _versaoResumo = 1,
+                                              With(
                                           {
                                               _selecoes: Table(
                                                   {
@@ -538,7 +549,7 @@ Screens:
                                                               "#B54708",
                                                               "medio",
                                                               "#B54708",
-                                                              "#391694"
+                                                              "#00879A"
                                                           ),
                                                           _fundoResultado: Switch(
                                                               Lower(_resultado),
@@ -550,7 +561,7 @@ Screens:
                                                               "#FFFAEB",
                                                               "medio",
                                                               "#FFFAEB",
-                                                              "#F4F0FF"
+                                                              "#EBF5F7"
                                                           ),
                                                           _textoTerceiro: If(
                                                               _temRespostaTerceiro,
@@ -566,14 +577,14 @@ Screens:
                                                               "Aguardando Microsoft Forms"
                                                           )
                                                       },
-                                                      "<div style='font-family:Segoe UI,Arial,sans-serif;background:#F8FAFC;border:1px solid #E2E8F0;padding:12px 14px;box-sizing:border-box'>" & "<table role='presentation' style='width:100%;border-collapse:collapse;margin-bottom:9px'>" & "<tr>" & "<td style='font-size:11px;font-weight:700;letter-spacing:.7px;color:#391694'>RESUMO DA AVALIAÇÃO</td>" & "<td style='font-size:10px;text-align:right;color:#64748B'>" & If(
+                                                      "<div style='font-family:Segoe UI,Arial,sans-serif;background:#F8FAFC;border:1px solid #E2E8F0;padding:12px 14px;box-sizing:border-box'>" & "<table role='presentation' style='width:100%;border-collapse:collapse;margin-bottom:9px'>" & "<tr>" & "<td style='font-size:11px;font-weight:700;letter-spacing:.7px;color:#00879A'>RESUMO DA AVALIAÇÃO</td>" & "<td style='font-size:10px;text-align:right;color:#64748B'>" & If(
                                                           IsBlank(varRegistroDueDiligence.ID),
                                                           "NOVA SOLICITAÇÃO",
                                                           "DD-" & Text(
                                                               varRegistroDueDiligence.ID,
                                                               "000000"
                                                           )
-                                                      ) & "</td>" & "</tr>" & "</table>" & "<table role='presentation' style='width:100%;table-layout:fixed;border-collapse:separate;border-spacing:8px 0'>" & "<tr>" & "<td style='vertical-align:top;background:#FFFFFF;border:1px solid #E2E8F0;border-top:3px solid #391694;padding:10px 12px'>" & "<div style='font-size:9px;font-weight:700;letter-spacing:.5px;color:#64748B'>PONTUAÇÃO SOLICITANTE</div>" & "<div style='font-size:25px;line-height:30px;font-weight:700;color:#24105F'>" & Text(
+                                                      ) & "</td>" & "</tr>" & "</table>" & "<table role='presentation' style='width:100%;table-layout:fixed;border-collapse:separate;border-spacing:8px 0'>" & "<tr>" & "<td style='vertical-align:top;background:#FFFFFF;border:1px solid #E2E8F0;border-top:3px solid #00879A;padding:10px 12px'>" & "<div style='font-size:9px;font-weight:700;letter-spacing:.5px;color:#64748B'>PONTUAÇÃO SOLICITANTE</div>" & "<div style='font-size:25px;line-height:30px;font-weight:700;color:#005864'>" & Text(
                                                           _pontSolicitante,
                                                           "0"
                                                       ) & "</div>" & "<div style='font-size:10px;color:#94A3B8'>Questionário interno</div>" & "</td>" & "<td style='vertical-align:top;background:#FFFFFF;border:1px solid #E2E8F0;border-top:3px solid #64748B;padding:10px 12px'>" & "<div style='font-size:9px;font-weight:700;letter-spacing:.5px;color:#64748B'>PONTUAÇÃO TERCEIRO</div>" & "<div style='font-size:25px;line-height:30px;font-weight:700;color:#0F172A'>" & _textoTerceiro & "</div>" & "<div style='font-size:10px;color:#94A3B8'>" & _subTextoTerceiro & "</div>" & "</td>" & "<td style='vertical-align:top;background:#FFFFFF;border:1px solid #E2E8F0;border-top:3px solid " & _corResultado & ";padding:10px 12px'>" & "<div style='font-size:9px;font-weight:700;letter-spacing:.5px;color:#64748B'>PONTUAÇÃO TOTAL</div>" & "<div style='font-size:25px;line-height:30px;font-weight:700;color:#0F172A'>" & Text(
@@ -586,6 +597,72 @@ Screens:
                                                           _limite,
                                                           "0"
                                                       ) & "</div>" & "</td>" & "<td style='vertical-align:top;background:#FFFFFF;border:1px solid #E2E8F0;border-top:3px solid " & _corResultado & ";padding:10px 12px'>" & "<div style='font-size:9px;font-weight:700;letter-spacing:.5px;color:#64748B;margin-bottom:7px'>RESULTADO / FLUXO</div>" & "<span style='display:inline-block;padding:4px 9px;background:" & _fundoResultado & ";color:" & _corResultado & ";font-size:10px;font-weight:700'>" & Upper(_resultado) & "</span>" & "<div style='font-size:10px;font-weight:600;color:#475569;margin-top:8px'>" & _statusFluxo & "</div>" & "</td>" & "</tr>" & "</table>" & "</div>"
+                                                  )
+                                              )
+                                          )
+                                              ),
+                                              With(
+                                                  {
+                                                      _classificacaoContraparte: Switch(
+                                                          true,
+                                                          dd_categoria_contraparte.Selected.texto_opcao = "Órgão da administração pública", "FLUXO II",
+                                                          dd_categoria_contraparte.Selected.texto_opcao = "Associação, sindicato, entidade de classe ou organização social", "ALTO",
+                                                          dd_categoria_contraparte.Selected.texto_opcao = "Fornecedor", Coalesce(LookUp(colDdParametros, codigo_pergunta = "fornecedor_tipo" && codigo_opcao = dd_fornecedor_tipo.Selected.codigo_opcao, classificacao), ""),
+                                                          dd_categoria_contraparte.Selected.texto_opcao = "Cliente", Coalesce(LookUp(colDdParametros, codigo_pergunta = "cliente_tipo" && codigo_opcao = dd_cliente_tipo.Selected.codigo_opcao, classificacao), ""),
+                                                          ""
+                                                      ),
+                                                      _pontosValor: If(IsBlank(txt_valor_contrato.Value), 0, With({_v: Value(txt_valor_contrato.Value)}, If(_v <= 100000, 0, If(_v <= 500000, 5, If(_v <= 2000000, 10, 20))))),
+                                                      _pontosVigencia: Switch(dd_vigencia_contrato.Selected.texto_opcao, "> 36 meses ou indeterminada", 10, "> 12 a 36 meses", 5, 0),
+                                                      _pontosAdiantamento: If(cmb_adiantamento.Selected.Value = "Sim", 10, 0),
+                                                      _pontosSuccessFee: If(cmb_success_fee.Selected.Value = "Sim", 15, 0),
+                                                      _pontosInteracao: Switch(dd_interacao_poder_publico.Selected.texto_opcao, "Habitual / parte do objeto", 15, "Eventual", 5, 0),
+                                                      _gatilhoDD: cmb_gatilho_subcontratacao.Selected.Value = "Sim" || cmb_gatilho_procuracao.Selected.Value = "Sim" || cmb_gatilho_pagamento_em_nome.Selected.Value = "Sim" || cmb_gatilho_representacao_orgao_publico.Selected.Value = "Sim" || cmb_gatilho_indicado_funcionario_publico.Selected.Value = "Sim",
+                                                      _obrigacaoLegal: cmb_pagamento_obrigacao_legal.Selected.Value = "Sim"
+                                                  },
+                                                  With(
+                                                      {
+                                                          _totalPontos: _pontosValor + _pontosVigencia + _pontosAdiantamento + _pontosSuccessFee + _pontosInteracao
+                                                      },
+                                                      With(
+                                                          {
+                                                              _faixaPontos: If(_totalPontos >= 36, "Alto", If(_totalPontos >= 16, "Médio", "Baixo"))
+                                                          },
+                                                          With(
+                                                              {
+                                                                  _fluxo: If(
+                                                                      _obrigacaoLegal, "FLUXO I",
+                                                                      _gatilhoDD, "FLUXO III",
+                                                                      _classificacaoContraparte = "FLUXO II", "FLUXO II",
+                                                                      _classificacaoContraparte = "ALTO", "FLUXO III",
+                                                                      _classificacaoContraparte = "SEM RISCO", "FLUXO I",
+                                                                      _classificacaoContraparte = "PONTUAR", If(_faixaPontos = "Baixo", "FLUXO I", "FLUXO III"),
+                                                                      ""
+                                                                  )
+                                                              },
+                                                              With(
+                                                                  {
+                                                                      _corFluxo: Switch(_fluxo, "FLUXO I", "#067647", "FLUXO II", "#B54708", "FLUXO III", "#B42318", "#00879A"),
+                                                                      _fundoFluxo: Switch(_fluxo, "FLUXO I", "#ECFDF3", "FLUXO II", "#FFFAEB", "FLUXO III", "#FEF3F2", "#EBF5F7"),
+                                                                      _tratamento: Switch(
+                                                                          _fluxo,
+                                                                          "FLUXO I", "Aprovação automática — cadastro para monitoramento futuro. Sem due diligence.",
+                                                                          "FLUXO II", "Cadastro como alto risco — monitoramento atual. Sem due diligence.",
+                                                                          "FLUXO III", "Submeter à due diligence do Compliance.",
+                                                                          "Preencha o formulário para calcular o fluxo."
+                                                                      ),
+                                                                      _rotuloClassificacao: Switch(
+                                                                          _classificacaoContraparte,
+                                                                          "SEM RISCO", "SEM RISCO",
+                                                                          "ALTO", "ALTO",
+                                                                          "PONTUAR", "PONTUAR",
+                                                                          "FLUXO II", "ÓRGÃO PÚBLICO",
+                                                                          "—"
+                                                                      )
+                                                                  },
+                                                                  "<div style='font-family:Segoe UI,Arial,sans-serif;background:#F8FAFC;border:1px solid #E2E8F0;padding:12px 14px;box-sizing:border-box'>" & "<table role='presentation' style='width:100%;border-collapse:collapse;margin-bottom:9px'>" & "<tr>" & "<td style='font-size:11px;font-weight:700;letter-spacing:.7px;color:#00879A'>RESUMO DA AVALIAÇÃO</td>" & "<td style='font-size:10px;text-align:right;color:#64748B'>" & If(IsBlank(varRegistroDueDiligence.ID), "NOVA SOLICITAÇÃO", "DD-" & Text(varRegistroDueDiligence.ID, "000000")) & "</td>" & "</tr>" & "</table>" & "<table role='presentation' style='width:100%;table-layout:fixed;border-collapse:separate;border-spacing:8px 0'>" & "<tr>" & "<td style='vertical-align:top;background:#FFFFFF;border:1px solid #E2E8F0;border-top:3px solid #00879A;padding:10px 12px'>" & "<div style='font-size:9px;font-weight:700;letter-spacing:.5px;color:#64748B'>CLASSIFICAÇÃO DA CONTRAPARTE</div>" & "<div style='font-size:18px;line-height:30px;font-weight:700;color:#005864'>" & _rotuloClassificacao & "</div>" & "<div style='font-size:10px;color:#94A3B8'>Categoria e tipo selecionados</div>" & "</td>" & "<td style='vertical-align:top;background:#FFFFFF;border:1px solid #E2E8F0;border-top:3px solid #64748B;padding:10px 12px'>" & "<div style='font-size:9px;font-weight:700;letter-spacing:.5px;color:#64748B'>PONTUAÇÃO DO CONTRATO</div>" & "<div style='font-size:25px;line-height:30px;font-weight:700;color:#0F172A'>" & Text(_totalPontos, "0") & "</div>" & "<div style='font-size:10px;color:#94A3B8'>" & If(_classificacaoContraparte = "PONTUAR", "Faixa por pontos — " & _faixaPontos, "Pontua apenas para contraparte PONTUAR") & "</div>" & "</td>" & "<td style='vertical-align:top;background:#FFFFFF;border:1px solid #E2E8F0;border-top:3px solid " & If(_gatilhoDD, "#B42318", "#067647") & ";padding:10px 12px'>" & "<div style='font-size:9px;font-weight:700;letter-spacing:.5px;color:#64748B'>GATILHO DE DUE DILIGENCE</div>" & "<div style='font-size:25px;line-height:30px;font-weight:700;color:#0F172A'>" & If(_gatilhoDD, "SIM", "NÃO") & "</div>" & "<div style='font-size:10px;color:#94A3B8'>Perguntas complementares</div>" & "</td>" & "<td style='vertical-align:top;background:#FFFFFF;border:1px solid #E2E8F0;border-top:3px solid " & _corFluxo & ";padding:10px 12px'>" & "<div style='font-size:9px;font-weight:700;letter-spacing:.5px;color:#64748B;margin-bottom:7px'>FLUXO / TRATAMENTO</div>" & "<span style='display:inline-block;padding:4px 9px;background:" & _fundoFluxo & ";color:" & _corFluxo & ";font-size:10px;font-weight:700'>" & If(IsBlank(_fluxo), "EM PREENCHIMENTO", _fluxo) & "</span>" & "<div style='font-size:10px;font-weight:600;color:#475569;margin-top:8px'>" & _tratamento & "</div>" & "</td>" & "</tr>" & "</table>" & "</div>"
+                                                              )
+                                                          )
+                                                      )
                                                   )
                                               )
                                           )
@@ -630,7 +707,13 @@ Screens:
                                                       status_novo: _registroAtualizado.status,
                                                       descricao: If(
                                                           varAcaoDueDiligence = "new",
-                                                          If(_registroAtualizado.status = "Encerrado - risco baixo", "Solicitação criada e encerrada automaticamente por regra de risco baixo.", "Solicitação criada. O envio do formulário externo ao terceiro será processado pelo Power Automate."),
+                                                          Switch(
+                                                              _registroAtualizado.status,
+                                                              "Encerrado - risco baixo", "Solicitação criada e encerrada automaticamente por regra de risco baixo.",
+                                                              "Aprovado automaticamente - Fluxo I", "Solicitação criada e aprovada automaticamente (Fluxo I). Sem due diligence.",
+                                                              "Cadastrado - monitoramento (Fluxo II)", "Solicitação criada e cadastrada como alto risco para monitoramento (Fluxo II). Sem due diligence.",
+                                                              "Solicitação criada. O envio do formulário externo ao terceiro será processado pelo Power Automate."
+                                                          ),
                                                           "Dados do solicitante e pontuação recalculados."
                                                       ),
                                                       visivel_solicitante: 1,
@@ -650,7 +733,12 @@ Screens:
                                                   varVisibleDueDiligence: "Registros",
                                                   varAcaoDueDiligence: Blank(),
                                                   varPontuacaoSolicitanteForm: 0,
-                                                  varEncerraBaixoForm: false
+                                                  varEncerraBaixoForm: false,
+                                                  varClassificacaoContraparteForm: Blank(),
+                                                  varGatilhoDdForm: Blank(),
+                                                  varFluxoForm: Blank(),
+                                                  varRiscoFinalTextoForm: Blank(),
+                                                  varRiscoFinalCategoriaForm: Blank()
                                               }
                                           );
                                           Refresh(tb_dueDiligence);
@@ -671,20 +759,29 @@ Screens:
                                           DataField: ="status"
                                           Default: =ThisItem.status
                                           DisplayName: =DataSourceInfo([@tb_dueDiligence], DataSourceInfo.DisplayName, status)
-                                          MaxLength: =DataSourceInfo(%DATACARD_DATASOURCE_NAME.ID%, %DataSourceInfo.RESERVED%.MaxLength, '%DATACARD_FIELD_NAME.ID%')
                                           Required: =true
                                           Update: |-
                                             =With(
                                                 {
-                                                    _statusAtual: Lower(Trim(Coalesce(Self.Default, "")))
+                                                    _statusAtual: Lower(Trim(Coalesce(Self.Default, ""))),
+                                                    _versao: Coalesce(ThisItem.versao_questionario, 2)
                                                 },
                                                 If(
                                                     IsBlank(_statusAtual) ||
                                                     _statusAtual in ["rascunho", "aguardando envio ao terceiro", "aguardando terceiro"],
                                                     If(
-                                                        varEncerraBaixoForm,
-                                                        "Encerrado - risco baixo",
-                                                        "Aguardando envio ao terceiro"
+                                                        _versao = 1,
+                                                        If(
+                                                            varEncerraBaixoForm,
+                                                            "Encerrado - risco baixo",
+                                                            "Aguardando envio ao terceiro"
+                                                        ),
+                                                        Switch(
+                                                            varFluxoForm,
+                                                            "FLUXO I", "Aprovado automaticamente - Fluxo I",
+                                                            "FLUXO II", "Cadastrado - monitoramento (Fluxo II)",
+                                                            "Aguardando envio ao terceiro"
+                                                        )
                                                     ),
                                                     Self.Default
                                                 )
@@ -708,7 +805,7 @@ Screens:
                                           Default: =ThisItem.versao_questionario
                                           DisplayName: =DataSourceInfo([@tb_dueDiligence], DataSourceInfo.DisplayName, versao_questionario)
                                           Required: =true
-                                          Update: =1
+                                          Update: =Coalesce(ThisItem.versao_questionario, 2)
                                           Visible: =false
                                           Width: =Parent.Width
                                           X: =0
@@ -768,7 +865,6 @@ Screens:
                                           Default: =ThisItem.aeroporto
                                           DisplayName: =DataSourceInfo([@tb_dueDiligence], DataSourceInfo.DisplayName, aeroporto)
                                           Height: =100
-                                          MaxLength: =DataSourceInfo(%DATACARD_DATASOURCE_NAME.ID%, %DataSourceInfo.RESERVED%.MaxLength, '%DATACARD_FIELD_NAME.ID%')
                                           Required: =true
                                           Update: =cmbDdAeroporto.Selected.Value
                                           Width: =Parent.Width - 24
@@ -852,7 +948,12 @@ Screens:
                                           Default: =ThisItem.data_conclusao
                                           DisplayName: =DataSourceInfo([@tb_dueDiligence], DataSourceInfo.DisplayName, data_conclusao)
                                           Required: =false
-                                          Update: =If(varEncerraBaixoForm, Coalesce(Self.Default, Now()), Self.Default)
+                                          Update: |-
+                                            =If(
+                                                Coalesce(ThisItem.versao_questionario, 2) = 1,
+                                                If(varEncerraBaixoForm, Coalesce(Self.Default, Now()), Self.Default),
+                                                If(varFluxoForm = "FLUXO I" || varFluxoForm = "FLUXO II", Coalesce(Self.Default, Now()), Self.Default)
+                                            )
                                           Visible: =false
                                           Width: =Parent.Width
                                           X: =0
@@ -864,9 +965,65 @@ Screens:
                                           DataField: ="classificacao_risco"
                                           Default: =ThisItem.classificacao_risco
                                           DisplayName: =DataSourceInfo([@tb_dueDiligence], DataSourceInfo.DisplayName, classificacao_risco)
-                                          MaxLength: =DataSourceInfo(%DATACARD_DATASOURCE_NAME.ID%, %DataSourceInfo.RESERVED%.MaxLength, '%DATACARD_FIELD_NAME.ID%')
                                           Required: =false
-                                          Update: =If(varEncerraBaixoForm, "Baixo", Self.Default)
+                                          Update: |-
+                                            =If(
+                                                Coalesce(ThisItem.versao_questionario, 2) = 1,
+                                                If(varEncerraBaixoForm, "Baixo", Self.Default),
+                                                If(IsBlank(varRiscoFinalCategoriaForm), Self.Default, varRiscoFinalCategoriaForm)
+                                            )
+                                          Visible: =false
+                                          Width: =Parent.Width
+                                          X: =0
+                                          Y: =0
+                                    - classificacao_contraparte_DataCard:
+                                        Control: TypedDataCard@1.0.7
+                                        Variant: TextualEdit
+                                        Properties:
+                                          DataField: ="classificacao_contraparte"
+                                          Default: =ThisItem.classificacao_contraparte
+                                          DisplayName: =DataSourceInfo([@tb_dueDiligence], DataSourceInfo.DisplayName, classificacao_contraparte)
+                                          Required: =false
+                                          Update: =If(Coalesce(ThisItem.versao_questionario, 2) = 2, varClassificacaoContraparteForm, Self.Default)
+                                          Visible: =false
+                                          Width: =Parent.Width
+                                          X: =0
+                                          Y: =0
+                                    - gatilho_dd_DataCard:
+                                        Control: TypedDataCard@1.0.7
+                                        Variant: TextualEdit
+                                        Properties:
+                                          DataField: ="gatilho_dd"
+                                          Default: =ThisItem.gatilho_dd
+                                          DisplayName: =DataSourceInfo([@tb_dueDiligence], DataSourceInfo.DisplayName, gatilho_dd)
+                                          Required: =false
+                                          Update: =If(Coalesce(ThisItem.versao_questionario, 2) = 2, varGatilhoDdForm, Self.Default)
+                                          Visible: =false
+                                          Width: =Parent.Width
+                                          X: =0
+                                          Y: =0
+                                    - fluxo_classificacao_DataCard:
+                                        Control: TypedDataCard@1.0.7
+                                        Variant: TextualEdit
+                                        Properties:
+                                          DataField: ="fluxo_classificacao"
+                                          Default: =ThisItem.fluxo_classificacao
+                                          DisplayName: =DataSourceInfo([@tb_dueDiligence], DataSourceInfo.DisplayName, fluxo_classificacao)
+                                          Required: =false
+                                          Update: =If(Coalesce(ThisItem.versao_questionario, 2) = 2, varFluxoForm, Self.Default)
+                                          Visible: =false
+                                          Width: =Parent.Width
+                                          X: =0
+                                          Y: =0
+                                    - risco_final_DataCard:
+                                        Control: TypedDataCard@1.0.7
+                                        Variant: TextualEdit
+                                        Properties:
+                                          DataField: ="risco_final"
+                                          Default: =ThisItem.risco_final
+                                          DisplayName: =DataSourceInfo([@tb_dueDiligence], DataSourceInfo.DisplayName, risco_final)
+                                          Required: =false
+                                          Update: =If(Coalesce(ThisItem.versao_questionario, 2) = 2, varRiscoFinalTextoForm, Self.Default)
                                           Visible: =false
                                           Width: =Parent.Width
                                           X: =0
@@ -879,7 +1036,6 @@ Screens:
                                           Default: =ThisItem.cnpj_cpf
                                           DisplayName: =DataSourceInfo([@tb_dueDiligence], DataSourceInfo.DisplayName, cnpj_cpf)
                                           Height: =100
-                                          MaxLength: =DataSourceInfo(%DATACARD_DATASOURCE_NAME.ID%, %DataSourceInfo.RESERVED%.MaxLength, '%DATACARD_FIELD_NAME.ID%')
                                           Required: =true
                                           Update: =Trim(txt_cnpj_cpf.Value)
                                           Width: =Parent.Width / 2 - 12
@@ -936,7 +1092,6 @@ Screens:
                                           Default: =ThisItem.razao_social
                                           DisplayName: =DataSourceInfo([@tb_dueDiligence], DataSourceInfo.DisplayName, razao_social)
                                           Height: =100
-                                          MaxLength: =DataSourceInfo(%DATACARD_DATASOURCE_NAME.ID%, %DataSourceInfo.RESERVED%.MaxLength, '%DATACARD_FIELD_NAME.ID%')
                                           Required: =true
                                           Update: =Trim(txt_razao_social.Value)
                                           Width: =Parent.Width / 2 - 12
@@ -985,6 +1140,1015 @@ Screens:
                                                 Width: =Parent.Width - 48
                                                 X: =24
                                                 Y: =txt_razao_social.Y + txt_razao_social.Height
+                                    - area_solicitante_DataCard:
+                                        Control: TypedDataCard@1.0.7
+                                        Variant: TextualEdit
+                                        Properties:
+                                          DataField: ="area_solicitante"
+                                          Default: =ThisItem.area_solicitante
+                                          DisplayName: =DataSourceInfo([@tb_dueDiligence], DataSourceInfo.DisplayName, area_solicitante)
+                                          Height: =If(Coalesce(ThisItem.versao_questionario, 2) = 2, 100, 0)
+                                          Required: =Coalesce(ThisItem.versao_questionario, 2) = 2
+                                          Update: =cmb_area_solicitante.Selected.Value
+                                          Visible: =Coalesce(ThisItem.versao_questionario, 2) = 2
+                                          Width: =Parent.Width / 2 - 12
+                                          X: =0
+                                          Y: =2
+                                        Children:
+                                          - lbl_area_solicitante:
+                                              Control: Text@0.0.51
+                                              MetadataKey: FieldName
+                                              Properties:
+                                                Height: =22
+                                                Text: ="Área Solicitante"
+                                                Weight: ='TextCanvas.Weight'.Bold
+                                                Width: =Parent.Width - 48
+                                                X: =24
+                                                Y: =10
+                                          - cmb_area_solicitante:
+                                              Control: ComboBox@0.0.51
+                                              MetadataKey: FieldValue
+                                              Properties:
+                                                Appearance: ='ComboboxCanvas.Appearance'.FilledLighter
+                                                BorderColor: =RGBA(229, 229, 229, 1)
+                                                BorderRadius: =0
+                                                BorderStyle: =BorderStyle.Solid
+                                                BorderThickness: =1
+                                                DefaultSelectedItems: =If(IsBlank(Parent.Default), [], [Parent.Default])
+                                                DisplayMode: =Parent.DisplayMode
+                                                Height: =40
+                                                InputTextPlaceholder: ="Selecione a área"
+                                                IsSearchable: =false
+                                                Items: =["Comercial", "Suprimentos", "Financeiro", "SGI", "Operações", "Engenharia/Manutenção", "Gestão de Pessoas", "Comunicação", "Administrativo", "Adm. Contratos Concessão", "Compliance", "Jurídico"]
+                                                Required: =Parent.Required
+                                                ValidationState: =If(IsBlank(Parent.Error), "None", "Error")
+                                                Width: =Parent.Width - 48
+                                                X: =24
+                                                Y: =lbl_area_solicitante.Y + lbl_area_solicitante.Height + 4
+                                          - err_area_solicitante:
+                                              Control: Text@0.0.51
+                                              MetadataKey: ErrorMessage
+                                              Properties:
+                                                FontColor: =Color.Red
+                                                Height: =25
+                                                Text: =Parent.Error
+                                                Visible: =And(!IsBlank(Parent.Error), Parent.DisplayMode = DisplayMode.Edit)
+                                                Width: =Parent.Width - 48
+                                                X: =24
+                                                Y: =cmb_area_solicitante.Y + cmb_area_solicitante.Height
+                                    - objeto_contratacao_DataCard:
+                                        Control: TypedDataCard@1.0.7
+                                        Variant: TextualEdit
+                                        Properties:
+                                          DataField: ="objeto_contratacao"
+                                          Default: =ThisItem.objeto_contratacao
+                                          DisplayName: =DataSourceInfo([@tb_dueDiligence], DataSourceInfo.DisplayName, objeto_contratacao)
+                                          Height: =If(Coalesce(ThisItem.versao_questionario, 2) = 2, 100, 0)
+                                          Required: =Coalesce(ThisItem.versao_questionario, 2) = 2
+                                          Update: =Trim(txt_objeto_contratacao.Value)
+                                          Visible: =Coalesce(ThisItem.versao_questionario, 2) = 2
+                                          Width: =Parent.Width - 24
+                                          X: =0
+                                          Y: =3
+                                        Children:
+                                          - lbl_objeto_contratacao:
+                                              Control: Text@0.0.51
+                                              MetadataKey: FieldName
+                                              Properties:
+                                                Height: =22
+                                                Text: ="Objeto resumido da contratação"
+                                                Weight: ='TextCanvas.Weight'.Bold
+                                                Width: =Parent.Width - 48
+                                                X: =24
+                                                Y: =10
+                                          - txt_objeto_contratacao:
+                                              Control: TextInput@0.0.54
+                                              MetadataKey: FieldValue
+                                              Properties:
+                                                AccessibleLabel: =Parent.DisplayName
+                                                Appearance: ='TextInputCanvas.Appearance'.FilledLighter
+                                                BorderColor: =RGBA(229, 229, 229, 1)
+                                                BorderRadius: =0
+                                                BorderStyle: =BorderStyle.Solid
+                                                BorderThickness: =1
+                                                DisplayMode: =Parent.DisplayMode
+                                                Height: =40
+                                                Mode: ='TextInputCanvas.Mode'.SingleLine
+                                                Placeholder: ="Descreva resumidamente o objeto da contratação"
+                                                Required: =Parent.Required
+                                                TriggerOutput: ='TextInputCanvas.TriggerOutput'.Keypress
+                                                ValidationState: =If(IsBlank(Parent.Error), "None", "Error")
+                                                Value: =Parent.Default
+                                                Width: =Parent.Width - 48
+                                                X: =24
+                                                Y: =lbl_objeto_contratacao.Y + lbl_objeto_contratacao.Height + 4
+                                          - err_objeto_contratacao:
+                                              Control: Text@0.0.51
+                                              MetadataKey: ErrorMessage
+                                              Properties:
+                                                FontColor: =Color.Red
+                                                Height: =25
+                                                Text: =Parent.Error
+                                                Visible: =And(!IsBlank(Parent.Error), Parent.DisplayMode = DisplayMode.Edit)
+                                                Width: =Parent.Width - 48
+                                                X: =24
+                                                Y: =txt_objeto_contratacao.Y + txt_objeto_contratacao.Height
+                                    - categoria_contraparte_DataCard:
+                                        Control: TypedDataCard@1.0.7
+                                        Variant: TextualEdit
+                                        Properties:
+                                          DataField: ="categoria_contraparte"
+                                          Default: =ThisItem.categoria_contraparte
+                                          DisplayName: =DataSourceInfo([@tb_dueDiligence], DataSourceInfo.DisplayName, categoria_contraparte)
+                                          Height: =If(Coalesce(ThisItem.versao_questionario, 2) = 2, 130, 0)
+                                          Required: =Coalesce(ThisItem.versao_questionario, 2) = 2
+                                          Update: =dd_categoria_contraparte.Selected.texto_opcao
+                                          Visible: =Coalesce(ThisItem.versao_questionario, 2) = 2
+                                          Width: =Parent.Width - 24
+                                          X: =0
+                                          Y: =4
+                                        Children:
+                                          - lbl_categoria_contraparte:
+                                              Control: Text@0.0.51
+                                              MetadataKey: FieldName
+                                              Properties:
+                                                AutoHeight: =true
+                                                FontColor: =RGBA(30, 41, 59, 1)
+                                                Height: =45
+                                                Text: ="Categoria da contraparte"
+                                                Weight: ='TextCanvas.Weight'.Semibold
+                                                Width: =Parent.Width - 48
+                                                X: =24
+                                                Y: =8
+                                          - dd_categoria_contraparte:
+                                              Control: Classic/ComboBox@2.4.0
+                                              MetadataKey: FieldValue
+                                              Properties:
+                                                BorderColor: =If(IsBlank(Parent.Error), RGBA(229, 229, 229, 1), Color.Red)
+                                                BorderThickness: =1
+                                                DefaultSelectedItems: =Filter(colDdParametros, codigo_pergunta = "categoria_contraparte" && texto_opcao = Parent.Default)
+                                                DisplayFields: =["texto_opcao"]
+                                                DisplayMode: =Parent.DisplayMode
+                                                IsSearchable: =false
+                                                Items: =SortByColumns(Filter(colDdParametros, codigo_pergunta = "categoria_contraparte"), "ordem", SortOrder.Ascending)
+                                                PaddingLeft: =8
+                                                SearchFields: =["texto_opcao"]
+                                                SelectMultiple: =false
+                                                Size: =10
+                                                Tooltip: =Parent.DisplayName
+                                                Width: =Parent.Width - 48
+                                                X: =24
+                                                Y: =lbl_categoria_contraparte.Y + lbl_categoria_contraparte.Height + 4
+                                          - err_categoria_contraparte:
+                                              Control: Text@0.0.51
+                                              MetadataKey: ErrorMessage
+                                              Properties:
+                                                FontColor: =Color.Red
+                                                Height: =25
+                                                Text: =Parent.Error
+                                                Visible: =And(!IsBlank(Parent.Error), Parent.DisplayMode = DisplayMode.Edit)
+                                                Width: =Parent.Width - 48
+                                                X: =24
+                                                Y: =dd_categoria_contraparte.Y + dd_categoria_contraparte.Height
+                                    - fornecedor_tipo_DataCard:
+                                        Control: TypedDataCard@1.0.7
+                                        Variant: TextualEdit
+                                        Properties:
+                                          DataField: ="fornecedor_tipo"
+                                          Default: =ThisItem.fornecedor_tipo
+                                          DisplayName: =DataSourceInfo([@tb_dueDiligence], DataSourceInfo.DisplayName, fornecedor_tipo)
+                                          Height: =If(Coalesce(ThisItem.versao_questionario, 2) = 2, 130, 0)
+                                          Required: =Coalesce(ThisItem.versao_questionario, 2) = 2 && dd_categoria_contraparte.Selected.texto_opcao = "Fornecedor"
+                                          Update: =If(dd_categoria_contraparte.Selected.texto_opcao = "Fornecedor", dd_fornecedor_tipo.Selected.texto_opcao, Blank())
+                                          Visible: =Coalesce(ThisItem.versao_questionario, 2) = 2 && dd_categoria_contraparte.Selected.texto_opcao = "Fornecedor"
+                                          Width: =Parent.Width - 24
+                                          X: =0
+                                          Y: =5
+                                        Children:
+                                          - lbl_fornecedor_tipo:
+                                              Control: Text@0.0.51
+                                              MetadataKey: FieldName
+                                              Properties:
+                                                AutoHeight: =true
+                                                FontColor: =RGBA(30, 41, 59, 1)
+                                                Height: =45
+                                                Text: ="Se Fornecedor, especifique o tipo"
+                                                Weight: ='TextCanvas.Weight'.Semibold
+                                                Width: =Parent.Width - 48
+                                                X: =24
+                                                Y: =8
+                                          - dd_fornecedor_tipo:
+                                              Control: Classic/ComboBox@2.4.0
+                                              MetadataKey: FieldValue
+                                              Properties:
+                                                BorderColor: =If(IsBlank(Parent.Error), RGBA(229, 229, 229, 1), Color.Red)
+                                                BorderThickness: =1
+                                                DefaultSelectedItems: =Filter(colDdParametros, codigo_pergunta = "fornecedor_tipo" && texto_opcao = Parent.Default)
+                                                DisplayFields: =["texto_opcao"]
+                                                DisplayMode: =Parent.DisplayMode
+                                                IsSearchable: =false
+                                                Items: =SortByColumns(Filter(colDdParametros, codigo_pergunta = "fornecedor_tipo"), "ordem", SortOrder.Ascending)
+                                                PaddingLeft: =8
+                                                SearchFields: =["texto_opcao"]
+                                                SelectMultiple: =false
+                                                Size: =10
+                                                Tooltip: =Parent.DisplayName
+                                                Width: =Parent.Width - 48
+                                                X: =24
+                                                Y: =lbl_fornecedor_tipo.Y + lbl_fornecedor_tipo.Height + 4
+                                          - err_fornecedor_tipo:
+                                              Control: Text@0.0.51
+                                              MetadataKey: ErrorMessage
+                                              Properties:
+                                                FontColor: =Color.Red
+                                                Height: =25
+                                                Text: =Parent.Error
+                                                Visible: =And(!IsBlank(Parent.Error), Parent.DisplayMode = DisplayMode.Edit)
+                                                Width: =Parent.Width - 48
+                                                X: =24
+                                                Y: =dd_fornecedor_tipo.Y + dd_fornecedor_tipo.Height
+                                    - cliente_tipo_DataCard:
+                                        Control: TypedDataCard@1.0.7
+                                        Variant: TextualEdit
+                                        Properties:
+                                          DataField: ="cliente_tipo"
+                                          Default: =ThisItem.cliente_tipo
+                                          DisplayName: =DataSourceInfo([@tb_dueDiligence], DataSourceInfo.DisplayName, cliente_tipo)
+                                          Height: =If(Coalesce(ThisItem.versao_questionario, 2) = 2, 130, 0)
+                                          Required: =Coalesce(ThisItem.versao_questionario, 2) = 2 && dd_categoria_contraparte.Selected.texto_opcao = "Cliente"
+                                          Update: =If(dd_categoria_contraparte.Selected.texto_opcao = "Cliente", dd_cliente_tipo.Selected.texto_opcao, Blank())
+                                          Visible: =Coalesce(ThisItem.versao_questionario, 2) = 2 && dd_categoria_contraparte.Selected.texto_opcao = "Cliente"
+                                          Width: =Parent.Width - 24
+                                          X: =0
+                                          Y: =6
+                                        Children:
+                                          - lbl_cliente_tipo:
+                                              Control: Text@0.0.51
+                                              MetadataKey: FieldName
+                                              Properties:
+                                                AutoHeight: =true
+                                                FontColor: =RGBA(30, 41, 59, 1)
+                                                Height: =45
+                                                Text: ="Se Cliente, especifique o tipo"
+                                                Weight: ='TextCanvas.Weight'.Semibold
+                                                Width: =Parent.Width - 48
+                                                X: =24
+                                                Y: =8
+                                          - dd_cliente_tipo:
+                                              Control: Classic/ComboBox@2.4.0
+                                              MetadataKey: FieldValue
+                                              Properties:
+                                                BorderColor: =If(IsBlank(Parent.Error), RGBA(229, 229, 229, 1), Color.Red)
+                                                BorderThickness: =1
+                                                DefaultSelectedItems: =Filter(colDdParametros, codigo_pergunta = "cliente_tipo" && texto_opcao = Parent.Default)
+                                                DisplayFields: =["texto_opcao"]
+                                                DisplayMode: =Parent.DisplayMode
+                                                IsSearchable: =false
+                                                Items: =SortByColumns(Filter(colDdParametros, codigo_pergunta = "cliente_tipo"), "ordem", SortOrder.Ascending)
+                                                PaddingLeft: =8
+                                                SearchFields: =["texto_opcao"]
+                                                SelectMultiple: =false
+                                                Size: =10
+                                                Tooltip: =Parent.DisplayName
+                                                Width: =Parent.Width - 48
+                                                X: =24
+                                                Y: =lbl_cliente_tipo.Y + lbl_cliente_tipo.Height + 4
+                                          - err_cliente_tipo:
+                                              Control: Text@0.0.51
+                                              MetadataKey: ErrorMessage
+                                              Properties:
+                                                FontColor: =Color.Red
+                                                Height: =25
+                                                Text: =Parent.Error
+                                                Visible: =And(!IsBlank(Parent.Error), Parent.DisplayMode = DisplayMode.Edit)
+                                                Width: =Parent.Width - 48
+                                                X: =24
+                                                Y: =dd_cliente_tipo.Y + dd_cliente_tipo.Height
+                                    - tipo_contrato_DataCard:
+                                        Control: TypedDataCard@1.0.7
+                                        Variant: TextualEdit
+                                        Properties:
+                                          DataField: ="tipo_contrato"
+                                          Default: =ThisItem.tipo_contrato
+                                          DisplayName: =DataSourceInfo([@tb_dueDiligence], DataSourceInfo.DisplayName, tipo_contrato)
+                                          Height: =If(Coalesce(ThisItem.versao_questionario, 2) = 2, 130, 0)
+                                          Required: =Coalesce(ThisItem.versao_questionario, 2) = 2
+                                          Update: =dd_tipo_contrato.Selected.texto_opcao
+                                          Visible: =Coalesce(ThisItem.versao_questionario, 2) = 2
+                                          Width: =Parent.Width - 24
+                                          X: =0
+                                          Y: =7
+                                        Children:
+                                          - lbl_tipo_contrato:
+                                              Control: Text@0.0.51
+                                              MetadataKey: FieldName
+                                              Properties:
+                                                AutoHeight: =true
+                                                FontColor: =RGBA(30, 41, 59, 1)
+                                                Height: =45
+                                                Text: ="Tipo de contrato"
+                                                Weight: ='TextCanvas.Weight'.Semibold
+                                                Width: =Parent.Width - 48
+                                                X: =24
+                                                Y: =8
+                                          - dd_tipo_contrato:
+                                              Control: Classic/ComboBox@2.4.0
+                                              MetadataKey: FieldValue
+                                              Properties:
+                                                BorderColor: =If(IsBlank(Parent.Error), RGBA(229, 229, 229, 1), Color.Red)
+                                                BorderThickness: =1
+                                                DefaultSelectedItems: =Filter(colDdParametros, codigo_pergunta = "tipo_contrato" && texto_opcao = Parent.Default)
+                                                DisplayFields: =["texto_opcao"]
+                                                DisplayMode: =Parent.DisplayMode
+                                                IsSearchable: =false
+                                                Items: =SortByColumns(Filter(colDdParametros, codigo_pergunta = "tipo_contrato"), "ordem", SortOrder.Ascending)
+                                                PaddingLeft: =8
+                                                SearchFields: =["texto_opcao"]
+                                                SelectMultiple: =false
+                                                Size: =10
+                                                Tooltip: =Parent.DisplayName
+                                                Width: =Parent.Width - 48
+                                                X: =24
+                                                Y: =lbl_tipo_contrato.Y + lbl_tipo_contrato.Height + 4
+                                          - err_tipo_contrato:
+                                              Control: Text@0.0.51
+                                              MetadataKey: ErrorMessage
+                                              Properties:
+                                                FontColor: =Color.Red
+                                                Height: =25
+                                                Text: =Parent.Error
+                                                Visible: =And(!IsBlank(Parent.Error), Parent.DisplayMode = DisplayMode.Edit)
+                                                Width: =Parent.Width - 48
+                                                X: =24
+                                                Y: =dd_tipo_contrato.Y + dd_tipo_contrato.Height
+                                    - valor_contrato_DataCard:
+                                        Control: TypedDataCard@1.0.7
+                                        Variant: NumberEdit
+                                        Properties:
+                                          DataField: ="valor_contrato"
+                                          Default: =ThisItem.valor_contrato
+                                          DisplayName: =DataSourceInfo([@tb_dueDiligence], DataSourceInfo.DisplayName, valor_contrato)
+                                          Height: =If(Coalesce(ThisItem.versao_questionario, 2) = 2, 100, 0)
+                                          Required: =Coalesce(ThisItem.versao_questionario, 2) = 2
+                                          Update: =Value(txt_valor_contrato.Value)
+                                          Visible: =Coalesce(ThisItem.versao_questionario, 2) = 2
+                                          Width: =Parent.Width / 2 - 12
+                                          X: =0
+                                          Y: =8
+                                        Children:
+                                          - lbl_valor_contrato:
+                                              Control: Text@0.0.51
+                                              MetadataKey: FieldName
+                                              Properties:
+                                                Height: =22
+                                                Text: ="Valor total do contrato (R$)"
+                                                Weight: ='TextCanvas.Weight'.Bold
+                                                Width: =Parent.Width - 48
+                                                X: =24
+                                                Y: =10
+                                          - txt_valor_contrato:
+                                              Control: TextInput@0.0.54
+                                              MetadataKey: FieldValue
+                                              Properties:
+                                                AccessibleLabel: =Parent.DisplayName
+                                                Appearance: ='TextInputCanvas.Appearance'.FilledLighter
+                                                BorderColor: =RGBA(229, 229, 229, 1)
+                                                BorderRadius: =0
+                                                BorderStyle: =BorderStyle.Solid
+                                                BorderThickness: =1
+                                                DisplayMode: =Parent.DisplayMode
+                                                Height: =40
+                                                Mode: ='TextInputCanvas.Mode'.SingleLine
+                                                Placeholder: ="Ex. 250000"
+                                                Required: =Parent.Required
+                                                TriggerOutput: ='TextInputCanvas.TriggerOutput'.Keypress
+                                                ValidationState: =If(IsBlank(Parent.Error), "None", "Error")
+                                                Value: =Text(Parent.Default)
+                                                Width: =Parent.Width - 48
+                                                X: =24
+                                                Y: =lbl_valor_contrato.Y + lbl_valor_contrato.Height + 4
+                                          - err_valor_contrato:
+                                              Control: Text@0.0.51
+                                              MetadataKey: ErrorMessage
+                                              Properties:
+                                                FontColor: =Color.Red
+                                                Height: =25
+                                                Text: =Parent.Error
+                                                Visible: =And(!IsBlank(Parent.Error), Parent.DisplayMode = DisplayMode.Edit)
+                                                Width: =Parent.Width - 48
+                                                X: =24
+                                                Y: =txt_valor_contrato.Y + txt_valor_contrato.Height
+                                    - vigencia_contrato_DataCard:
+                                        Control: TypedDataCard@1.0.7
+                                        Variant: TextualEdit
+                                        Properties:
+                                          DataField: ="vigencia_contrato"
+                                          Default: =ThisItem.vigencia_contrato
+                                          DisplayName: =DataSourceInfo([@tb_dueDiligence], DataSourceInfo.DisplayName, vigencia_contrato)
+                                          Height: =If(Coalesce(ThisItem.versao_questionario, 2) = 2, 130, 0)
+                                          Required: =Coalesce(ThisItem.versao_questionario, 2) = 2
+                                          Update: =dd_vigencia_contrato.Selected.texto_opcao
+                                          Visible: =Coalesce(ThisItem.versao_questionario, 2) = 2
+                                          Width: =Parent.Width / 2 - 12
+                                          X: =1
+                                          Y: =8
+                                        Children:
+                                          - lbl_vigencia_contrato:
+                                              Control: Text@0.0.51
+                                              MetadataKey: FieldName
+                                              Properties:
+                                                AutoHeight: =true
+                                                FontColor: =RGBA(30, 41, 59, 1)
+                                                Height: =45
+                                                Text: ="Vigência do contrato"
+                                                Weight: ='TextCanvas.Weight'.Semibold
+                                                Width: =Parent.Width - 48
+                                                X: =24
+                                                Y: =8
+                                          - dd_vigencia_contrato:
+                                              Control: Classic/ComboBox@2.4.0
+                                              MetadataKey: FieldValue
+                                              Properties:
+                                                BorderColor: =If(IsBlank(Parent.Error), RGBA(229, 229, 229, 1), Color.Red)
+                                                BorderThickness: =1
+                                                DefaultSelectedItems: =Filter(colDdParametros, codigo_pergunta = "vigencia_contrato" && texto_opcao = Parent.Default)
+                                                DisplayFields: =["texto_opcao"]
+                                                DisplayMode: =Parent.DisplayMode
+                                                IsSearchable: =false
+                                                Items: =SortByColumns(Filter(colDdParametros, codigo_pergunta = "vigencia_contrato"), "ordem", SortOrder.Ascending)
+                                                PaddingLeft: =8
+                                                SearchFields: =["texto_opcao"]
+                                                SelectMultiple: =false
+                                                Size: =10
+                                                Tooltip: =Parent.DisplayName
+                                                Width: =Parent.Width - 48
+                                                X: =24
+                                                Y: =lbl_vigencia_contrato.Y + lbl_vigencia_contrato.Height + 4
+                                          - err_vigencia_contrato:
+                                              Control: Text@0.0.51
+                                              MetadataKey: ErrorMessage
+                                              Properties:
+                                                FontColor: =Color.Red
+                                                Height: =25
+                                                Text: =Parent.Error
+                                                Visible: =And(!IsBlank(Parent.Error), Parent.DisplayMode = DisplayMode.Edit)
+                                                Width: =Parent.Width - 48
+                                                X: =24
+                                                Y: =dd_vigencia_contrato.Y + dd_vigencia_contrato.Height
+                                    - adiantamento_DataCard:
+                                        Control: TypedDataCard@1.0.7
+                                        Variant: TextualEdit
+                                        Properties:
+                                          DataField: ="adiantamento"
+                                          Default: =ThisItem.adiantamento
+                                          DisplayName: =DataSourceInfo([@tb_dueDiligence], DataSourceInfo.DisplayName, adiantamento)
+                                          Height: =If(Coalesce(ThisItem.versao_questionario, 2) = 2, 100, 0)
+                                          Required: =Coalesce(ThisItem.versao_questionario, 2) = 2
+                                          Update: =cmb_adiantamento.Selected.Value
+                                          Visible: =Coalesce(ThisItem.versao_questionario, 2) = 2
+                                          Width: =Parent.Width / 2 - 12
+                                          X: =0
+                                          Y: =9
+                                        Children:
+                                          - lbl_adiantamento:
+                                              Control: Text@0.0.51
+                                              MetadataKey: FieldName
+                                              Properties:
+                                                Height: =22
+                                                Text: ="Haverá adiantamento de valores?"
+                                                Weight: ='TextCanvas.Weight'.Bold
+                                                Width: =Parent.Width - 48
+                                                X: =24
+                                                Y: =10
+                                          - cmb_adiantamento:
+                                              Control: ComboBox@0.0.51
+                                              MetadataKey: FieldValue
+                                              Properties:
+                                                Appearance: ='ComboboxCanvas.Appearance'.FilledLighter
+                                                BorderColor: =RGBA(229, 229, 229, 1)
+                                                BorderRadius: =0
+                                                BorderStyle: =BorderStyle.Solid
+                                                BorderThickness: =1
+                                                DefaultSelectedItems: =If(IsBlank(Parent.Default), [], [Parent.Default])
+                                                DisplayMode: =Parent.DisplayMode
+                                                Height: =40
+                                                IsSearchable: =false
+                                                Items: =["Sim", "Não"]
+                                                Required: =Parent.Required
+                                                ValidationState: =If(IsBlank(Parent.Error), "None", "Error")
+                                                Width: =Parent.Width - 48
+                                                X: =24
+                                                Y: =lbl_adiantamento.Y + lbl_adiantamento.Height + 4
+                                          - err_adiantamento:
+                                              Control: Text@0.0.51
+                                              MetadataKey: ErrorMessage
+                                              Properties:
+                                                FontColor: =Color.Red
+                                                Height: =25
+                                                Text: =Parent.Error
+                                                Visible: =And(!IsBlank(Parent.Error), Parent.DisplayMode = DisplayMode.Edit)
+                                                Width: =Parent.Width - 48
+                                                X: =24
+                                                Y: =cmb_adiantamento.Y + cmb_adiantamento.Height
+                                    - success_fee_DataCard:
+                                        Control: TypedDataCard@1.0.7
+                                        Variant: TextualEdit
+                                        Properties:
+                                          DataField: ="success_fee"
+                                          Default: =ThisItem.success_fee
+                                          DisplayName: =DataSourceInfo([@tb_dueDiligence], DataSourceInfo.DisplayName, success_fee)
+                                          Height: =If(Coalesce(ThisItem.versao_questionario, 2) = 2, 100, 0)
+                                          Required: =Coalesce(ThisItem.versao_questionario, 2) = 2
+                                          Update: =cmb_success_fee.Selected.Value
+                                          Visible: =Coalesce(ThisItem.versao_questionario, 2) = 2
+                                          Width: =Parent.Width / 2 - 12
+                                          X: =1
+                                          Y: =9
+                                        Children:
+                                          - lbl_success_fee:
+                                              Control: Text@0.0.51
+                                              MetadataKey: FieldName
+                                              Properties:
+                                                Height: =22
+                                                Text: ="Haverá remuneração com base em resultado (success fee)?"
+                                                Weight: ='TextCanvas.Weight'.Bold
+                                                Width: =Parent.Width - 48
+                                                X: =24
+                                                Y: =10
+                                          - cmb_success_fee:
+                                              Control: ComboBox@0.0.51
+                                              MetadataKey: FieldValue
+                                              Properties:
+                                                Appearance: ='ComboboxCanvas.Appearance'.FilledLighter
+                                                BorderColor: =RGBA(229, 229, 229, 1)
+                                                BorderRadius: =0
+                                                BorderStyle: =BorderStyle.Solid
+                                                BorderThickness: =1
+                                                DefaultSelectedItems: =If(IsBlank(Parent.Default), [], [Parent.Default])
+                                                DisplayMode: =Parent.DisplayMode
+                                                Height: =40
+                                                IsSearchable: =false
+                                                Items: =["Sim", "Não"]
+                                                Required: =Parent.Required
+                                                ValidationState: =If(IsBlank(Parent.Error), "None", "Error")
+                                                Width: =Parent.Width - 48
+                                                X: =24
+                                                Y: =lbl_success_fee.Y + lbl_success_fee.Height + 4
+                                          - err_success_fee:
+                                              Control: Text@0.0.51
+                                              MetadataKey: ErrorMessage
+                                              Properties:
+                                                FontColor: =Color.Red
+                                                Height: =25
+                                                Text: =Parent.Error
+                                                Visible: =And(!IsBlank(Parent.Error), Parent.DisplayMode = DisplayMode.Edit)
+                                                Width: =Parent.Width - 48
+                                                X: =24
+                                                Y: =cmb_success_fee.Y + cmb_success_fee.Height
+                                    - interacao_poder_publico_DataCard:
+                                        Control: TypedDataCard@1.0.7
+                                        Variant: TextualEdit
+                                        Properties:
+                                          DataField: ="interacao_poder_publico"
+                                          Default: =ThisItem.interacao_poder_publico
+                                          DisplayName: =DataSourceInfo([@tb_dueDiligence], DataSourceInfo.DisplayName, interacao_poder_publico)
+                                          Height: =If(Coalesce(ThisItem.versao_questionario, 2) = 2, 130, 0)
+                                          Required: =Coalesce(ThisItem.versao_questionario, 2) = 2
+                                          Update: =dd_interacao_poder_publico.Selected.texto_opcao
+                                          Visible: =Coalesce(ThisItem.versao_questionario, 2) = 2
+                                          Width: =Parent.Width - 24
+                                          X: =0
+                                          Y: =10
+                                        Children:
+                                          - lbl_interacao_poder_publico:
+                                              Control: Text@0.0.51
+                                              MetadataKey: FieldName
+                                              Properties:
+                                                AutoHeight: =true
+                                                FontColor: =RGBA(30, 41, 59, 1)
+                                                Height: =45
+                                                Text: ="Interação com a administração pública no objeto do contrato"
+                                                Weight: ='TextCanvas.Weight'.Semibold
+                                                Width: =Parent.Width - 48
+                                                X: =24
+                                                Y: =8
+                                          - dd_interacao_poder_publico:
+                                              Control: Classic/ComboBox@2.4.0
+                                              MetadataKey: FieldValue
+                                              Properties:
+                                                BorderColor: =If(IsBlank(Parent.Error), RGBA(229, 229, 229, 1), Color.Red)
+                                                BorderThickness: =1
+                                                DefaultSelectedItems: =Filter(colDdParametros, codigo_pergunta = "interacao_poder_publico" && texto_opcao = Parent.Default)
+                                                DisplayFields: =["texto_opcao"]
+                                                DisplayMode: =Parent.DisplayMode
+                                                IsSearchable: =false
+                                                Items: =SortByColumns(Filter(colDdParametros, codigo_pergunta = "interacao_poder_publico"), "ordem", SortOrder.Ascending)
+                                                PaddingLeft: =8
+                                                SearchFields: =["texto_opcao"]
+                                                SelectMultiple: =false
+                                                Size: =10
+                                                Tooltip: =Parent.DisplayName
+                                                Width: =Parent.Width - 48
+                                                X: =24
+                                                Y: =lbl_interacao_poder_publico.Y + lbl_interacao_poder_publico.Height + 4
+                                          - err_interacao_poder_publico:
+                                              Control: Text@0.0.51
+                                              MetadataKey: ErrorMessage
+                                              Properties:
+                                                FontColor: =Color.Red
+                                                Height: =25
+                                                Text: =Parent.Error
+                                                Visible: =And(!IsBlank(Parent.Error), Parent.DisplayMode = DisplayMode.Edit)
+                                                Width: =Parent.Width - 48
+                                                X: =24
+                                                Y: =dd_interacao_poder_publico.Y + dd_interacao_poder_publico.Height
+                                    - gatilho_subcontratacao_DataCard:
+                                        Control: TypedDataCard@1.0.7
+                                        Variant: TextualEdit
+                                        Properties:
+                                          DataField: ="gatilho_subcontratacao"
+                                          Default: =ThisItem.gatilho_subcontratacao
+                                          DisplayName: =DataSourceInfo([@tb_dueDiligence], DataSourceInfo.DisplayName, gatilho_subcontratacao)
+                                          Height: =If(Coalesce(ThisItem.versao_questionario, 2) = 2, 100, 0)
+                                          Required: =Coalesce(ThisItem.versao_questionario, 2) = 2
+                                          Update: =cmb_gatilho_subcontratacao.Selected.Value
+                                          Visible: =Coalesce(ThisItem.versao_questionario, 2) = 2
+                                          Width: =Parent.Width / 2 - 12
+                                          X: =0
+                                          Y: =11
+                                        Children:
+                                          - lbl_gatilho_subcontratacao:
+                                              Control: Text@0.0.51
+                                              MetadataKey: FieldName
+                                              Properties:
+                                                Height: =22
+                                                Text: ="Haverá subcontratação?"
+                                                Weight: ='TextCanvas.Weight'.Bold
+                                                Width: =Parent.Width - 48
+                                                X: =24
+                                                Y: =10
+                                          - cmb_gatilho_subcontratacao:
+                                              Control: ComboBox@0.0.51
+                                              MetadataKey: FieldValue
+                                              Properties:
+                                                Appearance: ='ComboboxCanvas.Appearance'.FilledLighter
+                                                BorderColor: =RGBA(229, 229, 229, 1)
+                                                BorderRadius: =0
+                                                BorderStyle: =BorderStyle.Solid
+                                                BorderThickness: =1
+                                                DefaultSelectedItems: =If(IsBlank(Parent.Default), [], [Parent.Default])
+                                                DisplayMode: =Parent.DisplayMode
+                                                Height: =40
+                                                IsSearchable: =false
+                                                Items: =["Sim", "Não"]
+                                                Required: =Parent.Required
+                                                ValidationState: =If(IsBlank(Parent.Error), "None", "Error")
+                                                Width: =Parent.Width - 48
+                                                X: =24
+                                                Y: =lbl_gatilho_subcontratacao.Y + lbl_gatilho_subcontratacao.Height + 4
+                                          - err_gatilho_subcontratacao:
+                                              Control: Text@0.0.51
+                                              MetadataKey: ErrorMessage
+                                              Properties:
+                                                FontColor: =Color.Red
+                                                Height: =25
+                                                Text: =Parent.Error
+                                                Visible: =And(!IsBlank(Parent.Error), Parent.DisplayMode = DisplayMode.Edit)
+                                                Width: =Parent.Width - 48
+                                                X: =24
+                                                Y: =cmb_gatilho_subcontratacao.Y + cmb_gatilho_subcontratacao.Height
+                                    - gatilho_procuracao_DataCard:
+                                        Control: TypedDataCard@1.0.7
+                                        Variant: TextualEdit
+                                        Properties:
+                                          DataField: ="gatilho_procuracao"
+                                          Default: =ThisItem.gatilho_procuracao
+                                          DisplayName: =DataSourceInfo([@tb_dueDiligence], DataSourceInfo.DisplayName, gatilho_procuracao)
+                                          Height: =If(Coalesce(ThisItem.versao_questionario, 2) = 2, 100, 0)
+                                          Required: =Coalesce(ThisItem.versao_questionario, 2) = 2
+                                          Update: =cmb_gatilho_procuracao.Selected.Value
+                                          Visible: =Coalesce(ThisItem.versao_questionario, 2) = 2
+                                          Width: =Parent.Width / 2 - 12
+                                          X: =1
+                                          Y: =11
+                                        Children:
+                                          - lbl_gatilho_procuracao:
+                                              Control: Text@0.0.51
+                                              MetadataKey: FieldName
+                                              Properties:
+                                                Height: =22
+                                                Text: ="Será outorgada procuração ao terceiro?"
+                                                Weight: ='TextCanvas.Weight'.Bold
+                                                Width: =Parent.Width - 48
+                                                X: =24
+                                                Y: =10
+                                          - cmb_gatilho_procuracao:
+                                              Control: ComboBox@0.0.51
+                                              MetadataKey: FieldValue
+                                              Properties:
+                                                Appearance: ='ComboboxCanvas.Appearance'.FilledLighter
+                                                BorderColor: =RGBA(229, 229, 229, 1)
+                                                BorderRadius: =0
+                                                BorderStyle: =BorderStyle.Solid
+                                                BorderThickness: =1
+                                                DefaultSelectedItems: =If(IsBlank(Parent.Default), [], [Parent.Default])
+                                                DisplayMode: =Parent.DisplayMode
+                                                Height: =40
+                                                IsSearchable: =false
+                                                Items: =["Sim", "Não"]
+                                                Required: =Parent.Required
+                                                ValidationState: =If(IsBlank(Parent.Error), "None", "Error")
+                                                Width: =Parent.Width - 48
+                                                X: =24
+                                                Y: =lbl_gatilho_procuracao.Y + lbl_gatilho_procuracao.Height + 4
+                                          - err_gatilho_procuracao:
+                                              Control: Text@0.0.51
+                                              MetadataKey: ErrorMessage
+                                              Properties:
+                                                FontColor: =Color.Red
+                                                Height: =25
+                                                Text: =Parent.Error
+                                                Visible: =And(!IsBlank(Parent.Error), Parent.DisplayMode = DisplayMode.Edit)
+                                                Width: =Parent.Width - 48
+                                                X: =24
+                                                Y: =cmb_gatilho_procuracao.Y + cmb_gatilho_procuracao.Height
+                                    - gatilho_pagamento_em_nome_DataCard:
+                                        Control: TypedDataCard@1.0.7
+                                        Variant: TextualEdit
+                                        Properties:
+                                          DataField: ="gatilho_pagamento_em_nome"
+                                          Default: =ThisItem.gatilho_pagamento_em_nome
+                                          DisplayName: =DataSourceInfo([@tb_dueDiligence], DataSourceInfo.DisplayName, gatilho_pagamento_em_nome)
+                                          Height: =If(Coalesce(ThisItem.versao_questionario, 2) = 2, 100, 0)
+                                          Required: =Coalesce(ThisItem.versao_questionario, 2) = 2
+                                          Update: =cmb_gatilho_pagamento_em_nome.Selected.Value
+                                          Visible: =Coalesce(ThisItem.versao_questionario, 2) = 2
+                                          Width: =Parent.Width / 2 - 12
+                                          X: =0
+                                          Y: =12
+                                        Children:
+                                          - lbl_gatilho_pagamento_em_nome:
+                                              Control: Text@0.0.51
+                                              MetadataKey: FieldName
+                                              Properties:
+                                                Height: =22
+                                                Text: ="O terceiro fará pagamentos em nome da Companhia?"
+                                                Weight: ='TextCanvas.Weight'.Bold
+                                                Width: =Parent.Width - 48
+                                                X: =24
+                                                Y: =10
+                                          - cmb_gatilho_pagamento_em_nome:
+                                              Control: ComboBox@0.0.51
+                                              MetadataKey: FieldValue
+                                              Properties:
+                                                Appearance: ='ComboboxCanvas.Appearance'.FilledLighter
+                                                BorderColor: =RGBA(229, 229, 229, 1)
+                                                BorderRadius: =0
+                                                BorderStyle: =BorderStyle.Solid
+                                                BorderThickness: =1
+                                                DefaultSelectedItems: =If(IsBlank(Parent.Default), [], [Parent.Default])
+                                                DisplayMode: =Parent.DisplayMode
+                                                Height: =40
+                                                IsSearchable: =false
+                                                Items: =["Sim", "Não"]
+                                                Required: =Parent.Required
+                                                ValidationState: =If(IsBlank(Parent.Error), "None", "Error")
+                                                Width: =Parent.Width - 48
+                                                X: =24
+                                                Y: =lbl_gatilho_pagamento_em_nome.Y + lbl_gatilho_pagamento_em_nome.Height + 4
+                                          - err_gatilho_pagamento_em_nome:
+                                              Control: Text@0.0.51
+                                              MetadataKey: ErrorMessage
+                                              Properties:
+                                                FontColor: =Color.Red
+                                                Height: =25
+                                                Text: =Parent.Error
+                                                Visible: =And(!IsBlank(Parent.Error), Parent.DisplayMode = DisplayMode.Edit)
+                                                Width: =Parent.Width - 48
+                                                X: =24
+                                                Y: =cmb_gatilho_pagamento_em_nome.Y + cmb_gatilho_pagamento_em_nome.Height
+                                    - gatilho_representacao_orgao_publico_DataCard:
+                                        Control: TypedDataCard@1.0.7
+                                        Variant: TextualEdit
+                                        Properties:
+                                          DataField: ="gatilho_representacao_orgao_publico"
+                                          Default: =ThisItem.gatilho_representacao_orgao_publico
+                                          DisplayName: =DataSourceInfo([@tb_dueDiligence], DataSourceInfo.DisplayName, gatilho_representacao_orgao_publico)
+                                          Height: =If(Coalesce(ThisItem.versao_questionario, 2) = 2, 100, 0)
+                                          Required: =Coalesce(ThisItem.versao_questionario, 2) = 2
+                                          Update: =cmb_gatilho_representacao_orgao_publico.Selected.Value
+                                          Visible: =Coalesce(ThisItem.versao_questionario, 2) = 2
+                                          Width: =Parent.Width / 2 - 12
+                                          X: =1
+                                          Y: =12
+                                        Children:
+                                          - lbl_gatilho_representacao_orgao_publico:
+                                              Control: Text@0.0.51
+                                              MetadataKey: FieldName
+                                              Properties:
+                                                Height: =22
+                                                Text: ="Haverá representação da Companhia pelo terceiro perante órgão da administração pública?"
+                                                Weight: ='TextCanvas.Weight'.Bold
+                                                Width: =Parent.Width - 48
+                                                X: =24
+                                                Y: =10
+                                          - cmb_gatilho_representacao_orgao_publico:
+                                              Control: ComboBox@0.0.51
+                                              MetadataKey: FieldValue
+                                              Properties:
+                                                Appearance: ='ComboboxCanvas.Appearance'.FilledLighter
+                                                BorderColor: =RGBA(229, 229, 229, 1)
+                                                BorderRadius: =0
+                                                BorderStyle: =BorderStyle.Solid
+                                                BorderThickness: =1
+                                                DefaultSelectedItems: =If(IsBlank(Parent.Default), [], [Parent.Default])
+                                                DisplayMode: =Parent.DisplayMode
+                                                Height: =40
+                                                IsSearchable: =false
+                                                Items: =["Sim", "Não"]
+                                                Required: =Parent.Required
+                                                ValidationState: =If(IsBlank(Parent.Error), "None", "Error")
+                                                Width: =Parent.Width - 48
+                                                X: =24
+                                                Y: =lbl_gatilho_representacao_orgao_publico.Y + lbl_gatilho_representacao_orgao_publico.Height + 4
+                                          - err_gatilho_representacao_orgao_publico:
+                                              Control: Text@0.0.51
+                                              MetadataKey: ErrorMessage
+                                              Properties:
+                                                FontColor: =Color.Red
+                                                Height: =25
+                                                Text: =Parent.Error
+                                                Visible: =And(!IsBlank(Parent.Error), Parent.DisplayMode = DisplayMode.Edit)
+                                                Width: =Parent.Width - 48
+                                                X: =24
+                                                Y: =cmb_gatilho_representacao_orgao_publico.Y + cmb_gatilho_representacao_orgao_publico.Height
+                                    - gatilho_indicado_funcionario_publico_DataCard:
+                                        Control: TypedDataCard@1.0.7
+                                        Variant: TextualEdit
+                                        Properties:
+                                          DataField: ="gatilho_indicado_funcionario_publico"
+                                          Default: =ThisItem.gatilho_indicado_funcionario_publico
+                                          DisplayName: =DataSourceInfo([@tb_dueDiligence], DataSourceInfo.DisplayName, gatilho_indicado_funcionario_publico)
+                                          Height: =If(Coalesce(ThisItem.versao_questionario, 2) = 2, 100, 0)
+                                          Required: =Coalesce(ThisItem.versao_questionario, 2) = 2
+                                          Update: =cmb_gatilho_indicado_funcionario_publico.Selected.Value
+                                          Visible: =Coalesce(ThisItem.versao_questionario, 2) = 2
+                                          Width: =Parent.Width - 24
+                                          X: =0
+                                          Y: =13
+                                        Children:
+                                          - lbl_gatilho_indicado_funcionario_publico:
+                                              Control: Text@0.0.51
+                                              MetadataKey: FieldName
+                                              Properties:
+                                                Height: =22
+                                                Text: ="O terceiro ou subcontratado foi indicado por funcionário público?"
+                                                Weight: ='TextCanvas.Weight'.Bold
+                                                Width: =Parent.Width - 48
+                                                X: =24
+                                                Y: =10
+                                          - cmb_gatilho_indicado_funcionario_publico:
+                                              Control: ComboBox@0.0.51
+                                              MetadataKey: FieldValue
+                                              Properties:
+                                                Appearance: ='ComboboxCanvas.Appearance'.FilledLighter
+                                                BorderColor: =RGBA(229, 229, 229, 1)
+                                                BorderRadius: =0
+                                                BorderStyle: =BorderStyle.Solid
+                                                BorderThickness: =1
+                                                DefaultSelectedItems: =If(IsBlank(Parent.Default), [], [Parent.Default])
+                                                DisplayMode: =Parent.DisplayMode
+                                                Height: =40
+                                                IsSearchable: =false
+                                                Items: =["Sim", "Não"]
+                                                Required: =Parent.Required
+                                                ValidationState: =If(IsBlank(Parent.Error), "None", "Error")
+                                                Width: =Parent.Width - 48
+                                                X: =24
+                                                Y: =lbl_gatilho_indicado_funcionario_publico.Y + lbl_gatilho_indicado_funcionario_publico.Height + 4
+                                          - err_gatilho_indicado_funcionario_publico:
+                                              Control: Text@0.0.51
+                                              MetadataKey: ErrorMessage
+                                              Properties:
+                                                FontColor: =Color.Red
+                                                Height: =25
+                                                Text: =Parent.Error
+                                                Visible: =And(!IsBlank(Parent.Error), Parent.DisplayMode = DisplayMode.Edit)
+                                                Width: =Parent.Width - 48
+                                                X: =24
+                                                Y: =cmb_gatilho_indicado_funcionario_publico.Y + cmb_gatilho_indicado_funcionario_publico.Height
+                                    - pagamento_obrigacao_legal_DataCard:
+                                        Control: TypedDataCard@1.0.7
+                                        Variant: TextualEdit
+                                        Properties:
+                                          DataField: ="pagamento_obrigacao_legal"
+                                          Default: =ThisItem.pagamento_obrigacao_legal
+                                          DisplayName: =DataSourceInfo([@tb_dueDiligence], DataSourceInfo.DisplayName, pagamento_obrigacao_legal)
+                                          Height: =If(Coalesce(ThisItem.versao_questionario, 2) = 2, 100, 0)
+                                          Required: =Coalesce(ThisItem.versao_questionario, 2) = 2
+                                          Update: =cmb_pagamento_obrigacao_legal.Selected.Value
+                                          Visible: =Coalesce(ThisItem.versao_questionario, 2) = 2
+                                          Width: =Parent.Width - 24
+                                          X: =0
+                                          Y: =14
+                                        Children:
+                                          - lbl_pagamento_obrigacao_legal:
+                                              Control: Text@0.0.51
+                                              MetadataKey: FieldName
+                                              Properties:
+                                                Height: =22
+                                                Text: ="O pagamento decorre de obrigação legal?"
+                                                Weight: ='TextCanvas.Weight'.Bold
+                                                Width: =Parent.Width - 48
+                                                X: =24
+                                                Y: =10
+                                          - cmb_pagamento_obrigacao_legal:
+                                              Control: ComboBox@0.0.51
+                                              MetadataKey: FieldValue
+                                              Properties:
+                                                Appearance: ='ComboboxCanvas.Appearance'.FilledLighter
+                                                BorderColor: =RGBA(229, 229, 229, 1)
+                                                BorderRadius: =0
+                                                BorderStyle: =BorderStyle.Solid
+                                                BorderThickness: =1
+                                                DefaultSelectedItems: =If(IsBlank(Parent.Default), [], [Parent.Default])
+                                                DisplayMode: =Parent.DisplayMode
+                                                Height: =40
+                                                IsSearchable: =false
+                                                Items: =["Sim", "Não"]
+                                                Required: =Parent.Required
+                                                ValidationState: =If(IsBlank(Parent.Error), "None", "Error")
+                                                Width: =Parent.Width - 48
+                                                X: =24
+                                                Y: =lbl_pagamento_obrigacao_legal.Y + lbl_pagamento_obrigacao_legal.Height + 4
+                                          - err_pagamento_obrigacao_legal:
+                                              Control: Text@0.0.51
+                                              MetadataKey: ErrorMessage
+                                              Properties:
+                                                FontColor: =Color.Red
+                                                Height: =25
+                                                Text: =Parent.Error
+                                                Visible: =And(!IsBlank(Parent.Error), Parent.DisplayMode = DisplayMode.Edit)
+                                                Width: =Parent.Width - 48
+                                                X: =24
+                                                Y: =cmb_pagamento_obrigacao_legal.Y + cmb_pagamento_obrigacao_legal.Height
+                                    - tipo_obrigacao_legal_DataCard:
+                                        Control: TypedDataCard@1.0.7
+                                        Variant: TextualEdit
+                                        Properties:
+                                          DataField: ="tipo_obrigacao_legal"
+                                          Default: =ThisItem.tipo_obrigacao_legal
+                                          DisplayName: =DataSourceInfo([@tb_dueDiligence], DataSourceInfo.DisplayName, tipo_obrigacao_legal)
+                                          Height: =If(Coalesce(ThisItem.versao_questionario, 2) = 2, 130, 0)
+                                          Required: =Coalesce(ThisItem.versao_questionario, 2) = 2 && cmb_pagamento_obrigacao_legal.Selected.Value = "Sim"
+                                          Update: =If(cmb_pagamento_obrigacao_legal.Selected.Value = "Sim", dd_tipo_obrigacao_legal.Selected.texto_opcao, Blank())
+                                          Visible: =Coalesce(ThisItem.versao_questionario, 2) = 2 && cmb_pagamento_obrigacao_legal.Selected.Value = "Sim"
+                                          Width: =Parent.Width - 24
+                                          X: =0
+                                          Y: =15
+                                        Children:
+                                          - lbl_tipo_obrigacao_legal:
+                                              Control: Text@0.0.51
+                                              MetadataKey: FieldName
+                                              Properties:
+                                                AutoHeight: =true
+                                                FontColor: =RGBA(30, 41, 59, 1)
+                                                Height: =45
+                                                Text: ="Se sim, qual o tipo de obrigação legal?"
+                                                Weight: ='TextCanvas.Weight'.Semibold
+                                                Width: =Parent.Width - 48
+                                                X: =24
+                                                Y: =8
+                                          - dd_tipo_obrigacao_legal:
+                                              Control: Classic/ComboBox@2.4.0
+                                              MetadataKey: FieldValue
+                                              Properties:
+                                                BorderColor: =If(IsBlank(Parent.Error), RGBA(229, 229, 229, 1), Color.Red)
+                                                BorderThickness: =1
+                                                DefaultSelectedItems: =Filter(colDdParametros, codigo_pergunta = "tipo_obrigacao_legal" && texto_opcao = Parent.Default)
+                                                DisplayFields: =["texto_opcao"]
+                                                DisplayMode: =Parent.DisplayMode
+                                                IsSearchable: =false
+                                                Items: =SortByColumns(Filter(colDdParametros, codigo_pergunta = "tipo_obrigacao_legal"), "ordem", SortOrder.Ascending)
+                                                PaddingLeft: =8
+                                                SearchFields: =["texto_opcao"]
+                                                SelectMultiple: =false
+                                                Size: =10
+                                                Tooltip: =Parent.DisplayName
+                                                Width: =Parent.Width - 48
+                                                X: =24
+                                                Y: =lbl_tipo_obrigacao_legal.Y + lbl_tipo_obrigacao_legal.Height + 4
+                                          - err_tipo_obrigacao_legal:
+                                              Control: Text@0.0.51
+                                              MetadataKey: ErrorMessage
+                                              Properties:
+                                                FontColor: =Color.Red
+                                                Height: =25
+                                                Text: =Parent.Error
+                                                Visible: =And(!IsBlank(Parent.Error), Parent.DisplayMode = DisplayMode.Edit)
+                                                Width: =Parent.Width - 48
+                                                X: =24
+                                                Y: =dd_tipo_obrigacao_legal.Y + dd_tipo_obrigacao_legal.Height
                                     - tipo_pessoa_DataCard:
                                         Control: TypedDataCard@1.0.7
                                         Variant: TextualEdit
@@ -992,13 +2156,13 @@ Screens:
                                           DataField: ="tipo_pessoa"
                                           Default: =ThisItem.tipo_pessoa
                                           DisplayName: =DataSourceInfo([@tb_dueDiligence], DataSourceInfo.DisplayName, tipo_pessoa)
-                                          Height: =100
-                                          MaxLength: =DataSourceInfo(%DATACARD_DATASOURCE_NAME.ID%, %DataSourceInfo.RESERVED%.MaxLength, '%DATACARD_FIELD_NAME.ID%')
-                                          Required: =true
+                                          Height: =If(Coalesce(ThisItem.versao_questionario, 2) = 1, 100, 0)
+                                          Required: =Coalesce(ThisItem.versao_questionario, 2) = 1
                                           Update: =cmb_tipo_pessoa.Selected.Value
+                                          Visible: =Coalesce(ThisItem.versao_questionario, 2) = 1
                                           Width: =Parent.Width / 2 - 12
                                           X: =0
-                                          Y: =2
+                                          Y: =90
                                         Children:
                                           - lbl_tipo_pessoa:
                                               Control: Text@0.0.51
@@ -1048,7 +2212,6 @@ Screens:
                                           Default: =ThisItem.email_terceiro
                                           DisplayName: =DataSourceInfo([@tb_dueDiligence], DataSourceInfo.DisplayName, email_terceiro)
                                           Height: =100
-                                          MaxLength: =DataSourceInfo(%DATACARD_DATASOURCE_NAME.ID%, %DataSourceInfo.RESERVED%.MaxLength, '%DATACARD_FIELD_NAME.ID%')
                                           Required: =true
                                           Update: =Trim(txt_email_terceiro.Value)
                                           Width: =Parent.Width / 2 - 12
@@ -1104,13 +2267,13 @@ Screens:
                                           DataField: ="modalidade_compra"
                                           Default: =ThisItem.modalidade_compra
                                           DisplayName: =DataSourceInfo([@tb_dueDiligence], DataSourceInfo.DisplayName, modalidade_compra)
-                                          Height: =100
-                                          MaxLength: =DataSourceInfo(%DATACARD_DATASOURCE_NAME.ID%, %DataSourceInfo.RESERVED%.MaxLength, '%DATACARD_FIELD_NAME.ID%')
+                                          Height: =If(Coalesce(ThisItem.versao_questionario, 2) = 1, 100, 0)
                                           Required: =false
                                           Update: =cmb_modalidade_compra.Selected.Value
+                                          Visible: =Coalesce(ThisItem.versao_questionario, 2) = 1
                                           Width: =Parent.Width - 24
                                           X: =0
-                                          Y: =3
+                                          Y: =91
                                         Children:
                                           - lbl_modalidade_compra:
                                               Control: Text@0.0.51
@@ -1159,13 +2322,13 @@ Screens:
                                           DataField: ="s01_tipo_relacionamento"
                                           Default: =ThisItem.s01_tipo_relacionamento
                                           DisplayName: =DataSourceInfo([@tb_dueDiligence], DataSourceInfo.DisplayName, s01_tipo_relacionamento)
-                                          Height: =130
-                                          MaxLength: =DataSourceInfo(%DATACARD_DATASOURCE_NAME.ID%, %DataSourceInfo.RESERVED%.MaxLength, '%DATACARD_FIELD_NAME.ID%')
-                                          Required: =true
+                                          Height: =If(Coalesce(ThisItem.versao_questionario, 2) = 1, 130, 0)
+                                          Required: =Coalesce(ThisItem.versao_questionario, 2) = 1
                                           Update: =dd_s01.Selected.texto_opcao
+                                          Visible: =Coalesce(ThisItem.versao_questionario, 2) = 1
                                           Width: =Parent.Width - 24
                                           X: =0
-                                          Y: =4
+                                          Y: =92
                                         Children:
                                           - lbl_s01:
                                               Control: Text@0.0.51
@@ -1215,13 +2378,13 @@ Screens:
                                           DataField: ="s02_doacao_patrocinio"
                                           Default: =ThisItem.s02_doacao_patrocinio
                                           DisplayName: =DataSourceInfo([@tb_dueDiligence], DataSourceInfo.DisplayName, s02_doacao_patrocinio)
-                                          Height: =130
-                                          MaxLength: =DataSourceInfo(%DATACARD_DATASOURCE_NAME.ID%, %DataSourceInfo.RESERVED%.MaxLength, '%DATACARD_FIELD_NAME.ID%')
-                                          Required: =true
+                                          Height: =If(Coalesce(ThisItem.versao_questionario, 2) = 1, 130, 0)
+                                          Required: =Coalesce(ThisItem.versao_questionario, 2) = 1
                                           Update: =dd_s02.Selected.texto_opcao
+                                          Visible: =Coalesce(ThisItem.versao_questionario, 2) = 1
                                           Width: =Parent.Width - 24
                                           X: =0
-                                          Y: =5
+                                          Y: =93
                                         Children:
                                           - lbl_s02:
                                               Control: Text@0.0.51
@@ -1272,14 +2435,13 @@ Screens:
                                           DataField: ="s03_licitacao_agente_publico"
                                           Default: =ThisItem.s03_licitacao_agente_publico
                                           DisplayName: =DataSourceInfo([@tb_dueDiligence], DataSourceInfo.DisplayName, s03_licitacao_agente_publico)
-                                          Height: =130
-                                          MaxLength: =DataSourceInfo(%DATACARD_DATASOURCE_NAME.ID%, %DataSourceInfo.RESERVED%.MaxLength, '%DATACARD_FIELD_NAME.ID%')
-                                          Required: =dd_s02.Selected.texto_opcao = "Sim"
+                                          Height: =If(Coalesce(ThisItem.versao_questionario, 2) = 1, 130, 0)
+                                          Required: =Coalesce(ThisItem.versao_questionario, 2) = 1 && dd_s02.Selected.texto_opcao = "Sim"
                                           Update: =If(dd_s02.Selected.texto_opcao = "Sim", dd_s03.Selected.texto_opcao, Blank())
-                                          Visible: =dd_s02.Selected.texto_opcao = "Sim"
+                                          Visible: =Coalesce(ThisItem.versao_questionario, 2) = 1 && dd_s02.Selected.texto_opcao = "Sim"
                                           Width: =Parent.Width - 24
                                           X: =0
-                                          Y: =6
+                                          Y: =94
                                         Children:
                                           - lbl_s03:
                                               Control: Text@0.0.51
@@ -1330,13 +2492,13 @@ Screens:
                                           DataField: ="s04_fornecedor_especial"
                                           Default: =ThisItem.s04_fornecedor_especial
                                           DisplayName: =DataSourceInfo([@tb_dueDiligence], DataSourceInfo.DisplayName, s04_fornecedor_especial)
-                                          Height: =130
-                                          MaxLength: =DataSourceInfo(%DATACARD_DATASOURCE_NAME.ID%, %DataSourceInfo.RESERVED%.MaxLength, '%DATACARD_FIELD_NAME.ID%')
-                                          Required: =true
+                                          Height: =If(Coalesce(ThisItem.versao_questionario, 2) = 1, 130, 0)
+                                          Required: =Coalesce(ThisItem.versao_questionario, 2) = 1
                                           Update: =dd_s04.Selected.texto_opcao
+                                          Visible: =Coalesce(ThisItem.versao_questionario, 2) = 1
                                           Width: =Parent.Width - 24
                                           X: =0
-                                          Y: =7
+                                          Y: =95
                                         Children:
                                           - lbl_s04:
                                               Control: Text@0.0.51
@@ -1387,13 +2549,13 @@ Screens:
                                           DataField: ="s05_fornecedor_exclusivo"
                                           Default: =ThisItem.s05_fornecedor_exclusivo
                                           DisplayName: =DataSourceInfo([@tb_dueDiligence], DataSourceInfo.DisplayName, s05_fornecedor_exclusivo)
-                                          Height: =130
-                                          MaxLength: =DataSourceInfo(%DATACARD_DATASOURCE_NAME.ID%, %DataSourceInfo.RESERVED%.MaxLength, '%DATACARD_FIELD_NAME.ID%')
-                                          Required: =true
+                                          Height: =If(Coalesce(ThisItem.versao_questionario, 2) = 1, 130, 0)
+                                          Required: =Coalesce(ThisItem.versao_questionario, 2) = 1
                                           Update: =dd_s05.Selected.texto_opcao
+                                          Visible: =Coalesce(ThisItem.versao_questionario, 2) = 1
                                           Width: =Parent.Width - 24
                                           X: =0
-                                          Y: =8
+                                          Y: =96
                                         Children:
                                           - lbl_s05:
                                               Control: Text@0.0.51
@@ -1444,13 +2606,13 @@ Screens:
                                           DataField: ="s06_parte_relacionada"
                                           Default: =ThisItem.s06_parte_relacionada
                                           DisplayName: =DataSourceInfo([@tb_dueDiligence], DataSourceInfo.DisplayName, s06_parte_relacionada)
-                                          Height: =130
-                                          MaxLength: =DataSourceInfo(%DATACARD_DATASOURCE_NAME.ID%, %DataSourceInfo.RESERVED%.MaxLength, '%DATACARD_FIELD_NAME.ID%')
-                                          Required: =true
+                                          Height: =If(Coalesce(ThisItem.versao_questionario, 2) = 1, 130, 0)
+                                          Required: =Coalesce(ThisItem.versao_questionario, 2) = 1
                                           Update: =dd_s06.Selected.texto_opcao
+                                          Visible: =Coalesce(ThisItem.versao_questionario, 2) = 1
                                           Width: =Parent.Width - 24
                                           X: =0
-                                          Y: =9
+                                          Y: =97
                                         Children:
                                           - lbl_s06:
                                               Control: Text@0.0.51
@@ -1459,7 +2621,7 @@ Screens:
                                                 AutoHeight: =true
                                                 FontColor: =RGBA(30, 41, 59, 1)
                                                 Height: =45
-                                                Text: ="6) O Terceiro é parte relacionada à Motiva?"
+                                                Text: ="6) O Terceiro é parte relacionada à Asur Brasil?"
                                                 Weight: ='TextCanvas.Weight'.Semibold
                                                 Width: =Parent.Width - 48
                                                 X: =24
@@ -1501,13 +2663,13 @@ Screens:
                                           DataField: ="s07_tipo_servico"
                                           Default: =ThisItem.s07_tipo_servico
                                           DisplayName: =DataSourceInfo([@tb_dueDiligence], DataSourceInfo.DisplayName, s07_tipo_servico)
-                                          Height: =130
-                                          MaxLength: =DataSourceInfo(%DATACARD_DATASOURCE_NAME.ID%, %DataSourceInfo.RESERVED%.MaxLength, '%DATACARD_FIELD_NAME.ID%')
-                                          Required: =true
+                                          Height: =If(Coalesce(ThisItem.versao_questionario, 2) = 1, 130, 0)
+                                          Required: =Coalesce(ThisItem.versao_questionario, 2) = 1
                                           Update: =dd_s07.Selected.texto_opcao
+                                          Visible: =Coalesce(ThisItem.versao_questionario, 2) = 1
                                           Width: =Parent.Width - 24
                                           X: =0
-                                          Y: =10
+                                          Y: =98
                                         Children:
                                           - lbl_s07:
                                               Control: Text@0.0.51
@@ -1557,13 +2719,13 @@ Screens:
                                           DataField: ="s08_faixa_valor"
                                           Default: =ThisItem.s08_faixa_valor
                                           DisplayName: =DataSourceInfo([@tb_dueDiligence], DataSourceInfo.DisplayName, s08_faixa_valor)
-                                          Height: =130
-                                          MaxLength: =DataSourceInfo(%DATACARD_DATASOURCE_NAME.ID%, %DataSourceInfo.RESERVED%.MaxLength, '%DATACARD_FIELD_NAME.ID%')
-                                          Required: =true
+                                          Height: =If(Coalesce(ThisItem.versao_questionario, 2) = 1, 130, 0)
+                                          Required: =Coalesce(ThisItem.versao_questionario, 2) = 1
                                           Update: =dd_s08.Selected.texto_opcao
+                                          Visible: =Coalesce(ThisItem.versao_questionario, 2) = 1
                                           Width: =Parent.Width - 24
                                           X: =0
-                                          Y: =11
+                                          Y: =99
                                         Children:
                                           - lbl_s08:
                                               Control: Text@0.0.51
@@ -1614,13 +2776,13 @@ Screens:
                                           DataField: ="s11_adiantamento"
                                           Default: =ThisItem.s11_adiantamento
                                           DisplayName: =DataSourceInfo([@tb_dueDiligence], DataSourceInfo.DisplayName, s11_adiantamento)
-                                          Height: =130
-                                          MaxLength: =DataSourceInfo(%DATACARD_DATASOURCE_NAME.ID%, %DataSourceInfo.RESERVED%.MaxLength, '%DATACARD_FIELD_NAME.ID%')
-                                          Required: =true
+                                          Height: =If(Coalesce(ThisItem.versao_questionario, 2) = 1, 130, 0)
+                                          Required: =Coalesce(ThisItem.versao_questionario, 2) = 1
                                           Update: =dd_s11.Selected.texto_opcao
+                                          Visible: =Coalesce(ThisItem.versao_questionario, 2) = 1
                                           Width: =Parent.Width - 24
                                           X: =0
-                                          Y: =12
+                                          Y: =100
                                         Children:
                                           - lbl_s11:
                                               Control: Text@0.0.51
@@ -1671,13 +2833,13 @@ Screens:
                                           DataField: ="s12_interacao_poder_publico"
                                           Default: =ThisItem.s12_interacao_poder_publico
                                           DisplayName: =DataSourceInfo([@tb_dueDiligence], DataSourceInfo.DisplayName, s12_interacao_poder_publico)
-                                          Height: =130
-                                          MaxLength: =DataSourceInfo(%DATACARD_DATASOURCE_NAME.ID%, %DataSourceInfo.RESERVED%.MaxLength, '%DATACARD_FIELD_NAME.ID%')
-                                          Required: =true
+                                          Height: =If(Coalesce(ThisItem.versao_questionario, 2) = 1, 130, 0)
+                                          Required: =Coalesce(ThisItem.versao_questionario, 2) = 1
                                           Update: =dd_s12.Selected.texto_opcao
+                                          Visible: =Coalesce(ThisItem.versao_questionario, 2) = 1
                                           Width: =Parent.Width - 24
                                           X: =0
-                                          Y: =13
+                                          Y: =101
                                         Children:
                                           - lbl_s12:
                                               Control: Text@0.0.51
@@ -1686,7 +2848,7 @@ Screens:
                                                 AutoHeight: =true
                                                 FontColor: =RGBA(30, 41, 59, 1)
                                                 Height: =45
-                                                Text: ="12) O Terceiro poderá agir em nome da Motiva ou interagir com o Poder Público durante a prestação dos serviços?"
+                                                Text: ="12) O Terceiro poderá agir em nome da Asur Brasil ou interagir com o Poder Público durante a prestação dos serviços?"
                                                 Weight: ='TextCanvas.Weight'.Semibold
                                                 Width: =Parent.Width - 48
                                                 X: =24
@@ -1728,13 +2890,13 @@ Screens:
                                           DataField: ="s13_licencas_autorizacoes"
                                           Default: =ThisItem.s13_licencas_autorizacoes
                                           DisplayName: =DataSourceInfo([@tb_dueDiligence], DataSourceInfo.DisplayName, s13_licencas_autorizacoes)
-                                          Height: =130
-                                          MaxLength: =DataSourceInfo(%DATACARD_DATASOURCE_NAME.ID%, %DataSourceInfo.RESERVED%.MaxLength, '%DATACARD_FIELD_NAME.ID%')
-                                          Required: =true
+                                          Height: =If(Coalesce(ThisItem.versao_questionario, 2) = 1, 130, 0)
+                                          Required: =Coalesce(ThisItem.versao_questionario, 2) = 1
                                           Update: =dd_s13.Selected.texto_opcao
+                                          Visible: =Coalesce(ThisItem.versao_questionario, 2) = 1
                                           Width: =Parent.Width - 24
                                           X: =0
-                                          Y: =14
+                                          Y: =102
                                         Children:
                                           - lbl_s13:
                                               Control: Text@0.0.51
@@ -1743,7 +2905,7 @@ Screens:
                                                 AutoHeight: =true
                                                 FontColor: =RGBA(30, 41, 59, 1)
                                                 Height: =45
-                                                Text: ="13) O Terceiro poderá emitir licença, obter permissão, autorização, alvará ou aprovação em Órgão Público, ou sofrer fiscalização em nome da Motiva?"
+                                                Text: ="13) O Terceiro poderá emitir licença, obter permissão, autorização, alvará ou aprovação em Órgão Público, ou sofrer fiscalização em nome da Asur Brasil?"
                                                 Weight: ='TextCanvas.Weight'.Semibold
                                                 Width: =Parent.Width - 48
                                                 X: =24
@@ -1785,13 +2947,13 @@ Screens:
                                           DataField: ="s14_subcontratacao"
                                           Default: =ThisItem.s14_subcontratacao
                                           DisplayName: =DataSourceInfo([@tb_dueDiligence], DataSourceInfo.DisplayName, s14_subcontratacao)
-                                          Height: =130
-                                          MaxLength: =DataSourceInfo(%DATACARD_DATASOURCE_NAME.ID%, %DataSourceInfo.RESERVED%.MaxLength, '%DATACARD_FIELD_NAME.ID%')
-                                          Required: =true
+                                          Height: =If(Coalesce(ThisItem.versao_questionario, 2) = 1, 130, 0)
+                                          Required: =Coalesce(ThisItem.versao_questionario, 2) = 1
                                           Update: =dd_s14.Selected.texto_opcao
+                                          Visible: =Coalesce(ThisItem.versao_questionario, 2) = 1
                                           Width: =Parent.Width - 24
                                           X: =0
-                                          Y: =15
+                                          Y: =103
                                         Children:
                                           - lbl_s14:
                                               Control: Text@0.0.51
@@ -1842,13 +3004,13 @@ Screens:
                                           DataField: ="s15_success_fee"
                                           Default: =ThisItem.s15_success_fee
                                           DisplayName: =DataSourceInfo([@tb_dueDiligence], DataSourceInfo.DisplayName, s15_success_fee)
-                                          Height: =130
-                                          MaxLength: =DataSourceInfo(%DATACARD_DATASOURCE_NAME.ID%, %DataSourceInfo.RESERVED%.MaxLength, '%DATACARD_FIELD_NAME.ID%')
-                                          Required: =true
+                                          Height: =If(Coalesce(ThisItem.versao_questionario, 2) = 1, 130, 0)
+                                          Required: =Coalesce(ThisItem.versao_questionario, 2) = 1
                                           Update: =dd_s15.Selected.texto_opcao
+                                          Visible: =Coalesce(ThisItem.versao_questionario, 2) = 1
                                           Width: =Parent.Width - 24
                                           X: =0
-                                          Y: =16
+                                          Y: =104
                                         Children:
                                           - lbl_s15:
                                               Control: Text@0.0.51
@@ -1899,13 +3061,13 @@ Screens:
                                           DataField: ="s16_indicado_funcionario_publico"
                                           Default: =ThisItem.s16_indicado_funcionario_publico
                                           DisplayName: =DataSourceInfo([@tb_dueDiligence], DataSourceInfo.DisplayName, s16_indicado_funcionario_publico)
-                                          Height: =130
-                                          MaxLength: =DataSourceInfo(%DATACARD_DATASOURCE_NAME.ID%, %DataSourceInfo.RESERVED%.MaxLength, '%DATACARD_FIELD_NAME.ID%')
-                                          Required: =true
+                                          Height: =If(Coalesce(ThisItem.versao_questionario, 2) = 1, 130, 0)
+                                          Required: =Coalesce(ThisItem.versao_questionario, 2) = 1
                                           Update: =dd_s16.Selected.texto_opcao
+                                          Visible: =Coalesce(ThisItem.versao_questionario, 2) = 1
                                           Width: =Parent.Width - 24
                                           X: =0
-                                          Y: =17
+                                          Y: =105
                                         Children:
                                           - lbl_s16:
                                               Control: Text@0.0.51
@@ -1956,13 +3118,13 @@ Screens:
                                           DataField: ="s17_obrigacao_poder_concedente"
                                           Default: =ThisItem.s17_obrigacao_poder_concedente
                                           DisplayName: =DataSourceInfo([@tb_dueDiligence], DataSourceInfo.DisplayName, s17_obrigacao_poder_concedente)
-                                          Height: =130
-                                          MaxLength: =DataSourceInfo(%DATACARD_DATASOURCE_NAME.ID%, %DataSourceInfo.RESERVED%.MaxLength, '%DATACARD_FIELD_NAME.ID%')
-                                          Required: =true
+                                          Height: =If(Coalesce(ThisItem.versao_questionario, 2) = 1, 130, 0)
+                                          Required: =Coalesce(ThisItem.versao_questionario, 2) = 1
                                           Update: =dd_s17.Selected.texto_opcao
+                                          Visible: =Coalesce(ThisItem.versao_questionario, 2) = 1
                                           Width: =Parent.Width - 24
                                           X: =0
-                                          Y: =18
+                                          Y: =106
                                         Children:
                                           - lbl_s17:
                                               Control: Text@0.0.51
@@ -2013,13 +3175,13 @@ Screens:
                                           DataField: ="s19_ex_colaborador"
                                           Default: =ThisItem.s19_ex_colaborador
                                           DisplayName: =DataSourceInfo([@tb_dueDiligence], DataSourceInfo.DisplayName, s19_ex_colaborador)
-                                          Height: =130
-                                          MaxLength: =DataSourceInfo(%DATACARD_DATASOURCE_NAME.ID%, %DataSourceInfo.RESERVED%.MaxLength, '%DATACARD_FIELD_NAME.ID%')
-                                          Required: =true
+                                          Height: =If(Coalesce(ThisItem.versao_questionario, 2) = 1, 130, 0)
+                                          Required: =Coalesce(ThisItem.versao_questionario, 2) = 1
                                           Update: =dd_s19.Selected.texto_opcao
+                                          Visible: =Coalesce(ThisItem.versao_questionario, 2) = 1
                                           Width: =Parent.Width - 24
                                           X: =0
-                                          Y: =19
+                                          Y: =107
                                         Children:
                                           - lbl_s19:
                                               Control: Text@0.0.51
@@ -2028,7 +3190,7 @@ Screens:
                                                 AutoHeight: =true
                                                 FontColor: =RGBA(30, 41, 59, 1)
                                                 Height: =45
-                                                Text: ="19) A empresa diligenciada possui em seu quadro algum ex-colaborador da Motiva desligado nos últimos 2 anos?"
+                                                Text: ="19) A empresa diligenciada possui em seu quadro algum ex-colaborador da Asur Brasil desligado nos últimos 2 anos?"
                                                 Weight: ='TextCanvas.Weight'.Semibold
                                                 Width: =Parent.Width - 48
                                                 X: =24
@@ -2105,6 +3267,7 @@ Screens:
                                           OnSelect: |-
                                             =With(
                                                 {
+                                                    _versao: Coalesce(varRegistroDueDiligence.versao_questionario, 2),
                                                     _selecoes: Table(
                                                         {codigo: dd_s01.Selected.codigo_opcao},
                                                         {codigo: dd_s02.Selected.codigo_opcao},
@@ -2122,22 +3285,98 @@ Screens:
                                                         {codigo: dd_s16.Selected.codigo_opcao},
                                                         {codigo: dd_s17.Selected.codigo_opcao},
                                                         {codigo: dd_s19.Selected.codigo_opcao}
-                                                    )
+                                                    ),
+                                                    _classificacaoContraparte: Switch(
+                                                        true,
+                                                        dd_categoria_contraparte.Selected.texto_opcao = "Órgão da administração pública", "FLUXO II",
+                                                        dd_categoria_contraparte.Selected.texto_opcao = "Associação, sindicato, entidade de classe ou organização social", "ALTO",
+                                                        dd_categoria_contraparte.Selected.texto_opcao = "Fornecedor", Coalesce(LookUp(colDdParametros, codigo_pergunta = "fornecedor_tipo" && codigo_opcao = dd_fornecedor_tipo.Selected.codigo_opcao, classificacao), ""),
+                                                        dd_categoria_contraparte.Selected.texto_opcao = "Cliente", Coalesce(LookUp(colDdParametros, codigo_pergunta = "cliente_tipo" && codigo_opcao = dd_cliente_tipo.Selected.codigo_opcao, classificacao), ""),
+                                                        ""
+                                                    ),
+                                                    _pontosValor: If(
+                                                        IsBlank(txt_valor_contrato.Value),
+                                                        0,
+                                                        With(
+                                                            {_v: Value(txt_valor_contrato.Value)},
+                                                            If(_v <= 100000, 0, If(_v <= 500000, 5, If(_v <= 2000000, 10, 20)))
+                                                        )
+                                                    ),
+                                                    _pontosVigencia: Switch(dd_vigencia_contrato.Selected.texto_opcao, "> 36 meses ou indeterminada", 10, "> 12 a 36 meses", 5, 0),
+                                                    _pontosAdiantamento: If(cmb_adiantamento.Selected.Value = "Sim", 10, 0),
+                                                    _pontosSuccessFee: If(cmb_success_fee.Selected.Value = "Sim", 15, 0),
+                                                    _pontosInteracao: Switch(dd_interacao_poder_publico.Selected.texto_opcao, "Habitual / parte do objeto", 15, "Eventual", 5, 0),
+                                                    _gatilhoDD: cmb_gatilho_subcontratacao.Selected.Value = "Sim" || cmb_gatilho_procuracao.Selected.Value = "Sim" || cmb_gatilho_pagamento_em_nome.Selected.Value = "Sim" || cmb_gatilho_representacao_orgao_publico.Selected.Value = "Sim" || cmb_gatilho_indicado_funcionario_publico.Selected.Value = "Sim",
+                                                    _obrigacaoLegal: cmb_pagamento_obrigacao_legal.Selected.Value = "Sim"
                                                 },
-                                                UpdateContext(
+                                                With(
                                                     {
-                                                        varPontuacaoSolicitanteForm: Sum(
-                                                            _selecoes As S,
-                                                            Coalesce(LookUp(colDdParametros, codigo_opcao = S.codigo, pontuacao), 0)
-                                                        ),
-                                                        varEncerraBaixoForm: CountIf(
-                                                            _selecoes As S,
-                                                            Coalesce(LookUp(colDdParametros, codigo_opcao = S.codigo, encerra_risco_baixo), 0) = 1
-                                                        ) > 0,
-                                                        varVisibleProcessandoDd: true
-                                                    }
-                                                );
-                                                SubmitForm(frmDdSolicitante)
+                                                        _totalPontos: _pontosValor + _pontosVigencia + _pontosAdiantamento + _pontosSuccessFee + _pontosInteracao
+                                                    },
+                                                    With(
+                                                        {
+                                                            _faixaPontos: If(_totalPontos >= 36, "Alto", If(_totalPontos >= 16, "Médio", "Baixo"))
+                                                        },
+                                                        With(
+                                                            {
+                                                                _fluxo: If(
+                                                                    _obrigacaoLegal, "FLUXO I",
+                                                                    _gatilhoDD, "FLUXO III",
+                                                                    _classificacaoContraparte = "FLUXO II", "FLUXO II",
+                                                                    _classificacaoContraparte = "ALTO", "FLUXO III",
+                                                                    _classificacaoContraparte = "SEM RISCO", "FLUXO I",
+                                                                    _classificacaoContraparte = "PONTUAR", If(_faixaPontos = "Baixo", "FLUXO I", "FLUXO III"),
+                                                                    ""
+                                                                ),
+                                                                _riscoTexto: If(
+                                                                    _obrigacaoLegal, "Sem risco (obrigação legal)",
+                                                                    _classificacaoContraparte = "FLUXO II", "Alto (monitoramento atual)",
+                                                                    _classificacaoContraparte = "ALTO", "Alto",
+                                                                    _classificacaoContraparte = "SEM RISCO", "Sem risco",
+                                                                    _classificacaoContraparte = "PONTUAR", _faixaPontos & If(_gatilhoDD, " + gatilho DD", ""),
+                                                                    _gatilhoDD, "Alto (gatilho DD)",
+                                                                    "Indefinido"
+                                                                ),
+                                                                _riscoCategoria: If(
+                                                                    _obrigacaoLegal, "Baixo",
+                                                                    _classificacaoContraparte = "FLUXO II", "Alto",
+                                                                    _classificacaoContraparte = "ALTO", "Alto",
+                                                                    _classificacaoContraparte = "SEM RISCO", "Baixo",
+                                                                    _classificacaoContraparte = "PONTUAR", _faixaPontos,
+                                                                    _gatilhoDD, "Alto",
+                                                                    Blank()
+                                                                )
+                                                            },
+                                                            UpdateContext(
+                                                                {
+                                                                    varPontuacaoSolicitanteForm: If(
+                                                                        _versao = 1,
+                                                                        Sum(
+                                                                            _selecoes As S,
+                                                                            Coalesce(LookUp(colDdParametros, codigo_opcao = S.codigo, pontuacao), 0)
+                                                                        ),
+                                                                        _totalPontos
+                                                                    ),
+                                                                    varEncerraBaixoForm: If(
+                                                                        _versao = 1,
+                                                                        CountIf(
+                                                                            _selecoes As S,
+                                                                            Coalesce(LookUp(colDdParametros, codigo_opcao = S.codigo, encerra_risco_baixo), 0) = 1
+                                                                        ) > 0,
+                                                                        false
+                                                                    ),
+                                                                    varClassificacaoContraparteForm: _classificacaoContraparte,
+                                                                    varGatilhoDdForm: If(_gatilhoDD, "Sim", "Não"),
+                                                                    varFluxoForm: _fluxo,
+                                                                    varRiscoFinalTextoForm: _riscoTexto,
+                                                                    varRiscoFinalCategoriaForm: _riscoCategoria,
+                                                                    varVisibleProcessandoDd: true
+                                                                }
+                                                            );
+                                                            SubmitForm(frmDdSolicitante)
+                                                        )
+                                                    )
+                                                )
                                             )
                                           Text: =If(varAcaoDueDiligence = "new", "Criar Solicitação", "Salvar Alterações")
                                           Width: =200
@@ -2196,7 +3435,7 @@ Screens:
                                           Height: =40
                                           InputTextPlaceholder: ="Status"
                                           IsSearchable: =false
-                                          Items: =["Rascunho", "Aguardando envio ao terceiro", "Aguardando terceiro", "Pendente Compliance", "Em análise Compliance", "Aguardando esclarecimento", "Em homologação", "Encerrado - risco baixo", "Aprovado", "Aprovado com ressalvas", "Reprovado parcialmente", "Reprovado", "Cancelado", "Erro no envio ao terceiro"]
+                                          Items: =["Rascunho", "Aguardando envio ao terceiro", "Aguardando terceiro", "Pendente Compliance", "Em análise Compliance", "Aguardando esclarecimento", "Em homologação", "Encerrado - risco baixo", "Aprovado automaticamente - Fluxo I", "Cadastrado - monitoramento (Fluxo II)", "Aprovado", "Aprovado com ressalvas", "Reprovado parcialmente", "Reprovado", "Cancelado", "Erro no envio ao terceiro"]
                                           Width: =200
                                     - dpDdDataInicio:
                                         Control: DatePicker@0.0.46
@@ -2479,7 +3718,7 @@ Screens:
                                                     Control: Label@2.5.1
                                                     Properties:
                                                       Align: =Align.Center
-                                                      Color: =Switch(ThisItem.classificacao_risco, "Alto", Color.Red, "Baixo", RGBA(17, 141, 92, 1), RGBA(100, 116, 139, 1))
+                                                      Color: =Switch(ThisItem.classificacao_risco, "Alto", Color.Red, "Médio", RGBA(196, 127, 0, 1), "Baixo", RGBA(17, 141, 92, 1), RGBA(100, 116, 139, 1))
                                                       FontWeight: =FontWeight.Semibold
                                                       Size: =10
                                                       Text: =Coalesce(ThisItem.classificacao_risco, "-")
@@ -2492,21 +3731,25 @@ Screens:
                                                             {
                                                                 _cor: Switch(
                                                                     ThisItem.status,
+                                                                    "Aprovado automaticamente - Fluxo I", "#118D5C",
+                                                                    "Cadastrado - monitoramento (Fluxo II)", "#D97706",
                                                                     "Aprovado", "#118D5C",
                                                                     "Aprovado com ressalvas", "#C47F00",
                                                                     "Reprovado parcialmente", "#D97706",
                                                                     "Reprovado", "#D93025",
                                                                     "Cancelado", "#64748B",
-                                                                    "#391694"
+                                                                    "#00879A"
                                                                 ),
                                                                 _fundo: Switch(
                                                                     ThisItem.status,
+                                                                    "Aprovado automaticamente - Fluxo I", "#E1F9ED",
+                                                                    "Cadastrado - monitoramento (Fluxo II)", "#FFF4D6",
                                                                     "Aprovado", "#E1F9ED",
                                                                     "Aprovado com ressalvas", "#FFF4D6",
                                                                     "Reprovado parcialmente", "#FFF4D6",
                                                                     "Reprovado", "#FFE5E5",
                                                                     "Cancelado", "#F1F5F9",
-                                                                    "#F3F0FF"
+                                                                    "#EBF5F7"
                                                                 )
                                                             },
                                                             "<div style='text-align:center;padding-top:18px;font-family:Segoe UI'><span style='display:inline-block;padding:5px 12px;background:" & _fundo & ";color:" & _cor & ";font-size:10px;font-weight:700'>" & Upper(ThisItem.status) & "</span></div>"
@@ -2534,7 +3777,7 @@ Screens:
                                                                 ItemKey: "editar",
                                                                 ItemDisplayName: "Editar",
                                                                 ItemIconName: "Edit",
-                                                                ItemDisabled: ThisItem.status in ["Encerrado - risco baixo", "Aprovado", "Aprovado com ressalvas", "Reprovado parcialmente", "Reprovado", "Cancelado"],
+                                                                ItemDisabled: ThisItem.status in ["Encerrado - risco baixo", "Aprovado automaticamente - Fluxo I", "Cadastrado - monitoramento (Fluxo II)", "Aprovado", "Aprovado com ressalvas", "Reprovado parcialmente", "Reprovado", "Cancelado"],
                                                                 ItemTooltip: "Editar"
                                                             },
                                                             {
@@ -2680,7 +3923,7 @@ Screens:
                               - txtDdDesdTitulo:
                                   Control: ModernText@1.0.0
                                   Properties:
-                                    Color: =RGBA(57, 22, 148, 1)
+                                    Color: =RGBA(0, 135, 154, 1)
                                     FillPortions: =1
                                     FontWeight: =FontWeight.Bold
                                     Size: =14
@@ -2689,7 +3932,7 @@ Screens:
                                   Control: ModernButton@1.0.0
                                   Properties:
                                     Appearance: =ButtonAppearance.Transparent
-                                    Color: =RGBA(57, 22, 148, 1)
+                                    Color: =RGBA(0, 135, 154, 1)
                                     Icon: ="Warning"
                                     Layout: =ButtonLayout.IconAfter
                                     OnSelect: |-
@@ -2811,7 +4054,6 @@ Screens:
                                     Default: =ThisItem.tipo_desdobramento
                                     DisplayName: =DataSourceInfo([@tb_dueDiligenceDesdobramentos], DataSourceInfo.DisplayName, tipo_desdobramento)
                                     Height: =90
-                                    MaxLength: =DataSourceInfo(%DATACARD_DATASOURCE_NAME.ID%, %DataSourceInfo.RESERVED%.MaxLength, '%DATACARD_FIELD_NAME.ID%')
                                     Required: =true
                                     Update: =cmbDdTipoDesdobramento.Selected.Value
                                     Width: =Parent.Width
@@ -2850,7 +4092,6 @@ Screens:
                                     DataField: ="status_anterior"
                                     Default: =varRegistroDueDiligence.status
                                     DisplayName: =DataSourceInfo([@tb_dueDiligenceDesdobramentos], DataSourceInfo.DisplayName, status_anterior)
-                                    MaxLength: =DataSourceInfo(%DATACARD_DATASOURCE_NAME.ID%, %DataSourceInfo.RESERVED%.MaxLength, '%DATACARD_FIELD_NAME.ID%')
                                     Required: =false
                                     Update: =varRegistroDueDiligence.status
                                     Visible: =false
@@ -2865,7 +4106,6 @@ Screens:
                                     Default: =ThisItem.status_novo
                                     DisplayName: =DataSourceInfo([@tb_dueDiligenceDesdobramentos], DataSourceInfo.DisplayName, status_novo)
                                     Height: =90
-                                    MaxLength: =DataSourceInfo(%DATACARD_DATASOURCE_NAME.ID%, %DataSourceInfo.RESERVED%.MaxLength, '%DATACARD_FIELD_NAME.ID%')
                                     Required: =true
                                     Update: =cmbDdDesdStatusNovo.Selected.Value
                                     Width: =Parent.Width
@@ -2906,7 +4146,6 @@ Screens:
                                     Default: =ThisItem.descricao
                                     DisplayName: =DataSourceInfo([@tb_dueDiligenceDesdobramentos], DataSourceInfo.DisplayName, descricao)
                                     Height: =155
-                                    MaxLength: =DataSourceInfo(%DATACARD_DATASOURCE_NAME.ID%, %DataSourceInfo.RESERVED%.MaxLength, '%DATACARD_FIELD_NAME.ID%')
                                     Required: =true
                                     Update: =Trim(txtDdDesdDescricao.Value)
                                     Width: =Parent.Width
@@ -3123,7 +4362,7 @@ Screens:
                         - txtDdHistoricoTitulo:
                             Control: ModernText@1.0.0
                             Properties:
-                              Color: =RGBA(57, 22, 148, 1)
+                              Color: =RGBA(0, 135, 154, 1)
                               FontWeight: =FontWeight.Bold
                               Height: =40
                               Size: =14
@@ -3151,9 +4390,9 @@ Screens:
                                         "<div style='padding:24px 16px;background:#f9fafb;border:1px dashed #d1d5db;text-align:center;color:#6b7280;font-weight:700'>Nenhum desdobramento registrado</div>",
                                         Concat(
                                             _itens As D,
-                                            "<div style='margin-bottom:14px;background:#fff;border:1px solid #e5e7eb;border-left:4px solid #391694;padding:10px 12px'>" &
+                                            "<div style='margin-bottom:14px;background:#fff;border:1px solid #e5e7eb;border-left:4px solid #00879A;padding:10px 12px'>" &
                                             "<div style='display:flex;justify-content:space-between;margin-bottom:7px'>" &
-                                            "<span style='font-size:11px;font-weight:700;color:#391694'>" & Upper(D.tipo_desdobramento) & "</span>" &
+                                            "<span style='font-size:11px;font-weight:700;color:#00879A'>" & Upper(D.tipo_desdobramento) & "</span>" &
                                             "<span style='font-size:10px;color:#9ca3af'>" & Text(D.Created, "[$-pt-BR]dd/mm/yyyy HH:mm") & "</span></div>" &
                                             "<div style='font-size:11px;color:#64748b;margin-bottom:7px'>" & Coalesce(D.status_anterior, "-") & " → " & Coalesce(D.status_novo, "-") & "</div>" &
                                             "<div style='font-size:12px;color:#374151;background:#f9fafb;padding:8px'>" & Substitute(Coalesce(D.descricao, "Sem descrição"), Char(10), "<br>") & "</div>" &
@@ -3183,7 +4422,7 @@ Screens:
                 Properties:
                   Height: =70
                   Icon: ="Clock"
-                  IconColor: =RGBA(57, 22, 148, 1)
+                  IconColor: =RGBA(0, 135, 154, 1)
                   Width: =70
             - txtDdProcessando:
                 Control: Text@0.0.51

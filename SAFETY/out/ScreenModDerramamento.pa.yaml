@@ -131,9 +131,21 @@ Screens:
                         LayoutMinHeight: =0
                         OnSelect: |-
                           =Set(
-                              var_vista,
-                              "form"
-                          )
+                               var_vista,
+                               "form"
+                           );
+                           // ── INIT DA VISÃO "form" ────────────────────────────────────
+                           // Era o OnVisible da tela de origem desta visão. Set(var_vista, ...)
+                           // não dispara OnVisible, então a inicialização anda junto com a
+                           // troca de visão — senão a visão abre sem coleção e sem estado.
+                           UpdateContext(
+                               {
+                                   varVisibleContainerDerFluAero: true,
+                                   varVisibleContainerDerFluOutros: false,
+                                   //Default color border
+                                   varBordaDefault: nfCorBorda
+                               }
+                           )
                         PaddingBottom: =5
                         PaddingLeft: =5
                         PaddingRight: =5
@@ -167,7 +179,7 @@ Screens:
                         LayoutMaxHeight: =
                         LayoutMaxWidth: =
                         LayoutMinHeight: =0
-                        OnSelect: =Navigate(frmHome, ScreenTransition.Fade)
+                        OnSelect: =Set(var_redirectAN, Blank()); Navigate(frmHome, ScreenTransition.Fade)
                         Visible: =!Icon28_205.Visible
                         Width: =75.94
             - Container83_88:
@@ -210,8 +222,19 @@ Screens:
                                var_vista,
                                "form"
                            );
-                          Clear(col_colVeiEnvolvidos);
-                          Clear(col_colVeiGalleryImg)
+                           // ── INIT DA VISÃO "form" ────────────────────────────────────
+                           // Era o OnVisible da tela de origem desta visão. Set(var_vista, ...)
+                           // não dispara OnVisible, então a inicialização anda junto com a
+                           // troca de visão — senão a visão abre sem coleção e sem estado.
+                           UpdateContext(
+                               {
+                                   varVisibleContainerDerFluAero: true,
+                                   varVisibleContainerDerFluOutros: false,
+                                   //Default color border
+                                   varBordaDefault: nfCorBorda
+                               }
+                           );
+                          Clear(col_derFluImg)
                         Text: ="Cadastrar"
                         Width: =113.92
                         X: =14.06
@@ -828,6 +851,35 @@ Screens:
                                  );
                                  UpdateContext(
                                      {varDerFluSelect: ThisItem}
+                                 );
+                                 // ── INIT DA VISÃO "detalhe" ────────────────────────────────────
+                                 // Era o OnVisible da tela de origem desta visão. Set(var_vista, ...)
+                                 // não dispara OnVisible, então a inicialização anda junto com a
+                                 // troca de visão — senão a visão abre sem coleção e sem estado.
+                                 ClearCollect(
+                                     col_derFluDetImagens,
+                                     Filter(
+                                         '14.2-tbl_DerFluidosImg',
+                                         derFluFK_id = varDerFluSelect.derFlu_id
+                                     )
+                                 );
+                                 UpdateContext(
+                                     {
+                                         var_XImg: 300,
+                                         var_YImg: 47,
+                                         var_WImg: 548,
+                                         var_HImg: 614,
+                                         var_XGallery: 900,
+                                         var_YGallery: 250,
+                                         var_WGallery: 195,
+                                         var_HGallery: 390,
+                                         var_colorGalleria: RGBA(
+                                             241,
+                                             244,
+                                             249,
+                                             1
+                                         )
+                                     }
                                  )
                               PaddingBottom: =5
                               PaddingLeft: =5
@@ -1064,7 +1116,7 @@ Screens:
                         LayoutMaxHeight: =
                         LayoutMaxWidth: =
                         LayoutMinHeight: =0
-                        OnSelect: =Navigate(frmHome, ScreenTransition.Fade)
+                        OnSelect: =Set(var_redirectAN, Blank()); Navigate(frmHome, ScreenTransition.Fade)
                         Width: =60
             - cntFaixaAeroDerFlu:
                 Control: GroupContainer@1.5.0
@@ -3701,7 +3753,7 @@ Screens:
                         LayoutMaxHeight: =
                         LayoutMaxWidth: =
                         LayoutMinHeight: =0
-                        OnSelect: =Navigate(frmHome, ScreenTransition.Fade)
+                        OnSelect: =Set(var_redirectAN, Blank()); Navigate(frmHome, ScreenTransition.Fade)
                         Width: =60
             - Container36_1:
                 Control: GroupContainer@1.5.0

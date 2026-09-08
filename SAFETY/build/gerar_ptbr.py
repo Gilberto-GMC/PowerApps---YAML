@@ -49,7 +49,7 @@ if __name__ == '__main__':
     fx = extrair_onstart('out/01_App.pa.yaml')
     ptbr = para_ptbr(fx)
     destino = 'out/01_App_OnStart_ptBR.txt'
-    open(destino, 'w', encoding='utf-8').write(CAB + ptbr + '\n')
+    open(destino, 'w', encoding='utf-8', newline='\n').write(CAB + ptbr + '\n')
 
     print(f"{destino}  ({len(ptbr.splitlines())} linhas)")
 

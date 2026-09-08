@@ -2,6 +2,7 @@
 """Escopo de segurança nas telas que já eram únicas (FOD, CSO, Vistoria, Fauna)."""
 import sys, os, re
 sys.path.insert(0, os.path.dirname(__file__))
+from pautil import limpar_redirect
 SRC, OUT = "msapp/Src", "out"
 
 # (tela, arquivo de saída, [(coluna, controle, variável de escopo)])
@@ -93,6 +94,34 @@ CAB = '''# *********************************************************************
 '''
 
 
+def escopo_col_presenca(corpo):
+    """O botão "Atualizar galeria" da Fauna montava col_presenca sem escopo.
+
+    ClearCollect(col_presenca, Filter(..., StartsWith(Aeroporto, combo...IATA)))
+    — com o combo em branco StartsWith casa toda linha, então a coleção do
+    cliente recebia os 17 aeroportos mesmo para o perfil Base. A galeria filtra
+    varEscopoIATA depois e nada vaza na tela, mas o dado sai do SharePoint.
+    Aqui o escopo passa a ser a primeira condição do Filter.
+
+    Esta fórmula mora num escalar YAML entre aspas, então as quebras de linha
+    são "\\n" literais no arquivo — daí o casamento com \\\\n.
+    """
+    pat = re.compile(r'StartsWith\(\\n(\s*)Aeroporto,\\n\s*'
+                     r'cmbOcoFaunaAeroporto\.Selected\.IATA\\n(\s*)\)')
+
+    def sub(mt):
+        p1, p2 = mt.group(1), mt.group(2)
+        return ('IsBlank(varEscopoIATA) || StartsWith(\\n'
+                f'{p1}Aeroporto,\\n{p1}varEscopoIATA\\n{p2}),\\n{p2}'
+                'StartsWith(\\n'
+                f'{p1}Aeroporto,\\n{p1}cmbOcoFaunaAeroporto.Selected.IATA\\n{p2})')
+
+    corpo, n = pat.subn(sub, corpo)
+    if n != 1:
+        sys.exit(f"escopo_col_presenca: esperava 1 ocorrência, achei {n}")
+    return corpo, n
+
+
 def aplicar(tela, saida, regras):
     txt = open(f"{SRC}/{tela}.pa.yaml", encoding='utf-8').read()
     corpo = txt[txt.index('Screens:'):]
@@ -131,13 +160,20 @@ def aplicar(tela, saida, regras):
             if n2:
                 break
 
+    if tela == 'ScreenFauna':
+        corpo, n3 = escopo_col_presenca(corpo)
+        total += n3
+
+    corpo, nred = limpar_redirect(corpo)
+
     cab = CAB.format(tela=tela, escopo=' / '.join(dict.fromkeys(escopos)))
     if tela in AVISOS:
         marca = '# ' + '*' * 96 + '\n'
         i = cab.rindex(marca)
         cab = cab[:i] + AVISOS[tela] + cab[i:]
-    open(f"{OUT}/{saida}", 'w', encoding='utf-8').write(cab + corpo)
-    print(f"{tela:28s} -> out/{saida}  ({total} galerias protegidas)")
+    open(f"{OUT}/{saida}", 'w', encoding='utf-8', newline='\n').write(cab + corpo)
+    print(f"{tela:28s} -> out/{saida}  ({total} consultas protegidas, "
+          f"{nred} saídas limpando var_redirectAN)")
     return total
 
 

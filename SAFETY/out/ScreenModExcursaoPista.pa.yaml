@@ -131,9 +131,23 @@ Screens:
                         LayoutMinHeight: =0
                         OnSelect: |-
                           =Set(
-                              var_vista,
-                              "form"
-                          )
+                               var_vista,
+                               "form"
+                           );
+                           // ── INIT DA VISÃO "form" ────────────────────────────────────
+                           // Era o OnVisible da tela de origem desta visão. Set(var_vista, ...)
+                           // não dispara OnVisible, então a inicialização anda junto com a
+                           // troca de visão — senão a visão abre sem coleção e sem estado.
+                           UpdateContext(
+                               {
+                                   var_visiblePainelAeronave: false,
+                                   var_visiblePainelVeiculo: false,
+                                   var_visiblePainelPessoa: false,
+                                   var_visiblePainelSpiner: true,
+                                   //Default color border
+                                   varBordaDefault: nfCorBorda
+                               }
+                           )
                         PaddingBottom: =5
                         PaddingLeft: =5
                         PaddingRight: =5
@@ -167,7 +181,7 @@ Screens:
                         LayoutMaxHeight: =
                         LayoutMaxWidth: =
                         LayoutMinHeight: =0
-                        OnSelect: =Navigate(frmHome, ScreenTransition.Fade)
+                        OnSelect: =Set(var_redirectAN, Blank()); Navigate(frmHome, ScreenTransition.Fade)
                         Visible: =!Icon28_207.Visible
                         Width: =75.94
             - Container83_95:
@@ -210,8 +224,21 @@ Screens:
                                var_vista,
                                "form"
                            );
-                          Clear(col_colVeiEnvolvidos);
-                          Clear(col_colVeiGalleryImg)
+                           // ── INIT DA VISÃO "form" ────────────────────────────────────
+                           // Era o OnVisible da tela de origem desta visão. Set(var_vista, ...)
+                           // não dispara OnVisible, então a inicialização anda junto com a
+                           // troca de visão — senão a visão abre sem coleção e sem estado.
+                           UpdateContext(
+                               {
+                                   var_visiblePainelAeronave: false,
+                                   var_visiblePainelVeiculo: false,
+                                   var_visiblePainelPessoa: false,
+                                   var_visiblePainelSpiner: true,
+                                   //Default color border
+                                   varBordaDefault: nfCorBorda
+                               }
+                           );
+                          Clear(col_excPistaImg)
                         Text: ="Cadastrar"
                         Width: =113.92
                         X: =14.06
@@ -828,7 +855,19 @@ Screens:
                                  );
                                  UpdateContext(
                                      {varExcPistaSelect: ThisItem}
-                                 )
+                                 );
+                                 // ── INIT DA VISÃO "detalhe" ────────────────────────────────────
+                                 // Era o OnVisible da tela de origem desta visão. Set(var_vista, ...)
+                                 // não dispara OnVisible, então a inicialização anda junto com a
+                                 // troca de visão — senão a visão abre sem coleção e sem estado.
+                                 ClearCollect(
+                                     col_excPistaDetImagens,
+                                     Filter(
+                                         '14.6-tbl_ExcPistaImg',
+                                         excPistaImg_idOcorrencia = varExcPistaSelect.excPista_id
+                                     )
+                                 );
+                                 UpdateContext({var_excPistaDetVisibleImagem: false})
                               PaddingBottom: =5
                               PaddingLeft: =5
                               PaddingRight: =5
@@ -1063,7 +1102,7 @@ Screens:
                         LayoutMaxHeight: =
                         LayoutMaxWidth: =
                         LayoutMinHeight: =0
-                        OnSelect: =Navigate(frmHome, ScreenTransition.Fade)
+                        OnSelect: =Set(var_redirectAN, Blank()); Navigate(frmHome, ScreenTransition.Fade)
                         Width: =60
             - cntFaixaAeroExcPista:
                 Control: GroupContainer@1.5.0
@@ -2649,7 +2688,7 @@ Screens:
                         LayoutMaxHeight: =
                         LayoutMaxWidth: =
                         LayoutMinHeight: =0
-                        OnSelect: =Navigate(frmHome, ScreenTransition.Fade)
+                        OnSelect: =Set(var_redirectAN, Blank()); Navigate(frmHome, ScreenTransition.Fade)
                         Width: =60
             - ContainerVisibleImagem_5:
                 Control: GroupContainer@1.5.0

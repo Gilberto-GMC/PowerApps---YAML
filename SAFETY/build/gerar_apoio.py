@@ -2,7 +2,7 @@
 """Telas de apoio: ScreenExcluir e ScreenAnaliseSafety."""
 import sys, os, re
 sys.path.insert(0, os.path.dirname(__file__))
-from pautil import HDR
+from pautil import HDR, limpar_redirect
 from modulos import MODULOS
 
 SRC, OUT = "msapp/Src", "out"
@@ -108,7 +108,7 @@ def corrigir_excluir():
             n3 += corpo.count(alvo)
             corpo = corpo.replace(alvo, f'{chave}: {nova}')
 
-    open(f"{OUT}/03_ScreenExcluir.pa.yaml", 'w', encoding='utf-8').write(CAB_EXCLUIR + corpo)
+    open(f"{OUT}/03_ScreenExcluir.pa.yaml", 'w', encoding='utf-8', newline='\n').write(CAB_EXCLUIR + corpo)
     print(f"ScreenExcluir  -> out/03_ScreenExcluir.pa.yaml")
     print(f"   {n1} refs 'derFlu_id' corrigidas no ramo de Colisão")
     print(f"   {n2} RemoveIf de filhos passaram a usar <modulo>_id")
@@ -123,6 +123,7 @@ def corrigir_analise():
         for m in re.finditer(r'(?<![A-Za-z])' + antiga + r'(?![A-Za-z_])', corpo):
             n += 1
         corpo = re.sub(r'(?<![A-Za-z])' + antiga + r'(?![A-Za-z_])', nova, corpo)
+    corpo, nred = limpar_redirect(corpo)
     cab = ('# ' + '*' * 96 + '\n'
            '# AirportNow — Safety & Fauna  ·  ScreenAnaliseSafety (navegação atualizada)\n'
            '#\n' 
@@ -134,11 +135,16 @@ def corrigir_analise():
            '#\n'
            '#\n'
            '# COLAR EM: Studio > tela ScreenAnaliseSafety > exibição de código.\n'
-           '# Única mudança: os destinos de Navigate passam a ser as telas consolidadas\n'
-           '# (ScreenMod*). Nenhuma alteração de layout ou de regra.\n'
+           '# Duas mudanças, nenhuma de layout ou de regra:\n'
+           '#   1. Os destinos de Navigate passam a ser as telas consolidadas (ScreenMod*).\n'
+           '#   2. Sair para frmHome limpa var_redirectAN. frmHome.OnVisible redireciona\n'
+           '#      de volta enquanto essa variável tiver valor, e Param() a mantém pela\n'
+           '#      sessão inteira: sem limpar, quem abriu o app por deep link não\n'
+           '#      conseguia voltar para a home.\n'
            '# ' + '*' * 96 + '\n')
-    open(f"{OUT}/04_ScreenAnaliseSafety.pa.yaml", 'w', encoding='utf-8').write(cab + corpo)
-    print(f"ScreenAnaliseSafety -> out/04_ScreenAnaliseSafety.pa.yaml  ({n} referências atualizadas)")
+    open(f"{OUT}/04_ScreenAnaliseSafety.pa.yaml", 'w', encoding='utf-8', newline='\n').write(cab + corpo)
+    print(f"ScreenAnaliseSafety -> out/04_ScreenAnaliseSafety.pa.yaml  ({n} referências atualizadas, "
+          f"{nred} saídas limpando var_redirectAN)")
 
 
 if __name__ == '__main__':

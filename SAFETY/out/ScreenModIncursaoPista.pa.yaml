@@ -131,9 +131,24 @@ Screens:
                         LayoutMinHeight: =0
                         OnSelect: |-
                           =Set(
-                              var_vista,
-                              "form"
-                          )
+                               var_vista,
+                               "form"
+                           );
+                           // ── INIT DA VISÃO "form" ────────────────────────────────────
+                           // Era o OnVisible da tela de origem desta visão. Set(var_vista, ...)
+                           // não dispara OnVisible, então a inicialização anda junto com a
+                           // troca de visão — senão a visão abre sem coleção e sem estado.
+                           UpdateContext(
+                               {
+                                   var_visiblePainelAeronave: false,
+                                   var_visiblePainelVeiculo: false,
+                                   var_visiblePainelPessoa: false,
+                                   var_visiblePainelSpiner: true,
+                                   var_tipoEnvolvido: "",
+                                   //Default color border
+                                   varBordaDefault: nfCorBorda
+                               }
+                           )
                         PaddingBottom: =5
                         PaddingLeft: =5
                         PaddingRight: =5
@@ -167,7 +182,7 @@ Screens:
                         LayoutMaxHeight: =
                         LayoutMaxWidth: =
                         LayoutMinHeight: =0
-                        OnSelect: =Navigate(frmHome, ScreenTransition.Fade)
+                        OnSelect: =Set(var_redirectAN, Blank()); Navigate(frmHome, ScreenTransition.Fade)
                         Visible: =!Icon28_208.Visible
                         Width: =75.94
             - Container83_97:
@@ -210,8 +225,23 @@ Screens:
                                var_vista,
                                "form"
                            );
-                          Clear(col_colVeiEnvolvidos);
-                          Clear(col_colVeiGalleryImg)
+                           // ── INIT DA VISÃO "form" ────────────────────────────────────
+                           // Era o OnVisible da tela de origem desta visão. Set(var_vista, ...)
+                           // não dispara OnVisible, então a inicialização anda junto com a
+                           // troca de visão — senão a visão abre sem coleção e sem estado.
+                           UpdateContext(
+                               {
+                                   var_visiblePainelAeronave: false,
+                                   var_visiblePainelVeiculo: false,
+                                   var_visiblePainelPessoa: false,
+                                   var_visiblePainelSpiner: true,
+                                   var_tipoEnvolvido: "",
+                                   //Default color border
+                                   varBordaDefault: nfCorBorda
+                               }
+                           );
+                          Clear(col_incPistaEnvolvidos);
+                          Clear(col_incPistaImg)
                         Text: ="Cadastrar"
                         Width: =113.92
                         X: =14.06
@@ -828,6 +858,24 @@ Screens:
                                  );
                                  UpdateContext(
                                      {var_incPistaSelect: ThisItem}
+                                 );
+                                 // ── INIT DA VISÃO "detalhe" ────────────────────────────────────
+                                 // Era o OnVisible da tela de origem desta visão. Set(var_vista, ...)
+                                 // não dispara OnVisible, então a inicialização anda junto com a
+                                 // troca de visão — senão a visão abre sem coleção e sem estado.
+                                 ClearCollect(
+                                     col_incPistaDetImagens,
+                                     Filter(
+                                         '14.3-tbl_IncPistaImg',
+                                         incPistaImg_idOcorrencia = var_incPistaSelect.incPista_id
+                                     )
+                                 );
+                                 ClearCollect(
+                                     col_incPistaEnvolvidosDetalhes,
+                                     Filter(
+                                         '14.3-tbl_IncPistaEnvolvidos',
+                                         incPistaEnv_idOcorrencia = var_incPistaSelect.incPista_id
+                                     )
                                  )
                               PaddingBottom: =5
                               PaddingLeft: =5
@@ -1066,7 +1114,7 @@ Screens:
                         LayoutMaxHeight: =
                         LayoutMaxWidth: =
                         LayoutMinHeight: =0
-                        OnSelect: =Navigate(frmHome, ScreenTransition.Fade)
+                        OnSelect: =Set(var_redirectAN, Blank()); Navigate(frmHome, ScreenTransition.Fade)
                         Width: =60
             - cntFaixaAeroIncPista:
                 Control: GroupContainer@1.5.0
@@ -4084,7 +4132,7 @@ Screens:
                         LayoutMaxHeight: =
                         LayoutMaxWidth: =
                         LayoutMinHeight: =0
-                        OnSelect: =Navigate(frmHome, ScreenTransition.Fade)
+                        OnSelect: =Set(var_redirectAN, Blank()); Navigate(frmHome, ScreenTransition.Fade)
                         Width: =60
             - ContainerVisibleImagem_6:
                 Control: GroupContainer@1.5.0

@@ -1504,3 +1504,143 @@ Duas regras que valem para qualquer grade montada em HTML no Power Apps:
    arredondamentos empatam. O teste tem que varrer zoom e DPI — e a medição é em
    pixel renderizado (screenshot + varredura de coluna), não em `getBoundingClientRect`,
    que devolve a caixa de layout e não onde a tinta caiu.
+
+## Casar pessoa por nome de exibição é casar por chave instável — e o remédio abre um segundo buraco (2026-09-02)
+
+- Projeto/tela: Gestão de Chamados / `ScreenServiceDeskForm`, ramo `RESET_SENHA`
+  do `OnSuccess`.
+- Sem erro do Studio: o defeito só aparece em produção, e como um falso
+  "usuário não localizado".
+
+O `OnSuccess` casava o solicitante com o cadastro por
+`LookUp(User; usrNome = varDeskUsuario)`, onde `varDeskUsuario` é o
+`DisplayName` do campo Pessoa. **Nome de exibição do AAD e `usrNome` da lista são
+duas grafias da mesma pessoa mantidas por processos diferentes** — abreviação,
+nome social, sobrenome de casada, acento. Quando divergem, o `LookUp` volta
+branco, o `Error()` sobe e o usuário vê a falha **depois** de o chamado já estar
+gravado. O e-mail da pessoa está disponível nas duas pontas (`.Email` do campo
+Pessoa, coluna `Email` da lista) e é a única chave estável entre elas.
+
+**A troca ingênua da chave introduz um bug pior que o original.** Trocar só o
+`LookUp` deixa isto:
+
+```powerfx
+With({locUsr: LookUp(User; Email = varDeskUsuEmail)};
+    If(IsBlank(locUsr); Error(...); Patch(User; locUsr; {Senha: varNovaSenha})))
+```
+
+Se `varDeskUsuEmail` vier branco, `Email = Blank()` **casa** com o primeiro
+registro de `User` que estiver com o e-mail vazio — `locUsr` não é branco, a
+guarda não dispara, e a senha temporária é aplicada **na conta errada**. É a
+lição `Blank() = 0` na versão texto: branco não é "não casa com nada", é um valor
+que casa com outros brancos.
+
+**Correção:** a guarda cobre a chave antes de cobrir o resultado.
+
+```powerfx
+If(IsBlank(varDeskUsuEmail) Or IsBlank(locUsr); Error(...); Patch(...))
+```
+
+`Or` curto-circuita antes de olhar o registro, e o `LookUp` continua delegável —
+nada de `IsBlank()` dentro do `Filter`/`LookUp`, que derrubaria a delegação.
+
+**Regra:** todo `LookUp` que ancora uma **escrita sensível** exige as duas
+guardas — *a chave de busca não pode estar em branco* e *o registro tem que ter
+sido achado*. Uma sozinha não cobre a outra: a segunda deixa passar o casamento
+branco-com-branco, e a primeira não prova que achou.
+
+**Verificação para as próximas telas:** procurar todo `LookUp(<lista>; <col> =
+<var>)` cujo resultado alimenta um `Patch` de coluna sensível (senha, papel,
+autorização, valor financeiro) e exigir um `IsBlank(<var>)` no caminho, não só o
+`IsBlank(<registro>)`. E procurar todo casamento entre fonte externa e lista
+local feito por nome — `usrNome = <DisplayName>`, `usrNome = User().FullName` —
+e trocar por e-mail. `SAFETY/msapp/Src/App.pa.yaml:204` ainda tem essa segunda
+forma; é o mesmo risco, em outro módulo.
+
+## `": "` dentro de string Power Fx quebra o YAML — mas só em propriedade de linha única (2026-09-03)
+
+- Data: 2026-09-03. Projeto/tela: DueDiligence / `ScreenDueDiligence` (motor v2).
+- Mensagem (pega em lint local com PyYAML, antes de chegar ao Studio):
+  `mapping values are not allowed here`, apontando para o `.` de
+  `Placeholder: ="Ex.: 250000"`.
+
+Causa confirmada: no Source Code, o valor de cada propriedade de linha única é um
+**plain scalar YAML não citado** — as aspas duplas ali dentro são caracteres
+literais do Power Fx, não citação YAML. Plain scalar não pode conter `": "`
+(dois-pontos seguido de espaço): o parser interpreta como um mapeamento aninhado
+e recusa o arquivo inteiro. O `"Ex.: 250000"` do placeholder tinha exatamente
+essa sequência.
+
+A regra tem duas metades, e é fácil registrar só uma:
+
+1. **Propriedade de linha única** (`Placeholder: ="..."`, `Text: ="..."`):
+   nenhuma string Power Fx pode conter `": "`. Reescrever o texto (`"Ex. 250000"`)
+   ou promover a propriedade a bloco `|-`.
+2. **Bloco literal `|-`** (`HtmlText: |-`, `OnSelect: |-`): tudo é texto literal
+   para o YAML — `": "` é livre. É por isso que os HTMLs gigantes com
+   `style='font-size:11px'` e textos como `"Referência de risco alto: "` sempre
+   funcionaram: estavam todos dentro de `|-`.
+
+Correção aplicada: placeholder trocado para `"Ex. 250000"`.
+
+Validação preventiva: rodar `yaml.safe_load` (com o constructor para a tag
+`tag:yaml.org,2002:value`, que o valor `=` sozinho exige) sobre o arquivo antes
+de entregar — foi esse lint que pegou o erro. Para checagem dirigida: em toda
+linha `Chave: =...` (fora de bloco `|-`), reprovar a sequência `": "` dentro do
+valor.
+
+Impacto global: qualquer gerador/tela que escreva rótulos, placeholders ou
+mensagens com dois-pontos em propriedade de linha única. Vale também para
+`Tooltip:`, `InputTextPlaceholder:` e `Text:` de labels.
+
+## `<Validation>` no List_Generator: fórmula localizada (`OU`/`;`) é recusada pelo `CreateFieldAsXml` (2026-09-04)
+
+- Projeto/lista: DueDiligence / `tb_dueDiligenceTerceiroRespostas`, coluna `ativo`.
+- Sintoma: o fluxo `List_Generator` roda, cria a lista, cria as primeiras colunas
+  e **falha numa coluna com `BadGateway`**. O erro do conector é genérico e não diz
+  nada — a causa real só aparece no `body` do OUTPUTS do passo `HTTP Criar Coluna`:
+
+```text
+statusCode 502 · SPException -2130575270
+"Não há suporte para a fórmula ou ela contém um erro de sintaxe."
+source: .../_api/web/lists(guid'...')/fields/CreateFieldAsXml
+```
+
+XML que causou:
+
+```xml
+<Field Type='Number' DisplayName='ativo' ... Required='TRUE'>
+  <Default>1</Default>
+  <Validation Message='use 1 ou 0'>=OU([ativo]=0;[ativo]=1)</Validation>
+</Field>
+```
+
+Causa confirmada: a fórmula com **nome de função localizado e separador `;`**
+(`=OU(...;...)`, padrão pt-BR) foi rejeitada pelo SharePoint neste tenant. A
+`SKILL.md` do `list-generator` orienta "na dúvida, pt-BR" — mas a interface do
+SharePoint aparecer em português é **preferência de idioma do usuário**, não o
+locale do site; o `CreateFieldAsXml` avalia a fórmula pelo locale do *site*.
+Nenhuma das listas criadas antes na mesma sessão (`tb_dueDiligence`,
+`tb_dueDiligenceParametros`) tinha `<Validation>` — por isso passaram, e por isso
+o problema só apareceu na primeira lista que de fato usou fórmula.
+
+Correção aplicada: **remover o `<Validation>`**. As colunas `ativo` das duas listas
+irmãs já existiam sem validação nenhuma, então tirar deixou o schema consistente e
+não custou nada — o app/fluxo sempre grava `1` ou `0` explicitamente. `<Default>1</Default>`
+foi mantido: valor literal não é fórmula e não dispara o erro.
+
+Prevenção:
+
+1. **`<Validation>` é opcional — só usar quando houver ganho real.** Guardrail
+   contra digitação manual no SharePoint não compensa arriscar o provisionamento
+   inteiro, ainda mais porque o fluxo falha no meio e deixa a lista pela metade.
+2. Se for mesmo necessário, **não assumir o locale**: criar a coluna à mão pela UI
+   do SharePoint uma vez, exportar/inspecionar o XML gerado e usar exatamente
+   aquela sintaxe (`OR`/`,` num site en-US, `OU`/`;` num pt-BR).
+3. Quando o `List_Generator` devolver `BadGateway`, **nunca parar no erro do
+   conector** — abrir `HTTP Criar Coluna` → Run results → OUTPUTS → `body` →
+   `innerError.message`. É lá que está o motivo real; o `BadGateway` é só o
+   envelope.
+4. Falha no meio do loop `Para cada Coluna` deixa a lista **parcialmente criada**.
+   Se ela ainda não tem dados, o caminho limpo é excluir a lista e rodar de novo
+   com o JSON corrigido — reexecutar por cima gera erro de coluna duplicada.

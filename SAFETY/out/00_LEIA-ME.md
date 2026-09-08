@@ -137,6 +137,19 @@ estado se mantém.
 
 Fauna, FOD, CSO e Vistoria já eram tela única e continuam assim.
 
+**O init de cada visão anda junto com a troca de visão.** `Navigate()` dispara o
+`OnVisible` da tela de destino; `Set(var_vista, ...)` não dispara nada. Tudo que os
+`OnVisible` das telas de Forms e Detalhes faziam ao abrir — carregar
+`col_<mod>DetImagens`, `col_incPistaEnvolvidosDetalhes`, `col_jetBlastItensDetalhes`,
+os quatro `col_ocoSoloOpEnvolv0x`, ligar os painéis do formulário, travar o
+`DisplayMode` dos campos de Ocorrência de Solo — foi reinjetado em **cada ponto que
+entra na visão**, com o comentário `// ── INIT DA VISÃO`.
+
+Sem isso a galeria do detalhe fica ligada a uma coleção que ninguém preenche: o YAML
+continua válido, a propriedade continua lá, o nome da coleção está certo — e a tela
+abre vazia. `build/checar_init.py` existe exatamente para travar essa regressão, e
+falha se algum ponto de entrada ficar sem o init.
+
 ### 2 · Campo de aeroporto no cadastro
 
 Faixa nova no topo de cada formulário (`cntFaixaAero<Modulo>`): **Bloco**,
@@ -204,7 +217,13 @@ Antes, uma falha de gravação **limpava o formulário** e mostrava
 
 Todo botão que grava tem trava com carimbo de hora que **expira sozinha em 60s** —
 duplo clique não grava duas vezes, e nenhuma falha deixa o botão morto.
-O spinner é desligado em todos os ramos de saída, inclusive validação e erro.
+
+> A trava também zera `var_visibleSpiner` em todos os ramos de saída, inclusive
+> validação e erro — mas isso é higiene, não funcionalidade: essa variável vem do
+> export e **nenhum controle do app a lê**. Não há spinner ligado a ela. O que o
+> usuário vê enquanto grava é o `LoadingSpinner.Data` da própria tela, que o Studio
+> controla sozinho. Se quiser um indicador explícito de "gravando", é preciso criar
+> o controle e ligá-lo à variável — ela já é atualizada nos lugares certos.
 
 ### 6 · Delegação
 
@@ -257,6 +276,17 @@ módulos estavam certos.
 > inclusive dentro do formulário — comportamento original, preservado. Se preferir que
 > ele respeite o formulário em preenchimento, dá para trocar por um aviso de confirmação.
 
+**Toda saída para `frmHome` agora limpa `var_redirectAN`** — nas 7 telas de módulo e
+também em FOD, CSO, Vistoria, Fauna, Análise Safety e Acesso Indevido de Fauna.
+
+`frmHome.OnVisible` faz `If(!IsBlank(var_redirectAN), Select(ButtonCanvasredirect))`,
+e `ButtonCanvasredirect` navega para a tela do `Param("ID_MODULO")`. Como `Param()`
+devolve o mesmo valor pela sessão inteira, quem abrisse o app por deep link e
+apertasse "voltar" era jogado de volta no módulo — laço sem saída. Seis módulos já
+limpavam a variável no botão de voltar da lista; faltavam Ocorrência de Solo, as
+quatro telas de apoio e o logotipo Motiva de **todas** as telas. `checar_init.py`
+agora reprova qualquer `Navigate(frmHome)` sem a limpeza.
+
 ### 9 · Layout
 
 O corpo dos formulários foi medido a partir do próprio export antes de qualquer
@@ -307,6 +337,8 @@ blocos se distribuem no espaço da tela.
 | `ScreenExcluir`, ramo Colisão | filhos apagados por `var_item.derFlu_id` — coluna inexistente ali. Envolvidos, imagens e desdobramentos **nunca** eram apagados. |
 | `ScreenExcluir`, todos os ramos | filhos apagados por `var_item.ID` (ID do SharePoint), mas os formulários gravaram os filhos com `<mod>_id` (max+1). Os dois divergem depois da primeira exclusão → apagava os filhos da ocorrência errada. |
 | `ScreenIncursaoPista` | `IsBlank(cmbStatus_4...)` testava um controle de outra tela (já vinha comentado no export). |
+| `ScreenDerramamentoFluido`, `ScreenExcursaoPista`, `ScreenIncursaoPista` | o botão "Cadastrar" abria o formulário limpando `col_colVeiEnvolvidos` e `col_colVeiGalleryImg` — coleções de **Colisão de Veículos**. As coleções do próprio módulo ficavam com o conteúdo do cadastro anterior, e as de Colisão eram zeradas de fora. Agora cada módulo limpa as suas (campo `filhos` em `build/modulos.py`). |
+| `ScreenFauna` | o botão "Atualizar galeria" montava `col_presenca` com `StartsWith(Aeroporto, combo.Selected.IATA)` e nada mais. Com o combo em branco `StartsWith` casa toda linha, então a coleção do cliente recebia os 17 aeroportos mesmo no perfil Base. A galeria filtrava `varEscopoIATA` depois — nada vazava na tela, mas o dado saía do SharePoint. O escopo virou a primeira condição do `Filter`. |
 
 Todos corrigidos nos arquivos entregues.
 
@@ -342,6 +374,12 @@ Todos corrigidos nos arquivos entregues.
 - 1.552 nomes de controle, nenhum duplicado entre as 7 telas novas.
 - Nenhuma referência residual às telas antigas fora dos comentários.
 - Nenhum `ForAll` de filho fora do guard `<mod>_id > 0`.
+- **Init das visões**: o corpo do `OnVisible` de cada tela de Forms/Detalhes de origem
+  aparece, inteiro e contíguo, em **todos** os pontos que entram naquela visão. É o
+  que impede a consolidação de engolir a carga das coleções do detalhe — nenhum outro
+  checador percebia, porque o YAML continua válido e o nome da coleção continua certo.
+- Nenhum `Navigate(frmHome)` sem `Set(var_redirectAN, Blank())` antes.
+- Nenhum módulo limpando coleção filha de outro módulo.
 - Gerador idempotente (mesmo hash em duas execuções).
 - Navegação auditada nas 15 telas: nenhum `Navigate` aponta para nome de controle,
   nenhuma tela consolidada tem navegação interna sobrando, nenhuma tela referenciada

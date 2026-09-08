@@ -18,6 +18,9 @@ python3 build/checar.py | tail -1
 echo "── referências de tela"
 python3 build/checar_refs.py
 
+echo "── init das visões consolidadas"
+python3 build/checar_init.py
+
 echo "── navegação e botões de voltar"
 python3 build/auditar_nav.py
 

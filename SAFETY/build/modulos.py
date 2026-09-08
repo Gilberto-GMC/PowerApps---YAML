@@ -17,6 +17,9 @@ LAYOUT_FORM = {
  "OcoSolo":  [("Container3_18", "centro", 1140), ("Container35", "centro", 780)],
 }
 
+# filhos: coleções de tela que o formulário grava como filhas da ocorrência.
+#   O botão "Cadastrar" precisa limpá-las ao abrir um cadastro novo; no export
+#   três módulos limpavam as de Colisão de Veículos por cópia.
 MODULOS = [
  dict(key="ColVei", nova="ScreenModColisaoVeiculos", titulo="Colisão de Veículos",
       lista="ScreenColisaoVeiculos", forms="ScreenColisaoVeiculosForms", det="ScreenColisaoVeiculosDetalhes",
@@ -24,6 +27,7 @@ MODULOS = [
       gal="GalleryColVeiRegistros", varId="var_colVeiId",
       fBloco="cmbHomeBloco_1", fAero="cmbHomeAeroporto_1", fIni="dtpHomeDtfInicio_1",
       fFim="dtpHomeDtfTermino_1", fStatus="cmbHomeStatus_1", fBusca="txtBuscar1_1",
+      filhos=['col_colVeiEnvolvidos', 'col_colVeiGalleryImg'],
       extraFiltros=[], contForm="ScreenContainerForms_2"),
  dict(key="DerFlu", nova="ScreenModDerramamento", titulo="Derramamento de Fluidos",
       lista="ScreenDerramamentoFluido", forms="ScreenDerramamentoForms", det="ScreenDerramamentoDetalhes",
@@ -31,6 +35,7 @@ MODULOS = [
       gal="GalleryDerFlu", varId="varDerFluId",
       fBloco="cmbDerFluBloco", fAero="cmbDerFluAeroporto", fIni="dtpDerFluDtfInicio",
       fFim="dtpDerFluDtfTermino", fStatus="cmbStatus_2", fBusca="txtDerFluBuscar",
+      filhos=['col_derFluImg'],
       extraFiltros=[], contForm=None),
  dict(key="ExcPista", nova="ScreenModExcursaoPista", titulo="Excursão de Pista",
       lista="ScreenExcursaoPista", forms="ScreenExcursaoPistaForms", det="ScreenExcursaoPistaDetalhes",
@@ -38,6 +43,7 @@ MODULOS = [
       gal="GalleryExcPistaRegistros", varId="var_excPistaId",
       fBloco="cmbExcPistaBloco", fAero="cmbExcPistaAeroporto", fIni="dtpExcPistaDtfInicio",
       fFim="dtpExcPistaDtfTermino", fStatus="cmbStatus_4", fBusca="txtExcPistaBuscar",
+      filhos=['col_excPistaImg'],
       extraFiltros=[], contForm=None),
  dict(key="IncPista", nova="ScreenModIncursaoPista", titulo="Incursão de Pista",
       lista="ScreenIncursaoPista", forms="ScreenIncursaoPistaForms", det="ScreenIncursaoPistaDetalhes",
@@ -45,6 +51,7 @@ MODULOS = [
       gal="GalleryIncPistaRegistros", varId="var_incPistaId",
       fBloco="cmbIncPistaBloco", fAero="cmbIncPistaAeroporto", fIni="dtpIncPistaDtfInicio",
       fFim="dtpIncPistaDtfTermino", fStatus="cmbStatus_5", fBusca="txtIncPistaBuscar",
+      filhos=['col_incPistaEnvolvidos', 'col_incPistaImg'],
       extraFiltros=[], contForm=None),
  dict(key="IntExt", nova="ScreenModInterferenciaExterna", titulo="Interferência Externa",
       lista="ScreenInterferenciaExterna", forms="ScreenInterferenciaExternaForms", det="ScreenInterferenciaExternaDetalhes",
@@ -52,6 +59,7 @@ MODULOS = [
       gal="GalleryIntExtRegistros", varId="var_intExtId",
       fBloco="cmbIntExtBloco", fAero="cmbIntExtAeroporto", fIni="dtpIntExtDtfInicio",
       fFim="dtpIntExtDtfTermino", fStatus="cmbStatus_7", fBusca="txtIntExtBuscar",
+      filhos=['col_intExtGalleryImg'],
       extraFiltros=[("intExt_tipo", "cmbTipo")], contForm=None),
  dict(key="JetBlast", nova="ScreenModJetBlast", titulo="Jet Blast",
       lista="ScreenJetBlast", forms="ScreenJetBlastForms", det="ScreenJetBlastDetalhes",
@@ -59,6 +67,7 @@ MODULOS = [
       gal="GalleryJetBlastRegistros", varId="var_jetBlastId",
       fBloco="cmbJetBlastBloco", fAero="cmbJetBlastAeroporto", fIni="dtpJetBlastDtfInicio",
       fFim="dtpJetBlastDtfTermino", fStatus="cmbStatus_8", fBusca="txtJetBlastBuscar",
+      filhos=['col_jetBlastImg', 'col_jetBlastItemAtingido'],
       extraFiltros=[], contForm=None),
  dict(key="OcoSolo", nova="ScreenModOcorrenciaSolo", titulo="Ocorrência de Solo",
       lista="ScreenOcorrenciaSolo", forms="ScreenOcorrenciaSoloForms", det="ScreenOcorrenciaSoloDetalhes",
@@ -66,5 +75,6 @@ MODULOS = [
       gal="GalleryOcoSoloListar", varId="varOcoSoloId",
       fBloco="cmbOcoSoloBloco", fAero="cmbOcoSoloAeroporto", fIni="dtpOcoSoloDtfInicio",
       fFim="dtpOcoSoloDtfTermino", fStatus="cmbStatus_9", fBusca="txtOcoSoloBuscar",
+      filhos=['col_ocoSoloImg'],
       extraFiltros=[], contForm=None),
 ]

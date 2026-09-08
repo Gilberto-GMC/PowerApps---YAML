@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 import sys, os, re, io, yaml
 sys.path.insert(0, os.path.dirname(__file__))
-from pautil import HDR, ind, block_end, find_line, split_screen, reindent, prop_block, set_prop, find_ctrl
-from fx import replace_calls, find_call, split_args
+from pautil import (HDR, ind, block_end, find_line, split_screen, reindent, prop_block,
+                    set_prop, find_ctrl, onvisible_de, limpar_redirect)
+from fx import replace_calls, find_call, split_args, indent_lines
 from modulos import MODULOS, LAYOUT_FORM
 
 SRC = "msapp/Src"
@@ -315,8 +316,54 @@ def faixa_aeroporto(m, base):
 # ─────────────────────────────────────────────────────────────────────────────
 # 4. reescrita de navegação interna do módulo
 # ─────────────────────────────────────────────────────────────────────────────
-def reescrever_nav(texto, m):
+#
+# Navigate() dispara o OnVisible da tela de destino; Set(var_vista, ...) não
+# dispara nada. Consolidar as três telas numa só, sem repor o que o OnVisible
+# de origem fazia, apaga silenciosamente toda a inicialização de cada visão:
+# as coleções que a tela de Detalhes carregava (imagens, envolvidos, itens
+# atingidos) e o estado inicial dos painéis e DisplayMode do formulário.
+# Por isso o corpo do OnVisible de origem é reinjetado em cada ponto de
+# entrada da visão — depois do UpdateContext que o Navigate levava junto,
+# que é a ordem original (o contexto do Navigate já valia no OnVisible).
+INIT_CAB = ('// ── INIT DA VISÃO "{vista}" ────────────────────────────────────\n'
+            '// Era o OnVisible da tela de origem desta visão. Set(var_vista, ...)\n'
+            '// não dispara OnVisible, então a inicialização anda junto com a\n'
+            '// troca de visão — senão a visão abre sem coleção e sem estado.')
+
+
+def preparar_init(corpo, vista):
+    """Corpo do OnVisible de origem, pronto para virar trecho de um OnSelect."""
+    if not corpo:
+        return None
+    # o token de cor do tema substitui o preto cru, como no resto da entrega
+    corpo = re.sub(r'varBordaDefault:\s*RGBA\([^)]*\)',
+                   'varBordaDefault: nfCorBorda', corpo)
+    return INIT_CAB.format(vista=vista) + '\n' + corpo
+
+
+FORM_ABRE = re.compile(
+    r'UpdateContext\(\s*\{\s*var_visibleForms:\s*true,\s*var_visibleMain:\s*false\s*,?\s*\}\s*\)')
+
+
+def abrir_form(texto, inits, conta):
+    """O botão "Cadastrar" da lista abria o formulário mexendo na visibilidade
+    dos containers, não por Navigate. Vira troca de var_vista — e, como toda
+    entrada no formulário, leva junto o init da visão."""
+    def sub(mt):
+        col = mt.start() - (mt.string.rfind('\n', 0, mt.start()) + 1)
+        p = ' ' * col
+        r = f'Set(\n{p}    var_vista,\n{p}    "form"\n{p})'
+        if inits.get('form'):
+            r += f';\n{p}' + indent_lines(inits['form'], col)
+            conta['form'] = conta.get('form', 0) + 1
+        return r
+
+    return FORM_ABRE.sub(sub, texto)
+
+
+def reescrever_nav(texto, m, inits=None, conta=None):
     alvos = {m['lista']: 'lista', m['forms']: 'form', m['det']: 'detalhe'}
+    inits = inits or {}
 
     def fn(args, raw, col):
         if not args:
@@ -327,13 +374,17 @@ def reescrever_nav(texto, m):
         vista = alvos[alvo]
         ctx = args[2].strip() if len(args) > 2 else ''
         p = ' ' * col
+        partes = [f'Set(\n{p}    var_vista,\n{p}    "{vista}"\n{p})']
         if ctx and ctx.startswith('{'):
-            return (f'Set(\n{p}    var_vista,\n{p}    "{vista}"\n{p});\n'
-                    f'{p}UpdateContext(\n{p}    ' +
-                    '\n'.join((p + '    ' + l.strip()) if i else l.strip()
-                              for i, l in enumerate(ctx.split('\n'))) +
-                    f'\n{p})')
-        return f'Set(\n{p}    var_vista,\n{p}    "{vista}"\n{p})'
+            partes.append(f'UpdateContext(\n{p}    ' +
+                          '\n'.join((p + '    ' + l.strip()) if i else l.strip()
+                                    for i, l in enumerate(ctx.split('\n'))) +
+                          f'\n{p})')
+        if inits.get(vista):
+            partes.append(indent_lines(inits[vista], col))
+            if conta is not None:
+                conta[vista] = conta.get(vista, 0) + 1
+        return f';\n{p}'.join(partes)
 
     texto = replace_calls(texto, 'Navigate', fn)
     # var_navigateSucess aponta para a tela consolidada
@@ -675,26 +726,35 @@ def passe_layout(finais, m):
 
 def montar(m):
     k, pfx = m['key'], m['pfx']
-    partes = []
+    partes, inits, conta = [], {}, {}
     for chave, vista in (('lista', 'lista'), ('forms', 'form'), ('det', 'detalhe')):
         nome, props, ch = split_screen(f"{SRC}/{m[chave]}.pa.yaml")
         ch = normalizar_escalares(ch)
+        # o OnVisible da lista é substituído pelo da tela consolidada (ONVISIBLE);
+        # os das outras duas viram init na troca de visão, senão somem.
+        if vista != 'lista':
+            ini = preparar_init(onvisible_de(props), vista)
+            if ini:
+                inits[vista] = ini
         partes.append((vista, ch))
 
     finais = []
     for vista, ch in partes:
         set_prop(ch, 0, 'Visible', f'=var_vista = "{vista}"')
         txt = '\n'.join(ch)
-        txt = re.sub(
-            r'UpdateContext\(\s*\{\s*var_visibleForms:\s*true,\s*var_visibleMain:\s*false\s*,?\s*\}\s*\)',
-            'Set(\n                              var_vista,\n                              "form"\n                          )',
-            txt)
+        txt = abrir_form(txt, inits, conta)
         txt = re.sub(r'\n\s*Visible: =var_visibleMain(?=\n)', '', txt)
         txt = corrigir_prefixos(txt, m)
-        txt = reescrever_nav(txt, m)
+        txt = reescrever_nav(txt, m, inits, conta)
         if vista == 'form':
             txt = cirurgia_gravacao(txt, m)
         finais.append([vista, txt.split('\n')])
+
+    # nenhum init pode ficar pelo caminho: se a tela de origem inicializava algo
+    # e não sobrou ponto de entrada para repor, a visão abre com estado errado.
+    for vista in inits:
+        if not conta.get(vista):
+            raise SystemExit(f"[{k}] OnVisible de {vista} não foi reinjetado em lugar nenhum")
 
     # formulário: faixa de aeroporto logo após o cabeçalho
     fch = finais[1][1]
@@ -743,6 +803,30 @@ def montar(m):
     for i, (vista, ch) in enumerate(finais):
         finais[i][1] = replace_calls('\n'.join(ch), 'Navigate', nav_container).split('\n')
 
+    # ── sair do módulo limpa o redirect de deep link ─────────────────────────
+    for i, (vista, ch) in enumerate(finais):
+        txt, _ = limpar_redirect('\n'.join(ch))
+        finais[i][1] = txt.split('\n')
+
+    # ── "Cadastrar" limpava as coleções filhas do módulo ERRADO ──────────────
+    #    Bug de cópia do export: Derramamento, Excursão e Incursão abriam o
+    #    formulário limpando col_colVeiEnvolvidos / col_colVeiGalleryImg, que
+    #    são de Colisão de Veículos. As coleções do próprio módulo ficavam com
+    #    o conteúdo do cadastro anterior.
+    if m['filhos'] != ['col_colVeiEnvolvidos', 'col_colVeiGalleryImg']:
+        lista_txt = '\n'.join(finais[0][1])
+        alvo = re.compile(r'(\n(\s*))Clear\(col_colVeiEnvolvidos\);\n\s*'
+                          r'Clear\(col_colVeiGalleryImg\)')
+
+        def trocar_clear(mt):
+            pad = mt.group(2)
+            return mt.group(1) + (';\n' + pad).join(f'Clear({c})' for c in m['filhos'])
+
+        lista_txt, n = alvo.subn(trocar_clear, lista_txt)
+        finais[0][1] = lista_txt.split('\n')
+        if 'col_colVeiEnvolvidos' in lista_txt or 'col_colVeiGalleryImg' in lista_txt:
+            raise SystemExit(f"[{k}] ainda limpa coleção de Colisão de Veículos")
+
     finais = passe_layout(finais, m)
 
     finais[1][1], ok = trava_reentrancia(finais[1][1], m)
@@ -773,5 +857,7 @@ if __name__ == '__main__':
             continue
         txt = montar(m)
         path = f"{OUT}/{m['nova']}.pa.yaml"
-        open(path, 'w', encoding='utf-8').write(txt)
+        # newline='\n' explícito: sem isso o Python no Windows grava CRLF e o
+        # arquivo inteiro aparece como reescrito no git, escondendo o diff real.
+        open(path, 'w', encoding='utf-8', newline='\n').write(txt)
         print(f"{m['key']:10s} -> {path}  ({len(txt.splitlines())} linhas)")

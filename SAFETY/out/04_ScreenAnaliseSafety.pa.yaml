@@ -9,8 +9,12 @@
 #
 #
 # COLAR EM: Studio > tela ScreenAnaliseSafety > exibição de código.
-# Única mudança: os destinos de Navigate passam a ser as telas consolidadas
-# (ScreenMod*). Nenhuma alteração de layout ou de regra.
+# Duas mudanças, nenhuma de layout ou de regra:
+#   1. Os destinos de Navigate passam a ser as telas consolidadas (ScreenMod*).
+#   2. Sair para frmHome limpa var_redirectAN. frmHome.OnVisible redireciona
+#      de volta enquanto essa variável tiver valor, e Param() a mantém pela
+#      sessão inteira: sem limpar, quem abriu o app por deep link não
+#      conseguia voltar para a home.
 # ************************************************************************************************
 Screens:
   ScreenAnaliseSafety:
@@ -95,7 +99,7 @@ Screens:
                         LayoutMaxHeight: =
                         LayoutMaxWidth: =
                         LayoutMinHeight: =0
-                        OnSelect: =Navigate(frmHome, ScreenTransition.Fade)
+                        OnSelect: =Set(var_redirectAN, Blank()); Navigate(frmHome, ScreenTransition.Fade)
                         Width: =60
             - Container4_1:
                 Control: GroupContainer@1.5.0

@@ -101,7 +101,11 @@ Screens:
                         LayoutMaxWidth: =
                         LayoutMinHeight: =0
                         OnSelect: |+
-                          =Navigate(
+                          =Set(
+                               var_redirectAN,
+                               Blank()
+                           );
+                           Navigate(
                               frmHome,
                               ScreenTransition.Fade
                           )
@@ -127,9 +131,25 @@ Screens:
                         LayoutMinHeight: =0
                         OnSelect: |-
                           =Set(
-                              var_vista,
-                              "form"
-                          )
+                               var_vista,
+                               "form"
+                           );
+                           // ── INIT DA VISÃO "form" ────────────────────────────────────
+                           // Era o OnVisible da tela de origem desta visão. Set(var_vista, ...)
+                           // não dispara OnVisible, então a inicialização anda junto com a
+                           // troca de visão — senão a visão abre sem coleção e sem estado.
+                           UpdateContext(
+                               {
+                                   varDisplayImpVoo: DisplayMode.Disabled,
+                                   varDisplayDano: DisplayMode.Disabled,
+                                   varDisplayTipEquipa: DisplayMode.Disabled,
+                                   varContOpEnvolvido: 0,
+                                   varVisibleNotifyDano: false,
+                                   varCampoVazio: true,
+                                   //Default color border
+                                   varBordaDefault: nfCorBorda
+                               }
+                           )
                         PaddingBottom: =5
                         PaddingLeft: =5
                         PaddingRight: =5
@@ -163,7 +183,7 @@ Screens:
                         LayoutMaxHeight: =
                         LayoutMaxWidth: =
                         LayoutMinHeight: =0
-                        OnSelect: =Navigate(frmHome, ScreenTransition.Fade)
+                        OnSelect: =Set(var_redirectAN, Blank()); Navigate(frmHome, ScreenTransition.Fade)
                         Visible: =!Icon28_212.Visible
                         Width: =75.94
             - Container83_105:
@@ -205,6 +225,22 @@ Screens:
                           =Set(
                                var_vista,
                                "form"
+                           );
+                           // ── INIT DA VISÃO "form" ────────────────────────────────────
+                           // Era o OnVisible da tela de origem desta visão. Set(var_vista, ...)
+                           // não dispara OnVisible, então a inicialização anda junto com a
+                           // troca de visão — senão a visão abre sem coleção e sem estado.
+                           UpdateContext(
+                               {
+                                   varDisplayImpVoo: DisplayMode.Disabled,
+                                   varDisplayDano: DisplayMode.Disabled,
+                                   varDisplayTipEquipa: DisplayMode.Disabled,
+                                   varContOpEnvolvido: 0,
+                                   varVisibleNotifyDano: false,
+                                   varCampoVazio: true,
+                                   //Default color border
+                                   varBordaDefault: nfCorBorda
+                               }
                            )
                         Text: ="Cadastrar"
                         Width: =113.92
@@ -822,6 +858,52 @@ Screens:
                                  );
                                  UpdateContext(
                                      {varOcoSoloSelect: ThisItem}
+                                 );
+                                 // ── INIT DA VISÃO "detalhe" ────────────────────────────────────
+                                 // Era o OnVisible da tela de origem desta visão. Set(var_vista, ...)
+                                 // não dispara OnVisible, então a inicialização anda junto com a
+                                 // troca de visão — senão a visão abre sem coleção e sem estado.
+                                 ClearCollect(
+                                     col_ocoSoloIdenDano,
+                                     Split(
+                                         varOcoSoloSelect.ocoSolo_danIdentific,
+                                         ";"
+                                     )
+                                 );
+                                 ClearCollect(
+                                     col_ocoSoloDetImagens,
+                                     Filter(
+                                         '16.1-tbl_OcoSoloImagens',
+                                         ocoSoloFK_id = varOcoSoloSelect.ocoSolo_id
+                                     )
+                                 );
+                                 ClearCollect(
+                                     col_ocoSoloOpEnvolv01,
+                                     Split(
+                                         varOcoSoloSelect.ocoSolo_opEnvolv01,
+                                         ";-;"
+                                     )
+                                 );
+                                 ClearCollect(
+                                     col_ocoSoloOpEnvolv02,
+                                     Split(
+                                         varOcoSoloSelect.ocoSolo_opEnvolv02,
+                                         ";-;"
+                                     )
+                                 );
+                                 ClearCollect(
+                                     col_ocoSoloOpEnvolv03,
+                                     Split(
+                                         varOcoSoloSelect.ocoSolo_opEnvolv03,
+                                         ";-;"
+                                     )
+                                 );
+                                 ClearCollect(
+                                     col_ocoSoloOpEnvolv04,
+                                     Split(
+                                         varOcoSoloSelect.ocoSolo_opEnvolv04,
+                                         ";-;"
+                                     )
                                  )
                               PaddingBottom: =5
                               PaddingLeft: =5
@@ -1058,7 +1140,7 @@ Screens:
                         LayoutMaxHeight: =
                         LayoutMaxWidth: =
                         LayoutMinHeight: =0
-                        OnSelect: =Navigate(frmHome, ScreenTransition.Fade)
+                        OnSelect: =Set(var_redirectAN, Blank()); Navigate(frmHome, ScreenTransition.Fade)
                         Width: =60
             - cntFaixaAeroOcoSolo:
                 Control: GroupContainer@1.5.0
@@ -5335,7 +5417,7 @@ Screens:
                         LayoutMaxHeight: =
                         LayoutMaxWidth: =
                         LayoutMinHeight: =0
-                        OnSelect: =Navigate(frmHome, ScreenTransition.Fade)
+                        OnSelect: =Set(var_redirectAN, Blank()); Navigate(frmHome, ScreenTransition.Fade)
                         Width: =60
             - Container38:
                 Control: GroupContainer@1.5.0

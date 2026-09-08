@@ -131,9 +131,19 @@ Screens:
                         LayoutMinHeight: =0
                         OnSelect: |-
                           =Set(
-                              var_vista,
-                              "form"
-                          )
+                               var_vista,
+                               "form"
+                           );
+                           // ── INIT DA VISÃO "form" ────────────────────────────────────
+                           // Era o OnVisible da tela de origem desta visão. Set(var_vista, ...)
+                           // não dispara OnVisible, então a inicialização anda junto com a
+                           // troca de visão — senão a visão abre sem coleção e sem estado.
+                           UpdateContext(
+                               {
+                                   //Default color border
+                                   varBordaDefault: nfCorBorda
+                               }
+                           )
                         PaddingBottom: =5
                         PaddingLeft: =5
                         PaddingRight: =5
@@ -167,7 +177,7 @@ Screens:
                         LayoutMaxHeight: =
                         LayoutMaxWidth: =
                         LayoutMinHeight: =0
-                        OnSelect: =Navigate(frmHome, ScreenTransition.Fade)
+                        OnSelect: =Set(var_redirectAN, Blank()); Navigate(frmHome, ScreenTransition.Fade)
                         Visible: =!Icon28_210.Visible
                         Width: =75.94
             - Container83_101:
@@ -212,6 +222,16 @@ Screens:
                            );
                            UpdateContext(
                                {var_visiblePainelTipo: true}
+                           );
+                           // ── INIT DA VISÃO "form" ────────────────────────────────────
+                           // Era o OnVisible da tela de origem desta visão. Set(var_vista, ...)
+                           // não dispara OnVisible, então a inicialização anda junto com a
+                           // troca de visão — senão a visão abre sem coleção e sem estado.
+                           UpdateContext(
+                               {
+                                   //Default color border
+                                   varBordaDefault: nfCorBorda
+                               }
                            )
                         Text: ="Cadastrar"
                         Width: =113.92
@@ -906,6 +926,17 @@ Screens:
                                  );
                                  UpdateContext(
                                      {var_intExtSelect: ThisItem.intExt_id}
+                                 );
+                                 // ── INIT DA VISÃO "detalhe" ────────────────────────────────────
+                                 // Era o OnVisible da tela de origem desta visão. Set(var_vista, ...)
+                                 // não dispara OnVisible, então a inicialização anda junto com a
+                                 // troca de visão — senão a visão abre sem coleção e sem estado.
+                                 ClearCollect(
+                                     col_intExtDetImagens,
+                                     Filter(
+                                         '14.5-tbl_IntExternaImg',
+                                         intExtImg_idOcorrencia = var_intExtSelect
+                                     )
                                  )
                               PaddingBottom: =5
                               PaddingLeft: =5
@@ -1148,7 +1179,7 @@ Screens:
                         LayoutMaxHeight: =
                         LayoutMaxWidth: =
                         LayoutMinHeight: =0
-                        OnSelect: =Navigate(frmHome, ScreenTransition.Fade)
+                        OnSelect: =Set(var_redirectAN, Blank()); Navigate(frmHome, ScreenTransition.Fade)
                         Width: =60
             - cntFaixaAeroIntExt:
                 Control: GroupContainer@1.5.0
@@ -4762,7 +4793,7 @@ Screens:
                         LayoutMaxHeight: =
                         LayoutMaxWidth: =
                         LayoutMinHeight: =0
-                        OnSelect: =Navigate(frmHome, ScreenTransition.Fade)
+                        OnSelect: =Set(var_redirectAN, Blank()); Navigate(frmHome, ScreenTransition.Fade)
                         Width: =60
             - ContainerVisibleImagem_7:
                 Control: GroupContainer@1.5.0

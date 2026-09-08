@@ -132,3 +132,76 @@ def find_ctrl(lines, nome, indent=None):
             if indent is None or ind(l) == indent:
                 return i
     return -1
+
+
+def onvisible_de(props):
+    """Corpo do OnVisible de um bloco Properties, sem o '=' e sem indentação.
+
+    Devolve None quando a tela não tem OnVisible. Serve para reinjetar em outro
+    lugar a inicialização que a tela de origem fazia ao abrir — ver
+    injetar_init() em gerar.py.
+    """
+    i = find_line(props, lambda l: l.strip().startswith('OnVisible:'))
+    if i < 0:
+        return None
+    cab = props[i].strip()
+    if not cab.endswith(('|', '|-', '|+')):
+        val = cab.split(':', 1)[1].strip()
+        return val.lstrip('=').strip() or None
+    e = block_end(props, i)
+    corpo = props[i + 1:e]
+    reais = [l for l in corpo if l.strip()]
+    if not reais:
+        return None
+    base = min(ind(l) for l in reais)
+    txt = '\n'.join((l[base:] if l.strip() else '') for l in corpo)
+    txt = txt.strip('\n').lstrip('=').strip('\n')
+    # o OnVisible de origem pode terminar em ';' — quem reinjeta é que decide
+    # como encadear, então o ';' final sai aqui.
+    return txt.rstrip().rstrip(';').rstrip() or None
+
+
+def limpar_redirect(texto):
+    """Todo Navigate(frmHome) sai limpando var_redirectAN.
+
+    frmHome.OnVisible redireciona de volta para o módulo enquanto
+    var_redirectAN tiver valor, e Param() mantém esse valor pela sessão inteira.
+    Quem sai do módulo sem limpar a variável é jogado de volta nele — laço
+    infinito quando o app é aberto por deep link. Seis dos sete módulos já
+    limpavam no botão de voltar da lista; faltavam Ocorrência de Solo, FOD, CSO,
+    Vistoria e o logotipo Motiva, que aparece nas três visões de toda tela.
+
+    Devolve (texto, quantas chamadas foram corrigidas).
+    """
+    from fx import find_call
+
+    pos, n = 0, 0
+    while True:
+        r = find_call(texto, 'Navigate', pos)
+        if not r:
+            break
+        a, b, c = r
+        raw = texto[b:c - 1]
+        if raw.split(',', 1)[0].strip() != 'frmHome':
+            pos = c
+            continue
+        # já limpa logo antes? então esta chamada já está correta
+        if 'var_redirectAN' in texto[max(0, a - 200):a]:
+            pos = c
+            continue
+        if '\n' in raw:
+            ls = texto.rfind('\n', 0, a) + 1
+            p = ' ' * (a - ls)
+            novo = (f'Set(\n{p}    var_redirectAN,\n{p}    Blank()\n{p});\n'
+                    f'{p}Navigate({raw})')
+        else:
+            # propriedade escrita numa linha só ("OnSelect: =Navigate(frmHome, ...)"):
+            # quebrar aqui viraria escalar YAML de várias linhas, que o Studio
+            # regrava dobrado. A correção cabe na mesma linha.
+            novo = f'Set(var_redirectAN, Blank()); Navigate({raw})'
+        texto = texto[:a] + novo + texto[c:]
+        pos = a + len(novo)
+        n += 1
+    return texto, n
+
+
