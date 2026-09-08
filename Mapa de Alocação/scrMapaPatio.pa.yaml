@@ -832,8 +832,7 @@ Screens:
                                     ForAll(
                                         Filter(
                                             tb_alocacoesMapa,
-                                            aeroporto = varAero And data_operacao <= varData And data_fim >= varData And ativo = 1 And
-                                            condicao <> "FINALIZADO"
+                                            aeroporto = varAero And data_operacao <= varData And data_fim >= varData And ativo = 1
                                         ) As _r,
                                         With(
                                             {
@@ -955,6 +954,11 @@ Screens:
                                         )
                                     )
                                 );
+                                // FINALIZADO sai AQUI, na colecao ja baixada, e nao no filtro do servidor.
+                                // Desigualdade em texto nao delega: no filtro, ela fazia o Power Apps baixar so as
+                                // primeiras 500 linhas por ID e filtrar localmente — tudo criado depois da
+                                // importacao de setembro ficava invisivel, gravado e ausente da grade.
+                                RemoveIf(colDia, cond = "FINALIZADO");
                                 Set(varCarregadoEm, Now());
                                 Select(btnDesenharMap)
                               PaddingLeft: =12
@@ -2796,8 +2800,7 @@ Screens:
                                   ForAll(
                                       Filter(
                                           tb_alocacoesMapa,
-                                          aeroporto = varAero And data_operacao <= locDataFim And data_fim >= locDataIni And ativo = 1 And
-                                          condicao <> "FINALIZADO"
+                                          aeroporto = varAero And data_operacao <= locDataFim And data_fim >= locDataIni And ativo = 1
                                       ) As _v,
                                       {
                                           id: _v.ID,
@@ -2814,10 +2817,14 @@ Screens:
                                           abs_ini: DateDiff(mapDataBase, _v.data_operacao, TimeUnit.Days) * mapMinutosDia + _v.hora_inicio,
                                           abs_fim: DateDiff(mapDataBase, _v.data_fim, TimeUnit.Days) * mapMinutosDia + _v.hora_fim,
                                           equip: _v.equipamento,
-                                          alt: Coalesce(_v.alternativa, 0)
+                                          alt: Coalesce(_v.alternativa, 0),
+                                          cond: Coalesce(_v.condicao, "PREVISTO")
                                       }
                                   )
                               );
+                              // Mesma armadilha do colDia, e aqui ela e pior: com o filtro cego, a checagem
+                              // de conflito nao via os registros recentes e deixaria gravar dupla marcacao.
+                              RemoveIf(colValida, cond = "FINALIZADO");
                               UpdateContext(
                                   {
                                       locBloqueio: "," & locPos.posicao & "," &

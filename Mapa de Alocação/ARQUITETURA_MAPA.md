@@ -989,3 +989,23 @@ aviação geral) já foi defendida três vezes e continua valendo.
 
 **No cabeçalho:** `BLOQUEIOS` deixou de contar alternativas e elas ganharam KPI próprio. Misturá-las
 faria o número de bloqueios sugerir uma ocupação que não existe.
+
+## Delegação: o recorte de FINALIZADO saiu do filtro (05/09/2026)
+
+`colDia` e `colValida` filtram a `tb_alocacoesMapa` no servidor. O termo `condicao <> "FINALIZADO"`,
+acrescentado em 04/09 para tirar o movimento finalizado do mapa, **não delega** — desigualdade em
+coluna de texto no conector SharePoint — e derrubava a consulta inteira para o modo local: primeiras
+500 linhas por ID, filtradas na memória.
+
+Com ~705 registros de setembro, as 500 primeiras cobriam o mês até cerca do dia 21. A grade parecia
+certa, e **todo registro criado depois da importação era invisível para o app**.
+
+Agora o filtro do servidor tem só termos delegáveis, e o `FINALIZADO` sai com `RemoveIf` na coleção
+já baixada — uma linha depois de cada `ClearCollect`.
+
+⚠️ **No `colValida` isso não era só cosmético.** Ele é a checagem de conflito: com a amostra cega
+para os registros recentes, o app deixaria gravar duas aeronaves na mesma posição sem avisar. Quem
+for mexer em qualquer um dos dois filtros: o que vai ao servidor tem de continuar 100% delegável.
+
+Ainda não delegado por opção: o botão TESTAR do `scrMapaRegra` varre 90 dias e é consulta delegável,
+mas o volume pode passar do limite de linhas do app. É diagnóstico, não regra de gravação — fica.

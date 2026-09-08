@@ -2133,3 +2133,36 @@ indistinguível de um validador que não roda.
 **Duas coisas daí:** teste toda trava nova contra um arquivo quebrado de propósito, sempre. E prefira
 o padrão preciso com falso positivo declarado — `/ variável` vira aviso, não erro — ao heurístico
 esperto que engole o verdadeiro positivo junto.
+
+## Um termo não delegável transforma a consulta numa janela silenciosa de 500 linhas (2026-09-05)
+
+O `colDia` do Mapa filtrava `aeroporto = ... And data_operacao <= ... And data_fim >= ... And ativo = 1
+And condicao <> "FINALIZADO"`. Os quatro primeiros termos delegam para o SharePoint; **o `<>` em
+coluna de texto não**. Basta um termo não delegável para o Power Apps desistir do servidor: ele baixa
+as **primeiras 500 linhas por ID** e filtra localmente.
+
+A `tb_alocacoesMapa` tinha ~705 registros da importação de setembro. As 500 primeiras cobriam o mês
+até por volta do dia 21 — então a grade parecia perfeita. Mas **todo registro criado depois da
+importação recebe ID maior que 500 e simplesmente não existia para o app**: gravava no SharePoint e
+não aparecia em lugar nenhum.
+
+**O que torna isto especialmente traiçoeiro:**
+
+1. **Não há erro.** A consulta "funciona", só responde menos. O aviso de delegação do Studio é um
+   triângulo azul que se lê uma vez e se ignora.
+2. **Degrada por idade, não por uso.** Funcionou por dias, e quebrou quando a lista passou de 500 —
+   sem que nada no código mudasse naquele momento.
+3. **A mesma armadilha estava no `colValida`**, que é a checagem de conflito. Lá o efeito não é
+   sumir da tela: é **deixar gravar dupla marcação sem avisar**, porque o registro concorrente não
+   estava na amostra.
+
+**A regra:** o filtro que vai ao servidor tem que ser 100% delegável. Recorte que não delega — `<>`,
+`in` sobre coleção local, comparação de texto sofisticada — se faz **depois**, na coleção já baixada,
+com `RemoveIf`. Custa uma linha e devolve a consulta ao servidor.
+
+**Como reconhecer o sintoma:** registro que existe na lista, casa com o filtro se você conferir campo
+a campo, e mesmo assim não aparece — com os registros *antigos* aparecendo normalmente. Idade do
+registro decidindo visibilidade é assinatura de delegação, não de lógica.
+
+Vale conferir também o "Limite de linhas de dados" nas configurações do app (padrão 500, máximo 2000):
+ele não conserta o problema, mas adia o dia em que ele aparece — e por isso também o esconde.
