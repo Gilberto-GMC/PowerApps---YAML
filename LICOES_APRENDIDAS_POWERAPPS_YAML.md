@@ -2105,3 +2105,31 @@ falsa. O que resolveu foi medir: o bloco `00:00–06:20` ocupava 26,3% do trilho
 2. Quando dois consumidores do mesmo número discordam, **meça um deles** antes de teorizar sobre
    semântica da plataforma. A régua contra 1440 era uma conta de dez segundos; a teoria sobre
    `UpdateContext` teria me custado uma reescrita inteira e não teria consertado nada.
+
+## Variável global nasce em branco, e o Studio avalia a tela antes de qualquer OnVisible (2026-09-05)
+
+A janela da grade virou o denominador de todas as larguras: `100 / varJanelaMin`. `varJanelaMin` é
+definida no `OnVisible` do `scrMapaPatio` — mas o Studio avalia as fórmulas da tela **na colagem**,
+sem rodar `OnVisible` nenhum. Divisor em branco, divisão por zero, colagem recusada.
+
+**A regra:** todo divisor que seja variável precisa de `Max(x, <mínimo>)` ou `Coalesce(x, <padrão>)`
+**na posição do divisor**. Divisão por constante (`/ 60`, `/ 36`) não tem esse problema, e por isso
+`varJanelaMin / 36` nas células de clique estava seguro desde o início — vale distinguir os dois
+antes de sair envolvendo tudo.
+
+Nunca conte com `OnVisible` para dar valor inicial a algo que uma fórmula declarativa lê. O
+`OnVisible` roda na navegação; a fórmula é avaliada sempre, inclusive no editor.
+
+## Um check que não pode falhar não está checando (2026-09-05)
+
+Ao acrescentar a trava de divisão ao `fx_check.js`, tentei ser esperto: suprimir o aviso quando a
+variável aparecesse dentro de algum `Max`/`Coalesce`/`If` da mesma fórmula, para não gritar em cima de
+guardas legítimas. O heurístico anulou o check — na fórmula da grade a variável aparece dentro de um
+`Max()` por outro motivo, então **nenhum** caso disparava, nem o que eu tinha acabado de consertar.
+
+Só descobri porque testei contra uma cópia com o defeito de volta. Um validador que passa em tudo é
+indistinguível de um validador que não roda.
+
+**Duas coisas daí:** teste toda trava nova contra um arquivo quebrado de propósito, sempre. E prefira
+o padrão preciso com falso positivo declarado — `/ variável` vira aviso, não erro — ao heurístico
+esperto que engole o verdadeiro positivo junto.

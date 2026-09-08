@@ -21,6 +21,7 @@ const PROIBIDO = {
 function analisa(arquivo, mortos) {
   const linhas = fs.readFileSync(arquivo, "utf8").replace(/\r\n/g, "\n").split("\n");
   const erros = [];
+  const avisos = [];
   const nomes = new Map();
   const pilha = []; // { recuo, chaves:Set }
 
@@ -131,13 +132,27 @@ function analisa(arquivo, mortos) {
       for (const c of semStr) { if (c === "{") b++; else if (c === "}") b--; }
       if (b !== 0) erros.push(`${i + 1}: '${nome}' tem ${b} chave(s) {} sem fechar`);
 
+      // Divisão por variável nua. Variável global nasce em branco, e o Studio avalia as
+      // fórmulas da tela antes de qualquer OnVisible rodar — dá "divisão por zero" na colagem.
+      // Envolva o divisor em Max(x, <mínimo>) ou Coalesce(x, <padrão>).
+      // Aviso, e não erro: um If() por fora testando o divisor já protege, porque o If do
+      // Power Fx é preguiçoso e o ramo da divisão nem chega a ser avaliado. O regex daqui
+      // não enxerga essa guarda, então isto aponta candidatos — não veredictos.
+      // Só o divisor conta: '/ Max(...)' e '/ Coalesce(...)' estão protegidos na posição certa.
+      // Tentei deduzir a guarda de um If() em volta e o heurístico anulou o check — passava a
+      // suprimir sempre que a variável aparecesse em qualquer Max/If da mesma fórmula.
+      for (const d of new Set(semStr.match(/\/\s*(?:var|loc)[A-Za-z0-9_.]+/g) || [])) {
+        const alvo = d.replace(/^\/\s*/, "");
+        avisos.push(`${i + 1}: '${nome}' divide por ${alvo} — em branco vira divisão por zero. Proteja com Max()/Coalesce() no divisor, ou confirme que um If() por fora já barra o caso`);
+      }
+
       for (const m of mortos) {
         if (new RegExp(`\\b${m}\\b`).test(formula)) erros.push(`${i + 1}: '${nome}' cita '${m}', que não existe mais`);
       }
       i = fim;
     }
   }
-  return { erros, controles: nomes.size, linhas: linhas.length };
+  return { erros, avisos, controles: nomes.size, linhas: linhas.length };
 }
 
 const args = process.argv.slice(2);
@@ -153,6 +168,10 @@ for (const a of arquivos) {
     r.erros.forEach((e) => console.log("   " + e));
   } else {
     console.log(`✓ ${a} — ${r.controles} controles, ${r.linhas} linhas`);
+  }
+  if (r.avisos.length) {
+    console.log(`  ⚠ ${r.avisos.length} aviso(s) — confira, podem já estar protegidos por um If() em volta`);
+    r.avisos.forEach((e) => console.log("     " + e));
   }
 }
 process.exit(falhou ? 1 : 0);
