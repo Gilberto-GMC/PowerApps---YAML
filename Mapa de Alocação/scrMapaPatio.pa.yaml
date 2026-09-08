@@ -3072,7 +3072,14 @@ Screens:
                                   If(
                                       locErro,
                                       Notify("Não foi possível gravar. Nada foi alterado.", NotificationType.Error, 7000),
-                                      UpdateContext({locConfirmaConting: 0, locConfirmaExcluir: 0, locConfirmaPortao: "", locConfirmaEnv: 0});
+                                      UpdateContext({locConfirmaConting: 0, locConfirmaExcluir: 0, locConfirmaPortao: "", locConfirmaEnv: 0, locConfirmaAlt: ""});
+                                      // A janela segue o que acabou de ser gravado. Sem isto o registro grava fora da faixa
+                                      // visivel e some da tela, indistinguivel de nao ter gravado.
+                                      If(
+                                          locDataIni <= varData And locDataFim >= varData And
+                                          (locIni < varJanelaIni Or locIni >= varJanelaIni + varJanelaMin),
+                                          Set(varJanelaIni, Min(mapMinutosDia - varJanelaMin, RoundDown(locIni / 60, 0) * 60))
+                                      );
                                       Select(btnAtualizarMap);
                                       Set(varAlocSel, Blank());
                                       Set(varPainelAberto, false);
