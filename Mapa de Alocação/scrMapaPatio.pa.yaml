@@ -1033,168 +1033,164 @@ Screens:
                               PaddingBottom: =4
                               PaddingLeft: =2
                             Children:
-                          - icoJanAntMap:
-                              Control: Classic/Icon@2.5.0
-                              Properties:
-                                Color: =thmOperacional
-                                Height: =26
-                                Icon: =Icon.ChevronLeft
-                                LayoutMinHeight: =26
-                                LayoutMinWidth: =0
-                                OnSelect: |-
-                                  =Set(varJanelaIni, Max(0, varJanelaIni - RoundDown(varJanelaMin / 2, 0)));
-                                  Select(btnDesenharMap)
-                                PaddingBottom: =4
-                                PaddingLeft: =4
-                                PaddingRight: =4
-                                PaddingTop: =4
-                                Tooltip: ="Voltar meia janela"
-                                Width: =32
-                          - lblJanelaMap:
-                              Control: Label@2.5.1
-                              Properties:
-                                Align: =Align.Center
-                                Color: =thmTexto
-                                Font: =thmFonte
-                                FontWeight: =FontWeight.Bold
-                                Height: =26
-                                LayoutMinWidth: =0
-                                Size: =12
-                                Text: |-
-                                  =Text(RoundDown(varJanelaIni / 60, 0), "00") & ":00  –  " &
-                                  Text(RoundDown((varJanelaIni + varJanelaMin) / 60, 0), "00") & ":00"
-                                Tooltip: ="Faixa de horas desenhada na grade"
-                                Width: =150
-                          - icoJanProxMap:
-                              Control: Classic/Icon@2.5.0
-                              Properties:
-                                Color: =thmOperacional
-                                Height: =26
-                                Icon: =Icon.ChevronRight
-                                LayoutMinHeight: =26
-                                LayoutMinWidth: =0
-                                OnSelect: |-
-                                  =Set(varJanelaIni, Min(mapMinutosDia - varJanelaMin, varJanelaIni + RoundDown(varJanelaMin / 2, 0)));
-                                  Select(btnDesenharMap)
-                                PaddingBottom: =4
-                                PaddingLeft: =4
-                                PaddingRight: =4
-                                PaddingTop: =4
-                                Tooltip: ="Avançar meia janela"
-                                Width: =32
-                          - btnAgoraMap:
-                              Control: Button@0.0.45
-                              Properties:
-                                Appearance: ='ButtonCanvas.Appearance'.Secondary
-                                BasePaletteColor: =thmOperacional
-                                BorderRadius: =0
-                                DisplayMode: =If(varJanelaMin >= mapMinutosDia, DisplayMode.Disabled, DisplayMode.Edit)
-                                FontColor: =thmOperacional
-                                FontSize: =11
-                                FontWeight: =FontWeight.Semibold
-                                Height: =28
-                                Icon: ="Clock"
-                                IconStyle: ='ButtonCanvas.IconStyle'.Filled
-                                LayoutMinHeight: =28
-                                LayoutMinWidth: =0
-                                OnSelect: |-
-                                  =Set(varData, Today());
-                                  Set(varJanelaIni, Min(mapMinutosDia - varJanelaMin, Max(0, Hour(Now()) * 60 - RoundDown(varJanelaMin / 4, 0))));
-                                  Select(btnAtualizarMap)
-                                PaddingLeft: =10
-                                PaddingRight: =10
-                                Text: ="AGORA"
-                                Tooltip: ="Ir para hoje e centrar a janela na hora atual"
-                                Width: =104
-                          - lblEspacoJanMap:
-                              Control: Label@2.5.1
-                              Properties:
-                                Fill: =thmTransparente
-                                FillPortions: =1
-                                LayoutMinWidth: =0
-                                Text: =""
-                          - btnJan6Map:
-                              Control: Button@0.0.45
-                              Properties:
-                                Appearance: ='ButtonCanvas.Appearance'.Secondary
-                                BasePaletteColor: =If(varJanelaMin = 360, thmAcao, thmTextoFraco)
-                                BorderRadius: =0
-                                FontColor: =If(varJanelaMin = 360, thmAcao, thmTextoFraco)
-                                FontSize: =11
-                                FontWeight: =FontWeight.Semibold
-                                Height: =28
-                                LayoutMinHeight: =28
-                                LayoutMinWidth: =0
-                                OnSelect: |-
-                                  =Set(varJanelaMin, 360);
-                                  Set(varJanelaIni, Min(RoundDown(varJanelaIni / 60, 0) * 60, mapMinutosDia - 360));
-                                  Select(btnDesenharMap)
-                                PaddingLeft: =8
-                                PaddingRight: =8
-                                Text: ="6 HORAS"
-                                Tooltip: ="Mostrar 6 horas de uma vez"
-                                Width: =78
-                          - btnJan12Map:
-                              Control: Button@0.0.45
-                              Properties:
-                                Appearance: ='ButtonCanvas.Appearance'.Secondary
-                                BasePaletteColor: =If(varJanelaMin = 720, thmAcao, thmTextoFraco)
-                                BorderRadius: =0
-                                FontColor: =If(varJanelaMin = 720, thmAcao, thmTextoFraco)
-                                FontSize: =11
-                                FontWeight: =FontWeight.Semibold
-                                Height: =28
-                                LayoutMinHeight: =28
-                                LayoutMinWidth: =0
-                                OnSelect: |-
-                                  =Set(varJanelaMin, 720);
-                                  Set(varJanelaIni, Min(RoundDown(varJanelaIni / 60, 0) * 60, mapMinutosDia - 720));
-                                  Select(btnDesenharMap)
-                                PaddingLeft: =8
-                                PaddingRight: =8
-                                Text: ="12 HORAS"
-                                Tooltip: ="Mostrar 12 horas de uma vez"
-                                Width: =84
-                          - btnJan24Map:
-                              Control: Button@0.0.45
-                              Properties:
-                                Appearance: ='ButtonCanvas.Appearance'.Secondary
-                                BasePaletteColor: =If(varJanelaMin = 1440, thmAcao, thmTextoFraco)
-                                BorderRadius: =0
-                                FontColor: =If(varJanelaMin = 1440, thmAcao, thmTextoFraco)
-                                FontSize: =11
-                                FontWeight: =FontWeight.Semibold
-                                Height: =28
-                                LayoutMinHeight: =28
-                                LayoutMinWidth: =0
-                                OnSelect: |-
-                                  =Set(varJanelaMin, 1440);
-                                  Set(varJanelaIni, Min(RoundDown(varJanelaIni / 60, 0) * 60, mapMinutosDia - 1440));
-                                  Select(btnDesenharMap)
-                                PaddingLeft: =8
-                                PaddingRight: =8
-                                Text: ="DIA INTEIRO"
-                                Tooltip: ="Mostrar dia inteiro de uma vez"
-                                Width: =100
-                          - tmrJanelaMap:
-                              Control: Timer@2.1.0
-                              Properties:
-                                AutoPause: =false
-                                AutoStart: =true
-                                Duration: =60000
-                                OnTimerEnd: |-
-                                  =With(
-                                      { _agora: Hour(Now()) * 60 + Minute(Now()) },
-                                      If(
-                                          varMapaVisivel And varData = Today() And varJanelaMin < mapMinutosDia And
-                                          _agora >= varJanelaIni + varJanelaMin And _agora < varJanelaIni + varJanelaMin + 60,
-                                          Set(varJanelaIni, Min(mapMinutosDia - varJanelaMin, Hour(Now()) * 60));
-                                          Select(btnDesenharMap)
+                              - icoJanAntMap:
+                                  Control: Classic/Icon@2.5.0
+                                  Properties:
+                                    Color: =thmOperacional
+                                    Height: =26
+                                    Icon: =Icon.ChevronLeft
+                                    LayoutMinHeight: =26
+                                    LayoutMinWidth: =0
+                                    OnSelect: |-
+                                      =Set(varJanelaIni, Max(0, varJanelaIni - RoundDown(varJanelaMin / 2, 0)));
+                                      Select(btnDesenharMap)
+                                    PaddingBottom: =4
+                                    PaddingLeft: =4
+                                    PaddingRight: =4
+                                    PaddingTop: =4
+                                    Tooltip: ="Voltar meia janela"
+                                    Width: =32
+                              - lblJanelaMap:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    Align: =Align.Center
+                                    Color: =thmTexto
+                                    Font: =thmFonte
+                                    FontWeight: =FontWeight.Bold
+                                    Height: =26
+                                    LayoutMinWidth: =0
+                                    Size: =12
+                                    Text: |-
+                                      =Text(RoundDown(varJanelaIni / 60, 0), "00") & ":00  –  " &
+                                      Text(RoundDown((varJanelaIni + varJanelaMin) / 60, 0), "00") & ":00"
+                                    Tooltip: ="Faixa de horas desenhada na grade"
+                                    Width: =150
+                              - icoJanProxMap:
+                                  Control: Classic/Icon@2.5.0
+                                  Properties:
+                                    Color: =thmOperacional
+                                    Height: =26
+                                    Icon: =Icon.ChevronRight
+                                    LayoutMinHeight: =26
+                                    LayoutMinWidth: =0
+                                    OnSelect: |-
+                                      =Set(varJanelaIni, Min(mapMinutosDia - varJanelaMin, varJanelaIni + RoundDown(varJanelaMin / 2, 0)));
+                                      Select(btnDesenharMap)
+                                    PaddingBottom: =4
+                                    PaddingLeft: =4
+                                    PaddingRight: =4
+                                    PaddingTop: =4
+                                    Tooltip: ="Avançar meia janela"
+                                    Width: =32
+                              - btnAgoraMap:
+                                  Control: Button@0.0.45
+                                  Properties:
+                                    Appearance: ='ButtonCanvas.Appearance'.Secondary
+                                    BasePaletteColor: =thmOperacional
+                                    BorderRadius: =0
+                                    DisplayMode: =If(varJanelaMin >= mapMinutosDia, DisplayMode.Disabled, DisplayMode.Edit)
+                                    FontColor: =thmOperacional
+                                    FontSize: =11
+                                    FontWeight: =FontWeight.Semibold
+                                    Height: =28
+                                    Icon: ="Clock"
+                                    IconStyle: ='ButtonCanvas.IconStyle'.Filled
+                                    LayoutMinHeight: =28
+                                    LayoutMinWidth: =0
+                                    OnSelect: |-
+                                      =Set(varData, Today());
+                                      Set(varJanelaIni, Min(mapMinutosDia - varJanelaMin, Max(0, Hour(Now()) * 60 - RoundDown(varJanelaMin / 4, 0))));
+                                      Select(btnAtualizarMap)
+                                    PaddingLeft: =10
+                                    PaddingRight: =10
+                                    Text: ="AGORA"
+                                    Width: =104
+                              - lblEspacoJanMap:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    Fill: =thmTransparente
+                                    FillPortions: =1
+                                    LayoutMinWidth: =0
+                                    Text: =""
+                              - btnJan6Map:
+                                  Control: Button@0.0.45
+                                  Properties:
+                                    Appearance: ='ButtonCanvas.Appearance'.Secondary
+                                    BasePaletteColor: =If(varJanelaMin = 360, thmAcao, thmTextoFraco)
+                                    BorderRadius: =0
+                                    FontColor: =If(varJanelaMin = 360, thmAcao, thmTextoFraco)
+                                    FontSize: =11
+                                    FontWeight: =FontWeight.Semibold
+                                    Height: =28
+                                    LayoutMinHeight: =28
+                                    LayoutMinWidth: =0
+                                    OnSelect: |-
+                                      =Set(varJanelaMin, 360);
+                                      Set(varJanelaIni, Min(RoundDown(varJanelaIni / 60, 0) * 60, mapMinutosDia - 360));
+                                      Select(btnDesenharMap)
+                                    PaddingLeft: =8
+                                    PaddingRight: =8
+                                    Text: ="6 HORAS"
+                                    Width: =78
+                              - btnJan12Map:
+                                  Control: Button@0.0.45
+                                  Properties:
+                                    Appearance: ='ButtonCanvas.Appearance'.Secondary
+                                    BasePaletteColor: =If(varJanelaMin = 720, thmAcao, thmTextoFraco)
+                                    BorderRadius: =0
+                                    FontColor: =If(varJanelaMin = 720, thmAcao, thmTextoFraco)
+                                    FontSize: =11
+                                    FontWeight: =FontWeight.Semibold
+                                    Height: =28
+                                    LayoutMinHeight: =28
+                                    LayoutMinWidth: =0
+                                    OnSelect: |-
+                                      =Set(varJanelaMin, 720);
+                                      Set(varJanelaIni, Min(RoundDown(varJanelaIni / 60, 0) * 60, mapMinutosDia - 720));
+                                      Select(btnDesenharMap)
+                                    PaddingLeft: =8
+                                    PaddingRight: =8
+                                    Text: ="12 HORAS"
+                                    Width: =84
+                              - btnJan24Map:
+                                  Control: Button@0.0.45
+                                  Properties:
+                                    Appearance: ='ButtonCanvas.Appearance'.Secondary
+                                    BasePaletteColor: =If(varJanelaMin = 1440, thmAcao, thmTextoFraco)
+                                    BorderRadius: =0
+                                    FontColor: =If(varJanelaMin = 1440, thmAcao, thmTextoFraco)
+                                    FontSize: =11
+                                    FontWeight: =FontWeight.Semibold
+                                    Height: =28
+                                    LayoutMinHeight: =28
+                                    LayoutMinWidth: =0
+                                    OnSelect: |-
+                                      =Set(varJanelaMin, 1440);
+                                      Set(varJanelaIni, Min(RoundDown(varJanelaIni / 60, 0) * 60, mapMinutosDia - 1440));
+                                      Select(btnDesenharMap)
+                                    PaddingLeft: =8
+                                    PaddingRight: =8
+                                    Text: ="DIA INTEIRO"
+                                    Width: =100
+                              - tmrJanelaMap:
+                                  Control: Timer@2.1.0
+                                  Properties:
+                                    AutoPause: =false
+                                    AutoStart: =true
+                                    Duration: =60000
+                                    OnTimerEnd: |-
+                                      =With(
+                                          { _agora: Hour(Now()) * 60 + Minute(Now()) },
+                                          If(
+                                              varMapaVisivel And varData = Today() And varJanelaMin < mapMinutosDia And
+                                              _agora >= varJanelaIni + varJanelaMin And _agora < varJanelaIni + varJanelaMin + 60,
+                                              Set(varJanelaIni, Min(mapMinutosDia - varJanelaMin, Hour(Now()) * 60));
+                                              Select(btnDesenharMap)
+                                          )
                                       )
-                                  )
-                                Repeat: =true
-                                Visible: =false
-                                Width: =1
+                                    Repeat: =true
+                                    Visible: =false
+                                    Width: =1
                         - htmReguaMap:
                             Control: HtmlViewer@2.1.0
                             Properties:

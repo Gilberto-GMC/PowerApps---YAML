@@ -2058,3 +2058,27 @@ janela.
 `<td>` de conteúdo só é emitido quando tem duração de verdade; o `<td>` de vão continua sempre, e é
 ele que mantém a soma das larguras em 100%. **Antes de assumir que largura zero some, pergunte o que
 mais o elemento desenha** — borda, sombra, outline e `min-width` sobrevivem a ela.
+
+## Gerar YAML por script exige conferir o recuo contra um irmão real (2026-09-05)
+
+A barra da janela foi gerada por script com recuos montados de cabeça: o container ficou certo, mas os
+filhos saíram com **26 espaços** sob um `Children:` que está em **28**. O Studio recusou com
+`PA1001 / YamlInvalidSyntax`, apontando a linha exata — e o `fx_check.js` da época deixou passar,
+porque só olhava fórmula, não estrutura.
+
+**A regra que faltava:** ao gerar um bloco, copiar o recuo de um **irmão que já existe no arquivo**, não
+deduzir. Aqui bastava olhar o `htmReguaMap` logo abaixo: item em 24, chaves em 28, propriedades em 30.
+
+E a trava correspondente entrou no validador: *chave de bloco tem que ser seguida de linha mais
+recuada*. Testei-a contra uma cópia quebrada de propósito antes de confiar nela — ela aponta a mesma
+linha que o Studio apontou.
+
+## Registrar a lição não basta; a trava tem que ser executável (2026-09-05)
+
+Em 04/09 anotei que `Button@0.0.45` não tem `Tooltip`. Em 05/09 pus `Tooltip` em quatro botões novos.
+A lição estava escrita, revisada e commitada — e não impediu nada, porque nada a executava na hora de
+escrever o YAML.
+
+Virou tabela `PROIBIDO` no `fx_check.js`. **Conhecimento que só existe em prosa não sobrevive ao
+próprio autor no dia seguinte**; se um erro pode ser detectado por script, a anotação é o rascunho e o
+script é a entrega.

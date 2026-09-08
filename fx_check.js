@@ -12,6 +12,12 @@
 
 const fs = require("fs");
 
+// Pares controle/propriedade que o Studio REJEITA, aprendidos a duras penas neste repositório.
+// Cada linha custou uma colagem recusada. Acrescente quando descobrir outra.
+const PROIBIDO = {
+  "Button@0.0.45": ["Tooltip"], // 04/09/2026 e de novo em 05/09 — PA2108
+};
+
 function analisa(arquivo, mortos) {
   const linhas = fs.readFileSync(arquivo, "utf8").replace(/\r\n/g, "\n").split("\n");
   const erros = [];
@@ -32,6 +38,39 @@ function analisa(arquivo, mortos) {
         erros.push(`${i + 1}: controle duplicado '${ctrl[1]}' (já em ${nomes.get(ctrl[1])})`);
       }
       nomes.set(ctrl[1], i + 1);
+    }
+
+    // Chave de bloco (nada depois dos dois pontos) tem que ser seguida de linha MAIS recuada.
+    // Foi isto que passou batido em 05/09/2026: 'Children:' em 28 com os filhos gerados em 26.
+    if (/^\s*[A-Za-z_][A-Za-z0-9_]*:\s*$/.test(l) && !/^\s*- /.test(l)) {
+      let j = i + 1;
+      while (j < linhas.length && !linhas[j].trim()) j++;
+      if (j < linhas.length && recuoDe(linhas[j]) <= r) {
+        erros.push(`${i + 1}: bloco '${l.trim()}' não tem filho recuado (linha ${j + 1} está em ${recuoDe(linhas[j])}, precisa passar de ${r})`);
+      }
+    }
+
+    // Itens de uma mesma lista têm que compartilhar o recuo.
+    if (/^\s*- \S/.test(l)) {
+      let j = i + 1;
+      while (j < linhas.length && (!linhas[j].trim() || recuoDe(linhas[j]) > r)) j++;
+      if (j < linhas.length && recuoDe(linhas[j]) < r && /^\s*- \S/.test(linhas[j] || "")) {
+        // item seguinte menos recuado é fim de lista, não erro
+      }
+    }
+
+    // Propriedade não suportada pelo tipo do controle.
+    const tipo = l.match(/^\s*Control: (\S+)\s*$/);
+    if (tipo && PROIBIDO[tipo[1]]) {
+      const rc = r;
+      for (let j = i + 1; j < linhas.length; j++) {
+        if (!linhas[j].trim()) continue;
+        if (recuoDe(linhas[j]) < rc) break;
+        const p = linhas[j].match(/^\s*([A-Za-z_][A-Za-z0-9_]*):/);
+        if (p && PROIBIDO[tipo[1]].includes(p[1])) {
+          erros.push(`${j + 1}: '${p[1]}' não existe em ${tipo[1]} — o Studio recusa com PA2108`);
+        }
+      }
     }
 
     // Propriedade repetida dentro de UM bloco Properties:.
