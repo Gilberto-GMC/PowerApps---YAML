@@ -1044,3 +1044,22 @@ número que muda precisa dizer por quê.
 tempo são recortados. Posição reusada por cima do horário de um movimento finalizado mostra o segundo
 bloco truncado enquanto o filtro estiver ligado. Consertar pediria dar precedência ao bloco vivo numa
 segunda passada — não vale o custo enquanto for visão de exceção, e some ao desligar.
+
+## A barra de filtros quebra em vez de cortar (09/09/2026)
+
+O Douglas viu no player que o **+ NOVO REGISTRO estava cortado** — o botão de ação principal da tela.
+Nos prints anteriores ele cabia porque o Studio estava a 60% de zoom; a 100%, numa janela de ~1280px,
+não cabe.
+
+A conta: oito controles de largura fixa somam **1076px**, mais 70 de vãos e 52 de padding — **1198**,
+mais o AMANHÃ, que era o único sem largura declarada. Container AutoLayout horizontal **não quebra
+linha sozinho**: o que não cabe é cortado, em silêncio, e some quem estiver por último.
+
+Agora `LayoutWrap: =true`, com a altura respondendo à largura disponível:
+`Height: =If(Parent.Width < 1330, 120, 62)`. Numa janela larga fica em uma linha como sempre; numa
+estreita passa a duas e a grade cede 58px. **O AMANHÃ ganhou largura explícita (110)** para o limiar
+de 1330 ser uma conta e não um chute.
+
+⚠️ **A classe do defeito importa mais que ele:** barra de ações com largura fixa é uma bomba-relógio
+de layout, porque falha só na janela de quem usa, nunca na de quem constrói. Toda vez que um botão
+novo entrar nessa barra, a conta acima muda e o limiar tem de mudar junto.
