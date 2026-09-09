@@ -5,6 +5,19 @@ Power Apps deste workspace. Cada nova ocorrência deve acrescentar causa,
 correção e uma validação preventiva para impedir regressão nas próximas telas,
 independentemente do projeto ou módulo.
 
+
+> ⚠️ **Esta lição estava errada e fica aqui como registro do erro.** Fórmula nomeada **lê variável
+> global sem problema**: o `colPosicoesAero` e o `colPatiosAero` filtram por `varAero` desde o primeiro
+> dia deste app. O que me levou à conclusão falsa foi o sintoma da grade desalinhada, cuja causa real
+> era outra — um script de edição que abortou antes de gravar. **Mover o `mapFundoHoras` para a tela
+> era desnecessário**; não faz mal, mas a regra que eu extraí faria.
+>
+> O que continua valendo: fórmula nomeada não pode usar função de comportamento (`Set`, `Collect`,
+> `Patch`). Sobre coleções eu **não tenho evidência** neste repositório — não afirmar sem testar.
+>
+> A lição de fundo é outra: **generalizar a partir de um sintoma cuja causa ainda não se confirmou
+> produz uma regra que sobrevive ao defeito e passa a atrapalhar sozinha.**
+
 ## Padrão para registrar novos aprendizados
 
 Cada novo erro deve informar:
@@ -2020,7 +2033,7 @@ custo ficou em +50% de controles em vez de +500%.
 densidade máxima — escolha um número de controles e deixe a *unidade* deles variar. Vale para grades
 de tempo, réguas, paginação e qualquer camada de toque sobre conteúdo desenhado.
 
-## Fórmula nomeada não enxerga variável — o que vira dinâmico tem que descer para a tela (2026-09-05)
+## ~~Fórmula nomeada não enxerga variável~~ — ERRADO, corrigido em 09/09/2026
 
 `mapPctHora` e `mapFundoHoras` viviam no `App.Formulas` porque a grade tinha 24 colunas fixas. Quando
 a largura passou a depender de uma janela escolhida pelo usuário, elas não podiam continuar lá:
