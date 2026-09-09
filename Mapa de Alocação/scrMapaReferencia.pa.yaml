@@ -573,6 +573,7 @@ Screens:
                                                   "Número da posição: <b>" & Text(varFormPos.id) & "</b> — gravado em mais de 700 lançamentos, não muda."
                                               ) & "</div>"
                                           Size: =11
+                                          Visible: =false
                                     - lblPosRef:
                                         Control: Label@2.5.1
                                         Properties:
@@ -994,8 +995,27 @@ Screens:
                                                       PaddingLeft: =12
                                                       PaddingRight: =12
                                                       Text: |-
-                                                          =ThisItem.nome_patio & "   ·   " & ThisItem.patio &
+                                                          =ThisItem.nome_patio & "   ·   " & ThisItem.patio & "   ·   " & Coalesce(ThisItem.sigla, "—") &
                                                           If(ThisItem.ativo = 1, "", "   ·   INATIVO")
+                                                - btnCorLinhaPatRef:
+                                                    Control: Button@0.0.45
+                                                    Properties:
+                                                      Appearance: ='ButtonCanvas.Appearance'.Primary
+                                                      BasePaletteColor: |-
+                                                        =If(
+                                                            IsMatch(Coalesce(ThisItem.cor_hex, ""), "^#[0-9A-Fa-f]{6}$"),
+                                                            ColorValue(ThisItem.cor_hex),
+                                                            thmTextoFraco
+                                                        )
+                                                      BorderRadius: =0
+                                                      Height: =22
+                                                      LayoutMinHeight: =22
+                                                      LayoutMinWidth: =0
+                                                      OnSelect: =Select(btnItemPatRef)
+                                                      PaddingLeft: =0
+                                                      PaddingRight: =0
+                                                      Text: =""
+                                                      Width: =22
                               - cntFormPatRef:
                                   Control: GroupContainer@1.5.0
                                   Variant: AutoLayout
