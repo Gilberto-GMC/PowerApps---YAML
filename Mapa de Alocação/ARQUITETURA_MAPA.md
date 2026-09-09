@@ -948,6 +948,11 @@ Em 6 horas isso entrega o "ganho de brinde" previsto no pedido: clicar às 09h40
    corte da janela. É a mesma informação — "isto continua fora do que você está vendo" — e por isso
    reusa o mesmo símbolo em vez de inventar outro.
 
+   ⚠️ **E a legenda ficou mentindo por quatro dias.** Ela dizia *"« » continua noutro dia"*, e passou
+   a aparecer em voo do próprio dia que começou antes da faixa. Corrigido em 09/09/2026 para *"começa
+   ou termina fora da faixa"*. **Símbolo que ganha significado novo obriga a revisitar a legenda na
+   mesma passada** — a legenda é código de leitura, e ninguém a testa.
+
 ### O que saiu do `App.Formulas`
 
 `mapPctHora` e `mapFundoHoras` dependiam de 24 colunas fixas. Agora dependem da janela, que é
