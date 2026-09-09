@@ -43,6 +43,7 @@ const asp = '"'; // aspas literais: dentro de literal de expressao do Logic Apps
 
 const LINHA =
   "@concat(" + q + asp + q + ",formatDateTime(item()?['data_operacao'],'dd/MM/yyyy')," + q + asp + ";" + asp + q + "," +
+  "formatDateTime(item()?['data_fim'],'dd/MM/yyyy')," + q + asp + ";" + asp + q + "," +
   "item()?['posicao_txt']," + q + asp + ";" + asp + q + ",item()?['patio_txt']," + q + asp + ";" + asp + q + "," +
   "formatNumber(div(item()?['hora_inicio'],60),'00'),':',formatNumber(mod(item()?['hora_inicio'],60),'00')," + q + asp + ";" + asp + q + "," +
   "formatNumber(div(item()?['hora_fim'],60),'00'),':',formatNumber(mod(item()?['hora_fim'],60),'00')," + q + asp + ";" + asp + q + "," +
@@ -56,7 +57,7 @@ const LINHA =
   "coalesce(item()?['responsavel'],'')," + q + asp + ";" + asp + q + ",coalesce(item()?['contato'],'')," + q + asp + ";" + asp + q + "," +
   "replace(coalesce(item()?['observacao'],''),'" + asp + "','''')," + q + asp + q + ")";
 
-const COLS = ["Data", "Posicao", "Patio", "Inicio", "Fim", "Tipo", "Companhia", "Voo chegada",
+const COLS = ["Data", "Data fim", "Posicao", "Patio", "Inicio", "Fim", "Tipo", "Companhia", "Voo chegada",
   "Voo saida", "Prefixo", "Equipamento", "Portao", "Condicao", "Internacional", "Pesquisado",
   "Alternativa", "Responsavel", "Contato", "Observacao"];
 const CABECALHO = COLS.map((c) => '"' + c + '"').join(";");
@@ -116,6 +117,9 @@ const definition = {
               "aeroporto eq '@{triggerBody()?['aeroporto']}' and ativo eq 1 and " +
               "data_operacao ge '@{formatDateTime(triggerBody()?['data_de'],'yyyy-MM-dd')}' and " +
               "data_operacao le '@{formatDateTime(triggerBody()?['data_ate'],'yyyy-MM-dd')}'",
+            // Sem isto o arquivo sai na ordem em que o SharePoint devolve, que e por ID:
+            // os voos semanais de setembro apareciam antes do dia 1.
+            $orderby: "data_operacao asc,hora_inicio asc",
             $top: 5000,
           }),
           {

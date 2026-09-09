@@ -90,6 +90,7 @@
               "dataset": "https://grupoccr.sharepoint.com/sites/AIRPORTNOW",
               "table": "tb_alocacoesMapa",
               "$filter": "aeroporto eq '@{triggerBody()?['aeroporto']}' and ativo eq 1 and data_operacao ge '@{formatDateTime(triggerBody()?['data_de'],'yyyy-MM-dd')}' and data_operacao le '@{formatDateTime(triggerBody()?['data_ate'],'yyyy-MM-dd')}'",
+              "$orderby": "data_operacao asc,hora_inicio asc",
               "$top": 5000
             },
             "host": {
@@ -126,7 +127,7 @@
           "type": "Select",
           "inputs": {
             "from": "@body('Filtrar_opcionais')",
-            "select": "@concat('\"',formatDateTime(item()?['data_operacao'],'dd/MM/yyyy'),'\";\"',item()?['posicao_txt'],'\";\"',item()?['patio_txt'],'\";\"',formatNumber(div(item()?['hora_inicio'],60),'00'),':',formatNumber(mod(item()?['hora_inicio'],60),'00'),'\";\"',formatNumber(div(item()?['hora_fim'],60),'00'),':',formatNumber(mod(item()?['hora_fim'],60),'00'),'\";\"',item()?['tipo_registro'],'\";\"',coalesce(item()?['cia_sigla'],''),'\";\"',coalesce(item()?['voo_chegada'],''),'\";\"',coalesce(item()?['voo_saida'],''),'\";\"',coalesce(item()?['prefixo'],''),'\";\"',coalesce(item()?['equipamento'],''),'\";\"',coalesce(item()?['portao'],''),'\";\"',coalesce(item()?['condicao'],'PREVISTO'),'\";\"',if(equals(item()?['internacional'],1),'SIM','NAO'),'\";\"',if(equals(item()?['pesquisado'],1),'SIM','NAO'),'\";\"',if(equals(item()?['alternativa'],1),'SIM','NAO'),'\";\"',coalesce(item()?['responsavel'],''),'\";\"',coalesce(item()?['contato'],''),'\";\"',replace(coalesce(item()?['observacao'],''),'\"',''''),'\"')"
+            "select": "@concat('\"',formatDateTime(item()?['data_operacao'],'dd/MM/yyyy'),'\";\"',formatDateTime(item()?['data_fim'],'dd/MM/yyyy'),'\";\"',item()?['posicao_txt'],'\";\"',item()?['patio_txt'],'\";\"',formatNumber(div(item()?['hora_inicio'],60),'00'),':',formatNumber(mod(item()?['hora_inicio'],60),'00'),'\";\"',formatNumber(div(item()?['hora_fim'],60),'00'),':',formatNumber(mod(item()?['hora_fim'],60),'00'),'\";\"',item()?['tipo_registro'],'\";\"',coalesce(item()?['cia_sigla'],''),'\";\"',coalesce(item()?['voo_chegada'],''),'\";\"',coalesce(item()?['voo_saida'],''),'\";\"',coalesce(item()?['prefixo'],''),'\";\"',coalesce(item()?['equipamento'],''),'\";\"',coalesce(item()?['portao'],''),'\";\"',coalesce(item()?['condicao'],'PREVISTO'),'\";\"',if(equals(item()?['internacional'],1),'SIM','NAO'),'\";\"',if(equals(item()?['pesquisado'],1),'SIM','NAO'),'\";\"',if(equals(item()?['alternativa'],1),'SIM','NAO'),'\";\"',coalesce(item()?['responsavel'],''),'\";\"',coalesce(item()?['contato'],''),'\";\"',replace(coalesce(item()?['observacao'],''),'\"',''''),'\"')"
           },
           "runAfter": {
             "Filtrar_opcionais": [
@@ -141,7 +142,7 @@
               "dataset": "https://grupoccr.sharepoint.com/sites/AIRPORTNOW",
               "folderPath": "/Documentos Partilhados/exportacoes",
               "name": "programacao_@{triggerBody()?['aeroporto']}_@{formatDateTime(triggerBody()?['data_de'],'yyyyMMdd')}_a_@{formatDateTime(triggerBody()?['data_ate'],'yyyyMMdd')}.csv",
-              "body": "@{concat(decodeUriComponent('%EF%BB%BF'),'\"Data\";\"Posicao\";\"Patio\";\"Inicio\";\"Fim\";\"Tipo\";\"Companhia\";\"Voo chegada\";\"Voo saida\";\"Prefixo\";\"Equipamento\";\"Portao\";\"Condicao\";\"Internacional\";\"Pesquisado\";\"Alternativa\";\"Responsavel\";\"Contato\";\"Observacao\"',decodeUriComponent('%0D%0A'),join(body('Montar_linhas'),decodeUriComponent('%0D%0A')))}"
+              "body": "@{concat(decodeUriComponent('%EF%BB%BF'),'\"Data\";\"Data fim\";\"Posicao\";\"Patio\";\"Inicio\";\"Fim\";\"Tipo\";\"Companhia\";\"Voo chegada\";\"Voo saida\";\"Prefixo\";\"Equipamento\";\"Portao\";\"Condicao\";\"Internacional\";\"Pesquisado\";\"Alternativa\";\"Responsavel\";\"Contato\";\"Observacao\"',decodeUriComponent('%0D%0A'),join(body('Montar_linhas'),decodeUriComponent('%0D%0A')))}"
             },
             "host": {
               "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",

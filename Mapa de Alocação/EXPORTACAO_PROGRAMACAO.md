@@ -137,7 +137,7 @@ Biblioteca do site (a mesma da importação serve).
 - **Conteúdo:**
 
 ```
-@{concat(decodeUriComponent('%EF%BB%BF'),'"Data";"Posicao";"Patio";"Inicio";"Fim";"Tipo";"Companhia";"Voo chegada";"Voo saida";"Prefixo";"Equipamento";"Portao";"Condicao";"Internacional";"Pesquisado";"Alternativa";"Responsavel";"Contato";"Observacao"',decodeUriComponent('%0D%0A'),join(body('Selecionar'),decodeUriComponent('%0D%0A')))}
+@{concat(decodeUriComponent('%EF%BB%BF'),'"Data";"Data fim";"Posicao";"Patio";"Inicio";"Fim";"Tipo";"Companhia";"Voo chegada";"Voo saida";"Prefixo";"Equipamento";"Portao";"Condicao";"Internacional";"Pesquisado";"Alternativa";"Responsavel";"Contato";"Observacao"',decodeUriComponent('%0D%0A'),join(body('Selecionar'),decodeUriComponent('%0D%0A')))}
 ```
 
 O `%EF%BB%BF` é a marca UTF-8. **Sem ela o Excel abre "Navegantes" como "NavegaÃ§Ã£o"** — e o operador
@@ -211,6 +211,25 @@ tela mostraria um número menor que o real sem dizer que truncou.
 manter constante em um lugar só. Foi para não custar mais uma colagem agora. **Move na próxima vez que
 o `App_Formulas_Mapa.txt` for ao Studio por outro motivo**, como `mapExportDiasMax`. Mesma regra do
 `ASUR BRASIL`.
+
+## Duas coisas que o primeiro arquivo real mostrou (09/09/2026)
+
+**Faltava a `data_fim`.** Estadia que cruza a meia-noite saía como `11:40 → 11:25` — fim antes do
+início, impossível de ler. O app trata pernoite como **um** registro com `data_fim` maior, e a grade
+marca isso com `«` `»`; a planilha não tinha como. Entrou a coluna **Data fim**, logo após **Data**.
+
+Vale como regra além deste arquivo: **toda saída tabular de um dado que atravessa dias precisa levar
+as duas pontas.** Quem lê a planilha não tem a grade ao lado para inferir o resto.
+
+**E faltava ordem.** Sem `$orderby`, o SharePoint devolve por ID: os voos semanais da ABS, criados
+primeiro na importação, apareciam antes do dia 1º. Entrou
+`$orderby: data_operacao asc,hora_inicio asc`.
+
+⚠️ `$orderby` sem coluna indexada pode falhar em lista grande. Aqui a consulta já vem recortada por
+período, então deve passar — mas **se aparecer erro de limiar no `Obter movimentacao`, é isto**, e o
+conserto é indexar `data_operacao` na lista ou remover a ordenação.
+
+---
 
 ## Verificação
 
