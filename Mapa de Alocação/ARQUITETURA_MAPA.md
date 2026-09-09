@@ -1146,3 +1146,32 @@ na primeira versão deste documento.
 
 > A `tbl_posicoes_patio` do app antigo foi avaliada como fonte e descartada: `ID`, código de pátio e
 > nomes de posição divergem dos nossos, e ela está vazia. Pode ser aposentada junto com o App B.
+
+## Faixa do pátio e marca do T6C (09/09/2026)
+
+Três pedidos dele depois de ver a migração funcionando.
+
+**A faixa vertical com o nome do pátio.** Uma coluna de 22px à esquerda, pintada com a `cor_hex` do
+pátio, com as letras da sigla **uma por linha, centradas no grupo** — é isso que produz o efeito de
+texto vertical sem depender de `writing-mode` nem de `transform`, que não têm precedente no
+`HtmlViewer` deste app e poderiam ser removidos pelo sanitizador.
+
+Cada linha sabe quantas linhas o pátio tem (`_qtdPatio`) e qual é a sua dentro dele (`_idxPatio`), e
+imprime a letra correspondente quando cai na faixa central. Grupo de 7 linhas com sigla de 2 letras
+imprime nas linhas 3 e 4.
+
+⚠️ **A faixa e o rótulo somam os mesmos 132px (`mapLarguraRotulo`) que a régua reserva** — 22 + 110.
+Mexer num sem o outro desalinha todas as colunas da grade, e o sintoma aparece longe da causa.
+
+**A cor não é mais escolha de código.** O Pátio 3 virou âmbar por pedido dele, e a troca foi feita
+**na lista**, não aqui. Foi o primeiro retorno concreto de ter tirado as posições do `App.Formulas`
+horas antes: mudança de aparência do pátio deixou de precisar de colagem no Studio.
+
+A `tb_patios` ganhou `cor_texto` e `sigla`, seguindo o padrão que `colCias` já usava (fundo + texto no
+mesmo registro). O texto sobre fundo escuro usa `#D6DDE0` e não branco puro, que é a convenção
+declarada no próprio `App.Formulas`.
+
+**`(T6C)` ao lado de T5 e T6.** A T6C consome as duas e por isso **nunca aparece como linha** — o
+operador não tinha como lembrar, olhando a T5, que aquele espaço é do cargueiro. Agora a linha de
+restrição mostra a posição que a consome, apagada. Vem de `ocupa`, então funciona para qualquer par
+que um aeroporto novo venha a declarar, sem código adicional.

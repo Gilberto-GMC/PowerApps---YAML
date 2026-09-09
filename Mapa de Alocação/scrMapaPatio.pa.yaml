@@ -80,6 +80,22 @@ Screens:
                                   SortOrder.Ascending
                               ),
                               _corPatio: Coalesce(LookUp(colPatiosAero As _cp, _cp.patio = _p.patio).cor_hex, hxPrimaria),
+                              _txtPatio: Coalesce(LookUp(colPatiosAero As _ct, _ct.patio = _p.patio).cor_texto, hxTextoBarra),
+                              _sigla: Coalesce(LookUp(colPatiosAero As _cs, _cs.patio = _p.patio).sigla, ""),
+                              // Quantas linhas o pátio ocupa na grade e qual e a posicao desta dentro dele — e o que
+                              // permite espalhar as letras da sigla uma por linha, centradas no grupo.
+                              _qtdPatio: CountRows(Filter(colPosicoesAero As _qa, _qa.patio = _p.patio And IsBlank(_qa.ocupa))),
+                              _idxPatio: CountRows(Filter(colPosicoesAero As _qb, _qb.patio = _p.patio And IsBlank(_qb.ocupa) And _qb.ordem <= _p.ordem)),
+                              // Posicao que consome esta: a T6C consome T5 e T6, e o operador precisa lembrar disso
+                              // olhando a linha da T5, onde a T6C nunca aparece como rotulo.
+                              _consome: Concat(
+                                  Filter(
+                                      colPosicoesAero As _qc,
+                                      !IsBlank(Find("," & _p.posicao & ",", "," & Substitute(Coalesce(_qc.ocupa, ""), " ", "") & ","))
+                                  ),
+                                  posicao,
+                                  "/"
+                              ),
                               _restricao: If(
                                   !IsBlank(_p.aeronave_max),
                                   _p.aeronave_max,
@@ -231,9 +247,22 @@ Screens:
                                   cor_patio: _corPatio,
                                   trechos: _trechos,
                                   html: "<table style='width:100%;table-layout:fixed;border-collapse:separate;border-spacing:0;" & htmlFonte & "'><tr>" &
-                                  "<td style='width:" & mapLarguraRotulo & "px;height:" & mapAlturaLinha & "px;box-sizing:border-box;padding:6px 8px;vertical-align:middle;border-top:" & _topo & ";border-left:4px solid " & _corPatio & ";border-right:1px solid " & hxGradeLinha & ";'>" &
+                                  // A faixa e o rotulo somam os mesmos 132px que a regua reserva. Mexer num sem o outro
+                                  // desalinha todas as colunas da grade.
+                                  "<td style='width:22px;height:" & mapAlturaLinha & "px;box-sizing:border-box;padding:0;text-align:center;vertical-align:middle;background:" & _corPatio & ";border-top:" & _topo & ";'>" &
+                                  With(
+                                      { _ini: RoundDown((_qtdPatio - Len(_sigla)) / 2, 0) + 1 },
+                                      If(
+                                          _idxPatio >= _ini And _idxPatio < _ini + Len(_sigla),
+                                          "<div style='font-size:12px;font-weight:800;line-height:1;color:" & _txtPatio & ";'>" & Mid(_sigla, _idxPatio - _ini + 1, 1) & "</div>",
+                                          ""
+                                      )
+                                  ) &
+                                  "</td>" &
+                                  "<td style='width:" & (mapLarguraRotulo - 22) & "px;height:" & mapAlturaLinha & "px;box-sizing:border-box;padding:6px 8px;vertical-align:middle;border-top:" & _topo & ";border-right:1px solid " & hxGradeLinha & ";'>" &
                                   "<div style='font-size:15px;font-weight:800;color:" & hxPrimaria & ";line-height:1.05;'>" & _p.posicao & "</div>" &
-                                  "<div style='font-size:8px;font-weight:700;letter-spacing:.08em;color:" & hxTextoFraco & ";margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;'>" & _restricao & "</div>" &
+                                  "<div style='font-size:8px;font-weight:700;letter-spacing:.08em;color:" & hxTextoFraco & ";margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;'>" & _restricao &
+                                  If(IsBlank(_consome) Or _consome = "", "", " <span style='opacity:.55;'>(" & _consome & ")</span>") & "</div>" &
                                   "</td>" &
                                   "<td style='height:" & mapAlturaLinha & "px;box-sizing:border-box;padding:0;border-top:" & _topo & ";" & "background-image:repeating-linear-gradient(to right," & hxGradeLinha & " 0," & hxGradeLinha & " 1px,transparent 1px,transparent " & Text(RoundDown(6000 / Max(varJanelaMin, 60), 4), "0.0000", "en-US") & "%),repeating-linear-gradient(to right," & hxGradeFina & " 0," & hxGradeFina & " 1px,transparent 1px,transparent " & Text(RoundDown(1000 / Max(varJanelaMin, 60), 4), "0.0000", "en-US") & "%);" & "'>" &
                                   If(
