@@ -178,27 +178,17 @@ que já precisa tocar as seis telas.
 
 ---
 
-## Regra de manutenção: a marca vira ASUR BRASIL, aos poucos
+## Marca ASUR BRASIL — ✅ concluída em 09/09/2026
 
-O cabeçalho das seis telas diz **`ASUR`** e deve dizer **`ASUR BRASIL`**.
+As seis telas dizem `ASUR BRASIL`. Levou de 04 a 09/09, tela a tela, cada uma na passada de outra
+mudança — que era exatamente o combinado, para nenhuma colagem existir só por causa de um rótulo.
 
-**Não fazer numa tacada.** Cada tela alterada custa uma colagem no Studio ao Douglas, e trocar um
-rótulo não paga esse custo sozinho. A regra é: **ao mexer numa tela por qualquer outro motivo, trocar
-a marca dela na mesma passada.**
+As quatro últimas (`scrMapaInicio`, `scrMapaReferencia`, `scrMapaEquip`, `scrMapaRegra`) saíram juntas
+na passada em que o menu virou **IMPORTAÇÃO / EXPORTAÇÃO** — esse rótulo vive duplicado nas cinco
+telas que têm menu, então a varredura já era obrigatória e a marca pegou carona.
 
-Onde está, uma vez por tela:
-
-```
-<div style='...letter-spacing:.24em...'>ASUR</div>
-```
-
-Falta em: `scrMapaInicio`, `scrMapaReferencia`, `scrMapaEquip`, `scrMapaRegra`, `scrMapaImport`.
-Riscar da lista conforme forem saindo.
-
-- ~~`scrMapaPatio`~~ — feita em 04/09/2026, na passada do botão de recolher a legenda.
-
-⚠️ Na `scrMapaInicio` o rótulo tem `letter-spacing` maior e fica sozinho numa linha de 11px; em
-`ASUR BRASIL` vale conferir se ainda cabe sem quebrar.
+O receio de que `ASUR BRASIL` não coubesse na `scrMapaInicio` **não se confirmou**: são ~107px num
+painel que ocupa a tela menos 430px. Eu tinha superestimado o risco a partir do `letter-spacing`.
 
 ---
 
