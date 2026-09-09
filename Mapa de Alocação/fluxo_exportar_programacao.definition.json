@@ -1,0 +1,216 @@
+{
+  "name": "3f1c9a04-7b62-4e58-9c31-8ad5e0b41726",
+  "id": "/providers/Microsoft.Flow/flows/3f1c9a04-7b62-4e58-9c31-8ad5e0b41726",
+  "type": "Microsoft.Flow/flows",
+  "properties": {
+    "apiId": "/providers/Microsoft.PowerApps/apis/shared_logicflows",
+    "displayName": "Exportar programacao",
+    "definition": {
+      "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+      "contentVersion": "1.0.0.0",
+      "parameters": {
+        "$authentication": {
+          "defaultValue": {},
+          "type": "SecureObject"
+        },
+        "$connections": {
+          "defaultValue": {},
+          "type": "Object"
+        }
+      },
+      "triggers": {
+        "Quando_um_pedido_entra": {
+          "recurrence": {
+            "frequency": "Minute",
+            "interval": 1
+          },
+          "evaluatedRecurrence": {
+            "frequency": "Minute",
+            "interval": 1
+          },
+          "splitOn": "@triggerOutputs()?['body/value']",
+          "type": "OpenApiConnection",
+          "inputs": {
+            "parameters": {
+              "dataset": "https://grupoccr.sharepoint.com/sites/AIRPORTNOW",
+              "table": "tb_exportacaoMapa"
+            },
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+              "connectionName": "shared_sharepointonline",
+              "operationId": "GetOnUpdatedItems"
+            },
+            "authentication": "@parameters('$authentication')"
+          },
+          "conditions": [
+            {
+              "expression": "@equals(triggerBody()?['status'], 'PRONTO')"
+            }
+          ]
+        }
+      },
+      "actions": {
+        "Marcar_processando": {
+          "type": "OpenApiConnection",
+          "inputs": {
+            "parameters": {
+              "dataset": "https://grupoccr.sharepoint.com/sites/AIRPORTNOW",
+              "table": "tb_exportacaoMapa",
+              "id": "@triggerBody()?['ID']",
+              "item/aeroporto": "@triggerBody()?['aeroporto']",
+              "item/ativo": "@triggerBody()?['ativo']",
+              "item/status": "PROCESSANDO"
+            },
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+              "connectionName": "shared_sharepointonline",
+              "operationId": "PatchItem"
+            },
+            "authentication": "@parameters('$authentication')"
+          },
+          "runAfter": {}
+        },
+        "Obter_movimentacao": {
+          "type": "OpenApiConnection",
+          "inputs": {
+            "parameters": {
+              "dataset": "https://grupoccr.sharepoint.com/sites/AIRPORTNOW",
+              "table": "tb_alocacoesMapa",
+              "$filter": "aeroporto eq '@{triggerBody()?['aeroporto']}' and ativo eq 1 and data_operacao ge '@{formatDateTime(triggerBody()?['data_de'],'yyyy-MM-dd')}' and data_operacao le '@{formatDateTime(triggerBody()?['data_ate'],'yyyy-MM-dd')}'",
+              "$top": 5000
+            },
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+              "connectionName": "shared_sharepointonline",
+              "operationId": "GetItems"
+            },
+            "authentication": "@parameters('$authentication')"
+          },
+          "runAfter": {
+            "Marcar_processando": [
+              "Succeeded"
+            ]
+          },
+          "runtimeConfiguration": {
+            "paginationPolicy": {
+              "minimumItemCount": 5000
+            }
+          }
+        },
+        "Filtrar_opcionais": {
+          "type": "Query",
+          "inputs": {
+            "from": "@outputs('Obter_movimentacao')?['body/value']",
+            "where": "@and(or(equals(coalesce(triggerBody()?['so_internacional'],0),0),equals(item()?['internacional'],1)),or(equals(coalesce(triggerBody()?['so_pesquisado'],0),0),equals(item()?['pesquisado'],1)),or(equals(coalesce(triggerBody()?['incluir_finalizados'],0),1),not(equals(item()?['condicao'],'FINALIZADO'))),or(empty(coalesce(triggerBody()?['patio'],'')),equals(item()?['patio_txt'],triggerBody()?['patio'])))"
+          },
+          "runAfter": {
+            "Obter_movimentacao": [
+              "Succeeded"
+            ]
+          }
+        },
+        "Montar_linhas": {
+          "type": "Select",
+          "inputs": {
+            "from": "@body('Filtrar_opcionais')",
+            "select": "@concat('\"',formatDateTime(item()?['data_operacao'],'dd/MM/yyyy'),'\";\"',item()?['posicao_txt'],'\";\"',item()?['patio_txt'],'\";\"',formatNumber(div(item()?['hora_inicio'],60),'00'),':',formatNumber(mod(item()?['hora_inicio'],60),'00'),'\";\"',formatNumber(div(item()?['hora_fim'],60),'00'),':',formatNumber(mod(item()?['hora_fim'],60),'00'),'\";\"',item()?['tipo_registro'],'\";\"',coalesce(item()?['cia_sigla'],''),'\";\"',coalesce(item()?['voo_chegada'],''),'\";\"',coalesce(item()?['voo_saida'],''),'\";\"',coalesce(item()?['prefixo'],''),'\";\"',coalesce(item()?['equipamento'],''),'\";\"',coalesce(item()?['portao'],''),'\";\"',coalesce(item()?['condicao'],'PREVISTO'),'\";\"',if(equals(item()?['internacional'],1),'SIM','NAO'),'\";\"',if(equals(item()?['pesquisado'],1),'SIM','NAO'),'\";\"',if(equals(item()?['alternativa'],1),'SIM','NAO'),'\";\"',coalesce(item()?['responsavel'],''),'\";\"',coalesce(item()?['contato'],''),'\";\"',replace(coalesce(item()?['observacao'],''),'\"',''''),'\"')"
+          },
+          "runAfter": {
+            "Filtrar_opcionais": [
+              "Succeeded"
+            ]
+          }
+        },
+        "Criar_arquivo": {
+          "type": "OpenApiConnection",
+          "inputs": {
+            "parameters": {
+              "dataset": "https://grupoccr.sharepoint.com/sites/AIRPORTNOW",
+              "folderPath": "/Documentos Compartilhados/exportacoes",
+              "name": "programacao_@{triggerBody()?['aeroporto']}_@{formatDateTime(triggerBody()?['data_de'],'yyyyMMdd')}_a_@{formatDateTime(triggerBody()?['data_ate'],'yyyyMMdd')}.csv",
+              "body": "@{concat(decodeUriComponent('%EF%BB%BF'),'\"Data\";\"Posicao\";\"Patio\";\"Inicio\";\"Fim\";\"Tipo\";\"Companhia\";\"Voo chegada\";\"Voo saida\";\"Prefixo\";\"Equipamento\";\"Portao\";\"Condicao\";\"Internacional\";\"Pesquisado\";\"Alternativa\";\"Responsavel\";\"Contato\";\"Observacao\"',decodeUriComponent('%0D%0A'),join(body('Montar_linhas'),decodeUriComponent('%0D%0A')))}"
+            },
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+              "connectionName": "shared_sharepointonline",
+              "operationId": "CreateFile"
+            },
+            "authentication": "@parameters('$authentication')"
+          },
+          "runAfter": {
+            "Montar_linhas": [
+              "Succeeded"
+            ]
+          }
+        },
+        "Concluir": {
+          "type": "OpenApiConnection",
+          "inputs": {
+            "parameters": {
+              "dataset": "https://grupoccr.sharepoint.com/sites/AIRPORTNOW",
+              "table": "tb_exportacaoMapa",
+              "id": "@triggerBody()?['ID']",
+              "item/aeroporto": "@triggerBody()?['aeroporto']",
+              "item/ativo": "@triggerBody()?['ativo']",
+              "item/status": "CONCLUIDO",
+              "item/total": "@length(body('Filtrar_opcionais'))",
+              "item/arquivo_nome": "@body('Criar_arquivo')?['Name']",
+              "item/arquivo_url": "@{concat('https://grupoccr.sharepoint.com',body('Criar_arquivo')?['Path'])}"
+            },
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+              "connectionName": "shared_sharepointonline",
+              "operationId": "PatchItem"
+            },
+            "authentication": "@parameters('$authentication')"
+          },
+          "runAfter": {
+            "Criar_arquivo": [
+              "Succeeded"
+            ]
+          }
+        },
+        "Marcar_erro": {
+          "type": "OpenApiConnection",
+          "inputs": {
+            "parameters": {
+              "dataset": "https://grupoccr.sharepoint.com/sites/AIRPORTNOW",
+              "table": "tb_exportacaoMapa",
+              "id": "@triggerBody()?['ID']",
+              "item/aeroporto": "@triggerBody()?['aeroporto']",
+              "item/ativo": "@triggerBody()?['ativo']",
+              "item/status": "ERRO",
+              "item/mensagem": "@{string(result('Criar_arquivo'))}"
+            },
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+              "connectionName": "shared_sharepointonline",
+              "operationId": "PatchItem"
+            },
+            "authentication": "@parameters('$authentication')"
+          },
+          "runAfter": {
+            "Criar_arquivo": [
+              "Failed",
+              "Skipped",
+              "TimedOut"
+            ]
+          }
+        }
+      },
+      "outputs": {}
+    },
+    "connectionReferences": {
+      "shared_sharepointonline": {
+        "connectionName": "shared-sharepointonl-0cd12861-383f-4b6e-9359-db983fb70160",
+        "source": "Embedded",
+        "id": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+        "tier": "NotSpecified",
+        "apiName": "sharepointonline",
+        "isProcessSimpleApiReferenceConversionAlreadyDone": false
+      }
+    },
+    "flowFailureAlertSubscribed": false,
+    "isManaged": false
+  }
+}

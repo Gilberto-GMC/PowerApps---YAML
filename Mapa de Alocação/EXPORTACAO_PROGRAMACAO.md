@@ -34,7 +34,34 @@ Obrigatórias: **só** `aeroporto`, `status` e `ativo`. Todas as outras são opc
 na `tb_importacaoMapa` oito colunas obrigatórias tornaram cada `Atualizar item` do fluxo um exercício
 de repreencher campos que não mudaram. Aqui o `Atualizar item` precisa devolver apenas essas três.
 
-## O fluxo, passo a passo
+## Caminho curto: importar o pacote
+
+`Exportarprogramacao.zip` traz o fluxo montado. Em **Power Automate › Meus fluxos › Importar › Pacote
+(.zip)**, escolha o arquivo, confirme a conexão do SharePoint como **Existente** e importe.
+
+**Antes de rodar, crie a pasta `exportacoes`** na biblioteca *Documentos Compartilhados* do site. O
+`Criar arquivo` grava lá e não cria a pasta sozinho — se ela faltar, o pedido vira `ERRO` com a
+mensagem, que é o comportamento certo, mas custa uma volta.
+
+O pacote foi montado sobre o `Importarprogramacao_COMPLETO.zip`, que já entrou neste ambiente:
+mesmas referências de conexão, entradas com `/` e na mesma ordem, e `suggestedCreationType: New`. O
+gerador está versionado em `montar_zip_exportacao.js`.
+
+⚠️ **Duas coisas que só o primeiro teste responde**, porque não há como conferir daqui:
+
+1. `arquivo_url` é montado como `https://grupoccr.sharepoint.com` + o `Path` devolvido pelo
+   `Criar arquivo`. Se o botão ABRIR O ÚLTIMO não abrir nada, é aqui — o campo pode vir num formato
+   diferente e a correção é trocar `Path` por `{Link}` na ação `Concluir`.
+2. O nome da lista é usado no lugar do GUID (`table: "tb_exportacaoMapa"`). Isso **funciona** no fluxo
+   de importação, que usa `tb_alocacoesMapa` assim há dias — mas se o gatilho reclamar da lista, é
+   só reabrir a ação e escolhê-la no menu, que o designer troca pelo GUID.
+
+---
+
+## O fluxo, passo a passo — referência
+
+O pacote acima já traz tudo isto montado. Esta seção fica para conferir o que cada ação faz, e para
+remontar à mão se o pacote for recusado.
 
 **Gatilho:** SharePoint › *Quando um item é criado* › site do AirportNow › lista `tb_exportacaoMapa`.
 
