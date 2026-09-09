@@ -1175,3 +1175,39 @@ declarada no próprio `App.Formulas`.
 operador não tinha como lembrar, olhando a T5, que aquele espaço é do cargueiro. Agora a linha de
 restrição mostra a posição que a consome, apagada. Vem de `ocupa`, então funciona para qualquer par
 que um aeroporto novo venha a declarar, sem código adicional.
+
+## Cadastro de posições e pátios (09/09/2026)
+
+A `scrMapaReferencia` deixou de ser consulta e virou cadastro. **Reaproveitar a tela foi decisão de
+custo:** ela já ocupa a vaga POSIÇÕES E CORES no menu, e o menu é duplicado nas cinco telas que o têm
+— tela nova custaria sete colagens antes de qualquer teste.
+
+Um seletor no topo alterna **POSIÇÕES** e **PÁTIOS**; cada modo tem a sua galeria e o seu formulário,
+no mesmo desenho do `scrMapaEquip`.
+
+⚠️ **Saiu dali o conteúdo de consulta** — a legenda de cores de companhia e portão. Ela continua na
+legenda do Mapa do Dia, então a informação não se perdeu do app; mas quem usava esta tela para
+consultar vai estranhar.
+
+### As travas, que são o motivo da tela existir
+
+Editar estas listas pelo SharePoint já era possível. A tela existe pelo que ele não verifica:
+
+- **Nome de posição único no aeroporto.** O nome vai gravado em cada lançamento; duplicar embaralha a
+  grade sem erro.
+- **Cada nome em `OCUPA` tem de existir.** Errar aqui produz regra muda: a posição não some da grade e
+  ninguém descobre até duas aeronaves disputarem o mesmo espaço. É a mesma classe de defeito que
+  justificou o botão TESTAR da tela de regras.
+- **Código de pátio único**, porque é ele que cada posição referencia.
+- **Cores no formato `#RRGGBB`**, com amostra ao vivo da faixa ao lado dos campos.
+- **`id_posicao` é atribuído pelo sistema** (`Max + 1`) e **nunca editável** num registro existente. O
+  formulário mostra o número e explica por quê.
+
+### Não há botão de excluir, e é de propósito
+
+Posição se **desativa**, não se apaga. O `id_posicao` está gravado em mais de 700 lançamentos: apagar
+deixaria o histórico apontando para o vazio, e a grade continuaria desenhando como se nada fosse. O
+mesmo vale para pátio, que as posições referenciam pelo código.
+
+Quem quiser mesmo apagar tem o SharePoint — mas aí é decisão deliberada, não um toque a mais no lugar
+errado.

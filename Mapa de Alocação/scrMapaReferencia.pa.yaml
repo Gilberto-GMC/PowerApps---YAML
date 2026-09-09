@@ -5,8 +5,33 @@ Screens:
         =If(IsBlank(varAero), Set(varAero, First(colAerosMapa).Aeroporto));
         If(IsBlank(varAeroNome), Set(varAeroNome, First(colAerosMapa).Aeroporto));
         Set(varMenuConfig, true);
-        Set(varMapaVisivel, false)
+        Set(varMapaVisivel, false);
+        Set(varPodeCadastro, DataSourceInfo('tb_posicoes', DataSourceInfo.EditPermission));
+        Set(varModoRef, Coalesce(varModoRef, "POSICOES"));
+        Set(varPosSelRef, Blank());
+        Set(varPatSelRef, Blank());
+        UpdateContext({ locErroRef: false });
+        Select(btnRecarregarRef);
+        Set(varFormPos, Blank());
+        Set(varFormPat, Blank())
     Children:
+      - btnRecarregarRef:
+          Control: Button@0.0.45
+          Properties:
+            Height: =1
+            OnSelect: |-
+                =ClearCollect(colPosRef, Sort(Filter(tb_posicoes, aeroporto = varAero), ordem, SortOrder.Ascending));
+                ClearCollect(colPatRef, Sort(Filter(tb_patios, aeroporto = varAero), ordem, SortOrder.Ascending));
+                ClearCollect(colPatiosSelRef, Table({ Value: "—" }));
+                Collect(colPatiosSelRef, ForAll(colPatRef As _p, { Value: _p.nome_patio }));
+                ClearCollect(colEquipSelRef, Table({ Value: "—" }));
+                Collect(colEquipSelRef, ForAll(Sort(Filter(tb_equipamentos, ativo = 1), ordem, SortOrder.Ascending) As _e, { Value: _e.equip }));
+                ClearCollect(colTiposPosRef, Table({ Value: "PONTE" }, { Value: "REMOTA" }, { Value: "HELIPONTO" }));
+                ClearCollect(colClassesSelRef, Table({ Value: "—" }));
+                Collect(colClassesSelRef, ForAll(colClasses As _c, { Value: _c.classe }))
+            Text: =""
+            Visible: =false
+            Width: =1
       - cntShellRef:
           Control: GroupContainer@1.5.0
           Variant: AutoLayout
@@ -281,7 +306,7 @@ Screens:
                               Font: =thmFonte
                               HtmlText: |-
                                 ="<div style='" & htmlFonte & "color:" & hxTextoBarra & ";'>" &
-                                "<div style='font-size:19px;font-weight:800;letter-spacing:.02em;line-height:1.1;'>POSIÇÕES E CORES</div>" &
+                                "<div style='font-size:19px;font-weight:800;letter-spacing:.02em;line-height:1.1;'>POSIÇÕES E PÁTIOS</div>" &
                                 "<div style='font-size:11px;opacity:.75;margin-top:3px;'>" &
                                 varAeroNome & " &nbsp;&middot;&nbsp; " & CountRows(colPosicoesAero) & " posições &nbsp;&middot;&nbsp; " &
                                 CountRows(colPortoes) & " portões &nbsp;&middot;&nbsp; " & CountRows(colCias) & " companhias</div></div>"
@@ -309,119 +334,926 @@ Screens:
                         RadiusTopLeft: =0
                         RadiusTopRight: =0
                       Children:
-                        - htmCoresRef:
-                            Control: HtmlViewer@2.1.0
+                        - cntModoRef:
+                            Control: GroupContainer@1.5.0
+                            Variant: AutoLayout
                             Properties:
-                              AutoHeight: =true
-                              Color: =thmTexto
+                              DropShadow: =DropShadow.None
                               Fill: =thmFundo
-                              Font: =thmFonte
-                              HtmlText: |-
-                                ="<table style='width:100%;border-spacing:" & thmEsp & "px 0;" & htmlFonte & "'><tr>" &
-                                "<td style='width:50%;vertical-align:top;'><div style='background:" & hxSuperficie & ";border:1px solid " & hxBorda &
-                                ";border-top:3px solid " & hxPrimaria & ";padding:16px 18px 18px 18px;'>" &
-                                "<div style='font-size:10px;font-weight:700;letter-spacing:.14em;color:" & hxTextoFraco & ";'>PREENCHIMENTO = COMPANHIA</div>" &
-                                "<div style='font-size:11px;color:" & hxTextoFraco & ";margin-top:8px;line-height:1.5;'>" &
-                                "Menos na <b>aviação geral</b>: ali a companhia é sempre a mesma e não distingue nada, então o " &
-                                "bloco toma a cor da <b>classe da posição</b>, que é o porte que cabe nela." &
-                                "</div>" &
-                                "<table style='width:100%;border-spacing:0;margin-top:8px;'>" &
-                                Concat(
-                                    colClasses As _lk,
-                                    "<tr><td style='padding:4px 0;width:78px;'><span style='display:inline-block;min-width:52px;text-align:center;font-size:12px;font-weight:800;padding:4px 10px;background:" &
-                                    _lk.cor_hex & ";color:" & _lk.cor_texto & ";'>" & _lk.classe & "</span></td>" &
-                                    "<td style='padding:4px 0;font-size:12px;color:" & hxTexto & ";'>" & Upper(_lk.rotulo) & "</td></tr>"
-                                ) &
-                                "</table>" &
-                                "<table style='width:100%;border-spacing:0;margin-top:12px;'>" &
-                                Concat(
-                                    Sort(colCias, ordem, SortOrder.Ascending) As _c,
-                                    "<tr><td style='padding:4px 0;width:78px;'><span style='display:inline-block;min-width:52px;text-align:center;font-size:12px;font-weight:800;padding:4px 10px;background:" &
-                                    _c.cor_hex & ";color:" & _c.cor_texto & ";'>" & _c.sigla & "</span></td>" &
-                                    "<td style='padding:4px 0;font-size:12px;color:" & hxTexto & ";'>" & _c.nome_cia & "</td></tr>"
-                                ) &
-                                "</table></div></td>" &
-                                "<td style='width:50%;vertical-align:top;'><div style='background:" & hxSuperficie & ";border:1px solid " & hxBorda &
-                                ";border-top:3px solid " & hxOperacional & ";padding:16px 18px 18px 18px;'>" &
-                                "<div style='font-size:10px;font-weight:700;letter-spacing:.14em;color:" & hxTextoFraco & ";'>CONTORNO = PORTÃO DE EMBARQUE</div>" &
-                                "<table style='width:100%;border-spacing:0;margin-top:12px;'>" &
-                                Concat(
-                                    Sort(colPortoes, ordem, SortOrder.Ascending) As _p,
-                                    "<tr><td style='padding:4px 0;width:78px;'><span style='display:inline-block;min-width:52px;text-align:center;font-size:12px;font-weight:800;padding:4px 10px;background:" &
-                                    hxSuperficie & ";color:" & hxTexto & ";border:3px solid " & _p.cor_hex & ";'>" & _p.portao & "</span></td>" &
-                                    "<td style='padding:4px 0;font-size:12px;color:" & hxTexto & ";'>PORTÃO " & _p.portao & "</td></tr>"
-                                ) &
-                                "<tr><td style='padding:4px 0;width:78px;'><span style='display:inline-block;min-width:52px;text-align:center;font-size:12px;font-weight:800;padding:4px 10px;background:" &
-                                hxSuperficie & ";color:" & hxTexto & ";border:3px dashed " & hxAmbar & ";'>!</span></td>" &
-                                "<td style='padding:4px 0;font-size:12px;color:" & hxTexto & ";'>PRECISA DE ATENÇÃO</td></tr>" &
-                                "</table>" &
-                                "<div style='font-size:11px;color:" & hxTextoFraco & ";margin-top:12px;line-height:1.5;'>" &
-                                "Bloco cinza escrito <b>INDISPONÍVEL</b> não é um lançamento: é a posição citada nele " &
-                                "ocupando espaço que esta aqui precisaria. Acontece na aviação geral, onde uma aeronave " &
-                                "grande numa posição classe B inutiliza as classe A vizinhas enquanto estiver lá. Clicando " &
-                                "nele, abre o registro que causa o impedimento.<br><br>" &
-                                "Selo <b>&#9992;</b> verde marca aeronave <b>no pátio</b> agora; <b>&#10003;</b> cinza, movimento " &
-                                "<b>finalizado</b>. Previsto é o normal e não ganha selo.<br><br>" &
-                                "Contorno <b>tracejado</b> marca voo que ainda precisa de alguém: sem equipamento, sem portão numa " &
-                                "posição de ponte, ou trazido pela importação com algo a conferir — posição fora da preferência da " &
-                                "companhia, ou horário que a planilha não trazia. O motivo aparece no balão, ao passar o mouse. " &
-                                "Em âmbar quando o portão é o que falta; na cor do portão quando ele já existe. Posição remota sem " &
-                                "portão é o normal e não é marcada." &
-                                "</div>" &
-                                "<div style='font-size:11px;color:" & hxTextoFraco & ";margin-top:12px;line-height:1.5;'>" &
-                                "O portão 4 foi confirmado pela operação. Os demais seguem a ordem do frio para o quente; " &
-                                "se a numeração for outra, é uma linha para corrigir.</div>" &
-                                "</div></td></tr></table>"
-                              Size: =11
-                        - htmPosicoesRef:
-                            Control: HtmlViewer@2.1.0
+                              FillPortions: =0
+                              Height: =44
+                              LayoutAlignItems: =LayoutAlignItems.Stretch
+                              LayoutDirection: =LayoutDirection.Horizontal
+                              LayoutGap: =6
+                              LayoutMinHeight: =0
+                              LayoutMinWidth: =0
+                              RadiusBottomLeft: =0
+                              RadiusBottomRight: =0
+                              RadiusTopLeft: =0
+                              RadiusTopRight: =0
+                            Children:
+                              - btnModoPosRef:
+                                  Control: Button@0.0.45
+                                  Properties:
+                                    Appearance: ='ButtonCanvas.Appearance'.Secondary
+                                    BasePaletteColor: =If(varModoRef = "POSICOES", thmAcao, thmTextoFraco)
+                                    BorderRadius: =0
+                                    FontColor: =If(varModoRef = "POSICOES", thmAcao, thmTextoFraco)
+                                    FontSize: =12
+                                    FontWeight: =FontWeight.Semibold
+                                    Height: =38
+                                    LayoutMinHeight: =38
+                                    LayoutMinWidth: =0
+                                    OnSelect: |-
+                                        =Set(varModoRef, "POSICOES")
+                                    PaddingLeft: =14
+                                    PaddingRight: =14
+                                    Text: ="POSIÇÕES"
+                                    Width: =150
+                              - btnModoPatRef:
+                                  Control: Button@0.0.45
+                                  Properties:
+                                    Appearance: ='ButtonCanvas.Appearance'.Secondary
+                                    BasePaletteColor: =If(varModoRef = "PATIOS", thmAcao, thmTextoFraco)
+                                    BorderRadius: =0
+                                    FontColor: =If(varModoRef = "PATIOS", thmAcao, thmTextoFraco)
+                                    FontSize: =12
+                                    FontWeight: =FontWeight.Semibold
+                                    Height: =38
+                                    LayoutMinHeight: =38
+                                    LayoutMinWidth: =0
+                                    OnSelect: |-
+                                        =Set(varModoRef, "PATIOS")
+                                    PaddingLeft: =14
+                                    PaddingRight: =14
+                                    Text: ="PÁTIOS"
+                                    Width: =130
+                              - lblEspacoModoRef:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    Fill: =thmTransparente
+                                    FillPortions: =1
+                                    LayoutMinWidth: =0
+                                    Text: =""
+                              - btnRecarregarVisRef:
+                                  Control: Button@0.0.45
+                                  Properties:
+                                    Appearance: ='ButtonCanvas.Appearance'.Secondary
+                                    BasePaletteColor: =thmOperacional
+                                    BorderRadius: =0
+                                    FontColor: =thmOperacional
+                                    FontSize: =12
+                                    FontWeight: =FontWeight.Semibold
+                                    Height: =38
+                                    Icon: ="ArrowClockwise"
+                                    IconStyle: ='ButtonCanvas.IconStyle'.Filled
+                                    LayoutMinHeight: =38
+                                    LayoutMinWidth: =0
+                                    OnSelect: =Select(btnRecarregarRef)
+                                    PaddingLeft: =12
+                                    PaddingRight: =12
+                                    Text: ="RECARREGAR"
+                                    Width: =150
+                        - cntPosRef:
+                            Control: GroupContainer@1.5.0
+                            Variant: AutoLayout
                             Properties:
-                              AutoHeight: =true
-                              Color: =thmTexto
+                              DropShadow: =DropShadow.None
                               Fill: =thmFundo
-                              Font: =thmFonte
-                              HtmlText: |-
-                                ="<div style='background:" & hxSuperficie & ";border:1px solid " & hxBorda & ";border-top:3px solid " & hxVerde &
-                                ";padding:16px 18px 18px 18px;" & htmlFonte & "'>" &
-                                "<div style='font-size:10px;font-weight:700;letter-spacing:.14em;color:" & hxTextoFraco & ";'>POSIÇÕES DO PÁTIO — NA ORDEM DA GRADE</div>" &
-                                "<table style='width:100%;border-spacing:0;margin-top:12px;'>" &
-                                "<tr>" &
-                                "<td style='padding:6px 8px;font-size:9px;font-weight:700;letter-spacing:.1em;color:" & hxTextoFraco & ";border-bottom:1px solid " & hxBorda & ";'>POSIÇÃO</td>" &
-                                "<td style='padding:6px 8px;font-size:9px;font-weight:700;letter-spacing:.1em;color:" & hxTextoFraco & ";border-bottom:1px solid " & hxBorda & ";'>PÁTIO</td>" &
-                                "<td style='padding:6px 8px;font-size:9px;font-weight:700;letter-spacing:.1em;color:" & hxTextoFraco & ";border-bottom:1px solid " & hxBorda & ";'>AERONAVE MÁXIMA</td>" &
-                                "<td style='padding:6px 8px;font-size:9px;font-weight:700;letter-spacing:.1em;color:" & hxTextoFraco & ";border-bottom:1px solid " & hxBorda & ";'>ENVERGADURA MÁX.</td>" &
-                                "<td style='padding:6px 8px;font-size:9px;font-weight:700;letter-spacing:.1em;color:" & hxTextoFraco & ";border-bottom:1px solid " & hxBorda & ";'>OBSERVAÇÃO</td>" &
-                                "</tr>" &
-                                Concat(
-                                    Sort(colPosicoesAero, ordem, SortOrder.Ascending) As _po,
-                                    "<tr>" &
-                                    "<td style='padding:5px 8px;font-size:13px;font-weight:800;color:" & hxPrimaria & ";border-bottom:1px solid " & hxGradeLinha & ";'>" & _po.posicao & "</td>" &
-                                    "<td style='padding:5px 8px;font-size:11px;color:" & hxTexto & ";border-bottom:1px solid " & hxGradeLinha & ";'>" &
-                                    Coalesce(LookUp(colPatiosAero As _pt, _pt.patio = _po.patio).nome_patio, _po.patio) & "</td>" &
-                                    "<td style='padding:5px 8px;font-size:11px;color:" & hxTexto & ";border-bottom:1px solid " & hxGradeLinha & ";'>" &
-                                    If(IsBlank(_po.aeronave_max), "&mdash;", _po.aeronave_max) & "</td>" &
-                                    "<td style='padding:5px 8px;font-size:11px;color:" & hxTexto & ";border-bottom:1px solid " & hxGradeLinha & ";'>" &
-                                    If(_po.env_max > 0, Text(_po.env_max) & " m", "sem limite") & "</td>" &
-                                    "<td style='padding:5px 8px;font-size:11px;color:" & hxTextoFraco & ";border-bottom:1px solid " & hxGradeLinha & ";'>" &
-                                    If(_po.contingencia = 1, "uso só em contingência", If(_po.classe = "HELICOPTERO", "heliponto", If(IsBlank(_po.classe), "", "classe " & _po.classe))) &
-                                    "</td></tr>"
-                                ) &
-                                "</table></div>"
-                              Size: =11
-                        - htmNotaRef:
-                            Control: HtmlViewer@2.1.0
+                              FillPortions: =1
+                              LayoutAlignItems: =LayoutAlignItems.Stretch
+                              LayoutDirection: =LayoutDirection.Horizontal
+                              LayoutGap: =16
+                              LayoutMinHeight: =0
+                              LayoutMinWidth: =0
+                              RadiusBottomLeft: =0
+                              RadiusBottomRight: =0
+                              RadiusTopLeft: =0
+                              RadiusTopRight: =0
+                              Visible: =varModoRef = "POSICOES"
+                            Children:
+                              - cntListaPosRef:
+                                  Control: GroupContainer@1.5.0
+                                  Variant: AutoLayout
+                                  Properties:
+                                    BorderColor: =thmBorda
+                                    BorderThickness: =1
+                                    DropShadow: =DropShadow.None
+                                    Fill: =thmSuperficie
+                                    FillPortions: =1
+                                    LayoutAlignItems: =LayoutAlignItems.Stretch
+                                    LayoutDirection: =LayoutDirection.Vertical
+                                    LayoutGap: =0
+                                    LayoutMinHeight: =0
+                                    LayoutMinWidth: =0
+                                    RadiusBottomLeft: =0
+                                    RadiusBottomRight: =0
+                                    RadiusTopLeft: =0
+                                    RadiusTopRight: =0
+                                  Children:
+                                    - galPosRef:
+                                        Control: Gallery@2.15.0
+                                        Variant: Vertical
+                                        Properties:
+                                          BorderColor: =thmBorda
+                                          BorderStyle: =BorderStyle.None
+                                          Fill: =thmSuperficie
+                                          FillPortions: =1
+                                          Items: =colPosRef
+                                          LayoutMinHeight: =0
+                                          LayoutMinWidth: =0
+                                          TemplatePadding: =0
+                                          TemplateSize: =46
+                                        Children:
+                                          - cntLinhaPosRef:
+                                              Control: GroupContainer@1.5.0
+                                              Variant: AutoLayout
+                                              Properties:
+                                                DropShadow: =DropShadow.None
+                                                Fill: =thmTransparente
+                                                Height: =44
+                                                LayoutAlignItems: =LayoutAlignItems.Stretch
+                                                LayoutDirection: =LayoutDirection.Horizontal
+                                                LayoutGap: =4
+                                                LayoutMinHeight: =0
+                                                LayoutMinWidth: =0
+                                                RadiusBottomLeft: =0
+                                                RadiusBottomRight: =0
+                                                RadiusTopLeft: =0
+                                                RadiusTopRight: =0
+                                                Width: =Parent.Width - 18
+                                              Children:
+                                                - btnItemPosRef:
+                                                    Control: Button@0.0.45
+                                                    Properties:
+                                                      Align: =Align.Left
+                                                      Appearance: =If(varPosSelRef.ID = ThisItem.ID, 'ButtonCanvas.Appearance'.Primary, 'ButtonCanvas.Appearance'.Secondary)
+                                                      BasePaletteColor: =If(ThisItem.ativo = 1, thmPrimaria, thmTextoFraco)
+                                                      BorderRadius: =0
+                                                      FillPortions: =1
+                                                      FontSize: =12
+                                                      FontWeight: =FontWeight.Semibold
+                                                      Height: =44
+                                                      LayoutMinWidth: =0
+                                                      OnSelect: |-
+                                                          =Set(varPosSelRef, ThisItem);
+                                                          Set(
+                                                              varFormPos,
+                                                              {
+                                                                  id: ThisItem.id_posicao,
+                                                                  posicao: ThisItem.posicao,
+                                                                  patio: Coalesce(LookUp(colPatRef As _lp, _lp.patio = ThisItem.patio).nome_patio, "—"),
+                                                                  ordem: Text(ThisItem.ordem),
+                                                                  tipo: Coalesce(ThisItem.tipo, "REMOTA"),
+                                                                  classe: If(IsBlank(ThisItem.classe) Or ThisItem.classe = "", "—", ThisItem.classe),
+                                                                  aeronave_max: Coalesce(ThisItem.aeronave_max, ""),
+                                                                  equip_max: If(IsBlank(ThisItem.equip_max) Or ThisItem.equip_max = "", "—", ThisItem.equip_max),
+                                                                  comp: Text(Coalesce(ThisItem.comp_max, 0)),
+                                                                  env: Text(Coalesce(ThisItem.env_max, 0)),
+                                                                  ocupa: Coalesce(ThisItem.ocupa, ""),
+                                                                  conting: ThisItem.contingencia = 1,
+                                                                  ativo: ThisItem.ativo = 1
+                                                              }
+                                                          )
+                                                      PaddingLeft: =12
+                                                      PaddingRight: =12
+                                                      Text: |-
+                                                          =ThisItem.posicao & "   ·   " & Coalesce(LookUp(colPatRef As _lp2, _lp2.patio = ThisItem.patio).nome_patio, ThisItem.patio) &
+                                                          If(ThisItem.ativo = 1, "", "   ·   INATIVA")
+                              - cntFormPosRef:
+                                  Control: GroupContainer@1.5.0
+                                  Variant: AutoLayout
+                                  Properties:
+                                    BorderColor: =thmBorda
+                                    BorderThickness: =1
+                                    DropShadow: =DropShadow.None
+                                    Fill: =thmSuperficie
+                                    FillPortions: =0
+                                    LayoutAlignItems: =LayoutAlignItems.Stretch
+                                    LayoutDirection: =LayoutDirection.Vertical
+                                    LayoutGap: =0
+                                    LayoutMinHeight: =0
+                                    LayoutMinWidth: =0
+                                    LayoutOverflowY: =LayoutOverflow.Scroll
+                                    PaddingBottom: =16
+                                    PaddingLeft: =18
+                                    PaddingRight: =18
+                                    PaddingTop: =12
+                                    RadiusBottomLeft: =0
+                                    RadiusBottomRight: =0
+                                    RadiusTopLeft: =0
+                                    RadiusTopRight: =0
+                                    Width: =430
+                                  Children:
+                                    - htmAjudaPosRef:
+                                        Control: HtmlViewer@2.1.0
+                                        Properties:
+                                          AutoHeight: =true
+                                          Color: =thmTexto
+                                          Fill: =thmSuperficie
+                                          Font: =thmFonte
+                                          HtmlText: |-
+                                              ="<div style='" & htmlFonte & "font-size:10px;font-weight:700;letter-spacing:.12em;color:" & hxTextoFraco & ";'>POSIÇÃO</div>" &
+                                              "<div style='" & htmlFonte & "font-size:11px;color:" & hxTexto & ";line-height:1.5;padding:6px 0 4px 0;'>" &
+                                              "Posição não se apaga: desligue <b>Ativa</b>. O número dela está gravado em cada lançamento, e apagar deixaria o histórico apontando para o vazio." &
+                                              "</div>"
+                                          Size: =11
+                                    - htmIdPosRef:
+                                        Control: HtmlViewer@2.1.0
+                                        Properties:
+                                          AutoHeight: =true
+                                          Color: =thmTexto
+                                          Fill: =thmSuperficie
+                                          Font: =thmFonte
+                                          HtmlText: |-
+                                              ="<div style='" & htmlFonte & "font-size:11px;color:" & hxTextoFraco & ";padding:2px 0 6px 0;'>" &
+                                              If(
+                                                  IsBlank(varPosSelRef.ID),
+                                                  "Novo registro — o número da posição será " & Text(Max(colPosRef, id_posicao) + 1) & ", atribuído ao salvar.",
+                                                  "Número da posição: <b>" & Text(varFormPos.id) & "</b> — gravado em mais de 700 lançamentos, não muda."
+                                              ) & "</div>"
+                                          Size: =11
+                                    - lblPosRef:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          Color: =thmTextoFraco
+                                          Font: =thmFonte
+                                          FontWeight: =FontWeight.Bold
+                                          Height: =18
+                                          PaddingTop: =6
+                                          Size: =10
+                                          Text: ="POSIÇÃO *"
+                                    - txtPosRef:
+                                        Control: TextInput@0.0.54
+                                        Properties:
+                                          Default: =Coalesce(varFormPos.posicao, "")
+                                          DisplayMode: =If(varPodeCadastro, DisplayMode.Edit, DisplayMode.View)
+                                          Height: =40
+                                          MaxLength: =20
+                                    - lblPatPosRef:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          Color: =thmTextoFraco
+                                          Font: =thmFonte
+                                          FontWeight: =FontWeight.Bold
+                                          Height: =18
+                                          PaddingTop: =6
+                                          Size: =10
+                                          Text: ="PÁTIO *"
+                                    - drpPatPosRef:
+                                        Control: DropDown@0.0.45
+                                        Properties:
+                                          DefaultSelectedItems: =[Coalesce(varFormPos.patio, "—")]
+                                          DisplayMode: =If(varPodeCadastro, DisplayMode.Edit, DisplayMode.View)
+                                          Height: =40
+                                          Items: =colPatiosSelRef
+                                    - lblOrdemPosRef:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          Color: =thmTextoFraco
+                                          Font: =thmFonte
+                                          FontWeight: =FontWeight.Bold
+                                          Height: =18
+                                          PaddingTop: =6
+                                          Size: =10
+                                          Text: ="ORDEM NA GRADE *"
+                                    - txtOrdemPosRef:
+                                        Control: TextInput@0.0.54
+                                        Properties:
+                                          Default: =Coalesce(varFormPos.ordem, "")
+                                          DisplayMode: =If(varPodeCadastro, DisplayMode.Edit, DisplayMode.View)
+                                          Height: =40
+                                          MaxLength: =6
+                                    - lblTipoPosRef:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          Color: =thmTextoFraco
+                                          Font: =thmFonte
+                                          FontWeight: =FontWeight.Bold
+                                          Height: =18
+                                          PaddingTop: =6
+                                          Size: =10
+                                          Text: ="TIPO"
+                                    - drpTipoPosRef:
+                                        Control: DropDown@0.0.45
+                                        Properties:
+                                          DefaultSelectedItems: =[Coalesce(varFormPos.tipo, "REMOTA")]
+                                          DisplayMode: =If(varPodeCadastro, DisplayMode.Edit, DisplayMode.View)
+                                          Height: =40
+                                          Items: =colTiposPosRef
+                                    - lblClassePosRef:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          Color: =thmTextoFraco
+                                          Font: =thmFonte
+                                          FontWeight: =FontWeight.Bold
+                                          Height: =18
+                                          PaddingTop: =6
+                                          Size: =10
+                                          Text: ="CLASSE (aviação geral)"
+                                    - drpClassePosRef:
+                                        Control: DropDown@0.0.45
+                                        Properties:
+                                          DefaultSelectedItems: =[Coalesce(varFormPos.classe, "—")]
+                                          DisplayMode: =If(varPodeCadastro, DisplayMode.Edit, DisplayMode.View)
+                                          Height: =40
+                                          Items: =colClassesSelRef
+                                    - lblAeroMaxRef:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          Color: =thmTextoFraco
+                                          Font: =thmFonte
+                                          FontWeight: =FontWeight.Bold
+                                          Height: =18
+                                          PaddingTop: =6
+                                          Size: =10
+                                          Text: ="AERONAVE MÁXIMA (rótulo)"
+                                    - txtAeroMaxRef:
+                                        Control: TextInput@0.0.54
+                                        Properties:
+                                          Default: =Coalesce(varFormPos.aeronave_max, "")
+                                          DisplayMode: =If(varPodeCadastro, DisplayMode.Edit, DisplayMode.View)
+                                          Height: =40
+                                          MaxLength: =40
+                                    - lblEquipMaxRef:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          Color: =thmTextoFraco
+                                          Font: =thmFonte
+                                          FontWeight: =FontWeight.Bold
+                                          Height: =18
+                                          PaddingTop: =6
+                                          Size: =10
+                                          Text: ="EQUIPAMENTO MÁXIMO"
+                                    - drpEquipMaxRef:
+                                        Control: DropDown@0.0.45
+                                        Properties:
+                                          DefaultSelectedItems: =[Coalesce(varFormPos.equip_max, "—")]
+                                          DisplayMode: =If(varPodeCadastro, DisplayMode.Edit, DisplayMode.View)
+                                          Height: =40
+                                          Items: =colEquipSelRef
+                                    - lblCompPosRef:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          Color: =thmTextoFraco
+                                          Font: =thmFonte
+                                          FontWeight: =FontWeight.Bold
+                                          Height: =18
+                                          PaddingTop: =6
+                                          Size: =10
+                                          Text: ="COMPRIMENTO MÁXIMO (m) — 0 desliga a trava"
+                                    - txtCompPosRef:
+                                        Control: TextInput@0.0.54
+                                        Properties:
+                                          Default: =Coalesce(varFormPos.comp, "0")
+                                          DisplayMode: =If(varPodeCadastro, DisplayMode.Edit, DisplayMode.View)
+                                          Height: =40
+                                          MaxLength: =6
+                                    - lblEnvPosRef:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          Color: =thmTextoFraco
+                                          Font: =thmFonte
+                                          FontWeight: =FontWeight.Bold
+                                          Height: =18
+                                          PaddingTop: =6
+                                          Size: =10
+                                          Text: ="ENVERGADURA MÁXIMA (m) — 0 desliga a trava"
+                                    - txtEnvPosRef:
+                                        Control: TextInput@0.0.54
+                                        Properties:
+                                          Default: =Coalesce(varFormPos.env, "0")
+                                          DisplayMode: =If(varPodeCadastro, DisplayMode.Edit, DisplayMode.View)
+                                          Height: =40
+                                          MaxLength: =6
+                                    - lblOcupaRef:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          Color: =thmTextoFraco
+                                          Font: =thmFonte
+                                          FontWeight: =FontWeight.Bold
+                                          Height: =18
+                                          PaddingTop: =6
+                                          Size: =10
+                                          Text: ="OCUPA (posições consumidas, separadas por vírgula)"
+                                    - txtOcupaRef:
+                                        Control: TextInput@0.0.54
+                                        Properties:
+                                          Default: =Coalesce(varFormPos.ocupa, "")
+                                          DisplayMode: =If(varPodeCadastro, DisplayMode.Edit, DisplayMode.View)
+                                          Height: =40
+                                          MaxLength: =100
+                                    - tglContingRef:
+                                        Control: Toggle@1.1.5
+                                        Properties:
+                                          AccessibleLabel: ="Posição de contingência"
+                                          BasePaletteColor: =thmAmbar
+                                          Checked: =Coalesce(varFormPos.conting, false)
+                                          DisplayMode: =If(varPodeCadastro, DisplayMode.Edit, DisplayMode.View)
+                                          FontColor: =thmTexto
+                                          Height: =44
+                                          Label: ="Posição de contingência"
+                                          LabelPosition: ='Toggle.LabelPosition'.Before
+                                    - tglAtivoPosRef:
+                                        Control: Toggle@1.1.5
+                                        Properties:
+                                          AccessibleLabel: ="Ativa"
+                                          BasePaletteColor: =thmPrimaria
+                                          Checked: =Coalesce(varFormPos.ativo, true)
+                                          DisplayMode: =If(varPodeCadastro, DisplayMode.Edit, DisplayMode.View)
+                                          FontColor: =thmTexto
+                                          Height: =44
+                                          Label: ="Ativa"
+                                          LabelPosition: ='Toggle.LabelPosition'.Before
+                                    - cntAcoesPosRef:
+                                        Control: GroupContainer@1.5.0
+                                        Variant: AutoLayout
+                                        Properties:
+                                          DropShadow: =DropShadow.None
+                                          Fill: =thmFundo
+                                          FillPortions: =0
+                                          Height: =60
+                                          LayoutAlignItems: =LayoutAlignItems.Stretch
+                                          LayoutDirection: =LayoutDirection.Horizontal
+                                          LayoutGap: =8
+                                          LayoutMinHeight: =0
+                                          LayoutMinWidth: =0
+                                          PaddingTop: =10
+                                          RadiusBottomLeft: =0
+                                          RadiusBottomRight: =0
+                                          RadiusTopLeft: =0
+                                          RadiusTopRight: =0
+                                        Children:
+                                          - btnNovoPosRef:
+                                              Control: Button@0.0.45
+                                              Properties:
+                                                Appearance: ='ButtonCanvas.Appearance'.Secondary
+                                                BasePaletteColor: =thmAcao
+                                                BorderRadius: =0
+                                                DisplayMode: =If(varPodeCadastro, DisplayMode.Edit, DisplayMode.Disabled)
+                                                FillPortions: =1
+                                                FontColor: =thmAcao
+                                                FontSize: =13
+                                                FontWeight: =FontWeight.Semibold
+                                                Height: =44
+                                                Icon: ="Add"
+                                                IconStyle: ='ButtonCanvas.IconStyle'.Filled
+                                                LayoutMinWidth: =0
+                                                OnSelect: |-
+                                                    =Set(varPosSelRef, Blank());
+                                                    Set(
+                                                        varFormPos,
+                                                        {
+                                                            id: Max(colPosRef, id_posicao) + 1, posicao: "", patio: "—", ordem: "",
+                                                            tipo: "REMOTA", classe: "—", aeronave_max: "", equip_max: "—",
+                                                            comp: "0", env: "0", ocupa: "", conting: false, ativo: true
+                                                        }
+                                                    )
+                                                Text: ="NOVO"
+                                          - btnSalvarPosRef:
+                                              Control: Button@0.0.45
+                                              Properties:
+                                                Appearance: ='ButtonCanvas.Appearance'.Primary
+                                                BasePaletteColor: =thmPrimaria
+                                                BorderRadius: =0
+                                                DisplayMode: =If(varPodeCadastro, DisplayMode.Edit, DisplayMode.Disabled)
+                                                FillPortions: =1
+                                                FontColor: =thmTextoBarra
+                                                FontSize: =13
+                                                FontWeight: =FontWeight.Semibold
+                                                Height: =44
+                                                Icon: ="Save"
+                                                IconStyle: ='ButtonCanvas.IconStyle'.Filled
+                                                LayoutMinWidth: =0
+                                                OnSelect: |-
+                                                    =If(
+                                                        IsBlank(Trim(txtPosRef.Value)),
+                                                        Notify("Informe o nome da posição.", NotificationType.Error, 5000),
+                                                        drpPatPosRef.Selected.Value = "—",
+                                                        Notify("Escolha o pátio.", NotificationType.Error, 5000),
+                                                        !IsNumeric(txtOrdemPosRef.Value),
+                                                        Notify("A ordem tem que ser número. Use decimal para encaixar entre duas: 6,5 põe a posição entre a 6 e a 7.", NotificationType.Error, 7000),
+                                                        !IsBlank(
+                                                            LookUp(
+                                                                colPosRef As _o,
+                                                                Upper(_o.posicao) = Upper(Trim(txtPosRef.Value)) And _o.ID <> Coalesce(varPosSelRef.ID, 0)
+                                                            ).ID
+                                                        ),
+                                                        Notify("Já existe posição com esse nome neste aeroporto. O nome é gravado em cada lançamento — duplicar embaralha a grade.", NotificationType.Error, 8000),
+                                                        // Cada nome em OCUPA precisa existir, senão a regra fica muda: a posição não some
+                                                        // da grade e ninguém descobre até duas aeronaves disputarem o mesmo espaço.
+                                                        CountRows(
+                                                            Filter(
+                                                                Split(Substitute(Trim(txtOcupaRef.Value), " ", ""), ",") As _t,
+                                                                _t.Value <> "" And IsBlank(LookUp(colPosRef As _pp, Upper(_pp.posicao) = Upper(_t.Value)).ID)
+                                                            )
+                                                        ) > 0,
+                                                        Notify(
+                                                            "OCUPA cita posição que não existe: " &
+                                                            Concat(
+                                                                Filter(
+                                                                    Split(Substitute(Trim(txtOcupaRef.Value), " ", ""), ",") As _t2,
+                                                                    _t2.Value <> "" And IsBlank(LookUp(colPosRef As _pp2, Upper(_pp2.posicao) = Upper(_t2.Value)).ID)
+                                                                ),
+                                                                Value,
+                                                                ", "
+                                                            ),
+                                                            NotificationType.Error,
+                                                            8000
+                                                        ),
+                                                        UpdateContext(
+                                                            {
+                                                                locErroRef: IsError(
+                                                                    Patch(
+                                                                        tb_posicoes,
+                                                                        If(IsBlank(varPosSelRef.ID), Defaults(tb_posicoes), LookUp(tb_posicoes, ID = varPosSelRef.ID)),
+                                                                        {
+                                                                            aeroporto: varAero,
+                                                                            id_posicao: If(IsBlank(varPosSelRef.ID), Max(colPosRef, id_posicao) + 1, varPosSelRef.id_posicao),
+                                                                            posicao: Upper(Trim(txtPosRef.Value)),
+                                                                            patio: Coalesce(LookUp(colPatRef As _lp3, _lp3.nome_patio = drpPatPosRef.Selected.Value).patio, ""),
+                                                                            ordem: Value(txtOrdemPosRef.Value),
+                                                                            tipo: drpTipoPosRef.Selected.Value,
+                                                                            classe: If(drpClassePosRef.Selected.Value = "—", "", drpClassePosRef.Selected.Value),
+                                                                            aeronave_max: Trim(txtAeroMaxRef.Value),
+                                                                            equip_max: If(drpEquipMaxRef.Selected.Value = "—", "", drpEquipMaxRef.Selected.Value),
+                                                                            comp_max: If(IsNumeric(txtCompPosRef.Value), Value(txtCompPosRef.Value), 0),
+                                                                            env_max: If(IsNumeric(txtEnvPosRef.Value), Value(txtEnvPosRef.Value), 0),
+                                                                            ocupa: Upper(Substitute(Trim(txtOcupaRef.Value), " ", "")),
+                                                                            contingencia: If(tglContingRef.Checked, 1, 0),
+                                                                            ativo: If(tglAtivoPosRef.Checked, 1, 0)
+                                                                        }
+                                                                    )
+                                                                )
+                                                            }
+                                                        );
+                                                        If(
+                                                            locErroRef,
+                                                            Notify("Não foi possível gravar. Nada foi alterado.", NotificationType.Error, 7000),
+                                                            Select(btnRecarregarRef);
+                                                            Set(varPosSelRef, Blank());
+                                                            Notify("Posição gravada. A grade só muda depois de ATUALIZAR no Mapa do Dia.", NotificationType.Success, 5000)
+                                                        )
+                                                    )
+                                                Text: ="SALVAR"
+                        - cntPatRef:
+                            Control: GroupContainer@1.5.0
+                            Variant: AutoLayout
                             Properties:
-                              AutoHeight: =true
-                              Color: =thmTexto
+                              DropShadow: =DropShadow.None
                               Fill: =thmFundo
-                              Font: =thmFonte
-                              HtmlText: |-
-                                ="<div style='background:" & hxAmbarSuave & ";border-left:4px solid " & hxAcao & ";padding:14px 18px;" & htmlFonte & "'>" &
-                                "<div style='font-size:12px;font-weight:700;color:" & hxTexto & ";'>Estes dados são de implantação, não de operação.</div>" &
-                                "<div style='font-size:11px;color:" & hxTexto & ";line-height:1.6;margin-top:6px;'>" &
-                                "Posições, portões e companhias mudam uma ou duas vezes por ano, então ficam guardados dentro do próprio " &
-                                "aplicativo — não em lista. Isso deixa a abertura instantânea e dispensa manutenção. " &
-                                "Para incluir uma posição, um portão, uma companhia ou um aeroporto novo, peça a alteração à equipe " &
-                                "de sistemas: é uma linha em App.Formulas e uma nova publicação." &
-                                "</div></div>"
-                              Size: =11
+                              FillPortions: =1
+                              LayoutAlignItems: =LayoutAlignItems.Stretch
+                              LayoutDirection: =LayoutDirection.Horizontal
+                              LayoutGap: =16
+                              LayoutMinHeight: =0
+                              LayoutMinWidth: =0
+                              RadiusBottomLeft: =0
+                              RadiusBottomRight: =0
+                              RadiusTopLeft: =0
+                              RadiusTopRight: =0
+                              Visible: =varModoRef = "PATIOS"
+                            Children:
+                              - cntListaPatRef:
+                                  Control: GroupContainer@1.5.0
+                                  Variant: AutoLayout
+                                  Properties:
+                                    BorderColor: =thmBorda
+                                    BorderThickness: =1
+                                    DropShadow: =DropShadow.None
+                                    Fill: =thmSuperficie
+                                    FillPortions: =1
+                                    LayoutAlignItems: =LayoutAlignItems.Stretch
+                                    LayoutDirection: =LayoutDirection.Vertical
+                                    LayoutGap: =0
+                                    LayoutMinHeight: =0
+                                    LayoutMinWidth: =0
+                                    RadiusBottomLeft: =0
+                                    RadiusBottomRight: =0
+                                    RadiusTopLeft: =0
+                                    RadiusTopRight: =0
+                                  Children:
+                                    - galPatRef:
+                                        Control: Gallery@2.15.0
+                                        Variant: Vertical
+                                        Properties:
+                                          BorderColor: =thmBorda
+                                          BorderStyle: =BorderStyle.None
+                                          Fill: =thmSuperficie
+                                          FillPortions: =1
+                                          Items: =colPatRef
+                                          LayoutMinHeight: =0
+                                          LayoutMinWidth: =0
+                                          TemplatePadding: =0
+                                          TemplateSize: =46
+                                        Children:
+                                          - cntLinhaPatRef:
+                                              Control: GroupContainer@1.5.0
+                                              Variant: AutoLayout
+                                              Properties:
+                                                DropShadow: =DropShadow.None
+                                                Fill: =thmTransparente
+                                                Height: =44
+                                                LayoutAlignItems: =LayoutAlignItems.Stretch
+                                                LayoutDirection: =LayoutDirection.Horizontal
+                                                LayoutGap: =4
+                                                LayoutMinHeight: =0
+                                                LayoutMinWidth: =0
+                                                RadiusBottomLeft: =0
+                                                RadiusBottomRight: =0
+                                                RadiusTopLeft: =0
+                                                RadiusTopRight: =0
+                                                Width: =Parent.Width - 18
+                                              Children:
+                                                - btnItemPatRef:
+                                                    Control: Button@0.0.45
+                                                    Properties:
+                                                      Align: =Align.Left
+                                                      Appearance: =If(varPatSelRef.ID = ThisItem.ID, 'ButtonCanvas.Appearance'.Primary, 'ButtonCanvas.Appearance'.Secondary)
+                                                      BasePaletteColor: =If(ThisItem.ativo = 1, thmPrimaria, thmTextoFraco)
+                                                      BorderRadius: =0
+                                                      FillPortions: =1
+                                                      FontSize: =12
+                                                      FontWeight: =FontWeight.Semibold
+                                                      Height: =44
+                                                      LayoutMinWidth: =0
+                                                      OnSelect: |-
+                                                          =Set(varPatSelRef, ThisItem);
+                                                          Set(
+                                                              varFormPat,
+                                                              {
+                                                                  patio: ThisItem.patio,
+                                                                  nome: ThisItem.nome_patio,
+                                                                  ordem: Text(ThisItem.ordem),
+                                                                  sigla: Coalesce(ThisItem.sigla, ""),
+                                                                  cor: Coalesce(ThisItem.cor_hex, ""),
+                                                                  cor_txt: Coalesce(ThisItem.cor_texto, ""),
+                                                                  ativo: ThisItem.ativo = 1
+                                                              }
+                                                          )
+                                                      PaddingLeft: =12
+                                                      PaddingRight: =12
+                                                      Text: |-
+                                                          =ThisItem.nome_patio & "   ·   " & ThisItem.patio &
+                                                          If(ThisItem.ativo = 1, "", "   ·   INATIVO")
+                              - cntFormPatRef:
+                                  Control: GroupContainer@1.5.0
+                                  Variant: AutoLayout
+                                  Properties:
+                                    BorderColor: =thmBorda
+                                    BorderThickness: =1
+                                    DropShadow: =DropShadow.None
+                                    Fill: =thmSuperficie
+                                    FillPortions: =0
+                                    LayoutAlignItems: =LayoutAlignItems.Stretch
+                                    LayoutDirection: =LayoutDirection.Vertical
+                                    LayoutGap: =0
+                                    LayoutMinHeight: =0
+                                    LayoutMinWidth: =0
+                                    LayoutOverflowY: =LayoutOverflow.Scroll
+                                    PaddingBottom: =16
+                                    PaddingLeft: =18
+                                    PaddingRight: =18
+                                    PaddingTop: =12
+                                    RadiusBottomLeft: =0
+                                    RadiusBottomRight: =0
+                                    RadiusTopLeft: =0
+                                    RadiusTopRight: =0
+                                    Width: =430
+                                  Children:
+                                    - htmAjudaPatRef:
+                                        Control: HtmlViewer@2.1.0
+                                        Properties:
+                                          AutoHeight: =true
+                                          Color: =thmTexto
+                                          Fill: =thmSuperficie
+                                          Font: =thmFonte
+                                          HtmlText: |-
+                                              ="<div style='" & htmlFonte & "font-size:10px;font-weight:700;letter-spacing:.12em;color:" & hxTextoFraco & ";'>PÁTIO</div>" &
+                                              "<div style='" & htmlFonte & "font-size:11px;color:" & hxTexto & ";line-height:1.5;padding:6px 0 4px 0;'>" &
+                                              "O <b>código</b> é o que cada posição referencia — mudá-lo em um pátio que já tem posições deixa todas órfãs. O <b>nome exibido</b> pode mudar à vontade." &
+                                              "</div>"
+                                          Size: =11
+                                    - lblCodPatRef:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          Color: =thmTextoFraco
+                                          Font: =thmFonte
+                                          FontWeight: =FontWeight.Bold
+                                          Height: =18
+                                          PaddingTop: =6
+                                          Size: =10
+                                          Text: ="CÓDIGO DO PÁTIO *"
+                                    - txtCodPatRef:
+                                        Control: TextInput@0.0.54
+                                        Properties:
+                                          Default: =Coalesce(varFormPat.patio, "")
+                                          DisplayMode: =If(varPodeCadastro, DisplayMode.Edit, DisplayMode.View)
+                                          Height: =40
+                                          MaxLength: =40
+                                    - lblNomePatRef:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          Color: =thmTextoFraco
+                                          Font: =thmFonte
+                                          FontWeight: =FontWeight.Bold
+                                          Height: =18
+                                          PaddingTop: =6
+                                          Size: =10
+                                          Text: ="NOME EXIBIDO *"
+                                    - txtNomePatRef:
+                                        Control: TextInput@0.0.54
+                                        Properties:
+                                          Default: =Coalesce(varFormPat.nome, "")
+                                          DisplayMode: =If(varPodeCadastro, DisplayMode.Edit, DisplayMode.View)
+                                          Height: =40
+                                          MaxLength: =80
+                                    - lblOrdemPatRef:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          Color: =thmTextoFraco
+                                          Font: =thmFonte
+                                          FontWeight: =FontWeight.Bold
+                                          Height: =18
+                                          PaddingTop: =6
+                                          Size: =10
+                                          Text: ="ORDEM *"
+                                    - txtOrdemPatRef:
+                                        Control: TextInput@0.0.54
+                                        Properties:
+                                          Default: =Coalesce(varFormPat.ordem, "")
+                                          DisplayMode: =If(varPodeCadastro, DisplayMode.Edit, DisplayMode.View)
+                                          Height: =40
+                                          MaxLength: =4
+                                    - lblSiglaPatRef:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          Color: =thmTextoFraco
+                                          Font: =thmFonte
+                                          FontWeight: =FontWeight.Bold
+                                          Height: =18
+                                          PaddingTop: =6
+                                          Size: =10
+                                          Text: ="SIGLA (letras da faixa vertical, até 4)"
+                                    - txtSiglaPatRef:
+                                        Control: TextInput@0.0.54
+                                        Properties:
+                                          Default: =Coalesce(varFormPat.sigla, "")
+                                          DisplayMode: =If(varPodeCadastro, DisplayMode.Edit, DisplayMode.View)
+                                          Height: =40
+                                          MaxLength: =4
+                                    - lblCorPatRef:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          Color: =thmTextoFraco
+                                          Font: =thmFonte
+                                          FontWeight: =FontWeight.Bold
+                                          Height: =18
+                                          PaddingTop: =6
+                                          Size: =10
+                                          Text: ="COR DE FUNDO (#RRGGBB)"
+                                    - txtCorPatRef:
+                                        Control: TextInput@0.0.54
+                                        Properties:
+                                          Default: =Coalesce(varFormPat.cor, "")
+                                          DisplayMode: =If(varPodeCadastro, DisplayMode.Edit, DisplayMode.View)
+                                          Height: =40
+                                          MaxLength: =7
+                                    - lblCorTxtPatRef:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          Color: =thmTextoFraco
+                                          Font: =thmFonte
+                                          FontWeight: =FontWeight.Bold
+                                          Height: =18
+                                          PaddingTop: =6
+                                          Size: =10
+                                          Text: ="COR DO TEXTO (#RRGGBB)"
+                                    - txtCorTxtPatRef:
+                                        Control: TextInput@0.0.54
+                                        Properties:
+                                          Default: =Coalesce(varFormPat.cor_txt, "")
+                                          DisplayMode: =If(varPodeCadastro, DisplayMode.Edit, DisplayMode.View)
+                                          Height: =40
+                                          MaxLength: =7
+                                    - htmAmostraPatRef:
+                                        Control: HtmlViewer@2.1.0
+                                        Properties:
+                                          AutoHeight: =true
+                                          Color: =thmTexto
+                                          Fill: =thmSuperficie
+                                          Font: =thmFonte
+                                          HtmlText: |-
+                                              ="<div style='" & htmlFonte & "padding:8px 0;'><span style='display:inline-block;padding:6px 14px;font-weight:800;background:" &
+                                              If(IsMatch(txtCorPatRef.Value, "^#[0-9A-Fa-f]{6}$"), txtCorPatRef.Value, hxTextoFraco) & ";color:" &
+                                              If(IsMatch(txtCorTxtPatRef.Value, "^#[0-9A-Fa-f]{6}$"), txtCorTxtPatRef.Value, hxTextoBarra) & ";'>" &
+                                              If(IsBlank(txtSiglaPatRef.Value), "??", txtSiglaPatRef.Value) & "</span>" &
+                                              "<span style='font-size:11px;color:" & hxTextoFraco & ";margin-left:10px;'>amostra da faixa</span></div>"
+                                          Size: =11
+                                    - tglAtivoPatRef:
+                                        Control: Toggle@1.1.5
+                                        Properties:
+                                          AccessibleLabel: ="Ativo"
+                                          BasePaletteColor: =thmPrimaria
+                                          Checked: =Coalesce(varFormPat.ativo, true)
+                                          DisplayMode: =If(varPodeCadastro, DisplayMode.Edit, DisplayMode.View)
+                                          FontColor: =thmTexto
+                                          Height: =44
+                                          Label: ="Ativo"
+                                          LabelPosition: ='Toggle.LabelPosition'.Before
+                                    - cntAcoesPatRef:
+                                        Control: GroupContainer@1.5.0
+                                        Variant: AutoLayout
+                                        Properties:
+                                          DropShadow: =DropShadow.None
+                                          Fill: =thmFundo
+                                          FillPortions: =0
+                                          Height: =60
+                                          LayoutAlignItems: =LayoutAlignItems.Stretch
+                                          LayoutDirection: =LayoutDirection.Horizontal
+                                          LayoutGap: =8
+                                          LayoutMinHeight: =0
+                                          LayoutMinWidth: =0
+                                          PaddingTop: =10
+                                          RadiusBottomLeft: =0
+                                          RadiusBottomRight: =0
+                                          RadiusTopLeft: =0
+                                          RadiusTopRight: =0
+                                        Children:
+                                          - btnNovoPatRef:
+                                              Control: Button@0.0.45
+                                              Properties:
+                                                Appearance: ='ButtonCanvas.Appearance'.Secondary
+                                                BasePaletteColor: =thmAcao
+                                                BorderRadius: =0
+                                                DisplayMode: =If(varPodeCadastro, DisplayMode.Edit, DisplayMode.Disabled)
+                                                FillPortions: =1
+                                                FontColor: =thmAcao
+                                                FontSize: =13
+                                                FontWeight: =FontWeight.Semibold
+                                                Height: =44
+                                                Icon: ="Add"
+                                                IconStyle: ='ButtonCanvas.IconStyle'.Filled
+                                                LayoutMinWidth: =0
+                                                OnSelect: |-
+                                                    =Set(varPatSelRef, Blank());
+                                                    Set(varFormPat, { patio: "", nome: "", ordem: "", sigla: "", cor: "#0E7C8C", cor_txt: "#D6DDE0", ativo: true })
+                                                Text: ="NOVO"
+                                          - btnSalvarPatRef:
+                                              Control: Button@0.0.45
+                                              Properties:
+                                                Appearance: ='ButtonCanvas.Appearance'.Primary
+                                                BasePaletteColor: =thmPrimaria
+                                                BorderRadius: =0
+                                                DisplayMode: =If(varPodeCadastro, DisplayMode.Edit, DisplayMode.Disabled)
+                                                FillPortions: =1
+                                                FontColor: =thmTextoBarra
+                                                FontSize: =13
+                                                FontWeight: =FontWeight.Semibold
+                                                Height: =44
+                                                Icon: ="Save"
+                                                IconStyle: ='ButtonCanvas.IconStyle'.Filled
+                                                LayoutMinWidth: =0
+                                                OnSelect: |-
+                                                    =If(
+                                                        IsBlank(Trim(txtCodPatRef.Value)),
+                                                        Notify("Informe o código do pátio.", NotificationType.Error, 5000),
+                                                        IsBlank(Trim(txtNomePatRef.Value)),
+                                                        Notify("Informe o nome exibido.", NotificationType.Error, 5000),
+                                                        !IsNumeric(txtOrdemPatRef.Value),
+                                                        Notify("A ordem tem que ser número.", NotificationType.Error, 5000),
+                                                        !IsMatch(txtCorPatRef.Value, "^#[0-9A-Fa-f]{6}$") Or !IsMatch(txtCorTxtPatRef.Value, "^#[0-9A-Fa-f]{6}$"),
+                                                        Notify("As cores têm que estar no formato #RRGGBB.", NotificationType.Error, 5000),
+                                                        !IsBlank(
+                                                            LookUp(colPatRef As _op, Upper(_op.patio) = Upper(Trim(txtCodPatRef.Value)) And _op.ID <> Coalesce(varPatSelRef.ID, 0)).ID
+                                                        ),
+                                                        Notify("Já existe pátio com esse código. É ele que cada posição referencia.", NotificationType.Error, 7000),
+                                                        UpdateContext(
+                                                            {
+                                                                locErroRef: IsError(
+                                                                    Patch(
+                                                                        tb_patios,
+                                                                        If(IsBlank(varPatSelRef.ID), Defaults(tb_patios), LookUp(tb_patios, ID = varPatSelRef.ID)),
+                                                                        {
+                                                                            aeroporto: varAero,
+                                                                            patio: Upper(Trim(txtCodPatRef.Value)),
+                                                                            nome_patio: Trim(txtNomePatRef.Value),
+                                                                            ordem: Value(txtOrdemPatRef.Value),
+                                                                            sigla: Upper(Trim(txtSiglaPatRef.Value)),
+                                                                            cor_hex: Upper(txtCorPatRef.Value),
+                                                                            cor_texto: Upper(txtCorTxtPatRef.Value),
+                                                                            ativo: If(tglAtivoPatRef.Checked, 1, 0)
+                                                                        }
+                                                                    )
+                                                                )
+                                                            }
+                                                        );
+                                                        If(
+                                                            locErroRef,
+                                                            Notify("Não foi possível gravar. Nada foi alterado.", NotificationType.Error, 7000),
+                                                            Select(btnRecarregarRef);
+                                                            Set(varPatSelRef, Blank());
+                                                            Notify("Pátio gravado.", NotificationType.Success, 4000)
+                                                        )
+                                                    )
+                                                Text: ="SALVAR"
