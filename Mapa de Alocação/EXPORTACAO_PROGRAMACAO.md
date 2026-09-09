@@ -167,6 +167,22 @@ marque apenas *falhou* e *tempo limite atingido* do passo 5. Preencha:
 Sem esse ramo, uma falha deixa o pedido eternamente em `PROCESSANDO` e o operador não sabe se espera
 ou refaz.
 
+## O aviso de "loop circular" é esperado
+
+Importado em 09/09/2026 com **0 erros e 3 avisos**, todos o mesmo: *o fluxo pode ter um loop circular*.
+Ele aparece porque os três `Atualizar item` gravam na mesma lista em que o gatilho escuta.
+
+**Está tratado pela condição de gatilho** `@equals(triggerBody()?[status], PRONTO)`: os patches
+gravam `PROCESSANDO`, `CONCLUIDO` e `ERRO`, e nenhum deles reabre o gatilho. Mesmo arranjo do fluxo
+de importação.
+
+⚠️ **Quem mexer no gatilho tem que preservar essa condição.** Sem ela o aviso deixa de ser falso
+alarme e o fluxo entra em laço na primeira execução. Ela fica em **Configurações › Condições de
+gatilho** e não aparece no desenho do fluxo — some da vista de quem edita, que é o que a torna
+perigosa.
+
+---
+
 ## Limites, e por que estão onde estão
 
 **Período máximo de 62 dias por arquivo.** A trava está na tela, e é sobre o app, não sobre o fluxo:
