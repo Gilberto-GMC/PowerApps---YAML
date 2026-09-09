@@ -14,9 +14,18 @@ const fs = require("fs");
 
 // Pares controle/propriedade que o Studio REJEITA, aprendidos a duras penas neste repositório.
 // Cada linha custou uma colagem recusada. Acrescente quando descobrir outra.
+//
+// Esta tabela existe porque o aviso de precedente lá embaixo NÃO basta. Ele conta ocorrências
+// no repositório, e o repositório tem apps diferentes, com versões diferentes do mesmo
+// controle e arquivos que talvez nunca tenham sido aceitos pelo Studio. Em 09/09/2026
+// 'Default' em TextInput@0.0.54 tinha 12 precedentes — todos em outros apps — e foi recusado
+// aqui, onde o certo é 'Value'.
+//
+// Precedente é pista. Esta lista é fato.
 const PROIBIDO = {
   "Button@0.0.45": ["Tooltip"], // 04/09/2026 e de novo em 05/09 — PA2108
   "DatePicker@0.0.46": ["StartYear"], // 09/09/2026 — é do DatePicker clássico, não deste
+  "TextInput@0.0.54": ["Default"], // 09/09/2026 — o moderno usa Value
 };
 
 // Dicionário de propriedades observadas por tipo de controle, montado a partir de TODOS os

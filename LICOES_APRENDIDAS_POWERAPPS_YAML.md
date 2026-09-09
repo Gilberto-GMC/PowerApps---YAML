@@ -2217,3 +2217,28 @@ antes exatamente para isto. Rodada depois do erro, apontou a linha 159 na primei
 2. **Ter a ferramenta não é usá-la.** Escrevi o `--mortos` para este caso e improvisei um grep na hora
    H. Quando existir trava específica no repositório, a improvisação não é atalho: é abrir mão da
    única verificação que já foi pensada com calma.
+
+## Precedente é pista; só o Studio é fato (2026-09-09)
+
+`Default` em `TextInput@0.0.54` foi recusado com `PA2108` — o moderno usa `Value`. O aviso de
+precedente do `fx_check.js` **ficou calado**, e com razão pelas próprias regras dele: `Default` tinha
+**12 usos no repositório**. Todos em outros apps — Gestão de Chamados, Frotas, AirportNow 2.0 — que
+usam outras versões do controle, e cujos arquivos talvez nunca tenham sido aceitos por Studio nenhum.
+
+**Tentei consertar a heurística e piorei.** Restringir a contagem ao projeto e excluir o arquivo em
+análise fez o aviso saltar de 5 para **84 numa tela só**, marcando propriedades que já colaram — porque
+uma propriedade usada trinta vezes em uma única tela, e em nenhuma outra, é indistinguível de uma
+propriedade inventada.
+
+**O limite é estrutural, e reconhecê-lo vale mais que refinar o palpite:** o repositório não guarda
+*se o Studio aceitou*. Sem esse dado, nenhuma contagem separa "novo e certo" de "novo e errado".
+
+Então a divisão de trabalho ficou explícita:
+
+- **`PROIBIDO`** — pares controle/propriedade que o Studio recusou de fato. Cresce a cada erro, é
+  exato, e reprova como **erro**.
+- **aviso de precedente** — heurística barata que já barrou `AlignInContainer` em `DropDown@0.0.45` e
+  `LayoutAlignItems.Start`. Fica como **aviso**, com ruído aceito.
+
+Reverter o refinamento foi a parte certa da decisão. Uma verificação que grita 84 vezes não é mais
+rigorosa que uma que grita 5 — é uma que ninguém lê.
