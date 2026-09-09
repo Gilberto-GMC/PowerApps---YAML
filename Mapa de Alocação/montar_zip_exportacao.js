@@ -70,6 +70,19 @@ const definition = {
     displayName: "Exportar programacao",
     definition: {
       $schema: "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+      metadata: {
+        workflowEntityId: null,
+        processAdvisorMetadata: null,
+        flowChargedByPaygo: null,
+        flowclientsuspensionreason: "None",
+        flowclientsuspensiontime: null,
+        flowclientsuspensionreasondetails: null,
+        creator: null,
+        provisioningMethod: "FromDefinition",
+        failureAlertSubscription: true,
+        creationSource: "Portal",
+        modifiedSources: "Portal",
+      },
       contentVersion: "1.0.0.0",
       parameters: {
         $authentication: { defaultValue: {}, type: "SecureObject" },
@@ -167,7 +180,7 @@ const definition = {
         Marcar_erro: Object.assign(
           sp("PatchItem", Object.assign({}, patchBase, {
             "item/status": "ERRO",
-            "item/mensagem": "@{string(result('Criar_arquivo'))}",
+            "item/mensagem": "Falha ao gerar o arquivo. Veja o historico da execucao no fluxo Exportar programacao.",
           })),
           { runAfter: { Criar_arquivo: ["Failed", "Skipped", "TimedOut"] } }
         ),
