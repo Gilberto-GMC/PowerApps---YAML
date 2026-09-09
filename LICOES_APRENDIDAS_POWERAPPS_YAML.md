@@ -2166,3 +2166,22 @@ registro decidindo visibilidade é assinatura de delegação, não de lógica.
 
 Vale conferir também o "Limite de linhas de dados" nas configurações do app (padrão 500, máximo 2000):
 ele não conserta o problema, mas adia o dia em que ele aparece — e por isso também o esconde.
+
+## `DatePicker@0.0.46` não tem `StartYear` (2026-09-09)
+
+`StartYear` é do DatePicker **clássico**. No `DatePicker@0.0.46` o Studio recusa com `PA2108`. Eu a
+escrevi de memória, sem conferir precedente — em duas linhas, na mesma colagem.
+
+**O que mudou por causa disso, e é o que importa:** a regra "um precedente não basta" virou executável.
+O `fx_check.js` agora monta um **dicionário de propriedades por tipo de controle a partir de todos os
+`.pa.yaml` do repositório** e avisa quando uma propriedade aparece pouquíssimas vezes:
+
+```
+723: 'StartYear' em DatePicker@0.0.46 aparece 0x no repositório — sem precedente firme
+```
+
+Não dá para saber o que o Studio aceita sem o Studio. **Dá para saber o que ele já aceitou** — e isso
+é quase toda a distância entre uma colagem que passa e uma que volta.
+
+O aviso é ruidoso de propósito: propriedade legítima e rara também aparece, até acumular precedente.
+Trocar cinco linhas de ruído por uma colagem recusada é troca boa.

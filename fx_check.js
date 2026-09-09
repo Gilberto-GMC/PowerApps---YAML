@@ -16,7 +16,56 @@ const fs = require("fs");
 // Cada linha custou uma colagem recusada. Acrescente quando descobrir outra.
 const PROIBIDO = {
   "Button@0.0.45": ["Tooltip"], // 04/09/2026 e de novo em 05/09 — PA2108
+  "DatePicker@0.0.46": ["StartYear"], // 09/09/2026 — é do DatePicker clássico, não deste
 };
+
+// Dicionário de propriedades observadas por tipo de controle, montado a partir de TODOS os
+// .pa.yaml do repositório. Serve à regra que mais custou colagem aqui: propriedade sem
+// precedente é sinal amarelo. Não dá para saber o que o Studio aceita — dá para saber o que
+// ele já aceitou.
+const RARIDADE = 2; // total de ocorrências no repositório abaixo do qual vira aviso
+
+function montaDicionario(raiz) {
+  const dic = new Map();
+  const arquivos = [];
+  (function anda(dir, prof) {
+    if (prof > 4) return;
+    let itens = [];
+    try {
+      itens = fs.readdirSync(dir, { withFileTypes: true });
+    } catch {
+      return;
+    }
+    for (const it of itens) {
+      if (it.name === "node_modules" || it.name.startsWith(".")) continue;
+      const p = require("path").join(dir, it.name);
+      if (it.isDirectory()) anda(p, prof + 1);
+      else if (it.name.endsWith(".pa.yaml")) arquivos.push(p);
+    }
+  })(raiz, 0);
+
+  for (const a of arquivos) {
+    const linhas = fs.readFileSync(a, "utf8").replace(/\r\n/g, "\n").split("\n");
+    for (let i = 0; i < linhas.length; i++) {
+      const t = linhas[i].match(/^(\s*)Control: (\S+)\s*$/);
+      if (!t) continue;
+      const rc = t[1].length;
+      if (!dic.has(t[2])) dic.set(t[2], new Map());
+      const props = dic.get(t[2]);
+      for (let j = i + 1; j < linhas.length; j++) {
+        if (!linhas[j].trim()) continue;
+        const rj = linhas[j].search(/\S/);
+        if (rj < rc) break;
+        if (rj !== rc + 2) continue; // filhos diretos do Properties: do controle
+        const p = linhas[j].match(/^\s*([A-Za-z_][A-Za-z0-9_]*):/);
+        if (p) props.set(p[1], (props.get(p[1]) || 0) + 1);
+      }
+    }
+  }
+  return dic;
+}
+
+let dicionario = null;
 
 function analisa(arquivo, mortos) {
   const linhas = fs.readFileSync(arquivo, "utf8").replace(/\r\n/g, "\n").split("\n");
@@ -60,16 +109,22 @@ function analisa(arquivo, mortos) {
       }
     }
 
-    // Propriedade não suportada pelo tipo do controle.
+    // Propriedade não suportada pelo tipo do controle, e propriedade sem precedente.
     const tipo = l.match(/^\s*Control: (\S+)\s*$/);
-    if (tipo && PROIBIDO[tipo[1]]) {
+    if (tipo) {
       const rc = r;
+      const conhecidas = dicionario ? dicionario.get(tipo[1]) : null;
       for (let j = i + 1; j < linhas.length; j++) {
         if (!linhas[j].trim()) continue;
-        if (recuoDe(linhas[j]) < rc) break;
+        const rj = recuoDe(linhas[j]);
+        if (rj < rc) break;
+        if (rj !== rc + 2) continue;
         const p = linhas[j].match(/^\s*([A-Za-z_][A-Za-z0-9_]*):/);
-        if (p && PROIBIDO[tipo[1]].includes(p[1])) {
+        if (!p) continue;
+        if ((PROIBIDO[tipo[1]] || []).includes(p[1])) {
           erros.push(`${j + 1}: '${p[1]}' não existe em ${tipo[1]} — o Studio recusa com PA2108`);
+        } else if (conhecidas && (conhecidas.get(p[1]) || 0) <= RARIDADE) {
+          avisos.push(`${j + 1}: '${p[1]}' em ${tipo[1]} aparece ${conhecidas.get(p[1]) || 0}x no repositório — sem precedente firme, confira antes de colar`);
         }
       }
     }
@@ -158,6 +213,7 @@ function analisa(arquivo, mortos) {
 const args = process.argv.slice(2);
 const mortos = (args.find((a) => a.startsWith("--mortos=")) || "").replace("--mortos=", "").split(",").filter(Boolean);
 const arquivos = args.filter((a) => !a.startsWith("--"));
+dicionario = montaDicionario(require("path").dirname(process.argv[1]));
 let falhou = false;
 
 for (const a of arquivos) {
