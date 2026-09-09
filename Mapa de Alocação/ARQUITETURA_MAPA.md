@@ -1128,10 +1128,21 @@ aeroporto — não de ter um segundo aeroporto na grade.
 3. Colar o `App_Formulas_Mapa.txt`.
 4. Colar o `scrMapaPatio.pa.yaml`.
 
-**A conferência que importa é uma só:** abrir um dia com movimento e comparar com antes. Mesmas 26
-posições, mesma ordem — com **T6C entre T6 e T7**, que é o teste do decimal — e as bordas coloridas
-como eram. Se algum bloco mudou de linha, o `id_posicao` não veio como devia, e é para voltar atrás
-antes de gravar qualquer coisa.
+**Três conferências, e a primeira é a que decide:**
+
+1. **Abrir um dia com movimento e comparar com antes.** Os blocos têm de estar nas mesmas linhas. Se
+   algum mudou de posição, o `id_posicao` não veio como devia — voltar atrás antes de gravar
+   qualquer coisa.
+2. **Rolar até o fim da grade:** as linhas do PÁTIO 3 e dos HELIPONTOS têm de existir, com a borda
+   esquerda laranja-azulada e verde. É o teste da coluna `cor_hex` — se saírem todas iguais, a cor
+   não está vindo do dado.
+3. **Abrir o formulário e o seletor de posição:** o **T6C tem de aparecer entre T6 e T7**. É o teste
+   da ordem 6,5.
+
+⚠️ **O T6C não aparece como linha da grade, e isso é o certo.** Ele tem `ocupa: "T5,T6"`, e a grade só
+desenha posições sem `ocupa` — o bloco do cargueiro é desenhado *sobre* T5 e T6. Procurá-lo na grade
+é procurar o que nunca esteve lá; a ordem 6,5 só se observa no seletor. Escrevi a verificação errada
+na primeira versão deste documento.
 
 > A `tbl_posicoes_patio` do app antigo foi avaliada como fonte e descartada: `ID`, código de pátio e
 > nomes de posição divergem dos nossos, e ela está vazia. Pode ser aposentada junto com o App B.
