@@ -11,60 +11,42 @@ Table(
     { ICAO: "SBNF"; IATA: "NVT"; Aeroporto: "NAVEGANTES" }
 );;
 
-// 🅿️ Pátios — a ordem manda no agrupamento visual da grade
-// aeroporto: ICAO dono do pátio — filtro para quando entrar um segundo aeroporto
-colPatios =
-Table(
-    { aeroporto: "NAVEGANTES"; patio: "PRINCIPAL";  nome_patio: "PÁTIO PRINCIPAL"; ordem: 1 };
-    { aeroporto: "NAVEGANTES"; patio: "PATIO3";    nome_patio: "PÁTIO 3"; ordem: 2 };
-    { aeroporto: "NAVEGANTES"; patio: "HELIPONTOS"; nome_patio: "PÁTIO 2";      ordem: 3 }
+// 🅿️ Pátios — vêm da lista tb_patios desde 09/09/2026. A ordem manda no agrupamento visual da
+// grade e a cor_hex pinta a borda esquerda da linha; aeroporto novo é linha nova, não código novo.
+colPatiosTodos =
+ForAll(
+    Filter(tb_patios; ativo = 1) As _p;
+    { aeroporto: _p.aeroporto; patio: _p.patio; nome_patio: _p.nome_patio; ordem: _p.ordem; cor_hex: _p.cor_hex }
 );;
 
-// 🛩️ Posições do pátio — ordem visual idêntica à planilha
-// aeroporto: ICAO dono da posição — filtro para quando entrar um segundo aeroporto
-colPosicoes =
-Table(
-    { aeroporto: "NAVEGANTES"; id: 1;  patio: "PRINCIPAL";  posicao: "T1";  ordem: 1;  aeronave_max: "B-738"; equip_max: "B738";    classe: "";            comp_max: 0; env_max: 0; tipo: "PONTE";     contingencia: 0; ocupa: "" };
-    { aeroporto: "NAVEGANTES"; id: 2;  patio: "PRINCIPAL";  posicao: "T2";  ordem: 2;  aeronave_max: "EMB. E-2"; equip_max: "E295"; classe: "";            comp_max: 0; env_max: 0; tipo: "PONTE";     contingencia: 0; ocupa: "" };
-    { aeroporto: "NAVEGANTES"; id: 3;  patio: "PRINCIPAL";  posicao: "T3";  ordem: 3;  aeronave_max: "EMB. E-2"; equip_max: "E295"; classe: "";            comp_max: 0; env_max: 0; tipo: "PONTE";     contingencia: 0; ocupa: "" };
-    { aeroporto: "NAVEGANTES"; id: 4;  patio: "PRINCIPAL";  posicao: "T4";  ordem: 4;  aeronave_max: "B-738"; equip_max: "B738";    classe: "";            comp_max: 0; env_max: 0; tipo: "PONTE";     contingencia: 0; ocupa: "" };
-    { aeroporto: "NAVEGANTES"; id: 5;  patio: "PRINCIPAL";  posicao: "T5";  ordem: 5;  aeronave_max: "B-738"; equip_max: "B738";    classe: "";            comp_max: 0; env_max: 0; tipo: "PONTE";     contingencia: 0; ocupa: "" };
-    { aeroporto: "NAVEGANTES"; id: 6;  patio: "PRINCIPAL";  posicao: "T6";  ordem: 6;  aeronave_max: "B-738"; equip_max: "B738";    classe: "";            comp_max: 0; env_max: 0; tipo: "PONTE";     contingencia: 0; ocupa: "" };
-    { aeroporto: "NAVEGANTES"; id: 26; patio: "PRINCIPAL";  posicao: "T6C"; ordem: 6,5; aeronave_max: "B-767 CARGO"; equip_max: "B763"; classe: "";            comp_max: 0; env_max: 0; tipo: "REMOTA";    contingencia: 0; ocupa: "T5,T6" };
-    { aeroporto: "NAVEGANTES"; id: 7;  patio: "PRINCIPAL";  posicao: "T7";  ordem: 7;  aeronave_max: "B-738"; equip_max: "B738";    classe: "";            comp_max: 0; env_max: 0; tipo: "PONTE";     contingencia: 1; ocupa: "" };
-    { aeroporto: "NAVEGANTES"; id: 8;  patio: "PATIO3";    posicao: "A6";  ordem: 8;  aeronave_max: ""; equip_max: "";         classe: "A";           comp_max: 0; env_max: 0; tipo: "REMOTA";    contingencia: 0; ocupa: "" };
-    { aeroporto: "NAVEGANTES"; id: 9;  patio: "PATIO3";    posicao: "7";   ordem: 9;  aeronave_max: ""; equip_max: "";         classe: "B";           comp_max: 0; env_max: 0; tipo: "REMOTA";    contingencia: 0; ocupa: "" };
-    { aeroporto: "NAVEGANTES"; id: 10; patio: "PATIO3";    posicao: "A10"; ordem: 10; aeronave_max: ""; equip_max: "";         classe: "A";           comp_max: 0; env_max: 0; tipo: "REMOTA";    contingencia: 0; ocupa: "" };
-    { aeroporto: "NAVEGANTES"; id: 11; patio: "PATIO3";    posicao: "A7";  ordem: 11; aeronave_max: ""; equip_max: "";         classe: "A";           comp_max: 0; env_max: 0; tipo: "REMOTA";    contingencia: 0; ocupa: "" };
-    { aeroporto: "NAVEGANTES"; id: 12; patio: "PATIO3";    posicao: "A8";  ordem: 12; aeronave_max: ""; equip_max: "";         classe: "A";           comp_max: 0; env_max: 0; tipo: "REMOTA";    contingencia: 0; ocupa: "" };
-    { aeroporto: "NAVEGANTES"; id: 13; patio: "PATIO3";    posicao: "8";   ordem: 13; aeronave_max: ""; equip_max: "";         classe: "B";           comp_max: 0; env_max: 0; tipo: "REMOTA";    contingencia: 0; ocupa: "" };
-    { aeroporto: "NAVEGANTES"; id: 14; patio: "PATIO3";    posicao: "A9";  ordem: 14; aeronave_max: ""; equip_max: "";         classe: "A";           comp_max: 0; env_max: 0; tipo: "REMOTA";    contingencia: 0; ocupa: "" };
-    { aeroporto: "NAVEGANTES"; id: 15; patio: "PATIO3";    posicao: "A5";  ordem: 15; aeronave_max: ""; equip_max: "";         classe: "A";           comp_max: 0; env_max: 0; tipo: "REMOTA";    contingencia: 0; ocupa: "" };
-    { aeroporto: "NAVEGANTES"; id: 16; patio: "PATIO3";    posicao: "6A";  ordem: 16; aeronave_max: ""; equip_max: "";         classe: "B";           comp_max: 0; env_max: 0; tipo: "REMOTA";    contingencia: 0; ocupa: "" };
-    { aeroporto: "NAVEGANTES"; id: 17; patio: "PATIO3";    posicao: "A1";  ordem: 17; aeronave_max: ""; equip_max: "";         classe: "A";           comp_max: 0; env_max: 0; tipo: "REMOTA";    contingencia: 0; ocupa: "" };
-    { aeroporto: "NAVEGANTES"; id: 18; patio: "PATIO3";    posicao: "A2";  ordem: 18; aeronave_max: ""; equip_max: "";         classe: "A";           comp_max: 0; env_max: 0; tipo: "REMOTA";    contingencia: 0; ocupa: "" };
-    { aeroporto: "NAVEGANTES"; id: 19; patio: "PATIO3";    posicao: "A3";  ordem: 19; aeronave_max: ""; equip_max: "";         classe: "A";           comp_max: 0; env_max: 0; tipo: "REMOTA";    contingencia: 0; ocupa: "" };
-    { aeroporto: "NAVEGANTES"; id: 20; patio: "PATIO3";    posicao: "6B";  ordem: 20; aeronave_max: ""; equip_max: "";         classe: "B";           comp_max: 0; env_max: 0; tipo: "REMOTA";    contingencia: 0; ocupa: "" };
-    { aeroporto: "NAVEGANTES"; id: 21; patio: "PATIO3";    posicao: "A4";  ordem: 21; aeronave_max: ""; equip_max: "";         classe: "A";           comp_max: 0; env_max: 0; tipo: "REMOTA";    contingencia: 0; ocupa: "" };
-    { aeroporto: "NAVEGANTES"; id: 22; patio: "HELIPONTOS"; posicao: "H1";  ordem: 22; aeronave_max: ""; equip_max: "";         classe: "HELICOPTERO"; comp_max: 0; env_max: 0; tipo: "HELIPONTO"; contingencia: 0; ocupa: "" };
-    { aeroporto: "NAVEGANTES"; id: 23; patio: "HELIPONTOS"; posicao: "H2";  ordem: 23; aeronave_max: ""; equip_max: "";         classe: "HELICOPTERO"; comp_max: 0; env_max: 0; tipo: "HELIPONTO"; contingencia: 0; ocupa: "" };
-    { aeroporto: "NAVEGANTES"; id: 24; patio: "HELIPONTOS"; posicao: "H3";  ordem: 24; aeronave_max: ""; equip_max: "";         classe: "HELICOPTERO"; comp_max: 0; env_max: 0; tipo: "HELIPONTO"; contingencia: 0; ocupa: "" };
-    { aeroporto: "NAVEGANTES"; id: 25; patio: "HELIPONTOS"; posicao: "H4";  ordem: 25; aeronave_max: ""; equip_max: "";         classe: "HELICOPTERO"; comp_max: 0; env_max: 0; tipo: "HELIPONTO"; contingencia: 0; ocupa: "" }
+// 🛩️ Posições — vêm da lista tb_posicoes desde 09/09/2026.
+// ⚠️ O campo id vem de id_posicao, NÃO do ID do SharePoint: mais de 700 lançamentos da
+// tb_alocacoesMapa gravam esse número. Renumerar aponta o histórico para a posição errada,
+// e nada na tela denuncia isso.
+colPosicoesTodas =
+ForAll(
+    Filter(tb_posicoes; ativo = 1) As _p;
+    {
+        aeroporto: _p.aeroporto; id: _p.id_posicao; patio: _p.patio; posicao: _p.posicao; ordem: _p.ordem;
+        aeronave_max: _p.aeronave_max; equip_max: _p.equip_max; classe: _p.classe;
+        comp_max: _p.comp_max; env_max: _p.env_max; tipo: _p.tipo;
+        contingencia: _p.contingencia; ocupa: _p.ocupa
+    }
 );;
 
 // 🛡️ Posições/pátios do aeroporto ativo, com rede de segurança: se o filtro não achar nada
 // (varAero em branco, aeroporto sem posição cadastrada), cai para a tabela inteira em vez de
-// deixar a grade em branco. Toda tela lê estas duas, nunca colPosicoes/colPatios direto.
+// deixar a grade em branco. Toda tela lê estas duas, nunca colPosicoesTodas/colPatiosTodos direto.
 colPosicoesAero =
 With(
-    { _f: Filter(colPosicoes; aeroporto = varAero) };
-    If(CountRows(_f) = 0; colPosicoes; _f)
+    { _f: Filter(colPosicoesTodas; aeroporto = varAero) };
+    If(CountRows(_f) = 0; colPosicoesTodas; _f)
 );;
 
 colPatiosAero =
 With(
-    { _f: Filter(colPatios; aeroporto = varAero) };
-    If(CountRows(_f) = 0; colPatios; _f)
+    { _f: Filter(colPatiosTodos; aeroporto = varAero) };
+    If(CountRows(_f) = 0; colPatiosTodos; _f)
 );;
 
 // 🚪 Portões da sala de embarque — cor do contorno do bloco
