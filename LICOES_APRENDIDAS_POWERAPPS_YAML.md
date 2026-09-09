@@ -2198,3 +2198,22 @@ Não dá para saber o que o Studio aceita sem o Studio. **Dá para saber o que e
 
 O aviso é ruidoso de propósito: propriedade legítima e rara também aparece, até acumular precedente.
 Trocar cinco linhas de ruído por uma colagem recusada é troca boa.
+
+## Comando que falha em silêncio vira falso verde (2026-09-09)
+
+Ao tirar `colPosicoes` e `colPatios` do `App.Formulas`, rodei um grep para saber se alguma tela ainda
+os citava. Misturei `-P` e `-E`, o grep respondeu **`conflicting matchers specified`** e não listou
+nada — e eu li a lista vazia como "nenhuma tela usa". O `scrMapaInicio` usava, e o Douglas recebeu a
+tela quebrada.
+
+**O `fx_check.js` já tinha a trava certa** (`--mortos=colPosicoes,colPatios`), escrita por mim dias
+antes exatamente para isto. Rodada depois do erro, apontou a linha 159 na primeira tentativa.
+
+**Duas coisas, e a segunda é a que se repete:**
+
+1. Verificação que devolve vazio precisa provar que *rodou*. Saída vazia e erro de sintaxe são
+   indistinguíveis quando se lê só o que voltou — confira o código de saída, ou faça o teste devolver
+   uma contagem em vez de silêncio.
+2. **Ter a ferramenta não é usá-la.** Escrevi o `--mortos` para este caso e improvisei um grep na hora
+   H. Quando existir trava específica no repositório, a improvisação não é atalho: é abrir mão da
+   única verificação que já foi pensada com calma.
