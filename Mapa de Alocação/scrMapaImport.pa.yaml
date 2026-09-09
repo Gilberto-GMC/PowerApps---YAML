@@ -74,7 +74,7 @@ Screens:
                           ="<div style='" & htmlFonte & "color:" & hxTextoBarra & ";'>" &
                           If(
                               varMenuAberto,
-                              "<div style='font-size:10px;letter-spacing:.24em;font-weight:700;opacity:.6;'>ASUR</div><div style='font-size:16px;font-weight:800;letter-spacing:.01em;margin-top:2px;'>MAPA DE ALOCAÇÃO</div>",
+                              "<div style='font-size:10px;letter-spacing:.24em;font-weight:700;opacity:.6;'>ASUR BRASIL</div><div style='font-size:16px;font-weight:800;letter-spacing:.01em;margin-top:2px;'>MAPA DE ALOCAÇÃO</div>",
                               "<div style='font-size:17px;font-weight:800;text-align:left;margin-left:12px;'>MA</div>"
                           ) &
                           "</div>"
@@ -664,3 +664,294 @@ Screens:
                                 )
                               Repeat: =true
                               Visible: =false
+
+                        - htmExpTituloImp:
+                            Control: HtmlViewer@2.1.0
+                            Properties:
+                              AutoHeight: =true
+                              Color: =thmTexto
+                              Fill: =thmFundo
+                              Font: =thmFonte
+                              HtmlText: |-
+                                ="<div style='" & htmlFonte & "border-top:1px solid " & hxBorda & ";margin-top:18px;padding-top:18px;'>" &
+                                "<div style='font-size:10px;font-weight:700;letter-spacing:.14em;color:" & hxTextoFraco & ";'>EXPORTAR</div>" &
+                                "<div style='font-size:19px;font-weight:800;color:" & hxPrimaria & ";margin-top:4px;'>Movimentação em planilha</div>" &
+                                "<div style='font-size:12px;color:" & hxTexto & ";margin-top:8px;line-height:1.6;max-width:760px;'>" &
+                                "Gera um arquivo CSV com a movimentação do período escolhido — passado ou futuro — que abre direto no Excel. " &
+                                "Serve para enviar a programação a quem não usa o app e para consultar o que já aconteceu. " &
+                                "O pedido entra numa fila: toque em GERAR, espere alguns segundos e use ATUALIZAR para ver o arquivo pronto." &
+                                "</div></div>"
+                              Size: =12
+                        - cntExpFiltrosImp:
+                            Control: GroupContainer@1.5.0
+                            Variant: AutoLayout
+                            Properties:
+                              BorderColor: =thmBorda
+                              BorderThickness: =1
+                              DropShadow: =DropShadow.None
+                              Fill: =thmSuperficie
+                              FillPortions: =0
+                              LayoutAlignItems: =LayoutAlignItems.Stretch
+                              LayoutDirection: =LayoutDirection.Vertical
+                              LayoutGap: =4
+                              LayoutMinHeight: =0
+                              LayoutMinWidth: =0
+                              PaddingBottom: =16
+                              PaddingLeft: =18
+                              PaddingRight: =18
+                              PaddingTop: =14
+                              RadiusBottomLeft: =0
+                              RadiusBottomRight: =0
+                              RadiusTopLeft: =0
+                              RadiusTopRight: =0
+                            Children:
+                              - lblExpDeImp:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    Color: =thmTextoFraco
+                                    Font: =thmFonte
+                                    FontWeight: =FontWeight.Bold
+                                    Height: =18
+                                    Size: =10
+                                    Text: ="DE (data da operação) *"
+                              - dtpExpDeImp:
+                                  Control: DatePicker@0.0.46
+                                  Properties:
+                                    AccessibleLabel: ="Data inicial da exportação"
+                                    Format: =DateTimeFormat.ShortDate
+                                    Height: =44
+                                    StartYear: =2024
+                              - lblExpAteImp:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    Color: =thmTextoFraco
+                                    Font: =thmFonte
+                                    FontWeight: =FontWeight.Bold
+                                    Height: =18
+                                    PaddingTop: =8
+                                    Size: =10
+                                    Text: ="ATÉ *"
+                              - dtpExpAteImp:
+                                  Control: DatePicker@0.0.46
+                                  Properties:
+                                    AccessibleLabel: ="Data final da exportação"
+                                    Format: =DateTimeFormat.ShortDate
+                                    Height: =44
+                                    StartYear: =2024
+                              - lblExpPatioImp:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    Color: =thmTextoFraco
+                                    Font: =thmFonte
+                                    FontWeight: =FontWeight.Bold
+                                    Height: =18
+                                    PaddingTop: =8
+                                    Size: =10
+                                    Text: ="PÁTIO"
+                              - drpExpPatioImp:
+                                  Control: DropDown@0.0.45
+                                  Properties:
+                                    DefaultSelectedItems: =["TODOS OS PÁTIOS"]
+                                    Height: =44
+                                    Items: =colPatiosSel
+                              - tglExpIntlImp:
+                                  Control: Toggle@1.1.5
+                                  Properties:
+                                    AccessibleLabel: ="Somente voos internacionais"
+                                    BasePaletteColor: =thmAmbar
+                                    FontColor: =thmTexto
+                                    Height: =44
+                                    Label: ="Somente voos internacionais"
+                                    LabelPosition: ='Toggle.LabelPosition'.Before
+                              - tglExpPesqImp:
+                                  Control: Toggle@1.1.5
+                                  Properties:
+                                    AccessibleLabel: ="Somente voos pesquisados"
+                                    BasePaletteColor: =thmVermelho
+                                    FontColor: =thmTexto
+                                    Height: =44
+                                    Label: ="Somente voos pesquisados"
+                                    LabelPosition: ='Toggle.LabelPosition'.Before
+                              - tglExpFinImp:
+                                  Control: Toggle@1.1.5
+                                  Properties:
+                                    AccessibleLabel: ="Incluir movimentos finalizados"
+                                    BasePaletteColor: =thmOperacional
+                                    FontColor: =thmTexto
+                                    Height: =44
+                                    Label: ="Incluir movimentos já finalizados"
+                                    LabelPosition: ='Toggle.LabelPosition'.Before
+                        - htmExpResumoImp:
+                            Control: HtmlViewer@2.1.0
+                            Properties:
+                              AutoHeight: =true
+                              Color: =thmTexto
+                              Fill: =thmFundo
+                              Font: =thmFonte
+                              HtmlText: |-
+                                =If(
+                                    IsBlank(dtpExpDeImp.SelectedDate) Or IsBlank(dtpExpAteImp.SelectedDate),
+                                    "<div style='" & htmlFonte & "font-size:12px;color:" & hxTextoFraco & ";padding:6px 0;'>Escolha as duas datas.</div>",
+                                    dtpExpAteImp.SelectedDate < dtpExpDeImp.SelectedDate,
+                                    "<div style='" & htmlFonte & "font-size:12px;font-weight:700;color:" & hxVermelho & ";padding:6px 0;'>A data final é anterior à inicial.</div>",
+                                    DateDiff(dtpExpDeImp.SelectedDate, dtpExpAteImp.SelectedDate, TimeUnit.Days) > 62,
+                                    "<div style='" & htmlFonte & "font-size:12px;font-weight:700;color:" & hxVermelho & ";padding:6px 0;'>" &
+                                    "Período de " & Text(DateDiff(dtpExpDeImp.SelectedDate, dtpExpAteImp.SelectedDate, TimeUnit.Days) + 1) & " dias. O máximo por arquivo é 62 — gere um arquivo por mês." &
+                                    "</div>",
+                                    "<div style='" & htmlFonte & "font-size:12px;color:" & hxTexto & ";padding:6px 0;'>" &
+                                    "<b>" & Text(CountRows(Filter(tb_alocacoesMapa, aeroporto = varAero And ativo = 1 And data_operacao >= dtpExpDeImp.SelectedDate And data_operacao <= dtpExpAteImp.SelectedDate))) & "</b> registro(s) no período" &
+                                    " &nbsp;&middot;&nbsp; " & Text(DateDiff(dtpExpDeImp.SelectedDate, dtpExpAteImp.SelectedDate, TimeUnit.Days) + 1) & " dia(s)" &
+                                    If(tglExpIntlImp.Checked Or tglExpPesqImp.Checked Or tglExpFinImp.Checked, " &nbsp;&middot;&nbsp; os filtros abaixo ainda serão aplicados pelo fluxo", "") &
+                                    "</div>"
+                                )
+                              Size: =12
+                        - cntExpAcoesImp:
+                            Control: GroupContainer@1.5.0
+                            Variant: AutoLayout
+                            Properties:
+                              DropShadow: =DropShadow.None
+                              Fill: =thmFundo
+                              FillPortions: =0
+                              Height: =60
+                              LayoutAlignItems: =LayoutAlignItems.Center
+                              LayoutDirection: =LayoutDirection.Horizontal
+                              LayoutGap: =8
+                              LayoutMinWidth: =0
+                              RadiusBottomLeft: =0
+                              RadiusBottomRight: =0
+                              RadiusTopLeft: =0
+                              RadiusTopRight: =0
+                            Children:
+                              - btnExpGerarImp:
+                                  Control: Button@0.0.45
+                                  Properties:
+                                    Appearance: ='ButtonCanvas.Appearance'.Primary
+                                    BasePaletteColor: =thmAcao
+                                    BorderRadius: =0
+                                    DisplayMode: |-
+                                      =If(
+                                          varPodeEditar And !IsBlank(dtpExpDeImp.SelectedDate) And !IsBlank(dtpExpAteImp.SelectedDate) And
+                                          dtpExpAteImp.SelectedDate >= dtpExpDeImp.SelectedDate And DateDiff(dtpExpDeImp.SelectedDate, dtpExpAteImp.SelectedDate, TimeUnit.Days) <= 62,
+                                          DisplayMode.Edit,
+                                          DisplayMode.Disabled
+                                      )
+                                    FontColor: =thmTextoBarra
+                                    FontSize: =13
+                                    FontWeight: =FontWeight.Semibold
+                                    Height: =44
+                                    Icon: ="Download"
+                                    IconStyle: ='ButtonCanvas.IconStyle'.Filled
+                                    LayoutMinWidth: =0
+                                    OnSelect: |-
+                                      =Patch(
+                                          tb_exportacaoMapa,
+                                          Defaults(tb_exportacaoMapa),
+                                          {
+                                              aeroporto: varAero,
+                                              data_de: dtpExpDeImp.SelectedDate,
+                                              data_ate: dtpExpAteImp.SelectedDate,
+                                              patio: If(
+                                                  drpExpPatioImp.Selected.Value = "TODOS OS PÁTIOS",
+                                                  "",
+                                                  Coalesce(LookUp(colPatiosAero As _p, _p.nome_patio = drpExpPatioImp.Selected.Value).patio, "")
+                                              ),
+                                              so_internacional: If(tglExpIntlImp.Checked, 1, 0),
+                                              so_pesquisado: If(tglExpPesqImp.Checked, 1, 0),
+                                              incluir_finalizados: If(tglExpFinImp.Checked, 1, 0),
+                                              solicitante: User().FullName,
+                                              status: "PRONTO",
+                                              total: 0,
+                                              ativo: 1
+                                          }
+                                      );
+                                      Refresh(tb_exportacaoMapa);
+                                      Notify("Pedido enviado. Em alguns segundos toque em ATUALIZAR para ver o arquivo pronto.", NotificationType.Success, 6000)
+                                    PaddingLeft: =16
+                                    PaddingRight: =16
+                                    Text: ="GERAR ARQUIVO"
+                                    Width: =190
+                              - btnExpAtualizarImp:
+                                  Control: Button@0.0.45
+                                  Properties:
+                                    Appearance: ='ButtonCanvas.Appearance'.Secondary
+                                    BasePaletteColor: =thmOperacional
+                                    BorderRadius: =0
+                                    FontColor: =thmOperacional
+                                    FontSize: =13
+                                    FontWeight: =FontWeight.Semibold
+                                    Height: =44
+                                    Icon: ="ArrowClockwise"
+                                    IconStyle: ='ButtonCanvas.IconStyle'.Filled
+                                    LayoutMinWidth: =0
+                                    OnSelect: =Refresh(tb_exportacaoMapa)
+                                    PaddingLeft: =16
+                                    PaddingRight: =16
+                                    Text: ="ATUALIZAR"
+                                    Width: =150
+                              - btnExpAbrirImp:
+                                  Control: Button@0.0.45
+                                  Properties:
+                                    Appearance: ='ButtonCanvas.Appearance'.Secondary
+                                    BasePaletteColor: =thmPrimaria
+                                    BorderRadius: =0
+                                    DisplayMode: =If(IsBlank(First(Sort(Filter(tb_exportacaoMapa, aeroporto = varAero And ativo = 1 And status = "CONCLUIDO"), ID, SortOrder.Descending)).arquivo_url), DisplayMode.Disabled, DisplayMode.Edit)
+                                    FontColor: =thmPrimaria
+                                    FontSize: =13
+                                    FontWeight: =FontWeight.Semibold
+                                    Height: =44
+                                    Icon: ="Eye"
+                                    IconStyle: ='ButtonCanvas.IconStyle'.Filled
+                                    LayoutMinWidth: =0
+                                    OnSelect: =Launch(First(Sort(Filter(tb_exportacaoMapa, aeroporto = varAero And ativo = 1 And status = "CONCLUIDO"), ID, SortOrder.Descending)).arquivo_url)
+                                    PaddingLeft: =16
+                                    PaddingRight: =16
+                                    Text: ="ABRIR O ÚLTIMO"
+                                    Width: =180
+                        - htmExpPedidosImp:
+                            Control: HtmlViewer@2.1.0
+                            Properties:
+                              AutoHeight: =true
+                              Color: =thmTexto
+                              Fill: =thmFundo
+                              Font: =thmFonte
+                              HtmlText: |-
+                                =With(
+                                    {
+                                        _ped: FirstN(
+                                            Sort(Filter(tb_exportacaoMapa, aeroporto = varAero And ativo = 1), ID, SortOrder.Descending),
+                                            5
+                                        )
+                                    },
+                                    If(
+                                        CountRows(_ped) = 0,
+                                        "<div style='" & htmlFonte & "font-size:11px;color:" & hxTextoFraco & ";padding:10px 0;'>Nenhum arquivo gerado ainda.</div>",
+                                        "<table style='width:100%;border-collapse:collapse;" & htmlFonte & "'>" &
+                                        "<tr><td colspan='4' style='font-size:9px;font-weight:700;letter-spacing:.12em;color:" & hxTextoFraco &
+                                        ";padding:10px 0 4px 0;'>ÚLTIMOS PEDIDOS</td></tr>" &
+                                        Concat(
+                                            _ped As _p,
+                                            "<tr style='border-top:1px solid " & hxBorda & ";'>" &
+                                            "<td style='padding:6px 10px 6px 0;font-size:11px;white-space:nowrap;'>" &
+                                            Text(_p.data_de, "dd/mm/yyyy") & " a " & Text(_p.data_ate, "dd/mm/yyyy") & "</td>" &
+                                            "<td style='padding:6px 10px 6px 0;font-size:10px;color:" & hxTextoFraco & ";'>" &
+                                            Trim(
+                                                If(IsBlank(_p.patio) Or _p.patio = "", "todos os pátios", _p.patio) &
+                                                If(_p.so_internacional = 1, " &middot; internacionais", "") &
+                                                If(_p.so_pesquisado = 1, " &middot; pesquisados", "") &
+                                                If(_p.incluir_finalizados = 1, " &middot; com finalizados", "")
+                                            ) & "</td>" &
+                                            "<td style='padding:6px 10px 6px 0;font-size:10px;font-weight:700;white-space:nowrap;color:" &
+                                            Switch(_p.status, "CONCLUIDO", hxPrimaria, "ERRO", hxVermelho, "PROCESSANDO", hxOperacional, hxAmbar) & ";'>" &
+                                            _p.status & If(_p.status = "CONCLUIDO", " &middot; " & Text(Coalesce(_p.total, 0)) & " linha(s)", "") & "</td>" &
+                                            "<td style='padding:6px 0;font-size:10px;color:" & hxTextoFraco & ";'>" &
+                                            Coalesce(_p.arquivo_nome, "") & "</td></tr>" &
+                                            If(
+                                                _p.status = "ERRO" And !IsBlank(_p.mensagem),
+                                                "<tr><td colspan='4' style='padding:0 0 8px 0;font-size:10px;color:" & hxVermelho & ";'>" & _p.mensagem & "</td></tr>",
+                                                ""
+                                            )
+                                        ) &
+                                        "</table>"
+                                    )
+                                )
+                              Size: =11

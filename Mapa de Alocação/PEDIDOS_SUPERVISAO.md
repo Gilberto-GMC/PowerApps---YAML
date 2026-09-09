@@ -134,7 +134,7 @@ ele viu simplesmente estivesse sem prefixo preenchido — o que seria outro prob
 
 ---
 
-## 5. Botões de "aeronave no pátio" e "concluído"
+## 5. Botões de "aeronave no pátio" e "concluído" — ✅ concluído em 09/09/2026
 
 **O que existe hoje:** a coluna `condicao` (`PREVISTO` / `NO PATIO` / `FINALIZADO`) e um seletor no
 painel. O pedido é transformar isso em **ação de um toque**, como no app de reserva que o Mapa
@@ -143,23 +143,38 @@ absorveu — lá um ícone de avião alternava o estado direto na lista.
 **Onde faria sentido:** no próprio bloco da grade, ou na lista de voos do painel lateral. Um toque
 que já grava, sem abrir o formulário.
 
-**⚠️ "Trocar de cor de categoria" precisa ser esclarecido.** Pode ser: o bloco muda de cor conforme a
-condição — o que colide de novo com preenchimento = companhia. Ou pode ser outra coisa, ligada ao
-item 3. Perguntar antes de desenhar.
+**"Trocar de cor de categoria" foi dado por atendido pelo Douglas em 09/09/2026**, sem código novo.
+A condição é comunicada por **selo** (`✈` e `✓`) e, desde o item 7, finalizado também **desbota** — o
+que entrega a distinção pedida sem quebrar a regra de que preenchimento = companhia. Cor de fundo por
+condição foi considerada e recusada: custaria a cor da companhia ou a da classe da aviação geral.
 
 ---
 
-## 6. Exportação e importação dos voos
+## 6. Exportação e importação dos voos — 🔧 tela pronta em 09/09/2026, falta o fluxo
 
 O supervisor pediu explicitamente por último.
 
 **Importação já existe** (mensal, da planilha, com o fluxo). **Exportação não existe.**
 
-**A esclarecer:** exportar o quê — um dia, um mês, o pátio inteiro? E para quê: reimportar em outro
-ambiente, mandar para quem não tem acesso ao app, ou guardar histórico? A resposta muda o formato.
+**Esclarecido pelo Douglas em 09/09/2026:** *"serve para enviar a movimentação ou verificar situações
+que já passaram, como se fosse o histórico. Ela pode ser feita do passado mas também do futuro para
+planejar algo que irá acontecer. Praticamente uma lista em excel onde podemos usar alguns filtros,
+principalmente de data, internacional, pesquisa e etc."*
 
-**Se for para reimportar**, o formato de saída deveria ser o mesmo que a importação lê, para o ciclo
-fechar. E aí vale reusar o `importacao_set26.csv`, que já tem a ordem de colunas correta da lista.
+**Não é ciclo de reimportação**, e isso cortou a maior parte do trabalho: o importador existente lê
+programação de companhia e *calcula* posição e portão. Exportar naquele formato jogaria fora
+exatamente o que o app faz. Um ciclo de verdade pediria um segundo importador, que aceitasse posições
+prontas — não foi pedido e não foi feito.
+
+**Estado:** lista `tb_exportacaoMapa` e a tela estão prontas; o fluxo está especificado passo a passo
+em `EXPORTACAO_PROGRAMACAO.md` e ainda **não foi montado**. Até ele existir, os pedidos ficam parados
+em `PRONTO` — a tela não quebra.
+
+**Onde a exportação mora, e por quê:** no fim da `scrMapaImport`, não em tela própria. O menu é
+duplicado nas seis telas, então tela nova custa sete colagens antes de qualquer teste; ali custa uma.
+**O que se perde é descoberta** — quem procura "exportar" não rola até o fim de "Importar
+programação". A promoção para tela própria é mecânica e deve pegar carona na passada do `ASUR BRASIL`,
+que já precisa tocar as seis telas.
 
 ---
 
