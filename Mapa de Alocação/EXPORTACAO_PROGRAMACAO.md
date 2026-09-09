@@ -49,9 +49,9 @@ gerador está versionado em `montar_zip_exportacao.js`.
 
 ⚠️ **Duas coisas que só o primeiro teste responde**, porque não há como conferir daqui:
 
-1. `arquivo_url` é montado como `https://grupoccr.sharepoint.com` + o `Path` devolvido pelo
-   `Criar arquivo`. Se o botão ABRIR O ÚLTIMO não abrir nada, é aqui — o campo pode vir num formato
-   diferente e a correção é trocar `Path` por `{Link}` na ação `Concluir`.
+1. ~~`arquivo_url`~~ — **resolvido em 09/09/2026.** O `Path` devolvido pelo `Criar arquivo` é relativo
+   ao **site**, não ao host: concatenar só `https://grupoccr.sharepoint.com` produzia um link sem o
+   `/sites/AIRPORTNOW` no meio, e dava 404. Agora concatena o site inteiro.
 2. O nome da lista é usado no lugar do GUID (`table: "tb_exportacaoMapa"`). Isso **funciona** no fluxo
    de importação, que usa `tb_alocacoesMapa` assim há dias — mas se o gatilho reclamar da lista, é
    só reabrir a ação e escolhê-la no menu, que o designer troca pelo GUID.
@@ -172,8 +172,9 @@ ou refaz.
 Na primeira execução o `Criar arquivo` falhou com **"a pasta raiz não foi encontrada"**. A pasta
 `exportacoes` existia; o errado era o **primeiro segmento** do caminho — o nome da biblioteca.
 
-Eu tinha copiado `/Documentos Compartilhados/` do fluxo de importação, e o nome da biblioteca não é
-esse nesta instalação. **O nome que aparece na tela do SharePoint não é necessariamente o que o
+Eu tinha copiado `/Documentos Compartilhados/` do fluxo de importação. **O nome certo é
+`/Documentos Partilhados/`** — "Partilhados", grafia de Portugal, uma letra de diferença que nenhuma
+leitura atenta pega. **O nome que aparece na tela do SharePoint não é necessariamente o que o
 conector usa**, e as duas coisas divergem com facilidade em site em português, onde o nome interno
 (`Shared Documents`) e o exibido não coincidem.
 

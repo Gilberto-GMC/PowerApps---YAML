@@ -152,7 +152,8 @@ const definition = {
         Criar_arquivo: Object.assign(
           sp("CreateFile", {
             dataset: SITE,
-            folderPath: "/Documentos Compartilhados/exportacoes",
+            // "Partilhados", nao "Compartilhados": confirmado pela URL do arquivo gerado em 09/09/2026.
+            folderPath: "/Documentos Partilhados/exportacoes",
             name:
               "programacao_@{triggerBody()?['aeroporto']}_@{formatDateTime(triggerBody()?['data_de'],'yyyyMMdd')}" +
               "_a_@{formatDateTime(triggerBody()?['data_ate'],'yyyyMMdd')}.csv",
@@ -170,7 +171,8 @@ const definition = {
             "item/status": "CONCLUIDO",
             "item/total": "@length(body('Filtrar_opcionais'))",
             "item/arquivo_nome": "@body('Criar_arquivo')?['Name']",
-            "item/arquivo_url": "@{concat('https://grupoccr.sharepoint.com',body('Criar_arquivo')?['Path'])}",
+            // O Path devolvido e relativo ao SITE, nao ao host: sem o /sites/AIRPORTNOW o link da 404.
+            "item/arquivo_url": "@{concat('" + SITE + "',body('Criar_arquivo')?['Path'])}",
           })),
           { runAfter: { Criar_arquivo: ["Succeeded"] } }
         ),
