@@ -1063,3 +1063,75 @@ de 1330 ser uma conta e não um chute.
 ⚠️ **A classe do defeito importa mais que ele:** barra de ações com largura fixa é uma bomba-relógio
 de layout, porque falha só na janela de quem usa, nunca na de quem constrói. Toda vez que um botão
 novo entrar nessa barra, a conta acima muda e o limiar tem de mudar junto.
+
+## Posições e pátios saíram do código (09/09/2026)
+
+Antecipação do lembrete do dia 19. O pedido dele foi **"o mínimo que torna possível"** — segundo
+aeroporto ainda é hipótese —, então a entrega é só tirar os dados do `App.Formulas` e pô-los em lista.
+
+**Sem tela de cadastro.** Configurar um aeroporto é tarefa de uma vez, não de operação diária, e a
+interface do SharePoint já serve de editor. Se um dia virar rotina, a tela é incremento barato: o
+caminho de leitura já está pronto.
+
+**Pátios entraram junto e não por capricho:** posição referencia código de pátio, e sem a tabela o
+aeroporto novo teria posições apontando para pátio inexistente — a grade perderia nome e cor.
+
+### Por que nenhuma tela mudou
+
+As cinco telas nunca leram `colPosicoes`; leem `colPosicoesAero`. Como **fórmula nomeada lê variável
+global** (ver a lição corrigida em 09/09), ela continua sendo fórmula nomeada e apenas passou a mapear
+a lista para os mesmos nomes de campo:
+
+```
+colPosicoesTodas = ForAll(Filter(tb_posicoes; ativo = 1) As _p; { ...; id: _p.id_posicao; ... });;
+colPosicoesAero  = (inalterada, agora sobre colPosicoesTodas)
+```
+
+Os 47 usos de `.id`, 21 de `.posicao` e 13 de `.patio` espalhados pelas telas seguem intactos.
+
+### ⚠️ `id_posicao` não é o ID do SharePoint, e não se renumera
+
+A `tb_alocacoesMapa` grava esse número em `id_posicao` em mais de 700 lançamentos. A coluna é própria
+da lista justamente para não depender do ID que o SharePoint gera sozinho. **Renumerar aponta o
+histórico inteiro para a posição errada e nada na tela denuncia** — a grade continua desenhando, só
+que no lugar errado.
+
+O seed foi **gerado a partir da tabela literal**, não redigitado, e o gerador confere ids sem buraco
+nem repetição, pátio referenciado existindo, e a ordem fracionária do T6C (6,5), que é o que o coloca
+entre T6 e T7.
+
+### A cor do pátio virou dado
+
+Era `Switch(_p.patio, "PRINCIPAL", ..., "PATIO3", ..., hxVerde)` dentro do `scrMapaPatio` — uma regra
+específica de um aeroporto morando na tela. Virou a coluna `cor_hex`. Sem isso, aeroporto novo sairia
+com todos os pátios verdes, e "multi-aeroporto" seria meia verdade.
+
+### O que continua exigindo desenvolvedor
+
+Ficaram de fora de propósito, e é honesto listá-los:
+
+| ainda no `App.Formulas` | consequência para um segundo aeroporto |
+|---|---|
+| `colPortoes` | herda os mesmos 5 portões e cores |
+| `colPrefPosicao` | herda as preferências de alocação de Navegantes |
+| `colAerosMapa` | o aeroporto novo precisa ser acrescentado no código |
+
+⚠️ **E a pior das três não está nessa tabela:** o `importar_programacao.ts` tem a sua própria cópia das
+preferências. Com um aeroporto isso é dívida conhecida; com dois, **o script aloca usando a tabela do
+aeroporto errado, sem erro nenhum**. Resolver isso é pré-requisito de importar programação num segundo
+aeroporto — não de ter um segundo aeroporto na grade.
+
+### Ordem de instalação, e como conferir
+
+1. Criar `tb_patios` e `tb_posicoes` pelos JSONs (eles trazem os registros).
+2. Adicionar as duas ao app como fonte de dados.
+3. Colar o `App_Formulas_Mapa.txt`.
+4. Colar o `scrMapaPatio.pa.yaml`.
+
+**A conferência que importa é uma só:** abrir um dia com movimento e comparar com antes. Mesmas 26
+posições, mesma ordem — com **T6C entre T6 e T7**, que é o teste do decimal — e as bordas coloridas
+como eram. Se algum bloco mudou de linha, o `id_posicao` não veio como devia, e é para voltar atrás
+antes de gravar qualquer coisa.
+
+> A `tbl_posicoes_patio` do app antigo foi avaliada como fonte e descartada: `ID`, código de pátio e
+> nomes de posição divergem dos nossos, e ela está vazia. Pode ser aposentada junto com o App B.
