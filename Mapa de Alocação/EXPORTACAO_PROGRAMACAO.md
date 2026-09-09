@@ -39,7 +39,7 @@ de repreencher campos que não mudaram. Aqui o `Atualizar item` precisa devolver
 `Exportarprogramacao.zip` traz o fluxo montado. Em **Power Automate › Meus fluxos › Importar › Pacote
 (.zip)**, escolha o arquivo, confirme a conexão do SharePoint como **Existente** e importe.
 
-**Antes de rodar, crie a pasta `exportacoes`** na biblioteca *Documentos Compartilhados* do site. O
+**Antes de rodar, crie a pasta `exportacoes`** na biblioteca *Documentos Partilhados* do site. O
 `Criar arquivo` grava lá e não cria a pasta sozinho — se ela faltar, o pedido vira `ERRO` com a
 mensagem, que é o comportamento certo, mas custa uma volta.
 
