@@ -1013,3 +1013,29 @@ for mexer em qualquer um dos dois filtros: o que vai ao servidor tem de continua
 
 O botão TESTAR do `scrMapaRegra` é consulta delegável, mas o volume podia passar do limite de linhas
 do app. Resolvido pelos dois lados: o limite subiu para 2000 e a janela caiu para 60 dias.
+
+## Mostrar finalizados: ver e ocupar são coisas diferentes (09/09/2026)
+
+Marcar um movimento como finalizado tira o registro da grade e da lista do painel, e até aqui não
+havia como alcançá-lo de volta pelo app — um visto errado só se desfazia pelo SharePoint. O botão
+`FINALIZADOS` na barra da janela devolve esses registros à tela.
+
+**A regra que dá sentido ao resto:** o interruptor é **de visualização**. O `RemoveIf` que tira
+`FINALIZADO` do `colDia` passou a depender de `varVerFinalizados`; o do `colValida` — a coleção que
+detecta conflito — é **incondicional**.
+
+Movimento finalizado quer dizer que a aeronave saiu e a posição está livre. Se ligar o histórico
+voltasse a bloquear, o operador perderia um box vazio por ter olhado o passado. Ver o que houve e
+ocupar o que existe são perguntas diferentes, e o código responde uma de cada vez.
+
+Isso está comentado no próprio `colValida`, porque a assimetria entre os dois `RemoveIf` parece
+descuido para quem lê rápido e é exatamente o oposto.
+
+**No visual:** bloco finalizado sai desbotado (`opacity:.45`) além do visto de condição que já tinha,
+e o cabeçalho passa a dizer `COM FINALIZADOS` — a contagem de registros sobe com o filtro ligado, e um
+número que muda precisa dizer por quê.
+
+⚠️ **Efeito conhecido:** a linha é desenhada como uma sequência de células, e blocos sobrepostos no
+tempo são recortados. Posição reusada por cima do horário de um movimento finalizado mostra o segundo
+bloco truncado enquanto o filtro estiver ligado. Consertar pediria dar precedência ao bloco vivo numa
+segunda passada — não vale o custo enquanto for visão de exceção, e some ao desligar.

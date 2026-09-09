@@ -23,6 +23,7 @@ Screens:
         );
         ClearCollect(colEquip, Sort(Filter(tb_equipamentos, ativo = 1), ordem, SortOrder.Ascending));
         ClearCollect(colRegras, Filter(tb_regrasPosicao, aeroporto = varAero And ativo = 1));
+        Set(varVerFinalizados, Coalesce(varVerFinalizados, false));
         Set(varJanelaMin, Coalesce(varJanelaMin, mapJanelaPadrao));
         Set(varJanelaIni, Coalesce(varJanelaIni, Min(mapMinutosDia - varJanelaMin, If(varData = Today(), Hour(Now()) * 60, 0))));
         ClearCollect(colEquipSel, Table({ Value: "—" }));
@@ -158,7 +159,8 @@ Screens:
                                                       "color:" & If(_imped, hxTextoFraco, _bloq Or _b.pesq = 1, hxTextoBarra, IsBlank(_b.cia) Or _b.cia = "GER", Coalesce(_cls.cor_texto, Coalesce(_cia.cor_texto, hxTexto)), Coalesce(_cia.cor_texto, hxTexto)) & ";" &
                                                       "border:3px " & If(_imped, "dashed", _pend, "dashed", "solid") & " " &
                                                       If(_imped, hxTextoFraco, _pend And IsBlank(_b.portao), hxAmbar, Coalesce(_prt.cor_hex, hxBorda)) & ";" &
-                                                      "font-size:10px;font-weight:700;line-height:1.15;padding:0 3px;text-align:center;overflow:hidden;'>" &
+                                                      "font-size:10px;font-weight:700;line-height:1.15;padding:0 3px;text-align:center;overflow:hidden;" &
+                                                      If(_b.cond = "FINALIZADO", "opacity:.45;", "") & "'>" &
                                                       "<div style='white-space:nowrap;overflow:hidden;text-overflow:ellipsis;'>" &
                                                       If(_b.de_antes = 1 Or _b.ini < varJanelaIni, "&laquo;&nbsp;", "") &
                                                       If(
@@ -658,6 +660,7 @@ Screens:
                                 "<div style='font-size:11px;opacity:.75;margin-top:3px;'>" &
                                 varAeroNome & " &nbsp;&middot;&nbsp; " & Upper(Text(varData, "ddd dd/mm/yyyy")) &
                                 " &nbsp;&middot;&nbsp; " & CountRows(colDia) & " registro(s)" &
+                                If(varVerFinalizados, " &nbsp;&middot;&nbsp; COM FINALIZADOS", "") &
                                 " &nbsp;&middot;&nbsp; carregado às " & Text(varCarregadoEm, "HH:mm") &
                                 "</div></div>"
                               LayoutMinWidth: =0
@@ -958,7 +961,7 @@ Screens:
                                 // Desigualdade em texto nao delega: no filtro, ela fazia o Power Apps baixar so as
                                 // primeiras 500 linhas por ID e filtrar localmente — tudo criado depois da
                                 // importacao de setembro ficava invisivel, gravado e ausente da grade.
-                                RemoveIf(colDia, cond = "FINALIZADO");
+                                If(!varVerFinalizados, RemoveIf(colDia, cond = "FINALIZADO"));
                                 Set(varCarregadoEm, Now());
                                 Select(btnDesenharMap)
                               PaddingLeft: =12
@@ -1092,6 +1095,27 @@ Screens:
                                     PaddingRight: =10
                                     Text: ="AGORA"
                                     Width: =104
+                              - btnFinalizadosMap:
+                                  Control: Button@0.0.45
+                                  Properties:
+                                    Appearance: ='ButtonCanvas.Appearance'.Secondary
+                                    BasePaletteColor: =If(varVerFinalizados, thmAcao, thmTextoFraco)
+                                    BorderRadius: =0
+                                    FontColor: =If(varVerFinalizados, thmAcao, thmTextoFraco)
+                                    FontSize: =11
+                                    FontWeight: =FontWeight.Semibold
+                                    Height: =28
+                                    Icon: ="Eye"
+                                    IconStyle: ='ButtonCanvas.IconStyle'.Filled
+                                    LayoutMinHeight: =28
+                                    LayoutMinWidth: =0
+                                    OnSelect: |-
+                                      =Set(varVerFinalizados, !varVerFinalizados);
+                                      Select(btnAtualizarMap)
+                                    PaddingLeft: =10
+                                    PaddingRight: =10
+                                    Text: =If(varVerFinalizados, "OCULTAR FINALIZADOS", "FINALIZADOS")
+                                    Width: =If(varVerFinalizados, 188, 136)
                               - lblEspacoJanMap:
                                   Control: Label@2.5.1
                                   Properties:
@@ -2824,6 +2848,11 @@ Screens:
                               );
                               // Mesma armadilha do colDia, e aqui ela e pior: com o filtro cego, a checagem
                               // de conflito nao via os registros recentes e deixaria gravar dupla marcacao.
+                              //
+                              // Aqui o RemoveIf e INCONDICIONAL, ao contrario do colDia: o interruptor
+                              // MOSTRAR FINALIZADOS e de visualizacao. Movimento finalizado significa que a
+                              // aeronave saiu e a posicao esta livre — deixar que ele volte a bloquear faria
+                              // o operador perder uma posicao vazia so por ter ligado uma visao de historico.
                               RemoveIf(colValida, cond = "FINALIZADO");
                               UpdateContext(
                                   {

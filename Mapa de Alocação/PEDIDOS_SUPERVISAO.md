@@ -187,7 +187,7 @@ Riscar da lista conforme forem saindo.
 
 ---
 
-## 7. Filtro "mostrar finalizados" — a fazer
+## 7. Filtro "mostrar finalizados" — ✅ feito em 09/09/2026
 
 Consequência direta do item 5. Marcar um movimento como finalizado tira o registro da grade e da
 lista do painel, e **não há como alcançá-lo de volta pelo app** — um toque errado no visto só se
@@ -197,9 +197,22 @@ O conserto natural é uma opção **mostrar finalizados** junto do botão FILTRA
 da grade. Ligada, o `colDia` para de excluir `FINALIZADO`, e os registros voltam a aparecer — cinzas
 pelo selo que já têm — para poderem ser desfeitos.
 
-**O que decidir junto:** finalizado que volta a aparecer deve **voltar a bloquear a posição**? Se sim,
-o `colValida` segue o mesmo interruptor e ver o histórico impede lançar por cima dele. Se não, ver e
-ocupar passam a ser coisas diferentes, o que é mais correto mas menos óbvio.
+**A decisão que estava em aberto foi resolvida contra o bloqueio, e a razão é operacional:** movimento
+finalizado significa que a aeronave saiu e a posição está **livre**. Deixar que ela volte a bloquear
+faria o operador perder um box vazio só por ter ligado uma visão de histórico. O interruptor é de
+visualização e nada mais — o `RemoveIf` do `colValida` é **incondicional** de propósito, e está
+comentado no código para não ser "consertado" por engano.
+
+**Como ficou:** botão `FINALIZADOS` na barra da janela, desligado por padrão. Ligado, os registros
+voltam à grade e à lista do painel, **desbotados** (`opacity:.45`) além do visto que já tinham, e o
+cabeçalho passa a dizer `COM FINALIZADOS` — porque com eles a contagem de registros sobe e o número
+precisa se explicar. Voltar atrás é abrir o registro e trocar a condição no próprio painel.
+
+⚠️ **Efeito visual conhecido:** o desenho de uma linha é sequencial, e blocos que se sobrepõem no
+tempo são recortados. Se uma posição foi reusada por cima do horário de um movimento já finalizado, o
+segundo bloco aparece truncado enquanto o filtro estiver ligado. É consequência do filtro, não
+defeito de dado, e some ao desligar. Consertar exigiria dar precedência ao bloco vivo numa segunda
+passada — não vale o custo enquanto for visão de exceção.
 
 ---
 
