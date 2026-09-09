@@ -1211,3 +1211,28 @@ mesmo vale para pátio, que as posições referenciam pelo código.
 
 Quem quiser mesmo apagar tem o SharePoint — mas aí é decisão deliberada, não um toque a mais no lugar
 errado.
+
+## Paleta de cores no cadastro de pátios (09/09/2026)
+
+Digitar `#RRGGBB` à mão é onde alguém erra um dígito e o pátio some do desenho. Cada campo de cor
+ganhou **18 amostras clicáveis** abaixo dele, com as cores do próprio app mais um conjunto padrão.
+
+**`Fill` não existe em `Button@0.0.45`** — zero usos em 651 instâncias no repositório. A amostra é um
+botão com `Appearance.Primary` e `BasePaletteColor: =ColorValue("#XXXXXX")`, que é como este app já
+pinta botão colorido.
+
+Clicar numa amostra **reconstrói o registro inteiro do formulário a partir dos controles**, trocando só
+a cor. É verboso — dezoito vezes dois — mas é gerado por script, e evita `Patch` sobre registro, que
+não tem precedente aqui. O efeito colateral desejado: o que estiver digitado e ainda não salvo
+sobrevive ao clique.
+
+Por isso `varFormPat` passou a nascer como registro vazio em vez de `Blank()`: reconstruir um registro
+a partir de `Blank()` daria erro no primeiro clique, antes de qualquer pátio ser selecionado.
+
+O campo de texto continua ali para quem tiver o hex exato, e a amostra ao vivo ao lado mostra o
+resultado antes de salvar.
+
+⚠️ **O que NÃO foi feito, e é limitação da plataforma:** as sugestões que aparecem ao digitar num
+campo de texto são o **preenchimento automático do navegador**, não do app. `TextInput@0.0.54` não
+expõe `autocomplete`, e desligar isso é configuração do navegador de cada pessoa. Ficou registrado
+para não voltar como pedido de código.
