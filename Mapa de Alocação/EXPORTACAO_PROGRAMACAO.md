@@ -167,6 +167,22 @@ marque apenas *falhou* e *tempo limite atingido* do passo 5. Preencha:
 Sem esse ramo, uma falha deixa o pedido eternamente em `PROCESSANDO` e o operador não sabe se espera
 ou refaz.
 
+## Caminho de pasta se escolhe no seletor, não se digita
+
+Na primeira execução o `Criar arquivo` falhou com **"a pasta raiz não foi encontrada"**. A pasta
+`exportacoes` existia; o errado era o **primeiro segmento** do caminho — o nome da biblioteca.
+
+Eu tinha copiado `/Documentos Compartilhados/` do fluxo de importação, e o nome da biblioteca não é
+esse nesta instalação. **O nome que aparece na tela do SharePoint não é necessariamente o que o
+conector usa**, e as duas coisas divergem com facilidade em site em português, onde o nome interno
+(`Shared Documents`) e o exibido não coincidem.
+
+**A regra:** ao montar ou revisar a ação, usar o **seletor de pasta** do designer em vez de digitar o
+caminho. Ele escreve o valor exato do ambiente. Um caminho digitado só falha em execução, e a
+mensagem fala de "pasta raiz", não do nome da biblioteca — que é o que realmente está errado.
+
+---
+
 ## O aviso de "loop circular" é esperado
 
 Importado em 09/09/2026 com **0 erros e 3 avisos**, todos o mesmo: *o fluxo pode ter um loop circular*.
