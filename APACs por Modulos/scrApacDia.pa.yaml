@@ -1,0 +1,583 @@
+Screens:
+  scrApacDia:
+    Properties:
+      Fill: =thmFundo
+      OnVisible: |-
+        =If(IsBlank(varAero); Set(varAero; First(colAerosApac).Aeroporto));
+        Set(varData; Coalesce(varData; Today()));
+        Set(
+            varParam;
+            First(
+                Sort(
+                    Filter(colParamApac; aeroporto = varAero);
+                    vigencia_inicio;
+                    SortOrder.Descending
+                )
+            )
+        );
+        Set(varCap; Coalesce(varCap; varParam.pax_por_modulo_hora; 185));
+        Set(varOcup; Coalesce(varOcup; varParam.ocupacao_pct; 85));
+        Set(varAntec; Coalesce(varAntec; varParam.antecedencia_min; 90));
+        Set(varAssentosMin; Coalesce(varAssentosMin; varParam.assentos_min; 150));
+        Set(varApacMod; Coalesce(varApacMod; varParam.apac_por_modulo; 3));
+        Set(varModSup; Coalesce(varModSup; varParam.modulos_por_supervisor; 2));
+        Set(varRaiosX; Coalesce(varRaiosX; varParam.raiosx_disponiveis; 3));
+        Select(btnLerDia)
+    Children:
+      # ------------------------------------------------------------------ leitura
+      # Ler e desenhar são botões separados de propósito: mexer numa premissa não pode
+      # relerar o SharePoint. É a lição "ler uma vez, desenhar muitas" do Mapa de Alocação.
+      - btnLerDia:
+          Control: Button@0.0.45
+          Properties:
+            Height: =1
+            OnSelect: |-
+              =ClearCollect(
+                  colVoosDia;
+                  ForAll(
+                      Filter(
+                          tb_apacMalha;
+                          aeroporto = varAero;
+                          ativo = 1;
+                          data >= varData;
+                          data <= DateAdd(varData; 1; TimeUnit.Days)
+                      ) As _v;
+                      {
+                          voo: _v.voo;
+                          empresa: _v.empresa;
+                          aeronave: _v.aeronave;
+                          assentos: _v.assentos;
+                          tipo_voo: _v.tipo_voo;
+                          hora_min: _v.hora_min;
+                          proprio: If(DateValue(Text(_v.data; "dd/mm/yyyy")) = varData; 1; 0);
+                          off: _v.hora_min + If(DateValue(Text(_v.data; "dd/mm/yyyy")) = varData; 0; 1440)
+                      }
+                  )
+              );
+              Select(btnCalcDia)
+            Text: ="ler"
+            Visible: =false
+            Width: =1
+            X: =-40
+            Y: =-40
+      - btnCalcDia:
+          Control: Button@0.0.45
+          Properties:
+            Height: =1
+            OnSelect: |-
+              =ClearCollect(
+                  colHoraDia;
+                  ForAll(
+                      Sequence(apacHorasDia; 0) As _h;
+                      With(
+                          {
+                              janIni: _h.Value * 60;
+                              janFim: _h.Value * 60 + 60
+                          };
+                          With(
+                              {
+                                  paxHora: Sum(
+                                      colVoosDia;
+                                      With(
+                                          {
+                                              corteA: Max(janIni; off - varAntec);
+                                              corteB: Min(janFim; off)
+                                          };
+                                          If(
+                                              corteB > corteA And varAntec > 0;
+                                              (corteB - corteA) / Max(1; varAntec) * assentos * varOcup / 100;
+                                              0
+                                          )
+                                      )
+                                  );
+                                  decHora: CountRows(
+                                      Filter(
+                                          colVoosDia;
+                                          assentos > varAssentosMin;
+                                          off >= janIni;
+                                          off < janFim
+                                      )
+                                  );
+                                  fixoApacHora: Sum(
+                                      Filter(
+                                          colPostosApac;
+                                          aeroporto = varAero;
+                                          papel = "APAC";
+                                          hora_inicio <= janIni;
+                                          hora_fim >= janFim
+                                      );
+                                      quantidade
+                                  );
+                                  fixoSupHora: Sum(
+                                      Filter(
+                                          colPostosApac;
+                                          aeroporto = varAero;
+                                          papel = "SUPERVISOR";
+                                          hora_inicio <= janIni;
+                                          hora_fim >= janFim
+                                      );
+                                      quantidade
+                                  )
+                              };
+                              With(
+                                  {
+                                      modPax: With(
+                                          { q: paxHora / Max(1; varCap) };
+                                          Int(q) + If(q > Int(q); 1; 0)
+                                      )
+                                  };
+                                  With(
+                                      { modPedido: Max(modPax; decHora) };
+                                      With(
+                                          { modAberto: Min(modPedido; varRaiosX) };
+                                          {
+                                              hora: _h.Value;
+                                              pax: paxHora;
+                                              decolagens: decHora;
+                                              mod_pedido: modPedido;
+                                              mod: modAberto;
+                                              estouro: If(modPedido > varRaiosX; 1; 0);
+                                              manda: If(
+                                                  decHora > modPax;
+                                                  "voos";
+                                                  If(modPax > 0; "pax"; "—")
+                                              );
+                                              apac_emb: modAberto * varApacMod;
+                                              apac_fixo: fixoApacHora;
+                                              sup: With(
+                                                  { s: modAberto / Max(1; varModSup) };
+                                                  Int(s) + If(s > Int(s); 1; 0)
+                                              );
+                                              sup_fixo: fixoSupHora
+                                          }
+                                      )
+                                  )
+                              )
+                          )
+                      )
+                  )
+              );
+              Set(varLido; true)
+            Text: ="calcular"
+            Visible: =false
+            Width: =1
+            X: =-40
+            Y: =-80
+      # ------------------------------------------------------------------ tela
+      - cntRaizApacDia:
+          Control: GroupContainer@1.5.0
+          Variant: ManualLayout
+          Properties:
+            DropShadow: =DropShadow.None
+            Fill: =thmFundo
+            Height: =Parent.Height
+            RadiusBottomLeft: =0
+            RadiusBottomRight: =0
+            RadiusTopLeft: =0
+            RadiusTopRight: =0
+            Width: =Parent.Width
+          Children:
+            - cntColunaApacDia:
+                Control: GroupContainer@1.5.0
+                Variant: AutoLayout
+                Properties:
+                  DropShadow: =DropShadow.None
+                  Fill: =thmFundo
+                  Height: =Parent.Height
+                  LayoutAlignItems: =LayoutAlignItems.Stretch
+                  LayoutDirection: =LayoutDirection.Vertical
+                  LayoutGap: =0
+                  LayoutMinHeight: =0
+                  PaddingBottom: =0
+                  PaddingLeft: =0
+                  PaddingRight: =0
+                  PaddingTop: =0
+                  RadiusBottomLeft: =0
+                  RadiusBottomRight: =0
+                  RadiusTopLeft: =0
+                  RadiusTopRight: =0
+                  Width: =Parent.Width
+                Children:
+                  # ------------------------------------------------ cabeçalho
+                  - cntBarraApacDia:
+                      Control: GroupContainer@1.5.0
+                      Variant: AutoLayout
+                      Properties:
+                        DropShadow: =DropShadow.None
+                        Fill: =thmPrimariaEscura
+                        FillPortions: =0
+                        Height: =thmAlturaBarra
+                        LayoutAlignItems: =LayoutAlignItems.Center
+                        LayoutDirection: =LayoutDirection.Horizontal
+                        LayoutGap: =12
+                        LayoutMinHeight: =0
+                        PaddingBottom: =0
+                        PaddingLeft: =20
+                        PaddingRight: =20
+                        PaddingTop: =0
+                        RadiusBottomLeft: =0
+                        RadiusBottomRight: =0
+                        RadiusTopLeft: =0
+                        RadiusTopRight: =0
+                        Width: =Parent.Width
+                      Children:
+                        - htmMarcaApacDia:
+                            Control: HtmlViewer@2.1.0
+                            Properties:
+                              AutoHeight: =true
+                              Color: =thmTextoBarra
+                              Fill: =thmTransparente
+                              Font: =thmFonte
+                              FillPortions: =1
+                              HtmlText: |-
+                                ="<div style='" & htmlFonte & "color:" & hxTextoBarra & ";'>" &
+                                "<div style='font-size:10px;letter-spacing:.24em;font-weight:700;opacity:.6;'>ASUR BRASIL</div>" &
+                                "<div style='font-size:16px;font-weight:800;letter-spacing:.01em;margin-top:2px;'>APACs POR MÓDULOS — DIA</div>" &
+                                "</div>"
+                              PaddingBottom: =0
+                              PaddingLeft: =0
+                              PaddingRight: =0
+                              PaddingTop: =0
+                              Size: =11
+                        - dtpDataApacDia:
+                            Control: DatePicker@0.0.46
+                            Properties:
+                              AlignInContainer: =AlignInContainer.Center
+                              DateTimeZone: =DateTimeZone.Local
+                              Format: =DateTimeFormat.ShortDate
+                              Height: =thmAlturaCampo
+                              OnChange: |-
+                                =Set(varData; dtpDataApacDia.SelectedDate);
+                                Select(btnLerDia)
+                              SelectedDate: =varData
+                              Width: =160
+                        - btnDiaAnterior:
+                            Control: Button@0.0.45
+                            Properties:
+                              Appearance: ='Button.Appearance'.Secondary
+                              Height: =thmAlturaCampo
+                              OnSelect: |-
+                                =Set(varData; DateAdd(varData; -1; TimeUnit.Days));
+                                Select(btnLerDia)
+                              Text: ="◀"
+                              Width: =46
+                        - btnDiaSeguinte:
+                            Control: Button@0.0.45
+                            Properties:
+                              Appearance: ='Button.Appearance'.Secondary
+                              Height: =thmAlturaCampo
+                              OnSelect: |-
+                                =Set(varData; DateAdd(varData; 1; TimeUnit.Days));
+                                Select(btnLerDia)
+                              Text: ="▶"
+                              Width: =46
+                        - btnVoltarMes:
+                            Control: Button@0.0.45
+                            Properties:
+                              Appearance: ='Button.Appearance'.Secondary
+                              Height: =thmAlturaCampo
+                              OnSelect: =Navigate(scrApacMes; ScreenTransition.None)
+                              Text: ="VER O MÊS"
+                              Width: =128
+                  # ------------------------------------------------ premissas
+                  - cntPremissasApac:
+                      Control: GroupContainer@1.5.0
+                      Variant: AutoLayout
+                      Properties:
+                        DropShadow: =DropShadow.None
+                        Fill: =thmSuperficie
+                        FillPortions: =0
+                        Height: =92
+                        LayoutAlignItems: =LayoutAlignItems.Center
+                        LayoutDirection: =LayoutDirection.Horizontal
+                        LayoutGap: =10
+                        LayoutMinHeight: =0
+                        PaddingBottom: =10
+                        PaddingLeft: =20
+                        PaddingRight: =20
+                        PaddingTop: =10
+                        RadiusBottomLeft: =0
+                        RadiusBottomRight: =0
+                        RadiusTopLeft: =0
+                        RadiusTopRight: =0
+                        Width: =Parent.Width
+                      Children:
+                        - htmRotuloPremissas:
+                            Control: HtmlViewer@2.1.0
+                            Properties:
+                              AutoHeight: =true
+                              Color: =thmTextoFraco
+                              Fill: =thmTransparente
+                              Font: =thmFonte
+                              HtmlText: |-
+                                ="<div style='" & htmlFonte & "font-size:10px;letter-spacing:.16em;font-weight:700;color:" & hxTextoFraco & ";'>PREMISSAS</div>"
+                              PaddingBottom: =0
+                              PaddingLeft: =0
+                              PaddingRight: =0
+                              PaddingTop: =0
+                              Size: =11
+                              Width: =92
+                        - txtCapApac:
+                            Control: TextInput@0.0.54
+                            Properties:
+                              Height: =thmAlturaCampo
+                              HintText: ="pax/h"
+                              Label: ="PAX POR MÓDULO/H"
+                              OnChange: |-
+                                =Set(varCap; Max(1; Value(txtCapApac.Value)));
+                                Select(btnCalcDia)
+                              Value: =Text(varCap)
+                              Width: =120
+                        - txtOcupApac:
+                            Control: TextInput@0.0.54
+                            Properties:
+                              Height: =thmAlturaCampo
+                              HintText: ="%"
+                              Label: ="OCUPAÇÃO %"
+                              OnChange: |-
+                                =Set(varOcup; Max(1; Min(100; Value(txtOcupApac.Value))));
+                                Select(btnCalcDia)
+                              Value: =Text(varOcup)
+                              Width: =104
+                        - txtAntecApac:
+                            Control: TextInput@0.0.54
+                            Properties:
+                              Height: =thmAlturaCampo
+                              HintText: ="min"
+                              Label: ="ANTECEDÊNCIA"
+                              OnChange: |-
+                                =Set(varAntec; Max(1; Value(txtAntecApac.Value)));
+                                Select(btnCalcDia)
+                              Value: =Text(varAntec)
+                              Width: =112
+                        - txtAssentosApac:
+                            Control: TextInput@0.0.54
+                            Properties:
+                              Height: =thmAlturaCampo
+                              HintText: ="assentos"
+                              Label: ="ASSENTOS MÍN."
+                              OnChange: |-
+                                =Set(varAssentosMin; Max(0; Value(txtAssentosApac.Value)));
+                                Select(btnCalcDia)
+                              Value: =Text(varAssentosMin)
+                              Width: =112
+                        - txtApacModApac:
+                            Control: TextInput@0.0.54
+                            Properties:
+                              Height: =thmAlturaCampo
+                              HintText: ="APAC"
+                              Label: ="APAC/MÓDULO"
+                              OnChange: |-
+                                =Set(varApacMod; Max(1; Value(txtApacModApac.Value)));
+                                Select(btnCalcDia)
+                              Value: =Text(varApacMod)
+                              Width: =108
+                        - txtModSupApac:
+                            Control: TextInput@0.0.54
+                            Properties:
+                              Height: =thmAlturaCampo
+                              HintText: ="módulos"
+                              Label: ="MÓD./SUPERV."
+                              OnChange: |-
+                                =Set(varModSup; Max(1; Value(txtModSupApac.Value)));
+                                Select(btnCalcDia)
+                              Value: =Text(varModSup)
+                              Width: =108
+                        - txtRaiosXApac:
+                            Control: TextInput@0.0.54
+                            Properties:
+                              Height: =thmAlturaCampo
+                              HintText: ="raios-X"
+                              Label: ="RAIOS-X"
+                              OnChange: |-
+                                =Set(varRaiosX; Max(1; Value(txtRaiosXApac.Value)));
+                                Select(btnCalcDia)
+                              Value: =Text(varRaiosX)
+                              Width: =92
+                        - btnSalvarPremissas:
+                            Control: Button@0.0.45
+                            Properties:
+                              Appearance: ='Button.Appearance'.Secondary
+                              Height: =thmAlturaCampo
+                              OnSelect: |-
+                                =Patch(
+                                    tb_apacParametros;
+                                    Defaults(tb_apacParametros);
+                                    {
+                                        aeroporto: varAero;
+                                        vigencia_inicio: Today();
+                                        pax_por_modulo_hora: varCap;
+                                        ocupacao_pct: varOcup;
+                                        antecedencia_min: varAntec;
+                                        assentos_min: varAssentosMin;
+                                        apac_por_modulo: varApacMod;
+                                        modulos_por_supervisor: varModSup;
+                                        raiosx_disponiveis: varRaiosX;
+                                        alternativa: varParam.alternativa;
+                                        observacao: "vigência gravada pela tela do dia";
+                                        ativo: 1
+                                    }
+                                );
+                                Notify("Premissas gravadas como vigência nova."; NotificationType.Success)
+                              Text: ="SALVAR PREMISSAS"
+                              Width: =176
+                  # ------------------------------------------------ grade do dia
+                  - cntGradeApacDia:
+                      Control: GroupContainer@1.5.0
+                      Variant: AutoLayout
+                      Properties:
+                        DropShadow: =DropShadow.None
+                        Fill: =thmSuperficie
+                        FillPortions: =1
+                        LayoutAlignItems: =LayoutAlignItems.Stretch
+                        LayoutDirection: =LayoutDirection.Vertical
+                        LayoutGap: =0
+                        LayoutMinHeight: =0
+                        LayoutOverflowY: =LayoutOverflow.Scroll
+                        PaddingBottom: =20
+                        PaddingLeft: =20
+                        PaddingRight: =20
+                        PaddingTop: =14
+                        RadiusBottomLeft: =0
+                        RadiusBottomRight: =0
+                        RadiusTopLeft: =0
+                        RadiusTopRight: =0
+                        Width: =Parent.Width
+                      Children:
+                        - htmGradeApacDia:
+                            Control: HtmlViewer@2.1.0
+                            Properties:
+                              AutoHeight: =true
+                              Color: =thmTexto
+                              Fill: =thmTransparente
+                              Font: =thmFonte
+                              HtmlText: |-
+                                =With(
+                                    {
+                                        celBase: "border:1px solid " & hxGradeFina & ";text-align:center;padding:5px 0;";
+                                        rotBase: "border:1px solid " & hxGradeFina & ";text-align:left;padding:5px 8px;font-weight:600;white-space:nowrap;"
+                                    };
+                                    "<div style='" & htmlFonte & "font-size:11px;color:" & hxTexto & ";'>" &
+                                    If(
+                                        CountRows(colVoosDia) = 0;
+                                        "<div style='padding:26px 10px;border:1px dashed " & hxBorda & ";background:" & hxAmbarSuave &
+                                        ";color:" & hxAmbar & ";font-size:13px;font-weight:600;'>Não há malha importada para " &
+                                        Text(varData; "dd/mm/yyyy") & ". Importe a competência " &
+                                        Text(varData; "yyyy-mm") & " antes de dimensionar.</div>";
+                                        "<table style='border-collapse:collapse;width:100%;table-layout:fixed;'>" &
+                                        "<tr><td style='" & rotBase & "width:" & apacLarguraRotulo & "px;background:" & hxPrimariaClara & ";'>HORA</td>" &
+                                        Concat(
+                                            colHoraDia;
+                                            "<td style='" & celBase & "background:" & hxPrimariaClara & ";font-weight:700;'>" &
+                                            Right("0" & Text(hora); 2) & "</td>"
+                                        ) &
+                                        "</tr>" &
+                                        "<tr><td style='" & rotBase & "'>VOLUMETRIA</td>" &
+                                        Concat(
+                                            colHoraDia;
+                                            "<td style='" & celBase & "color:" & hxTextoFraco & ";'>" &
+                                            If(pax < 0,5; "—"; Text(Round(pax; 0))) & "</td>"
+                                        ) &
+                                        "</tr>" &
+                                        "<tr><td style='" & rotBase & "'>MÓDULOS ABERTOS</td>" &
+                                        Concat(
+                                            colHoraDia;
+                                            "<td style='" & celBase & "font-weight:800;color:" &
+                                            If(mod >= 2; "#FFFFFF"; hxTexto) & ";background:" &
+                                            If(
+                                                estouro = 1;
+                                                hxCargaEstouro;
+                                                If(mod >= 3; hxCarga3; If(mod = 2; hxCarga2; If(mod = 1; hxCarga1; hxCarga0)))
+                                            ) & ";'>" &
+                                            If(mod = 0; "—"; Text(mod) & If(estouro = 1; " !"; "")) & "</td>"
+                                        ) &
+                                        "</tr>" &
+                                        "<tr><td style='" & rotBase & "'>EMBARQUE — APAC</td>" &
+                                        Concat(
+                                            colHoraDia;
+                                            "<td style='" & celBase & "'>" & If(apac_emb = 0; "—"; Text(apac_emb)) & "</td>"
+                                        ) &
+                                        "</tr>" &
+                                        "<tr><td style='" & rotBase & "'>EMBARQUE — SUPERVISOR</td>" &
+                                        Concat(
+                                            colHoraDia;
+                                            "<td style='" & celBase & "'>" & If(sup = 0; "—"; Text(sup)) & "</td>"
+                                        ) &
+                                        "</tr>" &
+                                        "<tr><td style='" & rotBase & "'>POSTOS FIXOS</td>" &
+                                        Concat(
+                                            colHoraDia;
+                                            "<td style='" & celBase & "color:" & hxTextoFraco & ";'>" & Text(apac_fixo) & "</td>"
+                                        ) &
+                                        "</tr>" &
+                                        "<tr><td style='" & rotBase & "background:" & hxPrimariaClara & ";'>TOTAL APAC</td>" &
+                                        Concat(
+                                            colHoraDia;
+                                            "<td style='" & celBase & "background:" & hxPrimariaClara & ";font-weight:800;'>" &
+                                            Text(apac_emb + apac_fixo) & "</td>"
+                                        ) &
+                                        "</tr>" &
+                                        "<tr><td style='" & rotBase & "background:" & hxPrimariaClara & ";'>TOTAL SUPERVISOR</td>" &
+                                        Concat(
+                                            colHoraDia;
+                                            "<td style='" & celBase & "background:" & hxPrimariaClara & ";font-weight:800;'>" &
+                                            Text(sup + sup_fixo) & "</td>"
+                                        ) &
+                                        "</tr>" &
+                                        "<tr><td style='" & rotBase & "background:" & hxPrimaria & ";color:#FFFFFF;'>TOTAL GERAL</td>" &
+                                        Concat(
+                                            colHoraDia;
+                                            "<td style='" & celBase & "background:" & hxPrimaria & ";color:#FFFFFF;font-weight:800;'>" &
+                                            Text(apac_emb + apac_fixo + sup + sup_fixo) & "</td>"
+                                        ) &
+                                        "</tr>" &
+                                        "<tr><td style='" & rotBase & "color:" & hxTextoFraco & ";font-weight:500;'>quem mandou</td>" &
+                                        Concat(
+                                            colHoraDia;
+                                            "<td style='" & celBase & "font-size:9px;color:" & hxTextoFraco & ";'>" & manda & "</td>"
+                                        ) &
+                                        "</tr>" &
+                                        "</table>"
+                                    ) &
+                                    "</div>"
+                                )
+                              PaddingBottom: =0
+                              PaddingLeft: =0
+                              PaddingRight: =0
+                              PaddingTop: =0
+                              Size: =11
+                        - htmRodapeApacDia:
+                            Control: HtmlViewer@2.1.0
+                            Properties:
+                              AutoHeight: =true
+                              Color: =thmTexto
+                              Fill: =thmTransparente
+                              Font: =thmFonte
+                              HtmlText: |-
+                                ="<div style='" & htmlFonte & "font-size:11px;color:" & hxTextoFraco & ";margin-top:14px;'>" &
+                                "<div style='margin-bottom:6px;'><b style='color:" & hxTexto & ";'>" &
+                                Text(CountRows(Filter(colVoosDia; proprio = 1))) & " decolagens</b> em " &
+                                Text(varData; "dd/mm/yyyy") & " · <b style='color:" & hxTexto & ";'>" &
+                                Text(CountRows(Filter(colVoosDia; proprio = 1; assentos <= varAssentosMin))) &
+                                "</b> abaixo de " & Text(varAssentosMin) & " assentos, que não abrem módulo por contagem" &
+                                "</div>" &
+                                "<div>Pico do dia: <b style='color:" & hxTexto & ";'>" &
+                                Text(Max(colHoraDia; apac_emb + apac_fixo)) & " APACs</b> e <b style='color:" & hxTexto & ";'>" &
+                                Text(Max(colHoraDia; sup + sup_fixo)) & " supervisores</b>" &
+                                If(
+                                    Sum(colHoraDia; estouro) > 0;
+                                    " · <b style='color:" & hxVermelho & ";'>" & Text(Sum(colHoraDia; estouro)) &
+                                    " hora(s) pedindo mais que os " & Text(varRaiosX) & " raios-X disponíveis</b>";
+                                    ""
+                                ) &
+                                "</div>" &
+                                "<div style='margin-top:6px;font-size:10px;'>premissas: " & Text(varCap) &
+                                " pax/h por módulo · " & Text(varOcup) & "% de ocupação · " & Text(varAntec) &
+                                " min de antecedência · " & Text(varApacMod) & " APAC por módulo · 1 supervisor a cada " &
+                                Text(varModSup) & "</div>" &
+                                "</div>"
+                              PaddingBottom: =0
+                              PaddingLeft: =0
+                              PaddingRight: =0
+                              PaddingTop: =0
+                              Size: =11

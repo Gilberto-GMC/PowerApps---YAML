@@ -1,0 +1,135 @@
+// ============================================================================
+// App.Formulas — ASUR BRASIL | APACs por Módulos
+// Colar em: Studio > App > propriedade Formulas   (NÃO é o OnStart)
+// Locale pt-BR: ';' separa argumentos, ';;' termina cada definição.
+// Documentação: ARQUITETURA_APAC.md
+// ============================================================================
+
+// ✈️ Aeroportos com dimensionamento APAC publicado.
+// Tabela literal de propósito: é uma linha só, não cresce sozinha e não tem tela de cadastro.
+// Quando virar duas ou três, vira lista — mesma régua do Mapa de Alocação.
+colAerosApac =
+Table(
+    { ICAO: "SBNF"; IATA: "NVT"; Aeroporto: "NAVEGANTES" }
+);;
+
+// ⚙️ Premissas por aeroporto, da lista. A tela carrega estas em variáveis e o usuário mexe
+// nelas no painel de premissas SEM gravar; gravar é um botão explícito, que cria vigência nova.
+// A vigência mais recente por aeroporto é a que vale.
+colParamApac =
+ForAll(
+    Filter(tb_apacParametros; ativo = 1) As _p;
+    {
+        aeroporto: _p.aeroporto;
+        vigencia_inicio: _p.vigencia_inicio;
+        pax_por_modulo_hora: _p.pax_por_modulo_hora;
+        ocupacao_pct: _p.ocupacao_pct;
+        antecedencia_min: _p.antecedencia_min;
+        assentos_min: _p.assentos_min;
+        apac_por_modulo: _p.apac_por_modulo;
+        modulos_por_supervisor: _p.modulos_por_supervisor;
+        raiosx_disponiveis: _p.raiosx_disponiveis;
+        alternativa: _p.alternativa
+    }
+);;
+
+// 🧱 Postos fixos — os que não dependem da malha (Acesso C, Portão Principal, Apoio).
+colPostosApac =
+ForAll(
+    Filter(tb_apacPostosFixos; ativo = 1) As _f;
+    {
+        aeroporto: _f.aeroporto; posto: _f.posto; papel: _f.papel;
+        hora_inicio: _f.hora_inicio; hora_fim: _f.hora_fim;
+        quantidade: _f.quantidade; ordem: _f.ordem
+    }
+);;
+
+// ============================================================================
+// Constantes de desenho
+// ============================================================================
+
+apacMinutosDia    = 1440;;   // minutos de um dia — denominador de toda largura em %
+apacHorasDia      = 24;;
+apacLarguraRotulo = 116;;    // px da coluna de rótulo, à esquerda da grade
+apacAlturaLinha   = 26;;     // px de cada linha da grade mensal (31 linhas têm que caber)
+apacAlturaLinhaDia = 34;;    // px de cada linha da grade do dia
+apacLarguraBarra  = 16;;     // px reservados à direita para a barra de rolagem
+
+// ⚠️ Teto de segurança do laço da grade mensal: 31 dias × 24 horas.
+// É constante e não variável porque Sequence com variável em branco na colagem faz o Studio
+// avaliar divisão por vazio — foi o quarto erro da série de 05/09/2026 no Mapa.
+apacCelulasMes    = 744;;
+
+// ============================================================================
+// Paleta — mesma do Mapa de Alocação, para os apps parecerem um só
+// ============================================================================
+
+hxPrimaria        = "#0E7C8C";;   // teal institucional ASUR
+hxPrimariaEscura  = "#0A5A66";;
+hxPrimariaClara   = "#E4F2F4";;
+hxAcao            = "#DD511A";;
+hxSuperficie      = "#FFFFFF";;
+hxFundo           = "#F8FAFC";;
+hxBorda           = "#B9D9DE";;
+hxGradeFina       = "#EDF3F4";;
+hxTexto           = "#1E293B";;
+hxTextoFraco      = "#64748B";;
+hxVerde           = "#15803D";;
+hxAmbar           = "#B45309";;
+hxAmbarSuave      = "#FFFBEB";;
+hxVermelho        = "#B91C1C";;
+hxVermelhoSuave   = "#FEF2F2";;
+hxTextoBarra      = "#D6DDE0";;   // texto sobre fundo escuro — nunca branco puro
+hxBordaBarra      = "rgba(214,221,224,.28)";;
+
+// 🎚️ Escala de carga da célula: quanto mais módulos, mais forte o teal.
+// Zero módulo não é cinza-claro por acaso — hora sem voo tem que sumir do olho.
+hxCarga0          = "#F8FAFC";;
+hxCarga1          = "#D8ECEF";;
+hxCarga2          = "#8FCBD4";;
+hxCarga3          = "#3E9EAD";;
+hxCargaEstouro    = "#B91C1C";;   // pediu mais módulo do que existe raio-X
+
+thmPrimaria       = ColorValue(hxPrimaria);;
+thmPrimariaEscura = ColorValue(hxPrimariaEscura);;
+thmPrimariaClara  = ColorValue(hxPrimariaClara);;
+thmAcao           = ColorValue(hxAcao);;
+thmSuperficie     = ColorValue(hxSuperficie);;
+thmFundo          = ColorValue(hxFundo);;
+thmBorda          = ColorValue(hxBorda);;
+thmTexto          = ColorValue(hxTexto);;
+thmTextoFraco     = ColorValue(hxTextoFraco);;
+thmVerde          = ColorValue(hxVerde);;
+thmAmbar          = ColorValue(hxAmbar);;
+thmVermelho       = ColorValue(hxVermelho);;
+thmTextoBarra     = ColorValue(hxTextoBarra);;
+thmTextoInverso   = RGBA(255; 255; 255; 1);;
+thmTransparente   = RGBA(0; 0; 0; 0);;
+
+// 🔤 Tipografia — Sora é a fonte da marca, mas não existe no Power Apps e o sanitizador do
+// HtmlViewer não carrega webfont. Segoe UI é a substituta e está em todos os clientes.
+thmFonte          = Font.'Segoe UI';;
+htmlFonte         = "font-family:'Segoe UI',Arial,sans-serif;-webkit-font-smoothing:antialiased;";;
+thmTamTitulo      = 19;;
+thmTamSubtitulo   = 14;;
+thmTamCorpo       = 12;;
+thmTamRotulo      = 11;;
+
+// 📐 Espaçamento e forma — canto reto
+thmEsp            = 13;;
+thmEspBloco       = 26;;
+thmRaio           = 0;;
+thmAlturaCampo    = 42;;
+thmAlturaBarra    = 72;;
+
+// ============================================================================
+// Rótulos
+// ============================================================================
+
+apacMesesNomes =
+Table(
+    { n: 1; nome: "janeiro" }; { n: 2; nome: "fevereiro" }; { n: 3; nome: "março" };
+    { n: 4; nome: "abril" }; { n: 5; nome: "maio" }; { n: 6; nome: "junho" };
+    { n: 7; nome: "julho" }; { n: 8; nome: "agosto" }; { n: 9; nome: "setembro" };
+    { n: 10; nome: "outubro" }; { n: 11; nome: "novembro" }; { n: 12; nome: "dezembro" }
+);;
