@@ -1,0 +1,75 @@
+{
+  "nomeLista": "tb_apacPostosFixos",
+  "descricao": "postos APAC que nao dependem da malha, somados a demanda calculada por hora",
+  "ocultarTitle": true,
+  "colunas": [
+    {
+      "internalName": "aeroporto",
+      "schemaXml": "<Field Type='Text' MaxLength='60' Required='TRUE' Indexed='TRUE' DisplayName='aeroporto' Name='aeroporto' StaticName='aeroporto' Group='AirportNow'/>"
+    },
+    {
+      "internalName": "posto",
+      "schemaXml": "<Field Type='Text' MaxLength='60' Required='TRUE' DisplayName='posto' Name='posto' StaticName='posto' Group='AirportNow'/>"
+    },
+    {
+      "internalName": "papel",
+      "schemaXml": "<Field Type='Text' MaxLength='20' Required='TRUE' Indexed='TRUE' DisplayName='papel' Name='papel' StaticName='papel' Group='AirportNow'><Default>APAC</Default><Validation Message='use APAC ou SUPERVISOR'>=OU([papel]=\"APAC\";[papel]=\"SUPERVISOR\")</Validation></Field>"
+    },
+    {
+      "internalName": "hora_inicio",
+      "schemaXml": "<Field Type='Number' Decimals='0' Min='0' Required='TRUE' DisplayName='hora_inicio' Name='hora_inicio' StaticName='hora_inicio' Group='AirportNow'><Default>0</Default><Validation Message='minutos desde 00:00, de 0 a 1439'>=E([hora_inicio]&gt;=0;[hora_inicio]&lt;=1439)</Validation></Field>"
+    },
+    {
+      "internalName": "hora_fim",
+      "schemaXml": "<Field Type='Number' Decimals='0' Min='1' Required='TRUE' DisplayName='hora_fim' Name='hora_fim' StaticName='hora_fim' Group='AirportNow'><Default>1440</Default><Validation Message='minutos desde 00:00, de 1 a 1440'>=E([hora_fim]&gt;=1;[hora_fim]&lt;=1440)</Validation></Field>"
+    },
+    {
+      "internalName": "quantidade",
+      "schemaXml": "<Field Type='Number' Decimals='0' Min='0' Required='TRUE' DisplayName='quantidade' Name='quantidade' StaticName='quantidade' Group='AirportNow'><Default>1</Default></Field>"
+    },
+    {
+      "internalName": "ordem",
+      "schemaXml": "<Field Type='Number' Decimals='0' Min='0' Required='TRUE' DisplayName='ordem' Name='ordem' StaticName='ordem' Group='AirportNow'><Default>0</Default></Field>"
+    },
+    {
+      "internalName": "ativo",
+      "schemaXml": "<Field Type='Number' Decimals='0' Min='0' Required='TRUE' Indexed='TRUE' DisplayName='ativo' Name='ativo' StaticName='ativo' Group='AirportNow'><Default>1</Default><Validation Message='use 1 ou 0'>=OU([ativo]=0;[ativo]=1)</Validation></Field>"
+    }
+  ],
+  "registrosIniciais": [
+    {
+      "aeroporto": "NAVEGANTES",
+      "posto": "ACESSO C",
+      "papel": "APAC",
+      "hora_inicio": 0,
+      "hora_fim": 1440,
+      "quantidade": 3,
+      "ordem": 1,
+      "ativo": 1
+    },
+    {
+      "aeroporto": "NAVEGANTES",
+      "posto": "PORTAO PRINCIPAL",
+      "papel": "APAC",
+      "hora_inicio": 0,
+      "hora_fim": 1440,
+      "quantidade": 1,
+      "ordem": 2,
+      "ativo": 1
+    },
+    {
+      "aeroporto": "NAVEGANTES",
+      "posto": "PORTAO PRINCIPAL APOIO",
+      "papel": "APAC",
+      "hora_inicio": 0,
+      "hora_fim": 1440,
+      "quantidade": 1,
+      "ordem": 3,
+      "ativo": 1
+    }
+  ],
+  "validacaoLista": {
+    "formula": "=[hora_fim]>[hora_inicio]",
+    "mensagem": "o fim do posto tem que ser maior que o inicio"
+  }
+}
