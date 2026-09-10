@@ -110,6 +110,108 @@ Value: =Parent.Default
 Prevenção: inspecionar separadamente cada bloco `TextInput@0.0.54` e rejeitar
 `Default:` dentro dele. `Default:` continua válido no DataCard pai.
 
+### PA2108 — `HintText` e `Label` em `TextInput@0.0.54`
+
+- Data: 2026-09-10. Projeto/telas: APACs por Módulos / `scrApacDia` e `scrApacMes`.
+- Mensagem: `Unknown property 'HintText' for control type 'TextInput@0.0.54'`
+  e a mesma para `'Label'`. **14 erros numa colagem só.**
+
+Causa confirmada: nenhuma das duas existe neste controle. O texto de dica é
+`Placeholder`; **rótulo visível não é propriedade do TextInput moderno** — tem
+que ser um controle separado ao lado ou acima.
+
+Correção aplicada: cada campo virou um `GroupContainer@1.5.0` AutoLayout
+vertical com um `HtmlViewer@2.1.0` de rótulo acima e o `TextInput` abaixo:
+
+```yaml
+Placeholder: ="pax/h"
+AccessibleLabel: ="PAX POR MÓDULO/H"
+```
+
+`AccessibleLabel` **existe** neste controle — 7 usos na `scrMapaPatio`, que está
+validada no app — mas é acessibilidade, não rótulo visível. Não substitui o
+controle de texto.
+
+Validação preventiva: as três propriedades entraram na tabela `PROIBIDO` do
+`fx_check.js` (`Default`, `HintText`, `Label`). A trava foi testada contra uma
+cópia do arquivo quebrada de propósito e pegou as 7 ocorrências.
+
+⚠️ **A lição que se repete, e esta é a terceira vez com o mesmo controle:** as
+três propriedades **tinham precedente no repositório** e passaram pelo aviso de
+raridade do `fx_check`. `TextInput@0.0.54` aparece em apps antigos deste
+workspace com propriedades de outra versão do controle, e o dicionário montado a
+partir de todos os `.pa.yaml` não distingue "já foi aceito pelo Studio" de
+"alguém escreveu isso um dia".
+
+**Onde procurar o precedente que vale:** a tela mais recente **validada no app**
+para aquele controle — hoje, `Mapa de Alocação/scrMapaPatio.pa.yaml`. O conjunto
+real de `TextInput@0.0.54` lá é: `Value`, `Placeholder`, `Height`,
+`DisplayMode`, `AccessibleLabel`, `Mode`. Contar ocorrências no repositório
+inteiro é pista; ler a tela validada é fato.
+
+### O `.pa.yaml` é en-US: vírgula separa argumento
+
+- Data: 2026-09-10. Projeto/telas: APACs por Módulos / `scrApacDia` e `scrApacMes`.
+- **395 separadores errados** nas duas telas, escritos em pt-BR.
+
+Causa: o **arquivo fonte é invariante de locale**. No `.pa.yaml`, argumento se separa por
+**vírgula** e `;` encadeia instrução. O que se digita **no Studio** é que segue o locale — em
+pt-BR, `;` separa argumento e `;;` termina definição.
+
+É por isso que os dois convivem no mesmo projeto e a confusão é fácil:
+
+| Arquivo | Separador de argumento | Fim de instrução |
+|---|---|---|
+| `App_Formulas_*.txt` (colado no Studio) | `;` | `;;` |
+| `*.pa.yaml` (código-fonte) | `,` | `;` |
+
+Correção: conversão bloco a bloco, contando profundidade de parênteses e ignorando o que está
+dentro de string — senão todo `;` de CSS dentro de `HtmlViewer` viraria vítima.
+
+⚠️ **A primeira versão da trava marcava todo `;` em profundidade > 0 e acusou 41 vezes a
+`scrMapaPatio`, que está validada no app.** Dentro de `If()` e `Switch()`, `;` encadeia
+instrução e é legítimo:
+
+```
+If(cond, Set(varX, 1); Select(btn))
+```
+
+O que decide não é a profundidade — é **qual função envolve o `;`**. A trava final olha a função
+mais interna e só reprova quando ela é de valor (`Set`, `Max`, `Min`, `Coalesce`, `Filter`…),
+onde `;` não pode ser outra coisa senão separador de argumento.
+
+Validação preventiva: implementada no `fx_check.js` e testada nas **três** direções — pega o
+arquivo quebrado de propósito, **não** acusa as duas telas validadas no app, e passa nas telas
+corrigidas. Testar só contra o arquivo quebrado teria aprovado a versão com 41 falsos positivos.
+
+### Linha órfã dentro de `Properties` — YAML inválido que o verificador não via
+
+- Data: 2026-09-10. Mesmas telas. **26 linhas.**
+
+Causa: ao remover `OnChange` de 13 campos, a linha da propriedade saiu e **o corpo dela ficou**,
+virando linha solta no meio do mapeamento:
+
+```yaml
+Height: =thmAlturaCampo
+=Set(varCap, 1);          # <- órfã: YAML espera 'chave: valor' aqui
+Placeholder: ="pax/h"
+```
+
+O `fx_check` passava por cima porque a linha **não casa** com o padrão de propriedade e por isso
+nem era olhada — o ponto cego estava em só inspecionar o que já tinha a forma certa.
+
+Validação preventiva: dentro de cada bloco `Properties:`, toda linha no recuo exato das
+propriedades tem que casar `nome:`. Linha mais funda é corpo de bloco escalar e é legítima.
+
+### O aviso de raridade erra nos dois sentidos
+
+Rodando o `fx_check` contra a própria `scrMapaPatio` — colada e validada no app — ele avisa que
+`LayoutMinWidth` e `FillPortions` em `Classic/Icon@2.5.0` têm **0 precedentes**. São falsos
+positivos, e do outro lado `HintText` tinha precedente e foi recusada.
+
+**Contar ocorrências no repositório é pista fraca nas duas direções.** O que vale é ler o
+conjunto de propriedades da tela mais recente **validada no app** para aquele controle.
+
 ## Nomes e referências
 
 ### PA2116 — `MetadataKey` repetida no mesmo DataCard

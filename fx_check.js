@@ -25,7 +25,13 @@ const fs = require("fs");
 const PROIBIDO = {
   "Button@0.0.45": ["Tooltip"], // 04/09/2026 e de novo em 05/09 — PA2108
   "DatePicker@0.0.46": ["StartYear"], // 09/09/2026 — é do DatePicker clássico, não deste
-  "TextInput@0.0.54": ["Default"], // 09/09/2026 — o moderno usa Value
+  // 09/09/2026 'Default' — o moderno usa Value.
+  // 10/09/2026 'HintText' e 'Label' — PA2108 no projeto APACs por Módulos, 14 erros de uma vez.
+  // Os nomes certos são 'Placeholder' e, para o rótulo, um controle separado; 'AccessibleLabel'
+  // existe neste controle (7 usos na scrMapaPatio validada) mas é acessibilidade, não rótulo visível.
+  // ⚠️ As três TINHAM precedente no repositório e passaram pelo aviso de raridade. É a terceira
+  // vez que este controle engana pelo precedente: ele aparece em apps antigos com outra versão.
+  "TextInput@0.0.54": ["Default", "HintText", "Label"],
 };
 
 // Dicionário de propriedades observadas por tipo de controle, montado a partir de TODOS os
@@ -213,9 +219,68 @@ function analisa(arquivo, mortos) {
       for (const m of mortos) {
         if (new RegExp(`\\b${m}\\b`).test(formula)) erros.push(`${i + 1}: '${nome}' cita '${m}', que não existe mais`);
       }
+
+      // ';' como separador de ARGUMENTO. O .pa.yaml é sempre en-US: vírgula separa argumento,
+      // ';' só encadeia instruções no nível de cima. O que se digita no Studio segue o locale
+      // (pt-BR usa ';' e ';;'), e é daí que vem a confusão — o App.Formulas é pt-BR, a tela não.
+      // 10/09/2026: as duas telas do projeto APAC nasceram com 395 separadores errados.
+      // Conta profundidade de parênteses e ignora o que está dentro de string, senão todo
+      // ponto-e-vírgula de CSS dentro de HtmlViewer viraria falso positivo.
+      // ⚠️ A PRIMEIRA versão desta trava marcava todo ';' em profundidade > 0 e acusava 41 vezes
+      // a scrMapaPatio, que está validada no app. O motivo: dentro de If(), Switch() e afins,
+      // ';' encadeia INSTRUÇÕES e é legítimo —
+      //     If(cond, Set(varX, 1); Select(btn))
+      // O que decide não é a profundidade, é QUAL função envolve o ';'. Numa função que só
+      // recebe valores, ';' só pode ser separador de argumento, e aí é erro.
+      {
+        const SO_VALOR = new Set(["Set", "Max", "Min", "Coalesce", "Sum", "Filter", "Text", "Value",
+          "Date", "DateAdd", "DateValue", "Sort", "LookUp", "Round", "Mod", "Int", "Sequence",
+          "CountRows", "ForAll", "With", "Concat", "Left", "Right", "Mid", "Upper", "Lower",
+          "Patch", "ClearCollect", "Collect", "Notify", "Navigate", "Day", "Month", "Year", "Hour"]);
+        const pilha = [];
+        let str = false, achou = null;
+        for (let k = 0; k < formula.length && !achou; k++) {
+          const c = formula[k];
+          if (str) { if (c === '"') { if (formula[k + 1] === '"') k++; else str = false; } continue; }
+          if (c === '"') { str = true; continue; }
+          if (c === "(") {
+            const antes = formula.slice(0, k).match(/([A-Za-z][A-Za-z0-9_]*)\s*$/);
+            pilha.push(antes ? antes[1] : "");
+          } else if (c === "{" || c === "[") pilha.push("{}");
+          else if (c === ")" || c === "}" || c === "]") pilha.pop();
+          else if (c === ";" && pilha.length) {
+            const dono = pilha[pilha.length - 1];
+            if (SO_VALOR.has(dono)) achou = dono;
+          }
+        }
+        if (achou) {
+          erros.push(`${i + 1}: '${nome}' usa ';' dentro de ${achou}() — no .pa.yaml o separador de argumento é ','`);
+        }
+      }
       i = fim;
     }
   }
+
+  // Linha órfã dentro de um bloco Properties: sobra de propriedade removida sem o corpo dela.
+  // Não é erro de Power Fx, é YAML inválido — e o fx_check passava por cima porque a linha
+  // não casa com o padrão de propriedade e por isso simplesmente não era olhada.
+  // 10/09/2026: 26 linhas assim ficaram nas telas do APAC ao tirar OnChange de 13 campos.
+  for (let i = 0; i < linhas.length; i++) {
+    const m = linhas[i].match(/^(\s*)Properties:\s*$/);
+    if (!m) continue;
+    const P = m[1].length;
+    for (let k = i + 1; k < linhas.length; k++) {
+      if (!linhas[k].trim()) continue;
+      const q = linhas[k].match(/^(\s*)\S/);
+      if (!q) continue;
+      if (q[1].length <= P) break;
+      if (q[1].length !== P + 2) continue; // mais fundo = corpo de bloco escalar, legítimo
+      if (!/^\s*[A-Za-z][\w.]*:/.test(linhas[k])) {
+        erros.push(`${k + 1}: linha solta dentro de Properties — '${linhas[k].trim().slice(0, 40)}'`);
+      }
+    }
+  }
+
   return { erros, avisos, controles: nomes.size, linhas: linhas.length };
 }
 

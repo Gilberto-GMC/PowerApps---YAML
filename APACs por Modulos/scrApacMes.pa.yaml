@@ -3,28 +3,28 @@ Screens:
     Properties:
       Fill: =thmFundo
       OnVisible: |-
-        =If(IsBlank(varAero); Set(varAero; First(colAerosApac).Aeroporto));
-        Set(varData; Coalesce(varData; Today()));
-        Set(varRefMes; Coalesce(varRefMes; Date(Year(varData); Month(varData); 1)));
-        Set(varComp; Text(varRefMes; "yyyy-mm"));
-        Set(varVerApac; Coalesce(varVerApac; false));
+        =If(IsBlank(varAero), Set(varAero, First(colAerosApac).Aeroporto));
+        Set(varData, Coalesce(varData, Today()));
+        Set(varRefMes, Coalesce(varRefMes, Date(Year(varData), Month(varData), 1)));
+        Set(varComp, Text(varRefMes, "yyyy-mm"));
+        Set(varVerApac, Coalesce(varVerApac, false));
         Set(
-            varParam;
+            varParam,
             First(
                 Sort(
-                    Filter(colParamApac; aeroporto = varAero);
-                    vigencia_inicio;
+                    Filter(colParamApac, aeroporto = varAero),
+                    vigencia_inicio,
                     SortOrder.Descending
                 )
             )
         );
-        Set(varCap; Coalesce(varCap; varParam.pax_por_modulo_hora; 185));
-        Set(varOcup; Coalesce(varOcup; varParam.ocupacao_pct; 85));
-        Set(varAntec; Coalesce(varAntec; varParam.antecedencia_min; 90));
-        Set(varAssentosMin; Coalesce(varAssentosMin; varParam.assentos_min; 150));
-        Set(varApacMod; Coalesce(varApacMod; varParam.apac_por_modulo; 3));
-        Set(varModSup; Coalesce(varModSup; varParam.modulos_por_supervisor; 2));
-        Set(varRaiosX; Coalesce(varRaiosX; varParam.raiosx_disponiveis; 3));
+        Set(varCap, Coalesce(varCap, varParam.pax_por_modulo_hora, 185));
+        Set(varOcup, Coalesce(varOcup, varParam.ocupacao_pct, 85));
+        Set(varAntec, Coalesce(varAntec, varParam.antecedencia_min, 90));
+        Set(varAssentosMin, Coalesce(varAssentosMin, varParam.assentos_min, 150));
+        Set(varApacMod, Coalesce(varApacMod, varParam.apac_por_modulo, 3));
+        Set(varModSup, Coalesce(varModSup, varParam.modulos_por_supervisor, 2));
+        Set(varRaiosX, Coalesce(varRaiosX, varParam.raiosx_disponiveis, 3));
         Select(btnLerMes)
     Children:
       # ------------------------------------------------------------------ leitura
@@ -38,24 +38,24 @@ Screens:
             Height: =1
             OnSelect: |-
               =ClearCollect(
-                  colVoosMes;
+                  colVoosMes,
                   ForAll(
                       Filter(
-                          tb_apacMalha;
-                          aeroporto = varAero;
-                          ativo = 1;
+                          tb_apacMalha,
+                          aeroporto = varAero,
+                          ativo = 1,
                           competencia = varComp
-                      ) As _v;
+                      ) As _v,
                       {
-                          voo: _v.voo;
-                          empresa: _v.empresa;
-                          assentos: _v.assentos;
-                          hora_min: _v.hora_min;
+                          voo: _v.voo,
+                          empresa: _v.empresa,
+                          assentos: _v.assentos,
+                          hora_min: _v.hora_min,
                           dia_num: Day(_v.data)
                       }
                   )
               );
-              Set(varDiasNoMes; Day(DateAdd(DateAdd(varRefMes; 1; TimeUnit.Months); -1; TimeUnit.Days)));
+              Set(varDiasNoMes, Day(DateAdd(DateAdd(varRefMes, 1, TimeUnit.Months), -1, TimeUnit.Days)));
               Select(btnCalcMes)
             Text: ="ler"
             Visible: =false
@@ -68,69 +68,69 @@ Screens:
             Height: =1
             OnSelect: |-
               =ClearCollect(
-                  colMesCel;
+                  colMesCel,
                   ForAll(
-                      Sequence(apacCelulasMes; 0) As _i;
+                      Sequence(apacCelulasMes, 0) As _i,
                       With(
                           {
-                              diaCel: Int(_i.Value / 24) + 1;
-                              horaCel: Mod(_i.Value; 24)
-                          };
+                              diaCel: Int(_i.Value / 24) + 1,
+                              horaCel: Mod(_i.Value, 24)
+                          },
                           With(
                               {
-                                  janIni: horaCel * 60;
+                                  janIni: horaCel * 60,
                                   janFim: horaCel * 60 + 60
-                              };
+                              },
                               With(
                                   {
                                       paxCel: Sum(
-                                          Filter(colVoosMes; dia_num = diaCel Or dia_num = diaCel + 1);
+                                          Filter(colVoosMes, dia_num = diaCel Or dia_num = diaCel + 1),
                                           With(
                                               {
-                                                  posic: hora_min + If(dia_num = diaCel; 0; 1440)
-                                              };
+                                                  posic: hora_min + If(dia_num = diaCel, 0, 1440)
+                                              },
                                               With(
                                                   {
-                                                      corteA: Max(janIni; posic - varAntec);
-                                                      corteB: Min(janFim; posic)
-                                                  };
+                                                      corteA: Max(janIni, posic - varAntec),
+                                                      corteB: Min(janFim, posic)
+                                                  },
                                                   If(
-                                                      corteB > corteA;
-                                                      (corteB - corteA) / Max(1; varAntec) * assentos * varOcup / 100;
+                                                      corteB > corteA,
+                                                      (corteB - corteA) / Max(1, varAntec) * assentos * varOcup / 100,
                                                       0
                                                   )
                                               )
                                           )
-                                      );
+                                      ),
                                       decCel: CountRows(
                                           Filter(
-                                              colVoosMes;
-                                              dia_num = diaCel;
-                                              assentos > varAssentosMin;
-                                              hora_min >= janIni;
+                                              colVoosMes,
+                                              dia_num = diaCel,
+                                              assentos > varAssentosMin,
+                                              hora_min >= janIni,
                                               hora_min < janFim
                                           )
                                       )
-                                  };
+                                  },
                                   With(
                                       {
                                           modPaxCel: With(
-                                              { q: paxCel / Max(1; varCap) };
-                                              Int(q) + If(q > Int(q); 1; 0)
+                                              { q: paxCel / Max(1, varCap) },
+                                              Int(q) + If(q > Int(q), 1, 0)
                                           )
-                                      };
+                                      },
                                       With(
-                                          { pedidoCel: Max(modPaxCel; decCel) };
+                                          { pedidoCel: Max(modPaxCel, decCel) },
                                           {
-                                              dia: diaCel;
-                                              hora: horaCel;
-                                              pax: paxCel;
-                                              mod: Min(pedidoCel; varRaiosX);
-                                              estouro: If(pedidoCel > varRaiosX; 1; 0);
-                                              apac: Min(pedidoCel; varRaiosX) * varApacMod;
+                                              dia: diaCel,
+                                              hora: horaCel,
+                                              pax: paxCel,
+                                              mod: Min(pedidoCel, varRaiosX),
+                                              estouro: If(pedidoCel > varRaiosX, 1, 0),
+                                              apac: Min(pedidoCel, varRaiosX) * varApacMod,
                                               sup: With(
-                                                  { s: Min(pedidoCel; varRaiosX) / Max(1; varModSup) };
-                                                  Int(s) + If(s > Int(s); 1; 0)
+                                                  { s: Min(pedidoCel, varRaiosX) / Max(1, varModSup) },
+                                                  Int(s) + If(s > Int(s), 1, 0)
                                               )
                                           }
                                       )
@@ -141,23 +141,23 @@ Screens:
                   )
               );
               ClearCollect(
-                  colMesDia;
+                  colMesDia,
                   ForAll(
-                      Sequence(Max(1; varDiasNoMes); 1) As _d;
+                      Sequence(Max(1, varDiasNoMes), 1) As _d,
                       With(
-                          { linha: Filter(colMesCel; dia = _d.Value) };
+                          { linha: Filter(colMesCel, dia = _d.Value) },
                           {
-                              dia: _d.Value;
-                              apac_pico: Max(linha; apac);
-                              sup_pico: Max(linha; sup);
-                              mod_pico: Max(linha; mod);
-                              horas_estouro: Sum(linha; estouro);
-                              carga: Sum(linha; apac)
+                              dia: _d.Value,
+                              apac_pico: Max(linha, apac),
+                              sup_pico: Max(linha, sup),
+                              mod_pico: Max(linha, mod),
+                              horas_estouro: Sum(linha, estouro),
+                              carga: Sum(linha, apac)
                           }
                       )
                   )
               );
-              Set(varMesLido; true)
+              Set(varMesLido, true)
             Text: ="calcular"
             Visible: =false
             Width: =1
@@ -233,7 +233,7 @@ Screens:
                                 "<div style='font-size:10px;letter-spacing:.24em;font-weight:700;opacity:.6;'>ASUR BRASIL · " &
                                 varAero & "</div>" &
                                 "<div style='font-size:16px;font-weight:800;letter-spacing:.01em;margin-top:2px;'>APACs POR MÓDULOS — " &
-                                Upper(LookUp(apacMesesNomes; n = Month(varRefMes); nome)) & " DE " & Text(Year(varRefMes)) &
+                                Upper(LookUp(apacMesesNomes, n = Month(varRefMes), nome)) & " DE " & Text(Year(varRefMes)) &
                                 "</div>" &
                                 "</div>"
                               PaddingBottom: =0
@@ -244,22 +244,22 @@ Screens:
                         - btnMesAnterior:
                             Control: Button@0.0.45
                             Properties:
-                              Appearance: ='Button.Appearance'.Secondary
+                              Appearance: ='ButtonCanvas.Appearance'.Secondary
                               Height: =thmAlturaCampo
                               OnSelect: |-
-                                =Set(varRefMes; DateAdd(varRefMes; -1; TimeUnit.Months));
-                                Set(varComp; Text(varRefMes; "yyyy-mm"));
+                                =Set(varRefMes, DateAdd(varRefMes, -1, TimeUnit.Months));
+                                Set(varComp, Text(varRefMes, "yyyy-mm"));
                                 Select(btnLerMes)
                               Text: ="◀"
                               Width: =46
                         - btnMesSeguinte:
                             Control: Button@0.0.45
                             Properties:
-                              Appearance: ='Button.Appearance'.Secondary
+                              Appearance: ='ButtonCanvas.Appearance'.Secondary
                               Height: =thmAlturaCampo
                               OnSelect: |-
-                                =Set(varRefMes; DateAdd(varRefMes; 1; TimeUnit.Months));
-                                Set(varComp; Text(varRefMes; "yyyy-mm"));
+                                =Set(varRefMes, DateAdd(varRefMes, 1, TimeUnit.Months));
+                                Set(varComp, Text(varRefMes, "yyyy-mm"));
                                 Select(btnLerMes)
                               Text: ="▶"
                               Width: =46
@@ -270,19 +270,19 @@ Screens:
                         - btnVerPico:
                             Control: Button@0.0.45
                             Properties:
-                              Appearance: ='Button.Appearance'.Secondary
-                              DisplayMode: =If(CountRows(colVoosMes) = 0; DisplayMode.Disabled; DisplayMode.Edit)
+                              Appearance: ='ButtonCanvas.Appearance'.Secondary
+                              DisplayMode: =If(CountRows(colVoosMes) = 0, DisplayMode.Disabled, DisplayMode.Edit)
                               Height: =thmAlturaCampo
                               OnSelect: |-
                                 =Set(
-                                    varData;
+                                    varData,
                                     Date(
-                                        Year(varRefMes);
-                                        Month(varRefMes);
-                                        Max(1; First(Sort(colMesDia; carga; SortOrder.Descending)).dia)
+                                        Year(varRefMes),
+                                        Month(varRefMes),
+                                        Max(1, First(Sort(colMesDia, carga, SortOrder.Descending)).dia)
                                     )
                                 );
-                                Navigate(scrApacDia; ScreenTransition.None)
+                                Navigate(scrApacDia, ScreenTransition.Fade)
                               Text: ="ABRIR O DIA DE PICO"
                               Width: =188
                   # ------------------------------------------------ premissas
@@ -323,79 +323,292 @@ Screens:
                               PaddingTop: =0
                               Size: =11
                               Width: =92
-                        - txtCapMes:
-                            Control: TextInput@0.0.54
+                        - cntCapMes:
+                            Control: GroupContainer@1.5.0
+                            Variant: AutoLayout
                             Properties:
-                              Height: =thmAlturaCampo
-                              HintText: ="pax/h"
-                              Label: ="PAX POR MÓDULO/H"
-                              OnChange: |-
-                                =Set(varCap; Max(1; Value(txtCapMes.Value)));
-                                Select(btnCalcMes)
-                              Value: =Text(varCap)
+                              DropShadow: =DropShadow.None
+                              Fill: =thmTransparente
+                              FillPortions: =0
+                              Height: =64
+                              LayoutAlignItems: =LayoutAlignItems.Stretch
+                              LayoutDirection: =LayoutDirection.Vertical
+                              LayoutGap: =2
+                              LayoutMinHeight: =0
+                              PaddingBottom: =0
+                              PaddingLeft: =0
+                              PaddingRight: =0
+                              PaddingTop: =0
+                              RadiusBottomLeft: =0
+                              RadiusBottomRight: =0
+                              RadiusTopLeft: =0
+                              RadiusTopRight: =0
                               Width: =120
-                        - txtOcupMes:
-                            Control: TextInput@0.0.54
+                            Children:
+                              - htmRotCapMes:
+                                  Control: HtmlViewer@2.1.0
+                                  Properties:
+                                    AutoHeight: =true
+                                    Color: =thmTextoFraco
+                                    Fill: =thmTransparente
+                                    Font: =thmFonte
+                                    HtmlText: |-
+                                      ="<div style='" & htmlFonte & "font-size:9px;letter-spacing:.06em;font-weight:700;color:" & hxTextoFraco & ";white-space:nowrap;'>PAX POR MÓDULO/H</div>"
+                                    PaddingBottom: =0
+                                    PaddingLeft: =0
+                                    PaddingRight: =0
+                                    PaddingTop: =0
+                                    Size: =11
+                                    Width: =Parent.Width
+                              - txtCapMes:
+                                  Control: TextInput@0.0.54
+                                  Properties:
+                                    AccessibleLabel: ="PAX POR MÓDULO/H"
+                                    Height: =thmAlturaCampo
+                                    Placeholder: ="pax/h"
+                                    Value: =Text(varCap)
+                        - cntOcupMes:
+                            Control: GroupContainer@1.5.0
+                            Variant: AutoLayout
                             Properties:
-                              Height: =thmAlturaCampo
-                              HintText: ="%"
-                              Label: ="OCUPAÇÃO %"
-                              OnChange: |-
-                                =Set(varOcup; Max(1; Min(100; Value(txtOcupMes.Value))));
-                                Select(btnCalcMes)
-                              Value: =Text(varOcup)
+                              DropShadow: =DropShadow.None
+                              Fill: =thmTransparente
+                              FillPortions: =0
+                              Height: =64
+                              LayoutAlignItems: =LayoutAlignItems.Stretch
+                              LayoutDirection: =LayoutDirection.Vertical
+                              LayoutGap: =2
+                              LayoutMinHeight: =0
+                              PaddingBottom: =0
+                              PaddingLeft: =0
+                              PaddingRight: =0
+                              PaddingTop: =0
+                              RadiusBottomLeft: =0
+                              RadiusBottomRight: =0
+                              RadiusTopLeft: =0
+                              RadiusTopRight: =0
                               Width: =104
-                        - txtAntecMes:
-                            Control: TextInput@0.0.54
+                            Children:
+                              - htmRotOcupMes:
+                                  Control: HtmlViewer@2.1.0
+                                  Properties:
+                                    AutoHeight: =true
+                                    Color: =thmTextoFraco
+                                    Fill: =thmTransparente
+                                    Font: =thmFonte
+                                    HtmlText: |-
+                                      ="<div style='" & htmlFonte & "font-size:9px;letter-spacing:.06em;font-weight:700;color:" & hxTextoFraco & ";white-space:nowrap;'>OCUPAÇÃO %</div>"
+                                    PaddingBottom: =0
+                                    PaddingLeft: =0
+                                    PaddingRight: =0
+                                    PaddingTop: =0
+                                    Size: =11
+                                    Width: =Parent.Width
+                              - txtOcupMes:
+                                  Control: TextInput@0.0.54
+                                  Properties:
+                                    AccessibleLabel: ="OCUPAÇÃO %"
+                                    Height: =thmAlturaCampo
+                                    Placeholder: ="%"
+                                    Value: =Text(varOcup)
+                        - cntAntecMes:
+                            Control: GroupContainer@1.5.0
+                            Variant: AutoLayout
                             Properties:
-                              Height: =thmAlturaCampo
-                              HintText: ="min"
-                              Label: ="ANTECEDÊNCIA"
-                              OnChange: |-
-                                =Set(varAntec; Max(1; Value(txtAntecMes.Value)));
-                                Select(btnCalcMes)
-                              Value: =Text(varAntec)
+                              DropShadow: =DropShadow.None
+                              Fill: =thmTransparente
+                              FillPortions: =0
+                              Height: =64
+                              LayoutAlignItems: =LayoutAlignItems.Stretch
+                              LayoutDirection: =LayoutDirection.Vertical
+                              LayoutGap: =2
+                              LayoutMinHeight: =0
+                              PaddingBottom: =0
+                              PaddingLeft: =0
+                              PaddingRight: =0
+                              PaddingTop: =0
+                              RadiusBottomLeft: =0
+                              RadiusBottomRight: =0
+                              RadiusTopLeft: =0
+                              RadiusTopRight: =0
                               Width: =112
-                        - txtAssentosMes:
-                            Control: TextInput@0.0.54
+                            Children:
+                              - htmRotAntecMes:
+                                  Control: HtmlViewer@2.1.0
+                                  Properties:
+                                    AutoHeight: =true
+                                    Color: =thmTextoFraco
+                                    Fill: =thmTransparente
+                                    Font: =thmFonte
+                                    HtmlText: |-
+                                      ="<div style='" & htmlFonte & "font-size:9px;letter-spacing:.06em;font-weight:700;color:" & hxTextoFraco & ";white-space:nowrap;'>ANTECEDÊNCIA</div>"
+                                    PaddingBottom: =0
+                                    PaddingLeft: =0
+                                    PaddingRight: =0
+                                    PaddingTop: =0
+                                    Size: =11
+                                    Width: =Parent.Width
+                              - txtAntecMes:
+                                  Control: TextInput@0.0.54
+                                  Properties:
+                                    AccessibleLabel: ="ANTECEDÊNCIA"
+                                    Height: =thmAlturaCampo
+                                    Placeholder: ="min"
+                                    Value: =Text(varAntec)
+                        - cntAssentosMes:
+                            Control: GroupContainer@1.5.0
+                            Variant: AutoLayout
                             Properties:
-                              Height: =thmAlturaCampo
-                              HintText: ="assentos"
-                              Label: ="ASSENTOS MÍN."
-                              OnChange: |-
-                                =Set(varAssentosMin; Max(0; Value(txtAssentosMes.Value)));
-                                Select(btnCalcMes)
-                              Value: =Text(varAssentosMin)
+                              DropShadow: =DropShadow.None
+                              Fill: =thmTransparente
+                              FillPortions: =0
+                              Height: =64
+                              LayoutAlignItems: =LayoutAlignItems.Stretch
+                              LayoutDirection: =LayoutDirection.Vertical
+                              LayoutGap: =2
+                              LayoutMinHeight: =0
+                              PaddingBottom: =0
+                              PaddingLeft: =0
+                              PaddingRight: =0
+                              PaddingTop: =0
+                              RadiusBottomLeft: =0
+                              RadiusBottomRight: =0
+                              RadiusTopLeft: =0
+                              RadiusTopRight: =0
                               Width: =112
-                        - txtApacModMes:
-                            Control: TextInput@0.0.54
+                            Children:
+                              - htmRotAssentosMes:
+                                  Control: HtmlViewer@2.1.0
+                                  Properties:
+                                    AutoHeight: =true
+                                    Color: =thmTextoFraco
+                                    Fill: =thmTransparente
+                                    Font: =thmFonte
+                                    HtmlText: |-
+                                      ="<div style='" & htmlFonte & "font-size:9px;letter-spacing:.06em;font-weight:700;color:" & hxTextoFraco & ";white-space:nowrap;'>ASSENTOS MÍN.</div>"
+                                    PaddingBottom: =0
+                                    PaddingLeft: =0
+                                    PaddingRight: =0
+                                    PaddingTop: =0
+                                    Size: =11
+                                    Width: =Parent.Width
+                              - txtAssentosMes:
+                                  Control: TextInput@0.0.54
+                                  Properties:
+                                    AccessibleLabel: ="ASSENTOS MÍN."
+                                    Height: =thmAlturaCampo
+                                    Placeholder: ="assentos"
+                                    Value: =Text(varAssentosMin)
+                        - cntApacModMes:
+                            Control: GroupContainer@1.5.0
+                            Variant: AutoLayout
                             Properties:
-                              Height: =thmAlturaCampo
-                              HintText: ="APAC"
-                              Label: ="APAC/MÓDULO"
-                              OnChange: |-
-                                =Set(varApacMod; Max(1; Value(txtApacModMes.Value)));
-                                Select(btnCalcMes)
-                              Value: =Text(varApacMod)
+                              DropShadow: =DropShadow.None
+                              Fill: =thmTransparente
+                              FillPortions: =0
+                              Height: =64
+                              LayoutAlignItems: =LayoutAlignItems.Stretch
+                              LayoutDirection: =LayoutDirection.Vertical
+                              LayoutGap: =2
+                              LayoutMinHeight: =0
+                              PaddingBottom: =0
+                              PaddingLeft: =0
+                              PaddingRight: =0
+                              PaddingTop: =0
+                              RadiusBottomLeft: =0
+                              RadiusBottomRight: =0
+                              RadiusTopLeft: =0
+                              RadiusTopRight: =0
                               Width: =108
-                        - txtRaiosXMes:
-                            Control: TextInput@0.0.54
+                            Children:
+                              - htmRotApacModMes:
+                                  Control: HtmlViewer@2.1.0
+                                  Properties:
+                                    AutoHeight: =true
+                                    Color: =thmTextoFraco
+                                    Fill: =thmTransparente
+                                    Font: =thmFonte
+                                    HtmlText: |-
+                                      ="<div style='" & htmlFonte & "font-size:9px;letter-spacing:.06em;font-weight:700;color:" & hxTextoFraco & ";white-space:nowrap;'>APAC/MÓDULO</div>"
+                                    PaddingBottom: =0
+                                    PaddingLeft: =0
+                                    PaddingRight: =0
+                                    PaddingTop: =0
+                                    Size: =11
+                                    Width: =Parent.Width
+                              - txtApacModMes:
+                                  Control: TextInput@0.0.54
+                                  Properties:
+                                    AccessibleLabel: ="APAC/MÓDULO"
+                                    Height: =thmAlturaCampo
+                                    Placeholder: ="APAC"
+                                    Value: =Text(varApacMod)
+                        - cntRaiosXMes:
+                            Control: GroupContainer@1.5.0
+                            Variant: AutoLayout
                             Properties:
-                              Height: =thmAlturaCampo
-                              HintText: ="raios-X"
-                              Label: ="RAIOS-X"
-                              OnChange: |-
-                                =Set(varRaiosX; Max(1; Value(txtRaiosXMes.Value)));
-                                Select(btnCalcMes)
-                              Value: =Text(varRaiosX)
+                              DropShadow: =DropShadow.None
+                              Fill: =thmTransparente
+                              FillPortions: =0
+                              Height: =64
+                              LayoutAlignItems: =LayoutAlignItems.Stretch
+                              LayoutDirection: =LayoutDirection.Vertical
+                              LayoutGap: =2
+                              LayoutMinHeight: =0
+                              PaddingBottom: =0
+                              PaddingLeft: =0
+                              PaddingRight: =0
+                              PaddingTop: =0
+                              RadiusBottomLeft: =0
+                              RadiusBottomRight: =0
+                              RadiusTopLeft: =0
+                              RadiusTopRight: =0
                               Width: =92
+                            Children:
+                              - htmRotRaiosXMes:
+                                  Control: HtmlViewer@2.1.0
+                                  Properties:
+                                    AutoHeight: =true
+                                    Color: =thmTextoFraco
+                                    Fill: =thmTransparente
+                                    Font: =thmFonte
+                                    HtmlText: |-
+                                      ="<div style='" & htmlFonte & "font-size:9px;letter-spacing:.06em;font-weight:700;color:" & hxTextoFraco & ";white-space:nowrap;'>RAIOS-X</div>"
+                                    PaddingBottom: =0
+                                    PaddingLeft: =0
+                                    PaddingRight: =0
+                                    PaddingTop: =0
+                                    Size: =11
+                                    Width: =Parent.Width
+                              - txtRaiosXMes:
+                                  Control: TextInput@0.0.54
+                                  Properties:
+                                    AccessibleLabel: ="RAIOS-X"
+                                    Height: =thmAlturaCampo
+                                    Placeholder: ="raios-X"
+                                    Value: =Text(varRaiosX)
+                        - btnRecalcularMes:
+                            Control: Button@0.0.45
+                            Properties:
+                              Appearance: ='ButtonCanvas.Appearance'.Primary
+                              Height: =thmAlturaCampo
+                              OnSelect: |-
+                                =Set(varCap, Max(1, Value(txtCapMes.Value)));
+                                Set(varOcup, Max(1, Min(100, Value(txtOcupMes.Value))));
+                                Set(varAntec, Max(1, Value(txtAntecMes.Value)));
+                                Set(varAssentosMin, Max(0, Value(txtAssentosMes.Value)));
+                                Set(varApacMod, Max(1, Value(txtApacModMes.Value)));
+                                Set(varRaiosX, Max(1, Value(txtRaiosXMes.Value)));
+                                Select(btnCalcMes)
+                              Text: ="RECALCULAR"
+                              Width: =144
                         - btnVerModulos:
                             Control: Button@0.0.45
                             Properties:
-                              Appearance: ='Button.Appearance'.Secondary
+                              Appearance: ='ButtonCanvas.Appearance'.Secondary
                               Height: =thmAlturaCampo
-                              OnSelect: =Set(varVerApac; !varVerApac)
-                              Text: =If(varVerApac; "VENDO APACs"; "VENDO MÓDULOS")
+                              OnSelect: =Set(varVerApac, !varVerApac)
+                              Text: =If(varVerApac, "VENDO APACs", "VENDO MÓDULOS")
                               Width: =176
                   # ------------------------------------------------ grade do mês
                   - cntGradeApacMes:
@@ -430,46 +643,46 @@ Screens:
                               HtmlText: |-
                                 =With(
                                     {
-                                        celBase: "border:1px solid " & hxGradeFina & ";text-align:center;padding:3px 0;font-size:10px;";
-                                        rotBase: "border:1px solid " & hxGradeFina & ";text-align:left;padding:3px 6px;font-weight:700;white-space:nowrap;font-size:10px;";
-                                        diaPico: First(Sort(colMesDia; carga; SortOrder.Descending)).dia
-                                    };
+                                        celBase: "border:1px solid " & hxGradeFina & ";text-align:center;padding:3px 0;font-size:10px;",
+                                        rotBase: "border:1px solid " & hxGradeFina & ";text-align:left;padding:3px 6px;font-weight:700;white-space:nowrap;font-size:10px;",
+                                        diaPico: First(Sort(colMesDia, carga, SortOrder.Descending)).dia
+                                    },
                                     "<div style='" & htmlFonte & "color:" & hxTexto & ";'>" &
                                     If(
-                                        CountRows(colVoosMes) = 0;
+                                        CountRows(colVoosMes) = 0,
                                         "<div style='padding:26px 10px;border:1px dashed " & hxBorda & ";background:" & hxAmbarSuave &
                                         ";color:" & hxAmbar & ";font-size:13px;font-weight:600;'>Não há malha importada para a competência " &
                                         varComp & ". Use IMPORTAR MALHA antes de dimensionar — grade vazia aqui significa " &
-                                        "falta de importação, não falta de gente.</div>";
+                                        "falta de importação, não falta de gente.</div>",
                                         "<table style='border-collapse:collapse;width:100%;table-layout:fixed;'>" &
                                         "<tr><td style='" & rotBase & "width:" & apacLarguraRotulo & "px;background:" & hxPrimariaClara & ";'>DIA</td>" &
                                         Concat(
-                                            Sequence(apacHorasDia; 0);
+                                            Sequence(apacHorasDia, 0),
                                             "<td style='" & celBase & "background:" & hxPrimariaClara & ";font-weight:700;'>" &
-                                            Right("0" & Text(Value); 2) & "</td>"
+                                            Right("0" & Text(Value), 2) & "</td>"
                                         ) &
                                         "<td style='" & celBase & "background:" & hxPrimaria & ";color:#FFFFFF;font-weight:700;'>PICO</td></tr>" &
                                         Concat(
-                                            Sort(colMesDia; dia; SortOrder.Ascending);
+                                            Sort(colMesDia, dia, SortOrder.Ascending),
                                             With(
-                                                { d: dia; ehPico: dia = diaPico };
+                                                { d: dia, ehPico: dia = diaPico },
                                                 "<tr><td style='" & rotBase & "background:" &
-                                                If(ehPico; hxAmbarSuave; hxSuperficie) & ";'>" &
-                                                Right("0" & Text(d); 2) &
-                                                If(ehPico; " ★"; "") & "</td>" &
+                                                If(ehPico, hxAmbarSuave, hxSuperficie) & ";'>" &
+                                                Right("0" & Text(d), 2) &
+                                                If(ehPico, " ★", "") & "</td>" &
                                                 Concat(
-                                                    Sort(Filter(colMesCel; dia = d); hora; SortOrder.Ascending);
+                                                    Sort(Filter(colMesCel, dia = d), hora, SortOrder.Ascending),
                                                     "<td style='" & celBase & "color:" &
-                                                    If(mod >= 2; "#FFFFFF"; hxTexto) & ";background:" &
+                                                    If(mod >= 2, "#FFFFFF", hxTexto) & ";background:" &
                                                     If(
-                                                        estouro = 1;
-                                                        hxCargaEstouro;
-                                                        If(mod >= 3; hxCarga3; If(mod = 2; hxCarga2; If(mod = 1; hxCarga1; hxCarga0)))
+                                                        estouro = 1,
+                                                        hxCargaEstouro,
+                                                        If(mod >= 3, hxCarga3, If(mod = 2, hxCarga2, If(mod = 1, hxCarga1, hxCarga0)))
                                                     ) & ";'>" &
                                                     If(
-                                                        mod = 0;
-                                                        "";
-                                                        If(varVerApac; Text(apac); Text(mod))
+                                                        mod = 0,
+                                                        "",
+                                                        If(varVerApac, Text(apac), Text(mod))
                                                     ) & "</td>"
                                                 ) &
                                                 "<td style='" & celBase & "background:" & hxPrimariaClara &
@@ -495,20 +708,20 @@ Screens:
                               HtmlText: |-
                                 ="<div style='" & htmlFonte & "font-size:11px;color:" & hxTextoFraco & ";margin-top:14px;'>" &
                                 If(
-                                    CountRows(colVoosMes) = 0;
-                                    "";
+                                    CountRows(colVoosMes) = 0,
+                                    "",
                                     "<div><b style='color:" & hxTexto & ";'>" & Text(CountRows(colVoosMes)) &
                                     " decolagens</b> na competência " & varComp & " · pico do mês: <b style='color:" & hxTexto &
-                                    ";'>" & Text(Max(colMesDia; apac_pico)) & " APACs</b> e <b style='color:" & hxTexto & ";'>" &
-                                    Text(Max(colMesDia; sup_pico)) & " supervisores</b> por hora" &
+                                    ";'>" & Text(Max(colMesDia, apac_pico)) & " APACs</b> e <b style='color:" & hxTexto & ";'>" &
+                                    Text(Max(colMesDia, sup_pico)) & " supervisores</b> por hora" &
                                     If(
-                                        Sum(colMesDia; horas_estouro) > 0;
-                                        " · <b style='color:" & hxVermelho & ";'>" & Text(Sum(colMesDia; horas_estouro)) &
-                                        " hora(s) do mês pedindo mais que os " & Text(varRaiosX) & " raios-X</b>";
+                                        Sum(colMesDia, horas_estouro) > 0,
+                                        " · <b style='color:" & hxVermelho & ";'>" & Text(Sum(colMesDia, horas_estouro)) &
+                                        " hora(s) do mês pedindo mais que os " & Text(varRaiosX) & " raios-X</b>",
                                         ""
                                     ) &
                                     "</div>" &
-                                    "<div style='margin-top:6px;'>" & Text(CountRows(Filter(colVoosMes; assentos <= varAssentosMin))) &
+                                    "<div style='margin-top:6px;'>" & Text(CountRows(Filter(colVoosMes, assentos <= varAssentosMin))) &
                                     " voos abaixo de " & Text(varAssentosMin) & " assentos — não abrem módulo por contagem, só por volumetria</div>" &
                                     "<div style='margin-top:6px;font-size:10px;'>★ dia de maior carga do mês, o que alimenta o escopo do contrato · " &
                                     "premissas: " & Text(varCap) & " pax/h · " & Text(varOcup) & "% · " & Text(varAntec) & " min</div>"
