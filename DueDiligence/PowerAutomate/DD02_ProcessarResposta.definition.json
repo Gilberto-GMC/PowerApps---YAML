@@ -1,0 +1,922 @@
+{
+  "name": "80efe41b-24f2-4da0-b5fa-c1edb50b1e43",
+  "id": "/providers/Microsoft.Flow/flows/80efe41b-24f2-4da0-b5fa-c1edb50b1e43",
+  "type": "Microsoft.Flow/flows",
+  "properties": {
+    "apiId": "/providers/Microsoft.PowerApps/apis/shared_logicflows",
+    "displayName": "Processar resposta Due Diligence",
+    "definition": {
+      "metadata": {
+        "workflowEntityId": null,
+        "processAdvisorMetadata": null,
+        "flowChargedByPaygo": null,
+        "flowclientsuspensionreason": "None",
+        "flowclientsuspensiontime": null,
+        "flowclientsuspensionreasondetails": null,
+        "creator": {
+          "id": "a06c04ca-600c-4586-a940-1db61e81fc41",
+          "type": "User",
+          "tenantId": "d233d58a-9973-43a7-af69-6763630548a0"
+        },
+        "provisioningMethod": "FromDefinition",
+        "failureAlertSubscription": true,
+        "clientLastModifiedTime": "2026-09-08T19:37:23.4276137Z",
+        "lastModifiedBy": "a06c04ca-600c-4586-a940-1db61e81fc41",
+        "connectionKeySavedTimeKey": "2026-09-08T19:37:23.4276137Z",
+        "creationSource": "Portal",
+        "modifiedSources": "Portal"
+      },
+      "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+      "contentVersion": "1.0.0.0",
+      "parameters": {
+        "$authentication": {
+          "defaultValue": {},
+          "type": "SecureObject"
+        },
+        "$connections": {
+          "defaultValue": {},
+          "type": "Object"
+        }
+      },
+      "triggers": {
+        "When_a_new_response_is_submitted": {
+          "splitOn": "@triggerOutputs()?['body/value']",
+          "type": "OpenApiConnectionWebhook",
+          "inputs": {
+            "parameters": {
+              "form_id": "itUz0nOZp0OvaWdjYwVIoMoEbKAMYIZFqUAdth6B_EFURVRKSFdaVDE4Q1RIV0VTRkxFSjFZS0VEQS4u"
+            },
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_microsoftforms",
+              "connectionName": "shared_microsoftforms",
+              "operationId": "CreateFormWebhook"
+            },
+            "authentication": "@parameters('$authentication')"
+          },
+          "runtimeConfiguration": {
+            "concurrency": {
+              "runs": 1
+            }
+          }
+        }
+      },
+      "actions": {
+        "Obter_detalhes_da_resposta": {
+          "runAfter": {},
+          "type": "OpenApiConnection",
+          "inputs": {
+            "parameters": {
+              "form_id": "itUz0nOZp0OvaWdjYwVIoMoEbKAMYIZFqUAdth6B_EFURVRKSFdaVDE4Q1RIV0VTRkxFSjFZS0VEQS4u",
+              "response_id": "@triggerOutputs()?['body/resourceData/responseId']"
+            },
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_microsoftforms",
+              "connectionName": "shared_microsoftforms",
+              "operationId": "GetFormResponseById"
+            },
+            "authentication": "@parameters('$authentication')"
+          }
+        },
+        "Inicializar_Respostas": {
+          "runAfter": {
+            "Obter_detalhes_da_resposta": [
+              "Succeeded"
+            ]
+          },
+          "type": "InitializeVariable",
+          "inputs": {
+            "variables": [
+              {
+                "name": "varRespostas",
+                "type": "array",
+                "value": []
+              }
+            ]
+          }
+        },
+        "Inicializar_Data_Resposta": {
+          "runAfter": {
+            "Inicializar_Respostas": [
+              "Succeeded"
+            ]
+          },
+          "type": "InitializeVariable",
+          "inputs": {
+            "variables": [
+              {
+                "name": "varDataResposta",
+                "type": "string",
+                "value": "@utcNow()"
+              }
+            ]
+          }
+        },
+        "Inicializar_Risco_Alto": {
+          "runAfter": {
+            "Inicializar_Data_Resposta": [
+              "Succeeded"
+            ]
+          },
+          "type": "InitializeVariable",
+          "inputs": {
+            "variables": [
+              {
+                "name": "varTerceiroAlto",
+                "type": "boolean",
+                "value": false
+              }
+            ]
+          }
+        },
+        "Inicializar_Erro_Parametro": {
+          "runAfter": {
+            "Inicializar_Risco_Alto": [
+              "Succeeded"
+            ]
+          },
+          "type": "InitializeVariable",
+          "inputs": {
+            "variables": [
+              {
+                "name": "varErroParametro",
+                "type": "boolean",
+                "value": false
+              }
+            ]
+          }
+        },
+        "Inicializar_Quantidade_Risco_Alto": {
+          "runAfter": {
+            "Inicializar_Erro_Parametro": [
+              "Succeeded"
+            ]
+          },
+          "type": "InitializeVariable",
+          "inputs": {
+            "variables": [
+              {
+                "name": "varQuantidadeRiscoAlto",
+                "type": "integer",
+                "value": 0
+              }
+            ]
+          }
+        },
+        "Codigo_Acompanhamento": {
+          "runAfter": {
+            "Inicializar_Quantidade_Risco_Alto": [
+              "Succeeded"
+            ]
+          },
+          "type": "Compose",
+          "inputs": "@trim(string(body('Obter_detalhes_da_resposta')?['rf6e81f83fe194d4c80dbfd30fc7b8301']))"
+        },
+        "HTTP_Localizar_Solicitacao": {
+          "runAfter": {
+            "Codigo_Acompanhamento": [
+              "Succeeded"
+            ]
+          },
+          "type": "OpenApiConnection",
+          "inputs": {
+            "parameters": {
+              "dataset": "https://grupoccr.sharepoint.com/sites/ComplianceAeroportos",
+              "parameters/method": "GET",
+              "parameters/uri": "@concat('_api/web/lists/getbytitle(''tb_dueDiligence'')/items?$select=ID,status,fluxo_classificacao,classificacao_risco,risco_final,forms_correlacao_id,forms_envio_id,forms_envio_processado_id,forms_ultima_resposta_id&$filter=forms_envio_id eq ''', replace(outputs('Codigo_Acompanhamento'), '''', ''''''), '''')",
+              "parameters/headers": {
+                "Accept": "application/json;odata=nometadata"
+              }
+            },
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+              "connectionName": "shared_sharepointonline",
+              "operationId": "HttpRequest"
+            },
+            "authentication": "@parameters('$authentication')",
+            "retryPolicy": {
+              "type": "none"
+            }
+          }
+        },
+        "Condicao_Correlacao_Encontrada": {
+          "runAfter": {
+            "HTTP_Localizar_Solicitacao": [
+              "Succeeded"
+            ]
+          },
+          "type": "If",
+          "expression": {
+            "and": [
+              {
+                "equals": [
+                  "@equals(length(body('HTTP_Localizar_Solicitacao')?['value']), 1)",
+                  true
+                ]
+              }
+            ]
+          },
+          "actions": {
+            "Condicao_Resposta_Repetida": {
+              "runAfter": {},
+              "type": "If",
+              "expression": {
+                "and": [
+                  {
+                    "equals": [
+                      "@equals(string(first(body('HTTP_Localizar_Solicitacao')?['value'])?['forms_ultima_resposta_id']), string(triggerOutputs()?['body/resourceData/responseId']))",
+                      true
+                    ]
+                  }
+                ]
+              },
+              "actions": {
+                "Ignorar_Resposta_Ja_Processada": {
+                  "runAfter": {},
+                  "type": "Compose",
+                  "inputs": "Resposta já processada; execução encerrada sem duplicar linhas."
+                }
+              },
+              "else": {
+                "actions": {
+                  "Condicao_Resposta_Valida": {
+                    "runAfter": {},
+                    "type": "If",
+                    "expression": {
+                      "and": [
+                        {
+                          "equals": [
+                            "@and(equals(first(body('HTTP_Localizar_Solicitacao')?['value'])?['status'], 'Aguardando terceiro'),equals(toUpper(trim(string(first(body('HTTP_Localizar_Solicitacao')?['value'])?['fluxo_classificacao']))), 'FLUXO III'),equals(string(first(body('HTTP_Localizar_Solicitacao')?['value'])?['forms_envio_id']), outputs('Codigo_Acompanhamento')) ,equals(string(first(body('HTTP_Localizar_Solicitacao')?['value'])?['forms_envio_processado_id']), outputs('Codigo_Acompanhamento')) ,contains(createArray('sim','não'), toLower(trim(string(body('Obter_detalhes_da_resposta')?['rc17ec46a782c4e9bb8577f1776f7b6a5'])))),contains(createArray('sim','não'), toLower(trim(string(body('Obter_detalhes_da_resposta')?['reabf29569f654ca7876bd8dd6470ef47'])))),contains(createArray('sim','não'), toLower(trim(string(body('Obter_detalhes_da_resposta')?['r41b1c93b2d5c4cb090fe93048d907b04'])))),contains(createArray('sim','não'), toLower(trim(string(body('Obter_detalhes_da_resposta')?['rdefccd229818492b9bbe6727758760a7'])))),contains(createArray('sim','não'), toLower(trim(string(body('Obter_detalhes_da_resposta')?['ra29396cc8af3475eab68360908138053'])))),contains(createArray('sim','não'), toLower(trim(string(body('Obter_detalhes_da_resposta')?['r631326ae893c4c17b3a4c3c627cf6df3'])))),contains(createArray('sim','não'), toLower(trim(string(body('Obter_detalhes_da_resposta')?['r7eb11f1294d7429391236b5d533ad22c'])))),contains(createArray('sim','não'), toLower(trim(string(body('Obter_detalhes_da_resposta')?['rf48abfb5124f4eedaf80b66c72091c0c'])))),contains(createArray('sim','não'), toLower(trim(string(body('Obter_detalhes_da_resposta')?['r37e5d456c486487e91f8e39948d26375'])))),or(not(equals(toLower(trim(string(body('Obter_detalhes_da_resposta')?['rc17ec46a782c4e9bb8577f1776f7b6a5']))), 'sim')),contains(createArray('sim','não'), toLower(trim(string(body('Obter_detalhes_da_resposta')?['rc8315faaa6674c8584da070ee5350001']))))),not(empty(trim(string(body('Obter_detalhes_da_resposta')?['r26254dcbbf9b4275aa3b824059f6c571'])))))",
+                            true
+                          ]
+                        }
+                      ]
+                    },
+                    "actions": {
+                      "Adicionar_T01": {
+                        "runAfter": {},
+                        "type": "AppendToArrayVariable",
+                        "inputs": {
+                          "name": "varRespostas",
+                          "value": {
+                            "codigo_pergunta": "terceiro_t01",
+                            "codigo_opcao": "@concat('terceiro_t01_', if(equals(toLower(trim(string(body('Obter_detalhes_da_resposta')?['rc17ec46a782c4e9bb8577f1776f7b6a5']))), 'sim'), 'sim', 'nao'))",
+                            "texto_pergunta": "T1) A empresa possui um programa de integridade implementado?",
+                            "resposta": "@body('Obter_detalhes_da_resposta')?['rc17ec46a782c4e9bb8577f1776f7b6a5']",
+                            "ordem": 1
+                          }
+                        }
+                      },
+                      "Condicao_T01_Positiva": {
+                        "runAfter": {
+                          "Adicionar_T01": [
+                            "Succeeded"
+                          ]
+                        },
+                        "type": "If",
+                        "expression": {
+                          "and": [
+                            {
+                              "equals": [
+                                "@equals(toLower(trim(string(body('Obter_detalhes_da_resposta')?['rc17ec46a782c4e9bb8577f1776f7b6a5']))), 'sim')",
+                                true
+                              ]
+                            }
+                          ]
+                        },
+                        "actions": {
+                          "Adicionar_T01_2": {
+                            "runAfter": {},
+                            "type": "AppendToArrayVariable",
+                            "inputs": {
+                              "name": "varRespostas",
+                              "value": {
+                                "codigo_pergunta": "terceiro_t01_2",
+                                "codigo_opcao": "@concat('terceiro_t01_2_', if(equals(toLower(trim(string(body('Obter_detalhes_da_resposta')?['rc8315faaa6674c8584da070ee5350001']))), 'sim'), 'sim', 'nao'))",
+                                "texto_pergunta": "T1.2) Caso positivo, esse programa conta com certificações como ISO 37001 e ISO 37301 ou realiza auditorias independentes?",
+                                "resposta": "@body('Obter_detalhes_da_resposta')?['rc8315faaa6674c8584da070ee5350001']",
+                                "ordem": 2
+                              }
+                            }
+                          }
+                        },
+                        "else": {
+                          "actions": {
+                            "Ignorar_T01_2": {
+                              "runAfter": {},
+                              "type": "Compose",
+                              "inputs": "T1.2 não se aplica quando T1 = Não."
+                            }
+                          }
+                        }
+                      },
+                      "Adicionar_T02": {
+                        "runAfter": {
+                          "Condicao_T01_Positiva": [
+                            "Succeeded"
+                          ]
+                        },
+                        "type": "AppendToArrayVariable",
+                        "inputs": {
+                          "name": "varRespostas",
+                          "value": {
+                            "codigo_pergunta": "terceiro_t02",
+                            "codigo_opcao": "@concat('terceiro_t02_', if(equals(toLower(trim(string(body('Obter_detalhes_da_resposta')?['reabf29569f654ca7876bd8dd6470ef47']))), 'sim'), 'sim', 'nao'))",
+                            "texto_pergunta": "T2) Atualmente, há no quadro de colaboradores algum ex-funcionário da ASUR Brasil desligado nos últimos dois anos?",
+                            "resposta": "@body('Obter_detalhes_da_resposta')?['reabf29569f654ca7876bd8dd6470ef47']",
+                            "ordem": 3
+                          }
+                        }
+                      },
+                      "Adicionar_T03_PEP": {
+                        "runAfter": {
+                          "Adicionar_T02": [
+                            "Succeeded"
+                          ]
+                        },
+                        "type": "AppendToArrayVariable",
+                        "inputs": {
+                          "name": "varRespostas",
+                          "value": {
+                            "codigo_pergunta": "terceiro_t03_pep",
+                            "codigo_opcao": "@concat('terceiro_t03_pep_', if(equals(toLower(trim(string(body('Obter_detalhes_da_resposta')?['r41b1c93b2d5c4cb090fe93048d907b04']))), 'sim'), 'sim', 'nao'))",
+                            "texto_pergunta": "T3) Algum sócio, administrador ou diretor é funcionário público, PEP ou parente de alguém nessas condições?",
+                            "resposta": "@body('Obter_detalhes_da_resposta')?['r41b1c93b2d5c4cb090fe93048d907b04']",
+                            "ordem": 4
+                          }
+                        }
+                      },
+                      "Adicionar_T03_PROCESSOS": {
+                        "runAfter": {
+                          "Adicionar_T03_PEP": [
+                            "Succeeded"
+                          ]
+                        },
+                        "type": "AppendToArrayVariable",
+                        "inputs": {
+                          "name": "varRespostas",
+                          "value": {
+                            "codigo_pergunta": "terceiro_t03_processos",
+                            "codigo_opcao": "@concat('terceiro_t03_processos_', if(equals(toLower(trim(string(body('Obter_detalhes_da_resposta')?['rdefccd229818492b9bbe6727758760a7']))), 'sim'), 'sim', 'nao'))",
+                            "texto_pergunta": "T3) A empresa, seus sócios ou diretores estão ou estiveram envolvidos em processos relacionados a fraude, corrupção, improbidade, lavagem de dinheiro, trabalho escravo, crime ambiental ou outros crimes?",
+                            "resposta": "@body('Obter_detalhes_da_resposta')?['rdefccd229818492b9bbe6727758760a7']",
+                            "ordem": 5
+                          }
+                        }
+                      },
+                      "Adicionar_T04": {
+                        "runAfter": {
+                          "Adicionar_T03_PROCESSOS": [
+                            "Succeeded"
+                          ]
+                        },
+                        "type": "AppendToArrayVariable",
+                        "inputs": {
+                          "name": "varRespostas",
+                          "value": {
+                            "codigo_pergunta": "terceiro_t04",
+                            "codigo_opcao": "@concat('terceiro_t04_', if(equals(toLower(trim(string(body('Obter_detalhes_da_resposta')?['ra29396cc8af3475eab68360908138053']))), 'sim'), 'sim', 'nao'))",
+                            "texto_pergunta": "T4) A empresa faz parte de algum grupo econômico?",
+                            "resposta": "@body('Obter_detalhes_da_resposta')?['ra29396cc8af3475eab68360908138053']",
+                            "ordem": 6
+                          }
+                        }
+                      },
+                      "Adicionar_T05": {
+                        "runAfter": {
+                          "Adicionar_T04": [
+                            "Succeeded"
+                          ]
+                        },
+                        "type": "AppendToArrayVariable",
+                        "inputs": {
+                          "name": "varRespostas",
+                          "value": {
+                            "codigo_pergunta": "terceiro_t05",
+                            "codigo_opcao": "terceiro_t05_texto",
+                            "texto_pergunta": "T5) Qual é a quantidade atual de funcionários da empresa?",
+                            "resposta": "@body('Obter_detalhes_da_resposta')?['r26254dcbbf9b4275aa3b824059f6c571']",
+                            "ordem": 7
+                          }
+                        }
+                      },
+                      "Adicionar_T06": {
+                        "runAfter": {
+                          "Adicionar_T05": [
+                            "Succeeded"
+                          ]
+                        },
+                        "type": "AppendToArrayVariable",
+                        "inputs": {
+                          "name": "varRespostas",
+                          "value": {
+                            "codigo_pergunta": "terceiro_t06",
+                            "codigo_opcao": "@concat('terceiro_t06_', if(equals(toLower(trim(string(body('Obter_detalhes_da_resposta')?['r631326ae893c4c17b3a4c3c627cf6df3']))), 'sim'), 'sim', 'nao'))",
+                            "texto_pergunta": "T6) Algum sócio, administrador ou diretor possui parentesco com colaboradores, diretores ou conselheiros da ASUR Brasil?",
+                            "resposta": "@body('Obter_detalhes_da_resposta')?['r631326ae893c4c17b3a4c3c627cf6df3']",
+                            "ordem": 8
+                          }
+                        }
+                      },
+                      "Adicionar_T07": {
+                        "runAfter": {
+                          "Adicionar_T06": [
+                            "Succeeded"
+                          ]
+                        },
+                        "type": "AppendToArrayVariable",
+                        "inputs": {
+                          "name": "varRespostas",
+                          "value": {
+                            "codigo_pergunta": "terceiro_t07",
+                            "codigo_opcao": "@concat('terceiro_t07_', if(equals(toLower(trim(string(body('Obter_detalhes_da_resposta')?['r7eb11f1294d7429391236b5d533ad22c']))), 'sim'), 'sim', 'nao'))",
+                            "texto_pergunta": "T7) A empresa ou outra empresa do grupo é concorrente direta ou participa de consórcios concorrentes da ASUR Brasil?",
+                            "resposta": "@body('Obter_detalhes_da_resposta')?['r7eb11f1294d7429391236b5d533ad22c']",
+                            "ordem": 9
+                          }
+                        }
+                      },
+                      "Adicionar_T08": {
+                        "runAfter": {
+                          "Adicionar_T07": [
+                            "Succeeded"
+                          ]
+                        },
+                        "type": "AppendToArrayVariable",
+                        "inputs": {
+                          "name": "varRespostas",
+                          "value": {
+                            "codigo_pergunta": "terceiro_t08",
+                            "codigo_opcao": "@concat('terceiro_t08_', if(equals(toLower(trim(string(body('Obter_detalhes_da_resposta')?['rf48abfb5124f4eedaf80b66c72091c0c']))), 'sim'), 'sim', 'nao'))",
+                            "texto_pergunta": "T8) A empresa, seus sócios ou diretores já foram mencionados em mídias relacionadas a fraude, corrupção ou outros fatos relevantes?",
+                            "resposta": "@body('Obter_detalhes_da_resposta')?['rf48abfb5124f4eedaf80b66c72091c0c']",
+                            "ordem": 10
+                          }
+                        }
+                      },
+                      "Adicionar_T09": {
+                        "runAfter": {
+                          "Adicionar_T08": [
+                            "Succeeded"
+                          ]
+                        },
+                        "type": "AppendToArrayVariable",
+                        "inputs": {
+                          "name": "varRespostas",
+                          "value": {
+                            "codigo_pergunta": "terceiro_t09",
+                            "codigo_opcao": "@concat('terceiro_t09_', if(equals(toLower(trim(string(body('Obter_detalhes_da_resposta')?['r37e5d456c486487e91f8e39948d26375']))), 'sim'), 'sim', 'nao'))",
+                            "texto_pergunta": "T9) Declara ciência e concordância com o Código de Ética do Fornecedor?",
+                            "resposta": "@body('Obter_detalhes_da_resposta')?['r37e5d456c486487e91f8e39948d26375']",
+                            "ordem": 11
+                          }
+                        }
+                      },
+                      "Para_Cada_Resposta": {
+                        "foreach": "@variables('varRespostas')",
+                        "actions": {
+                          "HTTP_Consultar_Parametro": {
+                            "runAfter": {},
+                            "type": "OpenApiConnection",
+                            "inputs": {
+                              "parameters": {
+                                "dataset": "https://grupoccr.sharepoint.com/sites/ComplianceAeroportos",
+                                "parameters/method": "GET",
+                                "parameters/uri": "@concat('_api/web/lists/getbytitle(''tb_dueDiligenceParametros'')/items?$select=ID,classificacao,codigo_pergunta,codigo_opcao&$filter=versao_questionario eq 2 and ativo eq 1 and codigo_pergunta eq ''', replace(items('Para_Cada_Resposta')?['codigo_pergunta'], '''', ''''''), ''' and codigo_opcao eq ''', replace(items('Para_Cada_Resposta')?['codigo_opcao'], '''', ''''''), '''')",
+                                "parameters/headers": {
+                                  "Accept": "application/json;odata=nometadata"
+                                }
+                              },
+                              "host": {
+                                "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+                                "connectionName": "shared_sharepointonline",
+                                "operationId": "HttpRequest"
+                              },
+                              "authentication": "@parameters('$authentication')",
+                              "retryPolicy": {
+                                "type": "none"
+                              }
+                            }
+                          },
+                          "Condicao_Parametro_Unico": {
+                            "runAfter": {
+                              "HTTP_Consultar_Parametro": [
+                                "Succeeded"
+                              ]
+                            },
+                            "type": "If",
+                            "expression": {
+                              "and": [
+                                {
+                                  "equals": [
+                                    "@equals(length(body('HTTP_Consultar_Parametro')?['value']), 1)",
+                                    true
+                                  ]
+                                }
+                              ]
+                            },
+                            "actions": {
+                              "Montar_Chave_Item": {
+                                "runAfter": {},
+                                "type": "Compose",
+                                "inputs": "@concat('itUz0nOZp0OvaWdjYwVIoMoEbKAMYIZFqUAdth6B_EFURVRKSFdaVDE4Q1RIV0VTRkxFSjFZS0VEQS4u|', string(triggerOutputs()?['body/resourceData/responseId']), '|', items('Para_Cada_Resposta')?['codigo_pergunta'])"
+                              },
+                              "HTTP_Consultar_Item_Resposta": {
+                                "runAfter": {
+                                  "Montar_Chave_Item": [
+                                    "Succeeded"
+                                  ]
+                                },
+                                "type": "OpenApiConnection",
+                                "inputs": {
+                                  "parameters": {
+                                    "dataset": "https://grupoccr.sharepoint.com/sites/ComplianceAeroportos",
+                                    "parameters/method": "GET",
+                                    "parameters/uri": "@concat('_api/web/lists/getbytitle(''tb_dueDiligenceTerceiroRespostas'')/items?$select=ID,forms_item_chave&$filter=forms_item_chave eq ''', replace(outputs('Montar_Chave_Item'), '''', ''''''), '''')",
+                                    "parameters/headers": {
+                                      "Accept": "application/json;odata=nometadata"
+                                    }
+                                  },
+                                  "host": {
+                                    "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+                                    "connectionName": "shared_sharepointonline",
+                                    "operationId": "HttpRequest"
+                                  },
+                                  "authentication": "@parameters('$authentication')",
+                                  "retryPolicy": {
+                                    "type": "none"
+                                  }
+                                }
+                              },
+                              "Montar_Item_Resposta": {
+                                "runAfter": {
+                                  "HTTP_Consultar_Item_Resposta": [
+                                    "Succeeded"
+                                  ]
+                                },
+                                "type": "Compose",
+                                "inputs": {
+                                  "solicitacao_id": "@int(first(body('HTTP_Localizar_Solicitacao')?['value'])?['ID'])",
+                                  "codigo_pergunta": "@string(items('Para_Cada_Resposta')?['codigo_pergunta'])",
+                                  "codigo_opcao": "@string(items('Para_Cada_Resposta')?['codigo_opcao'])",
+                                  "texto_pergunta": "@string(items('Para_Cada_Resposta')?['texto_pergunta'])",
+                                  "resposta": "@string(items('Para_Cada_Resposta')?['resposta'])",
+                                  "classificacao": "@string(first(body('HTTP_Consultar_Parametro')?['value'])?['classificacao'])",
+                                  "data_resposta": "@variables('varDataResposta')",
+                                  "versao_questionario": 2,
+                                  "ordem": "@int(items('Para_Cada_Resposta')?['ordem'])",
+                                  "forms_formulario_id": "itUz0nOZp0OvaWdjYwVIoMoEbKAMYIZFqUAdth6B_EFURVRKSFdaVDE4Q1RIV0VTRkxFSjFZS0VEQS4u",
+                                  "forms_resposta_id": "@string(triggerOutputs()?['body/resourceData/responseId'])",
+                                  "forms_envio_id": "@string(outputs('Codigo_Acompanhamento'))",
+                                  "forms_item_chave": "@string(outputs('Montar_Chave_Item'))",
+                                  "ativo": 1
+                                }
+                              },
+                              "Condicao_Classificacao_Alta": {
+                                "runAfter": {
+                                  "Montar_Item_Resposta": [
+                                    "Succeeded"
+                                  ]
+                                },
+                                "type": "If",
+                                "expression": {
+                                  "and": [
+                                    {
+                                      "equals": [
+                                        "@equals(first(body('HTTP_Consultar_Parametro')?['value'])?['classificacao'], 'Risco Alto')",
+                                        true
+                                      ]
+                                    }
+                                  ]
+                                },
+                                "actions": {
+                                  "Definir_Risco_Alto": {
+                                    "runAfter": {},
+                                    "type": "SetVariable",
+                                    "inputs": {
+                                      "name": "varTerceiroAlto",
+                                      "value": true
+                                    }
+                                  },
+                                  "Incrementar_Quantidade_Risco_Alto": {
+                                    "runAfter": {
+                                      "Definir_Risco_Alto": [
+                                        "Succeeded"
+                                      ]
+                                    },
+                                    "type": "IncrementVariable",
+                                    "inputs": {
+                                      "name": "varQuantidadeRiscoAlto",
+                                      "value": 1
+                                    }
+                                  }
+                                },
+                                "else": {
+                                  "actions": {
+                                    "Manter_Classificacao": {
+                                      "runAfter": {},
+                                      "type": "Compose",
+                                      "inputs": "Classificação sem gatilho alto."
+                                    }
+                                  }
+                                }
+                              },
+                              "Condicao_Criar_Ou_Atualizar": {
+                                "runAfter": {
+                                  "Condicao_Classificacao_Alta": [
+                                    "Succeeded"
+                                  ]
+                                },
+                                "type": "If",
+                                "expression": {
+                                  "and": [
+                                    {
+                                      "equals": [
+                                        "@equals(length(body('HTTP_Consultar_Item_Resposta')?['value']), 0)",
+                                        true
+                                      ]
+                                    }
+                                  ]
+                                },
+                                "actions": {
+                                  "HTTP_Criar_Item_Resposta": {
+                                    "runAfter": {},
+                                    "type": "OpenApiConnection",
+                                    "inputs": {
+                                      "parameters": {
+                                        "dataset": "https://grupoccr.sharepoint.com/sites/ComplianceAeroportos",
+                                        "parameters/method": "POST",
+                                        "parameters/uri": "_api/web/lists/getbytitle('tb_dueDiligenceTerceiroRespostas')/items",
+                                        "parameters/headers": {
+                                          "Accept": "application/json;odata=nometadata",
+                                          "Content-Type": "application/json;odata=nometadata"
+                                        },
+                                        "parameters/body": "@string(outputs('Montar_Item_Resposta'))"
+                                      },
+                                      "host": {
+                                        "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+                                        "connectionName": "shared_sharepointonline",
+                                        "operationId": "HttpRequest"
+                                      },
+                                      "authentication": "@parameters('$authentication')",
+                                      "retryPolicy": {
+                                        "type": "none"
+                                      }
+                                    }
+                                  }
+                                },
+                                "else": {
+                                  "actions": {
+                                    "HTTP_Atualizar_Item_Resposta": {
+                                      "runAfter": {},
+                                      "type": "OpenApiConnection",
+                                      "inputs": {
+                                        "parameters": {
+                                          "dataset": "https://grupoccr.sharepoint.com/sites/ComplianceAeroportos",
+                                          "parameters/method": "POST",
+                                          "parameters/uri": "@concat('_api/web/lists/getbytitle(''tb_dueDiligenceTerceiroRespostas'')/items(', string(first(body('HTTP_Consultar_Item_Resposta')?['value'])?['ID']), ')')",
+                                          "parameters/headers": {
+                                            "Accept": "application/json;odata=nometadata",
+                                            "Content-Type": "application/json;odata=nometadata",
+                                            "X-HTTP-Method": "MERGE",
+                                            "IF-MATCH": "*"
+                                          },
+                                          "parameters/body": "@string(outputs('Montar_Item_Resposta'))"
+                                        },
+                                        "host": {
+                                          "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+                                          "connectionName": "shared_sharepointonline",
+                                          "operationId": "HttpRequest"
+                                        },
+                                        "authentication": "@parameters('$authentication')",
+                                        "retryPolicy": {
+                                          "type": "none"
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            },
+                            "else": {
+                              "actions": {
+                                "Registrar_Erro_Parametro": {
+                                  "runAfter": {},
+                                  "type": "SetVariable",
+                                  "inputs": {
+                                    "name": "varErroParametro",
+                                    "value": true
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        },
+                        "runtimeConfiguration": {
+                          "concurrency": {
+                            "repetitions": 1
+                          }
+                        },
+                        "type": "Foreach",
+                        "runAfter": {
+                          "Adicionar_T09": [
+                            "Succeeded"
+                          ]
+                        }
+                      },
+                      "Condicao_Parametros_Validos": {
+                        "runAfter": {
+                          "Para_Cada_Resposta": [
+                            "Succeeded"
+                          ]
+                        },
+                        "type": "If",
+                        "expression": {
+                          "and": [
+                            {
+                              "equals": [
+                                "@equals(variables('varErroParametro'), false)",
+                                true
+                              ]
+                            }
+                          ]
+                        },
+                        "actions": {
+                          "Montar_Atualizacao_Solicitacao": {
+                            "runAfter": {},
+                            "type": "Compose",
+                            "inputs": {
+                              "terceiro_gatilho_risco": "@if(variables('varTerceiroAlto'), 'Sim', 'Não')",
+                              "classificacao_risco": "@if(variables('varTerceiroAlto'), 'Alto', first(body('HTTP_Localizar_Solicitacao')?['value'])?['classificacao_risco'])",
+                              "risco_final": "@if(variables('varTerceiroAlto'), 'Alto (gatilho do terceiro)', first(body('HTTP_Localizar_Solicitacao')?['value'])?['risco_final'])",
+                              "data_resposta_terceiro": "@variables('varDataResposta')",
+                              "forms_ultima_resposta_id": "@string(triggerOutputs()?['body/resourceData/responseId'])",
+                              "status": "Pendente Compliance"
+                            }
+                          },
+                          "HTTP_Atualizar_Solicitacao": {
+                            "runAfter": {
+                              "Montar_Atualizacao_Solicitacao": [
+                                "Succeeded"
+                              ]
+                            },
+                            "type": "OpenApiConnection",
+                            "inputs": {
+                              "parameters": {
+                                "dataset": "https://grupoccr.sharepoint.com/sites/ComplianceAeroportos",
+                                "parameters/method": "POST",
+                                "parameters/uri": "@concat('_api/web/lists/getbytitle(''tb_dueDiligence'')/items(', string(first(body('HTTP_Localizar_Solicitacao')?['value'])?['ID']), ')')",
+                                "parameters/headers": {
+                                  "Accept": "application/json;odata=nometadata",
+                                  "Content-Type": "application/json;odata=nometadata",
+                                  "X-HTTP-Method": "MERGE",
+                                  "IF-MATCH": "*"
+                                },
+                                "parameters/body": "@string(outputs('Montar_Atualizacao_Solicitacao'))"
+                              },
+                              "host": {
+                                "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+                                "connectionName": "shared_sharepointonline",
+                                "operationId": "HttpRequest"
+                              },
+                              "authentication": "@parameters('$authentication')",
+                              "retryPolicy": {
+                                "type": "none"
+                              }
+                            }
+                          },
+                          "Montar_Historico_Resposta": {
+                            "runAfter": {
+                              "HTTP_Atualizar_Solicitacao": [
+                                "Succeeded"
+                              ]
+                            },
+                            "type": "Compose",
+                            "inputs": {
+                              "solicitacao_id": "@int(first(body('HTTP_Localizar_Solicitacao')?['value'])?['ID'])",
+                              "tipo_desdobramento": "Resposta do terceiro",
+                              "status_anterior": "@first(body('HTTP_Localizar_Solicitacao')?['value'])?['status']",
+                              "status_novo": "Pendente Compliance",
+                              "descricao": "@concat('Resposta do terceiro processada. ', string(length(variables('varRespostas'))), ' resposta(s); ', string(variables('varQuantidadeRiscoAlto')), ' classificação(ões) de risco alto. Forms Response ID: ', string(triggerOutputs()?['body/resourceData/responseId']), '.')",
+                              "visivel_solicitante": 1,
+                              "ativo": 1
+                            }
+                          },
+                          "HTTP_Registrar_Historico_Resposta": {
+                            "runAfter": {
+                              "Montar_Historico_Resposta": [
+                                "Succeeded"
+                              ]
+                            },
+                            "type": "OpenApiConnection",
+                            "inputs": {
+                              "parameters": {
+                                "dataset": "https://grupoccr.sharepoint.com/sites/ComplianceAeroportos",
+                                "parameters/method": "POST",
+                                "parameters/uri": "_api/web/lists/getbytitle('tb_dueDiligenceDesdobramentos')/items",
+                                "parameters/headers": {
+                                  "Accept": "application/json;odata=nometadata",
+                                  "Content-Type": "application/json;odata=nometadata"
+                                },
+                                "parameters/body": "@string(outputs('Montar_Historico_Resposta'))"
+                              },
+                              "host": {
+                                "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+                                "connectionName": "shared_sharepointonline",
+                                "operationId": "HttpRequest"
+                              },
+                              "authentication": "@parameters('$authentication')",
+                              "retryPolicy": {
+                                "type": "none"
+                              }
+                            }
+                          },
+                          "Resposta_Processada": {
+                            "runAfter": {
+                              "HTTP_Registrar_Historico_Resposta": [
+                                "Succeeded",
+                                "Failed",
+                                "TimedOut"
+                              ]
+                            },
+                            "type": "Compose",
+                            "inputs": "@concat('Solicitação ', string(first(body('HTTP_Localizar_Solicitacao')?['value'])?['ID']), ' processada com ', string(length(variables('varRespostas'))), ' respostas.')"
+                          }
+                        },
+                        "else": {
+                          "actions": {
+                            "Falha_Parametro_Ausente_Ou_Duplicado": {
+                              "runAfter": {},
+                              "type": "Terminate",
+                              "inputs": {
+                                "runStatus": "Failed",
+                                "runError": {
+                                  "code": "DD02_PARAMETRO_INVALIDO",
+                                  "message": "Uma ou mais respostas não possuem exatamente um parâmetro v2 ativo."
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "else": {
+                      "actions": {
+                        "Falha_Resposta_Invalida": {
+                          "runAfter": {},
+                          "type": "Terminate",
+                          "inputs": {
+                            "runStatus": "Failed",
+                            "runError": {
+                              "code": "DD02_RESPOSTA_INVALIDA",
+                              "message": "O código, o status, o fluxo ou uma das respostas não corresponde à solicitação atualmente aguardada."
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "else": {
+            "actions": {
+              "Falha_Correlacao": {
+                "runAfter": {},
+                "type": "Terminate",
+                "inputs": {
+                  "runStatus": "Failed",
+                  "runError": {
+                    "code": "DD02_CORRELACAO_INVALIDA",
+                    "message": "Nenhuma solicitação única foi localizada pelo Código de acompanhamento."
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "outputs": {}
+    },
+    "connectionReferences": {
+      "shared_microsoftforms": {
+        "connectionName": "shared-microsoftform-391140b1-7340-4f41-a9fa-21898cc21062",
+        "source": "Embedded",
+        "id": "/providers/Microsoft.PowerApps/apis/shared_microsoftforms",
+        "tier": "NotSpecified",
+        "apiName": "microsoftforms",
+        "isProcessSimpleApiReferenceConversionAlreadyDone": false
+      },
+      "shared_sharepointonline": {
+        "connectionName": "shared_sharepointonline-due-diligence",
+        "source": "Embedded",
+        "id": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+        "tier": "NotSpecified",
+        "apiName": "sharepointonline",
+        "isProcessSimpleApiReferenceConversionAlreadyDone": false
+      }
+    },
+    "flowFailureAlertSubscribed": false,
+    "isManaged": false
+  }
+}

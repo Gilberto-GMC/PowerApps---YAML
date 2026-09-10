@@ -20,7 +20,11 @@ Screens:
                 varGatilhoDdForm: Blank(),
                 varFluxoForm: Blank(),
                 varRiscoFinalTextoForm: Blank(),
-                varRiscoFinalCategoriaForm: Blank()
+                varRiscoFinalCategoriaForm: Blank(),
+                varDdFormsCorrelacaoForm: Blank(),
+                varDdFormsEnvioForm: Blank(),
+                varDdPodeAnalisarCompliance: false,
+                varDdOcupadoDesde: Blank()
             }
         );
         If(
@@ -214,7 +218,9 @@ Screens:
                                           {
                                               varVisibleDueDiligence: Self.Text,
                                               varAcaoDueDiligence: "new",
-                                              varRegistroDueDiligence: Defaults(tb_dueDiligence)
+                                              varRegistroDueDiligence: Defaults(tb_dueDiligence),
+                                              varDdFormsCorrelacaoForm: Text(GUID()),
+                                              varDdFormsEnvioForm: Blank()
                                           }
                                       );
                                       NewForm(frmDdSolicitante);
@@ -239,7 +245,9 @@ Screens:
                                           {
                                               varVisibleDueDiligence: Self.Text,
                                               varAcaoDueDiligence: Blank(),
-                                              varRegistroDueDiligence: Blank()
+                                              varRegistroDueDiligence: Blank(),
+                                              varDdFormsCorrelacaoForm: Blank(),
+                                              varDdFormsEnvioForm: Blank()
                                           }
                                       )
                                     Text: ="Registros"
@@ -617,6 +625,7 @@ Screens:
                                                       _pontosSuccessFee: If(cmb_success_fee.Selected.Value = "Sim", 15, 0),
                                                       _pontosInteracao: Switch(dd_interacao_poder_publico.Selected.texto_opcao, "Habitual / parte do objeto", 15, "Eventual", 5, 0),
                                                       _gatilhoDD: cmb_gatilho_subcontratacao.Selected.Value = "Sim" || cmb_gatilho_procuracao.Selected.Value = "Sim" || cmb_gatilho_pagamento_em_nome.Selected.Value = "Sim" || cmb_gatilho_representacao_orgao_publico.Selected.Value = "Sim" || cmb_gatilho_indicado_funcionario_publico.Selected.Value = "Sim",
+                                                      _gatilhoTerceiro: Lower(Trim(Coalesce(varRegistroDueDiligence.terceiro_gatilho_risco, ""))) = "sim",
                                                       _obrigacaoLegal: cmb_pagamento_obrigacao_legal.Selected.Value = "Sim"
                                                   },
                                                   With(
@@ -641,14 +650,40 @@ Screens:
                                                               },
                                                               With(
                                                                   {
-                                                                      _corFluxo: Switch(_fluxo, "FLUXO I", "#067647", "FLUXO II", "#B54708", "FLUXO III", "#B42318", "#00879A"),
-                                                                      _fundoFluxo: Switch(_fluxo, "FLUXO I", "#ECFDF3", "FLUXO II", "#FFFAEB", "FLUXO III", "#FEF3F2", "#EBF5F7"),
-                                                                      _tratamento: Switch(
-                                                                          _fluxo,
-                                                                          "FLUXO I", "Aprovação automática — cadastro para monitoramento futuro. Sem due diligence.",
-                                                                          "FLUXO II", "Cadastro como alto risco — monitoramento atual. Sem due diligence.",
-                                                                          "FLUXO III", "Submeter à due diligence do Compliance.",
-                                                                          "Preencha o formulário para calcular o fluxo."
+                                                                      _respostasTerceiroAtual: Filter(
+                                                                          tb_dueDiligenceTerceiroRespostas,
+                                                                          !IsBlank(varRegistroDueDiligence.ID) &&
+                                                                          solicitacao_id = varRegistroDueDiligence.ID &&
+                                                                          forms_envio_id = varRegistroDueDiligence.forms_envio_id &&
+                                                                          ativo = 1
+                                                                      )
+                                                                  },
+                                                                  With(
+                                                                  {
+                                                                      _qtdRespostasTerceiro: CountRows(_respostasTerceiroAtual),
+                                                                      _qtdRiscoAltoTerceiro: CountIf(_respostasTerceiroAtual, classificacao = "Risco Alto"),
+                                                                      _statusAnalise: Coalesce(varRegistroDueDiligence.status, "Em preenchimento"),
+                                                                      _corStatusAnalise: Switch(
+                                                                          varRegistroDueDiligence.status,
+                                                                          "Aprovado", "#067647",
+                                                                          "Aprovado automaticamente - Fluxo I", "#067647",
+                                                                          "Encerrado - risco baixo", "#067647",
+                                                                          "Aprovado com ressalvas", "#B54708",
+                                                                          "Reprovado parcialmente", "#D97706",
+                                                                          "Reprovado", "#B42318",
+                                                                          "Cancelado", "#64748B",
+                                                                          "#00879A"
+                                                                      ),
+                                                                      _fundoStatusAnalise: Switch(
+                                                                          varRegistroDueDiligence.status,
+                                                                          "Aprovado", "#ECFDF3",
+                                                                          "Aprovado automaticamente - Fluxo I", "#ECFDF3",
+                                                                          "Encerrado - risco baixo", "#ECFDF3",
+                                                                          "Aprovado com ressalvas", "#FFFAEB",
+                                                                          "Reprovado parcialmente", "#FFF4D6",
+                                                                          "Reprovado", "#FEF3F2",
+                                                                          "Cancelado", "#F1F5F9",
+                                                                          "#EBF5F7"
                                                                       ),
                                                                       _rotuloClassificacao: Switch(
                                                                           _classificacaoContraparte,
@@ -659,7 +694,8 @@ Screens:
                                                                           "—"
                                                                       )
                                                                   },
-                                                                  "<div style='font-family:Segoe UI,Arial,sans-serif;background:#F8FAFC;border:1px solid #E2E8F0;padding:12px 14px;box-sizing:border-box'>" & "<table role='presentation' style='width:100%;border-collapse:collapse;margin-bottom:9px'>" & "<tr>" & "<td style='font-size:11px;font-weight:700;letter-spacing:.7px;color:#00879A'>RESUMO DA AVALIAÇÃO</td>" & "<td style='font-size:10px;text-align:right;color:#64748B'>" & If(IsBlank(varRegistroDueDiligence.ID), "NOVA SOLICITAÇÃO", "DD-" & Text(varRegistroDueDiligence.ID, "000000")) & "</td>" & "</tr>" & "</table>" & "<table role='presentation' style='width:100%;table-layout:fixed;border-collapse:separate;border-spacing:8px 0'>" & "<tr>" & "<td style='vertical-align:top;background:#FFFFFF;border:1px solid #E2E8F0;border-top:3px solid #00879A;padding:10px 12px'>" & "<div style='font-size:9px;font-weight:700;letter-spacing:.5px;color:#64748B'>CLASSIFICAÇÃO DA CONTRAPARTE</div>" & "<div style='font-size:18px;line-height:30px;font-weight:700;color:#005864'>" & _rotuloClassificacao & "</div>" & "<div style='font-size:10px;color:#94A3B8'>Categoria e tipo selecionados</div>" & "</td>" & "<td style='vertical-align:top;background:#FFFFFF;border:1px solid #E2E8F0;border-top:3px solid #64748B;padding:10px 12px'>" & "<div style='font-size:9px;font-weight:700;letter-spacing:.5px;color:#64748B'>PONTUAÇÃO DO CONTRATO</div>" & "<div style='font-size:25px;line-height:30px;font-weight:700;color:#0F172A'>" & Text(_totalPontos, "0") & "</div>" & "<div style='font-size:10px;color:#94A3B8'>" & If(_classificacaoContraparte = "PONTUAR", "Faixa por pontos — " & _faixaPontos, "Pontua apenas para contraparte PONTUAR") & "</div>" & "</td>" & "<td style='vertical-align:top;background:#FFFFFF;border:1px solid #E2E8F0;border-top:3px solid " & If(_gatilhoDD, "#B42318", "#067647") & ";padding:10px 12px'>" & "<div style='font-size:9px;font-weight:700;letter-spacing:.5px;color:#64748B'>GATILHO DE DUE DILIGENCE</div>" & "<div style='font-size:25px;line-height:30px;font-weight:700;color:#0F172A'>" & If(_gatilhoDD, "SIM", "NÃO") & "</div>" & "<div style='font-size:10px;color:#94A3B8'>Perguntas complementares</div>" & "</td>" & "<td style='vertical-align:top;background:#FFFFFF;border:1px solid #E2E8F0;border-top:3px solid " & _corFluxo & ";padding:10px 12px'>" & "<div style='font-size:9px;font-weight:700;letter-spacing:.5px;color:#64748B;margin-bottom:7px'>FLUXO / TRATAMENTO</div>" & "<span style='display:inline-block;padding:4px 9px;background:" & _fundoFluxo & ";color:" & _corFluxo & ";font-size:10px;font-weight:700'>" & If(IsBlank(_fluxo), "EM PREENCHIMENTO", _fluxo) & "</span>" & "<div style='font-size:10px;font-weight:600;color:#475569;margin-top:8px'>" & _tratamento & "</div>" & "</td>" & "</tr>" & "</table>" & "</div>"
+                                                                  "<div style='font-family:Segoe UI,Arial,sans-serif;background:#F8FAFC;border:1px solid #E2E8F0;padding:12px 14px;box-sizing:border-box'>" & "<table role='presentation' style='width:100%;border-collapse:collapse;margin-bottom:9px'>" & "<tr>" & "<td style='font-size:11px;font-weight:700;letter-spacing:.7px;color:#00879A'>RESUMO DA AVALIAÇÃO</td>" & "<td style='font-size:10px;text-align:right;color:#64748B'>" & If(IsBlank(varRegistroDueDiligence.ID), "NOVA SOLICITAÇÃO", "DD-" & Text(varRegistroDueDiligence.ID, "000000")) & "</td>" & "</tr>" & "</table>" & "<table role='presentation' style='width:100%;table-layout:fixed;border-collapse:separate;border-spacing:8px 0'>" & "<tr>" & "<td style='vertical-align:top;background:#FFFFFF;border:1px solid #E2E8F0;border-top:3px solid #00879A;padding:10px 12px'>" & "<div style='font-size:9px;font-weight:700;letter-spacing:.5px;color:#64748B'>CLASSIFICAÇÃO DA CONTRAPARTE</div>" & "<div style='font-size:18px;line-height:30px;font-weight:700;color:#005864'>" & _rotuloClassificacao & "</div>" & "<div style='font-size:10px;color:#94A3B8'>Categoria e tipo selecionados</div>" & "</td>" & "<td style='vertical-align:top;background:#FFFFFF;border:1px solid #E2E8F0;border-top:3px solid " & If(_qtdRiscoAltoTerceiro > 0, "#B42318", If(_qtdRespostasTerceiro > 0, "#00879A", "#64748B")) & ";padding:10px 12px'>" & "<div style='font-size:9px;font-weight:700;letter-spacing:.5px;color:#64748B'>RESPOSTAS DO TERCEIRO</div>" & "<div style='font-size:" & If(IsBlank(varRegistroDueDiligence.data_resposta_terceiro), "16", "25") & "px;line-height:30px;font-weight:700;color:#0F172A'>" & If(IsBlank(varRegistroDueDiligence.data_resposta_terceiro), "AGUARDANDO", Text(_qtdRespostasTerceiro, "0")) & "</div>" & "<div style='font-size:10px;color:#94A3B8'>" & If(IsBlank(varRegistroDueDiligence.data_resposta_terceiro), "Questionário ainda não respondido", Text(_qtdRiscoAltoTerceiro, "0") & If(_qtdRiscoAltoTerceiro = 1, " resposta de risco alto", " respostas de risco alto")) & "</div>" & "</td>" & "<td style='vertical-align:top;background:#FFFFFF;border:1px solid #E2E8F0;border-top:3px solid " & If(_gatilhoDD || _gatilhoTerceiro, "#B42318", "#067647") & ";padding:10px 12px'>" & "<div style='font-size:9px;font-weight:700;letter-spacing:.5px;color:#64748B'>GATILHO DE DUE DILIGENCE</div>" & "<div style='font-size:25px;line-height:30px;font-weight:700;color:#0F172A'>" & If(_gatilhoDD || _gatilhoTerceiro, "SIM", "NÃO") & "</div>" & "<div style='font-size:10px;color:#94A3B8'>Solicitante: " & If(_gatilhoDD, "SIM", "NÃO") & " • Terceiro: " & If(IsBlank(varRegistroDueDiligence.data_resposta_terceiro), "AGUARDANDO", If(_gatilhoTerceiro, "SIM", "NÃO")) & "</div>" & "</td>" & "<td style='vertical-align:top;background:#FFFFFF;border:1px solid #E2E8F0;border-top:3px solid " & _corStatusAnalise & ";padding:10px 12px'>" & "<div style='font-size:9px;font-weight:700;letter-spacing:.5px;color:#64748B;margin-bottom:7px'>SITUAÇÃO DA ANÁLISE</div>" & "<span style='display:inline-block;padding:4px 9px;background:" & _fundoStatusAnalise & ";color:" & _corStatusAnalise & ";font-size:10px;font-weight:700'>" & Upper(_statusAnalise) & "</span>" & "<div style='font-size:10px;font-weight:600;color:#475569;margin-top:8px'>" & If(IsBlank(varRegistroDueDiligence.responsavel_compliance_email), "Aguardando atribuição do Compliance", "Responsável: " & varRegistroDueDiligence.responsavel_compliance_email) & "</div>" & "</td>" & "</tr>" & "</table>" & "</div>"
+                                                              )
                                                               )
                                                           )
                                                       )
@@ -684,7 +720,7 @@ Screens:
                                     Height: =2500
                                     Item: =varRegistroDueDiligence
                                     OnFailure: |-
-                                      =UpdateContext({varVisibleProcessandoDd: false});
+                                      =UpdateContext({varVisibleProcessandoDd: false, varDdOcupadoDesde: Blank()});
                                       Notify(
                                           "Não foi possível salvar a solicitação: " & Self.Error,
                                           NotificationType.Error,
@@ -738,7 +774,10 @@ Screens:
                                                   varGatilhoDdForm: Blank(),
                                                   varFluxoForm: Blank(),
                                                   varRiscoFinalTextoForm: Blank(),
-                                                  varRiscoFinalCategoriaForm: Blank()
+                                                  varRiscoFinalCategoriaForm: Blank(),
+                                                  varDdFormsCorrelacaoForm: Blank(),
+                                                  varDdFormsEnvioForm: Blank(),
+                                                  varDdOcupadoDesde: Blank()
                                               }
                                           );
                                           Refresh(tb_dueDiligence);
@@ -768,7 +807,7 @@ Screens:
                                                 },
                                                 If(
                                                     IsBlank(_statusAtual) ||
-                                                    _statusAtual in ["rascunho", "aguardando envio ao terceiro", "aguardando terceiro"],
+                                                    _statusAtual in ["rascunho", "aguardando envio ao terceiro"],
                                                     If(
                                                         _versao = 1,
                                                         If(
@@ -1024,6 +1063,32 @@ Screens:
                                           DisplayName: =DataSourceInfo([@tb_dueDiligence], DataSourceInfo.DisplayName, risco_final)
                                           Required: =false
                                           Update: =If(Coalesce(ThisItem.versao_questionario, 2) = 2, varRiscoFinalTextoForm, Self.Default)
+                                          Visible: =false
+                                          Width: =Parent.Width
+                                          X: =0
+                                          Y: =0
+                                    - forms_correlacao_id_DataCard:
+                                        Control: TypedDataCard@1.0.7
+                                        Variant: TextualEdit
+                                        Properties:
+                                          DataField: ="forms_correlacao_id"
+                                          Default: =ThisItem.forms_correlacao_id
+                                          DisplayName: =DataSourceInfo([@tb_dueDiligence], DataSourceInfo.DisplayName, forms_correlacao_id)
+                                          Required: =true
+                                          Update: =varDdFormsCorrelacaoForm
+                                          Visible: =false
+                                          Width: =Parent.Width
+                                          X: =0
+                                          Y: =0
+                                    - forms_envio_id_DataCard:
+                                        Control: TypedDataCard@1.0.7
+                                        Variant: TextualEdit
+                                        Properties:
+                                          DataField: ="forms_envio_id"
+                                          Default: =ThisItem.forms_envio_id
+                                          DisplayName: =DataSourceInfo([@tb_dueDiligence], DataSourceInfo.DisplayName, forms_envio_id)
+                                          Required: =false
+                                          Update: =Coalesce(varDdFormsEnvioForm, Self.Default)
                                           Visible: =false
                                           Width: =Parent.Width
                                           X: =0
@@ -3249,7 +3314,9 @@ Screens:
                                                 {
                                                     varVisibleDueDiligence: "Registros",
                                                     varAcaoDueDiligence: Blank(),
-                                                    varRegistroDueDiligence: Blank()
+                                                    varRegistroDueDiligence: Blank(),
+                                                    varDdFormsCorrelacaoForm: Blank(),
+                                                    varDdFormsEnvioForm: Blank()
                                                 }
                                             )
                                           Text: ="Cancelar"
@@ -3265,7 +3332,24 @@ Screens:
                                           FontSize: =16
                                           Height: =45
                                           OnSelect: |-
-                                            =With(
+                                            =If(
+                                                !IsBlank(varDdOcupadoDesde) && DateDiff(varDdOcupadoDesde, Now(), TimeUnit.Seconds) < 30,
+                                                Notify(
+                                                    "Aguarde: a ação anterior ainda está sendo processada.",
+                                                    NotificationType.Warning,
+                                                    3000
+                                                ),
+                                                UpdateContext(
+                                                    {
+                                                        varDdOcupadoDesde: Now(),
+                                                        varDdFormsCorrelacaoForm: Coalesce(
+                                                            varDdFormsCorrelacaoForm,
+                                                            varRegistroDueDiligence.forms_correlacao_id,
+                                                            Text(GUID())
+                                                        )
+                                                    }
+                                                );
+                                                With(
                                                 {
                                                     _versao: Coalesce(varRegistroDueDiligence.versao_questionario, 2),
                                                     _selecoes: Table(
@@ -3330,20 +3414,20 @@ Screens:
                                                                 ),
                                                                 _riscoTexto: If(
                                                                     _obrigacaoLegal, "Sem risco (obrigação legal)",
+                                                                    _gatilhoDD, "Alto (gatilho DD)",
                                                                     _classificacaoContraparte = "FLUXO II", "Alto (monitoramento atual)",
                                                                     _classificacaoContraparte = "ALTO", "Alto",
                                                                     _classificacaoContraparte = "SEM RISCO", "Sem risco",
-                                                                    _classificacaoContraparte = "PONTUAR", _faixaPontos & If(_gatilhoDD, " + gatilho DD", ""),
-                                                                    _gatilhoDD, "Alto (gatilho DD)",
+                                                                    _classificacaoContraparte = "PONTUAR", _faixaPontos,
                                                                     "Indefinido"
                                                                 ),
                                                                 _riscoCategoria: If(
                                                                     _obrigacaoLegal, "Baixo",
+                                                                    _gatilhoDD, "Alto",
                                                                     _classificacaoContraparte = "FLUXO II", "Alto",
                                                                     _classificacaoContraparte = "ALTO", "Alto",
                                                                     _classificacaoContraparte = "SEM RISCO", "Baixo",
                                                                     _classificacaoContraparte = "PONTUAR", _faixaPontos,
-                                                                    _gatilhoDD, "Alto",
                                                                     Blank()
                                                                 )
                                                             },
@@ -3370,12 +3454,25 @@ Screens:
                                                                     varFluxoForm: _fluxo,
                                                                     varRiscoFinalTextoForm: _riscoTexto,
                                                                     varRiscoFinalCategoriaForm: _riscoCategoria,
+                                                                    varDdFormsEnvioForm: If(
+                                                                        _fluxo = "FLUXO III",
+                                                                        Coalesce(
+                                                                            varDdFormsEnvioForm,
+                                                                            varRegistroDueDiligence.forms_envio_id,
+                                                                            Text(GUID())
+                                                                        ),
+                                                                        Coalesce(
+                                                                            varDdFormsEnvioForm,
+                                                                            varRegistroDueDiligence.forms_envio_id
+                                                                        )
+                                                                    ),
                                                                     varVisibleProcessandoDd: true
                                                                 }
                                                             );
                                                             SubmitForm(frmDdSolicitante)
                                                         )
                                                     )
+                                                )
                                                 )
                                             )
                                           Text: =If(varAcaoDueDiligence = "new", "Criar Solicitação", "Salvar Alterações")
@@ -3495,7 +3592,8 @@ Screens:
                                           Layout: ='ButtonCanvas.Layout'.IconOnly
                                           OnSelect: |-
                                             =Refresh(tb_dueDiligence);
-                                            Refresh(tb_dueDiligenceDesdobramentos)
+                                            Refresh(tb_dueDiligenceDesdobramentos);
+                                            Refresh(tb_dueDiligenceTerceiroRespostas)
                                           Width: =40
                               - cntDdGrid:
                                   Control: GroupContainer@1.5.0
@@ -3626,34 +3724,71 @@ Screens:
                                           Items: |-
                                             =With(
                                                 {
-                                                    _busca: Trim(txtDdBuscar.Value)
+                                                    _busca: Trim(txtDdBuscar.Value),
+                                                    _idBusca: If(IsNumeric(Trim(txtDdBuscar.Value)), Value(Trim(txtDdBuscar.Value)), Blank()),
+                                                    _status: cmbDdFiltroStatus.Selected.Value,
+                                                    _dataInicio: Coalesce(dpDdDataInicio.SelectedDate, Date(1900, 1, 1)),
+                                                    _dataFimExclusiva: If(
+                                                        IsBlank(dpDdDataFim.SelectedDate),
+                                                        DateAdd(Today(), 1, TimeUnit.Days),
+                                                        DateAdd(dpDdDataFim.SelectedDate, 1, TimeUnit.Days)
+                                                    )
                                                 },
                                                 SortByColumns(
                                                     If(
-                                                        IsBlank(_busca),
-                                                        Filter(
-                                                            tb_dueDiligence,
-                                                            ativo = 1,
-                                                            IsBlank(cmbDdFiltroStatus.Selected.Value) || status = cmbDdFiltroStatus.Selected.Value,
-                                                            IsBlank(dpDdDataInicio.SelectedDate) || Created >= dpDdDataInicio.SelectedDate,
-                                                            IsBlank(dpDdDataFim.SelectedDate) || Created < DateAdd(dpDdDataFim.SelectedDate, 1, TimeUnit.Days)
+                                                        IsBlank(_status),
+                                                        Switch(
+                                                            true,
+                                                            IsBlank(_busca),
+                                                            Filter(
+                                                                tb_dueDiligence,
+                                                                ativo = 1 &&
+                                                                Created >= _dataInicio &&
+                                                                Created < _dataFimExclusiva
+                                                            ),
+                                                            IsNumeric(_busca),
+                                                            Filter(
+                                                                tb_dueDiligence,
+                                                                ativo = 1 &&
+                                                                ID = _idBusca &&
+                                                                Created >= _dataInicio &&
+                                                                Created < _dataFimExclusiva
+                                                            ),
+                                                            Filter(
+                                                                tb_dueDiligence,
+                                                                ativo = 1 &&
+                                                                (StartsWith(razao_social, _busca) || StartsWith(cnpj_cpf, _busca)) &&
+                                                                Created >= _dataInicio &&
+                                                                Created < _dataFimExclusiva
+                                                            )
                                                         ),
-                                                        IsNumeric(_busca),
-                                                        Filter(
-                                                            tb_dueDiligence,
-                                                            ativo = 1,
-                                                            ID = Value(_busca),
-                                                            IsBlank(cmbDdFiltroStatus.Selected.Value) || status = cmbDdFiltroStatus.Selected.Value,
-                                                            IsBlank(dpDdDataInicio.SelectedDate) || Created >= dpDdDataInicio.SelectedDate,
-                                                            IsBlank(dpDdDataFim.SelectedDate) || Created < DateAdd(dpDdDataFim.SelectedDate, 1, TimeUnit.Days)
-                                                        ),
-                                                        Filter(
-                                                            tb_dueDiligence,
-                                                            ativo = 1,
-                                                            StartsWith(razao_social, _busca) || StartsWith(cnpj_cpf, _busca),
-                                                            IsBlank(cmbDdFiltroStatus.Selected.Value) || status = cmbDdFiltroStatus.Selected.Value,
-                                                            IsBlank(dpDdDataInicio.SelectedDate) || Created >= dpDdDataInicio.SelectedDate,
-                                                            IsBlank(dpDdDataFim.SelectedDate) || Created < DateAdd(dpDdDataFim.SelectedDate, 1, TimeUnit.Days)
+                                                        Switch(
+                                                            true,
+                                                            IsBlank(_busca),
+                                                            Filter(
+                                                                tb_dueDiligence,
+                                                                ativo = 1 &&
+                                                                status = _status &&
+                                                                Created >= _dataInicio &&
+                                                                Created < _dataFimExclusiva
+                                                            ),
+                                                            IsNumeric(_busca),
+                                                            Filter(
+                                                                tb_dueDiligence,
+                                                                ativo = 1 &&
+                                                                ID = _idBusca &&
+                                                                status = _status &&
+                                                                Created >= _dataInicio &&
+                                                                Created < _dataFimExclusiva
+                                                            ),
+                                                            Filter(
+                                                                tb_dueDiligence,
+                                                                ativo = 1 &&
+                                                                status = _status &&
+                                                                (StartsWith(razao_social, _busca) || StartsWith(cnpj_cpf, _busca)) &&
+                                                                Created >= _dataInicio &&
+                                                                Created < _dataFimExclusiva
+                                                            )
                                                         )
                                                     ),
                                                     varColunaOrdenacaoDd,
@@ -3712,7 +3847,11 @@ Screens:
                                                       Size: =10
                                                       Text: =Text(If(IsBlank(ThisItem.data_resposta_terceiro), Coalesce(ThisItem.pontuacao_solicitante, 0), Coalesce(ThisItem.pontuacao_total, 0)), "0")
                                                       Tooltip: |-
-                                                        ="Solicitante: " & Text(Coalesce(ThisItem.pontuacao_solicitante, 0), "0") & " | Terceiro: " & Text(Coalesce(ThisItem.pontuacao_terceiro, 0), "0")
+                                                        =If(
+                                                            Coalesce(ThisItem.versao_questionario, 2) = 1,
+                                                            "Solicitante: " & Text(Coalesce(ThisItem.pontuacao_solicitante, 0), "0") & " | Terceiro: " & Text(Coalesce(ThisItem.pontuacao_terceiro, 0), "0"),
+                                                            "Pontos do contrato: " & Text(Coalesce(ThisItem.pontuacao_solicitante, 0), "0") & " | Gatilho solicitante: " & Coalesce(ThisItem.gatilho_dd, "Não") & " | Gatilho terceiro: " & If(IsBlank(ThisItem.data_resposta_terceiro), "Aguardando", Coalesce(ThisItem.terceiro_gatilho_risco, "Não"))
+                                                        )
                                                       Width: =95
                                                 - lblDdRisco:
                                                     Control: Label@2.5.1
@@ -3775,10 +3914,26 @@ Screens:
                                                             {ItemKey: "ver", ItemDisplayName: "Ver", ItemIconName: "Eye", ItemTooltip: "Visualizar"},
                                                             {
                                                                 ItemKey: "editar",
-                                                                ItemDisplayName: "Editar",
+                                                                ItemDisplayName: If(
+                                                                    ThisItem.status in ["Pendente Compliance", "Em análise Compliance", "Aguardando esclarecimento", "Em homologação"],
+                                                                    "Analisar",
+                                                                    "Editar"
+                                                                ),
                                                                 ItemIconName: "Edit",
-                                                                ItemDisabled: ThisItem.status in ["Encerrado - risco baixo", "Aprovado automaticamente - Fluxo I", "Cadastrado - monitoramento (Fluxo II)", "Aprovado", "Aprovado com ressalvas", "Reprovado parcialmente", "Reprovado", "Cancelado"],
-                                                                ItemTooltip: "Editar"
+                                                                ItemDisabled: If(
+                                                                    ThisItem.status in ["Pendente Compliance", "Em análise Compliance", "Aguardando esclarecimento", "Em homologação"],
+                                                                    !varDdPodeAnalisarCompliance,
+                                                                    ThisItem.status in ["Aguardando terceiro", "Encerrado - risco baixo", "Aprovado automaticamente - Fluxo I", "Cadastrado - monitoramento (Fluxo II)", "Aprovado", "Aprovado com ressalvas", "Reprovado parcialmente", "Reprovado", "Cancelado"]
+                                                                ),
+                                                                ItemTooltip: If(
+                                                                    ThisItem.status in ["Aguardando terceiro", "Pendente Compliance", "Em análise Compliance", "Aguardando esclarecimento", "Em homologação"],
+                                                                    If(
+                                                                        ThisItem.status = "Aguardando terceiro",
+                                                                        "Aguardando resposta do terceiro",
+                                                                        If(varDdPodeAnalisarCompliance, "Abrir análise de Compliance", "Apenas usuários da área de Compliance podem analisar")
+                                                                    ),
+                                                                    "Editar"
+                                                                )
                                                             },
                                                             {
                                                                 ItemKey: "terceiro",
@@ -3797,68 +3952,105 @@ Screens:
                                                                 {
                                                                     varRegistroDueDiligence: ThisItem,
                                                                     varVisibleDueDiligence: "Nova Solicitação",
-                                                                    varAcaoDueDiligence: "view"
+                                                                    varAcaoDueDiligence: "view",
+                                                                    varDdFormsCorrelacaoForm: ThisItem.forms_correlacao_id,
+                                                                    varDdFormsEnvioForm: ThisItem.forms_envio_id
                                                                 }
                                                             );
                                                             ViewForm(frmDdSolicitante);
                                                             ViewForm(frmDdDesdobramento),
                                                             "editar",
-                                                            UpdateContext(
-                                                                {
-                                                                    varRegistroDueDiligence: ThisItem,
-                                                                    varVisibleDueDiligence: "Nova Solicitação",
-                                                                    varAcaoDueDiligence: "edit"
-                                                                }
-                                                            );
-                                                            EditForm(frmDdSolicitante);
-                                                            NewForm(frmDdDesdobramento),
+                                                            If(
+                                                                ThisItem.status in ["Pendente Compliance", "Em análise Compliance", "Aguardando esclarecimento", "Em homologação"] && !varDdPodeAnalisarCompliance,
+                                                                Notify(
+                                                                    "A análise está restrita aos usuários da área de Compliance.",
+                                                                    NotificationType.Error,
+                                                                    8000
+                                                                ),
+                                                                UpdateContext(
+                                                                    {
+                                                                        varRegistroDueDiligence: ThisItem,
+                                                                        varVisibleDueDiligence: "Nova Solicitação",
+                                                                        varAcaoDueDiligence: "edit",
+                                                                        varDdFormsCorrelacaoForm: Coalesce(
+                                                                            ThisItem.forms_correlacao_id,
+                                                                            Text(GUID())
+                                                                        ),
+                                                                        varDdFormsEnvioForm: ThisItem.forms_envio_id
+                                                                    }
+                                                                );
+                                                                If(
+                                                                    ThisItem.status in ["Aguardando terceiro", "Pendente Compliance", "Em análise Compliance", "Aguardando esclarecimento", "Em homologação"],
+                                                                    ViewForm(frmDdSolicitante),
+                                                                    EditForm(frmDdSolicitante)
+                                                                );
+                                                                NewForm(frmDdDesdobramento)
+                                                            ),
                                                             "terceiro",
-                                                            With(
-                                                                {
-                                                                    _registroBase: LookUp(tb_dueDiligence, ID = ThisItem.ID),
-                                                                    _statusAnterior: ThisItem.status
-                                                                },
-                                                                IfError(
-                                                                    With(
-                                                                        {
-                                                                            _registroAtualizado: Patch(
-                                                                                tb_dueDiligence,
-                                                                                _registroBase,
-                                                                                {status: "Aguardando envio ao terceiro"}
-                                                                            )
-                                                                        },
-                                                                        IfError(
-                                                                            Patch(
-                                                                                tb_dueDiligenceDesdobramentos,
-                                                                                Defaults(tb_dueDiligenceDesdobramentos),
-                                                                                {
-                                                                                    solicitacao_id: ThisItem.ID,
-                                                                                    tipo_desdobramento: If(_statusAnterior = "Aguardando terceiro", "Solicitação de reenvio ao terceiro", "Solicitação de envio ao terceiro"),
-                                                                                    status_anterior: _statusAnterior,
-                                                                                    status_novo: "Aguardando envio ao terceiro",
-                                                                                    descricao: "O envio do Microsoft Forms foi colocado na fila do Power Automate para o e-mail " & ThisItem.email_terceiro & ".",
-                                                                                    visivel_solicitante: 1,
-                                                                                    ativo: 1
-                                                                                }
-                                                                            ),
+                                                            If(
+                                                                !IsBlank(varDdOcupadoDesde) && DateDiff(varDdOcupadoDesde, Now(), TimeUnit.Seconds) < 30,
+                                                                Notify(
+                                                                    "Aguarde: a ação anterior ainda está sendo processada.",
+                                                                    NotificationType.Warning,
+                                                                    3000
+                                                                ),
+                                                                UpdateContext({varDdOcupadoDesde: Now()});
+                                                                With(
+                                                                    {
+                                                                        _registroBase: LookUp(tb_dueDiligence, ID = ThisItem.ID),
+                                                                        _statusAnterior: ThisItem.status
+                                                                    },
+                                                                    IfError(
+                                                                        With(
+                                                                            {
+                                                                                _registroAtualizado: Patch(
+                                                                                    tb_dueDiligence,
+                                                                                    _registroBase,
+                                                                                    {
+                                                                                        status: "Aguardando envio ao terceiro",
+                                                                                        forms_correlacao_id: Coalesce(
+                                                                                            _registroBase.forms_correlacao_id,
+                                                                                            Text(GUID())
+                                                                                        ),
+                                                                                        forms_envio_id: Text(GUID())
+                                                                                    }
+                                                                                )
+                                                                            },
+                                                                            IfError(
+                                                                                Patch(
+                                                                                    tb_dueDiligenceDesdobramentos,
+                                                                                    Defaults(tb_dueDiligenceDesdobramentos),
+                                                                                    {
+                                                                                        solicitacao_id: ThisItem.ID,
+                                                                                        tipo_desdobramento: If(_statusAnterior = "Aguardando terceiro", "Solicitação de reenvio ao terceiro", "Solicitação de envio ao terceiro"),
+                                                                                        status_anterior: _statusAnterior,
+                                                                                        status_novo: "Aguardando envio ao terceiro",
+                                                                                        descricao: "O envio do Microsoft Forms foi colocado na fila do Power Automate para o e-mail " & ThisItem.email_terceiro & ".",
+                                                                                        visivel_solicitante: 1,
+                                                                                        ativo: 1
+                                                                                    }
+                                                                                ),
+                                                                                Notify(
+                                                                                    "O envio foi colocado na fila, mas o histórico da solicitação não pôde ser criado.",
+                                                                                    NotificationType.Warning,
+                                                                                    8000
+                                                                                )
+                                                                            );
+                                                                            UpdateContext({varDdOcupadoDesde: Blank()});
+                                                                            Refresh(tb_dueDiligence);
+                                                                            Refresh(tb_dueDiligenceDesdobramentos);
                                                                             Notify(
-                                                                                "O envio foi colocado na fila, mas o histórico da solicitação não pôde ser criado.",
-                                                                                NotificationType.Warning,
+                                                                                "Solicitação de envio registrada. O Power Automate deverá enviar o Forms e atualizar o status para Aguardando terceiro.",
+                                                                                NotificationType.Success,
                                                                                 8000
                                                                             )
-                                                                        );
-                                                                        Refresh(tb_dueDiligence);
-                                                                        Refresh(tb_dueDiligenceDesdobramentos);
+                                                                        ),
+                                                                        UpdateContext({varDdOcupadoDesde: Blank()});
                                                                         Notify(
-                                                                            "Solicitação de envio registrada. O Power Automate deverá enviar o Forms e atualizar o status para Aguardando terceiro.",
-                                                                            NotificationType.Success,
-                                                                            8000
+                                                                            "Não foi possível colocar o envio do Forms na fila.",
+                                                                            NotificationType.Error,
+                                                                            10000
                                                                         )
-                                                                    ),
-                                                                    Notify(
-                                                                        "Não foi possível colocar o envio do Forms na fila.",
-                                                                        NotificationType.Error,
-                                                                        10000
                                                                     )
                                                                 )
                                                             ),
@@ -3881,7 +4073,7 @@ Screens:
                                           Height: =35
                                           PaddingLeft: =20
                                           Size: =10
-                                          Text: =galDdRegistros.AllItemsCount & " REGISTRO(S) ENCONTRADO(S)"
+                                          Text: =galDdRegistros.AllItemsCount & " REGISTRO(S) CARREGADO(S)"
                   - cntDdDesdobramentos:
                       Control: GroupContainer@1.5.0
                       Variant: AutoLayout
@@ -3905,6 +4097,51 @@ Screens:
                         RadiusTopRight: =0
                         Visible: =!IsBlank(varRegistroDueDiligence.ID) && (varAcaoDueDiligence = "edit" || varAcaoDueDiligence = "view")
                       Children:
+                        - txtDdRespostasTerceiroTitulo:
+                            Control: ModernText@1.0.0
+                            Properties:
+                              Color: =RGBA(0, 135, 154, 1)
+                              FillPortions: =0
+                              FontWeight: =FontWeight.Bold
+                              Height: =32
+                              Size: =14
+                              Text: ="RESPOSTAS DO TERCEIRO"
+                              Visible: =!IsBlank(varRegistroDueDiligence.data_resposta_terceiro)
+                        - htmlDdRespostasTerceiro:
+                            Control: HtmlViewer@2.1.0
+                            Properties:
+                              AutoHeight: =true
+                              Fill: =RGBA(0, 0, 0, 0)
+                              HtmlText: |-
+                                =With(
+                                    {
+                                        _respostas: Sort(
+                                            Filter(
+                                                tb_dueDiligenceTerceiroRespostas,
+                                                solicitacao_id = varRegistroDueDiligence.ID &&
+                                                forms_envio_id = varRegistroDueDiligence.forms_envio_id &&
+                                                ativo = 1
+                                            ),
+                                            ordem,
+                                            SortOrder.Ascending
+                                        )
+                                    },
+                                    "<div style='font-family:Segoe UI,sans-serif;font-size:12px;padding:4px'>" &
+                                    If(
+                                        IsEmpty(_respostas),
+                                        "<div style='padding:14px;background:#F8FAFC;border:1px dashed #CBD5E1;color:#64748B'>Nenhuma resposta localizada para o envio atual.</div>",
+                                        Concat(
+                                            _respostas As R,
+                                            "<div style='margin-bottom:8px;border:1px solid #E2E8F0;border-left:4px solid " & If(R.classificacao = "Risco Alto", "#B42318", "#00879A") & ";padding:8px 10px;background:#FFFFFF'>" &
+                                            "<div style='font-size:11px;font-weight:700;color:#334155'>" & Text(R.ordem, "00") & ". " & Substitute(Substitute(Substitute(Coalesce(R.texto_pergunta, ""), "&", "&amp;"), "<", "&lt;"), ">", "&gt;") & "</div>" &
+                                            "<div style='margin-top:5px;color:#0F172A'><strong>Resposta:</strong> " & Substitute(Substitute(Substitute(Coalesce(R.resposta, "Sem resposta"), "&", "&amp;"), "<", "&lt;"), ">", "&gt;") & "</div>" &
+                                            "<div style='margin-top:4px;font-size:10px;font-weight:700;color:" & If(R.classificacao = "Risco Alto", "#B42318", "#64748B") & "'>" & Upper(R.classificacao) & "</div>" &
+                                            "</div>"
+                                        )
+                                    ) &
+                                    "</div>"
+                                )
+                              Visible: =!IsBlank(varRegistroDueDiligence.data_resposta_terceiro)
                         - cntDdDesdTitulo:
                             Control: GroupContainer@1.5.0
                             Variant: AutoLayout
@@ -3927,7 +4164,7 @@ Screens:
                                     FillPortions: =1
                                     FontWeight: =FontWeight.Bold
                                     Size: =14
-                                    Text: ="DESDOBRAMENTOS"
+                                    Text: =If(varRegistroDueDiligence.status in ["Pendente Compliance", "Em análise Compliance", "Aguardando esclarecimento", "Em homologação"], "ANÁLISE COMPLIANCE", "DESDOBRAMENTOS")
                               - btnDdInstrucoes:
                                   Control: ModernButton@1.0.0
                                   Properties:
@@ -3956,7 +4193,7 @@ Screens:
                               Height: =650
                               Item: =Defaults(tb_dueDiligenceDesdobramentos)
                               OnFailure: |-
-                                =UpdateContext({varVisibleProcessandoDd: false});
+                                =UpdateContext({varVisibleProcessandoDd: false, varDdOcupadoDesde: Blank()});
                                 Notify(
                                     "Não foi possível registrar o desdobramento: " & Self.Error,
                                     NotificationType.Error,
@@ -3976,7 +4213,7 @@ Screens:
                                         If(
                                             IsBlank(_registroBase.ID) || IsBlank(_statusNovo),
                                             Remove(tb_dueDiligenceDesdobramentos, _desdobramento);
-                                            UpdateContext({varVisibleProcessandoDd: false});
+                                            UpdateContext({varVisibleProcessandoDd: false, varDdOcupadoDesde: Blank()});
                                             Notify(
                                                 "O desdobramento foi revertido porque o registro principal ou o novo status não foi localizado.",
                                                 NotificationType.Error,
@@ -3991,9 +4228,39 @@ Screens:
                                                             {
                                                                 status: _statusNovo,
                                                                 responsavel_compliance_email: If(
-                                                                    _statusNovo = "Em análise Compliance",
-                                                                    Lower(User().Email),
+                                                                    _statusNovo in ["Em análise Compliance", "Aguardando esclarecimento", "Em homologação", "Aprovado", "Aprovado com ressalvas", "Reprovado parcialmente", "Reprovado"],
+                                                                    Coalesce(_registroBase.responsavel_compliance_email, Lower(User().Email)),
                                                                     _registroBase.responsavel_compliance_email
+                                                                ),
+                                                                decisao_compliance: If(
+                                                                    _statusNovo in ["Aprovado", "Aprovado com ressalvas", "Reprovado parcialmente", "Reprovado"],
+                                                                    _statusNovo,
+                                                                    _registroBase.decisao_compliance
+                                                                ),
+                                                                condicionantes_compliance: If(
+                                                                    _statusNovo = "Aprovado com ressalvas",
+                                                                    _desdobramento.descricao,
+                                                                    _registroBase.condicionantes_compliance
+                                                                ),
+                                                                justificativa_compliance: If(
+                                                                    _statusNovo in ["Aprovado", "Aprovado com ressalvas", "Reprovado parcialmente", "Reprovado"],
+                                                                    _desdobramento.descricao,
+                                                                    _registroBase.justificativa_compliance
+                                                                ),
+                                                                decisao_compliance_por_email: If(
+                                                                    _statusNovo in ["Aprovado", "Aprovado com ressalvas", "Reprovado parcialmente", "Reprovado"],
+                                                                    Lower(User().Email),
+                                                                    _registroBase.decisao_compliance_por_email
+                                                                ),
+                                                                data_decisao_compliance: If(
+                                                                    _statusNovo in ["Aprovado", "Aprovado com ressalvas", "Reprovado parcialmente", "Reprovado"],
+                                                                    Now(),
+                                                                    _registroBase.data_decisao_compliance
+                                                                ),
+                                                                prazo_reavaliacao: If(
+                                                                    _statusNovo = "Aprovado com ressalvas",
+                                                                    _desdobramento.prazo_resposta,
+                                                                    _registroBase.prazo_reavaliacao
                                                                 ),
                                                                 data_conclusao: If(
                                                                     _statusNovo in ["Encerrado - risco baixo", "Aprovado", "Aprovado com ressalvas", "Reprovado parcialmente", "Reprovado", "Cancelado"],
@@ -4006,7 +4273,13 @@ Screens:
                                                     UpdateContext(
                                                         {
                                                             varRegistroDueDiligence: _registroAtualizado,
-                                                            varVisibleProcessandoDd: false
+                                                            varVisibleProcessandoDd: false,
+                                                            varDdOcupadoDesde: Blank(),
+                                                            varAcaoDueDiligence: If(
+                                                                _statusNovo in ["Aprovado", "Aprovado com ressalvas", "Reprovado parcialmente", "Reprovado", "Cancelado"],
+                                                                "view",
+                                                                varAcaoDueDiligence
+                                                            )
                                                         }
                                                     );
                                                     ResetForm(Self);
@@ -4020,7 +4293,7 @@ Screens:
                                                     )
                                                 ),
                                                 Remove(tb_dueDiligenceDesdobramentos, _desdobramento);
-                                                UpdateContext({varVisibleProcessandoDd: false});
+                                                UpdateContext({varVisibleProcessandoDd: false, varDdOcupadoDesde: Blank()});
                                                 Notify(
                                                     "O status principal não pôde ser atualizado. O desdobramento foi revertido.",
                                                     NotificationType.Error,
@@ -4133,7 +4406,18 @@ Screens:
                                           DefaultSelectedItems: =If(IsBlank(varRegistroDueDiligence.status), [], [varRegistroDueDiligence.status])
                                           Height: =40
                                           IsSearchable: =false
-                                          Items: =["Aguardando envio ao terceiro", "Aguardando terceiro", "Pendente Compliance", "Em análise Compliance", "Aguardando esclarecimento", "Em homologação", "Aprovado", "Aprovado com ressalvas", "Reprovado parcialmente", "Reprovado", "Cancelado", "Erro no envio ao terceiro"]
+                                          Items: |-
+                                            =If(
+                                                varDdPodeAnalisarCompliance && varRegistroDueDiligence.status in ["Pendente Compliance", "Em análise Compliance", "Aguardando esclarecimento", "Em homologação"],
+                                                Switch(
+                                                    varRegistroDueDiligence.status,
+                                                    "Pendente Compliance", ["Em análise Compliance"],
+                                                    "Em análise Compliance", ["Em análise Compliance", "Aguardando esclarecimento", "Em homologação", "Aprovado", "Aprovado com ressalvas", "Reprovado parcialmente", "Reprovado", "Cancelado"],
+                                                    "Aguardando esclarecimento", ["Em análise Compliance", "Aguardando esclarecimento", "Cancelado"],
+                                                    "Em homologação", ["Em análise Compliance", "Aprovado", "Aprovado com ressalvas", "Reprovado parcialmente", "Reprovado", "Cancelado"]
+                                                ),
+                                                ["Aguardando envio ao terceiro", "Aguardando terceiro", "Pendente Compliance", "Em análise Compliance", "Aguardando esclarecimento", "Em homologação", "Aprovado", "Aprovado com ressalvas", "Reprovado parcialmente", "Reprovado", "Cancelado", "Erro no envio ao terceiro"]
+                                            )
                                           Required: =Parent.Required
                                           Width: =Parent.Width - 48
                                           X: =24
@@ -4184,7 +4468,7 @@ Screens:
                                   Variant: NumberEdit
                                   Properties:
                                     DataField: ="visivel_solicitante"
-                                    Default: =Coalesce(ThisItem.visivel_solicitante, 1)
+                                    Default: =Coalesce(ThisItem.visivel_solicitante, If(varDdPodeAnalisarCompliance && varRegistroDueDiligence.status in ["Pendente Compliance", "Em análise Compliance", "Aguardando esclarecimento", "Em homologação"], 0, 1))
                                     DisplayName: =DataSourceInfo([@tb_dueDiligenceDesdobramentos], DataSourceInfo.DisplayName, visivel_solicitante)
                                     Height: =60
                                     Required: =true
@@ -4231,7 +4515,7 @@ Screens:
                                         Control: Text@0.0.51
                                         Properties:
                                           Height: =22
-                                          Text: ="Prazo para resposta (opcional)"
+                                          Text: =If(cmbDdDesdStatusNovo.Selected.Value = "Aprovado com ressalvas", "Prazo de reavaliação", "Prazo para resposta (opcional)")
                                           Weight: ='TextCanvas.Weight'.Semibold
                                           Width: =Parent.Width - 48
                                           X: =24
@@ -4338,23 +4622,34 @@ Screens:
                                     Appearance: ='ButtonCanvas.Appearance'.Primary
                                     BasePaletteColor: =RGBA(8, 222, 8, 1)
                                     BorderRadius: =0
-                                    DisplayMode: =If(varAcaoDueDiligence = "edit", DisplayMode.Edit, DisplayMode.Disabled)
+                                    DisplayMode: =If(varAcaoDueDiligence = "edit" && (!(varRegistroDueDiligence.status in ["Pendente Compliance", "Em análise Compliance", "Aguardando esclarecimento", "Em homologação"]) || varDdPodeAnalisarCompliance), DisplayMode.Edit, DisplayMode.Disabled)
                                     FillPortions: =1
                                     Height: =40
                                     OnSelect: |-
                                       =If(
                                           IsBlank(cmbDdTipoDesdobramento.Selected.Value) ||
                                           IsBlank(cmbDdDesdStatusNovo.Selected.Value) ||
-                                          IsBlank(Trim(txtDdDesdDescricao.Value)),
+                                          IsBlank(Trim(txtDdDesdDescricao.Value)) ||
+                                          (cmbDdDesdStatusNovo.Selected.Value in ["Aprovado", "Aprovado com ressalvas", "Reprovado parcialmente", "Reprovado"] && cmbDdTipoDesdobramento.Selected.Value <> "Parecer final") ||
+                                          (cmbDdTipoDesdobramento.Selected.Value = "Parecer final" && !(cmbDdDesdStatusNovo.Selected.Value in ["Aprovado", "Aprovado com ressalvas", "Reprovado parcialmente", "Reprovado"])) ||
+                                          (cmbDdDesdStatusNovo.Selected.Value = "Aprovado com ressalvas" && IsBlank(dpDdPrazoResposta.SelectedDate)),
                                           Notify(
-                                              "Preencha Tipo de desdobramento, Novo status e Descrição antes de registrar.",
+                                              "Preencha os campos obrigatórios. Use Parecer final apenas com uma decisão conclusiva; para aprovação com ressalvas, informe também o prazo de reavaliação.",
                                               NotificationType.Warning,
                                               8000
                                           ),
-                                          UpdateContext({varVisibleProcessandoDd: true});
-                                          SubmitForm(frmDdDesdobramento)
+                                          If(
+                                              !IsBlank(varDdOcupadoDesde) && DateDiff(varDdOcupadoDesde, Now(), TimeUnit.Seconds) < 30,
+                                              Notify(
+                                                  "Aguarde: a ação anterior ainda está sendo processada.",
+                                                  NotificationType.Warning,
+                                                  3000
+                                              ),
+                                              UpdateContext({varDdOcupadoDesde: Now(), varVisibleProcessandoDd: true});
+                                              SubmitForm(frmDdDesdobramento)
+                                          )
                                       )
-                                    Text: ="Registrar desdobramento e atualizar status"
+                                    Text: =If(varRegistroDueDiligence.status in ["Pendente Compliance", "Em análise Compliance", "Aguardando esclarecimento", "Em homologação"], "Registrar análise e atualizar status", "Registrar desdobramento e atualizar status")
                                     Visible: =varAcaoDueDiligence = "edit"
                                     Width: =290
                                     X: =Parent.Width - 210
@@ -4376,9 +4671,19 @@ Screens:
                                 =With(
                                     {
                                         _itens: SortByColumns(
-                                            Filter(
-                                                tb_dueDiligenceDesdobramentos,
-                                                solicitacao_id = varRegistroDueDiligence.ID && ativo = 1
+                                            If(
+                                                varDdPodeAnalisarCompliance,
+                                                Filter(
+                                                    tb_dueDiligenceDesdobramentos,
+                                                    solicitacao_id = varRegistroDueDiligence.ID &&
+                                                    ativo = 1
+                                                ),
+                                                Filter(
+                                                    tb_dueDiligenceDesdobramentos,
+                                                    solicitacao_id = varRegistroDueDiligence.ID &&
+                                                    ativo = 1 &&
+                                                    visivel_solicitante = 1
+                                                )
                                             ),
                                             "Created",
                                             SortOrder.Descending
@@ -4394,6 +4699,7 @@ Screens:
                                             "<div style='display:flex;justify-content:space-between;margin-bottom:7px'>" &
                                             "<span style='font-size:11px;font-weight:700;color:#00879A'>" & Upper(D.tipo_desdobramento) & "</span>" &
                                             "<span style='font-size:10px;color:#9ca3af'>" & Text(D.Created, "[$-pt-BR]dd/mm/yyyy HH:mm") & "</span></div>" &
+                                            If(D.visivel_solicitante <> 1, "<div style='display:inline-block;margin-bottom:7px;padding:2px 6px;background:#FEF3F2;color:#B42318;font-size:9px;font-weight:700'>INTERNO COMPLIANCE</div>", "") &
                                             "<div style='font-size:11px;color:#64748b;margin-bottom:7px'>" & Coalesce(D.status_anterior, "-") & " → " & Coalesce(D.status_novo, "-") & "</div>" &
                                             "<div style='font-size:12px;color:#374151;background:#f9fafb;padding:8px'>" & Substitute(Coalesce(D.descricao, "Sem descrição"), Char(10), "<br>") & "</div>" &
                                             "<div style='margin-top:7px;font-size:10px;color:#9ca3af'>&#128100; " & D.'Criado por'.DisplayName & "</div></div>"
@@ -4519,31 +4825,46 @@ Screens:
                               FillPortions: =1
                               Height: =45
                               OnSelect: |-
-                                =UpdateContext({varVisibleProcessandoDd: true, varVisibleExcluirDd: false});
-                                IfError(
-                                    RemoveIf(
-                                        tb_dueDiligenceDesdobramentos,
-                                        solicitacao_id = varRegistroDueDiligence.ID
-                                    );
-                                    Remove(
-                                        tb_dueDiligence,
-                                        varRegistroDueDiligence
-                                    );
+                                =If(
+                                    !IsBlank(varDdOcupadoDesde) && DateDiff(varDdOcupadoDesde, Now(), TimeUnit.Seconds) < 30,
                                     Notify(
-                                        "Solicitação excluída com sucesso.",
-                                        NotificationType.Success
-                                    );
+                                        "Aguarde: a ação anterior ainda está sendo processada.",
+                                        NotificationType.Warning,
+                                        3000
+                                    ),
                                     UpdateContext(
                                         {
-                                            varVisibleProcessandoDd: false,
-                                            varRegistroDueDiligence: Blank()
+                                            varDdOcupadoDesde: Now(),
+                                            varVisibleProcessandoDd: true,
+                                            varVisibleExcluirDd: false
                                         }
-                                    ),
-                                    UpdateContext({varVisibleProcessandoDd: false});
-                                    Notify(
-                                        "Não foi possível excluir a solicitação.",
-                                        NotificationType.Error,
-                                        10000
+                                    );
+                                    IfError(
+                                        RemoveIf(
+                                            tb_dueDiligenceDesdobramentos,
+                                            solicitacao_id = varRegistroDueDiligence.ID
+                                        );
+                                        Remove(
+                                            tb_dueDiligence,
+                                            varRegistroDueDiligence
+                                        );
+                                        Notify(
+                                            "Solicitação excluída com sucesso.",
+                                            NotificationType.Success
+                                        );
+                                        UpdateContext(
+                                            {
+                                                varVisibleProcessandoDd: false,
+                                                varRegistroDueDiligence: Blank(),
+                                                varDdOcupadoDesde: Blank()
+                                            }
+                                        ),
+                                        UpdateContext({varVisibleProcessandoDd: false, varDdOcupadoDesde: Blank()});
+                                        Notify(
+                                            "Não foi possível excluir a solicitação.",
+                                            NotificationType.Error,
+                                            10000
+                                        )
                                     )
                                 )
                               Text: ="Confirmar"

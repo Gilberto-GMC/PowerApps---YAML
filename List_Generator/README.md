@@ -138,8 +138,10 @@ caso: a execução fica minutos em *running* sem dizer o motivo. Foi acrescentad
 na hora, em vez de ficar escondido atrás de tentativas. No laço de colunas o retry continua ligado, onde é
 útil contra throttling.
 
-O `Compor_Erro` também mudou: devolve `acoesComFalha`, filtrando do `result()` do escopo só as ações que não
-tiveram sucesso, com status e corpo da resposta.
+O `Compor_Erro` devolve `acoesDoEscopo` com o `result()` completo do escopo, incluindo status e corpo de
+cada ação. Não use `filter(result(...), item()?['status'] ne 'Succeeded')`: `ne` não é um operador infixo
+válido nessa expressão de template e impede até a importação/salvamento do fluxo. O resultado bruto mantém
+o diagnóstico disponível sem tornar o modelo inválido.
 
 ### 8. Aspas duplas no `schemaXml` quebravam o corpo da criação de coluna
 

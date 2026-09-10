@@ -1,0 +1,399 @@
+{
+  "name": "92b60f72-f4d2-42bc-bc4e-2ec09da31b4b",
+  "id": "/providers/Microsoft.Flow/flows/92b60f72-f4d2-42bc-bc4e-2ec09da31b4b",
+  "type": "Microsoft.Flow/flows",
+  "properties": {
+    "apiId": "/providers/Microsoft.PowerApps/apis/shared_logicflows",
+    "displayName": "Enviar questionário Due Diligence",
+    "definition": {
+      "metadata": {
+        "workflowEntityId": null,
+        "processAdvisorMetadata": null,
+        "flowChargedByPaygo": null,
+        "flowclientsuspensionreason": "None",
+        "flowclientsuspensiontime": null,
+        "flowclientsuspensionreasondetails": null,
+        "creator": {
+          "id": "a06c04ca-600c-4586-a940-1db61e81fc41",
+          "type": "User",
+          "tenantId": "d233d58a-9973-43a7-af69-6763630548a0"
+        },
+        "provisioningMethod": "FromDefinition",
+        "failureAlertSubscription": true,
+        "clientLastModifiedTime": "2026-09-08T15:57:05.3390018Z",
+        "lastModifiedBy": "a06c04ca-600c-4586-a940-1db61e81fc41",
+        "connectionKeySavedTimeKey": "2026-09-08T15:57:05.3390018Z",
+        "creationSource": "Portal",
+        "modifiedSources": "Portal"
+      },
+      "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+      "contentVersion": "1.0.0.0",
+      "parameters": {
+        "$authentication": {
+          "defaultValue": {},
+          "type": "SecureObject"
+        },
+        "$connections": {
+          "defaultValue": {},
+          "type": "Object"
+        }
+      },
+      "triggers": {
+        "When_an_item_is_created_or_modified": {
+          "recurrence": {
+            "frequency": "Minute",
+            "interval": 1
+          },
+          "evaluatedRecurrence": {
+            "frequency": "Minute",
+            "interval": 1
+          },
+          "splitOn": "@triggerOutputs()?['body/value']",
+          "type": "OpenApiConnection",
+          "inputs": {
+            "parameters": {
+              "dataset": "https://grupoccr.sharepoint.com/sites/ComplianceAeroportos",
+              "table": "ad57d68b-addf-466d-a86e-034035c412d6"
+            },
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+              "connectionName": "shared_sharepointonline",
+              "operationId": "GetOnUpdatedItems"
+            },
+            "authentication": "@parameters('$authentication')"
+          },
+          "conditions": [
+            {
+              "expression": "@and(equals(triggerBody()?['status'], 'Aguardando envio ao terceiro'), not(empty(triggerBody()?['forms_envio_id'])), not(equals(triggerBody()?['forms_envio_id'], triggerBody()?['forms_envio_processado_id'])))"
+            }
+          ],
+          "runtimeConfiguration": {
+            "concurrency": {
+              "runs": 1
+            }
+          }
+        }
+      },
+      "actions": {
+        "ESCOPO_Processar_Envio": {
+          "runAfter": {},
+          "type": "Scope",
+          "actions": {
+            "HTTP_Obter_Item_Atual": {
+              "runAfter": {},
+              "type": "OpenApiConnection",
+              "inputs": {
+                "parameters": {
+                  "dataset": "https://grupoccr.sharepoint.com/sites/ComplianceAeroportos",
+                  "parameters/method": "GET",
+                  "parameters/uri": "@concat('_api/web/lists/getbytitle(''tb_dueDiligence'')/items(', string(triggerBody()?['ID']), ')?$select=ID,status,forms_envio_id,forms_envio_processado_id,forms_correlacao_id,email_terceiro,razao_social')",
+                  "parameters/headers": {
+                    "Accept": "application/json;odata=nometadata"
+                  }
+                },
+                "host": {
+                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+                  "connectionName": "shared_sharepointonline",
+                  "operationId": "HttpRequest"
+                },
+                "authentication": "@parameters('$authentication')",
+                "retryPolicy": {
+                  "type": "none"
+                }
+              }
+            },
+            "Condicao_Item_Valido": {
+              "runAfter": {
+                "HTTP_Obter_Item_Atual": [
+                  "Succeeded"
+                ]
+              },
+              "type": "If",
+              "expression": {
+                "and": [
+                  {
+                    "equals": [
+                      "@and(equals(body('HTTP_Obter_Item_Atual')?['status'], 'Aguardando envio ao terceiro'),not(empty(body('HTTP_Obter_Item_Atual')?['forms_envio_id'])),not(equals(body('HTTP_Obter_Item_Atual')?['forms_envio_id'], body('HTTP_Obter_Item_Atual')?['forms_envio_processado_id'])),not(empty(body('HTTP_Obter_Item_Atual')?['forms_correlacao_id'])),not(empty(body('HTTP_Obter_Item_Atual')?['email_terceiro'])))",
+                      true
+                    ]
+                  }
+                ]
+              },
+              "actions": {
+                "Montar_Link_Questionario": {
+                  "runAfter": {},
+                  "type": "Compose",
+                  "inputs": "@concat('https://forms.office.com/Pages/ResponsePage.aspx?id=itUz0nOZp0OvaWdjYwVIoMoEbKAMYIZFqUAdth6B_EFURVRKSFdaVDE4Q1RIV0VTRkxFSjFZS0VEQS4u&origin=lprLink&rf6e81f83fe194d4c80dbfd30fc7b8301=', uriComponent(string(body('HTTP_Obter_Item_Atual')?['forms_envio_id'])))"
+                },
+                "Enviar_Email_V2": {
+                  "runAfter": {
+                    "Montar_Link_Questionario": [
+                      "Succeeded"
+                    ]
+                  },
+                  "type": "OpenApiConnection",
+                  "inputs": {
+                    "parameters": {
+                      "emailMessage/To": "@body('HTTP_Obter_Item_Atual')?['email_terceiro']",
+                      "emailMessage/Subject": "Questionário de Due Diligence — @{body('HTTP_Obter_Item_Atual')?['razao_social']}",
+                      "emailMessage/Body": "<p>Olá,</p><p>A ASUR Brasil solicita o preenchimento do questionário de Due Diligence referente à empresa <strong>@{body('HTTP_Obter_Item_Atual')?['razao_social']}</strong>.</p><p><a href=\"@{outputs('Montar_Link_Questionario')}\">Acessar questionário</a></p><p>O código de acompanhamento já está preenchido no link. Não o altere.</p><p>Mensagem enviada automaticamente. Em caso de dúvida, responda ao solicitante da contratação.</p>",
+                      "emailMessage/Importance": "Normal"
+                    },
+                    "host": {
+                      "apiId": "/providers/Microsoft.PowerApps/apis/shared_office365",
+                      "connectionName": "shared_office365",
+                      "operationId": "SendEmailV2"
+                    },
+                    "authentication": "@parameters('$authentication')",
+                    "retryPolicy": {
+                      "type": "none"
+                    }
+                  }
+                },
+                "Montar_Atualizacao_Envio": {
+                  "runAfter": {
+                    "Enviar_Email_V2": [
+                      "Succeeded"
+                    ]
+                  },
+                  "type": "Compose",
+                  "inputs": {
+                    "forms_formulario_id": "itUz0nOZp0OvaWdjYwVIoMoEbKAMYIZFqUAdth6B_EFURVRKSFdaVDE4Q1RIV0VTRkxFSjFZS0VEQS4u",
+                    "forms_envio_processado_id": "@body('HTTP_Obter_Item_Atual')?['forms_envio_id']",
+                    "data_envio_terceiro": "@utcNow()",
+                    "status": "Aguardando terceiro"
+                  }
+                },
+                "HTTP_Atualizar_Item_Enviado": {
+                  "runAfter": {
+                    "Montar_Atualizacao_Envio": [
+                      "Succeeded"
+                    ]
+                  },
+                  "type": "OpenApiConnection",
+                  "inputs": {
+                    "parameters": {
+                      "dataset": "https://grupoccr.sharepoint.com/sites/ComplianceAeroportos",
+                      "parameters/method": "POST",
+                      "parameters/uri": "@concat('_api/web/lists/getbytitle(''tb_dueDiligence'')/items(', string(triggerBody()?['ID']), ')')",
+                      "parameters/headers": {
+                        "Accept": "application/json;odata=nometadata",
+                        "Content-Type": "application/json;odata=nometadata",
+                        "X-HTTP-Method": "MERGE",
+                        "IF-MATCH": "*"
+                      },
+                      "parameters/body": "@string(outputs('Montar_Atualizacao_Envio'))"
+                    },
+                    "host": {
+                      "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+                      "connectionName": "shared_sharepointonline",
+                      "operationId": "HttpRequest"
+                    },
+                    "authentication": "@parameters('$authentication')",
+                    "retryPolicy": {
+                      "type": "none"
+                    }
+                  }
+                },
+                "Montar_Historico_Envio": {
+                  "runAfter": {
+                    "HTTP_Atualizar_Item_Enviado": [
+                      "Succeeded"
+                    ]
+                  },
+                  "type": "Compose",
+                  "inputs": {
+                    "solicitacao_id": "@int(triggerBody()?['ID'])",
+                    "tipo_desdobramento": "Envio ao terceiro",
+                    "status_anterior": "@body('HTTP_Obter_Item_Atual')?['status']",
+                    "status_novo": "Aguardando terceiro",
+                    "descricao": "@concat('Questionário enviado ao terceiro. Identificador do envio: ', string(body('HTTP_Obter_Item_Atual')?['forms_envio_id']), '.')",
+                    "visivel_solicitante": 1,
+                    "ativo": 1
+                  }
+                },
+                "HTTP_Registrar_Historico_Envio": {
+                  "runAfter": {
+                    "Montar_Historico_Envio": [
+                      "Succeeded"
+                    ]
+                  },
+                  "type": "OpenApiConnection",
+                  "inputs": {
+                    "parameters": {
+                      "dataset": "https://grupoccr.sharepoint.com/sites/ComplianceAeroportos",
+                      "parameters/method": "POST",
+                      "parameters/uri": "_api/web/lists/getbytitle('tb_dueDiligenceDesdobramentos')/items",
+                      "parameters/headers": {
+                        "Accept": "application/json;odata=nometadata",
+                        "Content-Type": "application/json;odata=nometadata"
+                      },
+                      "parameters/body": "@string(outputs('Montar_Historico_Envio'))"
+                    },
+                    "host": {
+                      "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+                      "connectionName": "shared_sharepointonline",
+                      "operationId": "HttpRequest"
+                    },
+                    "authentication": "@parameters('$authentication')",
+                    "retryPolicy": {
+                      "type": "none"
+                    }
+                  }
+                },
+                "Envio_Concluido": {
+                  "runAfter": {
+                    "HTTP_Registrar_Historico_Envio": [
+                      "Succeeded",
+                      "Failed",
+                      "TimedOut"
+                    ]
+                  },
+                  "type": "Compose",
+                  "inputs": "Questionário enviado; consulte o histórico para confirmar o registro auxiliar."
+                }
+              },
+              "else": {
+                "actions": {
+                  "Ignorar_Item_Sem_Intencao_Nova": {
+                    "runAfter": {},
+                    "type": "Compose",
+                    "inputs": "Item ignorado: status ou identificadores não autorizam novo envio."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "ESCOPO_Tratar_Erro": {
+          "runAfter": {
+            "ESCOPO_Processar_Envio": [
+              "Failed",
+              "TimedOut"
+            ]
+          },
+          "type": "Scope",
+          "actions": {
+            "HTTP_Reler_Item_Apos_Erro": {
+              "runAfter": {},
+              "type": "OpenApiConnection",
+              "inputs": {
+                "parameters": {
+                  "dataset": "https://grupoccr.sharepoint.com/sites/ComplianceAeroportos",
+                  "parameters/method": "GET",
+                  "parameters/uri": "@concat('_api/web/lists/getbytitle(''tb_dueDiligence'')/items(', string(triggerBody()?['ID']), ')?$select=ID,status,forms_envio_id,forms_envio_processado_id,forms_correlacao_id,email_terceiro,razao_social')",
+                  "parameters/headers": {
+                    "Accept": "application/json;odata=nometadata"
+                  }
+                },
+                "host": {
+                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+                  "connectionName": "shared_sharepointonline",
+                  "operationId": "HttpRequest"
+                },
+                "authentication": "@parameters('$authentication')",
+                "retryPolicy": {
+                  "type": "none"
+                }
+              }
+            },
+            "Condicao_Intencao_Ainda_Atual": {
+              "runAfter": {
+                "HTTP_Reler_Item_Apos_Erro": [
+                  "Succeeded"
+                ]
+              },
+              "type": "If",
+              "expression": {
+                "and": [
+                  {
+                    "equals": [
+                      "@and(equals(body('HTTP_Reler_Item_Apos_Erro')?['forms_envio_id'], triggerBody()?['forms_envio_id']),not(equals(body('HTTP_Reler_Item_Apos_Erro')?['forms_envio_processado_id'], triggerBody()?['forms_envio_id'])))",
+                      true
+                    ]
+                  }
+                ]
+              },
+              "actions": {
+                "HTTP_Marcar_Erro_Envio": {
+                  "runAfter": {},
+                  "type": "OpenApiConnection",
+                  "inputs": {
+                    "parameters": {
+                      "dataset": "https://grupoccr.sharepoint.com/sites/ComplianceAeroportos",
+                      "parameters/method": "POST",
+                      "parameters/uri": "@concat('_api/web/lists/getbytitle(''tb_dueDiligence'')/items(', string(triggerBody()?['ID']), ')')",
+                      "parameters/headers": {
+                        "Accept": "application/json;odata=nometadata",
+                        "Content-Type": "application/json;odata=nometadata",
+                        "X-HTTP-Method": "MERGE",
+                        "IF-MATCH": "*"
+                      },
+                      "parameters/body": "{\"status\":\"Erro no envio ao terceiro\"}"
+                    },
+                    "host": {
+                      "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+                      "connectionName": "shared_sharepointonline",
+                      "operationId": "HttpRequest"
+                    },
+                    "authentication": "@parameters('$authentication')",
+                    "retryPolicy": {
+                      "type": "none"
+                    }
+                  }
+                }
+              },
+              "else": {
+                "actions": {
+                  "Ignorar_Erro_De_Intencao_Antiga": {
+                    "runAfter": {},
+                    "type": "Compose",
+                    "inputs": "A intenção de envio já mudou."
+                  }
+                }
+              }
+            },
+            "Encerrar_Com_Falha": {
+              "runAfter": {
+                "Condicao_Intencao_Ainda_Atual": [
+                  "Succeeded",
+                  "Failed",
+                  "TimedOut"
+                ]
+              },
+              "type": "Terminate",
+              "inputs": {
+                "runStatus": "Failed",
+                "runError": {
+                  "code": "DD01_ENVIO_FALHOU",
+                  "message": "O questionário não foi confirmado como enviado. Consulte a ação que falhou."
+                }
+              }
+            }
+          }
+        }
+      },
+      "outputs": {}
+    },
+    "connectionReferences": {
+      "shared_sharepointonline": {
+        "connectionName": "shared-sharepointonl-0cd12861-383f-4b6e-9359-db983fb70160",
+        "source": "Embedded",
+        "id": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+        "tier": "NotSpecified",
+        "apiName": "sharepointonline",
+        "isProcessSimpleApiReferenceConversionAlreadyDone": false
+      },
+      "shared_office365": {
+        "connectionName": "shared_office365-due-diligence",
+        "source": "Embedded",
+        "id": "/providers/Microsoft.PowerApps/apis/shared_office365",
+        "tier": "NotSpecified",
+        "apiName": "office365",
+        "isProcessSimpleApiReferenceConversionAlreadyDone": false
+      }
+    },
+    "flowFailureAlertSubscribed": false,
+    "isManaged": false
+  }
+}

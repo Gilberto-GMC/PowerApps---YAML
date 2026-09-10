@@ -1644,3 +1644,172 @@ Prevenção:
 4. Falha no meio do loop `Para cada Coluna` deixa a lista **parcialmente criada**.
    Se ela ainda não tem dados, o caminho limpo é excluir a lista e rodar de novo
    com o JSON corrigido — reexecutar por cima gera erro de coluna duplicada.
+
+## Power Automate: `trigger.conditions` exige objetos com `expression` (2026-09-08)
+
+- Projeto/fluxo: DueDiligence / `Enviar questionário Due Diligence`.
+- Erro na importação: `MalformedFlowAssetFlowDefinition` — “A definição de fluxo
+  para o ativo `88fccf2d-dc50-421b-b4a1-8061581e1091` não pôde ser
+  desserializada.” Tracking ID:
+  `61ae0a77-326e-4383-b5c0-fb81a5a9b08c`.
+
+Causa confirmada: o pacote gerado escreveu a condição do gatilho como uma lista
+de strings:
+
+```json
+"conditions": ["@and(...)"]
+```
+
+Na Workflow Definition Language, cada entrada de `conditions` é um objeto JSON
+com a propriedade `expression`. A forma correta é:
+
+```json
+"conditions": [
+  {
+    "expression": "@and(...)"
+  }
+]
+```
+
+O JSON era sintaticamente válido, por isso `json.loads` e a verificação do ZIP
+passaram, mas o ativo não correspondia ao contrato tipado esperado pelo Power
+Automate e falhou antes de criar/atualizar o fluxo.
+
+Correção aplicada no gerador `DueDiligence/build_power_automate_flows.py` e no
+pacote DD01. Validação preventiva adicionada a
+`DueDiligence/validar_due_diligence.py`: toda entrada de
+`trigger.conditions` agora precisa ser um objeto com `expression` textual. A
+mesma validação também rejeita `Terminate` dentro de `Foreach` e expressões WDL
+com literais/delimitadores malformados.
+
+## Microsoft Forms: parâmetro na URL não preenche sem ativar `AllowPrefill` (2026-09-09)
+
+- Projeto/fluxo: DueDiligence / `Enviar questionário Due Diligence` (DD01).
+- Sintoma: o e-mail contém o código na URL, por exemplo
+  `&rf6e...=<forms_envio_id>`, mas a pergunta obrigatória
+  `Código de acompanhamento` abre vazia no Microsoft Forms.
+
+Causa confirmada: o link foi montado a partir da URL comum do formulário. O
+runtime público retornou as configurações do formulário sem `AllowPrefill`, e o
+DD01 também não informava `origin=lprLink`. O Forms preserva parâmetros
+desconhecidos na barra de endereço, mas só aplica respostas da query string
+quando o proprietário habilita o recurso de URL pré-preenchida.
+
+Correção:
+
+1. No formulário, usar `...` → `Obter URL pré-preenchida`, preencher a pergunta
+   de controle com um valor de teste e gerar o link uma vez. Isso habilita o
+   preenchimento no formulário.
+2. Montar links dinâmicos com `&origin=lprLink` antes dos pares
+   `<question-id>=<valor codificado>`.
+3. Manter o valor dinâmico protegido por `uriComponent()` no Power Automate.
+
+Prevenção adicionada: `DueDiligence/validar_due_diligence.py` reprova o pacote
+DD01 quando `origin=lprLink` não está presente. A ativação de `AllowPrefill`
+continua sendo uma configuração externa do Microsoft Forms e deve constar do
+checklist de implantação.
+
+## SharePoint REST: `responseId` do Forms precisa de `string()` em coluna Text (2026-09-09)
+
+- Projeto/fluxo: DueDiligence / `Processar resposta Due Diligence` (DD02), ação
+  `HTTP Criar Item Resposta`.
+- Erro: HTTP 400, `Microsoft.SharePoint.Client.InvalidClientQueryException` —
+  `Cannot convert a primitive value to the expected type 'Edm.String'`.
+- Endpoint: lista `tb_dueDiligenceTerceiroRespostas`.
+
+Causa: o gatilho do Forms pode devolver `resourceData/responseId` como número,
+mas `forms_resposta_id` e `forms_ultima_resposta_id` são colunas SharePoint
+`Text`. O objeto de criação repassava o valor bruto para `forms_resposta_id`.
+Embora o JSON seja válido, o OData não converte automaticamente esse primitivo
+numérico para `Edm.String`.
+
+Correção aplicada: envolver `responseId` com `string()` e tipar explicitamente
+todos os campos `Text`/`Note` do objeto `Montar_Item_Resposta`. A mesma conversão
+foi aplicada a `forms_ultima_resposta_id`, que seria gravado posteriormente na
+solicitação principal.
+
+Prevenção: o validador agora deve inspecionar `Montar_Item_Resposta` e reprovar
+o DD02 se qualquer campo textual dinâmico perder o `@string(...)`; também deve
+verificar a conversão de `forms_ultima_resposta_id`.
+
+## Status de fila não pode bloquear a ação da área responsável (2026-09-09)
+
+- Projeto/tela: DueDiligence / `ScreenDueDiligence`.
+- Sintoma: o Power Automate processava o Forms, criava o histórico e mudava a
+  solicitação para `Pendente Compliance`, mas a ação `Editar` permanecia
+  desabilitada. A analista conseguia visualizar a solicitação, porém não havia
+  caminho para iniciar a análise ou emitir parecer.
+
+Causa confirmada: `tbDdAcoes.Items` incluía todos os estados internos de
+Compliance diretamente em `ItemDisabled`, junto dos estados terminais. O
+próprio tooltip dizia que o perfil ainda precisava ser configurado. O formulário
+de desdobramento existia, mas era inalcançável nesses estados; as respostas do
+terceiro também não eram renderizadas na tela.
+
+Correção aplicada:
+
+1. Manter `varDdPodeAnalisarCompliance` bloqueado até a fonte real de
+   autorização do app ser confirmada; não inferir lista ou variável de outro
+   módulo do workspace.
+2. Exibir a ação `Analisar` nos estados internos somente para esse perfil,
+   mantendo o formulário do solicitante em `ViewForm`.
+3. Mostrar as respostas de `tb_dueDiligenceTerceiroRespostas` do envio atual.
+4. Gravar decisão, justificativa, condicionantes, autor, data e prazo de
+   reavaliação nos campos estruturados da solicitação, além do histórico.
+5. Exibir notas internas apenas ao perfil Compliance; os demais usuários veem
+   somente desdobramentos com `visivel_solicitante = 1`.
+
+Prevenção adicionada a `DueDiligence/validar_due_diligence.py`: a tela deve ter
+guarda de perfil no toolbar e no evento, respostas do terceiro visíveis, decisão
+estruturada persistida e histórico interno segregado. Regra geral: estado de
+fila e estado terminal são categorias diferentes; não devem compartilhar uma
+lista única de bloqueio de edição.
+
+## Variável criada numa tela não é contrato global do app (2026-09-09)
+
+- Projeto/tela: DueDiligence / `ScreenDueDiligence`.
+- Mensagem do Studio: `O nome não é válido. 'userRecord' não é reconhecido.`
+- Fórmula afetada: inicialização de `varDdPodeAnalisarCompliance` no
+  `OnVisible`.
+
+Causa confirmada: a autorização foi implementada lendo diretamente
+`userRecord.Area`, `userRecord.Funcao` e `userRecord.Perfil`. `userRecord` é um
+registro temporário criado durante o login em outra implementação; ele não faz
+parte do contrato global garantido para a tela importada. A tentativa seguinte
+de usar `varIdUser`, `varFuncaoUser` e `varPerfilUser`, encontrada em outro app
+do workspace, também não era uma prova de que esses nomes existiam no app de
+destino.
+
+Correção aplicada: remover todas as dependências de identidade não comprovadas
+e manter `varDdPodeAnalisarCompliance: false` até o responsável informar a
+fonte real de autorização. Esse padrão falha fechado: bloqueia a ação sem
+conceder acesso indevido.
+
+Validação preventiva: `DueDiligence/validar_due_diligence.py` agora reprova
+`userRecord`, a lista `User` inferida e as variáveis de login não comprovadas;
+até a fonte ser definida, exige o bloqueio explícito. Regra global: antes de
+reutilizar uma variável ou fonte encontrada em outra tela, confirmar no próprio
+app de destino que ela existe; referência em outro projeto do workspace não é
+contrato.
+
+## Fonte de dados de outro app não existe por herança (2026-09-09)
+
+- Projeto/tela: DueDiligence / `ScreenDueDiligence`.
+- Mensagem do Studio: `O nome não é válido. 'User' não é reconhecido.`
+- Erros associados no mesmo trecho: `ID`, `varIdUser`, `Area`,
+  `varFuncaoUser` e `varPerfilUser` também não reconhecidos.
+
+Causa confirmada: `User` era uma lista SharePoint usada por outro aplicativo do
+workspace. Fontes de dados, conectores e variáveis globais não são herdados
+quando uma tela é colada em outro app. Inspecionar um módulo vizinho comprova o
+contrato daquele módulo, não o contrato do destino.
+
+Correção aplicada: retirar a consulta e deixar a autorização em `false` até a
+fonte real dos usuários do Compliance ser indicada. Não usar `User().Email`
+com uma lista de endereços inventada, nem liberar todos temporariamente.
+
+Validação preventiva: o validador bloqueia os nomes inferidos e exige modo
+fechado enquanto `PREENCHER_FONTE_PERFIL_COMPLIANCE` estiver pendente. Impacto
+global: toda tela importável que tenha controle de acesso precisa declarar sua
+dependência de identidade no checklist de implantação; quando a dependência não
+for fornecida, deve compilar em modo somente leitura.
