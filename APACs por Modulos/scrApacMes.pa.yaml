@@ -68,6 +68,35 @@ Screens:
             Height: =1
             OnSelect: |-
               =ClearCollect(
+                  colFixoHoraMes,
+                  ForAll(
+                      Sequence(apacHorasDia, 0) As _h,
+                      {
+                          hora: _h.Value,
+                          apac: Sum(
+                              Filter(
+                                  colPostosApac,
+                                  aeroporto = varAero,
+                                  papel = "APAC",
+                                  hora_inicio <= _h.Value * 60,
+                                  hora_fim >= _h.Value * 60 + 60
+                              ),
+                              quantidade
+                          ),
+                          sup: Sum(
+                              Filter(
+                                  colPostosApac,
+                                  aeroporto = varAero,
+                                  papel = "SUPERVISOR",
+                                  hora_inicio <= _h.Value * 60,
+                                  hora_fim >= _h.Value * 60 + 60
+                              ),
+                              quantidade
+                          )
+                      }
+                  )
+              );
+              ClearCollect(
                   colMesCel,
                   ForAll(
                       Sequence(apacCelulasMes, 0) As _i,
@@ -127,11 +156,12 @@ Screens:
                                               pax: paxCel,
                                               mod: Min(pedidoCel, varRaiosX),
                                               estouro: If(pedidoCel > varRaiosX, 1, 0),
-                                              apac: Min(pedidoCel, varRaiosX) * varApacMod,
+                                              apac: Min(pedidoCel, varRaiosX) * varApacMod +
+                                                  LookUp(colFixoHoraMes, hora = horaCel).apac,
                                               sup: With(
                                                   { s: Min(pedidoCel, varRaiosX) / Max(1, varModSup) },
                                                   Int(s) + If(s > Int(s), 1, 0)
-                                              )
+                                              ) + LookUp(colFixoHoraMes, hora = horaCel).sup
                                           }
                                       )
                                   )
@@ -154,6 +184,173 @@ Screens:
                               horas_estouro: Sum(linha, estouro),
                               carga: Sum(linha, apac)
                           }
+                      )
+                  )
+              );
+              // ------------------------------------------------ efetivo mínimo do mês
+              // Envelope: a maior exigência de cada hora entre os dias do mês, já com os postos fixos.
+              ClearCollect(
+                  colEnvMes,
+                  ForAll(
+                      Sequence(apacHorasDia, 0) As _h,
+                      With(
+                          { linhaHora: Filter(colMesCel, hora = _h.Value, dia <= varDiasNoMes) },
+                          {
+                              hora: _h.Value,
+                              apac: Max(linhaHora, apac),
+                              sup: Max(linhaHora, sup)
+                          }
+                      )
+                  )
+              );
+              // ⚠️ Mínimo = o MAIOR entre dois limites que nenhuma escala consegue furar:
+              //   porCobertura — menor número de turnos de apacJornadaPresenca horas contíguas que cobre todas
+              //                  as horas do envelope. Sem laço: em cada uma das 24 rotações do dia, t1..t4
+              //                  guardam a maior soma de 1..4 horas espaçadas de pelo menos uma jornada; t4 na
+              //                  última hora é o número de turnos da rotação, e a menor rotação é o mínimo.
+              //                  Cada rotação devolve { n } e o Min lê n — Min(ForAll(...), Value) não tem
+              //                  precedente validado neste repositório; ForAll que devolve registro tem.
+              //                  Quatro níveis bastam para jornada de 6h ou mais.
+              //   porHomemHora — homem-hora do envelope dividido pelas horas trabalhadas, para cima: é o limite
+              //                  que obriga o intervalo de 1h a caber dentro do turno.
+              // Conferido em 14/09/2026 contra o mínimo exato e contra escala real com intervalo no meio do
+              // turno: 5 meses + temporada, 9 cenários, 2 papéis = 108 casos, 0 divergências.
+              // Reproduzir: node valida_minimo_app.js
+              ClearCollect(
+                  colMinMes,
+                  ForAll(
+                      Table({ papel: "APAC" }, { papel: "SUPERVISOR" }) As _p,
+                      With(
+                          {
+                              dem: ForAll(
+                                  colEnvMes As _e,
+                                  { hora: _e.hora, d: If(_p.papel = "APAC", _e.apac, _e.sup) }
+                              )
+                          },
+                          With(
+                              {
+                                  porCobertura: Min(
+                                      ForAll(
+                                          Sequence(apacHorasDia, 0) As _r,
+                                          With(
+                                              {
+                                                  d0: ForAll(
+                                                      Sequence(apacHorasDia, 0) As _k,
+                                                      {
+                                                          k: _k.Value,
+                                                          d: LookUp(dem, hora = Mod(_r.Value + _k.Value, apacHorasDia)).d
+                                                      }
+                                                  )
+                                              },
+                                              With(
+                                                  {
+                                                      t1: ForAll(
+                                                          Sequence(apacHorasDia, 0) As _h,
+                                                          { k: _h.Value, v: Max(Filter(d0, k <= _h.Value), d) }
+                                                      )
+                                                  },
+                                                  With(
+                                                      {
+                                                          g2: ForAll(
+                                                              d0 As _x,
+                                                              {
+                                                                  k: _x.k,
+                                                                  g: _x.d + If(
+                                                                      _x.k >= apacJornadaPresenca,
+                                                                      LookUp(t1, k = _x.k - apacJornadaPresenca).v,
+                                                                      0
+                                                                  )
+                                                              }
+                                                          )
+                                                      },
+                                                      With(
+                                                          {
+                                                              t2: ForAll(
+                                                                  Sequence(apacHorasDia, 0) As _h,
+                                                                  { k: _h.Value, v: Max(Filter(g2, k <= _h.Value), g) }
+                                                              )
+                                                          },
+                                                          With(
+                                                              {
+                                                                  g3: ForAll(
+                                                                      d0 As _x,
+                                                                      {
+                                                                          k: _x.k,
+                                                                          g: _x.d + If(
+                                                                              _x.k >= apacJornadaPresenca,
+                                                                              LookUp(t2, k = _x.k - apacJornadaPresenca).v,
+                                                                              0
+                                                                          )
+                                                                      }
+                                                                  )
+                                                              },
+                                                              With(
+                                                                  {
+                                                                      t3: ForAll(
+                                                                          Sequence(apacHorasDia, 0) As _h,
+                                                                          { k: _h.Value, v: Max(Filter(g3, k <= _h.Value), g) }
+                                                                      )
+                                                                  },
+                                                                  With(
+                                                                      {
+                                                                          g4: ForAll(
+                                                                              d0 As _x,
+                                                                              {
+                                                                                  k: _x.k,
+                                                                                  g: _x.d + If(
+                                                                                      _x.k >= apacJornadaPresenca,
+                                                                                      LookUp(t3, k = _x.k - apacJornadaPresenca).v,
+                                                                                      0
+                                                                                  )
+                                                                              }
+                                                                          )
+                                                                      },
+                                                                      With(
+                                                                          {
+                                                                              t4: ForAll(
+                                                                                  Sequence(apacHorasDia, 0) As _h,
+                                                                                  { k: _h.Value, v: Max(Filter(g4, k <= _h.Value), g) }
+                                                                              )
+                                                                          },
+                                                                          { n: LookUp(t4, k = apacHorasDia - 1).v }
+                                                                      )
+                                                                  )
+                                                              )
+                                                          )
+                                                      )
+                                                  )
+                                              )
+                                          )
+                                      ),
+                                      n
+                                  ),
+                                  porHomemHora: With(
+                                      { q: Sum(dem, d) / Max(1, apacHorasTrabalhadas) },
+                                      Int(q) + If(q > Int(q), 1, 0)
+                                  ),
+                                  homemHora: Sum(dem, d)
+                              },
+                              With(
+                                  { minimo: Max(porCobertura, porHomemHora) },
+                                  With(
+                                      {
+                                          folguistas: With(
+                                              { f: minimo / Max(1, apacTurnosPorFolguista) },
+                                              Int(f) + If(f > Int(f), 1, 0)
+                                          )
+                                      },
+                                      {
+                                          papel: _p.papel,
+                                          minimo: minimo,
+                                          folguistas: folguistas,
+                                          total: minimo + folguistas,
+                                          porCobertura: porCobertura,
+                                          porHomemHora: porHomemHora,
+                                          homemHora: homemHora
+                                      }
+                                  )
+                              )
+                          )
                       )
                   )
               );
@@ -633,6 +830,88 @@ Screens:
                         RadiusTopRight: =0
                         Width: =Parent.Width
                       Children:
+                        - htmMinimoApacMes:
+                            Control: HtmlViewer@2.1.0
+                            Properties:
+                              AutoHeight: =true
+                              Color: =thmTexto
+                              Fill: =thmTransparente
+                              Font: =thmFonte
+                              HtmlText: |-
+                                =If(
+                                    CountRows(colVoosMes) = 0,
+                                    "",
+                                    With(
+                                        {
+                                            mA: LookUp(colMinMes, papel = "APAC"),
+                                            mS: LookUp(colMinMes, papel = "SUPERVISOR"),
+                                            picoA: Max(colEnvMes, apac),
+                                            picoS: Max(colEnvMes, sup),
+                                            celH: "border:1px solid " & hxGradeFina & ";text-align:center;padding:3px 0;font-size:10px;",
+                                            rotH: "border:1px solid " & hxGradeFina & ";text-align:left;padding:3px 6px;font-weight:700;white-space:nowrap;font-size:10px;",
+                                            cardBase: "width:50%;vertical-align:top;padding:12px 14px;border:1px solid " & hxBorda & ";background:" & hxPrimariaClara & ";"
+                                        },
+                                        "<div style='" & htmlFonte & "color:" & hxTexto & ";margin-bottom:20px;'>" &
+                                        "<div style='font-size:11px;font-weight:700;letter-spacing:1px;color:" & hxTextoFraco &
+                                        ";margin-bottom:8px;'>EFETIVO MÍNIMO PARA COBRIR " & varComp & "</div>" &
+                                        "<table style='border-collapse:separate;border-spacing:10px 0;width:100%;margin-bottom:10px;'><tr>" &
+                                        "<td style='" & cardBase & "'>" &
+                                        "<div style='font-size:10px;font-weight:700;letter-spacing:1px;color:" & hxPrimariaEscura & ";'>AGENTES DE PROTEÇÃO</div>" &
+                                        "<div style='font-size:30px;font-weight:800;line-height:1.15;color:" & hxTexto & ";'>" & Text(mA.minimo) &
+                                        " <span style='font-size:13px;font-weight:600;color:" & hxTextoFraco & ";'>em escala por dia</span></div>" &
+                                        "<div style='font-size:11px;color:" & hxTextoFraco & ";margin-top:4px;'>+ " & Text(mA.folguistas) &
+                                        " folguistas (1 para " & Text(apacTurnosPorFolguista) & ") = <b style='color:" & hxTexto & ";'>" &
+                                        Text(mA.total) & " no quadro</b></div>" &
+                                        "<div style='font-size:10px;color:" & hxTextoFraco & ";margin-top:6px;'>pico de " & Text(picoA) &
+                                        " por hora · " & Text(mA.homemHora) & " homem-hora no dia</div>" &
+                                        "</td>" &
+                                        "<td style='" & cardBase & "'>" &
+                                        "<div style='font-size:10px;font-weight:700;letter-spacing:1px;color:" & hxPrimariaEscura & ";'>SUPERVISORES</div>" &
+                                        "<div style='font-size:30px;font-weight:800;line-height:1.15;color:" & hxTexto & ";'>" & Text(mS.minimo) &
+                                        " <span style='font-size:13px;font-weight:600;color:" & hxTextoFraco & ";'>em escala por dia</span></div>" &
+                                        "<div style='font-size:11px;color:" & hxTextoFraco & ";margin-top:4px;'>+ " & Text(mS.folguistas) &
+                                        " folguistas (1 para " & Text(apacTurnosPorFolguista) & ") = <b style='color:" & hxTexto & ";'>" &
+                                        Text(mS.total) & " no quadro</b></div>" &
+                                        "<div style='font-size:10px;color:" & hxTextoFraco & ";margin-top:6px;'>pico de " & Text(picoS) &
+                                        " por hora · " & Text(mS.homemHora) & " homem-hora no dia</div>" &
+                                        "</td>" &
+                                        "</tr></table>" &
+                                        "<table style='border-collapse:collapse;width:100%;table-layout:fixed;'>" &
+                                        "<tr><td style='" & rotH & "width:" & apacLarguraRotulo & "px;background:" & hxPrimariaClara & ";'>EXIGIDO</td>" &
+                                        Concat(
+                                            Sequence(apacHorasDia, 0),
+                                            "<td style='" & celH & "background:" & hxPrimariaClara & ";font-weight:700;'>" &
+                                            Right("0" & Text(Value), 2) & "</td>"
+                                        ) &
+                                        "</tr><tr><td style='" & rotH & "'>APACs</td>" &
+                                        Concat(
+                                            Sort(colEnvMes, hora, SortOrder.Ascending),
+                                            "<td style='" & celH & "background:" & If(apac = picoA, hxCarga2, hxSuperficie) & ";'>" &
+                                            Text(apac) & "</td>"
+                                        ) &
+                                        "</tr><tr><td style='" & rotH & "'>Supervisores</td>" &
+                                        Concat(
+                                            Sort(colEnvMes, hora, SortOrder.Ascending),
+                                            "<td style='" & celH & "background:" & If(sup = picoS And sup > 0, hxCarga2, hxSuperficie) & ";'>" &
+                                            If(sup = 0, "", Text(sup)) & "</td>"
+                                        ) &
+                                        "</tr></table>" &
+                                        "<div style='font-size:10px;color:" & hxTextoFraco & ";margin-top:8px;line-height:1.5;'>" &
+                                        "Exigido = a hora mais pesada de cada faixa entre os dias do mês, já com os postos fixos. " &
+                                        "Mínimo = o menor quadro diário que cobre todas essas horas com turnos de " & Text(apacJornadaPresenca) &
+                                        "h de presença e 1h de intervalo dentro do turno. " &
+                                        "É o maior entre dois limites: turnos contíguos (" & Text(mA.porCobertura) & " APACs · " &
+                                        Text(mS.porCobertura) & " sup.) e homem-hora ÷ " & Text(apacHorasTrabalhadas) & " (" &
+                                        Text(mA.porHomemHora) & " · " & Text(mS.porHomemHora) & "). " &
+                                        "Não inclui férias, absenteísmo nem treinamento.</div>" &
+                                        "</div>"
+                                    )
+                                )
+                              PaddingBottom: =0
+                              PaddingLeft: =0
+                              PaddingRight: =0
+                              PaddingTop: =0
+                              Size: =11
                         - htmGradeApacMes:
                             Control: HtmlViewer@2.1.0
                             Properties:

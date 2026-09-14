@@ -4,6 +4,10 @@
 
 **Resposta:** **+1 supervisor. Zero APACs.** Contrato de **59 → 60**, não 65.
 
+⚠️ **Revisão de 14/09/2026:** o mínimo de APACs é **36**, não 38 — medido exato (§4). A resposta não
+muda; a folga aumenta. E mês a mês, o 5º supervisor só é exigido em **outubro e dezembro** (§3).
+O app passou a calcular esses mínimos sozinho, na tela do mês (`ARQUITETURA_APAC.md` §13).
+
 ⚠️ **Esta conclusão substitui a de 11/09 de manhã (+3 APAC, +1 supervisor, 59→65), que estava
 errada.** O que mudou está na seção "O erro que a revisão pegou".
 
@@ -48,8 +52,9 @@ reproduz aquela linha). Subtrair a demanda da malha de uma escala desenhada cont
 
 O teste certo é: reposicionando os horários de início, os 38 efetivos cobrem o envelope?
 
-**Cobrem.** `minimo_efetivo.js` constrói uma escala viável com **exatamente 38 pessoas** (jornada de
-8h de presença com 1h de intervalo), cobrindo todas as 24 horas em todos os 151 dias.
+**Cobrem, com folga.** O menor quadro que cobre todas as 24 horas em todos os 151 dias, com jornada
+de 8h de presença e 1h de intervalo dentro do turno, é de **36 pessoas** (§4). `minimo_efetivo.js`
+imprime uma escala possível com 38.
 
 Um movimento de custo zero, visível a olho nu na planilha: a linha **L34 (2 pessoas, 12h->19h)**
 passa a **13h->20h** e coloca 2 APACs na hora que mais falta.
@@ -67,32 +72,44 @@ Não é heurística e não é amostra: é enumeração completa. 4 supervisores 
 homem-hora contra 27 exigidos — a folga de 1 hora não sobrevive à exigência de que as horas sejam
 contíguas e de que 10h, 11h, 15h, 18h, 19h e 20h peçam **2 simultâneos**.
 
+**Mês a mês a exigência não é a mesma:**
+
+| Competência | APACs mínimo | Supervisores mínimo |
+|---|---|---|
+| 2026-10 | 36 | **5** |
+| 2026-11 | 33 | 4 |
+| 2026-12 | 36 | **5** |
+| 2027-01 | 33 | 4 |
+| 2027-02 | 33 | 4 |
+
+O 5º supervisor é exigido em **outubro e dezembro**. Se ele entra no contrato permanente ou como
+reforço de temporada é decisão de contrato, não de cálculo.
+
 ---
 
 ## 4. Robustez — o que muda se a premissa mudar
 
 Nove cenários, incluindo a leitura **literal** da regra da Simone (só 3 voos ou mais dispara 3
-módulos, em vez de N voos -> N módulos):
+módulos, em vez de N voos -> N módulos). Mínimo da temporada:
 
-| cenário | envelope APAC | mínimo APAC | 4 supervisores? |
+| cenário | exigido (h-h) | mínimo APAC | mínimo supervisor |
 |---|---|---|---|
-| base (85%, 90 min, >150) | 249 | **38** OK | inviável -> 5 |
-| contagem literal (só >=3 dispara) | 246 | **38** OK | inviável -> 5 |
-| ocupação 80% | 246 | **38** OK | inviável -> 5 |
-| **ocupação 95%** | 255 | **39** | inviável -> 5 |
-| antecedência 60 min | 246 | **38** OK | inviável -> 5 |
-| antecedência 120 min | 246 | **38** OK | inviável -> 5 |
-| sem corte de assentos | 252 | **38** OK | inviável -> 5 |
-| **capacidade 150 pax/h** | 255 | **39** | inviável -> 5 |
-| **literal + 95% + 120 min** | 252 | **39** | inviável -> 5 |
+| base (85%, 90 min, >150) | 249 | **36** | **5** |
+| contagem literal (só >=3 dispara) | 246 | **36** | **5** |
+| ocupação 80% | 246 | **36** | **5** |
+| ocupação 95% | 255 | **37** | **5** |
+| antecedência 60 min | 246 | **36** | **5** |
+| antecedência 120 min | 246 | **36** | **5** |
+| sem corte de assentos | 252 | **36** | **5** |
+| capacidade 150 pax/h | 255 | **37** | **5** |
+| literal + 95% + 120 min | 252 | **36** | **5** |
 
-**O +1 supervisor é invariante — aparece nos nove cenários.** O APAC fica no fio: em três cenários
-mais apertados o mínimo sobe para 39, ou seja +1 APAC.
+**Nenhum cenário passa de 37 APACs — os 38 contratados cobrem todos. O 5º supervisor é invariante.**
 
-⚠️ **Assimetria de força das duas linhas, e ela importa:** o "38" é **construtivo** — existe a
-escala, ela está impressa. O "39" é o que uma busca gulosa com 250 reinícios conseguiu achar, e
-portanto é **limite superior**, não prova de que 38 seja impossível nesses cenários. Onde a tabela
-diz 39, o correto é ler "não achei 38", não "38 não existe".
+**Estes números são exatos, não estimativa.** Cada um foi fechado pelos dois lados
+(`valida_minimo_app.js`): é o limite inferior provado — o maior entre a cobertura circular exata por
+janelas de 8h e o homem-hora ÷ 7 —, e existe escala real, com o intervalo dentro do turno, desse
+tamanho. 108 casos (meses e temporada × cenários × papéis), 0 divergências.
 
 ---
 
@@ -106,6 +123,10 @@ A resposta da manhã dizia **+3 APAC e +1 supervisor, 59 -> 65**. Dois defeitos:
    vazia auto-fechada no XML — só que uma linha adiante. O déficit de supervisor às 19h/20h
    sobrevive à correção; o que **não** sobrevive é o "buraco das 03h", que era artefato do
    deslocamento.
+3. **(14/09) Tratar o melhor achado como mínimo.** O 38 e os três 39 da versão de 11/09 vieram de
+   busca gulosa com reinícios: ela acha escalas boas, não prova que não existe menor. Medido com
+   limite inferior exato, o mínimo é 36 (37 nos dois cenários mais apertados). A conclusão não mudou
+   por sorte, não por método.
 2. **Confundir déficit com necessidade de contratação.** Déficit mede a escala atual; contratação
    se mede contra a **melhor escala possível**. Nunca rodei a otimização antes de recomendar +6
    pessoas.
@@ -134,5 +155,6 @@ A resposta da manhã dizia **+3 APAC e +1 supervisor, 59 -> 65**. Dois defeitos:
 node oferta_e_deficit.js          # oferta lida por letra de coluna + deficit hora a hora
 node minimo_efetivo.js            # escala minima construtiva (38 APAC / 5 supervisores)
 node exaustivo_supervisores.js    # prova exaustiva de que 4 supervisores nao cobrem
-node robustez_efetivo.js          # os nove cenarios
+node robustez_efetivo.js          # os nove cenarios (versao 11/09, gulosa - superada)
+node valida_minimo_app.js         # minimo EXATO por mes e cenario, e prova da formula do app
 ```

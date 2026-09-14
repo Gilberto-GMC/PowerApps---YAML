@@ -1,3 +1,5 @@
+// ⚠️ SUPERADO em 14/09/2026 por valida_minimo_app.js. O minimo de APAC aqui vem de busca gulosa
+// e sai MAIOR que o verdadeiro (39 onde o exato e 37). Mantido para rastrear a versao de 11/09.
 // O minimo de efetivo sobrevive as premissas em disputa?
 // Varia: (a) leitura da contagem N->N  x  literal (so >=3 dispara 3), (b) ocupacao, (c) antecedencia,
 // (d) corte de assentos. Para cada cenario: envelope, minimo de APAC (greedy+poda) e

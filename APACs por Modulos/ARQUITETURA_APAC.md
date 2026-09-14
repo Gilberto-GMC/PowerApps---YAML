@@ -118,6 +118,10 @@ numa premissa, o caminho já pensado é trocar o pré-cálculo das 744 células 
 dias**, em que cada linha desenha as próprias 24 horas: a galeria só renderiza o que está visível,
 e o custo cai para os ~10 dias na tela.
 
+O **efetivo mínimo** (§13) soma outro custo ao mesmo recálculo: 2 papéis × 24 rotações × 4 níveis,
+cada nível varrendo tabelas de 24 linhas — da ordem de 250 mil operações, **fixas**, porque não
+dependem de quantos voos o mês tem. Também não medido no app.
+
 Está escrito aqui para não virar redescoberta.
 
 ## 10. Convenções
@@ -137,12 +141,80 @@ Está escrito aqui para não virar redescoberta.
 | `importar_malha.ts` | Office Script — lê o export do Power BI, não grava |
 | `lista_tb_*.json` | insumos do `List_Generator` |
 | `dados/malha_AAAA-MM.csv` | a temporada já convertida, para colar no modo de grade |
+| `valida_minimo_app.js` | prova de que a fórmula do mínimo da tela do mês bate com o mínimo exato |
+| `CONTRATACAO_APAC.md` | a resposta "precisamos contratar?", medida |
 
 ## 12. O que ainda não existe
 
-- **`scrApacEscala`** — turnos 6x2 sobre a régua de horas, déficit ao vivo e o fechamento com
-  folguistas. É a metade de baixo da planilha da Simone.
+- **`scrApacEscala`** — turnos 6x2 sobre a régua de horas e déficit ao vivo **contra a escala
+  cadastrada**. O efetivo mínimo e os folguistas já saem na tela do mês (§13); o que falta é
+  comparar com os turnos que existem de fato.
 - **`scrApacImport`** e o fluxo do Power Automate. Enquanto não existem, a malha entra pelos CSVs
   de `dados/` no modo de grade do SharePoint — o que já permite validar todo o cálculo.
 - **`scrApacParametros`** — hoje as premissas se editam no painel das telas de cálculo, que grava
   vigência; falta a tela que lista o histórico e cadastra postos fixos.
+
+## 13. Efetivo mínimo — calculado na tela do mês, sem laço
+
+Pedido do Douglas em 14/09/2026: **conforme os dados entram, o sistema já calcula o mínimo
+necessário.** A cada leitura do mês ou RECALCULAR, o `btnCalcMes` monta três coleções novas:
+
+| Coleção | O que é |
+|---|---|
+| `colFixoHoraMes` | postos fixos por hora, da `colPostosApac` — a tela do mês não os lia até aqui |
+| `colEnvMes` | **envelope**: a maior exigência de cada hora entre os dias do mês, já com os fixos |
+| `colMinMes` | uma linha por papel (APAC, SUPERVISOR): mínimo, folguistas, total no quadro |
+
+⚠️ **Mudança de número visível:** a célula da grade em modo APAC, a coluna PICO e o rodapé passam
+a **somar os postos fixos**. Dezembro mostrava 9 no pico; agora mostra **14**, igual à tela do dia.
+
+### A fórmula
+
+```
+mínimo = Max( porCobertura , porHomemHora )
+
+porCobertura = menor número de turnos de 8h contíguas que cobre todas as horas do envelope
+porHomemHora = teto( soma do envelope ÷ 7 )     -- 7 = horas trabalhadas, o intervalo fica de fora
+folguistas   = teto( mínimo ÷ 3 )               -- escala 6x2
+```
+
+**Por que dois termos.** O primeiro trata cada turno como 8 horas cheias — enxerga a *forma* do dia,
+mas esquece o intervalo. O segundo desconta o intervalo — enxerga o *volume*, mas esquece a forma.
+Cada um sozinho erra para menos; o maior dos dois foi, em todos os casos medidos, exatamente o
+mínimo verdadeiro.
+
+**Como o primeiro termo é calculado sem laço.** Power Fx não tem laço com estado. Cobrir horas com
+turnos contíguos, porém, tem forma fechada: o número de turnos que um guloso da esquerda para a
+direita abre é igual à **maior soma de exigências em horas espaçadas de pelo menos uma jornada**.
+Com 24 horas e jornada de 8h cabem no máximo 3 dessas horas (4 para jornada de 6h ou 7h), e cada
+"nível" `t1..t4` é um `ForAll` de 24 linhas sobre o nível anterior. Como o dia é circular — turno
+das 22h cruza a meia-noite —, o cálculo roda nas **24 rotações** e fica com a menor.
+
+### Por que confiar — e onde não confiar
+
+`valida_minimo_app.js` compara a fórmula, em cada mês e na temporada, nos 9 cenários de premissa,
+para os 2 papéis, contra:
+
+1. o **limite inferior provado**: o maior entre o mínimo exato de cobertura circular por janelas de
+   8h (restrições de diferença, Bellman-Ford) e o homem-hora ÷ 7;
+2. uma **escala real** com o intervalo dentro do turno (2ª a 7ª hora), achada por busca local com
+   verificação de encaixe dos intervalos por fluxo máximo.
+
+**108 casos, 0 divergências**: a fórmula deu o limite inferior provado, e existe escala desse tamanho.
+
+Números que a tela tem de mostrar com as premissas padrão (emulação do cálculo da própria tela):
+
+| Competência | APACs em escala | + folguistas | Supervisores em escala | + folguistas |
+|---|---|---|---|---|
+| 2026-10 | **36** | 48 | **5** | 7 |
+| 2026-11 | **33** | 44 | **4** | 6 |
+| 2026-12 | **36** | 48 | **5** | 7 |
+| 2027-01 | **33** | 44 | **4** | 6 |
+| 2027-02 | **33** | 44 | **4** | 6 |
+
+⚠️ **Isso é medição sobre a malha de NVT, não teorema.** As rotações do guloso podem, em tese,
+superar o mínimo exato em outro perfil de demanda. Antes de usar o número de outro aeroporto como
+número de contrato, exporte a malha e rode `valida_minimo_app.js`.
+
+⚠️ **O mínimo não é o quadro contratado.** Ele não cobre férias, absenteísmo nem treinamento, e não
+impõe interjornada de 11h. É o piso de desenho de escala — abaixo dele nenhuma escala cobre.

@@ -1,3 +1,5 @@
+// ⚠️ Imprime UMA escala viavel (38 APAC). Nao e o minimo: o minimo exato e 36
+// (valida_minimo_app.js, 14/09/2026).
 // Cobertura minima: cada pessoa = janela de 8h consecutivas menos 1 hora de intervalo (interior).
 // Pergunta: quantas pessoas sao necessarias para cobrir o envelope horario?
 // Greedy pelo maior ganho + 400 reinicios aleatorios deterministicos (LCG), depois poda.

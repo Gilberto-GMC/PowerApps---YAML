@@ -79,6 +79,9 @@ meses estão na mesma pasta.
 3. Cole `App_Formulas_APAC.txt` em **App → propriedade `Formulas`** — **não** é o `OnStart`.
    Este arquivo é o único em **pt-BR** (`;` separa argumento, `;;` termina definição), porque é
    digitado no Studio e segue o locale.
+   ⚠️ **Se já tinha colado antes de 14/09/2026, cole de novo:** a versão nova tem
+   `apacJornadaPresenca`, `apacHorasTrabalhadas` e `apacTurnosPorFolguista`, e a tela do mês não
+   compila sem elas.
 4. Cole `scrApacMes.pa.yaml` e `scrApacDia.pa.yaml`, cada um numa tela nova. Estes estão em
    **en-US** (vírgula separa argumento), que é o formato do código-fonte.
 
@@ -94,6 +97,10 @@ Na ordem, porque cada uma cobre uma classe de defeito diferente:
 | Prova | Como fazer | O que tem que acontecer |
 |---|---|---|
 | **Aritmética** | abrir **24/12/2026** na tela do dia | às **20:00**: 3 módulos, **14 APACs**, 2 supervisores — e a linha "quem mandou" dizendo **voos** |
+| **Postos fixos no mês** | tela do mês em **2026-12**, botão VENDO APACs | coluna PICO chega a **14** (9 dos módulos + 5 fixos), igual à tela do dia — antes desta versão mostrava 9 |
+| **Efetivo mínimo** | tela do mês em **2026-12** | painel no topo: **36 APACs** e **5 supervisores** em escala; com folguistas, **48** e **7** |
+| **Mínimo acompanha o mês** | trocar para **2026-11** | **33 APACs** e **4 supervisores** — novembro não exige o 5º supervisor |
+| **Mínimo acompanha a premissa** | em **2027-02**, trocar a ocupação de 85 para **95** e RECALCULAR | **34 APACs** (era 33) e supervisores continuam **4**; no rodapé do painel, o homem-hora (34) passa a mandar sobre os turnos contíguos (33) |
 | **Antecedência** | qualquer voo às 05:00 | módulo aceso desde **03:30**, não às 05:00 |
 | **Virada** | um voo entre 00:00 e 01:30 | módulo aceso no **dia anterior** |
 | **Delegação** | abrir **28/12 a 31/12** | os voos aparecem (é o teste do limite de 500) |
@@ -110,7 +117,8 @@ sozinha erraria por seis pessoas.
 
 ## O que ainda não existe
 
-- **`scrApacEscala`** — turnos 6x2, déficit ao vivo e folguistas. É a metade de baixo da planilha.
+- **`scrApacEscala`** — os turnos cadastrados e o déficit contra eles. O **mínimo necessário** e os
+  folguistas já saem na tela do mês; falta comparar com a escala que existe de fato.
 - **`scrApacImport`** e o fluxo do Power Automate — por isso o passo 2 é manual.
 - **`scrApacParametros`** — as premissas se editam no painel das telas de cálculo, que grava
   vigência nova; falta a tela que lista o histórico e cadastra postos fixos.
