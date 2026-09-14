@@ -285,7 +285,7 @@ function analisa(arquivo, mortos) {
   // e " #" vira comentário. As aspas do Power Fx não protegem — o YAML não sabe o que é Power Fx.
   // 14/09/2026: "(rótulo, ex.: VIII)" derrubou a colagem da scrApacCadastro com PA1001.
   for (let i = 0; i < linhas.length; i++) {
-    const m = linhas[i].match(/^s*[A-Za-z][w.]*: (=.*)$/);
+    const m = linhas[i].match(/^\s*[A-Za-z][\w.]*: (=.*)$/);
     if (!m) continue;
     const v = m[1];
     const c = v.indexOf(": ");
