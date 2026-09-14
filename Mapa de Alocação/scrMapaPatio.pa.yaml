@@ -126,6 +126,9 @@ Screens:
                                                       _cia: LookUp(colCias As _cc, _cc.sigla = _b.cia),
                                                       _prt: LookUp(colPortoes As _pp, _pp.portao = _b.portao),
                                                       _bloq: _b.tipo <> "VOO",
+                                                      // Voo que ja terminou sai da atencao como o finalizado. abs_fim e dia + hora, entao o voo que
+                                                      // vira a noite nao fica cinza antes da hora.
+                                                      _passou: _b.tipo = "VOO" And _b.abs_fim <= DateDiff(mapDataBase, Today(), TimeUnit.Days) * mapMinutosDia + Hour(Now()) * 60 + Minute(Now()),
                                                       _cls: LookUp(colClasses As _kc, _kc.classe = LookUp(colPosicoesAero As _kp, _kp.id = _b.id_posicao).classe),
                                                       _imped:
                                                           _b.posicao_txt <> _p.posicao And
@@ -171,10 +174,10 @@ Screens:
                                                       If(
                                                           _z > _a,
                                                       "<td title='" & _b.dica & "' style='box-sizing:border-box;width:" & Text((_z - _a) * 100 / Max(varJanelaMin, 60), "0.000", "en-US") & "%;height:" & (mapAlturaLinha - 14) & "px;" &
-                                                      "background:" & If(_imped, hxGradeLinha, _b.cond = "FINALIZADO", hxFinalizado, _bloq, hxTextoFraco, _b.pesq = 1, hxVermelho, IsBlank(_b.cia) Or _b.cia = "GER", Coalesce(_cls.cor_hex, Coalesce(_cia.cor_hex, hxBorda)), Coalesce(_cia.cor_hex, hxBorda)) & ";" &
-                                                      "color:" & If(_imped, hxTextoFraco, _b.cond = "FINALIZADO", hxTextoFraco, _bloq Or _b.pesq = 1, hxTextoBarra, IsBlank(_b.cia) Or _b.cia = "GER", Coalesce(_cls.cor_texto, Coalesce(_cia.cor_texto, hxTexto)), Coalesce(_cia.cor_texto, hxTexto)) & ";" &
-                                                      "border:3px " & If(_imped, "dashed", _b.cond = "FINALIZADO", "solid", _pend, "dashed", "solid") & " " &
-                                                      If(_imped, hxTextoFraco, _b.cond = "FINALIZADO", hxFinalizadoBorda, _pend And IsBlank(_b.portao), hxAmbar, Coalesce(_prt.cor_hex, hxBorda)) & ";" &
+                                                      "background:" & If(_imped, hxGradeLinha, _b.cond = "FINALIZADO" Or _passou, hxFinalizado, _bloq, hxTextoFraco, _b.pesq = 1, hxVermelho, IsBlank(_b.cia) Or _b.cia = "GER", Coalesce(_cls.cor_hex, Coalesce(_cia.cor_hex, hxBorda)), Coalesce(_cia.cor_hex, hxBorda)) & ";" &
+                                                      "color:" & If(_imped, hxTextoFraco, _b.cond = "FINALIZADO" Or _passou, hxTextoFraco, _bloq Or _b.pesq = 1, hxTextoBarra, IsBlank(_b.cia) Or _b.cia = "GER", Coalesce(_cls.cor_texto, Coalesce(_cia.cor_texto, hxTexto)), Coalesce(_cia.cor_texto, hxTexto)) & ";" &
+                                                      "border:3px " & If(_imped, "dashed", _b.cond = "FINALIZADO" Or _passou, "solid", _pend, "dashed", "solid") & " " &
+                                                      If(_imped, hxTextoFraco, _b.cond = "FINALIZADO" Or _passou, hxFinalizadoBorda, _pend And IsBlank(_b.portao), hxAmbar, Coalesce(_prt.cor_hex, hxBorda)) & ";" &
                                                       "font-size:10px;font-weight:700;line-height:1.15;padding:0 3px;text-align:center;overflow:hidden;" &
                                                       "'>" &
                                                       "<div style='white-space:nowrap;overflow:hidden;text-overflow:ellipsis;'>" &
@@ -1227,6 +1230,9 @@ Screens:
                                               varMapaVisivel And varData = Today() And varJanelaMin < mapMinutosDia And
                                               _agora >= varJanelaIni + varJanelaMin And _agora < varJanelaIni + varJanelaMin + 60,
                                               Set(varJanelaIni, Min(mapMinutosDia - varJanelaMin, Hour(Now()) * 60));
+                                              Select(btnDesenharMap),
+                                              // A cada 5 minutos redesenha, para o voo que terminou ficar cinza sem ATUALIZAR.
+                                              varMapaVisivel And varData = Today() And Mod(_agora, 5) = 0,
                                               Select(btnDesenharMap)
                                           )
                                       )
@@ -1997,7 +2003,7 @@ Screens:
                           "<span style='background:" & hxVermelho & ";color:" & hxTextoBarra & ";padding:0 3px;font-weight:700;'>P</span> pesquisado &nbsp;&middot;&nbsp; " &
                           "<span style='background:" & hxInternacional & ";color:" & hxTexto & ";padding:0 3px;font-weight:700;'>I</span> internacional &nbsp;&middot;&nbsp; " &
                           "<span style='background:" & hxAlternativa & ";color:" & hxTextoBarra & ";padding:0 3px;font-weight:700;'>A</span> reserva de alternativa &nbsp;&middot;&nbsp; " &
-                          "<span style='background:" & hxFinalizado & ";color:" & hxTextoFraco & ";border:1px solid " & hxFinalizadoBorda & ";padding:0 3px;font-weight:700;'>&#10003;</span> finalizado &nbsp;&middot;&nbsp; " &
+                          "<span style='background:" & hxFinalizado & ";color:" & hxTextoFraco & ";border:1px solid " & hxFinalizadoBorda & ";padding:0 3px;font-weight:700;'>&#10003;</span> finalizado ou voo encerrado &nbsp;&middot;&nbsp; " &
                           "<span style='background:" & hxTextoFraco & ";color:" & hxTextoBarra & ";padding:0 3px;font-weight:700;'>INTERDITADO</span> posição bloqueada &nbsp;&middot;&nbsp; " &
                           "<span style='font-weight:700;color:" & hxTexto & ";'>&laquo;&nbsp;&raquo;</span> começa ou termina fora da faixa</td>" &
                           "</tr></table>"
