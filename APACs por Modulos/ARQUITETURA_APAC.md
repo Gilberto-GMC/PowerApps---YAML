@@ -139,7 +139,12 @@ Está escrito aqui para não virar redescoberta.
 | `scrApacMes.pa.yaml` | grade do mês: dias × horas |
 | `scrApacDia.pa.yaml` | o dia hora a hora, reproduzindo a planilha da Simone |
 | `scrApacCadastro.pa.yaml` | cadastro de premissas (vigências) e postos fixos |
-| `importar_malha.ts` | Office Script — lê o export do Power BI, não grava |
+| `scrApacImport.pa.yaml` | importação da malha: anexo, progresso e histórico |
+| `montar_fluxo_importacao.js` | gera `fluxo/ImportarMalhaAPAC.zip` e confere a definição antes |
+| `testar_importar_malha.js` | roda o Office Script fora do Excel contra o export real |
+| `FLUXO_IMPORTACAO_APAC.md` | passo a passo do fluxo, com a costura do Office Script |
+| `testar_montar_fluxo.js` | prova que as conferências do gerador recusam defeito (controle + 8 casos) |
+| `importar_malha.ts` | Office Script — lê o export do Power BI, devolve os voos e o filtro de exclusão; não grava |
 | `lista_tb_*.json` | insumos do `List_Generator` |
 | `dados/malha_AAAA-MM.csv` | a temporada já convertida, para colar no modo de grade |
 | `valida_minimo_app.js` | prova de que a fórmula do mínimo da tela do mês bate com o mínimo exato |
@@ -150,8 +155,6 @@ Está escrito aqui para não virar redescoberta.
 - **`scrApacEscala`** — turnos 6x2 sobre a régua de horas e déficit ao vivo **contra a escala
   cadastrada**. O efetivo mínimo e os folguistas já saem na tela do mês (§13); o que falta é
   comparar com os turnos que existem de fato.
-- **`scrApacImport`** e o fluxo do Power Automate. Enquanto não existem, a malha entra pelos CSVs
-  de `dados/` no modo de grade do SharePoint — o que já permite validar todo o cálculo.
 - **Cadastro da escala** — a `tb_apacEscala` existe, mas nenhuma tela lê nem grava turnos.
 
 ## 13. Efetivo mínimo — calculado na tela do mês, sem laço
@@ -259,3 +262,34 @@ A skill `list-generator` ainda documenta `<Validation>` como padrão. Não está
 é o elemento em si ou a fórmula em sintaxe pt-BR (`OU(...;...)`) — o `schemaXml` é XML de
 SharePoint, e fórmula de coluna nesse formato costuma ser em inglês. Enquanto isso não for isolado
 com uma coluna só, a regra aqui é não usar.
+
+## 16. Importação da malha
+
+O triângulo do Mapa, com três mudanças. Passo a passo em `FLUXO_IMPORTACAO_APAC.md`.
+
+| Peça | Faz |
+|---|---|
+| `importar_malha.ts` | lê o export pelo **nome** das colunas, converte data e hora, devolve os voos e o **filtro de exclusão** |
+| fluxo `Importar malha APAC` | só transporta: apaga o que o filtro diz, grava em lotes, atualiza o progresso |
+| `scrApacImport` | anexa, escolhe TODAS ou um mês, acompanha a barra e mostra o histórico |
+
+**1. Um anexo importa a temporada.** O padrão é TODAS. Escolher um mês grava só aquele mês e o filtro
+de exclusão só inclui aquele mês — importar dezembro não apaga outubro. O teste
+`testar_importar_malha.js` prova isso contra o export real, junto com os 3.841 voos campo a campo.
+
+**2. O que apagar é decidido pelo script, não pelo fluxo.** É a parte perigosa, e é a única das
+três peças que dá para rodar sozinha e conferir. O fluxo só apaga se o script disser `ok`, tiver
+lido algum voo e devolvido filtro; senão cai em `Recusar`, com a mensagem do script na tela.
+
+**3. Lotes de 50, com 10 em paralelo.** O fluxo do Mapa grava um registro por vez e gasta cerca de
+quatro ações por registro; com 3.841 voos seriam uns 15 mil pedidos, acima do limite diário da
+licença M365. Em lotes são cerca de 4 mil — 8 mil ao reimportar a temporada, porque também apaga.
+**Se TODAS falhar por limite, importe mês a mês.**
+
+**Formulário com sete cards invisíveis.** `Attachments` só existe dentro de `Form`, e o
+`SubmitForm` só cria o item se todas as obrigatórias tiverem valor. Como as listas saem sem
+`<Default>` (§15), cada obrigatória precisa de card — o Mapa tinha dois, aqui são seis mais a
+competência. O item nasce `RASCUNHO` e o `OnSuccess` o marca `PRONTO`: o fluxo dispara em
+`PRONTO`, quando o anexo já está gravado.
+
+**O gerador confere antes de gerar, e a conferência foi testada.** testar_montar_fluxo.js roda uma cópia sem defeito (tem de passar) e oito cópias com defeito plantado — obrigatória faltando em PostItem e em PatchItem, referência a ação inexistente, coluna que não existe, runAfter para outro nível, variável não inicializada, items() fora do laço e InitializeVariable dentro de escopo. Os oito são recusados, e cada um pela própria conferência: erro de sintaxe não conta como recusa.

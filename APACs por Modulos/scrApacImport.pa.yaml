@@ -1,0 +1,589 @@
+Screens:
+  scrApacImport:
+    Properties:
+      Fill: =thmFundo
+      OnVisible: |-
+        =If(IsBlank(varAero), Set(varAero, First(colAerosApac).Aeroporto));
+        Set(varPodeImportar, DataSourceInfo('tb_apacImportacao', DataSourceInfo.EditPermission));
+        ClearCollect(colCompImpApac, Table({ Value: "TODAS" }));
+        Collect(
+            colCompImpApac,
+            ForAll(
+                Sequence(24, -6) As _m,
+                { Value: Text(DateAdd(Date(Year(Today()), Month(Today()), 1), _m.Value, TimeUnit.Months), "yyyy-mm") }
+            )
+        );
+        ResetForm(frmImportApac);
+        // Volta para a importação que ainda está andando, se houver — sair e voltar não pode
+        // esconder um processamento em curso.
+        If(
+            IsBlank(varImpApacId),
+            Set(
+                varImpApacId,
+                First(
+                    Sort(
+                        Filter(tb_apacImportacao, aeroporto = varAero And (status = "PRONTO" Or status = "PROCESSANDO")),
+                        ID,
+                        SortOrder.Descending
+                    )
+                ).ID
+            )
+        );
+        If(
+            !IsBlank(varImpApacId),
+            UpdateContext({ locImpApac: LookUp(tb_apacImportacao, ID = varImpApacId) })
+        )
+    Children:
+      - cntRaizImpApac:
+          Control: GroupContainer@1.5.0
+          Variant: ManualLayout
+          Properties:
+            DropShadow: =DropShadow.None
+            Fill: =thmFundo
+            Height: =Parent.Height
+            RadiusBottomLeft: =0
+            RadiusBottomRight: =0
+            RadiusTopLeft: =0
+            RadiusTopRight: =0
+            Width: =Parent.Width
+          Children:
+            - cntColunaImpApac:
+                Control: GroupContainer@1.5.0
+                Variant: AutoLayout
+                Properties:
+                  DropShadow: =DropShadow.None
+                  Fill: =thmFundo
+                  Height: =Parent.Height
+                  LayoutAlignItems: =LayoutAlignItems.Stretch
+                  LayoutDirection: =LayoutDirection.Vertical
+                  LayoutGap: =0
+                  LayoutMinHeight: =0
+                  PaddingBottom: =0
+                  PaddingLeft: =0
+                  PaddingRight: =0
+                  PaddingTop: =0
+                  RadiusBottomLeft: =0
+                  RadiusBottomRight: =0
+                  RadiusTopLeft: =0
+                  RadiusTopRight: =0
+                  Width: =Parent.Width
+                Children:
+                  # ------------------------------------------------ barra
+                  - cntBarraImpApac:
+                      Control: GroupContainer@1.5.0
+                      Variant: AutoLayout
+                      Properties:
+                        DropShadow: =DropShadow.None
+                        Fill: =thmPrimariaEscura
+                        FillPortions: =0
+                        Height: =thmAlturaBarra
+                        LayoutAlignItems: =LayoutAlignItems.Center
+                        LayoutDirection: =LayoutDirection.Horizontal
+                        LayoutGap: =12
+                        LayoutMinHeight: =0
+                        PaddingBottom: =0
+                        PaddingLeft: =20
+                        PaddingRight: =20
+                        PaddingTop: =0
+                        RadiusBottomLeft: =0
+                        RadiusBottomRight: =0
+                        RadiusTopLeft: =0
+                        RadiusTopRight: =0
+                        Width: =Parent.Width
+                      Children:
+                        - htmMarcaImpApac:
+                            Control: HtmlViewer@2.1.0
+                            Properties:
+                              AutoHeight: =true
+                              Color: =thmTextoBarra
+                              Fill: =thmTransparente
+                              FillPortions: =1
+                              Font: =thmFonte
+                              HtmlText: |-
+                                ="<div style='" & htmlFonte & "color:" & hxTextoBarra & ";'>" &
+                                "<div style='font-size:10px;letter-spacing:.24em;font-weight:700;opacity:.6;'>ASUR BRASIL · " &
+                                varAero & "</div>" &
+                                "<div style='font-size:16px;font-weight:800;letter-spacing:.01em;margin-top:2px;'>APACs POR MÓDULOS — IMPORTAR MALHA</div>" &
+                                "</div>"
+                              PaddingBottom: =0
+                              PaddingLeft: =0
+                              PaddingRight: =0
+                              PaddingTop: =0
+                              Size: =11
+                        - btnVoltarImpApac:
+                            Control: Button@0.0.45
+                            Properties:
+                              Appearance: ='ButtonCanvas.Appearance'.Secondary
+                              Height: =thmAlturaCampo
+                              OnSelect: =Navigate(scrApacMes, ScreenTransition.Fade)
+                              Text: ="◀ VOLTAR AO MÊS"
+                              Width: =170
+                  # ------------------------------------------------ conteúdo
+                  - cntConteudoImpApac:
+                      Control: GroupContainer@1.5.0
+                      Variant: AutoLayout
+                      Properties:
+                        DropShadow: =DropShadow.None
+                        Fill: =thmFundo
+                        FillPortions: =1
+                        LayoutAlignItems: =LayoutAlignItems.Stretch
+                        LayoutDirection: =LayoutDirection.Vertical
+                        LayoutGap: =12
+                        LayoutMinHeight: =0
+                        LayoutMinWidth: =0
+                        LayoutOverflowY: =LayoutOverflow.Scroll
+                        PaddingBottom: =20
+                        PaddingLeft: =26
+                        PaddingRight: =26
+                        PaddingTop: =20
+                        RadiusBottomLeft: =0
+                        RadiusBottomRight: =0
+                        RadiusTopLeft: =0
+                        RadiusTopRight: =0
+                      Children:
+                        - htmAjudaImpApac:
+                            Control: HtmlViewer@2.1.0
+                            Properties:
+                              AutoHeight: =true
+                              Color: =thmTexto
+                              Fill: =thmSuperficie
+                              FillPortions: =0
+                              Font: =thmFonte
+                              HtmlText: |-
+                                ="<div style='" & htmlFonte & "background:" & hxPrimariaClara & ";padding:12px 14px;font-size:11px;" &
+                                "line-height:1.6;color:" & hxTexto & ";'>" &
+                                "<b>Como funciona.</b> Anexe o export de <b>DECOLAGENS</b> do Power BI, escolha o que importar e toque em IMPORTAR. " &
+                                "O arquivo é lido, a malha anterior <b>das mesmas competências</b> é apagada e a nova é gravada. " &
+                                "Reimportar o mesmo arquivo não duplica nada." &
+                                "<br><br>" &
+                                "<b>TODAS</b> grava todas as competências que o arquivo traz — a temporada inteira de uma vez, cerca de 3.800 voos. " &
+                                "Escolher um mês grava só aquele mês e não toca nos outros. A temporada inteira leva mais tempo e " &
+                                "consome mais do limite diário de pedidos do Power Automate; se a importação falhar por limite, importe mês a mês." &
+                                "<br><br>" &
+                                "<b>Como o arquivo precisa estar.</b> Primeira aba, títulos na linha 1. As colunas são achadas <b>pelo nome</b>, " &
+                                "sem diferenciar maiúscula nem acento, e a ordem não importa:" &
+                                "<table style='border-collapse:collapse;font-size:11px;margin-top:6px;'>" &
+                                "<tr><th style='text-align:left;padding:2px 14px 2px 0;border-bottom:1px solid " & hxBorda & ";'>COLUNA</th>" &
+                                "<th style='text-align:left;padding:2px 0;border-bottom:1px solid " & hxBorda & ";'>O QUE VAI NELA</th></tr>" &
+                                "<tr><td style='padding:2px 14px 2px 0;'><b>Horário</b> *</td><td>hora da decolagem, como hora do Excel</td></tr>" &
+                                "<tr><td style='padding:2px 14px 2px 0;'><b>Data</b> *</td><td>data da decolagem, como data do Excel</td></tr>" &
+                                "<tr><td style='padding:2px 14px 2px 0;'><b>Voo</b> *</td><td>número do voo</td></tr>" &
+                                "<tr><td style='padding:2px 14px 2px 0;'><b>Assentos</b> *</td><td>assentos ofertados — é o que vira volumetria</td></tr>" &
+                                "<tr><td style='padding:2px 14px 2px 0;'><b>Empresa</b>, <b>Rota</b>, <b>Aeronave</b>, <b>Tipo Voo</b>, <b>Dia</b></td><td>opcionais, só para exibição</td></tr>" &
+                                "</table>" &
+                                "<br>" &
+                                "<b style='color:" & hxAmbar & ";'>Atenção:</b> linha sem <b>Data</b> ou <b>Horário</b> de verdade é ignorada — " &
+                                "é assim que o rodapé de filtros do Power BI fica de fora. O resumo diz quantas linhas foram ignoradas; " &
+                                "se o número for alto, o arquivo veio com data em texto." &
+                                "</div>"
+                              Size: =11
+                        - cntEntradaImpApac:
+                            Control: GroupContainer@1.5.0
+                            Variant: AutoLayout
+                            Properties:
+                              DropShadow: =DropShadow.None
+                              Fill: =thmSuperficie
+                              FillPortions: =0
+                              LayoutAlignItems: =LayoutAlignItems.Stretch
+                              LayoutDirection: =LayoutDirection.Vertical
+                              LayoutGap: =4
+                              LayoutMinHeight: =0
+                              LayoutMinWidth: =0
+                              PaddingBottom: =14
+                              PaddingLeft: =16
+                              PaddingRight: =16
+                              PaddingTop: =14
+                              RadiusBottomLeft: =0
+                              RadiusBottomRight: =0
+                              RadiusTopLeft: =0
+                              RadiusTopRight: =0
+                            Children:
+                              - lblCompImpApac:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    Color: =thmTextoFraco
+                                    Font: =thmFonte
+                                    FontWeight: =FontWeight.Bold
+                                    Height: =18
+                                    Size: =10
+                                    Text: ="O QUE IMPORTAR *"
+                              - drpCompImpApac:
+                                  Control: DropDown@0.0.45
+                                  Properties:
+                                    DefaultSelectedItems: =["TODAS"]
+                                    DisplayMode: =If(varPodeImportar And IsBlank(varImpApacId), DisplayMode.Edit, DisplayMode.View)
+                                    Height: =40
+                                    Items: =colCompImpApac
+                              - lblArqImpApac:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    Color: =thmTextoFraco
+                                    Font: =thmFonte
+                                    FontWeight: =FontWeight.Bold
+                                    Height: =18
+                                    Size: =10
+                                    Text: ="EXPORT DE DECOLAGENS DO POWER BI (.xlsx) *"
+                              # Attachments só existe dentro de card de Form. As colunas obrigatórias da
+                              # tb_apacImportacao não têm valor padrão (a lista sai sem <Default>, ver
+                              # ARQUITETURA §15), então cada uma precisa de card invisível, senão o
+                              # SubmitForm é recusado e o item nem chega a existir.
+                              - frmImportApac:
+                                  Control: Form@2.4.4
+                                  Layout: Vertical
+                                  Properties:
+                                    BorderColor: =thmBorda
+                                    DataSource: =tb_apacImportacao
+                                    DefaultMode: =FormMode.New
+                                    Fill: =thmSuperficie
+                                    FillPortions: =0
+                                    Height: =210
+                                    LayoutMinHeight: =0
+                                    NumberOfColumns: =1
+                                    OnFailure: |-
+                                      =Notify(
+                                          "Não foi possível enviar o arquivo. Confira se o export está anexado e tente de novo.",
+                                          NotificationType.Error,
+                                          7000
+                                      )
+                                    OnSuccess: |-
+                                      =Set(varImpApacId, Self.LastSubmit.ID);
+                                      // Criado como RASCUNHO e só depois marcado PRONTO: o fluxo dispara em PRONTO,
+                                      // e a essa altura o anexo já está gravado no item.
+                                      Patch(
+                                          tb_apacImportacao,
+                                          LookUp(tb_apacImportacao, ID = Self.LastSubmit.ID),
+                                          {
+                                              aeroporto: varAero,
+                                              competencia: drpCompImpApac.Selected.Value,
+                                              status: "PRONTO",
+                                              total_lidos: 0,
+                                              total_gravados: 0,
+                                              total_descartados: 0,
+                                              ativo: 1
+                                          }
+                                      );
+                                      UpdateContext({ locImpApac: LookUp(tb_apacImportacao, ID = varImpApacId) });
+                                      Notify("Arquivo enviado. O processamento começa em até um minuto.", NotificationType.Success, 5000)
+                                    Width: =Parent.Width - 32
+                                  Children:
+                                    - cardAeroImpApac:
+                                        Control: TypedDataCard@1.0.7
+                                        Variant: TextualEdit
+                                        Properties:
+                                          BorderColor: =thmBorda
+                                          DataField: ="aeroporto"
+                                          Default: =ThisItem.aeroporto
+                                          DisplayName: ="aeroporto"
+                                          Height: =1
+                                          Required: =true
+                                          Update: =varAero
+                                          Visible: =false
+                                          Width: =Parent.Width
+                                          X: =0
+                                          Y: =0
+                                    - cardCompImpApac:
+                                        Control: TypedDataCard@1.0.7
+                                        Variant: TextualEdit
+                                        Properties:
+                                          BorderColor: =thmBorda
+                                          DataField: ="competencia"
+                                          Default: =ThisItem.competencia
+                                          DisplayName: ="competencia"
+                                          Height: =1
+                                          Required: =false
+                                          Update: =drpCompImpApac.Selected.Value
+                                          Visible: =false
+                                          Width: =Parent.Width
+                                          X: =0
+                                          Y: =1
+                                    - cardStatusImpApac:
+                                        Control: TypedDataCard@1.0.7
+                                        Variant: TextualEdit
+                                        Properties:
+                                          BorderColor: =thmBorda
+                                          DataField: ="status"
+                                          Default: =ThisItem.status
+                                          DisplayName: ="status"
+                                          Height: =1
+                                          Required: =true
+                                          Update: ="RASCUNHO"
+                                          Visible: =false
+                                          Width: =Parent.Width
+                                          X: =0
+                                          Y: =2
+                                    - cardLidosImpApac:
+                                        Control: TypedDataCard@1.0.7
+                                        Variant: NumberEdit
+                                        Properties:
+                                          BorderColor: =thmBorda
+                                          DataField: ="total_lidos"
+                                          Default: =ThisItem.total_lidos
+                                          DisplayName: ="total_lidos"
+                                          Height: =1
+                                          Required: =true
+                                          Update: =0
+                                          Visible: =false
+                                          Width: =Parent.Width
+                                          X: =0
+                                          Y: =3
+                                    - cardGravadosImpApac:
+                                        Control: TypedDataCard@1.0.7
+                                        Variant: NumberEdit
+                                        Properties:
+                                          BorderColor: =thmBorda
+                                          DataField: ="total_gravados"
+                                          Default: =ThisItem.total_gravados
+                                          DisplayName: ="total_gravados"
+                                          Height: =1
+                                          Required: =true
+                                          Update: =0
+                                          Visible: =false
+                                          Width: =Parent.Width
+                                          X: =0
+                                          Y: =4
+                                    - cardDescartadosImpApac:
+                                        Control: TypedDataCard@1.0.7
+                                        Variant: NumberEdit
+                                        Properties:
+                                          BorderColor: =thmBorda
+                                          DataField: ="total_descartados"
+                                          Default: =ThisItem.total_descartados
+                                          DisplayName: ="total_descartados"
+                                          Height: =1
+                                          Required: =true
+                                          Update: =0
+                                          Visible: =false
+                                          Width: =Parent.Width
+                                          X: =0
+                                          Y: =5
+                                    - cardAtivoImpApac:
+                                        Control: TypedDataCard@1.0.7
+                                        Variant: NumberEdit
+                                        Properties:
+                                          BorderColor: =thmBorda
+                                          DataField: ="ativo"
+                                          Default: =ThisItem.ativo
+                                          DisplayName: ="ativo"
+                                          Height: =1
+                                          Required: =true
+                                          Update: =1
+                                          Visible: =false
+                                          Width: =Parent.Width
+                                          X: =0
+                                          Y: =6
+                                    - cardAnexoImpApac:
+                                        Control: TypedDataCard@1.0.7
+                                        Variant: ClassicAttachmentsEdit
+                                        Properties:
+                                          BorderColor: =thmBorda
+                                          DataField: ="{Attachments}"
+                                          Default: =ThisItem.Anexos
+                                          DisplayMode: =If(varPodeImportar And IsBlank(varImpApacId), DisplayMode.Edit, DisplayMode.View)
+                                          DisplayName: ="Anexos"
+                                          Height: =190
+                                          Required: =true
+                                          Update: =attImportApac.Attachments
+                                          Width: =Parent.Width
+                                          X: =0
+                                          Y: =7
+                                        Children:
+                                          - lblCardAnexoImpApac:
+                                              Control: Label@2.5.1
+                                              MetadataKey: FieldName
+                                              Properties:
+                                                AutoHeight: =true
+                                                Color: =thmTextoFraco
+                                                Font: =thmFonte
+                                                FontWeight: =FontWeight.Bold
+                                                Height: =20
+                                                PaddingLeft: =0
+                                                Size: =10
+                                                Text: ="arraste o .xlsx aqui ou use Anexar arquivo"
+                                                Width: =Parent.Width - 60
+                                                Wrap: =false
+                                                Y: =0
+                                          - attImportApac:
+                                              Control: Attachments@2.3.0
+                                              MetadataKey: FieldValue
+                                              Properties:
+                                                BorderColor: =thmBorda
+                                                BorderThickness: =1
+                                                DisplayMode: =Parent.DisplayMode
+                                                Fill: =thmSuperficie
+                                                Font: =thmFonte
+                                                Height: =150
+                                                ItemColor: =thmTexto
+                                                ItemFill: =thmSuperficie
+                                                Items: =Parent.Default
+                                                MaxAttachments: =1
+                                                NoAttachmentsText: ="nenhum arquivo anexado"
+                                                Size: =11
+                                                Width: =Parent.Width - 20
+                                                X: =10
+                                                Y: =24
+                        - cntAcoesImpApac:
+                            Control: GroupContainer@1.5.0
+                            Variant: AutoLayout
+                            Properties:
+                              DropShadow: =DropShadow.None
+                              Fill: =thmFundo
+                              FillPortions: =0
+                              Height: =64
+                              LayoutAlignItems: =LayoutAlignItems.Center
+                              LayoutDirection: =LayoutDirection.Horizontal
+                              LayoutGap: =8
+                              LayoutMinWidth: =0
+                              RadiusBottomLeft: =0
+                              RadiusBottomRight: =0
+                              RadiusTopLeft: =0
+                              RadiusTopRight: =0
+                            Children:
+                              - btnImportarImpApac:
+                                  Control: Button@0.0.45
+                                  Properties:
+                                    Appearance: ='ButtonCanvas.Appearance'.Primary
+                                    DisplayMode: =If(varPodeImportar And IsBlank(varImpApacId), DisplayMode.Edit, DisplayMode.Disabled)
+                                    FillPortions: =1
+                                    Height: =44
+                                    LayoutMinWidth: =0
+                                    OnSelect: |-
+                                      =If(
+                                          IsBlank(drpCompImpApac.Selected.Value),
+                                          Notify("Escolha o que importar.", NotificationType.Error, 5000),
+                                          CountRows(attImportApac.Attachments) = 0,
+                                          Notify("Anexe o export de DECOLAGENS antes de importar.", NotificationType.Error, 5000),
+                                          SubmitForm(frmImportApac)
+                                      )
+                                    Text: |-
+                                      =If(
+                                          IsBlank(varImpApacId), "IMPORTAR",
+                                          Coalesce(locImpApac.status, "") in ["CONCLUIDO", "ERRO"], "IMPORTAÇÃO ENCERRADA",
+                                          "AGUARDE…"
+                                      )
+                              - btnNovaImpApac:
+                                  Control: Button@0.0.45
+                                  Properties:
+                                    Appearance: ='ButtonCanvas.Appearance'.Secondary
+                                    DisplayMode: =If(varPodeImportar, DisplayMode.Edit, DisplayMode.Disabled)
+                                    FillPortions: =1
+                                    Height: =44
+                                    LayoutMinWidth: =0
+                                    OnSelect: |-
+                                      =Set(varImpApacId, Blank());
+                                      UpdateContext({ locImpApac: Blank() });
+                                      ResetForm(frmImportApac)
+                                    Text: ="NOVA IMPORTAÇÃO"
+                        - htmProgressoImpApac:
+                            Control: HtmlViewer@2.1.0
+                            Properties:
+                              AutoHeight: =true
+                              Color: =thmTexto
+                              Fill: =thmFundo
+                              FillPortions: =0
+                              Font: =thmFonte
+                              HtmlText: |-
+                                =With(
+                                    {
+                                        lidos: Coalesce(locImpApac.total_lidos, 0),
+                                        gravados: Coalesce(locImpApac.total_gravados, 0)
+                                    },
+                                    "<div style='" & htmlFonte & "background:" & hxSuperficie & ";padding:14px 16px;'>" &
+                                    "<div style='font-size:11px;font-weight:700;letter-spacing:.1em;color:" & hxTextoFraco & ";'>" &
+                                    Upper(
+                                        Switch(
+                                            Coalesce(locImpApac.status, "-"),
+                                            "RASCUNHO", "Enviando o arquivo",
+                                            "PRONTO", "Na fila — o fluxo verifica a lista a cada minuto",
+                                            "PROCESSANDO", If(lidos = 0, "Lendo o arquivo", "Gravando a malha"),
+                                            "CONCLUIDO", "Concluído",
+                                            "ERRO", "Erro",
+                                            "Aguardando envio do arquivo"
+                                        )
+                                    ) &
+                                    " &nbsp;&middot;&nbsp; " & Coalesce(locImpApac.competencia, "") & "</div>" &
+                                    "<div style='margin-top:8px;background:" & hxBorda & ";height:24px;'>" &
+                                    "<div style='background:" & hxPrimaria & ";height:24px;width:" &
+                                    RoundDown(gravados * 100 / Max(1, lidos), 0) & "%;'></div>" &
+                                    "</div>" &
+                                    "<div style='margin-top:6px;font-size:11px;color:" & hxTextoFraco & ";'>" &
+                                    gravados & " de " & lidos & " voo(s) gravado(s) &nbsp;&middot;&nbsp; " &
+                                    RoundDown(gravados * 100 / Max(1, lidos), 0) & "%" &
+                                    If(IsBlank(locImpApac.arquivo), "", " &nbsp;&middot;&nbsp; " & locImpApac.arquivo) &
+                                    "</div>" &
+                                    "</div>"
+                                )
+                              Size: =11
+                              Visible: =!IsBlank(varImpApacId)
+                        - htmResultadoImpApac:
+                            Control: HtmlViewer@2.1.0
+                            Properties:
+                              AutoHeight: =true
+                              Color: =thmTexto
+                              Fill: =thmFundo
+                              FillPortions: =0
+                              Font: =thmFonte
+                              HtmlText: |-
+                                ="<div style='" & htmlFonte & "background:" &
+                                If(locImpApac.status = "ERRO", hxVermelhoSuave, hxAmbarSuave) &
+                                ";border-left:4px solid " & If(locImpApac.status = "ERRO", hxVermelho, hxVerde) &
+                                ";padding:12px 14px;font-size:11px;line-height:1.6;color:" & hxTexto & ";'>" &
+                                If(
+                                    locImpApac.status = "ERRO",
+                                    "<b>A importação não foi concluída.</b>",
+                                    "<b>" & Coalesce(locImpApac.total_gravados, 0) & " voo(s) gravado(s)</b> de " &
+                                    Coalesce(locImpApac.total_lidos, 0) & " lido(s)" &
+                                    If(
+                                        Coalesce(locImpApac.total_descartados, 0) > 0,
+                                        " &nbsp;&middot;&nbsp; " & locImpApac.total_descartados & " linha(s) sem data ignorada(s)",
+                                        ""
+                                    ) &
+                                    If(
+                                        Coalesce(locImpApac.total_gravados, 0) <> Coalesce(locImpApac.total_lidos, 0),
+                                        "<br><b style='color:" & hxVermelho & ";'>Gravados e lidos não batem — importe de novo antes de dimensionar.</b>",
+                                        "<br>Abra a tela do mês: ela relê a malha ao abrir."
+                                    )
+                                ) &
+                                If(IsBlank(locImpApac.mensagem), "", "<br><br>" & locImpApac.mensagem) &
+                                "</div>"
+                              Size: =11
+                              Visible: =locImpApac.status = "CONCLUIDO" Or locImpApac.status = "ERRO"
+                        - tmrImpApac:
+                            Control: Timer@2.1.0
+                            Properties:
+                              AutoPause: =false
+                              AutoStart: =true
+                              Duration: =3000
+                              OnTimerEnd: |-
+                                =If(
+                                    !IsBlank(varImpApacId) And !(Coalesce(locImpApac.status, "") in ["CONCLUIDO", "ERRO"]),
+                                    UpdateContext({ locImpApac: LookUp(tb_apacImportacao, ID = varImpApacId) })
+                                )
+                              Repeat: =true
+                              Visible: =false
+                        - htmHistoricoImpApac:
+                            Control: HtmlViewer@2.1.0
+                            Properties:
+                              AutoHeight: =true
+                              Color: =thmTexto
+                              Fill: =thmFundo
+                              FillPortions: =0
+                              Font: =thmFonte
+                              HtmlText: |-
+                                ="<div style='" & htmlFonte & "border-top:1px solid " & hxBorda & ";margin-top:12px;padding-top:14px;'>" &
+                                "<div style='font-size:10px;font-weight:700;letter-spacing:.14em;color:" & hxTextoFraco & ";margin-bottom:6px;'>ÚLTIMAS IMPORTAÇÕES DE " & varAero & "</div>" &
+                                "<table style='border-collapse:collapse;width:100%;font-size:11px;'>" &
+                                "<tr><th style='text-align:left;padding:4px 8px;border-bottom:1px solid " & hxBorda & ";'>Nº</th>" &
+                                "<th style='text-align:left;padding:4px 8px;border-bottom:1px solid " & hxBorda & ";'>O QUE</th>" &
+                                "<th style='text-align:left;padding:4px 8px;border-bottom:1px solid " & hxBorda & ";'>SITUAÇÃO</th>" &
+                                "<th style='text-align:right;padding:4px 8px;border-bottom:1px solid " & hxBorda & ";'>GRAVADOS / LIDOS</th>" &
+                                "<th style='text-align:left;padding:4px 8px;border-bottom:1px solid " & hxBorda & ";'>ARQUIVO</th></tr>" &
+                                Concat(
+                                    FirstN(Sort(Filter(tb_apacImportacao, aeroporto = varAero), ID, SortOrder.Descending), 8),
+                                    "<tr><td style='padding:4px 8px;'>" & ID & "</td>" &
+                                    "<td style='padding:4px 8px;'>" & Coalesce(competencia, "") & "</td>" &
+                                    "<td style='padding:4px 8px;color:" & If(status = "ERRO", hxVermelho, If(status = "CONCLUIDO", hxVerde, hxAmbar)) & ";font-weight:700;'>" & status & "</td>" &
+                                    "<td style='padding:4px 8px;text-align:right;'>" & Coalesce(total_gravados, 0) & " / " & Coalesce(total_lidos, 0) & "</td>" &
+                                    "<td style='padding:4px 8px;color:" & hxTextoFraco & ";'>" & Coalesce(arquivo, "") & "</td></tr>"
+                                ) &
+                                "</table></div>"
+                              Size: =11

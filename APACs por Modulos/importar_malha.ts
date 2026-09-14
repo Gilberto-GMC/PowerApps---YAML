@@ -17,14 +17,19 @@
  * Ele NÃO grava no SharePoint: quem grava é o fluxo, que recebe este retorno. Assim dá para
  * rodar o script sozinho e conferir a saída antes de existir fluxo.
  *
- * DOIS MODOS:
- *   - `mesRef` vazio  → modo descoberta: devolve as competências encontradas e quantos voos tem
- *                        cada uma, com `registros` vazio. É o que a tela usa para montar a lista.
- *   - `mesRef` = "2026-10" → devolve os registros daquele mês.
+ * TRÊS MODOS, pelo parâmetro mesRef:
+ *   - ""          → descoberta: devolve as competências do arquivo e quantos voos tem cada uma,
+ *                   com `registros` vazio. Serve para conferir o arquivo rodando o script à mão.
+ *   - "TODAS"     → devolve todos os voos do arquivo, de todas as competências. É o padrão da tela:
+ *                   um anexo importa a temporada inteira.
+ *   - "2026-10"   → devolve só os voos daquela competência.
  *
- * O modo descoberta existe por causa do tamanho: uma temporada tem ~3.800 voos, e devolver tudo
- * de uma vez estoura o que o fluxo aguenta com folga. Um mês são ~730 — a mesma ordem de grandeza
- * dos 698 que a importação do Mapa já processa sem reclamar.
+ * Tamanho: a temporada de verão 2027 tem 3.841 voos, cerca de 850 KB de retorno — abaixo do
+ * limite de retorno do Office Script no Power Automate. O fluxo grava em lotes de 50.
+ *
+ * `filtro` sai pronto para o $filter do "Obter itens" que apaga a importação anterior:
+ *   competencia eq '2026-10' or competencia eq '2026-11' ...
+ * Montar isso aqui, e não no fluxo, deixa a parte perigosa (o que apagar) testável sem fluxo.
  *
  * ⚠️ O fluxo tem de APAGAR os registros da competência antes de gravar, senão reimportar duplica.
  *    O `competencia` devolvido aqui é o que ele usa para filtrar.
@@ -60,6 +65,7 @@ interface Resultado {
   total: number;
   descartados: number;
   competencias: Competencia[];
+  filtro: string;
   registros: Registro[];
 }
 
@@ -86,11 +92,20 @@ function serialParaData(serial: number): string {
   );
 }
 
-function main(workbook: ExcelScript.Workbook, mesRef: string = ""): Resultado {
+function main(workbook: ExcelScript.Workbook, mesRef: string = "", aeroporto: string = ""): Resultado {
+  const aero = (aeroporto || AEROPORTO).trim().toUpperCase();
+  const modo = (mesRef || "").trim().toUpperCase();
   const vazio: Resultado = {
-    ok: false, mensagem: "", aeroporto: AEROPORTO, mes_ref: mesRef,
-    total: 0, descartados: 0, competencias: [], registros: [],
+    ok: false, mensagem: "", aeroporto: aero, mes_ref: modo,
+    total: 0, descartados: 0, competencias: [], filtro: "", registros: [],
   };
+
+  // Competência escrita errado ("12/2026", "dez") não casaria com nada e o fluxo gravaria zero
+  // registros sem erro. Recusar aqui dá mensagem legível na tela.
+  if (modo !== "" && modo !== "TODAS" && !/^\d{4}-\d{2}$/.test(modo)) {
+    vazio.mensagem = "Competência inválida: \"" + mesRef + "\". Use TODAS ou o formato AAAA-MM.";
+    return vazio;
+  }
 
   const planilha = workbook.getWorksheets()[0];
   const dados = planilha.getUsedRange().getValues();
@@ -121,13 +136,15 @@ function main(workbook: ExcelScript.Workbook, mesRef: string = ""): Resultado {
   if (col.voo < 0) faltando.push("Voo");
   if (col.assentos < 0) faltando.push("Assentos");
   if (faltando.length) {
-    vazio.mensagem = "Colunas não encontradas na planilha: " + faltando.join(", ");
+    vazio.mensagem = "Colunas não encontradas na planilha: " + faltando.join(", ") +
+      ". Confira se o arquivo é o export de DECOLAGENS do Power BI.";
     return vazio;
   }
 
   // --- leitura
   const registros: Registro[] = [];
   const contagem: { [comp: string]: number } = {};
+  const devolvidas: { [comp: string]: boolean } = {};
   let descartados = 0;
 
   for (let l = 1; l < dados.length; l++) {
@@ -135,7 +152,7 @@ function main(workbook: ExcelScript.Workbook, mesRef: string = ""): Resultado {
     const serial = Number(linha[col.data]);
     const fracao = Number(linha[col.hora]);
 
-    // O rodapé do export do Power BI traz uma linha de "Filtros aplicados:" sem data — cai aqui.
+    // O rodapé do export do Power BI traz linhas de "Filtros aplicados:" sem data — caem aqui.
     if (!serial || isNaN(serial) || isNaN(fracao)) {
       descartados++;
       continue;
@@ -145,13 +162,14 @@ function main(workbook: ExcelScript.Workbook, mesRef: string = ""): Resultado {
     const competencia = data.substring(0, 7);
     contagem[competencia] = (contagem[competencia] || 0) + 1;
 
-    if (mesRef && competencia !== mesRef) continue;
+    if (modo === "" || (modo !== "TODAS" && competencia !== modo)) continue;
 
     // Math.round e não Math.floor: 0,2152777… × 1440 = 309,99996, que é 05:10 e não 05:09.
     const min = Math.round(fracao * 1440);
 
+    devolvidas[competencia] = true;
     registros.push({
-      aeroporto: AEROPORTO,
+      aeroporto: aero,
       competencia: competencia,
       data: data,
       hora_min: min < 0 ? 0 : min > 1439 ? 1439 : min,
@@ -174,15 +192,17 @@ function main(workbook: ExcelScript.Workbook, mesRef: string = ""): Resultado {
     competencias.push({ competencia: chaves[i], voos: contagem[chaves[i]] });
   }
 
-  if (!mesRef) {
+  if (modo === "") {
     return {
       ok: true,
-      mensagem: "Encontradas " + competencias.length + " competências na planilha.",
-      aeroporto: AEROPORTO,
+      mensagem: "Encontradas " + competencias.length + " competências na planilha: " +
+        competencias.map(c => c.competencia + " (" + c.voos + ")").join(", ") + ".",
+      aeroporto: aero,
       mes_ref: "",
       total: 0,
       descartados: descartados,
       competencias: competencias,
+      filtro: "",
       registros: [],
     };
   }
@@ -190,24 +210,33 @@ function main(workbook: ExcelScript.Workbook, mesRef: string = ""): Resultado {
   if (!registros.length) {
     return {
       ok: false,
-      mensagem: "Nenhum voo em " + mesRef + ". A planilha tem: " + chaves.join(", "),
-      aeroporto: AEROPORTO,
-      mes_ref: mesRef,
+      mensagem: (modo === "TODAS" ? "Nenhum voo lido no arquivo." : "Nenhum voo em " + modo + ".") +
+        " A planilha tem: " + (chaves.length ? chaves.join(", ") : "nenhuma competência reconhecível") + ".",
+      aeroporto: aero,
+      mes_ref: modo,
       total: 0,
       descartados: descartados,
       competencias: competencias,
+      filtro: "",
       registros: [],
     };
   }
 
+  // Só as competências que ESTE retorno grava entram no filtro: importar dezembro não pode apagar
+  // outubro. E o aeroporto fica de fora de propósito — o fluxo o acrescenta pelo item da tela.
+  const gravadas = Object.keys(devolvidas).sort();
+  const filtro = gravadas.map(c => "competencia eq '" + c + "'").join(" or ");
+
   return {
     ok: true,
-    mensagem: registros.length + " voos lidos para " + mesRef + ".",
-    aeroporto: AEROPORTO,
-    mes_ref: mesRef,
+    mensagem: registros.length + " voos lidos (" + gravadas.join(", ") + ")" +
+      (descartados ? "; " + descartados + " linha(s) sem data ignorada(s)" : "") + ".",
+    aeroporto: aero,
+    mes_ref: modo,
     total: registros.length,
     descartados: descartados,
     competencias: competencias,
+    filtro: filtro,
     registros: registros,
   };
 }

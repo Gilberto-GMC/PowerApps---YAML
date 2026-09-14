@@ -1,0 +1,504 @@
+{
+  "name": "5b7d2e91-4c3a-4f0e-9a61-7e2c8d4f1a3b",
+  "id": "/providers/Microsoft.Flow/flows/5b7d2e91-4c3a-4f0e-9a61-7e2c8d4f1a3b",
+  "type": "Microsoft.Flow/flows",
+  "properties": {
+    "apiId": "/providers/Microsoft.PowerApps/apis/shared_logicflows",
+    "displayName": "Importar malha APAC",
+    "definition": {
+      "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+      "contentVersion": "1.0.0.0",
+      "parameters": {
+        "$authentication": {
+          "defaultValue": {},
+          "type": "SecureObject"
+        },
+        "$connections": {
+          "defaultValue": {},
+          "type": "Object"
+        }
+      },
+      "triggers": {
+        "When_an_item_is_created_or_modified": {
+          "recurrence": {
+            "frequency": "Minute",
+            "interval": 1
+          },
+          "evaluatedRecurrence": {
+            "frequency": "Minute",
+            "interval": 1
+          },
+          "splitOn": "@triggerOutputs()?['body/value']",
+          "type": "OpenApiConnection",
+          "inputs": {
+            "parameters": {
+              "dataset": "https://grupoccr.sharepoint.com/sites/AIRPORTNOW",
+              "table": "tb_apacImportacao"
+            },
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+              "connectionName": "shared_sharepointonline",
+              "operationId": "GetOnUpdatedItems"
+            },
+            "authentication": "@parameters('$authentication')"
+          },
+          "conditions": [
+            {
+              "expression": "@equals(triggerBody()?['status'], 'PRONTO')"
+            }
+          ]
+        }
+      },
+      "actions": {
+        "Inicializar_gravados": {
+          "runAfter": {},
+          "type": "InitializeVariable",
+          "inputs": {
+            "variables": [
+              {
+                "name": "gravados",
+                "type": "integer",
+                "value": 0
+              }
+            ]
+          }
+        },
+        "Marcar_processando": {
+          "type": "OpenApiConnection",
+          "inputs": {
+            "parameters": {
+              "dataset": "https://grupoccr.sharepoint.com/sites/AIRPORTNOW",
+              "table": "tb_apacImportacao",
+              "id": "@triggerBody()?['ID']",
+              "item/aeroporto": "@triggerBody()?['aeroporto']",
+              "item/competencia": "@triggerBody()?['competencia']",
+              "item/status": "PROCESSANDO",
+              "item/total_lidos": "@triggerBody()?['total_lidos']",
+              "item/total_gravados": "@triggerBody()?['total_gravados']",
+              "item/total_descartados": "@triggerBody()?['total_descartados']",
+              "item/ativo": "@triggerBody()?['ativo']"
+            },
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+              "connectionName": "shared_sharepointonline",
+              "operationId": "PatchItem"
+            },
+            "authentication": "@parameters('$authentication')"
+          },
+          "runAfter": {
+            "Inicializar_gravados": [
+              "Succeeded"
+            ]
+          }
+        },
+        "Processar": {
+          "runAfter": {
+            "Marcar_processando": [
+              "Succeeded"
+            ]
+          },
+          "type": "Scope",
+          "actions": {
+            "Obter_anexos": {
+              "type": "OpenApiConnection",
+              "inputs": {
+                "parameters": {
+                  "dataset": "https://grupoccr.sharepoint.com/sites/AIRPORTNOW",
+                  "table": "tb_apacImportacao",
+                  "itemId": "@triggerBody()?['ID']"
+                },
+                "host": {
+                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+                  "connectionName": "shared_sharepointonline",
+                  "operationId": "GetItemAttachments"
+                },
+                "authentication": "@parameters('$authentication')"
+              },
+              "runAfter": {}
+            },
+            "Obter_conteudo_do_anexo": {
+              "type": "OpenApiConnection",
+              "inputs": {
+                "parameters": {
+                  "dataset": "https://grupoccr.sharepoint.com/sites/AIRPORTNOW",
+                  "table": "tb_apacImportacao",
+                  "itemId": "@triggerBody()?['ID']",
+                  "attachmentId": "@{first(body('Obter_anexos'))?['Id']}"
+                },
+                "host": {
+                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+                  "connectionName": "shared_sharepointonline",
+                  "operationId": "GetAttachmentContent"
+                },
+                "authentication": "@parameters('$authentication')"
+              },
+              "runAfter": {
+                "Obter_anexos": [
+                  "Succeeded"
+                ]
+              }
+            },
+            "Salvar_planilha": {
+              "type": "OpenApiConnection",
+              "inputs": {
+                "parameters": {
+                  "dataset": "https://grupoccr.sharepoint.com/sites/AIRPORTNOW",
+                  "folderPath": "/Documentos Compartilhados/Importar",
+                  "name": "malha-apac-@{triggerBody()?['ID']}.xlsx",
+                  "body": "@body('Obter_conteudo_do_anexo')"
+                },
+                "host": {
+                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+                  "connectionName": "shared_sharepointonline",
+                  "operationId": "CreateFile"
+                },
+                "authentication": "@parameters('$authentication')"
+              },
+              "runAfter": {
+                "Obter_conteudo_do_anexo": [
+                  "Succeeded"
+                ]
+              }
+            },
+            "Resultado_script": {
+              "runAfter": {
+                "Salvar_planilha": [
+                  "Succeeded"
+                ]
+              },
+              "type": "Compose",
+              "inputs": {
+                "ok": false,
+                "mensagem": "COSTURA NAO LIGADA: acrescente a acao do Excel 'Executar script de uma biblioteca do SharePoint' e troque o valor desta acao pelo resultado dela. Ver FLUXO_IMPORTACAO_APAC.md.",
+                "aeroporto": "",
+                "mes_ref": "",
+                "total": 0,
+                "descartados": 0,
+                "competencias": [],
+                "filtro": "",
+                "registros": []
+              }
+            },
+            "Guardar_total": {
+              "type": "OpenApiConnection",
+              "inputs": {
+                "parameters": {
+                  "dataset": "https://grupoccr.sharepoint.com/sites/AIRPORTNOW",
+                  "table": "tb_apacImportacao",
+                  "id": "@triggerBody()?['ID']",
+                  "item/aeroporto": "@triggerBody()?['aeroporto']",
+                  "item/competencia": "@triggerBody()?['competencia']",
+                  "item/status": "PROCESSANDO",
+                  "item/total_lidos": "@coalesce(outputs('Resultado_script')?['total'], 0)",
+                  "item/total_gravados": 0,
+                  "item/total_descartados": "@coalesce(outputs('Resultado_script')?['descartados'], 0)",
+                  "item/ativo": "@triggerBody()?['ativo']",
+                  "item/arquivo": "@{first(body('Obter_anexos'))?['DisplayName']}",
+                  "item/mensagem": "@outputs('Resultado_script')?['mensagem']"
+                },
+                "host": {
+                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+                  "connectionName": "shared_sharepointonline",
+                  "operationId": "PatchItem"
+                },
+                "authentication": "@parameters('$authentication')"
+              },
+              "runAfter": {
+                "Resultado_script": [
+                  "Succeeded"
+                ]
+              }
+            },
+            "Conferir_resultado": {
+              "runAfter": {
+                "Guardar_total": [
+                  "Succeeded"
+                ]
+              },
+              "type": "If",
+              "expression": {
+                "and": [
+                  {
+                    "equals": [
+                      "@outputs('Resultado_script')?['ok']",
+                      true
+                    ]
+                  },
+                  {
+                    "greater": [
+                      "@coalesce(outputs('Resultado_script')?['total'], 0)",
+                      0
+                    ]
+                  },
+                  {
+                    "not": {
+                      "equals": [
+                        "@coalesce(outputs('Resultado_script')?['filtro'], '')",
+                        ""
+                      ]
+                    }
+                  }
+                ]
+              },
+              "actions": {
+                "Obter_malha_anterior": {
+                  "type": "OpenApiConnection",
+                  "inputs": {
+                    "parameters": {
+                      "dataset": "https://grupoccr.sharepoint.com/sites/AIRPORTNOW",
+                      "table": "tb_apacMalha",
+                      "$filter": "aeroporto eq '@{triggerBody()?['aeroporto']}' and (@{outputs('Resultado_script')?['filtro']})",
+                      "$top": 5000
+                    },
+                    "host": {
+                      "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+                      "connectionName": "shared_sharepointonline",
+                      "operationId": "GetItems"
+                    },
+                    "authentication": "@parameters('$authentication')"
+                  },
+                  "runAfter": {},
+                  "runtimeConfiguration": {
+                    "paginationPolicy": {
+                      "minimumItemCount": 5000
+                    }
+                  }
+                },
+                "Apagar_anteriores": {
+                  "runAfter": {
+                    "Obter_malha_anterior": [
+                      "Succeeded"
+                    ]
+                  },
+                  "type": "Foreach",
+                  "foreach": "@outputs('Obter_malha_anterior')?['body/value']",
+                  "runtimeConfiguration": {
+                    "concurrency": {
+                      "repetitions": 10
+                    }
+                  },
+                  "actions": {
+                    "Excluir_voo_anterior": {
+                      "type": "OpenApiConnection",
+                      "inputs": {
+                        "parameters": {
+                          "dataset": "https://grupoccr.sharepoint.com/sites/AIRPORTNOW",
+                          "table": "tb_apacMalha",
+                          "id": "@items('Apagar_anteriores')?['ID']"
+                        },
+                        "host": {
+                          "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+                          "connectionName": "shared_sharepointonline",
+                          "operationId": "DeleteItem"
+                        },
+                        "authentication": "@parameters('$authentication')"
+                      },
+                      "runAfter": {}
+                    }
+                  }
+                },
+                "Gravar_lotes": {
+                  "runAfter": {
+                    "Apagar_anteriores": [
+                      "Succeeded"
+                    ]
+                  },
+                  "type": "Foreach",
+                  "foreach": "@chunk(outputs('Resultado_script')?['registros'], 50)",
+                  "runtimeConfiguration": {
+                    "concurrency": {
+                      "repetitions": 1
+                    }
+                  },
+                  "actions": {
+                    "Gravar_lote": {
+                      "runAfter": {},
+                      "type": "Foreach",
+                      "foreach": "@items('Gravar_lotes')",
+                      "runtimeConfiguration": {
+                        "concurrency": {
+                          "repetitions": 10
+                        }
+                      },
+                      "actions": {
+                        "Criar_voo": {
+                          "type": "OpenApiConnection",
+                          "inputs": {
+                            "parameters": {
+                              "dataset": "https://grupoccr.sharepoint.com/sites/AIRPORTNOW",
+                              "table": "tb_apacMalha",
+                              "item/aeroporto": "@items('Gravar_lote')?['aeroporto']",
+                              "item/competencia": "@items('Gravar_lote')?['competencia']",
+                              "item/data": "@items('Gravar_lote')?['data']",
+                              "item/hora_min": "@items('Gravar_lote')?['hora_min']",
+                              "item/empresa": "@items('Gravar_lote')?['empresa']",
+                              "item/voo": "@items('Gravar_lote')?['voo']",
+                              "item/rota": "@items('Gravar_lote')?['rota']",
+                              "item/aeronave": "@items('Gravar_lote')?['aeronave']",
+                              "item/assentos": "@items('Gravar_lote')?['assentos']",
+                              "item/tipo_voo": "@items('Gravar_lote')?['tipo_voo']",
+                              "item/dia_semana": "@items('Gravar_lote')?['dia_semana']",
+                              "item/ativo": "@items('Gravar_lote')?['ativo']"
+                            },
+                            "host": {
+                              "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+                              "connectionName": "shared_sharepointonline",
+                              "operationId": "PostItem"
+                            },
+                            "authentication": "@parameters('$authentication')"
+                          },
+                          "runAfter": {}
+                        }
+                      }
+                    },
+                    "Somar_lote": {
+                      "runAfter": {
+                        "Gravar_lote": [
+                          "Succeeded"
+                        ]
+                      },
+                      "type": "IncrementVariable",
+                      "inputs": {
+                        "name": "gravados",
+                        "value": "@length(items('Gravar_lotes'))"
+                      }
+                    },
+                    "Atualizar_barra": {
+                      "type": "OpenApiConnection",
+                      "inputs": {
+                        "parameters": {
+                          "dataset": "https://grupoccr.sharepoint.com/sites/AIRPORTNOW",
+                          "table": "tb_apacImportacao",
+                          "id": "@triggerBody()?['ID']",
+                          "item/aeroporto": "@triggerBody()?['aeroporto']",
+                          "item/competencia": "@triggerBody()?['competencia']",
+                          "item/status": "PROCESSANDO",
+                          "item/total_lidos": "@coalesce(outputs('Resultado_script')?['total'], 0)",
+                          "item/total_gravados": "@variables('gravados')",
+                          "item/total_descartados": "@coalesce(outputs('Resultado_script')?['descartados'], 0)",
+                          "item/ativo": "@triggerBody()?['ativo']"
+                        },
+                        "host": {
+                          "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+                          "connectionName": "shared_sharepointonline",
+                          "operationId": "PatchItem"
+                        },
+                        "authentication": "@parameters('$authentication')"
+                      },
+                      "runAfter": {
+                        "Somar_lote": [
+                          "Succeeded"
+                        ]
+                      }
+                    }
+                  }
+                },
+                "Fechar": {
+                  "type": "OpenApiConnection",
+                  "inputs": {
+                    "parameters": {
+                      "dataset": "https://grupoccr.sharepoint.com/sites/AIRPORTNOW",
+                      "table": "tb_apacImportacao",
+                      "id": "@triggerBody()?['ID']",
+                      "item/aeroporto": "@triggerBody()?['aeroporto']",
+                      "item/competencia": "@triggerBody()?['competencia']",
+                      "item/status": "CONCLUIDO",
+                      "item/total_lidos": "@coalesce(outputs('Resultado_script')?['total'], 0)",
+                      "item/total_gravados": "@variables('gravados')",
+                      "item/total_descartados": "@coalesce(outputs('Resultado_script')?['descartados'], 0)",
+                      "item/ativo": "@triggerBody()?['ativo']",
+                      "item/mensagem": "@{outputs('Resultado_script')?['mensagem']} Gravados: @{variables('gravados')}."
+                    },
+                    "host": {
+                      "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+                      "connectionName": "shared_sharepointonline",
+                      "operationId": "PatchItem"
+                    },
+                    "authentication": "@parameters('$authentication')"
+                  },
+                  "runAfter": {
+                    "Gravar_lotes": [
+                      "Succeeded"
+                    ]
+                  }
+                }
+              },
+              "else": {
+                "actions": {
+                  "Recusar": {
+                    "type": "OpenApiConnection",
+                    "inputs": {
+                      "parameters": {
+                        "dataset": "https://grupoccr.sharepoint.com/sites/AIRPORTNOW",
+                        "table": "tb_apacImportacao",
+                        "id": "@triggerBody()?['ID']",
+                        "item/aeroporto": "@triggerBody()?['aeroporto']",
+                        "item/competencia": "@triggerBody()?['competencia']",
+                        "item/status": "ERRO",
+                        "item/total_lidos": "@coalesce(outputs('Resultado_script')?['total'], 0)",
+                        "item/total_gravados": 0,
+                        "item/total_descartados": "@coalesce(outputs('Resultado_script')?['descartados'], 0)",
+                        "item/ativo": "@triggerBody()?['ativo']",
+                        "item/mensagem": "@{coalesce(outputs('Resultado_script')?['mensagem'], 'O script nao devolveu resultado.')} Nada foi apagado nem gravado."
+                      },
+                      "host": {
+                        "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+                        "connectionName": "shared_sharepointonline",
+                        "operationId": "PatchItem"
+                      },
+                      "authentication": "@parameters('$authentication')"
+                    },
+                    "runAfter": {}
+                  }
+                }
+              }
+            }
+          }
+        },
+        "Marcar_erro": {
+          "type": "OpenApiConnection",
+          "inputs": {
+            "parameters": {
+              "dataset": "https://grupoccr.sharepoint.com/sites/AIRPORTNOW",
+              "table": "tb_apacImportacao",
+              "id": "@triggerBody()?['ID']",
+              "item/aeroporto": "@triggerBody()?['aeroporto']",
+              "item/competencia": "@triggerBody()?['competencia']",
+              "item/status": "ERRO",
+              "item/total_lidos": "@triggerBody()?['total_lidos']",
+              "item/total_gravados": "@variables('gravados')",
+              "item/total_descartados": "@triggerBody()?['total_descartados']",
+              "item/ativo": "@triggerBody()?['ativo']",
+              "item/mensagem": "A importacao falhou no meio. Gravados ate a falha: @{variables('gravados')}. Veja o historico do fluxo Importar malha APAC e importe de novo: a reimportacao apaga o que ficou pela metade."
+            },
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+              "connectionName": "shared_sharepointonline",
+              "operationId": "PatchItem"
+            },
+            "authentication": "@parameters('$authentication')"
+          },
+          "runAfter": {
+            "Processar": [
+              "Failed",
+              "TimedOut"
+            ]
+          }
+        }
+      },
+      "outputs": {}
+    },
+    "connectionReferences": {
+      "shared_sharepointonline": {
+        "connectionName": "shared-sharepointonl-0cd12861-383f-4b6e-9359-db983fb70160",
+        "source": "Embedded",
+        "id": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+        "tier": "NotSpecified",
+        "apiName": "sharepointonline",
+        "isProcessSimpleApiReferenceConversionAlreadyDone": false
+      }
+    },
+    "flowFailureAlertSubscribed": false,
+    "isManaged": false
+  }
+}

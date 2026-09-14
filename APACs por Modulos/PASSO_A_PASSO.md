@@ -56,17 +56,24 @@ avançadas). É por ali que o arquivo chega ao fluxo, quando o fluxo existir.
 
 ---
 
-## Passo 2 — carregar a malha
+## Passo 2 — a importação da malha
 
-Sem o fluxo de importação, a malha entra direto:
+Agora a malha entra pelo app: tela **IMPORTAR MALHA**, com o export de DECOLAGENS do Power BI anexado.
+Para isso existir, três peças — o passo a passo inteiro, com o porquê de cada ação, está em
+[FLUXO_IMPORTACAO_APAC.md](FLUXO_IMPORTACAO_APAC.md):
 
-1. Abra a `tb_apacMalha` → **Editar em modo de grade**.
-2. Abra `dados/malha_2026-12.csv` e cole. Separador `;`, UTF-8 com BOM, data em `dd/mm/aaaa`.
+1. **Anexos habilitados** em `tb_apacImportacao` (Configurações da lista → Configurações avançadas).
+2. **Office Script** `importar_malha.ts` salvo como `Importar malha APAC` e movido para
+   `Documentos › Roteiros`.
+3. **Fluxo**: importar `fluxo/ImportarMalhaAPAC.zip` como pacote, reescolher as listas se vierem em
+   branco e **ligar a costura** do Office Script — é a única ação montada à mão.
 
-Dezembro tem **814 voos** e é o mês de pico da temporada — é o que serve de prova. Os outros quatro
-meses estão na mesma pasta.
+**Como saber que deu certo:** importar **2026-12** primeiro. A tela mostra **814 gravados de 814
+lidos**, e importar dezembro de novo mantém a lista em 814 — não 1.628.
 
-**Como saber que deu certo:** 814 itens na lista, e o primeiro dia com voos a partir de 01/12.
+> Enquanto o fluxo não estiver ligado, o caminho antigo continua valendo: abrir
+> `dados/malha_2026-12.csv` no Excel, copiar sem o cabeçalho e colar na `tb_apacMalha` em
+> **Editar no modo de grade**. Confira a contagem: 814.
 
 ---
 
@@ -82,7 +89,8 @@ meses estão na mesma pasta.
    ⚠️ **Se já tinha colado antes de 14/09/2026, cole de novo:** a versão nova tem
    `apacJornadaPresenca`, `apacHorasTrabalhadas` e `apacTurnosPorFolguista`, e a tela do mês não
    compila sem elas.
-4. Cole `scrApacMes.pa.yaml`, `scrApacDia.pa.yaml` e `scrApacCadastro.pa.yaml`, cada um numa tela nova. Estes estão em
+4. Cole `scrApacMes.pa.yaml`, `scrApacDia.pa.yaml`, `scrApacCadastro.pa.yaml` e `scrApacImport.pa.yaml`,
+   cada um numa tela nova. Estes estão em
    **en-US** (vírgula separa argumento), que é o formato do código-fonte.
 
 > As telas navegam umas para as outras. Se o Studio reclamar de tela inexistente ao colar uma,
@@ -105,6 +113,10 @@ Na ordem, porque cada uma cobre uma classe de defeito diferente:
 | **Vigência desligada** | selecionar essa vigência, desligar **Ativa**, SALVAR e voltar ao mês | volta a **33 APACs**, e a vigência de 01/10/2026 volta a ser **EM VIGOR** |
 | **Vigência duplicada** | NOVA VIGÊNCIA com a mesma data de uma que já existe → SALVAR | recusa, com aviso vermelho; nada é gravado |
 | **Posto fixo** | CADASTROS → POSTOS FIXOS → ACESSO C, quantidade **4** → SALVAR → voltar ao mês | o pico da grade sobe de **14** para **15** e o mínimo de APACs aumenta |
+| **Importação de um mês** | IMPORTAR MALHA → **2026-12** → anexar o export → IMPORTAR | barra até 100%, **814 gravados de 814 lidos**, e a lista com 814 itens de 2026-12 |
+| **Reimportação não duplica** | importar **2026-12** de novo com o mesmo arquivo | a lista continua com **814** — não 1.628 |
+| **Importação não apaga outro mês** | com dezembro na lista, importar **2027-01** | dezembro continua com **814**; janeiro entra com **832** |
+| **Costura desligada** | rodar o fluxo antes de acrescentar a ação do Excel | a importação termina em **ERRO** dizendo "COSTURA NAO LIGADA", e **nenhum voo** é apagado ou gravado |
 | **Antecedência** | qualquer voo às 05:00 | módulo aceso desde **03:30**, não às 05:00 |
 | **Virada** | um voo entre 00:00 e 01:30 | módulo aceso no **dia anterior** |
 | **Delegação** | abrir **28/12 a 31/12** | os voos aparecem (é o teste do limite de 500) |
@@ -123,6 +135,5 @@ sozinha erraria por seis pessoas.
 
 - **`scrApacEscala`** — os turnos cadastrados e o déficit contra eles. O **mínimo necessário** e os
   folguistas já saem na tela do mês; falta comparar com a escala que existe de fato.
-- **`scrApacImport`** e o fluxo do Power Automate — por isso o passo 2 é manual.
 - **Cadastro da escala** (`tb_apacEscala`) — a lista existe, mas nenhuma tela ainda lê nem grava
   os turnos. Entra junto com a `scrApacEscala`.

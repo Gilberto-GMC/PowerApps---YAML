@@ -1638,3 +1638,25 @@ comentário e corta a fórmula calado.
 
 **Regra.** Texto com `: ` ou ` #` vai em bloco `|-` na linha de baixo, ou se reescreve sem o caractere.
 O `fx_check.js` passou a recusar os dois em valor de uma linha.
+
+## Tratamento de erro com vários `runAfter` quase nunca dispara (14/09/2026)
+
+**O padrão.** Uma ação `Marcar_erro` com `runAfter` apontando para seis ações ao mesmo tempo, cada
+uma com `["Failed", "TimedOut"]`. Parece "se qualquer uma falhar, marque erro".
+
+**O que ele realmente diz.** Com várias ações no `runAfter`, o Power Automate só executa quando
+**todas** terminam num dos estados listados. Quando a primeira falha, as seguintes não falham: ficam
+**Skipped** — e `Skipped` não está na lista. A condição não fecha, `Marcar_erro` é pulado, e o
+item fica em `PROCESSANDO` para sempre, com a barra parada.
+
+**O certo.** Pôr o trabalho num **escopo** (`Scope`) e fazer o tratamento depender só dele:
+`runAfter: { Processar: ["Failed", "TimedOut"] }`. O escopo falha se qualquer ação de dentro falhar.
+
+**Onde está.** O fluxo `Importar programacao` do Mapa de Alocação tem o padrão com seis ações. O
+`Importar malha APAC` já nasceu com escopo.
+
+## Teste de verificação também precisa ser verificado (14/09/2026)
+
+No mesmo dia, duas verificações minhas aprovaram o que deviam recusar. A guarda de dois-pontos do fx_check perdeu as barras invertidas no escape do shell e nunca casava; e o primeiro teste negativo do gerador de fluxo lia os argumentos do node -e a partir de process.argv[2] (o certo é [1]), trocava o texto errado e contava erro de sintaxe como recusa.
+
+**Regra.** Teste negativo tem de provar três coisas: que o defeito foi plantado (a cópia difere do original), que o alvo saiu com erro, e que o erro é o da conferência — não uma quebra. E um caso de controle, sem defeito, tem de passar. Código de teste vai em arquivo, não em linha de shell.
