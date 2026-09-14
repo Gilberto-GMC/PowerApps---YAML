@@ -12,9 +12,79 @@ grava os registros em `tb_alocacoesMapa`, atualizando o progresso que a barra da
 
 ---
 
+## ⚠️ 14/09/2026 — o pacote foi refeito: o tratamento de erro não disparava
+
+**O defeito.** O `Marcar_erro` tinha `runAfter` apontando para seis ações ao mesmo tempo
+(`Obter_conteudo_do_anexo`, `Salvar_planilha`, `Guardar_total`, `Obter_importacao_anterior`,
+`Apagar_anteriores`, `Gravar_registros`), cada uma com "houve falha" e "expirou". Com várias ações no
+`runAfter`, o Power Automate só executa quando **todas** terminam num dos estados listados. Quando uma
+falha, as seguintes não falham: ficam **ignoradas** (*Skipped*), que não está na lista. O `Marcar_erro`
+era pulado, o item de `tb_importacaoMapa` ficava em `PROCESSANDO` para sempre e a barra da
+`scrMapaImport` parava sem explicar nada.
+
+**A correção.** O trabalho — de `Obter_anexos` até `Fechar` — está dentro de um escopo **`Processar`**,
+e o `Marcar_erro` depende só dele. Escopo falha se qualquer ação de dentro falhar, então agora
+qualquer falha no meio vira `ERRO` na tela. De quebra, o `Marcar_erro` grava em `processados` até onde
+a importação chegou.
+
+```
+Marcar_processando
+Inicializar_contador          ← subiu para o nível de cima: variável não se inicializa dentro de escopo
+Processar (escopo)
+  Obter_anexos → Obter_conteudo_do_anexo → Salvar_planilha
+  [Executar script]           ← a costura, agora DENTRO do escopo
+  Resultado_script → Guardar_total → Obter_importacao_anterior → Apagar_anteriores
+  Gravar_registros → Fechar
+Marcar_erro                   ← só se Processar falhar ou expirar
+```
+
+Não mudou: a costura do Office Script, a condição de gatilho `status = PRONTO`, o mapeamento das colunas,
+os manifestos do pacote.
+
+**Como foi conferido.** O pacote agora sai de `montar_fluxo_importacao.js`, que lê
+`fluxo_importar_programacao.definition.json`, monta o escopo e confere antes de gravar: referências a
+ações, colunas obrigatórias e existentes (lidas dos `lista_tb_*.json`), `runAfter` no mesmo nível,
+variáveis, `items()` dentro do laço, a trava do gatilho e a costura. `testar_montar_fluxo_importacao.js`
+prova que essas conferências funcionam: uma definição sem defeito passa, rodar duas vezes dá o mesmo
+resultado, e **dez defeitos plantados de propósito são recusados** — cada um pela conferência, não por
+erro de sintaxe. A comparação com a versão anterior confirmou que só mudaram o escopo, os `runAfter` da
+remontagem e o `Marcar_erro`.
+
+### ⚠️ O fluxo em produção continua com o defeito até ser trocado
+
+Duas formas. **A primeira é a recomendada**, porque deixa o fluxo igual ao do repositório.
+
+**Opção A — reimportar o pacote.**
+
+1. **Desligue** o fluxo `Importar programacao` que está rodando — não apague ainda. Dois fluxos com o
+   mesmo gatilho na mesma lista processariam a mesma importação duas vezes.
+2. Importe o `Importarprogramacao_COMPLETO.zip` novo (entra como **fluxo novo**, ver "Atalho" abaixo).
+3. **Refaça os ajustes que o fluxo em produção tem e o pacote não tem** — são os mesmos da primeira vez:
+   - a ação do Excel **Run script from SharePoint library**, com os seis campos da seção "Tirar o
+     script do OneDrive pessoal", **dentro do escopo `Processar`**, entre `Salvar_planilha` e
+     `Resultado_script`;
+   - a expressão do `Resultado_script` apontando para ela;
+   - a pasta da `Salvar_planilha` (`Documentos › Importar`, escolhida pelo ícone de pasta);
+   - a lista `tb_alocacoesMapa` nas ações que abrirem com o campo em branco.
+4. Confira a condição de gatilho (seção "Os 5 avisos de loop circular").
+5. **Teste a falha:** na tela, anexe um arquivo que não seja planilha e toque em GERAR. O item tem de
+   terminar em **ERRO**, não ficar em `PROCESSANDO`.
+6. Teste uma importação normal com a planilha reduzida (seção "Como testar sem risco").
+7. Só depois **apague o fluxo antigo**.
+
+**Opção B — corrigir no designer, sem reimportar.**
+
+1. Abra o fluxo em produção. Logo depois de `Inicializar_contador`, adicione **Controle → Escopo** e
+   renomeie para `Processar`.
+2. Arraste para dentro do escopo, na ordem: `Obter_anexos` até `Fechar` — inclusive a ação do Excel.
+   `Marcar_processando` e `Inicializar_contador` ficam **fora**, antes dele.
+3. No `Marcar_erro`: **⋯ → Configurar execução após** → desmarque todas as ações e deixe **só
+   `Processar`**, com "houve falha" e "expirou".
+4. Salve e faça o teste de falha do passo 5 da opção A.
+
 ## Atalho: importar o pacote pronto
 
-`Importarprogramacao_COMPLETO.zip` traz as **16 ações já montadas e ligadas**, com a condição de
+`Importarprogramacao_COMPLETO.zip` traz as **18 ações já montadas e ligadas** — o trabalho dentro do escopo `Processar`, com a condição de
 gatilho, a simultaneidade 1 e as 19 colunas mapeadas. Foi construído sobre o pacote que o Douglas
 exportou do próprio ambiente, então site e GUID de `tb_importacaoMapa` são os reais.
 
@@ -41,7 +111,7 @@ O pacote exportado declara **só** a conexão do SharePoint. Acrescentar o conec
 inventar entradas no manifesto, e erro ali derruba a importação inteira — sem mensagem útil. Então a
 chamada do Office Script ficou como uma junta que você liga na mão:
 
-1. **Adicione a ação do Excel** entre `Salvar_planilha` e `Resultado_script`:
+1. **Adicione a ação do Excel** dentro do escopo `Processar`, entre `Salvar_planilha` e `Resultado_script`:
    **Excel Online (Business) → Executar script**, com os parâmetros do passo 5. O **Arquivo** é o
    `Id` da ação `Salvar_planilha`.
 2. **Abra a ação `Resultado_script`** (é um *Compose* com um JSON de aviso dentro), apague o
@@ -458,11 +528,19 @@ mais que suficiente para o operador ver que está andando.
 
 ## 11. Tratar falha
 
-No escopo principal ou nas ações críticas: **⋯ → Configurar execução após → marcar "houve falha" e
-"expirou"**, apontando para uma **Atualizar item** final com `status = ERRO` e a `mensagem` do erro.
+Ponha as ações de trabalho (de "Obter anexos" até "Fechar") dentro de um **Escopo** e crie, **depois** do
+escopo, uma **Atualizar item** com `status = ERRO`. Nela: **⋯ → Configurar execução após → só o escopo**,
+com "houve falha" e "expirou".
 
-Sem isso, uma falha no meio deixa o item em `PROCESSANDO` para sempre, e a tela fica com a barra
-parada sem explicar por quê.
+**Não aponte o tratamento para várias ações ao mesmo tempo.** Com várias ações no "Configurar execução
+após", ele só roda quando **todas** terminam num dos estados marcados; quando a primeira falha, as seguintes
+ficam *ignoradas*, e ignorada não é falhada. Foi exatamente o defeito do pacote até 14/09/2026.
+
+A **Inicializar variável** tem de ficar **fora** do escopo, antes dele — o Power Automate não inicializa
+variável dentro de escopo.
+
+Sem tratamento de falha, uma falha no meio deixa o item em `PROCESSANDO` para sempre, e a tela fica com a
+barra parada sem explicar por quê.
 
 ---
 
