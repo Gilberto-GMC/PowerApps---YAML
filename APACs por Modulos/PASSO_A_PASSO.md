@@ -7,30 +7,30 @@ Documentos irmãos: [CONTEXTO_APAC.md](CONTEXTO_APAC.md) · [ARQUITETURA_APAC.md
 
 ---
 
-## Passo 0 — limpar o terreno e descobrir se o problema é o ambiente
+## Passo 0 — limpar o terreno
 
-**Faça primeiro, antes de qualquer coisa.** Em 10/09/2026 o `List_Generator` falhou com
-`HTTP_Criar_Coluna: BadGateway` em quatro tentativas, inclusive num arquivo de **três colunas
-triviais**, depois de dois arquivos maiores terem passado. Isso aponta para **throttling do
-SharePoint**, não para o conteúdo do JSON.
+**A causa do BadGateway foi encontrada em 14/09/2026.** Todo JSON que passou pelo `List_Generator`
+tinha colunas **sem** `<Default>` e **sem** `<Validation>`; todo JSON que falhou tinha pelo menos um
+dos dois. Os cinco `lista_tb_apac*.json` foram limpos e agora têm exatamente a forma dos que passaram.
 
-1. Apague as listas descartáveis que sobraram: `tb_apacTeste`, `tb_apacTeste2`, `tb_apacTeste3` e a
-   `tb_apacMalha` meio criada.
-2. Rode o `List_Generator` com **`teste_lista_minima.json`** — o mesmo arquivo que **passou** ontem.
+> Em 10/09 eu li o teste de três colunas como "o problema está fora do JSON". Estava errado: aquele
+> arquivo tinha **uma hipótese por coluna** (`col_b` com `<Default>`, `col_c` com `<Validation>`),
+> e basta uma coluna falhar para a execução inteira falhar. O teste nunca apontou para o ambiente.
 
-| Resultado | Leitura | O que fazer |
-|---|---|---|
-| **passou** | o ambiente está são | siga para o passo 1 |
-| **falhou** | não é o JSON — é ambiente ou throttling | espere algumas horas e repita; se insistir, é caso de abrir a saída bruta do `HTTP_Criar_Coluna` |
+Nada se perde com a limpeza. As faixas válidas (ocupação 1–100, antecedência 0–600, `ativo` 0 ou 1)
+são conferidas pela tela de cadastro antes de gravar, e toda gravação do app e todo CSV mandam o
+valor de todas as colunas — nenhuma depende de valor padrão.
+
+1. Apague as listas que ficaram pela metade: **`tb_apacParametros`** (a de hoje), `tb_apacMalha`,
+   `tb_apacTeste`, `tb_apacTeste2`, `tb_apacTeste3`.
+2. Siga para o passo 1 com os JSON novos.
 
 > ⚠️ **Sempre apague a lista meio criada antes de repetir.** Se ela ficar, o fluxo cai no ramo
 > "lista já existe" e você termina com uma lista faltando coluna — que **não dá erro no app**, dá
 > fórmula quebrada depois.
 
-**Os cinco JSON estão corretos pelos três validadores do repositório** — `valida_lista.js` (forma
-que o fluxo aceita), `validar_json.js` da skill `list-generator` (contrato do projeto) e a
-conferência de XML bem formado nas 52 colunas. Isso não prova que o fluxo vai aceitar, mas tira o
-conteúdo da lista de suspeitos.
+**Se ainda falhar:** no histórico da execução, abra `Para cada Coluna`, use as setas até a iteração
+com o ícone vermelho e anote o `internalName`. Com o nome da coluna dá para fechar em uma rodada.
 
 ---
 
@@ -82,11 +82,11 @@ meses estão na mesma pasta.
    ⚠️ **Se já tinha colado antes de 14/09/2026, cole de novo:** a versão nova tem
    `apacJornadaPresenca`, `apacHorasTrabalhadas` e `apacTurnosPorFolguista`, e a tela do mês não
    compila sem elas.
-4. Cole `scrApacMes.pa.yaml` e `scrApacDia.pa.yaml`, cada um numa tela nova. Estes estão em
+4. Cole `scrApacMes.pa.yaml`, `scrApacDia.pa.yaml` e `scrApacCadastro.pa.yaml`, cada um numa tela nova. Estes estão em
    **en-US** (vírgula separa argumento), que é o formato do código-fonte.
 
-> As duas telas navegam uma para a outra. Se o Studio reclamar de tela inexistente ao colar a
-> primeira, cole a segunda e o erro some sozinho.
+> As telas navegam umas para as outras. Se o Studio reclamar de tela inexistente ao colar uma,
+> cole as outras e o erro some sozinho.
 
 ---
 
@@ -101,6 +101,10 @@ Na ordem, porque cada uma cobre uma classe de defeito diferente:
 | **Efetivo mínimo** | tela do mês em **2026-12** | painel no topo: **36 APACs** e **5 supervisores** em escala; com folguistas, **48** e **7** |
 | **Mínimo acompanha o mês** | trocar para **2026-11** | **33 APACs** e **4 supervisores** — novembro não exige o 5º supervisor |
 | **Mínimo acompanha a premissa** | em **2027-02**, trocar a ocupação de 85 para **95** e RECALCULAR | **34 APACs** (era 33) e supervisores continuam **4**; no rodapé do painel, o homem-hora (34) passa a mandar sobre os turnos contíguos (33) |
+| **Cadastro de premissa** | CADASTROS → PREMISSAS → NOVA VIGÊNCIA com ocupação **95** e data de hoje → SALVAR → VOLTAR AO MÊS em **2027-02** | o painel mostra **34 APACs**; a lista de vigências marca a nova como **EM VIGOR** |
+| **Vigência desligada** | selecionar essa vigência, desligar **Ativa**, SALVAR e voltar ao mês | volta a **33 APACs**, e a vigência de 01/10/2026 volta a ser **EM VIGOR** |
+| **Vigência duplicada** | NOVA VIGÊNCIA com a mesma data de uma que já existe → SALVAR | recusa, com aviso vermelho; nada é gravado |
+| **Posto fixo** | CADASTROS → POSTOS FIXOS → ACESSO C, quantidade **4** → SALVAR → voltar ao mês | o pico da grade sobe de **14** para **15** e o mínimo de APACs aumenta |
 | **Antecedência** | qualquer voo às 05:00 | módulo aceso desde **03:30**, não às 05:00 |
 | **Virada** | um voo entre 00:00 e 01:30 | módulo aceso no **dia anterior** |
 | **Delegação** | abrir **28/12 a 31/12** | os voos aparecem (é o teste do limite de 500) |
@@ -120,5 +124,5 @@ sozinha erraria por seis pessoas.
 - **`scrApacEscala`** — os turnos cadastrados e o déficit contra eles. O **mínimo necessário** e os
   folguistas já saem na tela do mês; falta comparar com a escala que existe de fato.
 - **`scrApacImport`** e o fluxo do Power Automate — por isso o passo 2 é manual.
-- **`scrApacParametros`** — as premissas se editam no painel das telas de cálculo, que grava
-  vigência nova; falta a tela que lista o histórico e cadastra postos fixos.
+- **Cadastro da escala** (`tb_apacEscala`) — a lista existe, mas nenhuma tela ainda lê nem grava
+  os turnos. Entra junto com a `scrApacEscala`.

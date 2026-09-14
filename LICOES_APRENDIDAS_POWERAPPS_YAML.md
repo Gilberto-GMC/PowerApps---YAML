@@ -1606,3 +1606,21 @@ Duas regras que valem para qualquer grade montada em HTML no Power Apps:
    arredondamentos empatam. O teste tem que varrer zoom e DPI — e a medição é em
    pixel renderizado (screenshot + varredura de coluna), não em `getBoundingClientRect`,
    que devolve a caixa de layout e não onde a tinta caiu.
+
+## Teste com uma hipótese por coluna não isola nada (14/09/2026)
+
+**O que aconteceu.** Para achar a causa do `BadGateway` no `List_Generator`, montei um JSON de três
+colunas: `col_a` pura, `col_b` com `<Default>`, `col_c` com `<Validation>`. Falhou. Concluí que,
+se até um arquivo minúsculo falhava, o problema estava **fora** do JSON — throttling do SharePoint — e
+mandei esperar e repetir. Quatro dias depois o erro seguia igual.
+
+**O erro de lógica.** O fluxo cria as colunas uma a uma, e basta **uma** falhar para a execução inteira
+falhar. Um arquivo com três hipóteses que falha diz só que *alguma* das três é culpada — exatamente o
+que eu já sabia. O teste tinha o formato de bisseção e nenhuma das propriedades dela.
+
+**O que teria resolvido em uma rodada.** Olhar a separação entre o que passou e o que falhou, antes de
+montar teste novo: os dois arquivos que passaram não tinham `<Default>` nem `<Validation>` em coluna
+nenhuma; os quatro que falharam tinham. A resposta estava na tabela de resultados desde 10/09.
+
+**Regra.** Um arquivo, **uma** hipótese. E, quando o fluxo itera, a iteração vermelha no histórico de
+execução diz o nome da coluna — pedir esse nome custa um print e dispensa teste.

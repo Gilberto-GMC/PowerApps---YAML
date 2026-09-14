@@ -1,5 +1,9 @@
 # Estrutura das listas — APACs por Módulos
 
+> ⚠️ **14/09/2026:** os JSON **não levam mais `<Default>` nem `<Validation>`** — era a causa do
+> BadGateway no `List_Generator` (`ARQUITETURA_APAC.md` §15). Onde as tabelas abaixo citam valor
+> padrão ou regra de validação, leia como **regra do app**, conferida pela tela antes de gravar.
+
 Documentos irmãos:
 [CONTEXTO_APAC.md](CONTEXTO_APAC.md) (regra e medições) ·
 [ARQUITETURA_APAC.md](ARQUITETURA_APAC.md) (decisões)

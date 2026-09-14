@@ -1,0 +1,1041 @@
+Screens:
+  scrApacCadastro:
+    Properties:
+      Fill: =thmFundo
+      OnVisible: |-
+        =If(IsBlank(varAero), Set(varAero, First(colAerosApac).Aeroporto));
+        Set(varModoCad, Coalesce(varModoCad, "PREMISSAS"));
+        Select(btnRecarregarCad)
+    Children:
+      # ------------------------------------------------------------------ leitura
+      # Lê as duas listas do aeroporto, INCLUSIVE inativos — é aqui que se reativa um registro.
+      # Refresh antes de ler: colParamApac e colPostosApac do App.Formulas vêm das mesmas listas,
+      # e é o Refresh que faz a tela do mês enxergar o que foi gravado aqui.
+      # Filtro só por igualdade: delegável.
+      - btnRecarregarCad:
+          Control: Button@0.0.45
+          Properties:
+            Height: =1
+            OnSelect: |-
+              =Refresh(tb_apacParametros);
+              Refresh(tb_apacPostosFixos);
+              ClearCollect(colParamCad, Filter(tb_apacParametros, aeroporto = varAero));
+              ClearCollect(colPostosCad, Filter(tb_apacPostosFixos, aeroporto = varAero));
+              ClearCollect(
+                  colHorasCad,
+                  ForAll(Sequence(apacHorasDia + 1, 0) As _h, { Value: Right("0" & Text(_h.Value), 2) & ":00" })
+              );
+              ClearCollect(colPapeisCad, Table({ Value: "APAC" }, { Value: "SUPERVISOR" }));
+              Set(
+                  varBaseCad,
+                  First(Sort(Filter(colParamCad, ativo = 1), vigencia_inicio, SortOrder.Descending))
+              );
+              If(
+                  IsBlank(varFormPar),
+                  Set(
+                      varFormPar,
+                      {
+                          cap: Text(Coalesce(varBaseCad.pax_por_modulo_hora, 185)),
+                          ocup: Text(Coalesce(varBaseCad.ocupacao_pct, 85)),
+                          antec: Text(Coalesce(varBaseCad.antecedencia_min, 90)),
+                          assentos: Text(Coalesce(varBaseCad.assentos_min, 150)),
+                          apacMod: Text(Coalesce(varBaseCad.apac_por_modulo, 3)),
+                          modSup: Text(Coalesce(varBaseCad.modulos_por_supervisor, 2)),
+                          raiosx: Text(Coalesce(varBaseCad.raiosx_disponiveis, 3)),
+                          alt: Coalesce(varBaseCad.alternativa, ""),
+                          obs: "",
+                          ativo: true
+                      }
+                  )
+              );
+              If(
+                  IsBlank(varFormPos),
+                  Set(
+                      varFormPos,
+                      {
+                          posto: "",
+                          papel: "APAC",
+                          ini: "00:00",
+                          fim: "24:00",
+                          qtd: "1",
+                          ordem: Text(Coalesce(Max(colPostosCad, ordem), 0) + 1),
+                          ativo: true
+                      }
+                  )
+              )
+            Text: ="recarregar"
+            Visible: =false
+            Width: =1
+            X: =-40
+            Y: =-40
+      # ------------------------------------------------------------------ tela
+      - cntRaizCad:
+          Control: GroupContainer@1.5.0
+          Variant: ManualLayout
+          Properties:
+            DropShadow: =DropShadow.None
+            Fill: =thmFundo
+            Height: =Parent.Height
+            RadiusBottomLeft: =0
+            RadiusBottomRight: =0
+            RadiusTopLeft: =0
+            RadiusTopRight: =0
+            Width: =Parent.Width
+          Children:
+            - cntColunaCad:
+                Control: GroupContainer@1.5.0
+                Variant: AutoLayout
+                Properties:
+                  DropShadow: =DropShadow.None
+                  Fill: =thmFundo
+                  Height: =Parent.Height
+                  LayoutAlignItems: =LayoutAlignItems.Stretch
+                  LayoutDirection: =LayoutDirection.Vertical
+                  LayoutGap: =0
+                  LayoutMinHeight: =0
+                  PaddingBottom: =0
+                  PaddingLeft: =0
+                  PaddingRight: =0
+                  PaddingTop: =0
+                  RadiusBottomLeft: =0
+                  RadiusBottomRight: =0
+                  RadiusTopLeft: =0
+                  RadiusTopRight: =0
+                  Width: =Parent.Width
+                Children:
+                  # ------------------------------------------------ barra
+                  - cntBarraCad:
+                      Control: GroupContainer@1.5.0
+                      Variant: AutoLayout
+                      Properties:
+                        DropShadow: =DropShadow.None
+                        Fill: =thmPrimariaEscura
+                        FillPortions: =0
+                        Height: =thmAlturaBarra
+                        LayoutAlignItems: =LayoutAlignItems.Center
+                        LayoutDirection: =LayoutDirection.Horizontal
+                        LayoutGap: =12
+                        LayoutMinHeight: =0
+                        PaddingBottom: =0
+                        PaddingLeft: =20
+                        PaddingRight: =20
+                        PaddingTop: =0
+                        RadiusBottomLeft: =0
+                        RadiusBottomRight: =0
+                        RadiusTopLeft: =0
+                        RadiusTopRight: =0
+                        Width: =Parent.Width
+                      Children:
+                        - htmMarcaCad:
+                            Control: HtmlViewer@2.1.0
+                            Properties:
+                              AutoHeight: =true
+                              Color: =thmTextoBarra
+                              Fill: =thmTransparente
+                              FillPortions: =1
+                              Font: =thmFonte
+                              HtmlText: |-
+                                ="<div style='" & htmlFonte & "color:" & hxTextoBarra & ";'>" &
+                                "<div style='font-size:10px;letter-spacing:.24em;font-weight:700;opacity:.6;'>ASUR BRASIL · " &
+                                varAero & "</div>" &
+                                "<div style='font-size:16px;font-weight:800;letter-spacing:.01em;margin-top:2px;'>APACs POR MÓDULOS — CADASTROS</div>" &
+                                "</div>"
+                              PaddingBottom: =0
+                              PaddingLeft: =0
+                              PaddingRight: =0
+                              PaddingTop: =0
+                              Size: =11
+                        - btnAbaParCad:
+                            Control: Button@0.0.45
+                            Properties:
+                              Appearance: =If(varModoCad = "PREMISSAS", 'ButtonCanvas.Appearance'.Primary, 'ButtonCanvas.Appearance'.Secondary)
+                              Height: =thmAlturaCampo
+                              OnSelect: =Set(varModoCad, "PREMISSAS")
+                              Text: ="PREMISSAS"
+                              Width: =130
+                        - btnAbaPosCad:
+                            Control: Button@0.0.45
+                            Properties:
+                              Appearance: =If(varModoCad = "POSTOS", 'ButtonCanvas.Appearance'.Primary, 'ButtonCanvas.Appearance'.Secondary)
+                              Height: =thmAlturaCampo
+                              OnSelect: =Set(varModoCad, "POSTOS")
+                              Text: ="POSTOS FIXOS"
+                              Width: =140
+                        - btnVoltarCad:
+                            Control: Button@0.0.45
+                            Properties:
+                              Appearance: ='ButtonCanvas.Appearance'.Secondary
+                              Height: =thmAlturaCampo
+                              OnSelect: =Navigate(scrApacMes, ScreenTransition.Fade)
+                              Text: ="◀ VOLTAR AO MÊS"
+                              Width: =170
+                  # ================================================ PREMISSAS
+                  - cntCorpoParCad:
+                      Control: GroupContainer@1.5.0
+                      Variant: AutoLayout
+                      Properties:
+                        DropShadow: =DropShadow.None
+                        Fill: =thmFundo
+                        FillPortions: =1
+                        LayoutAlignItems: =LayoutAlignItems.Stretch
+                        LayoutDirection: =LayoutDirection.Horizontal
+                        LayoutGap: =16
+                        LayoutMinHeight: =0
+                        LayoutMinWidth: =0
+                        PaddingBottom: =20
+                        PaddingLeft: =20
+                        PaddingRight: =20
+                        PaddingTop: =20
+                        RadiusBottomLeft: =0
+                        RadiusBottomRight: =0
+                        RadiusTopLeft: =0
+                        RadiusTopRight: =0
+                        Visible: =varModoCad = "PREMISSAS"
+                      Children:
+                        - cntListaParCad:
+                            Control: GroupContainer@1.5.0
+                            Variant: AutoLayout
+                            Properties:
+                              BorderColor: =thmBorda
+                              BorderThickness: =1
+                              DropShadow: =DropShadow.None
+                              Fill: =thmSuperficie
+                              FillPortions: =1
+                              LayoutAlignItems: =LayoutAlignItems.Stretch
+                              LayoutDirection: =LayoutDirection.Vertical
+                              LayoutGap: =0
+                              LayoutMinHeight: =0
+                              LayoutMinWidth: =0
+                              RadiusBottomLeft: =0
+                              RadiusBottomRight: =0
+                              RadiusTopLeft: =0
+                              RadiusTopRight: =0
+                            Children:
+                              - htmCabListaParCad:
+                                  Control: HtmlViewer@2.1.0
+                                  Properties:
+                                    AutoHeight: =true
+                                    Color: =thmTexto
+                                    Fill: =thmSuperficie
+                                    Font: =thmFonte
+                                    HtmlText: |-
+                                      ="<div style='" & htmlFonte & "padding:12px 14px;border-bottom:1px solid " & hxBorda & ";'>" &
+                                      "<div style='font-size:10px;font-weight:700;letter-spacing:.12em;color:" & hxTextoFraco & ";'>VIGÊNCIAS DE " & varAero & "</div>" &
+                                      "<div style='font-size:11px;color:" & hxTexto & ";line-height:1.5;margin-top:4px;'>" &
+                                      "O cálculo usa a <b>vigência ativa mais recente</b>. Mudou uma premissa? Crie vigência nova em vez de " &
+                                      "sobrescrever: o dimensionamento vira número de contrato, e é a vigência antiga que explica o número antigo." &
+                                      "</div></div>"
+                                    PaddingBottom: =0
+                                    PaddingLeft: =0
+                                    PaddingRight: =0
+                                    PaddingTop: =0
+                                    Size: =11
+                              - galParCad:
+                                  Control: Gallery@2.15.0
+                                  Variant: Vertical
+                                  Properties:
+                                    BorderColor: =thmBorda
+                                    BorderStyle: =BorderStyle.None
+                                    Fill: =thmSuperficie
+                                    FillPortions: =1
+                                    Items: =Sort(colParamCad, vigencia_inicio, SortOrder.Descending)
+                                    LayoutMinHeight: =0
+                                    LayoutMinWidth: =0
+                                    TemplatePadding: =0
+                                    TemplateSize: =46
+                                  Children:
+                                    - cntLinhaParCad:
+                                        Control: GroupContainer@1.5.0
+                                        Variant: AutoLayout
+                                        Properties:
+                                          DropShadow: =DropShadow.None
+                                          Fill: =thmTransparente
+                                          Height: =44
+                                          LayoutAlignItems: =LayoutAlignItems.Stretch
+                                          LayoutDirection: =LayoutDirection.Horizontal
+                                          LayoutGap: =4
+                                          LayoutMinHeight: =0
+                                          LayoutMinWidth: =0
+                                          RadiusBottomLeft: =0
+                                          RadiusBottomRight: =0
+                                          RadiusTopLeft: =0
+                                          RadiusTopRight: =0
+                                          Width: =Parent.Width - 18
+                                        Children:
+                                          - btnItemParCad:
+                                              Control: Button@0.0.45
+                                              Properties:
+                                                Align: =Align.Left
+                                                Appearance: =If(varParSelCad.ID = ThisItem.ID, 'ButtonCanvas.Appearance'.Primary, 'ButtonCanvas.Appearance'.Secondary)
+                                                BasePaletteColor: =If(ThisItem.ativo = 1, thmPrimaria, thmTextoFraco)
+                                                BorderRadius: =0
+                                                FillPortions: =1
+                                                FontSize: =12
+                                                FontWeight: =FontWeight.Semibold
+                                                Height: =44
+                                                LayoutMinWidth: =0
+                                                OnSelect: |-
+                                                  =Set(varParSelCad, ThisItem);
+                                                  Set(
+                                                      varFormPar,
+                                                      {
+                                                          cap: Text(ThisItem.pax_por_modulo_hora),
+                                                          ocup: Text(ThisItem.ocupacao_pct),
+                                                          antec: Text(ThisItem.antecedencia_min),
+                                                          assentos: Text(ThisItem.assentos_min),
+                                                          apacMod: Text(ThisItem.apac_por_modulo),
+                                                          modSup: Text(ThisItem.modulos_por_supervisor),
+                                                          raiosx: Text(ThisItem.raiosx_disponiveis),
+                                                          alt: Coalesce(ThisItem.alternativa, ""),
+                                                          obs: Coalesce(ThisItem.observacao, ""),
+                                                          ativo: ThisItem.ativo = 1
+                                                      }
+                                                  )
+                                                PaddingLeft: =12
+                                                PaddingRight: =12
+                                                Text: |-
+                                                  ="desde " & Text(ThisItem.vigencia_inicio, "dd/mm/yyyy") & "   ·   " &
+                                                  Text(ThisItem.pax_por_modulo_hora) & " pax/h · " & Text(ThisItem.ocupacao_pct) & "% · " &
+                                                  Text(ThisItem.antecedencia_min) & " min · >" & Text(ThisItem.assentos_min) & " assentos" &
+                                                  If(
+                                                      ThisItem.ID = varBaseCad.ID,
+                                                      "   ·   EM VIGOR",
+                                                      If(ThisItem.ativo = 1, "", "   ·   INATIVA")
+                                                  )
+                        - cntFormParCad:
+                            Control: GroupContainer@1.5.0
+                            Variant: AutoLayout
+                            Properties:
+                              BorderColor: =thmBorda
+                              BorderThickness: =1
+                              DropShadow: =DropShadow.None
+                              Fill: =thmSuperficie
+                              FillPortions: =0
+                              LayoutAlignItems: =LayoutAlignItems.Stretch
+                              LayoutDirection: =LayoutDirection.Vertical
+                              LayoutGap: =0
+                              LayoutMinHeight: =0
+                              LayoutMinWidth: =0
+                              LayoutOverflowY: =LayoutOverflow.Scroll
+                              PaddingBottom: =16
+                              PaddingLeft: =18
+                              PaddingRight: =18
+                              PaddingTop: =12
+                              RadiusBottomLeft: =0
+                              RadiusBottomRight: =0
+                              RadiusTopLeft: =0
+                              RadiusTopRight: =0
+                              Width: =430
+                            Children:
+                              - htmAjudaParCad:
+                                  Control: HtmlViewer@2.1.0
+                                  Properties:
+                                    AutoHeight: =true
+                                    Color: =thmTexto
+                                    Fill: =thmSuperficie
+                                    Font: =thmFonte
+                                    HtmlText: |-
+                                      ="<div style='" & htmlFonte & "font-size:10px;font-weight:700;letter-spacing:.12em;color:" & hxTextoFraco & ";'>" &
+                                      If(IsBlank(varParSelCad.ID), "NOVA VIGÊNCIA", "CORRIGIR VIGÊNCIA SELECIONADA") & "</div>" &
+                                      "<div style='" & htmlFonte & "font-size:11px;color:" & hxTexto & ";line-height:1.5;padding:6px 0 4px 0;'>" &
+                                      If(
+                                          IsBlank(varParSelCad.ID),
+                                          "Os campos vêm preenchidos com a vigência em vigor. Mude o que mudou e informe a data a partir da qual vale.",
+                                          "Use para corrigir digitação. Para premissa que mudou de fato, clique em NOVA VIGÊNCIA."
+                                      ) &
+                                      " Vigência não se apaga: desligue <b>Ativa</b>.</div>"
+                                    Size: =11
+                              - lblVigCad:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    Color: =thmTextoFraco
+                                    Font: =thmFonte
+                                    FontWeight: =FontWeight.Bold
+                                    Height: =18
+                                    PaddingTop: =6
+                                    Size: =10
+                                    Text: ="VALE A PARTIR DE *"
+                              - dtpVigCad:
+                                  Control: DatePicker@0.0.46
+                                  Properties:
+                                    AccessibleLabel: ="Vale a partir de"
+                                    DisplayMode: =DisplayMode.Edit
+                                    Format: =DateTimeFormat.ShortDate
+                                    Height: =40
+                                    SelectedDate: =If(IsBlank(varParSelCad.ID), Today(), varParSelCad.vigencia_inicio)
+                                    Width: =200
+                              - lblCapCad:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    Color: =thmTextoFraco
+                                    Font: =thmFonte
+                                    FontWeight: =FontWeight.Bold
+                                    Height: =18
+                                    PaddingTop: =6
+                                    Size: =10
+                                    Text: ="PASSAGEIROS POR HORA EM CADA MÓDULO *"
+                              - txtCapCad:
+                                  Control: TextInput@0.0.54
+                                  Properties:
+                                    AccessibleLabel: ="Passageiros por hora em cada módulo"
+                                    DisplayMode: =DisplayMode.Edit
+                                    Height: =40
+                                    MaxLength: =5
+                                    Value: =Coalesce(varFormPar.cap, "")
+                              - lblOcupCad:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    Color: =thmTextoFraco
+                                    Font: =thmFonte
+                                    FontWeight: =FontWeight.Bold
+                                    Height: =18
+                                    PaddingTop: =6
+                                    Size: =10
+                                    Text: ="OCUPAÇÃO DOS ASSENTOS OFERTADOS (%) *"
+                              - txtOcupCad:
+                                  Control: TextInput@0.0.54
+                                  Properties:
+                                    AccessibleLabel: ="Ocupação dos assentos ofertados, em porcentagem"
+                                    DisplayMode: =DisplayMode.Edit
+                                    Height: =40
+                                    MaxLength: =3
+                                    Value: =Coalesce(varFormPar.ocup, "")
+                              - lblAntecCad:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    Color: =thmTextoFraco
+                                    Font: =thmFonte
+                                    FontWeight: =FontWeight.Bold
+                                    Height: =18
+                                    PaddingTop: =6
+                                    Size: =10
+                                    Text: ="MÓDULO ABRE QUANTOS MINUTOS ANTES DO VOO *"
+                              - txtAntecCad:
+                                  Control: TextInput@0.0.54
+                                  Properties:
+                                    AccessibleLabel: ="Minutos de antecedência do módulo"
+                                    DisplayMode: =DisplayMode.Edit
+                                    Height: =40
+                                    MaxLength: =3
+                                    Value: =Coalesce(varFormPar.antec, "")
+                              - lblAssentosCad:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    Color: =thmTextoFraco
+                                    Font: =thmFonte
+                                    FontWeight: =FontWeight.Bold
+                                    Height: =18
+                                    PaddingTop: =6
+                                    Size: =10
+                                    Text: ="VOO ABRE MÓDULO ACIMA DE QUANTOS ASSENTOS *"
+                              - txtAssentosCad:
+                                  Control: TextInput@0.0.54
+                                  Properties:
+                                    AccessibleLabel: ="Assentos acima dos quais o voo abre módulo"
+                                    DisplayMode: =DisplayMode.Edit
+                                    Height: =40
+                                    MaxLength: =3
+                                    Value: =Coalesce(varFormPar.assentos, "")
+                              - lblApacModCad:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    Color: =thmTextoFraco
+                                    Font: =thmFonte
+                                    FontWeight: =FontWeight.Bold
+                                    Height: =18
+                                    PaddingTop: =6
+                                    Size: =10
+                                    Text: ="APACs POR MÓDULO *"
+                              - txtApacModCad:
+                                  Control: TextInput@0.0.54
+                                  Properties:
+                                    AccessibleLabel: ="APACs por módulo"
+                                    DisplayMode: =DisplayMode.Edit
+                                    Height: =40
+                                    MaxLength: =2
+                                    Value: =Coalesce(varFormPar.apacMod, "")
+                              - lblModSupCad:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    Color: =thmTextoFraco
+                                    Font: =thmFonte
+                                    FontWeight: =FontWeight.Bold
+                                    Height: =18
+                                    PaddingTop: =6
+                                    Size: =10
+                                    Text: ="MÓDULOS POR SUPERVISOR *"
+                              - txtModSupCad:
+                                  Control: TextInput@0.0.54
+                                  Properties:
+                                    AccessibleLabel: ="Módulos por supervisor"
+                                    DisplayMode: =DisplayMode.Edit
+                                    Height: =40
+                                    MaxLength: =2
+                                    Value: =Coalesce(varFormPar.modSup, "")
+                              - lblRaiosXCad:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    Color: =thmTextoFraco
+                                    Font: =thmFonte
+                                    FontWeight: =FontWeight.Bold
+                                    Height: =18
+                                    PaddingTop: =6
+                                    Size: =10
+                                    Text: ="RAIOS-X DISPONÍVEIS *"
+                              - txtRaiosXCad:
+                                  Control: TextInput@0.0.54
+                                  Properties:
+                                    AccessibleLabel: ="Raios-X disponíveis"
+                                    DisplayMode: =DisplayMode.Edit
+                                    Height: =40
+                                    MaxLength: =2
+                                    Value: =Coalesce(varFormPar.raiosx, "")
+                              - lblAltCad:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    Color: =thmTextoFraco
+                                    Font: =thmFonte
+                                    FontWeight: =FontWeight.Bold
+                                    Height: =18
+                                    PaddingTop: =6
+                                    Size: =10
+                                    Text: ="ALTERNATIVA DE MÓDULO (rótulo, ex.: VIII)"
+                              - txtAltCad:
+                                  Control: TextInput@0.0.54
+                                  Properties:
+                                    AccessibleLabel: ="Alternativa de módulo"
+                                    DisplayMode: =DisplayMode.Edit
+                                    Height: =40
+                                    MaxLength: =10
+                                    Value: =Coalesce(varFormPar.alt, "")
+                              - lblObsCad:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    Color: =thmTextoFraco
+                                    Font: =thmFonte
+                                    FontWeight: =FontWeight.Bold
+                                    Height: =18
+                                    PaddingTop: =6
+                                    Size: =10
+                                    Text: ="DE ONDE VEIO ESTA PREMISSA"
+                              - txtObsCad:
+                                  Control: TextInput@0.0.54
+                                  Properties:
+                                    AccessibleLabel: ="De onde veio esta premissa"
+                                    DisplayMode: =DisplayMode.Edit
+                                    Height: =40
+                                    MaxLength: =500
+                                    Value: =Coalesce(varFormPar.obs, "")
+                              - tglAtivoParCad:
+                                  Control: Toggle@1.1.5
+                                  Properties:
+                                    AccessibleLabel: ="Ativa"
+                                    BasePaletteColor: =thmPrimaria
+                                    Checked: =Coalesce(varFormPar.ativo, true)
+                                    DisplayMode: =DisplayMode.Edit
+                                    FontColor: =thmTexto
+                                    Height: =44
+                                    Label: ="Ativa"
+                                    LabelPosition: ='Toggle.LabelPosition'.Before
+                              - cntAcoesParCad:
+                                  Control: GroupContainer@1.5.0
+                                  Variant: AutoLayout
+                                  Properties:
+                                    DropShadow: =DropShadow.None
+                                    Fill: =thmSuperficie
+                                    Height: =56
+                                    LayoutAlignItems: =LayoutAlignItems.Center
+                                    LayoutDirection: =LayoutDirection.Horizontal
+                                    LayoutGap: =10
+                                    LayoutMinHeight: =0
+                                    LayoutMinWidth: =0
+                                    PaddingTop: =12
+                                    RadiusBottomLeft: =0
+                                    RadiusBottomRight: =0
+                                    RadiusTopLeft: =0
+                                    RadiusTopRight: =0
+                                  Children:
+                                    - btnNovaParCad:
+                                        Control: Button@0.0.45
+                                        Properties:
+                                          Appearance: ='ButtonCanvas.Appearance'.Secondary
+                                          Height: =thmAlturaCampo
+                                          OnSelect: |-
+                                            =Set(varParSelCad, Blank());
+                                            Set(
+                                                varFormPar,
+                                                {
+                                                    cap: Text(Coalesce(varBaseCad.pax_por_modulo_hora, 185)),
+                                                    ocup: Text(Coalesce(varBaseCad.ocupacao_pct, 85)),
+                                                    antec: Text(Coalesce(varBaseCad.antecedencia_min, 90)),
+                                                    assentos: Text(Coalesce(varBaseCad.assentos_min, 150)),
+                                                    apacMod: Text(Coalesce(varBaseCad.apac_por_modulo, 3)),
+                                                    modSup: Text(Coalesce(varBaseCad.modulos_por_supervisor, 2)),
+                                                    raiosx: Text(Coalesce(varBaseCad.raiosx_disponiveis, 3)),
+                                                    alt: Coalesce(varBaseCad.alternativa, ""),
+                                                    obs: "",
+                                                    ativo: true
+                                                }
+                                            )
+                                          Text: ="NOVA VIGÊNCIA"
+                                          Width: =150
+                                    - btnSalvarParCad:
+                                        Control: Button@0.0.45
+                                        Properties:
+                                          Appearance: ='ButtonCanvas.Appearance'.Primary
+                                          FillPortions: =1
+                                          Height: =thmAlturaCampo
+                                          OnSelect: |-
+                                            =If(
+                                                IsBlank(dtpVigCad.SelectedDate),
+                                                Notify("Informe a data a partir da qual a vigência vale.", NotificationType.Error, 6000),
+                                                !IsNumeric(txtCapCad.Value) Or Value(txtCapCad.Value) < 1,
+                                                Notify("Passageiros por hora em cada módulo precisa ser um número maior que zero.", NotificationType.Error, 6000),
+                                                !IsNumeric(txtOcupCad.Value) Or Value(txtOcupCad.Value) < 1 Or Value(txtOcupCad.Value) > 100,
+                                                Notify("Ocupação precisa ser um número de 1 a 100.", NotificationType.Error, 6000),
+                                                !IsNumeric(txtAntecCad.Value) Or Value(txtAntecCad.Value) < 0 Or Value(txtAntecCad.Value) > 600,
+                                                Notify("Antecedência precisa ser um número de 0 a 600 minutos.", NotificationType.Error, 6000),
+                                                !IsNumeric(txtAssentosCad.Value) Or Value(txtAssentosCad.Value) < 0,
+                                                Notify("Assentos precisa ser um número, zero ou maior.", NotificationType.Error, 6000),
+                                                !IsNumeric(txtApacModCad.Value) Or Value(txtApacModCad.Value) < 1,
+                                                Notify("APACs por módulo precisa ser um número maior que zero.", NotificationType.Error, 6000),
+                                                !IsNumeric(txtModSupCad.Value) Or Value(txtModSupCad.Value) < 1,
+                                                Notify("Módulos por supervisor precisa ser um número maior que zero.", NotificationType.Error, 6000),
+                                                !IsNumeric(txtRaiosXCad.Value) Or Value(txtRaiosXCad.Value) < 1,
+                                                Notify("Raios-X disponíveis precisa ser um número maior que zero.", NotificationType.Error, 6000),
+                                                // Duas vigências na mesma data deixam a "mais recente" indefinida: o app
+                                                // pegaria qualquer uma das duas, e o número mudaria sem ninguém mexer.
+                                                CountRows(
+                                                    Filter(
+                                                        colParamCad As _pc,
+                                                        Text(_pc.vigencia_inicio, "yyyy-mm-dd") = Text(dtpVigCad.SelectedDate, "yyyy-mm-dd"),
+                                                        _pc.ID <> Coalesce(varParSelCad.ID, -1)
+                                                    )
+                                                ) > 0,
+                                                Notify("Já existe vigência nessa data. Selecione-a na lista para corrigir, ou escolha outra data.", NotificationType.Error, 8000),
+                                                UpdateContext(
+                                                    {
+                                                        locErroParCad: IsError(
+                                                            Patch(
+                                                                tb_apacParametros,
+                                                                If(
+                                                                    IsBlank(varParSelCad.ID),
+                                                                    Defaults(tb_apacParametros),
+                                                                    LookUp(tb_apacParametros, ID = varParSelCad.ID)
+                                                                ),
+                                                                {
+                                                                    aeroporto: varAero,
+                                                                    vigencia_inicio: dtpVigCad.SelectedDate,
+                                                                    pax_por_modulo_hora: Value(txtCapCad.Value),
+                                                                    ocupacao_pct: Value(txtOcupCad.Value),
+                                                                    antecedencia_min: Value(txtAntecCad.Value),
+                                                                    assentos_min: Value(txtAssentosCad.Value),
+                                                                    apac_por_modulo: Value(txtApacModCad.Value),
+                                                                    modulos_por_supervisor: Value(txtModSupCad.Value),
+                                                                    raiosx_disponiveis: Value(txtRaiosXCad.Value),
+                                                                    alternativa: Trim(txtAltCad.Value),
+                                                                    observacao: Trim(txtObsCad.Value),
+                                                                    ativo: If(tglAtivoParCad.Checked, 1, 0)
+                                                                }
+                                                            )
+                                                        )
+                                                    }
+                                                );
+                                                If(
+                                                    locErroParCad,
+                                                    Notify("Não foi possível gravar. Nada foi alterado.", NotificationType.Error, 7000),
+                                                    Set(varParSelCad, Blank());
+                                                    Set(varFormPar, Blank());
+                                                    // A tela do mês só relê as premissas quando estas variáveis estão vazias.
+                                                    Set(varCap, Blank());
+                                                    Set(varOcup, Blank());
+                                                    Set(varAntec, Blank());
+                                                    Set(varAssentosMin, Blank());
+                                                    Set(varApacMod, Blank());
+                                                    Set(varModSup, Blank());
+                                                    Set(varRaiosX, Blank());
+                                                    Select(btnRecarregarCad);
+                                                    Notify("Premissas gravadas. A tela do mês usa a vigência ativa mais recente na próxima vez que abrir.", NotificationType.Success, 6000)
+                                                )
+                                            )
+                                          Text: ="SALVAR"
+                  # ================================================ POSTOS FIXOS
+                  - cntCorpoPosCad:
+                      Control: GroupContainer@1.5.0
+                      Variant: AutoLayout
+                      Properties:
+                        DropShadow: =DropShadow.None
+                        Fill: =thmFundo
+                        FillPortions: =1
+                        LayoutAlignItems: =LayoutAlignItems.Stretch
+                        LayoutDirection: =LayoutDirection.Horizontal
+                        LayoutGap: =16
+                        LayoutMinHeight: =0
+                        LayoutMinWidth: =0
+                        PaddingBottom: =20
+                        PaddingLeft: =20
+                        PaddingRight: =20
+                        PaddingTop: =20
+                        RadiusBottomLeft: =0
+                        RadiusBottomRight: =0
+                        RadiusTopLeft: =0
+                        RadiusTopRight: =0
+                        Visible: =varModoCad = "POSTOS"
+                      Children:
+                        - cntListaPosCad:
+                            Control: GroupContainer@1.5.0
+                            Variant: AutoLayout
+                            Properties:
+                              BorderColor: =thmBorda
+                              BorderThickness: =1
+                              DropShadow: =DropShadow.None
+                              Fill: =thmSuperficie
+                              FillPortions: =1
+                              LayoutAlignItems: =LayoutAlignItems.Stretch
+                              LayoutDirection: =LayoutDirection.Vertical
+                              LayoutGap: =0
+                              LayoutMinHeight: =0
+                              LayoutMinWidth: =0
+                              RadiusBottomLeft: =0
+                              RadiusBottomRight: =0
+                              RadiusTopLeft: =0
+                              RadiusTopRight: =0
+                            Children:
+                              - htmCabListaPosCad:
+                                  Control: HtmlViewer@2.1.0
+                                  Properties:
+                                    AutoHeight: =true
+                                    Color: =thmTexto
+                                    Fill: =thmSuperficie
+                                    Font: =thmFonte
+                                    HtmlText: |-
+                                      ="<div style='" & htmlFonte & "padding:12px 14px;border-bottom:1px solid " & hxBorda & ";'>" &
+                                      "<div style='font-size:10px;font-weight:700;letter-spacing:.12em;color:" & hxTextoFraco & ";'>POSTOS FIXOS DE " & varAero & "</div>" &
+                                      "<div style='font-size:11px;color:" & hxTexto & ";line-height:1.5;margin-top:4px;'>" &
+                                      "Postos que não dependem da malha. O cálculo soma a quantidade em <b>cada hora cheia</b> entre DAS e ATÉ, " &
+                                      "por cima dos módulos. Hoje, os ativos somam <b>" &
+                                      Text(Sum(Filter(colPostosCad, ativo = 1, papel = "APAC", hora_inicio = 0, hora_fim = 1440), quantidade)) &
+                                      " APACs</b> nas 24 horas." &
+                                      "</div></div>"
+                                    PaddingBottom: =0
+                                    PaddingLeft: =0
+                                    PaddingRight: =0
+                                    PaddingTop: =0
+                                    Size: =11
+                              - galPosCad:
+                                  Control: Gallery@2.15.0
+                                  Variant: Vertical
+                                  Properties:
+                                    BorderColor: =thmBorda
+                                    BorderStyle: =BorderStyle.None
+                                    Fill: =thmSuperficie
+                                    FillPortions: =1
+                                    Items: =Sort(colPostosCad, ordem, SortOrder.Ascending)
+                                    LayoutMinHeight: =0
+                                    LayoutMinWidth: =0
+                                    TemplatePadding: =0
+                                    TemplateSize: =46
+                                  Children:
+                                    - cntLinhaPosCad:
+                                        Control: GroupContainer@1.5.0
+                                        Variant: AutoLayout
+                                        Properties:
+                                          DropShadow: =DropShadow.None
+                                          Fill: =thmTransparente
+                                          Height: =44
+                                          LayoutAlignItems: =LayoutAlignItems.Stretch
+                                          LayoutDirection: =LayoutDirection.Horizontal
+                                          LayoutGap: =4
+                                          LayoutMinHeight: =0
+                                          LayoutMinWidth: =0
+                                          RadiusBottomLeft: =0
+                                          RadiusBottomRight: =0
+                                          RadiusTopLeft: =0
+                                          RadiusTopRight: =0
+                                          Width: =Parent.Width - 18
+                                        Children:
+                                          - btnItemPosCad:
+                                              Control: Button@0.0.45
+                                              Properties:
+                                                Align: =Align.Left
+                                                Appearance: =If(varPosSelCad.ID = ThisItem.ID, 'ButtonCanvas.Appearance'.Primary, 'ButtonCanvas.Appearance'.Secondary)
+                                                BasePaletteColor: =If(ThisItem.ativo = 1, thmPrimaria, thmTextoFraco)
+                                                BorderRadius: =0
+                                                FillPortions: =1
+                                                FontSize: =12
+                                                FontWeight: =FontWeight.Semibold
+                                                Height: =44
+                                                LayoutMinWidth: =0
+                                                OnSelect: |-
+                                                  =Set(varPosSelCad, ThisItem);
+                                                  Set(
+                                                      varFormPos,
+                                                      {
+                                                          posto: ThisItem.posto,
+                                                          papel: ThisItem.papel,
+                                                          ini: Right("0" & Text(Int(ThisItem.hora_inicio / 60)), 2) & ":00",
+                                                          fim: Right("0" & Text(Int(ThisItem.hora_fim / 60)), 2) & ":00",
+                                                          qtd: Text(ThisItem.quantidade),
+                                                          ordem: Text(ThisItem.ordem),
+                                                          ativo: ThisItem.ativo = 1
+                                                      }
+                                                  )
+                                                PaddingLeft: =12
+                                                PaddingRight: =12
+                                                Text: |-
+                                                  =ThisItem.posto & "   ·   " & Text(ThisItem.quantidade) & " " & ThisItem.papel & "   ·   " &
+                                                  Right("0" & Text(Int(ThisItem.hora_inicio / 60)), 2) & ":00 às " &
+                                                  Right("0" & Text(Int(ThisItem.hora_fim / 60)), 2) & ":00" &
+                                                  If(ThisItem.ativo = 1, "", "   ·   INATIVO")
+                        - cntFormPosCad:
+                            Control: GroupContainer@1.5.0
+                            Variant: AutoLayout
+                            Properties:
+                              BorderColor: =thmBorda
+                              BorderThickness: =1
+                              DropShadow: =DropShadow.None
+                              Fill: =thmSuperficie
+                              FillPortions: =0
+                              LayoutAlignItems: =LayoutAlignItems.Stretch
+                              LayoutDirection: =LayoutDirection.Vertical
+                              LayoutGap: =0
+                              LayoutMinHeight: =0
+                              LayoutMinWidth: =0
+                              LayoutOverflowY: =LayoutOverflow.Scroll
+                              PaddingBottom: =16
+                              PaddingLeft: =18
+                              PaddingRight: =18
+                              PaddingTop: =12
+                              RadiusBottomLeft: =0
+                              RadiusBottomRight: =0
+                              RadiusTopLeft: =0
+                              RadiusTopRight: =0
+                              Width: =430
+                            Children:
+                              - htmAjudaPosCad:
+                                  Control: HtmlViewer@2.1.0
+                                  Properties:
+                                    AutoHeight: =true
+                                    Color: =thmTexto
+                                    Fill: =thmSuperficie
+                                    Font: =thmFonte
+                                    HtmlText: |-
+                                      ="<div style='" & htmlFonte & "font-size:10px;font-weight:700;letter-spacing:.12em;color:" & hxTextoFraco & ";'>" &
+                                      If(IsBlank(varPosSelCad.ID), "NOVO POSTO", "EDITAR POSTO SELECIONADO") & "</div>" &
+                                      "<div style='" & htmlFonte & "font-size:11px;color:" & hxTexto & ";line-height:1.5;padding:6px 0 4px 0;'>" &
+                                      "Posto que atravessa a meia-noite vira <b>dois cadastros</b> — 22:00 às 24:00 e 00:00 às 06:00. " &
+                                      "Posto não se apaga: desligue <b>Ativo</b>.</div>"
+                                    Size: =11
+                              - lblPostoCad:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    Color: =thmTextoFraco
+                                    Font: =thmFonte
+                                    FontWeight: =FontWeight.Bold
+                                    Height: =18
+                                    PaddingTop: =6
+                                    Size: =10
+                                    Text: ="POSTO *"
+                              - txtPostoCad:
+                                  Control: TextInput@0.0.54
+                                  Properties:
+                                    AccessibleLabel: ="Nome do posto"
+                                    DisplayMode: =DisplayMode.Edit
+                                    Height: =40
+                                    MaxLength: =60
+                                    Value: =Coalesce(varFormPos.posto, "")
+                              - lblPapelCad:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    Color: =thmTextoFraco
+                                    Font: =thmFonte
+                                    FontWeight: =FontWeight.Bold
+                                    Height: =18
+                                    PaddingTop: =6
+                                    Size: =10
+                                    Text: ="QUEM OCUPA *"
+                              - drpPapelCad:
+                                  Control: DropDown@0.0.45
+                                  Properties:
+                                    DefaultSelectedItems: =[Coalesce(varFormPos.papel, "APAC")]
+                                    DisplayMode: =DisplayMode.Edit
+                                    Height: =40
+                                    Items: =colPapeisCad
+                              - lblIniCad:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    Color: =thmTextoFraco
+                                    Font: =thmFonte
+                                    FontWeight: =FontWeight.Bold
+                                    Height: =18
+                                    PaddingTop: =6
+                                    Size: =10
+                                    Text: ="DAS *"
+                              - drpIniCad:
+                                  Control: DropDown@0.0.45
+                                  Properties:
+                                    DefaultSelectedItems: =[Coalesce(varFormPos.ini, "00:00")]
+                                    DisplayMode: =DisplayMode.Edit
+                                    Height: =40
+                                    Items: =colHorasCad
+                              - lblFimCad:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    Color: =thmTextoFraco
+                                    Font: =thmFonte
+                                    FontWeight: =FontWeight.Bold
+                                    Height: =18
+                                    PaddingTop: =6
+                                    Size: =10
+                                    Text: ="ATÉ *"
+                              - drpFimCad:
+                                  Control: DropDown@0.0.45
+                                  Properties:
+                                    DefaultSelectedItems: =[Coalesce(varFormPos.fim, "24:00")]
+                                    DisplayMode: =DisplayMode.Edit
+                                    Height: =40
+                                    Items: =colHorasCad
+                              - lblQtdCad:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    Color: =thmTextoFraco
+                                    Font: =thmFonte
+                                    FontWeight: =FontWeight.Bold
+                                    Height: =18
+                                    PaddingTop: =6
+                                    Size: =10
+                                    Text: ="QUANTIDADE DE PESSOAS NO POSTO *"
+                              - txtQtdCad:
+                                  Control: TextInput@0.0.54
+                                  Properties:
+                                    AccessibleLabel: ="Quantidade de pessoas no posto"
+                                    DisplayMode: =DisplayMode.Edit
+                                    Height: =40
+                                    MaxLength: =2
+                                    Value: =Coalesce(varFormPos.qtd, "")
+                              - lblOrdemPosCad:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    Color: =thmTextoFraco
+                                    Font: =thmFonte
+                                    FontWeight: =FontWeight.Bold
+                                    Height: =18
+                                    PaddingTop: =6
+                                    Size: =10
+                                    Text: ="ORDEM NA LISTA"
+                              - txtOrdemPosCad:
+                                  Control: TextInput@0.0.54
+                                  Properties:
+                                    AccessibleLabel: ="Ordem na lista"
+                                    DisplayMode: =DisplayMode.Edit
+                                    Height: =40
+                                    MaxLength: =3
+                                    Value: =Coalesce(varFormPos.ordem, "")
+                              - tglAtivoPosCad:
+                                  Control: Toggle@1.1.5
+                                  Properties:
+                                    AccessibleLabel: ="Ativo"
+                                    BasePaletteColor: =thmPrimaria
+                                    Checked: =Coalesce(varFormPos.ativo, true)
+                                    DisplayMode: =DisplayMode.Edit
+                                    FontColor: =thmTexto
+                                    Height: =44
+                                    Label: ="Ativo"
+                                    LabelPosition: ='Toggle.LabelPosition'.Before
+                              - cntAcoesPosCad:
+                                  Control: GroupContainer@1.5.0
+                                  Variant: AutoLayout
+                                  Properties:
+                                    DropShadow: =DropShadow.None
+                                    Fill: =thmSuperficie
+                                    Height: =56
+                                    LayoutAlignItems: =LayoutAlignItems.Center
+                                    LayoutDirection: =LayoutDirection.Horizontal
+                                    LayoutGap: =10
+                                    LayoutMinHeight: =0
+                                    LayoutMinWidth: =0
+                                    PaddingTop: =12
+                                    RadiusBottomLeft: =0
+                                    RadiusBottomRight: =0
+                                    RadiusTopLeft: =0
+                                    RadiusTopRight: =0
+                                  Children:
+                                    - btnNovoPosCad:
+                                        Control: Button@0.0.45
+                                        Properties:
+                                          Appearance: ='ButtonCanvas.Appearance'.Secondary
+                                          Height: =thmAlturaCampo
+                                          OnSelect: |-
+                                            =Set(varPosSelCad, Blank());
+                                            Set(
+                                                varFormPos,
+                                                {
+                                                    posto: "",
+                                                    papel: "APAC",
+                                                    ini: "00:00",
+                                                    fim: "24:00",
+                                                    qtd: "1",
+                                                    ordem: Text(Coalesce(Max(colPostosCad, ordem), 0) + 1),
+                                                    ativo: true
+                                                }
+                                            )
+                                          Text: ="NOVO POSTO"
+                                          Width: =130
+                                    - btnSalvarPosCad:
+                                        Control: Button@0.0.45
+                                        Properties:
+                                          Appearance: ='ButtonCanvas.Appearance'.Primary
+                                          FillPortions: =1
+                                          Height: =thmAlturaCampo
+                                          OnSelect: |-
+                                            =With(
+                                                {
+                                                    minIni: Value(Left(drpIniCad.Selected.Value, 2)) * 60,
+                                                    minFim: Value(Left(drpFimCad.Selected.Value, 2)) * 60
+                                                },
+                                                If(
+                                                    Trim(txtPostoCad.Value) = "",
+                                                    Notify("Informe o nome do posto.", NotificationType.Error, 6000),
+                                                    IsBlank(drpPapelCad.Selected.Value),
+                                                    Notify("Escolha quem ocupa o posto.", NotificationType.Error, 6000),
+                                                    minFim <= minIni,
+                                                    Notify("ATÉ precisa ser depois de DAS. Posto que atravessa a meia-noite vira dois cadastros.", NotificationType.Error, 8000),
+                                                    !IsNumeric(txtQtdCad.Value) Or Value(txtQtdCad.Value) < 1 Or Value(txtQtdCad.Value) <> Int(Value(txtQtdCad.Value)),
+                                                    Notify("Quantidade precisa ser um número inteiro maior que zero.", NotificationType.Error, 6000),
+                                                    Trim(txtOrdemPosCad.Value) <> "" And !IsNumeric(txtOrdemPosCad.Value),
+                                                    Notify("Ordem precisa ser um número.", NotificationType.Error, 6000),
+                                                    UpdateContext(
+                                                        {
+                                                            locErroPosCad: IsError(
+                                                                Patch(
+                                                                    tb_apacPostosFixos,
+                                                                    If(
+                                                                        IsBlank(varPosSelCad.ID),
+                                                                        Defaults(tb_apacPostosFixos),
+                                                                        LookUp(tb_apacPostosFixos, ID = varPosSelCad.ID)
+                                                                    ),
+                                                                    {
+                                                                        aeroporto: varAero,
+                                                                        posto: Upper(Trim(txtPostoCad.Value)),
+                                                                        papel: drpPapelCad.Selected.Value,
+                                                                        hora_inicio: minIni,
+                                                                        hora_fim: minFim,
+                                                                        quantidade: Value(txtQtdCad.Value),
+                                                                        ordem: If(IsNumeric(txtOrdemPosCad.Value), Value(txtOrdemPosCad.Value), 0),
+                                                                        ativo: If(tglAtivoPosCad.Checked, 1, 0)
+                                                                    }
+                                                                )
+                                                            )
+                                                        }
+                                                    );
+                                                    If(
+                                                        locErroPosCad,
+                                                        Notify("Não foi possível gravar. Nada foi alterado.", NotificationType.Error, 7000),
+                                                        Set(varPosSelCad, Blank());
+                                                        Set(varFormPos, Blank());
+                                                        Select(btnRecarregarCad);
+                                                        Notify("Posto gravado. A tela do mês soma os postos ativos na próxima vez que abrir.", NotificationType.Success, 6000)
+                                                    )
+                                                )
+                                            )
+                                          Text: ="SALVAR"

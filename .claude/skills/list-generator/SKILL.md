@@ -111,6 +111,11 @@ Rede de segurança para quem editar a lista fora do app.
 - **Regra de uma coluna só** vai dentro do próprio `schemaXml`, como elemento filho de `Field`:
   `<Field ...><Validation Message='mensagem curta'>=OU([coluna]=0;[coluna]=1)</Validation></Field>`
   Quando há `Validation`, o `Field` deixa de ser auto-fechado.
+
+  > ⚠️ **14/09/2026 — projeto APACs por Módulos:** no fluxo `Gerador de lista` do tenant ASUR, toda
+  > coluna com `<Default>` ou `<Validation>` falhou com `HTTP_Criar_Coluna: BadGateway`, e toda coluna
+  > sem os dois passou. Não está isolado se o problema é o elemento ou a fórmula em pt-BR
+  > (`OU(...;...)`). Até isolar, **gere sem os dois** e confira as faixas no app antes do `Patch`.
 - **Regra que enxerga duas colunas** vai em `validacaoLista`, porque no SharePoint ela é da lista, não da
   coluna: `{"formula": "=[hora_fim]>[hora_inicio]", "mensagem": "o fim tem que ser maior que o inicio"}`.
   Sem regra → `"validacaoLista": {}`.

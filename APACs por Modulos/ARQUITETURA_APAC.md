@@ -138,6 +138,7 @@ Está escrito aqui para não virar redescoberta.
 | `App_Formulas_APAC.txt` | colar em App → Formulas (não é o OnStart) |
 | `scrApacMes.pa.yaml` | grade do mês: dias × horas |
 | `scrApacDia.pa.yaml` | o dia hora a hora, reproduzindo a planilha da Simone |
+| `scrApacCadastro.pa.yaml` | cadastro de premissas (vigências) e postos fixos |
 | `importar_malha.ts` | Office Script — lê o export do Power BI, não grava |
 | `lista_tb_*.json` | insumos do `List_Generator` |
 | `dados/malha_AAAA-MM.csv` | a temporada já convertida, para colar no modo de grade |
@@ -151,8 +152,7 @@ Está escrito aqui para não virar redescoberta.
   comparar com os turnos que existem de fato.
 - **`scrApacImport`** e o fluxo do Power Automate. Enquanto não existem, a malha entra pelos CSVs
   de `dados/` no modo de grade do SharePoint — o que já permite validar todo o cálculo.
-- **`scrApacParametros`** — hoje as premissas se editam no painel das telas de cálculo, que grava
-  vigência; falta a tela que lista o histórico e cadastra postos fixos.
+- **Cadastro da escala** — a `tb_apacEscala` existe, mas nenhuma tela lê nem grava turnos.
 
 ## 13. Efetivo mínimo — calculado na tela do mês, sem laço
 
@@ -218,3 +218,44 @@ número de contrato, exporte a malha e rode `valida_minimo_app.js`.
 
 ⚠️ **O mínimo não é o quadro contratado.** Ele não cobre férias, absenteísmo nem treinamento, e não
 impõe interjornada de 11h. É o piso de desenho de escala — abaixo dele nenhuma escala cobre.
+
+## 14. Cadastro de premissas e postos fixos
+
+`scrApacCadastro`, aberta pelo botão **CADASTROS** da tela do mês. Duas abas, cada uma com lista à
+esquerda e formulário à direita — o mesmo desenho do `scrMapaReferencia`, validado no Studio.
+
+**Premissas são vigências, não uma linha que se sobrescreve.** NOVA VIGÊNCIA abre o formulário já
+preenchido com a vigência em vigor; muda-se o que mudou e a data a partir da qual vale. Selecionar uma
+vigência na lista serve para corrigir digitação. O cálculo usa a **ativa mais recente**, e a lista
+marca qual é com EM VIGOR. Duas vigências na mesma data são recusadas: deixariam "a mais recente"
+indefinida, e o número mudaria sem ninguém mexer.
+
+⚠️ **A tela do mês guarda as premissas em variáveis e só relê a lista quando elas estão vazias** —
+é o que permite mexer no painel sem gravar. Por isso gravar uma vigência esvazia `varCap`,
+`varOcup`, `varAntec`, `varAssentosMin`, `varApacMod`, `varModSup` e `varRaiosX`. Se um dia
+entrar variável nova no painel, ela tem de entrar nessa lista também, senão a vigência gravada não
+chega ao cálculo e nada acusa.
+
+**Postos fixos** usam hora cheia (DAS/ATÉ de 00:00 a 24:00), porque o cálculo soma o posto em cada
+hora inteiramente coberta. Posto que atravessa a meia-noite vira dois cadastros — a tela recusa ATÉ
+antes de DAS e explica.
+
+**Nada se apaga:** vigência e posto se desligam em Ativa/Ativo, como em todo o workspace.
+
+**As faixas válidas moram na tela, não na lista.** Ver §15.
+
+## 15. As listas não levam `<Default>` nem `<Validation>`
+
+Em 14/09/2026 ficou claro que o `List_Generator` deste tenant falha com `HTTP_Criar_Coluna:
+BadGateway` em coluna que traz `<Default>` ou `<Validation>` no `schemaXml`. A separação entre os
+arquivos que passaram e os que falharam é total. Os `lista_tb_apac*.json` saem sem os dois.
+
+Consequência de desenho: **toda faixa válida é conferida pelo app antes do `Patch`** — ocupação de 1
+a 100, antecedência de 0 a 600, quantidade inteira maior que zero, ATÉ depois de DAS. Quem grava
+direto no SharePoint (modo de grade) não tem essa rede; por isso a carga em grade fica restrita aos
+CSVs de `dados/`, que já saem conferidos.
+
+A skill `list-generator` ainda documenta `<Validation>` como padrão. Não está provado se o que falha
+é o elemento em si ou a fórmula em sintaxe pt-BR (`OU(...;...)`) — o `schemaXml` é XML de
+SharePoint, e fórmula de coluna nesse formato costuma ser em inglês. Enquanto isso não for isolado
+com uma coluna só, a regra aqui é não usar.
