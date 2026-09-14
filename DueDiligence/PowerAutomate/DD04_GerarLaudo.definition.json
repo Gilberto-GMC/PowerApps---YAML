@@ -1,0 +1,267 @@
+{
+  "name": "8a9f7104-6e26-5478-8192-a6b305953220",
+  "id": "/providers/Microsoft.Flow/flows/8a9f7104-6e26-5478-8192-a6b305953220",
+  "type": "Microsoft.Flow/flows",
+  "properties": {
+    "apiId": "/providers/Microsoft.PowerApps/apis/shared_logicflows",
+    "displayName": "DD04 Gerar Laudo",
+    "definition": {
+      "metadata": {
+        "workflowEntityId": null,
+        "processAdvisorMetadata": null,
+        "flowChargedByPaygo": null,
+        "flowclientsuspensionreason": "None",
+        "flowclientsuspensiontime": null,
+        "flowclientsuspensionreasondetails": null,
+        "creator": {
+          "id": "a06c04ca-600c-4586-a940-1db61e81fc41",
+          "type": "User",
+          "tenantId": "d233d58a-9973-43a7-af69-6763630548a0"
+        },
+        "provisioningMethod": "FromDefinition",
+        "failureAlertSubscription": true,
+        "clientLastModifiedTime": "2026-09-08T15:57:05.3390018Z",
+        "lastModifiedBy": "a06c04ca-600c-4586-a940-1db61e81fc41",
+        "connectionKeySavedTimeKey": "2026-09-08T15:57:05.3390018Z",
+        "creationSource": "Portal",
+        "modifiedSources": "Portal"
+      },
+      "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+      "contentVersion": "1.0.0.0",
+      "parameters": {
+        "$authentication": {
+          "defaultValue": {},
+          "type": "SecureObject"
+        },
+        "$connections": {
+          "defaultValue": {},
+          "type": "Object"
+        }
+      },
+      "triggers": {
+        "manual": {
+          "type": "Request",
+          "kind": "PowerAppV2",
+          "inputs": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "number": {
+                  "description": "Please enter a number",
+                  "title": "id",
+                  "type": "number",
+                  "x-ms-content-hint": "NUMBER",
+                  "x-ms-dynamically-added": true
+                },
+                "text": {
+                  "description": "Please enter your input",
+                  "title": "html",
+                  "type": "string",
+                  "x-ms-content-hint": "TEXT",
+                  "x-ms-dynamically-added": true
+                }
+              },
+              "required": [
+                "number",
+                "text"
+              ]
+            }
+          }
+        }
+      },
+      "actions": {
+        "HTTP_Obter_Item_Laudo": {
+          "runAfter": {},
+          "type": "OpenApiConnection",
+          "inputs": {
+            "parameters": {
+              "dataset": "https://grupoccr.sharepoint.com/sites/ComplianceAeroportos",
+              "parameters/method": "GET",
+              "parameters/uri": "@concat('_api/web/lists/getbytitle(''tb_dueDiligence'')/items(', string(triggerBody()?['number']), ')?$select=ID,status')",
+              "parameters/headers": {
+                "Accept": "application/json;odata=nometadata"
+              }
+            },
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+              "connectionName": "shared_sharepointonline",
+              "operationId": "HttpRequest"
+            },
+            "authentication": "@parameters('$authentication')",
+            "retryPolicy": {
+              "type": "none"
+            }
+          }
+        },
+        "Condicao_Decisao_Final": {
+          "runAfter": {
+            "HTTP_Obter_Item_Laudo": [
+              "Succeeded"
+            ]
+          },
+          "type": "If",
+          "expression": {
+            "and": [
+              {
+                "equals": [
+                  "@or(equals(body('HTTP_Obter_Item_Laudo')?['status'], 'Aprovado'), equals(body('HTTP_Obter_Item_Laudo')?['status'], 'Aprovado com Ressalvas'), equals(body('HTTP_Obter_Item_Laudo')?['status'], 'Reprovado Parcialmente'), equals(body('HTTP_Obter_Item_Laudo')?['status'], 'Reprovado'))",
+                  true
+                ]
+              }
+            ]
+          },
+          "actions": {
+            "HTTP_Criar_Arquivo_Html": {
+              "runAfter": {},
+              "type": "OpenApiConnection",
+              "inputs": {
+                "parameters": {
+                  "dataset": "https://grupoccr.sharepoint.com/sites/ComplianceAeroportos",
+                  "parameters/method": "POST",
+                  "parameters/uri": "@concat('_api/web/lists/getbytitle(''Laudos%20Due%20Diligence'')/RootFolder/Files/add(url=''DD-', formatNumber(int(triggerBody()?['number']), '000000'), '.html'',overwrite=true)')",
+                  "parameters/headers": {
+                    "Accept": "application/json;odata=nometadata",
+                    "Content-Type": "text/html;charset=utf-8"
+                  },
+                  "parameters/body": "@triggerBody()?['text']"
+                },
+                "host": {
+                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+                  "connectionName": "shared_sharepointonline",
+                  "operationId": "HttpRequest"
+                },
+                "authentication": "@parameters('$authentication')",
+                "retryPolicy": {
+                  "type": "none"
+                }
+              }
+            },
+            "Montar_Atualizacao_Laudo": {
+              "runAfter": {
+                "HTTP_Criar_Arquivo_Html": [
+                  "Succeeded"
+                ]
+              },
+              "type": "Compose",
+              "inputs": {
+                "laudo_url": "@concat('https://grupoccr.sharepoint.com', body('HTTP_Criar_Arquivo_Html')?['ServerRelativeUrl'])"
+              }
+            },
+            "HTTP_Gravar_Laudo_Url": {
+              "runAfter": {
+                "Montar_Atualizacao_Laudo": [
+                  "Succeeded"
+                ]
+              },
+              "type": "OpenApiConnection",
+              "inputs": {
+                "parameters": {
+                  "dataset": "https://grupoccr.sharepoint.com/sites/ComplianceAeroportos",
+                  "parameters/method": "POST",
+                  "parameters/uri": "@concat('_api/web/lists/getbytitle(''tb_dueDiligence'')/items(', string(triggerBody()?['number']), ')')",
+                  "parameters/headers": {
+                    "Accept": "application/json;odata=nometadata",
+                    "Content-Type": "application/json;odata=nometadata",
+                    "X-HTTP-Method": "MERGE",
+                    "IF-MATCH": "*"
+                  },
+                  "parameters/body": "@string(outputs('Montar_Atualizacao_Laudo'))"
+                },
+                "host": {
+                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+                  "connectionName": "shared_sharepointonline",
+                  "operationId": "HttpRequest"
+                },
+                "authentication": "@parameters('$authentication')",
+                "retryPolicy": {
+                  "type": "none"
+                }
+              }
+            },
+            "Responder_Com_Laudo": {
+              "runAfter": {
+                "HTTP_Gravar_Laudo_Url": [
+                  "Succeeded"
+                ]
+              },
+              "type": "Response",
+              "kind": "PowerApp",
+              "inputs": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "saida_laudo_url": {
+                      "title": "saida_laudo_url",
+                      "type": "string",
+                      "x-ms-content-hint": "TEXT",
+                      "x-ms-dynamically-added": true
+                    },
+                    "saida_erro": {
+                      "title": "saida_erro",
+                      "type": "string",
+                      "x-ms-content-hint": "TEXT",
+                      "x-ms-dynamically-added": true
+                    }
+                  },
+                  "additionalProperties": {}
+                },
+                "statusCode": 200,
+                "body": {
+                  "saida_laudo_url": "@{outputs('Montar_Atualizacao_Laudo')?['laudo_url']}",
+                  "saida_erro": ""
+                }
+              }
+            }
+          },
+          "else": {
+            "actions": {
+              "Responder_Sem_Decisao": {
+                "runAfter": {},
+                "type": "Response",
+                "kind": "PowerApp",
+                "inputs": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "saida_laudo_url": {
+                        "title": "saida_laudo_url",
+                        "type": "string",
+                        "x-ms-content-hint": "TEXT",
+                        "x-ms-dynamically-added": true
+                      },
+                      "saida_erro": {
+                        "title": "saida_erro",
+                        "type": "string",
+                        "x-ms-content-hint": "TEXT",
+                        "x-ms-dynamically-added": true
+                      }
+                    },
+                    "additionalProperties": {}
+                  },
+                  "statusCode": 200,
+                  "body": {
+                    "saida_laudo_url": "",
+                    "saida_erro": "Laudo disponível somente após o parecer final do Compliance (Aprovado, Aprovado com Ressalvas, Reprovado Parcialmente ou Reprovado)."
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "outputs": {}
+    },
+    "connectionReferences": {
+      "shared_sharepointonline": {
+        "connectionName": "shared-sharepointonl-0cd12861-383f-4b6e-9359-db983fb70160",
+        "source": "Embedded",
+        "id": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+        "tier": "NotSpecified",
+        "apiName": "sharepointonline",
+        "isProcessSimpleApiReferenceConversionAlreadyDone": false
+      }
+    },
+    "flowFailureAlertSubscribed": false,
+    "isManaged": false
+  }
+}

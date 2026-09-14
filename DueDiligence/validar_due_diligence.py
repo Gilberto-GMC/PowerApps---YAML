@@ -19,17 +19,31 @@ except ImportError:  # pragma: no cover - depende do ambiente de execução
 
 
 BASE = Path(__file__).resolve().parent
+PANEL_FILE = BASE / "ScreenDueDiligencePainel.yaml"
 YAML_FILES = (
     BASE / "ScreenDueDiligence.yaml",
     BASE / "ScreenDueDiligenceInicio.yaml",
+    PANEL_FILE,
 )
 MAIN_LIST_FILE = BASE / "listgen_tb_dueDiligence_completo.json"
 PARAMETERS_LIST_FILE = BASE / "listgen_tb_dueDiligenceParametros_completo.json"
 THIRD_PARTY_RESPONSES_FILE = BASE / "listgen_tb_dueDiligenceTerceiroRespostas.json"
+COMPLIANCE_LIST_FILE = BASE / "listgen_tb_dueDiligenceCompliance.json"
+DESDOBRAMENTOS_LIST_FILE = BASE / "listgen_tb_dueDiligenceDesdobramentos_completo.json"
+# Regra de acesso do perfil Compliance: chave não vazia e registro achado
+# (lição de 2026-09-02), envolvida em IfError para falhar fechada.
+COMPLIANCE_ACCESS_TOKENS = (
+    "IfError( With( {_email: Lower(Trim(User().Email))},",
+    "!IsBlank(_email) && !IsBlank(LookUp(tb_dueDiligenceCompliance, email = _email && ativo = 1, ID))",
+    "), false )",
+)
 READY_FLOW_FILES = (
     BASE / "EnviarquestionarioDueDiligence_PRONTO.zip",
     BASE / "ProcessarrespostaDueDiligence_PRONTO.zip",
+    BASE / "VencervigenciaDueDiligence_PRONTO.zip",
 )
+LAUDO_READY_FILE = BASE / "GerarLaudoDueDiligence_PRONTO.zip"
+LAUDO_DECISION_STATUSES = ("Aprovado", "Aprovado com Ressalvas", "Reprovado Parcialmente", "Reprovado")
 FORM_ID = "itUz0nOZp0OvaWdjYwVIoMoEbKAMYIZFqUAdth6B_EFURVRKSFdaVDE4Q1RIV0VTRkxFSjFZS0VEQS4u"
 FORM_QUESTION_IDS = {
     "rc17ec46a782c4e9bb8577f1776f7b6a5",
@@ -64,6 +78,7 @@ PHASE2_MAIN_FIELDS = {
     "decisao_compliance_por_email": "Text",
     "data_decisao_compliance": "DateTime",
     "prazo_reavaliacao": "DateTime",
+    "data_vencimento": "DateTime",
 }
 PHASE2_RESPONSE_FIELDS = {
     "codigo_opcao": "Text",
@@ -74,6 +89,44 @@ PHASE2_RESPONSE_FIELDS = {
     "forms_envio_id": "Text",
     "forms_item_chave": "Text",
 }
+# Modelo de status definido pelo Compliance em 2026-09-10, na ordem do filtro.
+CANONICAL_STATUSES = (
+    "Aguardando Terceiro",
+    "Pendente Compliance",
+    "Aprovado",
+    "Aprovado com Ressalvas",
+    "Reprovado Parcialmente",
+    "Reprovado",
+    "Cancelado",
+    "Vencido",
+)
+LEGACY_STATUSES = (
+    "Rascunho",
+    "Aguardando envio ao terceiro",
+    "Aguardando terceiro",
+    "Em análise Compliance",
+    "Aguardando esclarecimento",
+    "Em homologação",
+    "Encerrado - risco baixo",
+    "Aprovado automaticamente - Fluxo I",
+    "Cadastrado - monitoramento (Fluxo II)",
+    "Aprovado com ressalvas",
+    "Reprovado parcialmente",
+    "Erro no envio ao terceiro",
+)
+DECISION_STATUSES = ("Aprovado", "Aprovado com Ressalvas", "Reprovado Parcialmente", "Reprovado")
+VALIDITY_STATUSES = ("Aprovado", "Aprovado com Ressalvas", "Reprovado Parcialmente")
+MANUAL_HISTORY_TYPES = ("Aguardando esclarecimentos", "Parecer final", "Cancelamento")
+REMOVED_HISTORY_TYPES = (
+    "Envio ao terceiro",
+    "Resposta do terceiro",
+    "Início da análise",
+    "Encaminhamento para homologação",
+    "Retorno da homologação",
+    "Reabertura",
+)
+# Vigência: baixo 3 anos, médio 2, alto ou ausente 1.
+VALIDITY_RULE_POWERFX = '"baixo", 3, "médio", 2, "medio", 2, 1)'
 
 
 class PowerAppsSafeLoader(yaml.SafeLoader if yaml else object):
@@ -173,6 +226,38 @@ def iter_controls(children: Any):
             continue
         yield str(name), body
         yield from iter_controls(body.get("Children"))
+
+
+def iter_json_items(value: Any):
+    """Percorre todos os pares chave/valor de um JSON aninhado."""
+    if isinstance(value, dict):
+        for key, child in value.items():
+            yield key, child
+            yield from iter_json_items(child)
+    elif isinstance(value, list):
+        for child in value:
+            yield from iter_json_items(child)
+
+
+def balanced_call(text: str, open_index: int) -> str:
+    """Conteúdo entre o parêntese em ``open_index`` e o seu par, ignorando strings."""
+    depth = 0
+    quote: str | None = None
+    for index in range(open_index, len(text)):
+        char = text[index]
+        if quote:
+            if char == quote:
+                quote = None
+            continue
+        if char in "\"'":
+            quote = char
+        elif char == "(":
+            depth += 1
+        elif char == ")":
+            depth -= 1
+            if depth == 0:
+                return text[open_index + 1:index]
+    return text[open_index + 1:]
 
 
 def strip_powerfx_literals_and_comments(formula: str) -> str:
@@ -501,15 +586,16 @@ def main() -> int:
 
         send = definitions[READY_FLOW_FILES[0]]
         process = definitions[READY_FLOW_FILES[1]]
+        expiry = definitions[READY_FLOW_FILES[2]]
         send_text = json.dumps(send, ensure_ascii=False)
         process_text = json.dumps(process, ensure_ascii=False)
+        expiry_text = json.dumps(expiry, ensure_ascii=False)
         combined = send_text + process_text
-        if "PREENCHER_" in combined:
+        if "PREENCHER_" in combined + expiry_text:
             findings.append("os fluxos prontos ainda contêm placeholder PREENCHER_*")
         for token in (
-            "Aguardando envio ao terceiro",
-            "Aguardando terceiro",
-            "Erro no envio ao terceiro",
+            "'Aguardando Terceiro'",
+            "Falha no envio ao terceiro",
             "SendEmailV2",
             "forms_envio_processado_id",
         ):
@@ -520,6 +606,7 @@ def main() -> int:
             "tb_dueDiligenceTerceiroRespostas",
             "tb_dueDiligenceParametros",
             "forms_item_chave",
+            "'Aguardando Terceiro'",
             "Pendente Compliance",
             "terceiro_t05_texto",
         ):
@@ -595,6 +682,51 @@ def main() -> int:
             findings.append(
                 "DD02: forms_ultima_resposta_id deve converter o responseId para string"
             )
+
+        # DD01 sem status de erro: o sucesso não regrava status (desfaria um
+        # cancelamento concorrente) e o catch consome a intenção de envio.
+        send_update = find_action(send, "Montar_Atualizacao_Envio")
+        send_update_inputs = send_update.get("inputs") if isinstance(send_update, dict) else None
+        if not isinstance(send_update_inputs, dict) or "status" in send_update_inputs:
+            findings.append("DD01: Montar_Atualizacao_Envio não pode regravar status")
+        consume = find_action(send, "Montar_Consumo_Intencao")
+        consume_inputs = consume.get("inputs") if isinstance(consume, dict) else None
+        if not isinstance(consume_inputs, dict) or set(consume_inputs) != {"forms_envio_processado_id"}:
+            findings.append(
+                "DD01: o catch deve consumir a intenção gravando só forms_envio_processado_id"
+            )
+
+        # DD03: vigência por risco e vencimento diário.
+        expiry_workflow = (expiry.get("properties") or {}).get("definition") or {}
+        expiry_triggers = list((expiry_workflow.get("triggers") or {}).values())
+        if [trigger.get("type") for trigger in expiry_triggers] != ["Recurrence"]:
+            findings.append("DD03 deve ter exatamente um gatilho Recurrence")
+        for token in (
+            "'baixo'), 3",
+            "'medio')), 2, 1)",
+            "'Year'",
+            "data_vencimento eq null",
+            "data_vencimento lt datetime",
+            "Vencimento da vigência",
+            "E. South America Standard Time",
+        ):
+            if token not in expiry_text:
+                findings.append(f"DD03 sem contrato obrigatório: {token!r}")
+        for status in VALIDITY_STATUSES:
+            if not re.search(rf"status eq '{{1,2}}{re.escape(status)}'{{1,2}}", expiry_text):
+                findings.append(f"DD03 não filtra o status com vigência {status!r}")
+        expiry_status = find_action(expiry, "Montar_Status_Vencido")
+        if not isinstance(expiry_status, dict) or expiry_status.get("inputs") != {"status": "Vencido"}:
+            findings.append("DD03: Montar_Status_Vencido deve gravar status 'Vencido'")
+        with zipfile.ZipFile(READY_FLOW_FILES[2]) as archive:
+            expiry_manifest = json.loads(archive.read("manifest.json"))
+        flow_resources = [
+            resource
+            for resource in expiry_manifest.get("resources", {}).values()
+            if resource.get("type") == "Microsoft.Flow/flows"
+        ]
+        if [resource.get("suggestedCreationType") for resource in flow_resources] != ["New"]:
+            findings.append("DD03 deve ser importado como fluxo novo (suggestedCreationType=New)")
 
         for path, document in definitions.items():
             properties = document.get("properties")
@@ -696,7 +828,7 @@ def main() -> int:
                             check_terminate_location(nested, current_foreach)
 
             check_terminate_location(workflow)
-        return "2 pacotes íntegros, correlacionados e sem placeholders"
+        return "3 pacotes íntegros, correlacionados e sem placeholders"
 
     validator.check("Pacotes Power Automate prontos", check_ready_flows)
 
@@ -1063,21 +1195,27 @@ def main() -> int:
         if not update:
             findings.append("status_DataCard.Update não foi localizado")
             return ""
-        compact = re.sub(r"\s+", " ", update).lower()
-        mutable_match = re.search(r"_statusatual\s+in\s+\[([^\]]*)\]", compact)
-        mutable_statuses = mutable_match.group(1) if mutable_match else ""
-        if not mutable_match:
-            findings.append("status_DataCard.Update não expõe a lista de estados recalculáveis")
-        elif '"aguardando terceiro"' in mutable_statuses:
+        compact = re.sub(r"\s+", " ", update)
+        # Recalcular um Aguardando Terceiro já enviado regrediria a fila; só o
+        # registro novo ou o envio com falha voltam a passar pelo motor.
+        if "IsBlank(_statusAtual) || _envioFalhou" not in compact:
             findings.append(
-                "status_DataCard.Update pode recalcular 'Aguardando terceiro' e regredir a fila"
+                "status_DataCard.Update só pode recalcular registro novo ou com falha no envio"
             )
-        for token in ('"rascunho"', '"aguardando envio ao terceiro"'):
-            if token not in mutable_statuses:
-                findings.append(
-                    f"status_DataCard.Update deixou de tratar o estado inicial {token}"
-                )
-        return "estado Aguardando terceiro é preservado após edição"
+        for token in (
+            'ThisItem.status = "Aguardando Terceiro"',
+            "ThisItem.forms_envio_id = ThisItem.forms_envio_processado_id",
+            "IsBlank(ThisItem.data_envio_terceiro)",
+        ):
+            if token not in compact:
+                findings.append(f"status_DataCard.Update sem o critério de falha no envio {token!r}")
+        literals = set(re.findall(r'"([^"]*)"', update)) - {"", "FLUXO I", "FLUXO II"}
+        if literals != {"Aguardando Terceiro", "Aprovado"}:
+            findings.append(
+                "status_DataCard.Update deve resultar só em Aprovado ou Aguardando Terceiro; "
+                f"literais: {sorted(literals)}"
+            )
+        return "status recalculado só na criação ou após falha no envio"
 
     validator.check("Progressão do status do terceiro", check_status_progression)
 
@@ -1107,6 +1245,86 @@ def main() -> int:
         return "gatilho DD alcançável nos campos de risco"
 
     validator.check("Coerência entre gatilho DD e risco", check_reachable_risk_trigger)
+
+    def wdl_literal_check(value: str) -> str:
+        return "'" + value.replace("'", "''") + "'"
+
+    def check_laudo_dd04(findings: list[str]) -> str:
+        if not LAUDO_READY_FILE.is_file():
+            findings.append(f"{display(LAUDO_READY_FILE)}: pacote pronto não encontrado")
+            return ""
+        try:
+            with zipfile.ZipFile(LAUDO_READY_FILE) as archive:
+                damaged = archive.testzip()
+                if damaged:
+                    findings.append(f"{display(LAUDO_READY_FILE)}: entrada ZIP corrompida: {damaged}")
+                    return ""
+                name = next(n for n in archive.namelist() if n.endswith("/definition.json"))
+                document = json.loads(archive.read(name))
+                manifest = json.loads(archive.read("manifest.json"))
+        except (OSError, zipfile.BadZipFile, StopIteration, json.JSONDecodeError) as exc:
+            findings.append(f"{display(LAUDO_READY_FILE)}: pacote inválido: {exc}")
+            return ""
+
+        raw = json.dumps(document, ensure_ascii=False)
+        if "PREENCHER_" in raw:
+            findings.append(f"{display(LAUDO_READY_FILE)}: ainda contém placeholder PREENCHER_*")
+        if "wordonlinebusiness" in raw.lower():
+            findings.append(f"{display(LAUDO_READY_FILE)}: depende do conector premium Word Online")
+
+        flows = [r for r in manifest["resources"].values() if r["type"] == "Microsoft.Flow/flows"]
+        if [r.get("suggestedCreationType") for r in flows] != ["New"]:
+            findings.append(f"{display(LAUDO_READY_FILE)}: deve ser importado como fluxo novo (suggestedCreationType=New)")
+
+        try:
+            workflow = document["properties"]["definition"]
+            trigger = next(iter(workflow["triggers"].values()))
+            condicao = workflow["actions"]["Condicao_Decisao_Final"]
+            expressao = condicao["expression"]["and"][0]["equals"][0]
+        except (KeyError, IndexError, StopIteration, TypeError):
+            findings.append(f"{display(LAUDO_READY_FILE)}: estrutura de ações inesperada")
+            return ""
+
+        if trigger.get("type") != "Request" or trigger.get("kind") != "PowerAppV2":
+            findings.append(f"{display(LAUDO_READY_FILE)}: gatilho deve ser Power Apps (V2)")
+        trigger_props = (trigger.get("inputs", {}).get("schema", {}) or {}).get("properties", {})
+        if set(trigger_props) != {"number", "text"}:
+            findings.append(
+                f"{display(LAUDO_READY_FILE)}: gatilho deve ter as entradas 'number' (id) e "
+                f"'text' (html); encontrado: {sorted(trigger_props)}"
+            )
+
+        for status in LAUDO_DECISION_STATUSES:
+            if wdl_literal_check(status) not in expressao:
+                findings.append(
+                    f"{display(LAUDO_READY_FILE)}: Condicao_Decisao_Final não contempla {status!r}"
+                )
+        for token in (
+            "triggerBody()?['number']",
+            "triggerBody()?['text']",
+            "laudo_url",
+            "RootFolder/Files/add",
+        ):
+            if token not in raw:
+                findings.append(f"{display(LAUDO_READY_FILE)}: sem contrato obrigatório {token!r}")
+
+        main_document = json_documents.get(MAIN_LIST_FILE)
+        if isinstance(main_document, dict) and "laudo_url" not in columns_by_name(main_document):
+            findings.append(f"{display(MAIN_LIST_FILE)}: coluna laudo_url ausente (necessária ao DD04)")
+
+        # O botão do app precisa chamar o fluxo com os dois parâmetros (ID e o
+        # HTML já montado) e tratar os dois campos de resposta do DD04.
+        for token in (
+            "DD04GerarLaudo.Run(ThisItem.ID, _html)",
+            "_laudo.saida_erro",
+            "_laudo.saida_laudo_url",
+        ):
+            if token not in main_yaml_text:
+                findings.append(f"ScreenDueDiligence.yaml: botão do laudo sem {token!r}")
+
+        return "pacote DD04 pronto, coerente com o gatilho real e com o botão do app"
+
+    validator.check("Pacote DD04 e botão do laudo", check_laudo_dd04)
 
     main_internal_names: set[str] = set()
     if MAIN_LIST_FILE in json_documents:
@@ -1166,6 +1384,51 @@ def main() -> int:
 
     validator.check("DataFields do formulário principal", check_data_fields)
 
+    def check_desdobramento_fields(findings: list[str]) -> str:
+        document = json_documents.get(DESDOBRAMENTOS_LIST_FILE)
+        if not isinstance(document, dict):
+            findings.append(f"{display(DESDOBRAMENTOS_LIST_FILE)}: JSON ausente ou inválido")
+            return ""
+        known = set(columns_by_name(document)) | {"{Attachments}"}
+        desdobramento_forms: list[tuple[Path, str, dict[str, Any]]] = []
+        for path, document_yaml in yaml_documents.items():
+            screens = document_yaml.get("Screens")
+            if not isinstance(screens, dict):
+                continue
+            for screen in screens.values():
+                if not isinstance(screen, dict):
+                    continue
+                for name, body in iter_controls(screen.get("Children")):
+                    properties = body.get("Properties")
+                    if not (str(body.get("Control", "")).startswith("Form@") and isinstance(properties, dict)):
+                        continue
+                    source = formula_value(properties.get("DataSource"))
+                    if source and re.sub(r"\s+", "", source) == "tb_dueDiligenceDesdobramentos":
+                        desdobramento_forms.append((path, name, body))
+        if len(desdobramento_forms) != 1:
+            findings.append(
+                f"esperado exatamente 1 Form ligado a tb_dueDiligenceDesdobramentos; "
+                f"encontrado(s): {len(desdobramento_forms)}"
+            )
+        total = 0
+        for path, form_name, form in desdobramento_forms:
+            for card_name, card in iter_controls(form.get("Children")):
+                properties = card.get("Properties")
+                if not isinstance(properties, dict) or "DataField" not in properties:
+                    continue
+                field_name = formula_value(properties["DataField"])
+                if not field_name:
+                    continue
+                total += 1
+                if field_name not in known:
+                    findings.append(
+                        f"DataField {field_name!r} não existe em {display(DESDOBRAMENTOS_LIST_FILE)} "
+                        f"({display(path)}:{form_name}/{card_name})"
+                    )
+        return f"{total} DataField(s) do formulário de desdobramento existem no JSON"
+
+    validator.check("DataFields do formulário de desdobramento", check_desdobramento_fields)
+
     def check_forms_queue_contract(findings: list[str]) -> str:
         expected_cards = {
             "forms_correlacao_id": "varDdFormsCorrelacaoForm",
@@ -1196,6 +1459,7 @@ def main() -> int:
             "varDdFormsCorrelacaoForm: Coalesce(",
             "varDdFormsEnvioForm: If(",
             'varFluxoForm: _fluxo',
+            '_fluxo = "FLUXO III" && _envioFalhou',
         ):
             if token not in save_formula:
                 findings.append(f"btnDdSalvarForm.OnSelect sem contrato Forms {token!r}")
@@ -1205,7 +1469,8 @@ def main() -> int:
         for token in (
             "forms_correlacao_id: Coalesce(",
             "forms_envio_id: Text(GUID())",
-            'status: "Aguardando envio ao terceiro"',
+            "data_envio_terceiro: Blank()",
+            '_registroBase.status <> "Aguardando Terceiro"',
         ):
             if token not in toolbar_formula:
                 findings.append(f"tbDdAcoes.OnSelect sem contrato de reenvio {token!r}")
@@ -1214,10 +1479,7 @@ def main() -> int:
     validator.check("Contrato da fila Microsoft Forms", check_forms_queue_contract)
 
     def check_phase2_screen_guards(findings: list[str]) -> str:
-        if "varDdPodeAnalisarCompliance: false" not in main_yaml_text:
-            findings.append(
-                "perfil Compliance deve permanecer bloqueado até a fonte real de autorização ser informada"
-            )
+        # A fonte do perfil é conferida no grupo "Perfil Compliance".
         for unsupported_identity in (
             "userRecord",
             "LookUp(User, ID = varIdUser, Area)",
@@ -1259,29 +1521,26 @@ def main() -> int:
         toolbar_properties = toolbar.get("Properties") or {}
         toolbar_formula = str(toolbar_properties.get("OnSelect", ""))
         toolbar_items = str(toolbar_properties.get("Items", ""))
+        compact_items = re.sub(r"\s+", " ", toolbar_items)
+        compact_formula = re.sub(r"\s+", " ", toolbar_formula)
         if "varDdPodeAnalisarCompliance" not in toolbar_items:
             findings.append("tbDdAcoes.Items não protege a análise pelo perfil Compliance")
-        if 'ThisItem.status in ["Aguardando terceiro", "Encerrado - risco baixo"' not in toolbar_items:
-            findings.append("tbDdAcoes.Items não mantém bloqueio dos estados não editáveis")
-        if "ViewForm(frmDdSolicitante)" not in toolbar_formula:
-            findings.append("tbDdAcoes.OnSelect não bloqueia o formulário principal após o envio")
-        if "!varDdPodeAnalisarCompliance" not in toolbar_formula:
-            findings.append("tbDdAcoes.OnSelect não reaplica a autorização de Compliance")
-        for status in (
-            "Aguardando terceiro",
-            "Pendente Compliance",
-            "Em análise Compliance",
-            "Aguardando esclarecimento",
-            "Em homologação",
+        for token in (
+            '"Pendente Compliance", !varDdPodeAnalisarCompliance',
+            '"Aguardando Terceiro", !(varDdPodeAnalisarCompliance || _envioFalhou)',
         ):
-            if f'"{status}"' not in toolbar_formula:
-                findings.append(
-                    f"tbDdAcoes.OnSelect não preserva modo somente leitura no estado {status!r}"
-                )
-            if f'"{status}"' not in toolbar_items:
-                findings.append(
-                    f"tbDdAcoes.Items não trata o estado {status!r}"
-                )
+            if token not in compact_items:
+                findings.append(f"tbDdAcoes.Items não mantém a regra de edição {token!r}")
+        # Estados encerrados caem no padrão do Switch: edição sempre bloqueada.
+        if not re.search(r"ItemDisabled: Switch\(.*?, true \),", compact_items):
+            findings.append("tbDdAcoes.Items deve bloquear a edição dos estados encerrados por padrão")
+        for token in (
+            '"Pendente Compliance", varDdPodeAnalisarCompliance',
+            '"Aguardando Terceiro", varDdPodeAnalisarCompliance || _envioFalhou',
+            "_envioFalhou, EditForm(frmDdSolicitante), ViewForm(frmDdSolicitante)",
+        ):
+            if token not in compact_formula:
+                findings.append(f"tbDdAcoes.OnSelect não reaplica a regra de edição {token!r}")
 
         responses = main_controls.get("htmlDdRespostasTerceiro", {})
         responses_formula = str((responses.get("Properties") or {}).get("HtmlText", ""))
@@ -1296,15 +1555,17 @@ def main() -> int:
                     f"htmlDdRespostasTerceiro não apresenta o contrato de resposta: {token!r}"
                 )
 
-        history = main_controls.get("htmlDdHistorico", {})
-        history_formula = str((history.get("Properties") or {}).get("HtmlText", ""))
+        history = main_controls.get("galDdHistorico", {})
+        history_formula = str((history.get("Properties") or {}).get("Items", ""))
         if not all(
             token in history_formula
             for token in ("varDdPodeAnalisarCompliance", "visivel_solicitante = 1")
         ):
             findings.append(
-                "htmlDdHistorico não separa histórico interno do histórico público"
+                "galDdHistorico não separa histórico interno do histórico público"
             )
+        if "htmlDdHistoricoItem" not in main_controls or "attDdHistoricoItem" not in main_controls:
+            findings.append("galDdHistorico sem os itens htmlDdHistoricoItem/attDdHistoricoItem")
 
         analysis_form = main_controls.get("frmDdDesdobramento", {})
         success_formula = str((analysis_form.get("Properties") or {}).get("OnSuccess", ""))
@@ -1325,11 +1586,31 @@ def main() -> int:
         register_formula = str(
             (register_button.get("Properties") or {}).get("OnSelect", "")
         )
-        for token in ("Parecer final", "Aprovado com ressalvas", "dpDdPrazoResposta"):
+        for token in ("Parecer final", "Aprovado com Ressalvas", "dpDdPrazoResposta", "Cancelamento"):
             if token not in register_formula:
                 findings.append(
                     f"btnDdRegistrarDesdobramento não valida a decisão: {token!r}"
                 )
+
+        # Decisão e cancelamento são atividades do Compliance: o registro de
+        # desdobramento não pode ficar ao alcance de quem só edita a solicitação.
+        panel = main_controls.get("cntDdDesdTitulo", {})
+        if "varDdPodeAnalisarCompliance" not in str((panel.get("Properties") or {}).get("Visible", "")):
+            findings.append("cntDdDesdTitulo: o registro de desdobramento deve ser exclusivo do Compliance")
+        register_mode = str((register_button.get("Properties") or {}).get("DisplayMode", ""))
+        if "varDdPodeAnalisarCompliance" not in register_mode:
+            findings.append("btnDdRegistrarDesdobramento.DisplayMode não exige o perfil Compliance")
+        if "_registroBase.status <> _desdobramento.status_anterior" not in success_formula:
+            findings.append(
+                "frmDdDesdobramento.OnSuccess não reverte quando o status mudou em paralelo"
+            )
+        save_button = main_controls.get("btnDdSalvarForm", {})
+        save_mode = str((save_button.get("Properties") or {}).get("DisplayMode", ""))
+        if "frmDdSolicitante.Mode = FormMode.View" not in save_mode:
+            findings.append(
+                "btnDdSalvarForm deve ficar desabilitado com o formulário em visualização "
+                "(SubmitForm não roda e o overlay ficaria preso)"
+            )
         return "respostas visíveis, análise autorizada, decisão persistida e histórico segregado"
 
     validator.check("Guardas visuais da Fase 2", check_phase2_screen_guards)
@@ -1373,8 +1654,8 @@ def main() -> int:
 
         flow_pattern = re.compile(
             r'_fluxo:\s*If\(\s*'
-            r'_obrigacaoLegal,\s*"FLUXO I",\s*'
             r'_gatilhoDD,\s*"FLUXO III",\s*'
+            r'_obrigacaoLegal,\s*"FLUXO I",\s*'
             r'_classificacaoContraparte\s*=\s*"FLUXO II",\s*"FLUXO II",\s*'
             r'_classificacaoContraparte\s*=\s*"ALTO",\s*"FLUXO III",\s*'
             r'_classificacaoContraparte\s*=\s*"SEM RISCO",\s*"FLUXO I",\s*'
@@ -1383,12 +1664,320 @@ def main() -> int:
         )
         if not flow_pattern.search(compact):
             findings.append(
-                "prioridade de fluxo v2 divergente: obrigação legal > gatilho DD > "
+                "prioridade de fluxo v2 divergente: gatilho DD > obrigação legal > "
                 "classificação FLUXO II/ALTO/SEM RISCO/PONTUAR"
             )
         return "filtro v1/v2, resultados, faixas 16/36 e prioridades preservados"
 
     validator.check("Contratos centrais v2", check_v2_contracts)
+
+    def check_status_model(findings: list[str]) -> str:
+        for path, text in yaml_texts.items():
+            for legacy in LEGACY_STATUSES:
+                for match in re.finditer(re.escape(f'"{legacy}"'), text):
+                    line = text.count("\n", 0, match.start()) + 1
+                    findings.append(f"{display(path)}:{line}: status legado {legacy!r}")
+            for match in re.finditer(r'\bstatus(?:_novo|_anterior)?:\s*"([^"]*)"', text):
+                if match.group(1) not in CANONICAL_STATUSES:
+                    line = text.count("\n", 0, match.start()) + 1
+                    findings.append(
+                        f"{display(path)}:{line}: grava status fora do modelo {match.group(1)!r}"
+                    )
+
+        flow_texts: dict[str, str] = {}
+        for path in READY_FLOW_FILES:
+            try:
+                with zipfile.ZipFile(path) as archive:
+                    name = next(n for n in archive.namelist() if n.endswith("/definition.json"))
+                    flow_texts[display(path)] = archive.read(name).decode("utf-8")
+            except (OSError, zipfile.BadZipFile, StopIteration):
+                continue  # o check dos pacotes já informa o detalhe
+        for path in sorted((BASE / "PowerAutomate").glob("*.json")):
+            flow_texts[display(path)] = path.read_text(encoding="utf-8")
+        for location, text in flow_texts.items():
+            for legacy in LEGACY_STATUSES:
+                if f"'{legacy}'" in text or f'"{legacy}"' in text:
+                    findings.append(f"{location}: status legado {legacy!r}")
+            try:
+                document = json.loads(text)
+            except json.JSONDecodeError as exc:
+                findings.append(f"{location}: JSON inválido: {exc}")
+                continue
+            for key, value in iter_json_items(document):
+                if (
+                    key in ("status", "status_novo", "status_anterior")
+                    and isinstance(value, str)
+                    and not value.startswith("@")
+                    and value not in CANONICAL_STATUSES
+                ):
+                    findings.append(f"{location}: {key} grava status fora do modelo: {value!r}")
+
+        combo = main_controls.get("cmbDdFiltroStatus", {})
+        items = str((combo.get("Properties") or {}).get("Items", ""))
+        if tuple(re.findall(r'"([^"]*)"', items)) != CANONICAL_STATUSES:
+            findings.append(
+                f"cmbDdFiltroStatus.Items deve listar exatamente {list(CANONICAL_STATUSES)}"
+            )
+        return f"{len(CANONICAL_STATUSES)} status canônicos; nenhum legado nas telas e nos fluxos"
+
+    validator.check("Modelo de status canônico", check_status_model)
+
+    def check_history_dropdowns(findings: list[str]) -> str:
+        tipo = main_controls.get("cmbDdTipoDesdobramento", {})
+        tipo_items = str((tipo.get("Properties") or {}).get("Items", ""))
+        offered = set(re.findall(r'"([^"]*)"', tipo_items)) - {"Pendente Compliance"}
+        if offered != set(MANUAL_HISTORY_TYPES):
+            findings.append(
+                f"cmbDdTipoDesdobramento.Items deve oferecer só {list(MANUAL_HISTORY_TYPES)}; "
+                f"encontrado: {sorted(offered)}"
+            )
+        for removed in REMOVED_HISTORY_TYPES:
+            if f'"{removed}"' in tipo_items:
+                findings.append(f"cmbDdTipoDesdobramento.Items ainda oferece {removed!r}")
+        branches = [
+            re.findall(r'"([^"]*)"', group) for group in re.findall(r"\[([^\]]*)\]", tipo_items)
+        ]
+        if len(branches) != 2 or "Parecer final" not in branches[0] or "Parecer final" in branches[1]:
+            findings.append("Parecer final só pode ser oferecido em Pendente Compliance")
+
+        status_combo = main_controls.get("cmbDdDesdStatusNovo", {})
+        status_items = str((status_combo.get("Properties") or {}).get("Items", ""))
+        offered_status = set(re.findall(r'"([^"]*)"', status_items)) - {"Parecer final", "Cancelamento"}
+        if offered_status != set(DECISION_STATUSES) | {"Cancelado"}:
+            findings.append(
+                "cmbDdDesdStatusNovo.Items deve oferecer só as decisões e Cancelado; "
+                f"encontrado: {sorted(offered_status)}"
+            )
+        compact_status = re.sub(r"\s+", " ", status_items)
+        for token in (
+            "!varDdPodeAnalisarCompliance, [varRegistroDueDiligence.status]",
+            "cmbDdTipoDesdobramento.Selected.Value",
+        ):
+            if token not in compact_status:
+                findings.append(f"cmbDdDesdStatusNovo.Items sem {token!r}")
+        return "tipos manuais enxutos; status do desdobramento derivado do tipo e restrito ao Compliance"
+
+    validator.check("Dropdowns de desdobramento", check_history_dropdowns)
+
+    def check_validity_rule(findings: list[str]) -> str:
+        cards = form_fields.get("data_vencimento", [])
+        if len(cards) != 1:
+            findings.append(
+                f"data_vencimento deve ter exatamente um DataCard; encontrado(s): {len(cards)}"
+            )
+        else:
+            update = re.sub(r"\s+", " ", str((cards[0][2].get("Properties") or {}).get("Update", "")))
+            for token in (
+                VALIDITY_RULE_POWERFX,
+                "TimeUnit.Years",
+                'varFluxoForm = "FLUXO I" || varFluxoForm = "FLUXO II"',
+            ):
+                if token not in update:
+                    findings.append(f"DataCard de data_vencimento sem {token!r}")
+        analysis_form = main_controls.get("frmDdDesdobramento", {})
+        success = re.sub(
+            r"\s+", " ", str((analysis_form.get("Properties") or {}).get("OnSuccess", ""))
+        )
+        match = re.search(r"data_vencimento: If\( _statusNovo in \[([^\]]*)\]", success)
+        if not match or tuple(re.findall(r'"([^"]*)"', match.group(1))) != VALIDITY_STATUSES:
+            findings.append(
+                f"frmDdDesdobramento.OnSuccess deve abrir vigência só para {list(VALIDITY_STATUSES)}"
+            )
+        if VALIDITY_RULE_POWERFX not in success or "TimeUnit.Years" not in success:
+            findings.append("frmDdDesdobramento.OnSuccess sem a regra de vigência 1/2/3 anos")
+        return "vigência 1/2/3 anos por risco no cadastro automático e no parecer"
+
+    validator.check("Regra de vigência", check_validity_rule)
+
+    def check_dashboard(findings: list[str]) -> str:
+        text = yaml_texts.get(PANEL_FILE, "")
+        document = yaml_documents.get(PANEL_FILE)
+        if not text or not isinstance(document, dict):
+            findings.append(f"{display(PANEL_FILE)} ausente ou inválido")
+            return ""
+        screen = next(iter(document["Screens"].values()))
+        controls = dict(iter_controls(screen.get("Children")))
+        on_visible = str((screen.get("Properties") or {}).get("OnVisible", ""))
+        refresh = str(
+            (controls.get("btnDdPainelAtualizar", {}).get("Properties") or {}).get("OnSelect", "")
+        )
+
+        # Navigate para a própria tela não reexecuta o OnVisible: o botão repete a carga.
+        def without_comments(formula: str) -> list[str]:
+            return re.sub(r"//[^\n]*", "", formula).split()
+
+        if not on_visible or without_comments(on_visible) != without_comments(refresh):
+            findings.append("OnVisible e btnDdPainelAtualizar.OnSelect têm que ser a mesma carga")
+        if on_visible.rfind("varDdPainelCarregando: false") < on_visible.rfind("FirstError"):
+            findings.append("a carga não libera varDdPainelCarregando depois do tratamento de erro")
+
+        queries = 0
+        for match in re.finditer(r"Filter\(\s*tb_dueDiligence\b", on_visible):
+            arguments = balanced_call(on_visible, match.start() + len("Filter"))
+            queries += 1
+            if "ativo = 1" not in arguments:
+                findings.append("consulta a tb_dueDiligence sem ativo = 1")
+            for token in (" in ", "IsBlank(", "Search(", "Len(", "Lower(", "Upper(", "Trim("):
+                if token in arguments:
+                    findings.append(
+                        f"consulta a tb_dueDiligence com operação não delegável {token.strip()!r}"
+                    )
+        if queries != 3:
+            findings.append(f"esperadas 3 consultas delegáveis a tb_dueDiligence; encontrada(s): {queries}")
+        for status in VALIDITY_STATUSES + ("Vencido",):
+            if f'status = "{status}"' not in on_visible:
+                findings.append(f"consulta de vigências não inclui {status!r}")
+        for literal in re.findall(r'status\s*(?:=|<>)\s*"([^"]+)"', text):
+            if literal not in CANONICAL_STATUSES:
+                findings.append(f"painel compara com status fora do modelo: {literal!r}")
+
+        for match in re.finditer(r"\bDistinct\(", text):
+            arguments = balanced_call(text, match.end() - 1)
+            if not re.match(r"\s+As\s+\w+", text[match.end() + len(arguments) + 1:]):
+                findings.append("Distinct sem alias As (a coluna devolvida é Value)")
+        # Agregado sobre tabela vazia: Average devolve erro (não Blank) e o erro
+        # atravessa a concatenação, apagando o cartão inteiro. Coalesce não o captura.
+        if re.search(r"\bAverage\(", text):
+            findings.append("Average sobre tabela vazia é erro; use If(_n = 0, Blank(), Sum(t, c) / _n)")
+        table_names = set(
+            re.findall(r"\b(_\w+):\s*(?:Sort|ForAll|Filter|FirstN|LastN|Distinct|Table)\(", text)
+        )
+        for match in re.finditer(r"\b(Max|Min|Sum)\(\s*(_\w+|col\w+)\s*,", text):
+            name = match.group(2)
+            if name.startswith("_") and name not in table_names:
+                continue  # sobrecarga escalar, como Max(_total, 1)
+            before = text[max(0, match.start() - 100):match.start()]
+            count_guard = f"_n{name[1:2].upper()}{name[2:]} = 0" if name.startswith("_") else None
+            if f"IsEmpty({name})" not in before and not (count_guard and count_guard in before):
+                findings.append(f"{match.group(1)}({name}, …) sem proteção para tabela vazia")
+        if re.search(r"\b(ShowColumns|RenameColumns|AddColumns|DropColumns|SortByColumns)\(", text):
+            findings.append("painel usa função de colunas por nome; use ForAll e Sort")
+        # No Power Apps o % do formato de Text() não multiplica por 100: 0,33 vira "0%".
+        for path, screen_text in yaml_texts.items():
+            if re.search(r'"[0#.,]+%"', screen_text):
+                findings.append(
+                    f'{display(path)}: Text(x, "0%") não multiplica por 100; '
+                    'use Text(Round(x * 100, 0)) & "%"'
+                )
+        if re.search(r'"[#0,]*0[.,]0+"', text):
+            findings.append("formato decimal em Text() depende do idioma; arredonde e use inteiro")
+
+        parameters = (json_documents.get(PARAMETERS_LIST_FILE) or {}).get("registrosIniciais", [])
+        for code in ("config_sla_terceiro_dias", "config_sla_compliance_dias"):
+            if f'"{code}"' not in on_visible:
+                findings.append(f"painel não lê o parâmetro {code}")
+            if not any(
+                isinstance(record, dict)
+                and record.get("codigo_opcao") == code
+                and record.get("ativo") == 1
+                and isinstance(record.get("pontuacao"), (int, float))
+                and record["pontuacao"] > 0
+                for record in parameters
+            ):
+                findings.append(f"{display(PARAMETERS_LIST_FILE)} sem o parâmetro ativo {code}")
+
+        main_nav = str((main_controls.get("btnDdPainel", {}).get("Properties") or {}).get("OnSelect", ""))
+        if "ScreenDueDiligencePainel" not in main_nav:
+            findings.append("a barra de abas da ScreenDueDiligence não leva ao painel")
+        if "ScreenDueDiligencePainel" not in yaml_texts.get(BASE / "ScreenDueDiligenceInicio.yaml", ""):
+            findings.append("a tela inicial não leva ao painel")
+
+        # Dicionário de propriedades: só o que já foi visto num export real do repositório.
+        if yaml is not None:
+            dictionary: defaultdict[str, set[str]] = defaultdict(set)
+            screen_properties: set[str] = set()
+            for other in BASE.parent.rglob("*.yaml"):
+                if other.resolve() == PANEL_FILE.resolve():
+                    continue
+                try:
+                    other_document = yaml.load(
+                        other.read_text(encoding="utf-8-sig"), Loader=PowerAppsSafeLoader
+                    )
+                except Exception:
+                    continue
+                screens = other_document.get("Screens") if isinstance(other_document, dict) else None
+                if not isinstance(screens, dict):
+                    continue
+                for other_screen in screens.values():
+                    if not isinstance(other_screen, dict):
+                        continue
+                    screen_properties.update((other_screen.get("Properties") or {}).keys())
+                    for _, body in iter_controls(other_screen.get("Children")):
+                        dictionary[str(body.get("Control"))].update(
+                            (body.get("Properties") or {}).keys()
+                        )
+            unproven = [
+                f"Screen.{name}"
+                for name in (screen.get("Properties") or {})
+                if name not in screen_properties
+            ]
+            for name, body in controls.items():
+                properties = list((body.get("Properties") or {}).keys())
+                unproven += [
+                    f"{name}.{prop}"
+                    for prop in properties
+                    if prop not in dictionary.get(str(body.get("Control")), set())
+                ]
+                if properties != sorted(properties):
+                    findings.append(f"{name}: propriedades fora da ordem alfabética do Studio")
+            if unproven:
+                findings.append(
+                    "propriedades sem export comprovado no repositório: " + ", ".join(unproven)
+                )
+        return f"{len(controls)} controles, {queries} consultas delegáveis, carga espelhada"
+
+    validator.check("Painel de indicadores", check_dashboard)
+
+    def check_compliance_profile(findings: list[str]) -> str:
+        columns = columns_by_name(json_documents.get(COMPLIANCE_LIST_FILE) or {})
+        email = columns.get("email")
+        if not isinstance(email, dict):
+            findings.append(f"{display(COMPLIANCE_LIST_FILE)} sem a coluna email")
+        else:
+            field = ElementTree.fromstring(str(email.get("schemaXml", "")))
+            for attribute in ("Required", "Indexed", "EnforceUniqueValues"):
+                if field.attrib.get(attribute) != "TRUE":
+                    findings.append(f"tb_dueDiligenceCompliance.email exige {attribute}='TRUE'")
+        if "ativo" not in columns:
+            findings.append(f"{display(COMPLIANCE_LIST_FILE)} sem a coluna ativo")
+
+        for path in YAML_FILES:
+            compact = re.sub(r"\s+", " ", yaml_texts.get(path, ""))
+            for token in COMPLIANCE_ACCESS_TOKENS:
+                if token not in compact:
+                    findings.append(f"{display(path)}: regra do perfil Compliance sem {token!r}")
+
+        def controls_of(path: Path) -> dict[str, dict[str, Any]]:
+            document = yaml_documents.get(path)
+            if not isinstance(document, dict):
+                return {}
+            screen = next(iter(document["Screens"].values()))
+            return dict(iter_controls(screen.get("Children")))
+
+        def visible(controls: dict[str, dict[str, Any]], name: str) -> str:
+            return str((controls.get(name, {}).get("Properties") or {}).get("Visible", ""))
+
+        restricted = 0
+        for name in ("HtmlText1", "lblDdPontuacaoCab", "lblDdRiscoCab", "lblDdPontuacao", "lblDdRisco", "btnDdPainel"):
+            restricted += 1
+            if "varDdPodeAnalisarCompliance" not in visible(main_controls, name):
+                findings.append(f"ScreenDueDiligence: {name}.Visible não restringe ao Compliance")
+        inicio_controls = controls_of(BASE / "ScreenDueDiligenceInicio.yaml")
+        restricted += 1
+        if "varDdPodeAnalisarCompliance" not in visible(inicio_controls, "btnInicioDdPainel"):
+            findings.append("ScreenDueDiligenceInicio: btnInicioDdPainel.Visible não restringe ao Compliance")
+        panel_controls = controls_of(PANEL_FILE)
+        restricted += 2
+        if visible(panel_controls, "cntDdPainelCorpo") != '=varDdPainelAcesso = "sim"':
+            findings.append('painel: cntDdPainelCorpo tem que exigir varDdPainelAcesso = "sim"')
+        if visible(panel_controls, "htmDdPainelRestrito") != '=varDdPainelAcesso = "nao"':
+            findings.append('painel: htmDdPainelRestrito tem que aparecer com varDdPainelAcesso = "nao"')
+        panel_compact = re.sub(r"\s+", " ", yaml_texts.get(PANEL_FILE, ""))
+        if 'varDdPainelAcesso <> "sim", Clear(colDdPainel);' not in panel_compact:
+            findings.append("painel: a carga não limpa os dados quando o usuário não é do Compliance")
+        return f"perfil pela lista tb_dueDiligenceCompliance, falha fechada, {restricted} itens restritos"
+
+    validator.check("Perfil Compliance", check_compliance_profile)
 
     print()
     if validator.errors:

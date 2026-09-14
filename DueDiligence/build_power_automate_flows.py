@@ -13,6 +13,7 @@ import json
 import uuid
 import zipfile
 from pathlib import Path
+from urllib.parse import quote as url_quote
 
 
 BASE = Path(__file__).resolve().parent
@@ -22,6 +23,17 @@ MAIN_LIST = "tb_dueDiligence"
 PARAM_LIST = "tb_dueDiligenceParametros"
 RESPONSE_LIST = "tb_dueDiligenceTerceiroRespostas"
 HISTORY_LIST = "tb_dueDiligenceDesdobramentos"
+TIME_ZONE = "E. South America Standard Time"
+
+# Status definidos pelo Compliance em 2026-09-10. A grafia é contrato: o app
+# compara com `=`, que diferencia maiúsculas de minúsculas.
+STATUS_AGUARDANDO_TERCEIRO = "Aguardando Terceiro"
+STATUS_PENDENTE_COMPLIANCE = "Pendente Compliance"
+STATUS_VENCIDO = "Vencido"
+# Decisões que abrem vigência: 1 ano (risco alto), 2 (médio) e 3 (baixo).
+STATUS_COM_VIGENCIA = ("Aprovado", "Aprovado com Ressalvas", "Reprovado Parcialmente")
+# As quatro decisões do parecer final: o laudo existe para todas, inclusive Reprovado.
+STATUS_DECISOES_FINAIS = ("Aprovado", "Aprovado com Ressalvas", "Reprovado Parcialmente", "Reprovado")
 
 FORM_ID = (
     "itUz0nOZp0OvaWdjYwVIoMoEbKAMYIZFqUAdth6B_EFURVRKSFdaVDE4Q1RIV0VTRkxFSjFZS0VEQS4u"
@@ -37,7 +49,11 @@ SEND_DRAFT_UTF8 = BASE / "EnviarquestionárioDueDiligence_20260908155750.zip"
 SEND_READY = BASE / "EnviarquestionarioDueDiligence_PRONTO.zip"
 PROCESS_DRAFT = BASE / "ProcessarrespostaDueDiligence_20260908193843.zip"
 PROCESS_READY = BASE / "ProcessarrespostaDueDiligence_PRONTO.zip"
+EXPIRY_READY = BASE / "VencervigenciaDueDiligence_PRONTO.zip"
+EXPIRY_NAME = "Vencer vigência Due Diligence"
 SOURCE_DIR = BASE / "PowerAutomate"
+LAUDO_READY = BASE / "GerarLaudoDueDiligence_PRONTO.zip"
+LAUDO_LIBRARY = "Laudos Due Diligence"
 
 QUESTIONS = [
     {
@@ -252,7 +268,7 @@ def send_actions():
     current = "body('HTTP_Obter_Item_Atual')"
     valid = (
         "@and("
-        f"equals({current}?['status'], 'Aguardando envio ao terceiro'),"
+        f"equals({current}?['status'], {wdl_literal(STATUS_AGUARDANDO_TERCEIRO)}),"
         f"not(empty({current}?['forms_envio_id'])),"
         f"not(equals({current}?['forms_envio_id'], {current}?['forms_envio_processado_id'])),"
         f"not(empty({current}?['forms_correlacao_id'])),"
@@ -273,11 +289,12 @@ def send_actions():
         "<p>Mensagem enviada automaticamente. Em caso de dúvida, responda ao solicitante da contratação.</p>"
     )
 
+    # O status já é Aguardando Terceiro. Regravá-lo desfaria um cancelamento
+    # feito pelo Compliance entre a leitura e esta atualização.
     update_body = {
         "forms_formulario_id": FORM_ID,
         "forms_envio_processado_id": "@body('HTTP_Obter_Item_Atual')?['forms_envio_id']",
         "data_envio_terceiro": "@utcNow()",
-        "status": "Aguardando terceiro",
     }
 
     main_item_prefix = f"_api/web/lists/getbytitle('{MAIN_LIST}')/items("
@@ -331,7 +348,7 @@ def send_actions():
                 "solicitacao_id": "@int(triggerBody()?['ID'])",
                 "tipo_desdobramento": "Envio ao terceiro",
                 "status_anterior": "@body('HTTP_Obter_Item_Atual')?['status']",
-                "status_novo": "Aguardando terceiro",
+                "status_novo": STATUS_AGUARDANDO_TERCEIRO,
                 "descricao": (
                     "@concat('Questionário enviado ao terceiro. Identificador do envio: ', "
                     "string(body('HTTP_Obter_Item_Atual')?['forms_envio_id']), '.')"
@@ -380,18 +397,55 @@ def send_actions():
         },
     }
 
+    # Não existe status de erro: o catch consome a intenção (processado = envio)
+    # e deixa data_envio_terceiro vazia, que é como o app reconhece a falha. Sem
+    # consumir, qualquer alteração posterior no item reativaria o gatilho e
+    # reenviaria o e-mail sem ninguém pedir.
     catch_get_uri = get_uri
-    catch_update = sp_http(
-        "POST",
-        main_uri,
-        body='{"status":"Erro no envio ao terceiro"}',
-        headers={
-            "Accept": "application/json;odata=nometadata",
-            "Content-Type": "application/json;odata=nometadata",
-            "X-HTTP-Method": "MERGE",
-            "IF-MATCH": "*",
-        },
-    )
+    reread = "body('HTTP_Reler_Item_Apos_Erro')"
+    failure_actions = {
+        "Montar_Consumo_Intencao": compose(
+            {"forms_envio_processado_id": "@string(triggerBody()?['forms_envio_id'])"}
+        ),
+        "HTTP_Consumir_Intencao_Com_Falha": sp_http(
+            "POST",
+            main_uri,
+            body="@string(outputs('Montar_Consumo_Intencao'))",
+            headers={
+                "Accept": "application/json;odata=nometadata",
+                "Content-Type": "application/json;odata=nometadata",
+                "X-HTTP-Method": "MERGE",
+                "IF-MATCH": "*",
+            },
+            run_after={"Montar_Consumo_Intencao": ["Succeeded"]},
+        ),
+        "Montar_Historico_Falha": compose(
+            {
+                "solicitacao_id": "@int(triggerBody()?['ID'])",
+                "tipo_desdobramento": "Falha no envio ao terceiro",
+                "status_anterior": f"@{reread}?['status']",
+                "status_novo": f"@{reread}?['status']",
+                "descricao": (
+                    "@concat('O questionário não foi confirmado como enviado ao terceiro. "
+                    "Corrija o e-mail, se necessário, e use Reenviar Forms. "
+                    "Execução do Power Automate: ', string(workflow()?['run']?['name']), '.')"
+                ),
+                "visivel_solicitante": 1,
+                "ativo": 1,
+            },
+            {"HTTP_Consumir_Intencao_Com_Falha": ["Succeeded", "Failed", "TimedOut"]},
+        ),
+        "HTTP_Registrar_Historico_Falha": sp_http(
+            "POST",
+            f"_api/web/lists/getbytitle('{HISTORY_LIST}')/items",
+            body="@string(outputs('Montar_Historico_Falha'))",
+            headers={
+                "Accept": "application/json;odata=nometadata",
+                "Content-Type": "application/json;odata=nometadata",
+            },
+            run_after={"Montar_Historico_Falha": ["Succeeded"]},
+        ),
+    }
     catch_actions = {
         "HTTP_Reler_Item_Apos_Erro": sp_http("GET", catch_get_uri),
         "Condicao_Intencao_Ainda_Atual": condition(
@@ -403,15 +457,17 @@ def send_actions():
                 "triggerBody()?['forms_envio_id']))"
                 ")"
             ),
-            {"HTTP_Marcar_Erro_Envio": catch_update},
+            failure_actions,
             {"Ignorar_Erro_De_Intencao_Antiga": compose("A intenção de envio já mudou.")},
             {"HTTP_Reler_Item_Apos_Erro": ["Succeeded"]},
         ),
+        # Skipped: se a releitura falhar, a condição é pulada e a execução ainda
+        # precisa terminar como falha.
         "Encerrar_Com_Falha": terminate(
             "Failed",
             "DD01_ENVIO_FALHOU",
             "O questionário não foi confirmado como enviado. Consulte a ação que falhou.",
-            {"Condicao_Intencao_Ainda_Atual": ["Succeeded", "Failed", "TimedOut"]},
+            {"Condicao_Intencao_Ainda_Atual": ["Succeeded", "Failed", "TimedOut", "Skipped"]},
         ),
     }
     catch_scope = {
@@ -500,7 +556,7 @@ def process_actions():
     q_t5 = next(q["id"] for q in QUESTIONS if q.get("text_answer"))
     validation = (
         "@and("
-        f"equals({first_parent}?['status'], 'Aguardando terceiro'),"
+        f"equals({first_parent}?['status'], {wdl_literal(STATUS_AGUARDANDO_TERCEIRO)}),"
         f"equals(toUpper(trim(string({first_parent}?['fluxo_classificacao']))), 'FLUXO III'),"
         f"equals(string({first_parent}?['forms_envio_id']), outputs('Codigo_Acompanhamento')) ,"
         f"equals(string({first_parent}?['forms_envio_processado_id']), outputs('Codigo_Acompanhamento')) ,"
@@ -595,7 +651,7 @@ def build_valid_response_actions(first_parent: str, response_id: str):
         ),
         "data_resposta_terceiro": "@variables('varDataResposta')",
         "forms_ultima_resposta_id": f"@string({response_id[1:]})",
-        "status": "Pendente Compliance",
+        "status": STATUS_PENDENTE_COMPLIANCE,
     }
     consolidate_actions = {
         "Montar_Atualizacao_Solicitacao": compose(parent_body),
@@ -622,7 +678,7 @@ def build_valid_response_actions(first_parent: str, response_id: str):
             "solicitacao_id": f"@int({first_parent}?['ID'])",
             "tipo_desdobramento": "Resposta do terceiro",
             "status_anterior": f"@{first_parent}?['status']",
-            "status_novo": "Pendente Compliance",
+            "status_novo": STATUS_PENDENTE_COMPLIANCE,
             "descricao": (
                 "@concat('Resposta do terceiro processada. ', "
                 "string(length(variables('varRespostas'))), ' resposta(s); ', "
@@ -808,6 +864,374 @@ def build_response_loop(first_parent: str, response_id: str):
     }
 
 
+def risk_years(risk: str) -> str:
+    """Anos de vigência pela classificação de risco: baixo 3, médio 2, demais 1.
+
+    Risco alto ou ausente fica com 1 ano: na dúvida, a vigência mais curta.
+    """
+    value = f"toLower(trim(string(coalesce({risk}, ''))))"
+    return (
+        f"if(equals({value}, 'baixo'), 3, "
+        f"if(or(equals({value}, 'médio'), equals({value}, 'medio')), 2, 1))"
+    )
+
+
+def main_item_uri(item: str) -> str:
+    prefix = f"_api/web/lists/getbytitle('{MAIN_LIST}')/items("
+    return f"@concat({wdl_literal(prefix)}, string({item}?['ID']), {wdl_literal(')')})"
+
+
+def expiry_actions():
+    main_items = f"_api/web/lists/getbytitle('{MAIN_LIST}')/items"
+    with_validity = "(" + " or ".join(f"status eq '{s}'" for s in STATUS_COM_VIGENCIA) + ")"
+    merge_headers = {
+        "Accept": "application/json;odata=nometadata",
+        "Content-Type": "application/json;odata=nometadata",
+        "X-HTTP-Method": "MERGE",
+        "IF-MATCH": "*",
+    }
+    post_headers = {
+        "Accept": "application/json;odata=nometadata",
+        "Content-Type": "application/json;odata=nometadata",
+    }
+
+    # 1. Decisões sem data de vencimento: registros anteriores à coluna ou
+    #    qualquer caminho que não a tenha gravado.
+    fill = "items('Para_Cada_Sem_Vencimento')"
+    start = (
+        f"convertFromUtc(coalesce({fill}?['data_decisao_compliance'], "
+        f"{fill}?['data_conclusao'], {fill}?['Created']), "
+        f"{wdl_literal(TIME_ZONE)}, 'yyyy-MM-dd')"
+    )
+    years = risk_years(f"{fill}?['classificacao_risco']")
+    fill_scope = {
+        "HTTP_Listar_Sem_Vencimento": sp_http(
+            "GET",
+            (
+                f"{main_items}?$select=ID,status,classificacao_risco,"
+                "data_decisao_compliance,data_conclusao,Created"
+                f"&$filter={with_validity} and data_vencimento eq null&$top=5000"
+            ),
+        ),
+        "Para_Cada_Sem_Vencimento": {
+            "runAfter": {"HTTP_Listar_Sem_Vencimento": ["Succeeded"]},
+            "type": "Foreach",
+            "foreach": "@body('HTTP_Listar_Sem_Vencimento')?['value']",
+            "runtimeConfiguration": {"concurrency": {"repetitions": 1}},
+            "actions": {
+                # Meio-dia UTC: a coluna é só data e não pode recuar um dia no fuso local.
+                "Montar_Vencimento": compose(
+                    {
+                        "data_vencimento": (
+                            f"@concat(formatDateTime(addToTime({start}, {years}, 'Year'), "
+                            "'yyyy-MM-dd'), 'T12:00:00Z')"
+                        )
+                    }
+                ),
+                "HTTP_Gravar_Vencimento": sp_http(
+                    "POST",
+                    main_item_uri(fill),
+                    body="@string(outputs('Montar_Vencimento'))",
+                    headers=merge_headers,
+                    run_after={"Montar_Vencimento": ["Succeeded"]},
+                ),
+            },
+        },
+    }
+
+    # 2. Vigência encerrada: vencimento anterior à data de hoje em Brasília.
+    due = "items('Para_Cada_Vencido')"
+    due_prefix = (
+        f"{main_items}?$select=ID,status,classificacao_risco,data_vencimento"
+        f"&$filter={with_validity} and data_vencimento lt datetime'"
+    )
+    due_suffix = "T00:00:00Z'&$top=5000"
+    expire_scope = {
+        "HTTP_Listar_Vencidos": sp_http(
+            "GET",
+            (
+                f"@concat({wdl_literal(due_prefix)}, outputs('Hoje_Local'), "
+                f"{wdl_literal(due_suffix)})"
+            ),
+        ),
+        "Para_Cada_Vencido": {
+            "runAfter": {"HTTP_Listar_Vencidos": ["Succeeded"]},
+            "type": "Foreach",
+            "foreach": "@body('HTTP_Listar_Vencidos')?['value']",
+            "runtimeConfiguration": {"concurrency": {"repetitions": 1}},
+            "actions": {
+                "Montar_Status_Vencido": compose({"status": STATUS_VENCIDO}),
+                "HTTP_Marcar_Vencido": sp_http(
+                    "POST",
+                    main_item_uri(due),
+                    body="@string(outputs('Montar_Status_Vencido'))",
+                    headers=merge_headers,
+                    run_after={"Montar_Status_Vencido": ["Succeeded"]},
+                ),
+                "Montar_Historico_Vencimento": compose(
+                    {
+                        "solicitacao_id": f"@int({due}?['ID'])",
+                        "tipo_desdobramento": "Vencimento da vigência",
+                        "status_anterior": f"@string({due}?['status'])",
+                        "status_novo": STATUS_VENCIDO,
+                        "descricao": (
+                            "@concat('Vigência encerrada em ', "
+                            f"convertFromUtc({due}?['data_vencimento'], "
+                            f"{wdl_literal(TIME_ZONE)}, 'dd/MM/yyyy'), "
+                            "' (classificação de risco: ', "
+                            f"string(coalesce({due}?['classificacao_risco'], 'não informada')), "
+                            "'). Para manter o relacionamento com o terceiro, "
+                            "abra uma nova solicitação de due diligence.')"
+                        ),
+                        "visivel_solicitante": 1,
+                        "ativo": 1,
+                    },
+                    {"HTTP_Marcar_Vencido": ["Succeeded"]},
+                ),
+                "HTTP_Registrar_Historico_Vencimento": sp_http(
+                    "POST",
+                    f"_api/web/lists/getbytitle('{HISTORY_LIST}')/items",
+                    body="@string(outputs('Montar_Historico_Vencimento'))",
+                    headers=post_headers,
+                    run_after={"Montar_Historico_Vencimento": ["Succeeded"]},
+                ),
+            },
+        },
+    }
+
+    scopes = ("ESCOPO_Preencher_Vencimento", "ESCOPO_Vencer_Vigencia")
+    any_scope_failed = (
+        "@or("
+        + ", ".join(
+            f"equals(actions('{scope}')?['status'], '{state}')"
+            for scope in scopes
+            for state in ("Failed", "TimedOut")
+        )
+        + ")"
+    )
+    every_outcome = ["Succeeded", "Failed", "Skipped", "TimedOut"]
+    return {
+        "Hoje_Local": compose(
+            f"@convertFromUtc(utcNow(), {wdl_literal(TIME_ZONE)}, 'yyyy-MM-dd')"
+        ),
+        "ESCOPO_Preencher_Vencimento": {
+            "runAfter": {"Hoje_Local": ["Succeeded"]},
+            "type": "Scope",
+            "actions": fill_scope,
+        },
+        # Roda mesmo que o preenchimento falhe: um item problemático não pode
+        # impedir que os demais vençam.
+        "ESCOPO_Vencer_Vigencia": {
+            "runAfter": {"ESCOPO_Preencher_Vencimento": every_outcome},
+            "type": "Scope",
+            "actions": expire_scope,
+        },
+        "Condicao_Alguma_Etapa_Falhou": condition(
+            any_scope_failed,
+            {
+                "Encerrar_Com_Falha": terminate(
+                    "Failed",
+                    "DD03_VIGENCIA_FALHOU",
+                    "O preenchimento ou o vencimento de vigências falhou. Consulte a execução.",
+                )
+            },
+            {"Execucao_Concluida": compose("Vigências preenchidas e vencimentos processados.")},
+            {"ESCOPO_Vencer_Vigencia": every_outcome},
+        ),
+    }
+
+
+# --------------------------------------------------------------------------
+# DD04 — Gerar laudo. Sem conector premium: o Power Apps monta o HTML do
+# laudo (a mesma lógica de string já usada nos outros previews da tela) e
+# manda pronto pro fluxo; o fluxo só grava esse HTML como arquivo na
+# biblioteca de laudos e devolve o link. Não precisa de nenhum conector além
+# do SharePoint que DD01-03 já usam — gatilho e resposta são ações nativas.
+#
+# O formato do gatilho "Power Apps (V2)" e da ação "Responder..." abaixo não
+# é inventado: veio de um fluxo esqueleto real, exportado do Studio deste
+# ambiente (dd04GerarLaudo_20260914134244.zip), com duas entradas (Number
+# "id", Text "html") e as duas saídas de resposta. Um detalhe não-óbvio que
+# só esse esqueleto revelou: o Power Automate nomeia o campo internamente
+# pelo TIPO da entrada, não pelo nome dado — "id" vira a chave "number" e
+# "html" vira a chave "text" no schema (o nome escolhido fica só no "title",
+# usado como rótulo). Por isso o restante das ações lê
+# triggerBody()?['number'] / triggerBody()?['text'], não ?['id'] / ?['html'].
+# --------------------------------------------------------------------------
+
+def laudo_trigger() -> dict:
+    return {
+        "manual": {
+            "type": "Request",
+            "kind": "PowerAppV2",
+            "inputs": {
+                "schema": {
+                    "type": "object",
+                    "properties": {
+                        "number": {
+                            "description": "Please enter a number",
+                            "title": "id",
+                            "type": "number",
+                            "x-ms-content-hint": "NUMBER",
+                            "x-ms-dynamically-added": True,
+                        },
+                        "text": {
+                            "description": "Please enter your input",
+                            "title": "html",
+                            "type": "string",
+                            "x-ms-content-hint": "TEXT",
+                            "x-ms-dynamically-added": True,
+                        },
+                    },
+                    "required": ["number", "text"],
+                }
+            },
+        }
+    }
+
+
+def laudo_response(run_after: dict, *, laudo_url: str = "", erro: str = "") -> dict:
+    return {
+        "runAfter": run_after,
+        "type": "Response",
+        "kind": "PowerApp",
+        "inputs": {
+            "schema": {
+                "type": "object",
+                "properties": {
+                    "saida_laudo_url": {
+                        "title": "saida_laudo_url",
+                        "type": "string",
+                        "x-ms-content-hint": "TEXT",
+                        "x-ms-dynamically-added": True,
+                    },
+                    "saida_erro": {
+                        "title": "saida_erro",
+                        "type": "string",
+                        "x-ms-content-hint": "TEXT",
+                        "x-ms-dynamically-added": True,
+                    },
+                },
+                "additionalProperties": {},
+            },
+            "statusCode": 200,
+            "body": {
+                "saida_laudo_url": laudo_url,
+                "saida_erro": erro,
+            },
+        },
+    }
+
+
+def laudo_status_uri() -> str:
+    prefix = f"_api/web/lists/getbytitle('{MAIN_LIST}')/items("
+    return (
+        f"@concat({wdl_literal(prefix)}, string(triggerBody()?['number']), "
+        f"{wdl_literal(')?$select=ID,status')})"
+    )
+
+
+def laudo_update_uri() -> str:
+    prefix = f"_api/web/lists/getbytitle('{MAIN_LIST}')/items("
+    return f"@concat({wdl_literal(prefix)}, string(triggerBody()?['number']), {wdl_literal(')')})"
+
+
+def laudo_arquivo_uri() -> str:
+    """Nome do arquivo é DD-000123.html; a biblioteca é referenciada por título,
+    igual às demais listas do projeto — não depende do caminho relativo real.
+
+    O título tem espaço ("Laudos Due Diligence"), diferente de todo o resto
+    deste gerador (as outras listas são tb_algumaCoisa, sem espaço). Por isso
+    aqui — só aqui — o espaço precisa ir como %20: a ação "Enviar uma
+    solicitação HTTP ao SharePoint" não codifica a URI para você.
+    """
+    prefix = (
+        "_api/web/lists/getbytitle('"
+        f"{url_quote(LAUDO_LIBRARY)}"
+        "')/RootFolder/Files/add(url='DD-"
+    )
+    suffix = ".html',overwrite=true)"
+    return (
+        f"@concat({wdl_literal(prefix)}, formatNumber(int(triggerBody()?['number']), '000000'), "
+        f"{wdl_literal(suffix)})"
+    )
+
+
+def laudo_actions() -> dict:
+    decision_check = "@or(" + ", ".join(
+        f"equals(body('HTTP_Obter_Item_Laudo')?['status'], {wdl_literal(s)})"
+        for s in STATUS_DECISOES_FINAIS
+    ) + ")"
+
+    merge_headers = {
+        "Accept": "application/json;odata=nometadata",
+        "Content-Type": "application/json;odata=nometadata",
+        "X-HTTP-Method": "MERGE",
+        "IF-MATCH": "*",
+    }
+    html_headers = {
+        "Accept": "application/json;odata=nometadata",
+        "Content-Type": "text/html;charset=utf-8",
+    }
+
+    return {
+        "HTTP_Obter_Item_Laudo": sp_http("GET", laudo_status_uri()),
+        "Condicao_Decisao_Final": condition(
+            decision_check,
+            {
+                "HTTP_Criar_Arquivo_Html": sp_http(
+                    "POST",
+                    laudo_arquivo_uri(),
+                    body="@triggerBody()?['text']",
+                    headers=html_headers,
+                ),
+                "Montar_Atualizacao_Laudo": compose(
+                    {
+                        "laudo_url": (
+                            "@concat('https://grupoccr.sharepoint.com', "
+                            "body('HTTP_Criar_Arquivo_Html')?['ServerRelativeUrl'])"
+                        )
+                    },
+                    {"HTTP_Criar_Arquivo_Html": ["Succeeded"]},
+                ),
+                "HTTP_Gravar_Laudo_Url": sp_http(
+                    "POST",
+                    laudo_update_uri(),
+                    body="@string(outputs('Montar_Atualizacao_Laudo'))",
+                    headers=merge_headers,
+                    run_after={"Montar_Atualizacao_Laudo": ["Succeeded"]},
+                ),
+                "Responder_Com_Laudo": laudo_response(
+                    {"HTTP_Gravar_Laudo_Url": ["Succeeded"]},
+                    laudo_url="@{outputs('Montar_Atualizacao_Laudo')?['laudo_url']}",
+                ),
+            },
+            {
+                "Responder_Sem_Decisao": laudo_response(
+                    {},
+                    erro=(
+                        "Laudo disponível somente após o parecer final do Compliance "
+                        "(Aprovado, Aprovado com Ressalvas, Reprovado Parcialmente ou Reprovado)."
+                    ),
+                ),
+            },
+            {"HTTP_Obter_Item_Laudo": ["Succeeded"]},
+        ),
+    }
+
+
+def configure_laudo():
+    # Mesmo molde SharePoint-only do DD03: DD04 não precisa de nenhum
+    # conector além do já mapeado nesse rascunho.
+    draft = SEND_DRAFT if SEND_DRAFT.exists() else SEND_DRAFT_UTF8
+    package = read_package(draft, "DD04")
+    rekey_as_new_flow(package, "DD04", "DD04 Gerar Laudo")
+    definition = package["definition"]["properties"]["definition"]
+    definition["triggers"] = laudo_trigger()
+    definition["actions"] = laudo_actions()
+    write_package(package, LAUDO_READY, "DD04_GerarLaudo.definition.json")
+
+
 def add_connector(package: dict, logical: str, display: str, icon: str):
     manifest = package["manifest"]
     flow_resource_id = next(
@@ -905,7 +1329,7 @@ def configure_send():
     trigger["conditions"] = [
         {
             "expression": (
-                "@and(equals(triggerBody()?['status'], 'Aguardando envio ao terceiro'), "
+                f"@and(equals(triggerBody()?['status'], {wdl_literal(STATUS_AGUARDANDO_TERCEIRO)}), "
                 "not(empty(triggerBody()?['forms_envio_id'])), "
                 "not(equals(triggerBody()?['forms_envio_id'], "
                 "triggerBody()?['forms_envio_processado_id'])))"
@@ -939,8 +1363,68 @@ def configure_process():
     write_package(package, PROCESS_READY, "DD02_ProcessarResposta.definition.json")
 
 
+def rekey_as_new_flow(package: dict, label: str, display_name: str):
+    """Transforma um pacote-molde em fluxo novo.
+
+    Mantém as conexões já mapeadas, mas troca os identificadores e sugere
+    "Criar como novo": com "Atualizar", o import sobrescreveria o fluxo escolhido.
+    """
+    manifest = package["manifest"]
+    old_key = next(
+        key for key, value in manifest["resources"].items() if value["type"] == "Microsoft.Flow/flows"
+    )
+    new_key = stable_uuid(f"{label}:pacote")
+    resource = manifest["resources"].pop(old_key)
+    resource["suggestedCreationType"] = "New"
+    resource["details"]["displayName"] = display_name
+    manifest["resources"][new_key] = resource
+    manifest["details"]["displayName"] = display_name
+    manifest["details"]["packageTelemetryId"] = stable_uuid(f"{label}:telemetria")
+
+    old_prefix = f"Microsoft.Flow/flows/{old_key}/"
+    new_prefix = f"Microsoft.Flow/flows/{new_key}/"
+    package["files"] = {
+        name.replace(old_prefix, new_prefix, 1): data for name, data in package["files"].items()
+    }
+    for key in ("definition_name", "apis_name", "connections_name"):
+        package[key] = package[key].replace(old_prefix, new_prefix, 1)
+    package["files"]["Microsoft.Flow/flows/manifest.json"] = json.dumps(
+        {"packageSchemaVersion": "1.0", "flowAssets": {"assetPaths": [new_key]}},
+        separators=(",", ":"),
+    ).encode("utf-8")
+
+    flow_id = stable_uuid(f"{label}:fluxo")
+    package["definition"]["name"] = flow_id
+    package["definition"]["id"] = f"/providers/Microsoft.Flow/flows/{flow_id}"
+    package["definition"]["properties"]["displayName"] = display_name
+
+
+def configure_expiry():
+    # O rascunho do DD01 é só o molde: já traz a conexão SharePoint mapeada.
+    draft = SEND_DRAFT if SEND_DRAFT.exists() else SEND_DRAFT_UTF8
+    package = read_package(draft, "DD03")
+    rekey_as_new_flow(package, "DD03", EXPIRY_NAME)
+    definition = package["definition"]["properties"]["definition"]
+    schedule = {
+        "frequency": "Day",
+        "interval": 1,
+        "timeZone": TIME_ZONE,
+        "schedule": {"hours": ["6"], "minutes": [0]},
+    }
+    definition["triggers"] = {
+        "Recorrencia_Diaria": {
+            "recurrence": schedule,
+            "evaluatedRecurrence": copy.deepcopy(schedule),
+            "type": "Recurrence",
+            "runtimeConfiguration": {"concurrency": {"runs": 1}},
+        }
+    }
+    definition["actions"] = expiry_actions()
+    write_package(package, EXPIRY_READY, "DD03_VencerVigencia.definition.json")
+
+
 def validate():
-    for path in (SEND_READY, PROCESS_READY):
+    for path in (SEND_READY, PROCESS_READY, EXPIRY_READY, LAUDO_READY):
         with zipfile.ZipFile(path) as archive:
             assert archive.testzip() is None
             name = next(x for x in archive.namelist() if x.endswith("/definition.json"))
@@ -948,16 +1432,50 @@ def validate():
             raw = json.dumps(data, ensure_ascii=False)
             assert "PREENCHER_" not in raw
             assert data["properties"]["definition"]["actions"]
+    for path, expected_trigger_types in ((EXPIRY_READY, ["Recurrence"]), (LAUDO_READY, ["Request"])):
+        with zipfile.ZipFile(path) as archive:
+            manifest = json.loads(archive.read("manifest.json"))
+            flows = [r for r in manifest["resources"].values() if r["type"] == "Microsoft.Flow/flows"]
+            assert [r["suggestedCreationType"] for r in flows] == ["New"]
+            name = next(x for x in archive.namelist() if x.endswith("/definition.json"))
+            triggers = json.loads(archive.read(name))["properties"]["definition"]["triggers"]
+            assert [t["type"] for t in triggers.values()] == expected_trigger_types
     assert len({q["id"] for q in QUESTIONS}) == 11
     assert len({q["code"] for q in QUESTIONS}) == 11
+
+    # DD04: contrato mínimo — recebe o HTML pronto do app, grava como arquivo
+    # e devolve o link; nenhuma peça deve depender de conector premium.
+    with zipfile.ZipFile(LAUDO_READY) as archive:
+        name = next(x for x in archive.namelist() if x.endswith("/definition.json"))
+        laudo_definition = json.loads(archive.read(name))
+    raw_laudo = json.dumps(laudo_definition, ensure_ascii=False)
+    assert "wordonlinebusiness" not in raw_laudo.lower()
+    assert '"kind": "PowerAppV2"' in raw_laudo or "'kind': 'PowerAppV2'" in raw_laudo or "PowerAppV2" in raw_laudo
+    for token in (
+        "triggerBody()?['text']",
+        "triggerBody()?['number']",
+        "laudo_url",
+        "RootFolder/Files/add",
+        url_quote(LAUDO_LIBRARY),
+    ):
+        assert token in raw_laudo, f"DD04 sem contrato obrigatório: {token!r}"
+    assert LAUDO_LIBRARY not in laudo_arquivo_uri(), (
+        "URI do arquivo do laudo tem o título da biblioteca sem codificar (espaço cru)"
+    )
+    for status in STATUS_DECISOES_FINAIS:
+        assert wdl_literal(status) in raw_laudo, f"DD04 não contempla a decisão {status!r}"
 
 
 def main():
     configure_send()
     configure_process()
+    configure_expiry()
+    configure_laudo()
     validate()
     print(SEND_READY)
     print(PROCESS_READY)
+    print(EXPIRY_READY)
+    print(LAUDO_READY)
 
 
 if __name__ == "__main__":

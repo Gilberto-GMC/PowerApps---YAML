@@ -1813,3 +1813,95 @@ fechado enquanto `PREENCHER_FONTE_PERFIL_COMPLIANCE` estiver pendente. Impacto
 global: toda tela importável que tenha controle de acesso precisa declarar sua
 dependência de identidade no checklist de implantação; quando a dependência não
 for fornecida, deve compilar em modo somente leitura.
+
+## Status técnico não é status de negócio — e o `catch` tem que consumir a intenção (2026-09-10)
+
+- Projeto/tela: DueDiligence / `ScreenDueDiligence`, fluxos DD01, DD02 e DD03.
+- Origem: o Compliance reduziu o ciclo a oito status. Não é erro do Studio: são
+  dois defeitos encontrados ao aplicar a mudança.
+
+**1. Remover o status de erro reabriria um reenvio automático.** O DD01 dispara
+em "item criado ou modificado" com a condição
+`forms_envio_id <> forms_envio_processado_id`. O `catch` só gravava
+`status = Erro no envio ao terceiro`; era o status, e não os IDs, que impedia o
+disparo seguinte. Sem esse status, a intenção continuaria aberta e qualquer
+alteração posterior no item (uma nota do Compliance, por exemplo) reenviaria o
+e-mail sem ninguém pedir.
+
+Correção: o `catch` grava `forms_envio_processado_id = forms_envio_id` e deixa
+`data_envio_terceiro` vazia. O app deriva "em processamento" (IDs diferentes) e
+"falha no envio" (IDs iguais e data vazia) e limpa a data a cada reenvio. O
+sucesso deixou de regravar `status`, para não desfazer um cancelamento feito
+entre a leitura e a gravação.
+
+**2. Qualquer usuário em modo edição podia aprovar.** Fora dos estados de
+Compliance, `cmbDdDesdStatusNovo` oferecia todos os status, e `Parecer final`
+estava sempre no combo de tipo. Quem abrisse uma solicitação em
+`Aguardando envio ao terceiro` ou `Erro no envio ao terceiro` podia registrar
+`Parecer final` com `Aprovado`. Correção: o painel de registro só aparece para
+`varDdPodeAnalisarCompliance`, e o status oferecido é derivado do tipo
+(`Parecer final` → decisões, `Cancelamento` → `Cancelado`, demais → status
+atual).
+
+Validação preventiva em `DueDiligence/validar_due_diligence.py`: literais de
+status legados reprovam em telas e fluxos; o filtro tem que listar exatamente os
+oito status; o `catch` do DD01 tem que consumir a intenção e o sucesso não pode
+gravar `status`; os tipos manuais de desdobramento são uma lista fechada; a
+regra de vigência (1/2/3 anos) tem que ser a mesma no app e no DD03.
+
+Impacto global: todo fluxo com gatilho "criado ou modificado" e condição de
+intenção precisa que **todos** os ramos, inclusive o de erro, fechem a
+intenção. Estado técnico de fila (enviando, erro de envio) cabe num campo
+derivado; status é vocabulário de negócio e pertence a quem decide.
+
+## `Average` sobre tabela vazia é erro, não branco — e apaga o `HtmlText` inteiro (2026-09-10)
+
+- Projeto/tela: DueDiligence / `ScreenDueDiligencePainel`, `htmDdPainelLinha3.HtmlText`.
+- Mensagem do Studio: `A função Average não pode ser usada com uma tabela
+  vazia`, sublinhando `Average(_anal; dias)`.
+
+Causa confirmada: com os dados de teste, nenhuma solicitação do período tinha
+resposta do terceiro e parecer, então `_anal` estava vazia. `Average` de tabela
+vazia devolve **erro** (é uma divisão por zero), não `Blank()`. As medianas
+logo acima usavam a mesma tabela e não acusaram nada, porque já estavam
+protegidas por `If(_nAnal = 0, Blank(), ...)` — é essa diferença que confirma a
+causa. Como o erro atravessa a concatenação do HTML, o cartão inteiro ficaria
+vazio em qualquer período sem pareceres.
+
+Correção: média calculada como `If(_n = 0, Blank(), Sum(t, col) / _n)`; `Max`
+sobre tabela passou a `If(IsEmpty(t), 1, Max(t, col))`; o aviso de corte trocou
+`Max(colDdPainelLotes, qtd)` por `CountIf(colDdPainelLotes, qtd >= 500) > 0`.
+`Coalesce` não resolvia: ele pula branco, mas devolve o erro adiante.
+
+Validação preventiva em `DueDiligence/validar_due_diligence.py`: o painel
+reprova `Average(` e qualquer `Max`/`Min`/`Sum` sobre tabela sem `IsEmpty(t)` ou
+contagem zero logo antes.
+
+Impacto global: todo painel que agrega coleção recortada por período ou filtro
+pode receber tabela vazia. Proteger o agregado com `If` **antes** de chamá-lo.
+Conferir `Frotas/scrFrotaPainel` (`Max(Max(colDistAero, Qtd), 1)`) e o painel de
+chamados.
+
+## `Text(x, "0%")` não multiplica por 100: 33% aparece como "0%" (2026-09-10)
+
+- Projeto/tela: DueDiligence / `ScreenDueDiligencePainel` — legenda de risco,
+  percentuais das barras e medidores de SLA.
+- Sintoma relatado pelo usuário: "1 0%", "0 0%", "2 1%" na legenda de risco e
+  "1 0%" em todas as barras. Nenhum erro no Studio.
+
+Causa confirmada: no Power Apps o `%` do formato de `Text()` não multiplica por
+100 como no Excel — o valor é arredondado e o `%` entra como texto. A legenda
+tinha Baixo 1, Médio 0 e Alto 2 (proporções 0,33, 0 e 0,67) e mostrou
+exatamente "0%", "0%" e "1%". A prévia HTML não pegou o defeito porque o gerador
+da prévia calculava o percentual em Python, e não com a fórmula da tela.
+
+Correção: `Text(Round(x * 100, 0)) & "%"`, com "<1%" quando a parcela existe mas
+arredonda para zero e "—" quando a contagem é zero. As larguras das barras já
+usavam `x * 100` e estavam certas; só os rótulos erravam.
+
+Validação preventiva: `DueDiligence/validar_due_diligence.py` reprova qualquer
+formato `"0%"`, `"0.0%"` ou `"#%"` nas telas do módulo.
+
+Impacto global: `Frotas/scrFrotaPainel` usa `Text(locDisponivel / locTotal, "0%")`
+no KPI de disponíveis — mesmo padrão, conferir. Regra: prévia montada fora do
+Power Apps não prova formatação; o número tem que ser conferido na tela real.

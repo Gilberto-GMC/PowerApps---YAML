@@ -1,0 +1,365 @@
+{
+  "name": "ff706a9c-2377-54ee-9444-a6d3d7aed1d4",
+  "id": "/providers/Microsoft.Flow/flows/ff706a9c-2377-54ee-9444-a6d3d7aed1d4",
+  "type": "Microsoft.Flow/flows",
+  "properties": {
+    "apiId": "/providers/Microsoft.PowerApps/apis/shared_logicflows",
+    "displayName": "Vencer vigência Due Diligence",
+    "definition": {
+      "metadata": {
+        "workflowEntityId": null,
+        "processAdvisorMetadata": null,
+        "flowChargedByPaygo": null,
+        "flowclientsuspensionreason": "None",
+        "flowclientsuspensiontime": null,
+        "flowclientsuspensionreasondetails": null,
+        "creator": {
+          "id": "a06c04ca-600c-4586-a940-1db61e81fc41",
+          "type": "User",
+          "tenantId": "d233d58a-9973-43a7-af69-6763630548a0"
+        },
+        "provisioningMethod": "FromDefinition",
+        "failureAlertSubscription": true,
+        "clientLastModifiedTime": "2026-09-08T15:57:05.3390018Z",
+        "lastModifiedBy": "a06c04ca-600c-4586-a940-1db61e81fc41",
+        "connectionKeySavedTimeKey": "2026-09-08T15:57:05.3390018Z",
+        "creationSource": "Portal",
+        "modifiedSources": "Portal"
+      },
+      "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+      "contentVersion": "1.0.0.0",
+      "parameters": {
+        "$authentication": {
+          "defaultValue": {},
+          "type": "SecureObject"
+        },
+        "$connections": {
+          "defaultValue": {},
+          "type": "Object"
+        }
+      },
+      "triggers": {
+        "Recorrencia_Diaria": {
+          "recurrence": {
+            "frequency": "Day",
+            "interval": 1,
+            "timeZone": "E. South America Standard Time",
+            "schedule": {
+              "hours": [
+                "6"
+              ],
+              "minutes": [
+                0
+              ]
+            }
+          },
+          "evaluatedRecurrence": {
+            "frequency": "Day",
+            "interval": 1,
+            "timeZone": "E. South America Standard Time",
+            "schedule": {
+              "hours": [
+                "6"
+              ],
+              "minutes": [
+                0
+              ]
+            }
+          },
+          "type": "Recurrence",
+          "runtimeConfiguration": {
+            "concurrency": {
+              "runs": 1
+            }
+          }
+        }
+      },
+      "actions": {
+        "Hoje_Local": {
+          "runAfter": {},
+          "type": "Compose",
+          "inputs": "@convertFromUtc(utcNow(), 'E. South America Standard Time', 'yyyy-MM-dd')"
+        },
+        "ESCOPO_Preencher_Vencimento": {
+          "runAfter": {
+            "Hoje_Local": [
+              "Succeeded"
+            ]
+          },
+          "type": "Scope",
+          "actions": {
+            "HTTP_Listar_Sem_Vencimento": {
+              "runAfter": {},
+              "type": "OpenApiConnection",
+              "inputs": {
+                "parameters": {
+                  "dataset": "https://grupoccr.sharepoint.com/sites/ComplianceAeroportos",
+                  "parameters/method": "GET",
+                  "parameters/uri": "_api/web/lists/getbytitle('tb_dueDiligence')/items?$select=ID,status,classificacao_risco,data_decisao_compliance,data_conclusao,Created&$filter=(status eq 'Aprovado' or status eq 'Aprovado com Ressalvas' or status eq 'Reprovado Parcialmente') and data_vencimento eq null&$top=5000",
+                  "parameters/headers": {
+                    "Accept": "application/json;odata=nometadata"
+                  }
+                },
+                "host": {
+                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+                  "connectionName": "shared_sharepointonline",
+                  "operationId": "HttpRequest"
+                },
+                "authentication": "@parameters('$authentication')",
+                "retryPolicy": {
+                  "type": "none"
+                }
+              }
+            },
+            "Para_Cada_Sem_Vencimento": {
+              "runAfter": {
+                "HTTP_Listar_Sem_Vencimento": [
+                  "Succeeded"
+                ]
+              },
+              "type": "Foreach",
+              "foreach": "@body('HTTP_Listar_Sem_Vencimento')?['value']",
+              "runtimeConfiguration": {
+                "concurrency": {
+                  "repetitions": 1
+                }
+              },
+              "actions": {
+                "Montar_Vencimento": {
+                  "runAfter": {},
+                  "type": "Compose",
+                  "inputs": {
+                    "data_vencimento": "@concat(formatDateTime(addToTime(convertFromUtc(coalesce(items('Para_Cada_Sem_Vencimento')?['data_decisao_compliance'], items('Para_Cada_Sem_Vencimento')?['data_conclusao'], items('Para_Cada_Sem_Vencimento')?['Created']), 'E. South America Standard Time', 'yyyy-MM-dd'), if(equals(toLower(trim(string(coalesce(items('Para_Cada_Sem_Vencimento')?['classificacao_risco'], '')))), 'baixo'), 3, if(or(equals(toLower(trim(string(coalesce(items('Para_Cada_Sem_Vencimento')?['classificacao_risco'], '')))), 'médio'), equals(toLower(trim(string(coalesce(items('Para_Cada_Sem_Vencimento')?['classificacao_risco'], '')))), 'medio')), 2, 1)), 'Year'), 'yyyy-MM-dd'), 'T12:00:00Z')"
+                  }
+                },
+                "HTTP_Gravar_Vencimento": {
+                  "runAfter": {
+                    "Montar_Vencimento": [
+                      "Succeeded"
+                    ]
+                  },
+                  "type": "OpenApiConnection",
+                  "inputs": {
+                    "parameters": {
+                      "dataset": "https://grupoccr.sharepoint.com/sites/ComplianceAeroportos",
+                      "parameters/method": "POST",
+                      "parameters/uri": "@concat('_api/web/lists/getbytitle(''tb_dueDiligence'')/items(', string(items('Para_Cada_Sem_Vencimento')?['ID']), ')')",
+                      "parameters/headers": {
+                        "Accept": "application/json;odata=nometadata",
+                        "Content-Type": "application/json;odata=nometadata",
+                        "X-HTTP-Method": "MERGE",
+                        "IF-MATCH": "*"
+                      },
+                      "parameters/body": "@string(outputs('Montar_Vencimento'))"
+                    },
+                    "host": {
+                      "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+                      "connectionName": "shared_sharepointonline",
+                      "operationId": "HttpRequest"
+                    },
+                    "authentication": "@parameters('$authentication')",
+                    "retryPolicy": {
+                      "type": "none"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "ESCOPO_Vencer_Vigencia": {
+          "runAfter": {
+            "ESCOPO_Preencher_Vencimento": [
+              "Succeeded",
+              "Failed",
+              "Skipped",
+              "TimedOut"
+            ]
+          },
+          "type": "Scope",
+          "actions": {
+            "HTTP_Listar_Vencidos": {
+              "runAfter": {},
+              "type": "OpenApiConnection",
+              "inputs": {
+                "parameters": {
+                  "dataset": "https://grupoccr.sharepoint.com/sites/ComplianceAeroportos",
+                  "parameters/method": "GET",
+                  "parameters/uri": "@concat('_api/web/lists/getbytitle(''tb_dueDiligence'')/items?$select=ID,status,classificacao_risco,data_vencimento&$filter=(status eq ''Aprovado'' or status eq ''Aprovado com Ressalvas'' or status eq ''Reprovado Parcialmente'') and data_vencimento lt datetime''', outputs('Hoje_Local'), 'T00:00:00Z''&$top=5000')",
+                  "parameters/headers": {
+                    "Accept": "application/json;odata=nometadata"
+                  }
+                },
+                "host": {
+                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+                  "connectionName": "shared_sharepointonline",
+                  "operationId": "HttpRequest"
+                },
+                "authentication": "@parameters('$authentication')",
+                "retryPolicy": {
+                  "type": "none"
+                }
+              }
+            },
+            "Para_Cada_Vencido": {
+              "runAfter": {
+                "HTTP_Listar_Vencidos": [
+                  "Succeeded"
+                ]
+              },
+              "type": "Foreach",
+              "foreach": "@body('HTTP_Listar_Vencidos')?['value']",
+              "runtimeConfiguration": {
+                "concurrency": {
+                  "repetitions": 1
+                }
+              },
+              "actions": {
+                "Montar_Status_Vencido": {
+                  "runAfter": {},
+                  "type": "Compose",
+                  "inputs": {
+                    "status": "Vencido"
+                  }
+                },
+                "HTTP_Marcar_Vencido": {
+                  "runAfter": {
+                    "Montar_Status_Vencido": [
+                      "Succeeded"
+                    ]
+                  },
+                  "type": "OpenApiConnection",
+                  "inputs": {
+                    "parameters": {
+                      "dataset": "https://grupoccr.sharepoint.com/sites/ComplianceAeroportos",
+                      "parameters/method": "POST",
+                      "parameters/uri": "@concat('_api/web/lists/getbytitle(''tb_dueDiligence'')/items(', string(items('Para_Cada_Vencido')?['ID']), ')')",
+                      "parameters/headers": {
+                        "Accept": "application/json;odata=nometadata",
+                        "Content-Type": "application/json;odata=nometadata",
+                        "X-HTTP-Method": "MERGE",
+                        "IF-MATCH": "*"
+                      },
+                      "parameters/body": "@string(outputs('Montar_Status_Vencido'))"
+                    },
+                    "host": {
+                      "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+                      "connectionName": "shared_sharepointonline",
+                      "operationId": "HttpRequest"
+                    },
+                    "authentication": "@parameters('$authentication')",
+                    "retryPolicy": {
+                      "type": "none"
+                    }
+                  }
+                },
+                "Montar_Historico_Vencimento": {
+                  "runAfter": {
+                    "HTTP_Marcar_Vencido": [
+                      "Succeeded"
+                    ]
+                  },
+                  "type": "Compose",
+                  "inputs": {
+                    "solicitacao_id": "@int(items('Para_Cada_Vencido')?['ID'])",
+                    "tipo_desdobramento": "Vencimento da vigência",
+                    "status_anterior": "@string(items('Para_Cada_Vencido')?['status'])",
+                    "status_novo": "Vencido",
+                    "descricao": "@concat('Vigência encerrada em ', convertFromUtc(items('Para_Cada_Vencido')?['data_vencimento'], 'E. South America Standard Time', 'dd/MM/yyyy'), ' (classificação de risco: ', string(coalesce(items('Para_Cada_Vencido')?['classificacao_risco'], 'não informada')), '). Para manter o relacionamento com o terceiro, abra uma nova solicitação de due diligence.')",
+                    "visivel_solicitante": 1,
+                    "ativo": 1
+                  }
+                },
+                "HTTP_Registrar_Historico_Vencimento": {
+                  "runAfter": {
+                    "Montar_Historico_Vencimento": [
+                      "Succeeded"
+                    ]
+                  },
+                  "type": "OpenApiConnection",
+                  "inputs": {
+                    "parameters": {
+                      "dataset": "https://grupoccr.sharepoint.com/sites/ComplianceAeroportos",
+                      "parameters/method": "POST",
+                      "parameters/uri": "_api/web/lists/getbytitle('tb_dueDiligenceDesdobramentos')/items",
+                      "parameters/headers": {
+                        "Accept": "application/json;odata=nometadata",
+                        "Content-Type": "application/json;odata=nometadata"
+                      },
+                      "parameters/body": "@string(outputs('Montar_Historico_Vencimento'))"
+                    },
+                    "host": {
+                      "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+                      "connectionName": "shared_sharepointonline",
+                      "operationId": "HttpRequest"
+                    },
+                    "authentication": "@parameters('$authentication')",
+                    "retryPolicy": {
+                      "type": "none"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "Condicao_Alguma_Etapa_Falhou": {
+          "runAfter": {
+            "ESCOPO_Vencer_Vigencia": [
+              "Succeeded",
+              "Failed",
+              "Skipped",
+              "TimedOut"
+            ]
+          },
+          "type": "If",
+          "expression": {
+            "and": [
+              {
+                "equals": [
+                  "@or(equals(actions('ESCOPO_Preencher_Vencimento')?['status'], 'Failed'), equals(actions('ESCOPO_Preencher_Vencimento')?['status'], 'TimedOut'), equals(actions('ESCOPO_Vencer_Vigencia')?['status'], 'Failed'), equals(actions('ESCOPO_Vencer_Vigencia')?['status'], 'TimedOut'))",
+                  true
+                ]
+              }
+            ]
+          },
+          "actions": {
+            "Encerrar_Com_Falha": {
+              "runAfter": {},
+              "type": "Terminate",
+              "inputs": {
+                "runStatus": "Failed",
+                "runError": {
+                  "code": "DD03_VIGENCIA_FALHOU",
+                  "message": "O preenchimento ou o vencimento de vigências falhou. Consulte a execução."
+                }
+              }
+            }
+          },
+          "else": {
+            "actions": {
+              "Execucao_Concluida": {
+                "runAfter": {},
+                "type": "Compose",
+                "inputs": "Vigências preenchidas e vencimentos processados."
+              }
+            }
+          }
+        }
+      },
+      "outputs": {}
+    },
+    "connectionReferences": {
+      "shared_sharepointonline": {
+        "connectionName": "shared-sharepointonl-0cd12861-383f-4b6e-9359-db983fb70160",
+        "source": "Embedded",
+        "id": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+        "tier": "NotSpecified",
+        "apiName": "sharepointonline",
+        "isProcessSimpleApiReferenceConversionAlreadyDone": false
+      }
+    },
+    "flowFailureAlertSubscribed": false,
+    "isManaged": false
+  }
+}

@@ -5,10 +5,89 @@
 - A fonte funcional é a planilha `Canal Confidencial.url` (arquivo XLSX com extensão incorreta).
 - O questionário v2 do terceiro é categórico; `pontuacao_terceiro` não participa da regra v2.
 - Sete perguntas podem produzir `Risco Alto`.
-- Sem obrigação legal, qualquer gatilho do solicitante ou do terceiro resulta em risco `Alto`.
-- A obrigação legal mantém a precedência da Fase 1 e encerra no Fluxo I.
+- Qualquer gatilho crítico do solicitante ou do terceiro resulta em risco `Alto` e `FLUXO III`, mesmo havendo obrigação legal: o gatilho tem peso maior que a obrigação legal.
+- Sem gatilho crítico, a obrigação legal mantém a precedência e encerra no Fluxo I.
 - Toda resposta válida de uma solicitação do Fluxo III segue para `Pendente Compliance`, mesmo quando `terceiro_gatilho_risco = "Não"`.
-- As decisões novas são `Aprovação`, `Aprovação condicionada` e `Reprovação`.
+- As decisões do parecer final são `Aprovado`, `Aprovado com Ressalvas`,
+  `Reprovado Parcialmente` e `Reprovado` (grafia exata; ver o modelo abaixo).
+
+## Modelo de status (2026-09-10)
+
+O Compliance reduziu o ciclo a oito status. A grafia é contrato: o app compara
+texto com `=`, que diferencia maiúsculas de minúsculas.
+
+| Status | Quem define | Quando |
+|---|---|---|
+| `Aguardando Terceiro` | App | Solicitação criada no Fluxo III; o questionário segue para o terceiro. |
+| `Pendente Compliance` | DD02 | Resposta válida do terceiro. Permanece durante toda a análise. |
+| `Aprovado` | App ou Compliance | Automático nos Fluxos I e II (e no v1 com encerramento por risco baixo) ou parecer do Compliance. |
+| `Aprovado com Ressalvas` | Compliance | Parecer final; exige condicionantes e prazo de reavaliação. |
+| `Reprovado Parcialmente` | Compliance | Parecer final. |
+| `Reprovado` | Compliance | Parecer final. |
+| `Cancelado` | Compliance | A partir de `Aguardando Terceiro` ou `Pendente Compliance`. |
+| `Vencido` | DD03 | Fim da vigência: 1 ano (risco alto), 2 (médio) e 3 (baixo). |
+
+O Fluxo II continua identificado por `fluxo_classificacao = "FLUXO II"` e risco
+`Alto`; por isso vence em 1 ano. No resumo da solicitação, a aprovação
+automática aparece como "Aprovação automática (FLUXO I/II)", sem status próprio.
+
+### Vigência
+
+- `data_vencimento` (coluna nova, somente data) = data da aprovação + 1, 2 ou 3
+  anos conforme `classificacao_risco`: `Alto` ou vazio = 1, `Médio` = 2,
+  `Baixo` = 3.
+- O app grava a data na aprovação automática e no parecer final. Recebem
+  vigência `Aprovado`, `Aprovado com Ressalvas` e `Reprovado Parcialmente`;
+  `Reprovado` e `Cancelado` não vencem.
+- O DD03 preenche a data que faltar (registros antigos) e marca `Vencido` quando
+  ela fica para trás. Para renovar, abre-se uma nova solicitação.
+
+### Estados técnicos que deixaram de ser status
+
+O envio ao terceiro é controlado pelo par `forms_envio_id` /
+`forms_envio_processado_id`. Dentro de `Aguardando Terceiro`, o app mostra:
+
+| Situação exibida | Condição |
+|---|---|
+| Envio em processamento | `forms_envio_id` diferente de `forms_envio_processado_id` |
+| Falha no envio | IDs iguais e `data_envio_terceiro` vazia |
+| Enviado | IDs iguais e `data_envio_terceiro` preenchida |
+
+A cada reenvio, o app gera um novo `forms_envio_id` e limpa
+`data_envio_terceiro`. Com falha no envio, o solicitante pode editar a
+solicitação (por exemplo, para corrigir o e-mail); ao salvar, um novo envio é
+solicitado automaticamente.
+
+### Migração dos status existentes
+
+| Status antigo | Status novo |
+|---|---|
+| `Aguardando envio ao terceiro`, `Aguardando terceiro` | `Aguardando Terceiro` |
+| `Erro no envio ao terceiro` | `Aguardando Terceiro` (ver o passo 4) |
+| `Rascunho` (o app não grava; só se existir) | `Aguardando Terceiro` |
+| `Em análise Compliance`, `Aguardando esclarecimento`, `Em homologação` | `Pendente Compliance` |
+| `Encerrado - risco baixo`, `Aprovado automaticamente - Fluxo I`, `Cadastrado - monitoramento (Fluxo II)` | `Aprovado` |
+| `Aprovado com ressalvas` | `Aprovado com Ressalvas` |
+| `Reprovado parcialmente` | `Reprovado Parcialmente` |
+
+Ordem obrigatória:
+
+1. Criar a coluna `data_vencimento` (Data e Hora, somente data, indexada) na
+   `tb_dueDiligence`. Sem ela, a tela não compila.
+2. Importar os três pacotes (DD02, DD01 e DD03) e ativá-los.
+3. Colar a tela nova no Studio.
+4. Trocar os status na visão em grade do SharePoint (filtrar por status e colar
+   o valor novo). Em `Erro no envio ao terceiro`, copie **primeiro**
+   `forms_envio_id` para `forms_envio_processado_id` e só **depois** troque o
+   status; na ordem inversa, o DD01 reenvia o e-mail sozinho. Registros em
+   `Aguardando envio ao terceiro` são enviados assim que o status muda: esse é o
+   comportamento esperado.
+5. Na primeira execução, o DD03 calcula `data_vencimento` das aprovações antigas
+   a partir de `data_decisao_compliance`, `data_conclusao` ou `Created` e marca
+   como `Vencido` o que já passou da vigência.
+
+O histórico (`tb_dueDiligenceDesdobramentos`) mantém os status antigos, porque
+registra o que aconteceu.
 
 ## Valores que ainda precisam ser configurados
 
@@ -19,7 +98,7 @@
 | Pergunta de correlação | `Código de acompanhamento` (`rf6e81f83fe194d4c80dbfd30fc7b8301`) |
 | URL do Código de Ética aprovada pelo Compliance | `PREENCHER_URL_CODIGO_ETICA` |
 | URL do Canal Confidencial da ASUR Brasil | `PREENCHER_URL_CANAL_CONFIDENCIAL` |
-| Fonte/grupo que autoriza o perfil Compliance | `PREENCHER_FONTE_PERFIL_COMPLIANCE` |
+| Fonte que autoriza o perfil Compliance | Lista `tb_dueDiligenceCompliance` (`email` = login do usuário, `ativo = 1`) |
 
 ## Pacotes dos fluxos
 
@@ -27,9 +106,13 @@
   as conexões Microsoft Forms e SharePoint.
 - `EnviarquestionarioDueDiligence_PRONTO.zip`: DD01, importar depois e mapear
   as conexões SharePoint e Office 365 Outlook.
+- `VencervigenciaDueDiligence_PRONTO.zip`: DD03, importar por último, como
+  **Criar como novo**, e mapear a conexão SharePoint. Não existe rascunho para
+  atualizar.
 
-Na importação legada, selecionar **Atualizar** e apontar para os dois fluxos
-rascunho existentes. Não criar cópias, pois isso deixaria gatilhos duplicados.
+Para DD01 e DD02, na importação legada, selecionar **Atualizar** e apontar para
+os dois fluxos rascunho existentes. Não criar cópias, pois isso deixaria
+gatilhos duplicados.
 Depois da importação, abrir cada fluxo, salvar e ativar. O gerador reproduzível
 está em `build_power_automate_flows.py`; as definições expandidas ficam em
 `PowerAutomate/`.
@@ -65,6 +148,8 @@ Para listas existentes, a migração deve ser aditiva e idempotente:
    existentes.
 10. Inserir os 21 parâmetros por upsert usando a chave composta
    `(versao_questionario, codigo_pergunta, codigo_opcao)`.
+11. Criar `data_vencimento` na `tb_dueDiligence` conforme o JSON completo
+   (`DateTime`, `Format='DateOnly'`, indexada).
 
 Não usar `<Validation>` no `CreateFieldAsXml`.
 
@@ -113,7 +198,7 @@ parâmetro aparece na barra de endereço, mas o Forms deixa a pergunta vazia.
 
 O código continua visível e editável no Forms. Ele serve para correlação, não
 como prova de identidade; o DD02 rejeita código inexistente, duplicado, antigo
-ou que não pertença a uma solicitação em `Aguardando terceiro` no `FLUXO III`.
+ou que não pertença a uma solicitação em `Aguardando Terceiro` no `FLUXO III`.
 
 O `responseId` devolvido pelo gatilho do Forms pode ser numérico. Nos corpos
 REST enviados ao SharePoint, o DD02 converte explicitamente esse valor e todos
@@ -129,7 +214,7 @@ Configure concorrência do gatilho como `1` e use:
 
 ```text
 @and(
-  equals(triggerBody()?['status'], 'Aguardando envio ao terceiro'),
+  equals(triggerBody()?['status'], 'Aguardando Terceiro'),
   not(empty(triggerBody()?['forms_envio_id'])),
   not(equals(
     triggerBody()?['forms_envio_id'],
@@ -142,7 +227,7 @@ Configure concorrência do gatilho como `1` e use:
 
 1. `Get item` pelo `ID` do gatilho.
 2. Revalidar no item atual:
-   - status = `Aguardando envio ao terceiro`;
+   - status = `Aguardando Terceiro`;
    - `forms_envio_id` preenchido;
    - `forms_envio_id <> forms_envio_processado_id`;
    - `forms_correlacao_id` preenchido;
@@ -153,8 +238,10 @@ Configure concorrência do gatilho como `1` e use:
 5. Atualizar o item principal:
    - `forms_formulario_id = itUz0nOZp0OvaWdjYwVIoMoEbKAMYIZFqUAdth6B_EFURVRKSFdaVDE4Q1RIV0VTRkxFSjFZS0VEQS4u`;
    - `forms_envio_processado_id = forms_envio_id`;
-   - `data_envio_terceiro = utcNow()`;
-   - `status = Aguardando terceiro`.
+   - `data_envio_terceiro = utcNow()`.
+
+   O status não é regravado: já é `Aguardando Terceiro`, e regravá-lo
+   desfaria um cancelamento feito entre a leitura e esta atualização.
 6. Criar desdobramento `Envio ao terceiro`, incluindo o identificador da
    intenção de envio na descrição.
 
@@ -165,12 +252,18 @@ pelo botão do app.
 
 ### Erro
 
-Dentro de um Scope `Catch`, configurado com `run after` para falha/timeout:
+Dentro de um Scope `Catch`, configurado com `run after` para falha/timeout,
+somente se o `forms_envio_id` ainda for o mesmo:
 
-- atualizar o status para `Erro no envio ao terceiro` somente se o
-  `forms_envio_id` ainda for o mesmo;
-- registrar um desdobramento com o run id e a ação que falhou;
+- gravar `forms_envio_processado_id = forms_envio_id` (consome a intenção) e
+  manter `data_envio_terceiro` vazia, que é como o app mostra "Falha no envio";
+- registrar o desdobramento `Falha no envio ao terceiro`, visível ao
+  solicitante, com o run id;
 - finalizar com `Terminate = Failed`.
+
+Consumir a intenção é obrigatório. O gatilho é "item criado ou modificado" com a
+condição `forms_envio_id <> forms_envio_processado_id`; sem o consumo, qualquer
+alteração posterior no item reenviaria o e-mail sem ninguém pedir.
 
 ## Fluxo DD02 — processar resposta
 
@@ -188,7 +281,7 @@ Dentro de um Scope `Catch`, configurado com `run after` para falha/timeout:
    gatilho inofensiva mesmo depois de o registro já estar em
    `Pendente Compliance`.
 6. Rejeitar a resposta se `forms_envio_id <> forms_envio_processado_id`, se o
-   fluxo não for `FLUXO III`, se o status não for `Aguardando terceiro` ou se
+   fluxo não for `FLUXO III`, se o status não for `Aguardando Terceiro` ou se
    qualquer resposta obrigatória estiver vazia/inválida.
 
 ### Normalização e idempotência
@@ -247,6 +340,27 @@ Depois de persistir e reler todas as linhas da resposta:
 
 O pai só pode ser atualizado depois de as dez/onze linhas terem sido confirmadas.
 
+## Fluxo DD03 — vencer vigência
+
+Gatilho: recorrência diária às 06:00 (`E. South America Standard Time`),
+concorrência 1. Não há rascunho: o pacote é gerado a partir do molde do DD01 e
+deve ser importado como fluxo novo.
+
+1. `Hoje_Local`: data de hoje em Brasília.
+2. Preencher vencimentos ausentes: itens em `Aprovado`, `Aprovado com Ressalvas`
+   ou `Reprovado Parcialmente` com `data_vencimento` vazia recebem a data de
+   partida + 1, 2 ou 3 anos conforme o risco. A data de partida é
+   `data_decisao_compliance`, senão `data_conclusao`, senão `Created`.
+3. Vencer: os mesmos status com `data_vencimento` anterior a hoje passam a
+   `Vencido`, com o desdobramento `Vencimento da vigência` visível ao
+   solicitante.
+4. A etapa 3 roda mesmo que a 2 falhe; a execução termina como falha se
+   qualquer etapa falhar, para aparecer no histórico de execuções.
+
+A data é gravada ao meio-dia UTC para não recuar um dia na coluna "somente
+data". As consultas usam `$top=5000`; acima do limite de exibição da lista,
+indexe `status` e `data_vencimento`.
+
 ## Decisão do Compliance
 
 Campos atuais do cabeçalho:
@@ -263,35 +377,63 @@ Mapeamento:
 | Decisão | Status |
 |---|---|
 | `Aprovado` | `Aprovado` |
-| `Aprovado com ressalvas` | `Aprovado com ressalvas` |
-| `Reprovado parcialmente` | `Reprovado parcialmente` |
+| `Aprovado com Ressalvas` | `Aprovado com Ressalvas` |
+| `Reprovado Parcialmente` | `Reprovado Parcialmente` |
 | `Reprovado` | `Reprovado` |
 
 A decisão e a justificativa são obrigatórias. Na aprovação com ressalvas,
-condicionantes e prazo de reavaliação também são obrigatórios.
+condicionantes e prazo de reavaliação também são obrigatórios. O parecer grava
+`data_vencimento` quando a decisão abre vigência.
 
-A fonte real que identifica os usuários do Compliance ainda não foi informada
-para este app. Até essa definição, `varDdPodeAnalisarCompliance` permanece
-como `false`: a ação `Analisar` fica desabilitada para todos, evitando conceder
-acesso por engano. Depois de conectar a fonte indicada no item
-`PREENCHER_FONTE_PERFIL_COMPLIANCE`, a ação será liberada apenas para os
-usuários autorizados. O formulário principal continua somente leitura durante
-todo o ciclo interno.
+O perfil Compliance vem da lista `tb_dueDiligenceCompliance`
+(`listgen_tb_dueDiligenceCompliance.json`). É do Compliance quem tem uma linha
+com `email` igual ao login do usuário (`User().Email`, em minúsculas) e
+`ativo = 1`. As três telas calculam o perfil no próprio `OnVisible`, com chave
+não vazia e falha fechada: qualquer erro na consulta resulta em "não é
+Compliance".
+
+Só esse perfil vê a ação `Analisar`, o painel de desdobramentos, as notas
+internas, o resumo da avaliação, as colunas de pontuação e risco da lista de
+registros e o painel de indicadores. O formulário principal continua somente
+leitura durante todo o ciclo interno; a única exceção é a falha no envio ao
+terceiro.
+
+Implantação da lista:
+
+1. Criar a lista pelo List_Generator com o JSON.
+2. Permissões da lista: interromper a herança, dar **Leitura** a todos os
+   usuários do app (o app precisa consultá-la) e **Edição** só ao Compliance.
+   Sem isso, qualquer pessoa poderia se incluir.
+3. Cadastrar cada analista com o login exatamente como o app o enxerga. Quem
+   não está cadastrado vê esse login no aviso do painel de indicadores.
+4. Adicionar `tb_dueDiligenceCompliance` como fonte de dados do app **antes**
+   de colar as telas.
 
 Fluxo da analista:
 
-1. Em `Pendente Compliance`, clicar em `Analisar`.
-2. Conferir as respostas do terceiro, ordenadas pela pergunta e sinalizadas
-   quando classificadas como risco alto.
-3. Registrar `Início da análise` e mudar para `Em análise Compliance`.
-4. Registrar dúvidas, respostas, anexos e encaminhamentos como
-   desdobramentos. O padrão é nota interna; a analista pode marcar o item como
-   visível ao solicitante.
-5. Para concluir, escolher `Parecer final`, informar uma decisão conclusiva e
-   escrever a justificativa. `Aprovado com ressalvas` também exige prazo de
-   reavaliação.
-6. A conclusão grava os campos estruturados do Compliance, mantém o parecer no
-   histórico e volta a tela para somente leitura.
+1. Em `Pendente Compliance`, clicar em `Analisar` e conferir as respostas do
+   terceiro, ordenadas pela pergunta e sinalizadas quando classificadas como
+   risco alto. O status permanece `Pendente Compliance` durante toda a análise;
+   o primeiro registro da analista a grava como responsável.
+2. Registrar em `Aguardando esclarecimentos` os pedidos de esclarecimento
+   enviados ao terceiro e as respostas recebidas, com anexos. Esse tipo não
+   muda o status e, por padrão, fica interno; a analista pode torná-lo visível
+   ao solicitante.
+3. Para concluir, escolher `Parecer final`: o novo status só aceita as quatro
+   decisões. `Aprovado com Ressalvas` também exige prazo de reavaliação.
+4. Para encerrar sem parecer, escolher `Cancelamento` (status `Cancelado`),
+   disponível também em `Aguardando Terceiro`.
+5. A conclusão grava os campos estruturados do Compliance e a vigência, mantém
+   o parecer no histórico e volta a tela para somente leitura.
+
+Tipos manuais de desdobramento: `Aguardando esclarecimentos`, `Parecer final`
+e `Cancelamento`. Os demais são gravados pelo sistema:
+`Criação`, `Atualização do solicitante`, `Solicitação de reenvio ao terceiro`,
+`Envio ao terceiro`, `Falha no envio ao terceiro`, `Resposta do terceiro` e
+`Vencimento da vigência`.
+
+Se outra pessoa (ou o DD02) mudar o status enquanto a analista registra, o
+desdobramento é revertido e a tela pede para reabrir a solicitação.
 
 O histórico interno aparece apenas para o perfil Compliance; os demais usuários
 continuam vendo somente `visivel_solicitante = 1`. As permissões das listas

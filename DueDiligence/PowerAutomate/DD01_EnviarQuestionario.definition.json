@@ -64,7 +64,7 @@
           },
           "conditions": [
             {
-              "expression": "@and(equals(triggerBody()?['status'], 'Aguardando envio ao terceiro'), not(empty(triggerBody()?['forms_envio_id'])), not(equals(triggerBody()?['forms_envio_id'], triggerBody()?['forms_envio_processado_id'])))"
+              "expression": "@and(equals(triggerBody()?['status'], 'Aguardando Terceiro'), not(empty(triggerBody()?['forms_envio_id'])), not(equals(triggerBody()?['forms_envio_id'], triggerBody()?['forms_envio_processado_id'])))"
             }
           ],
           "runtimeConfiguration": {
@@ -113,7 +113,7 @@
                 "and": [
                   {
                     "equals": [
-                      "@and(equals(body('HTTP_Obter_Item_Atual')?['status'], 'Aguardando envio ao terceiro'),not(empty(body('HTTP_Obter_Item_Atual')?['forms_envio_id'])),not(equals(body('HTTP_Obter_Item_Atual')?['forms_envio_id'], body('HTTP_Obter_Item_Atual')?['forms_envio_processado_id'])),not(empty(body('HTTP_Obter_Item_Atual')?['forms_correlacao_id'])),not(empty(body('HTTP_Obter_Item_Atual')?['email_terceiro'])))",
+                      "@and(equals(body('HTTP_Obter_Item_Atual')?['status'], 'Aguardando Terceiro'),not(empty(body('HTTP_Obter_Item_Atual')?['forms_envio_id'])),not(equals(body('HTTP_Obter_Item_Atual')?['forms_envio_id'], body('HTTP_Obter_Item_Atual')?['forms_envio_processado_id'])),not(empty(body('HTTP_Obter_Item_Atual')?['forms_correlacao_id'])),not(empty(body('HTTP_Obter_Item_Atual')?['email_terceiro'])))",
                       true
                     ]
                   }
@@ -160,8 +160,7 @@
                   "inputs": {
                     "forms_formulario_id": "itUz0nOZp0OvaWdjYwVIoMoEbKAMYIZFqUAdth6B_EFURVRKSFdaVDE4Q1RIV0VTRkxFSjFZS0VEQS4u",
                     "forms_envio_processado_id": "@body('HTTP_Obter_Item_Atual')?['forms_envio_id']",
-                    "data_envio_terceiro": "@utcNow()",
-                    "status": "Aguardando terceiro"
+                    "data_envio_terceiro": "@utcNow()"
                   }
                 },
                 "HTTP_Atualizar_Item_Enviado": {
@@ -206,7 +205,7 @@
                     "solicitacao_id": "@int(triggerBody()?['ID'])",
                     "tipo_desdobramento": "Envio ao terceiro",
                     "status_anterior": "@body('HTTP_Obter_Item_Atual')?['status']",
-                    "status_novo": "Aguardando terceiro",
+                    "status_novo": "Aguardando Terceiro",
                     "descricao": "@concat('Questionário enviado ao terceiro. Identificador do envio: ', string(body('HTTP_Obter_Item_Atual')?['forms_envio_id']), '.')",
                     "visivel_solicitante": 1,
                     "ativo": 1
@@ -315,8 +314,19 @@
                 ]
               },
               "actions": {
-                "HTTP_Marcar_Erro_Envio": {
+                "Montar_Consumo_Intencao": {
                   "runAfter": {},
+                  "type": "Compose",
+                  "inputs": {
+                    "forms_envio_processado_id": "@string(triggerBody()?['forms_envio_id'])"
+                  }
+                },
+                "HTTP_Consumir_Intencao_Com_Falha": {
+                  "runAfter": {
+                    "Montar_Consumo_Intencao": [
+                      "Succeeded"
+                    ]
+                  },
                   "type": "OpenApiConnection",
                   "inputs": {
                     "parameters": {
@@ -329,7 +339,55 @@
                         "X-HTTP-Method": "MERGE",
                         "IF-MATCH": "*"
                       },
-                      "parameters/body": "{\"status\":\"Erro no envio ao terceiro\"}"
+                      "parameters/body": "@string(outputs('Montar_Consumo_Intencao'))"
+                    },
+                    "host": {
+                      "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+                      "connectionName": "shared_sharepointonline",
+                      "operationId": "HttpRequest"
+                    },
+                    "authentication": "@parameters('$authentication')",
+                    "retryPolicy": {
+                      "type": "none"
+                    }
+                  }
+                },
+                "Montar_Historico_Falha": {
+                  "runAfter": {
+                    "HTTP_Consumir_Intencao_Com_Falha": [
+                      "Succeeded",
+                      "Failed",
+                      "TimedOut"
+                    ]
+                  },
+                  "type": "Compose",
+                  "inputs": {
+                    "solicitacao_id": "@int(triggerBody()?['ID'])",
+                    "tipo_desdobramento": "Falha no envio ao terceiro",
+                    "status_anterior": "@body('HTTP_Reler_Item_Apos_Erro')?['status']",
+                    "status_novo": "@body('HTTP_Reler_Item_Apos_Erro')?['status']",
+                    "descricao": "@concat('O questionário não foi confirmado como enviado ao terceiro. Corrija o e-mail, se necessário, e use Reenviar Forms. Execução do Power Automate: ', string(workflow()?['run']?['name']), '.')",
+                    "visivel_solicitante": 1,
+                    "ativo": 1
+                  }
+                },
+                "HTTP_Registrar_Historico_Falha": {
+                  "runAfter": {
+                    "Montar_Historico_Falha": [
+                      "Succeeded"
+                    ]
+                  },
+                  "type": "OpenApiConnection",
+                  "inputs": {
+                    "parameters": {
+                      "dataset": "https://grupoccr.sharepoint.com/sites/ComplianceAeroportos",
+                      "parameters/method": "POST",
+                      "parameters/uri": "_api/web/lists/getbytitle('tb_dueDiligenceDesdobramentos')/items",
+                      "parameters/headers": {
+                        "Accept": "application/json;odata=nometadata",
+                        "Content-Type": "application/json;odata=nometadata"
+                      },
+                      "parameters/body": "@string(outputs('Montar_Historico_Falha'))"
                     },
                     "host": {
                       "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
@@ -358,7 +416,8 @@
                 "Condicao_Intencao_Ainda_Atual": [
                   "Succeeded",
                   "Failed",
-                  "TimedOut"
+                  "TimedOut",
+                  "Skipped"
                 ]
               },
               "type": "Terminate",
