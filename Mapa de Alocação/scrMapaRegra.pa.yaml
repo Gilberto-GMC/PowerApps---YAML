@@ -20,7 +20,7 @@ Screens:
               =ClearCollect(colRegrasTodas, Sort(Filter(tb_regrasPosicao, aeroporto = varAero), posicao, SortOrder.Ascending));
               ClearCollect(colRegras, Filter(tb_regrasPosicao, aeroporto = varAero And ativo = 1));
               ClearCollect(colEquipRg, Sort(Filter(tb_equipamentos, ativo = 1), ordem, SortOrder.Ascending));
-              ClearCollect(colEquipSelRg, ForAll(colEquipRg As _e, { Value: _e.nome_equip }))
+              ClearCollect(colEquipSelRg, ForAll(Sort(colEquipRg, equip, SortOrder.Ascending) As _e, { Value: _e.equip }))
             Text: =""
             Visible: =true
             Width: =1
@@ -415,7 +415,7 @@ Screens:
                                                         Split(Substitute(ThisItem.equip_a, " ", ""), ",") As _s,
                                                         {
                                                             equip: _s.Value,
-                                                            nome: Coalesce(LookUp(colEquipRg As _e, _e.equip = _s.Value).nome_equip, _s.Value)
+                                                            nome: _s.Value
                                                         }
                                                     )
                                                 )
@@ -429,7 +429,7 @@ Screens:
                                                         Split(Substitute(ThisItem.equip_b, " ", ""), ",") As _s,
                                                         {
                                                             equip: _s.Value,
-                                                            nome: Coalesce(LookUp(colEquipRg As _e, _e.equip = _s.Value).nome_equip, _s.Value)
+                                                            nome: _s.Value
                                                         }
                                                     )
                                                 )
@@ -553,7 +553,7 @@ Screens:
                                                 Collect(
                                                     colEqaSel,
                                                     {
-                                                        equip: LookUp(colEquipRg As _e, _e.nome_equip = drpAddEqaRgr.Selected.Value).equip,
+                                                        equip: drpAddEqaRgr.Selected.Value,
                                                         nome: drpAddEqaRgr.Selected.Value
                                                     }
                                                 )
@@ -765,7 +765,7 @@ Screens:
                                                 Collect(
                                                     colEqbSel,
                                                     {
-                                                        equip: LookUp(colEquipRg As _e, _e.nome_equip = drpAddEqbRgr.Selected.Value).equip,
+                                                        equip: drpAddEqbRgr.Selected.Value,
                                                         nome: drpAddEqbRgr.Selected.Value
                                                     }
                                                 )
@@ -915,11 +915,11 @@ Screens:
                                             Clear(colEqbSel);
                                             If(
                                                 !IsBlank(varRegraSel.equip_a),
-                                                Collect(colEqaSel, ForAll(Split(Substitute(varRegraSel.equip_a, " ", ""), ",") As _s, { equip: _s.Value, nome: Coalesce(LookUp(colEquipRg As _e, _e.equip = _s.Value).nome_equip, _s.Value) }))
+                                                Collect(colEqaSel, ForAll(Split(Substitute(varRegraSel.equip_a, " ", ""), ",") As _s, { equip: _s.Value, nome: _s.Value }))
                                             );
                                             If(
                                                 !IsBlank(varRegraSel.equip_b),
-                                                Collect(colEqbSel, ForAll(Split(Substitute(varRegraSel.equip_b, " ", ""), ",") As _s, { equip: _s.Value, nome: Coalesce(LookUp(colEquipRg As _e, _e.equip = _s.Value).nome_equip, _s.Value) }))
+                                                Collect(colEqbSel, ForAll(Split(Substitute(varRegraSel.equip_b, " ", ""), ",") As _s, { equip: _s.Value, nome: _s.Value }))
                                             );
                                             UpdateContext({locNonceRg: locNonceRg + 1})
                                           PaddingLeft: =12

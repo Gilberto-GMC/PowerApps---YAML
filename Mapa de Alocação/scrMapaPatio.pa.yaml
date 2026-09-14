@@ -23,11 +23,11 @@ Screens:
         );
         ClearCollect(colEquip, Sort(Filter(tb_equipamentos, ativo = 1), ordem, SortOrder.Ascending));
         ClearCollect(colRegras, Filter(tb_regrasPosicao, aeroporto = varAero And ativo = 1));
-        Set(varVerFinalizados, Coalesce(varVerFinalizados, false));
+        Set(varVerFinalizados, Coalesce(varVerFinalizados, true));
         Set(varJanelaMin, Coalesce(varJanelaMin, mapJanelaPadrao));
         Set(varJanelaIni, Coalesce(varJanelaIni, Min(mapMinutosDia - varJanelaMin, If(varData = Today(), Hour(Now()) * 60, 0))));
         ClearCollect(colEquipSel, Table({ Value: "—" }));
-        Collect(colEquipSel, ForAll(colEquip As _e, { Value: _e.nome_equip }));
+        Collect(colEquipSel, ForAll(Sort(colEquip, equip, SortOrder.Ascending) As _e, { Value: _e.equip }));
         Select(btnAtualizarMap)
     Children:
       - btnDesenharMap:
@@ -171,12 +171,12 @@ Screens:
                                                       If(
                                                           _z > _a,
                                                       "<td title='" & _b.dica & "' style='box-sizing:border-box;width:" & Text((_z - _a) * 100 / Max(varJanelaMin, 60), "0.000", "en-US") & "%;height:" & (mapAlturaLinha - 14) & "px;" &
-                                                      "background:" & If(_imped, hxGradeLinha, _bloq, hxTextoFraco, _b.pesq = 1, hxVermelho, IsBlank(_b.cia) Or _b.cia = "GER", Coalesce(_cls.cor_hex, Coalesce(_cia.cor_hex, hxBorda)), Coalesce(_cia.cor_hex, hxBorda)) & ";" &
-                                                      "color:" & If(_imped, hxTextoFraco, _bloq Or _b.pesq = 1, hxTextoBarra, IsBlank(_b.cia) Or _b.cia = "GER", Coalesce(_cls.cor_texto, Coalesce(_cia.cor_texto, hxTexto)), Coalesce(_cia.cor_texto, hxTexto)) & ";" &
-                                                      "border:3px " & If(_imped, "dashed", _pend, "dashed", "solid") & " " &
-                                                      If(_imped, hxTextoFraco, _pend And IsBlank(_b.portao), hxAmbar, Coalesce(_prt.cor_hex, hxBorda)) & ";" &
+                                                      "background:" & If(_imped, hxGradeLinha, _b.cond = "FINALIZADO", hxFinalizado, _bloq, hxTextoFraco, _b.pesq = 1, hxVermelho, IsBlank(_b.cia) Or _b.cia = "GER", Coalesce(_cls.cor_hex, Coalesce(_cia.cor_hex, hxBorda)), Coalesce(_cia.cor_hex, hxBorda)) & ";" &
+                                                      "color:" & If(_imped, hxTextoFraco, _b.cond = "FINALIZADO", hxTextoFraco, _bloq Or _b.pesq = 1, hxTextoBarra, IsBlank(_b.cia) Or _b.cia = "GER", Coalesce(_cls.cor_texto, Coalesce(_cia.cor_texto, hxTexto)), Coalesce(_cia.cor_texto, hxTexto)) & ";" &
+                                                      "border:3px " & If(_imped, "dashed", _b.cond = "FINALIZADO", "solid", _pend, "dashed", "solid") & " " &
+                                                      If(_imped, hxTextoFraco, _b.cond = "FINALIZADO", hxFinalizadoBorda, _pend And IsBlank(_b.portao), hxAmbar, Coalesce(_prt.cor_hex, hxBorda)) & ";" &
                                                       "font-size:10px;font-weight:700;line-height:1.15;padding:0 3px;text-align:center;overflow:hidden;" &
-                                                      If(_b.cond = "FINALIZADO", "opacity:.45;", "") & "'>" &
+                                                      "'>" &
                                                       "<div style='white-space:nowrap;overflow:hidden;text-overflow:ellipsis;'>" &
                                                       If(_b.de_antes = 1 Or _b.ini < varJanelaIni, "&laquo;&nbsp;", "") &
                                                       If(
@@ -306,7 +306,7 @@ Screens:
                       portao: If(IsBlank(varAlocSel.portao), "—", varAlocSel.portao),
                       ini: Text(Int(varAlocSel.h_ini / 60), "00") & ":" & Text(Mod(varAlocSel.h_ini, 60), "00"),
                       fim: Text(Int(varAlocSel.h_fim / 60), "00") & ":" & Text(Mod(varAlocSel.h_fim, 60), "00"),
-                      equip: Coalesce(LookUp(colEquip As _e, _e.equip = varAlocSel.equip).nome_equip, "—"),
+                      equip: Coalesce(LookUp(colEquip As _e, _e.equip = varAlocSel.equip).equip, "—"),
                       env: If(Value(Text(varAlocSel.env)) > 0, Text(varAlocSel.env), ""),
                       obs: varAlocSel.obs,
                       pesq: varAlocSel.pesq = 1,
@@ -689,7 +689,7 @@ Screens:
                                 "<div style='font-size:11px;opacity:.75;margin-top:3px;'>" &
                                 varAeroNome & " &nbsp;&middot;&nbsp; " & Upper(Text(varData, "ddd dd/mm/yyyy")) &
                                 " &nbsp;&middot;&nbsp; " & CountRows(colDia) & " registro(s)" &
-                                If(varVerFinalizados, " &nbsp;&middot;&nbsp; COM FINALIZADOS", "") &
+                                If(!varVerFinalizados, " &nbsp;&middot;&nbsp; SEM FINALIZADOS", "") &
                                 " &nbsp;&middot;&nbsp; carregado às " & Text(varCarregadoEm, "HH:mm") &
                                 "</div></div>"
                               LayoutMinWidth: =0
@@ -1997,6 +1997,7 @@ Screens:
                           "<span style='background:" & hxVermelho & ";color:" & hxTextoBarra & ";padding:0 3px;font-weight:700;'>P</span> pesquisado &nbsp;&middot;&nbsp; " &
                           "<span style='background:" & hxInternacional & ";color:" & hxTexto & ";padding:0 3px;font-weight:700;'>I</span> internacional &nbsp;&middot;&nbsp; " &
                           "<span style='background:" & hxAlternativa & ";color:" & hxTextoBarra & ";padding:0 3px;font-weight:700;'>A</span> reserva de alternativa &nbsp;&middot;&nbsp; " &
+                          "<span style='background:" & hxFinalizado & ";color:" & hxTextoFraco & ";border:1px solid " & hxFinalizadoBorda & ";padding:0 3px;font-weight:700;'>&#10003;</span> finalizado &nbsp;&middot;&nbsp; " &
                           "<span style='background:" & hxTextoFraco & ";color:" & hxTextoBarra & ";padding:0 3px;font-weight:700;'>INTERDITADO</span> posição bloqueada &nbsp;&middot;&nbsp; " &
                           "<span style='font-weight:700;color:" & hxTexto & ";'>&laquo;&nbsp;&raquo;</span> começa ou termina fora da faixa</td>" &
                           "</tr></table>"
@@ -2645,7 +2646,7 @@ Screens:
                                     Placeholder: ="vem do equipamento"
                                     Value: |-
                                       =With(
-                                          { _e: LookUp(colEquip As _q, _q.nome_equip = drpEquipMap.Selected.Value) },
+                                          { _e: LookUp(colEquip As _q, _q.equip = drpEquipMap.Selected.Value) },
                                           If(
                                               Value(Text(_e.envergadura_m)) > 0,
                                               Text(_e.envergadura_m),
@@ -2810,7 +2811,7 @@ Screens:
                                       locEquip: If(
                                           drpEquipMap.Selected.Value = "—",
                                           "",
-                                          Coalesce(LookUp(colEquip As _e, _e.nome_equip = drpEquipMap.Selected.Value).equip, "")
+                                          Coalesce(LookUp(colEquip As _e, _e.equip = drpEquipMap.Selected.Value).equip, "")
                                       ),
                                       locEnvDigitada: If(IsNumeric(txtEnvergaduraMap.Value), Value(txtEnvergaduraMap.Value), -1),
                                       locIni: If(
