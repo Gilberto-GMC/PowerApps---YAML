@@ -281,6 +281,19 @@ function analisa(arquivo, mortos) {
     }
   }
 
+  // Valor de UMA linha (Chave: =...) é escalar YAML sem aspas: ": " dentro dele vira outra chave
+  // e " #" vira comentário. As aspas do Power Fx não protegem — o YAML não sabe o que é Power Fx.
+  // 14/09/2026: "(rótulo, ex.: VIII)" derrubou a colagem da scrApacCadastro com PA1001.
+  for (let i = 0; i < linhas.length; i++) {
+    const m = linhas[i].match(/^s*[A-Za-z][w.]*: (=.*)$/);
+    if (!m) continue;
+    const v = m[1];
+    const c = v.indexOf(": ");
+    if (c >= 0) erros.push(`${i + 1}: ": " no valor de uma linha (coluna ${linhas[i].indexOf(v) + c + 1}) — o YAML lê como chave; use bloco |- ou reescreva`);
+    const h = v.indexOf(" #");
+    if (h >= 0) erros.push(`${i + 1}: " #" no valor de uma linha — o YAML corta ali como comentário; use bloco |-`);
+  }
+
   return { erros, avisos, controles: nomes.size, linhas: linhas.length };
 }
 

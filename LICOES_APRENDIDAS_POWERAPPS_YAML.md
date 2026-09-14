@@ -1624,3 +1624,17 @@ nenhuma; os quatro que falharam tinham. A resposta estava na tabela de resultado
 
 **Regra.** Um arquivo, **uma** hipótese. E, quando o fluxo itera, a iteração vermelha no histórico de
 execução diz o nome da coluna — pedir esse nome custa um print e dispensa teste.
+
+## Dois-pontos e espaço dentro de valor de uma linha quebram a colagem inteira (14/09/2026)
+
+**O que aconteceu.** `Text: ="ALTERNATIVA DE MÓDULO (rótulo, ex.: VIII)"` numa tela nova. O Studio recusou
+a colagem com `PA1001 ... YamlInvalidSyntax; Reason: While scanning a plain scalar value, found invalid
+mapping`, apontando linha e coluna.
+
+**Por quê.** Propriedade escrita numa linha só (`Chave: =valor`) é um escalar YAML **sem aspas**. Dentro
+dele, `: ` (dois-pontos seguido de espaço) é lido como início de outra chave — as aspas da fórmula
+Power Fx não protegem nada, porque o YAML não sabe o que é Power Fx. O mesmo vale para ` #`, que abre
+comentário e corta a fórmula calado.
+
+**Regra.** Texto com `: ` ou ` #` vai em bloco `|-` na linha de baixo, ou se reescreve sem o caractere.
+O `fx_check.js` passou a recusar os dois em valor de uma linha.
