@@ -89,9 +89,16 @@ lidos**, e importar dezembro de novo mantém a lista em 814 — não 1.628.
    ⚠️ **Se já tinha colado antes de 14/09/2026, cole de novo:** a versão nova tem
    `apacJornadaPresenca`, `apacHorasTrabalhadas` e `apacTurnosPorFolguista`, e a tela do mês não
    compila sem elas.
-4. Cole `scrApacMes.pa.yaml`, `scrApacDia.pa.yaml`, `scrApacCadastro.pa.yaml` e `scrApacImport.pa.yaml`,
-   cada um numa tela nova. Estes estão em
+4. Cole `scrApacMes.pa.yaml`, `scrApacDia.pa.yaml`, `scrApacCadastro.pa.yaml`, `scrApacImport.pa.yaml`
+   e `scrApacEscala.pa.yaml`, cada um numa tela nova. Estes estão em
    **en-US** (vírgula separa argumento), que é o formato do código-fonte.
+   ⚠️ **Se já tinha colado a `scrApacMes` antes, cole de novo:** a versão de 15/09/2026 tem o botão
+   ESCALA e grava `varCompCalc`, sem o qual a tela da escala diz que o mês não está calculado.
+5. **A escala da planilha do escopo** já está convertida em `dados/escala_escopo_AAAA-MM.csv`, um por
+   mês, 25 turnos cada. Abra a `tb_apacEscala` em **Editar no modo de grade** e cole os cinco (ou só o
+   do mês que for testar). Os turnos também se cadastram um a um na aba TURNOS da tela da escala.
+   Os CSVs saem de `node escala_do_escopo.js "…/Escopo NVT Verão 2027.xlsx"`, que só grava se a
+   cobertura dos turnos bater, hora a hora, com as linhas de total da planilha.
 
 > As telas navegam umas para as outras. Se o Studio reclamar de tela inexistente ao colar uma,
 > cole as outras e o erro some sozinho.
@@ -105,7 +112,7 @@ Na ordem, porque cada uma cobre uma classe de defeito diferente:
 | Prova | Como fazer | O que tem que acontecer |
 |---|---|---|
 | **Aritmética** | abrir **24/12/2026** na tela do dia | às **20:00**: 3 módulos, **14 APACs**, 2 supervisores — e a linha "quem mandou" dizendo **voos** |
-| **Postos fixos no mês** | tela do mês em **2026-12**, botão VENDO APACs | coluna PICO chega a **14** (9 dos módulos + 5 fixos), igual à tela do dia — antes desta versão mostrava 9 |
+| **Postos fixos no mês** | tela do mês em **2026-12**, botão do olho em **APAC** | coluna PICO chega a **14** (9 dos módulos + 5 fixos), igual à tela do dia — antes desta versão mostrava 9 |
 | **Efetivo mínimo** | tela do mês em **2026-12** | painel no topo: **36 APACs** e **5 supervisores** em escala; com folguistas, **48** e **7** |
 | **Mínimo acompanha o mês** | trocar para **2026-11** | **33 APACs** e **4 supervisores** — novembro não exige o 5º supervisor |
 | **Mínimo acompanha a premissa** | em **2027-02**, trocar a ocupação de 85 para **95** e RECALCULAR | **34 APACs** (era 33) e supervisores continuam **4**; no rodapé do painel, o homem-hora (34) passa a mandar sobre os turnos contíguos (33) |
@@ -123,6 +130,16 @@ Na ordem, porque cada uma cobre uma classe de defeito diferente:
 | **Mês vazio** | apontar para uma competência não importada | aviso âmbar dizendo que falta importar — **nunca zeros** |
 | **Premissas** | trocar 185 por 150 e RECALCULAR | os módulos sobem e o rodapé passa a dizer 150 |
 | **Corte de 150** | olhar o rodapé | quantos voos ficaram fora do critério de contagem |
+| **Escala sem turno** | ESCALA num mês sem os CSVs colados | aviso âmbar dizendo que não há turno ativo — **nunca "cobre o mês"** |
+| **Escala de outubro** | colar `escala_escopo_2026-10.csv`, mês em **2026-10**, ESCALA | APAC **amarelo, REPOSICIONAR TURNOS**: 38 em escala, mínimo 36, **24 dias** com falta. SUP **vermelho, CONTRATAR 1**: 4 em escala, mínimo 5, 24 dias |
+| **Onde falta em outubro** | tabela hora a hora | APAC: saldo **−2 às 11h** (7 dias), **−3 às 19h** (20 dias) e **−3 às 20h** (7 dias); todas as outras horas verdes. SUP: −1 nas mesmas três horas |
+| **Célula exigido/escalado** | grade dia a dia, hora 19, um dia com falta | **14/11** em amarelo; em SUPERVISORES (olho), **2/1** em vermelho |
+| **Régua bate com a planilha** | linha ESCALADOS da régua | **5 5 5 12 11 14 14 11 11 14 14 12 14 12 15 14 11 14 15 11 11 11 5 5** — a linha 56 + 48–55 do escopo |
+| **Vigilância desligada** | em 2026-10, botão VIGILÂNCIA CONTA COMO APAC | vira VIGILÂNCIA NÃO CONTA; APAC passa a **32** em escala e **CONTRATAR 4**, em vermelho; a hora 00 fica **5/3** |
+| **Escala de dezembro** | colar `escala_escopo_2026-12.csv`, mês **2026-12**, ESCALA | APAC amarelo com **30 dias** com falta, inclusive **01h e 02h** (2 dias, voos de madrugada); SUP **CONTRATAR 1** |
+| **Novembro não pede supervisor** | mês **2026-11**, ESCALA | APAC e SUP **amarelos**, 11 dias com falta, só às 19h e 20h |
+| **Turno novo muda a análise** | em 2026-10, TURNOS → NOVO TURNO: APAC, começa 17:00, 08h, intervalo 22:00, 3 pessoas → SALVAR → ANÁLISE | APAC passa a **41** em escala e **7 dias** com falta, só às **11h**; 19h e 20h ficam verdes. Desligar **Ativo** desse turno e SALVAR volta a **24 dias** (`node testar_escala.js --extra=APAC:1020:480:1320:60:3`) |
+| **Intervalo fora do turno** | TURNOS → NOVO TURNO, começa 06:00, 08h, intervalo 20:00 → SALVAR | recusa com aviso vermelho; nada é gravado |
 
 A prova da aritmética é a que vale por todas: **20:00 de 24/12 tem 171 passageiros**, que pela
 volumetria dariam **1 módulo**, mas são **3 decolagens acima de 150 assentos** na mesma hora. Se a
@@ -133,7 +150,7 @@ sozinha erraria por seis pessoas.
 
 ## O que ainda não existe
 
-- **`scrApacEscala`** — os turnos cadastrados e o déficit contra eles. O **mínimo necessário** e os
-  folguistas já saem na tela do mês; falta comparar com a escala que existe de fato.
-- **Cadastro da escala** (`tb_apacEscala`) — a lista existe, mas nenhuma tela ainda lê nem grava
-  os turnos. Entra junto com a `scrApacEscala`.
+- **Copiar a escala de um mês para outro** — cada competência tem a sua escala e, na tela, só se
+  cadastra turno a turno. Copiar exigiria `ForAll` com `Patch` numa lista, que não tem precedente
+  validado neste repositório. Até lá, a carga em massa é pelos CSVs no modo de grade.
+- **Técnico de segurança, ADM e preposto** — não entram em nenhuma conta.

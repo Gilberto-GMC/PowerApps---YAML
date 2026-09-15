@@ -354,7 +354,9 @@ Screens:
                       )
                   )
               );
-              Set(varMesLido, true)
+              Set(varMesLido, true);
+              // A scrApacEscala usa colMesCel e colMinMes deste cálculo; varCompCalc diz de qual mês eles são.
+              Set(varCompCalc, varComp)
             Text: ="calcular"
             Visible: =false
             Width: =1
@@ -482,6 +484,16 @@ Screens:
                                 Navigate(scrApacDia, ScreenTransition.Fade)
                               Text: ="ABRIR O DIA DE PICO"
                               Width: =188
+                        # A escala confere os turnos cadastrados contra o exigido deste mês, já calculado aqui.
+                        - btnEscalaMes:
+                            Control: Button@0.0.45
+                            Properties:
+                              Appearance: ='ButtonCanvas.Appearance'.Secondary
+                              DisplayMode: =If(CountRows(colVoosMes) = 0, DisplayMode.Disabled, DisplayMode.Edit)
+                              Height: =thmAlturaCampo
+                              OnSelect: =Navigate(scrApacEscala, ScreenTransition.Fade)
+                              Text: ="ESCALA"
+                              Width: =100
                         # Premissas e postos fixos se cadastram em scrApacCadastro. Ao voltar, o
                         # OnVisible desta tela relê tudo e recalcula o mínimo.
                         - btnCadastrosMes:

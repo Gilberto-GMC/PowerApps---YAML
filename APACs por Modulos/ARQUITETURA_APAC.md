@@ -140,6 +140,9 @@ Está escrito aqui para não virar redescoberta.
 | `scrApacDia.pa.yaml` | o dia hora a hora, reproduzindo a planilha da Simone |
 | `scrApacCadastro.pa.yaml` | cadastro de premissas (vigências) e postos fixos |
 | `scrApacImport.pa.yaml` | importação da malha: anexo, progresso e histórico |
+| `scrApacEscala.pa.yaml` | a escala cadastrada contra o exigido do mês: veredito, hora a hora, régua dos turnos, dia a dia (§17) |
+| `escala_do_escopo.js` | converte a escala do `Escopo NVT Verão 2027.xlsx` em `dados/escala_escopo_AAAA-MM.csv`, conferindo a cobertura contra a planilha |
+| `testar_escala.js` | os números que a tela da escala tem de mostrar, mês a mês, com a conta do app |
 | `montar_fluxo_importacao.js` | gera `fluxo/ImportarMalhaAPAC.zip` e confere a definição antes |
 | `testar_importar_malha.js` | roda o Office Script fora do Excel contra o export real |
 | `FLUXO_IMPORTACAO_APAC.md` | passo a passo do fluxo, com a costura do Office Script |
@@ -152,10 +155,9 @@ Está escrito aqui para não virar redescoberta.
 
 ## 12. O que ainda não existe
 
-- **`scrApacEscala`** — turnos 6x2 sobre a régua de horas e déficit ao vivo **contra a escala
-  cadastrada**. O efetivo mínimo e os folguistas já saem na tela do mês (§13); o que falta é
-  comparar com os turnos que existem de fato.
-- **Cadastro da escala** — a `tb_apacEscala` existe, mas nenhuma tela lê nem grava turnos.
+- **Copiar a escala entre meses** — sem precedente validado de `ForAll` com `Patch` em lista; a carga
+  em massa é pelos CSVs no modo de grade (§17).
+- **Técnico de segurança, ADM e preposto** — fora de todas as contas.
 
 ## 13. Efetivo mínimo — calculado na tela do mês, sem laço
 
@@ -293,3 +295,45 @@ competência. O item nasce `RASCUNHO` e o `OnSuccess` o marca `PRONTO`: o fluxo 
 `PRONTO`, quando o anexo já está gravado.
 
 **O gerador confere antes de gerar, e a conferência foi testada.** testar_montar_fluxo.js roda uma cópia sem defeito (tem de passar) e oito cópias com defeito plantado — obrigatória faltando em PostItem e em PatchItem, referência a ação inexistente, coluna que não existe, runAfter para outro nível, variável não inicializada, items() fora do laço e InitializeVariable dentro de escopo. Os oito são recusados, e cada um pela própria conferência: erro de sintaxe não conta como recusa.
+
+## 17. A escala contra o exigido
+
+A tela do mês diz **quanto** a malha pede; a `scrApacEscala` diz se **os turnos cadastrados** entregam
+isso em cada hora de cada dia. Abre só pelo botão ESCALA do mês.
+
+**Não recalcula o exigido.** Usa `colMesCel` e `colMinMes` que o `btnCalcMes` deixou prontos, e
+`varCompCalc` diz de qual mês eles são. Se não bater com `varComp`, a tela avisa em vez de comparar
+turnos de um mês com a malha de outro.
+
+**A regra de cobertura é uma só nos três lugares** — `btnCalcEsc`, a régua da tela e o `cobre()` de
+`escala_do_escopo.js`: o turno conta na hora h se a hora inteira está dentro da presença (atravessando
+a meia-noite) e não encosta no intervalo. Essa regra foi conferida contra a planilha antes de virar
+Power Fx: os 25 turnos gerados reproduzem, nas 24 horas, a linha 56 + 48–55 (APAC) e a linha 58
+(supervisor). Mudar a regra num lugar exige mudar nos outros e rodar o script de novo.
+
+**Um turno por hora de intervalo.** A planilha tem, por turno, uma linha "efetivo em intervalo" com
+quantas pessoas param em cada hora. Cada hora negativa vira um registro; quem não para vira um
+registro "sem intervalo". Por isso a escala do escopo tem 25 turnos para 42 pessoas.
+
+**Vigilância conta como APAC por padrão.** Os postos fixos já estão dentro do exigido de APAC, e na
+planilha quem os cobre são os turnos de vigilância. O botão da barra desliga, para ver o que sobra.
+
+**Verde, amarelo, vermelho.** Em cada célula, `exigido/escalado`:
+
+| Cor | Quando |
+|---|---|
+| verde | escalado ≥ exigido |
+| amarelo | falta nesta hora, **e** o total em escala ≥ mínimo do mês (§13) — remanejar turnos cobre |
+| vermelho | falta nesta hora, **e** o total em escala < mínimo do mês — só contratando |
+
+Amarelo ou vermelho se decide **pelo mês**, não pela hora: a escala é uma só para todos os dias, e o
+mínimo do mês é o menor quadro que cobre o pior dia de cada hora com turnos de 8h e 1h de intervalo —
+provado atingível em `valida_minimo_app.js`. Quem tem o mínimo tem uma escala que cobre tudo; quem
+não tem, não tem nenhuma.
+
+**Sem intervalo** grava `intervalo_inicio = hora_inicio` e `intervalo_min = 0`, que a regra ignora — em
+vez de gravar `Blank()` num número, que não tem precedente de `Patch` neste repositório.
+
+**Números esperados:** `node testar_escala.js`. Outubro: APAC 38 em escala contra mínimo 36, faltas
+às 11h, 19h e 20h em 24 dias → amarelo; supervisores 4 contra 5 → vermelho, contratar 1. É a mesma
+resposta do `CONTRATACAO_APAC.md`, agora chegando pela tela.
