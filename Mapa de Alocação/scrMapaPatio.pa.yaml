@@ -24,6 +24,8 @@ Screens:
         ClearCollect(colEquip, Sort(Filter(tb_equipamentos, ativo = 1), ordem, SortOrder.Ascending));
         ClearCollect(colRegras, Filter(tb_regrasPosicao, aeroporto = varAero And ativo = 1));
         Set(varVerFinalizados, Coalesce(varVerFinalizados, true));
+        Set(varCliqueCel, "");
+        Set(varCliqueEm, Now());
         Set(varJanelaMin, Coalesce(varJanelaMin, mapJanelaPadrao));
         Set(varJanelaIni, Coalesce(varJanelaIni, Min(mapMinutosDia - varJanelaMin, If(varData = Today(), Hour(Now()) * 60, 0))));
         ClearCollect(colEquipSel, Table({ Value: "—" }));
@@ -1334,9 +1336,15 @@ Screens:
                                           FillPortions: =0
                                           LayoutMinWidth: =0
                                           OnSelect: |-
-                                            =Set(varPosSel, ThisItem);
-                                            Set(varNovoIni, -1);
-                                            Select(btnAbrirNovoMap)
+                                            =If(
+                                                varCliqueCel = "R|" & ThisItem.posicao And DateDiff(varCliqueEm, Now(), TimeUnit.Milliseconds) <= mapDuploCliqueMs,
+                                                    Set(varCliqueCel, "");
+                                                    Set(varPosSel, ThisItem);
+                                                    Set(varNovoIni, -1);
+                                                    Select(btnAbrirNovoMap),
+                                                Set(varCliqueCel, "R|" & ThisItem.posicao);
+                                                Set(varCliqueEm, Now())
+                                            )
                                           Text: =""
                                           Width: =mapLarguraRotulo
                                     - lblFx0Map:
@@ -1347,12 +1355,18 @@ Screens:
                                           LayoutMinWidth: =0
                                           OnSelect: |-
                                             =If(
-                                                IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 1 * varJanelaMin / 36 And _t.fim > varJanelaIni + 0 * varJanelaMin / 36).id),
-                                                Set(varPosSel, ThisItem);
-                                                Set(varNovoIni, varJanelaIni + 0 * varJanelaMin / 36);
-                                                Select(btnAbrirNovoMap),
-                                                Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 1 * varJanelaMin / 36 And _t.fim > varJanelaIni + 0 * varJanelaMin / 36).id));
-                                                Select(btnAbrirEdicaoMap)
+                                                varCliqueCel = "0|" & ThisItem.posicao And DateDiff(varCliqueEm, Now(), TimeUnit.Milliseconds) <= mapDuploCliqueMs,
+                                                    Set(varCliqueCel, "");
+                                                    If(
+                                                        IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 1 * varJanelaMin / 36 And _t.fim > varJanelaIni + 0 * varJanelaMin / 36).id),
+                                                        Set(varPosSel, ThisItem);
+                                                        Set(varNovoIni, varJanelaIni + 0 * varJanelaMin / 36);
+                                                        Select(btnAbrirNovoMap),
+                                                        Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 1 * varJanelaMin / 36 And _t.fim > varJanelaIni + 0 * varJanelaMin / 36).id));
+                                                        Select(btnAbrirEdicaoMap)
+                                                    ),
+                                                Set(varCliqueCel, "0|" & ThisItem.posicao);
+                                                Set(varCliqueEm, Now())
                                             )
                                           Text: =""
                                           Tooltip: =Coalesce(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 1 * varJanelaMin / 36 And _t.fim > varJanelaIni + 0 * varJanelaMin / 36).dica_txt, "")
@@ -1364,12 +1378,18 @@ Screens:
                                           LayoutMinWidth: =0
                                           OnSelect: |-
                                             =If(
-                                                IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 2 * varJanelaMin / 36 And _t.fim > varJanelaIni + 1 * varJanelaMin / 36).id),
-                                                Set(varPosSel, ThisItem);
-                                                Set(varNovoIni, varJanelaIni + 1 * varJanelaMin / 36);
-                                                Select(btnAbrirNovoMap),
-                                                Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 2 * varJanelaMin / 36 And _t.fim > varJanelaIni + 1 * varJanelaMin / 36).id));
-                                                Select(btnAbrirEdicaoMap)
+                                                varCliqueCel = "1|" & ThisItem.posicao And DateDiff(varCliqueEm, Now(), TimeUnit.Milliseconds) <= mapDuploCliqueMs,
+                                                    Set(varCliqueCel, "");
+                                                    If(
+                                                        IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 2 * varJanelaMin / 36 And _t.fim > varJanelaIni + 1 * varJanelaMin / 36).id),
+                                                        Set(varPosSel, ThisItem);
+                                                        Set(varNovoIni, varJanelaIni + 1 * varJanelaMin / 36);
+                                                        Select(btnAbrirNovoMap),
+                                                        Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 2 * varJanelaMin / 36 And _t.fim > varJanelaIni + 1 * varJanelaMin / 36).id));
+                                                        Select(btnAbrirEdicaoMap)
+                                                    ),
+                                                Set(varCliqueCel, "1|" & ThisItem.posicao);
+                                                Set(varCliqueEm, Now())
                                             )
                                           Text: =""
                                           Tooltip: =Coalesce(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 2 * varJanelaMin / 36 And _t.fim > varJanelaIni + 1 * varJanelaMin / 36).dica_txt, "")
@@ -1381,12 +1401,18 @@ Screens:
                                           LayoutMinWidth: =0
                                           OnSelect: |-
                                             =If(
-                                                IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 3 * varJanelaMin / 36 And _t.fim > varJanelaIni + 2 * varJanelaMin / 36).id),
-                                                Set(varPosSel, ThisItem);
-                                                Set(varNovoIni, varJanelaIni + 2 * varJanelaMin / 36);
-                                                Select(btnAbrirNovoMap),
-                                                Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 3 * varJanelaMin / 36 And _t.fim > varJanelaIni + 2 * varJanelaMin / 36).id));
-                                                Select(btnAbrirEdicaoMap)
+                                                varCliqueCel = "2|" & ThisItem.posicao And DateDiff(varCliqueEm, Now(), TimeUnit.Milliseconds) <= mapDuploCliqueMs,
+                                                    Set(varCliqueCel, "");
+                                                    If(
+                                                        IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 3 * varJanelaMin / 36 And _t.fim > varJanelaIni + 2 * varJanelaMin / 36).id),
+                                                        Set(varPosSel, ThisItem);
+                                                        Set(varNovoIni, varJanelaIni + 2 * varJanelaMin / 36);
+                                                        Select(btnAbrirNovoMap),
+                                                        Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 3 * varJanelaMin / 36 And _t.fim > varJanelaIni + 2 * varJanelaMin / 36).id));
+                                                        Select(btnAbrirEdicaoMap)
+                                                    ),
+                                                Set(varCliqueCel, "2|" & ThisItem.posicao);
+                                                Set(varCliqueEm, Now())
                                             )
                                           Text: =""
                                           Tooltip: =Coalesce(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 3 * varJanelaMin / 36 And _t.fim > varJanelaIni + 2 * varJanelaMin / 36).dica_txt, "")
@@ -1398,12 +1424,18 @@ Screens:
                                           LayoutMinWidth: =0
                                           OnSelect: |-
                                             =If(
-                                                IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 4 * varJanelaMin / 36 And _t.fim > varJanelaIni + 3 * varJanelaMin / 36).id),
-                                                Set(varPosSel, ThisItem);
-                                                Set(varNovoIni, varJanelaIni + 3 * varJanelaMin / 36);
-                                                Select(btnAbrirNovoMap),
-                                                Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 4 * varJanelaMin / 36 And _t.fim > varJanelaIni + 3 * varJanelaMin / 36).id));
-                                                Select(btnAbrirEdicaoMap)
+                                                varCliqueCel = "3|" & ThisItem.posicao And DateDiff(varCliqueEm, Now(), TimeUnit.Milliseconds) <= mapDuploCliqueMs,
+                                                    Set(varCliqueCel, "");
+                                                    If(
+                                                        IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 4 * varJanelaMin / 36 And _t.fim > varJanelaIni + 3 * varJanelaMin / 36).id),
+                                                        Set(varPosSel, ThisItem);
+                                                        Set(varNovoIni, varJanelaIni + 3 * varJanelaMin / 36);
+                                                        Select(btnAbrirNovoMap),
+                                                        Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 4 * varJanelaMin / 36 And _t.fim > varJanelaIni + 3 * varJanelaMin / 36).id));
+                                                        Select(btnAbrirEdicaoMap)
+                                                    ),
+                                                Set(varCliqueCel, "3|" & ThisItem.posicao);
+                                                Set(varCliqueEm, Now())
                                             )
                                           Text: =""
                                           Tooltip: =Coalesce(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 4 * varJanelaMin / 36 And _t.fim > varJanelaIni + 3 * varJanelaMin / 36).dica_txt, "")
@@ -1415,12 +1447,18 @@ Screens:
                                           LayoutMinWidth: =0
                                           OnSelect: |-
                                             =If(
-                                                IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 5 * varJanelaMin / 36 And _t.fim > varJanelaIni + 4 * varJanelaMin / 36).id),
-                                                Set(varPosSel, ThisItem);
-                                                Set(varNovoIni, varJanelaIni + 4 * varJanelaMin / 36);
-                                                Select(btnAbrirNovoMap),
-                                                Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 5 * varJanelaMin / 36 And _t.fim > varJanelaIni + 4 * varJanelaMin / 36).id));
-                                                Select(btnAbrirEdicaoMap)
+                                                varCliqueCel = "4|" & ThisItem.posicao And DateDiff(varCliqueEm, Now(), TimeUnit.Milliseconds) <= mapDuploCliqueMs,
+                                                    Set(varCliqueCel, "");
+                                                    If(
+                                                        IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 5 * varJanelaMin / 36 And _t.fim > varJanelaIni + 4 * varJanelaMin / 36).id),
+                                                        Set(varPosSel, ThisItem);
+                                                        Set(varNovoIni, varJanelaIni + 4 * varJanelaMin / 36);
+                                                        Select(btnAbrirNovoMap),
+                                                        Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 5 * varJanelaMin / 36 And _t.fim > varJanelaIni + 4 * varJanelaMin / 36).id));
+                                                        Select(btnAbrirEdicaoMap)
+                                                    ),
+                                                Set(varCliqueCel, "4|" & ThisItem.posicao);
+                                                Set(varCliqueEm, Now())
                                             )
                                           Text: =""
                                           Tooltip: =Coalesce(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 5 * varJanelaMin / 36 And _t.fim > varJanelaIni + 4 * varJanelaMin / 36).dica_txt, "")
@@ -1432,12 +1470,18 @@ Screens:
                                           LayoutMinWidth: =0
                                           OnSelect: |-
                                             =If(
-                                                IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 6 * varJanelaMin / 36 And _t.fim > varJanelaIni + 5 * varJanelaMin / 36).id),
-                                                Set(varPosSel, ThisItem);
-                                                Set(varNovoIni, varJanelaIni + 5 * varJanelaMin / 36);
-                                                Select(btnAbrirNovoMap),
-                                                Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 6 * varJanelaMin / 36 And _t.fim > varJanelaIni + 5 * varJanelaMin / 36).id));
-                                                Select(btnAbrirEdicaoMap)
+                                                varCliqueCel = "5|" & ThisItem.posicao And DateDiff(varCliqueEm, Now(), TimeUnit.Milliseconds) <= mapDuploCliqueMs,
+                                                    Set(varCliqueCel, "");
+                                                    If(
+                                                        IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 6 * varJanelaMin / 36 And _t.fim > varJanelaIni + 5 * varJanelaMin / 36).id),
+                                                        Set(varPosSel, ThisItem);
+                                                        Set(varNovoIni, varJanelaIni + 5 * varJanelaMin / 36);
+                                                        Select(btnAbrirNovoMap),
+                                                        Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 6 * varJanelaMin / 36 And _t.fim > varJanelaIni + 5 * varJanelaMin / 36).id));
+                                                        Select(btnAbrirEdicaoMap)
+                                                    ),
+                                                Set(varCliqueCel, "5|" & ThisItem.posicao);
+                                                Set(varCliqueEm, Now())
                                             )
                                           Text: =""
                                           Tooltip: =Coalesce(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 6 * varJanelaMin / 36 And _t.fim > varJanelaIni + 5 * varJanelaMin / 36).dica_txt, "")
@@ -1449,12 +1493,18 @@ Screens:
                                           LayoutMinWidth: =0
                                           OnSelect: |-
                                             =If(
-                                                IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 7 * varJanelaMin / 36 And _t.fim > varJanelaIni + 6 * varJanelaMin / 36).id),
-                                                Set(varPosSel, ThisItem);
-                                                Set(varNovoIni, varJanelaIni + 6 * varJanelaMin / 36);
-                                                Select(btnAbrirNovoMap),
-                                                Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 7 * varJanelaMin / 36 And _t.fim > varJanelaIni + 6 * varJanelaMin / 36).id));
-                                                Select(btnAbrirEdicaoMap)
+                                                varCliqueCel = "6|" & ThisItem.posicao And DateDiff(varCliqueEm, Now(), TimeUnit.Milliseconds) <= mapDuploCliqueMs,
+                                                    Set(varCliqueCel, "");
+                                                    If(
+                                                        IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 7 * varJanelaMin / 36 And _t.fim > varJanelaIni + 6 * varJanelaMin / 36).id),
+                                                        Set(varPosSel, ThisItem);
+                                                        Set(varNovoIni, varJanelaIni + 6 * varJanelaMin / 36);
+                                                        Select(btnAbrirNovoMap),
+                                                        Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 7 * varJanelaMin / 36 And _t.fim > varJanelaIni + 6 * varJanelaMin / 36).id));
+                                                        Select(btnAbrirEdicaoMap)
+                                                    ),
+                                                Set(varCliqueCel, "6|" & ThisItem.posicao);
+                                                Set(varCliqueEm, Now())
                                             )
                                           Text: =""
                                           Tooltip: =Coalesce(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 7 * varJanelaMin / 36 And _t.fim > varJanelaIni + 6 * varJanelaMin / 36).dica_txt, "")
@@ -1466,12 +1516,18 @@ Screens:
                                           LayoutMinWidth: =0
                                           OnSelect: |-
                                             =If(
-                                                IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 8 * varJanelaMin / 36 And _t.fim > varJanelaIni + 7 * varJanelaMin / 36).id),
-                                                Set(varPosSel, ThisItem);
-                                                Set(varNovoIni, varJanelaIni + 7 * varJanelaMin / 36);
-                                                Select(btnAbrirNovoMap),
-                                                Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 8 * varJanelaMin / 36 And _t.fim > varJanelaIni + 7 * varJanelaMin / 36).id));
-                                                Select(btnAbrirEdicaoMap)
+                                                varCliqueCel = "7|" & ThisItem.posicao And DateDiff(varCliqueEm, Now(), TimeUnit.Milliseconds) <= mapDuploCliqueMs,
+                                                    Set(varCliqueCel, "");
+                                                    If(
+                                                        IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 8 * varJanelaMin / 36 And _t.fim > varJanelaIni + 7 * varJanelaMin / 36).id),
+                                                        Set(varPosSel, ThisItem);
+                                                        Set(varNovoIni, varJanelaIni + 7 * varJanelaMin / 36);
+                                                        Select(btnAbrirNovoMap),
+                                                        Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 8 * varJanelaMin / 36 And _t.fim > varJanelaIni + 7 * varJanelaMin / 36).id));
+                                                        Select(btnAbrirEdicaoMap)
+                                                    ),
+                                                Set(varCliqueCel, "7|" & ThisItem.posicao);
+                                                Set(varCliqueEm, Now())
                                             )
                                           Text: =""
                                           Tooltip: =Coalesce(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 8 * varJanelaMin / 36 And _t.fim > varJanelaIni + 7 * varJanelaMin / 36).dica_txt, "")
@@ -1483,12 +1539,18 @@ Screens:
                                           LayoutMinWidth: =0
                                           OnSelect: |-
                                             =If(
-                                                IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 9 * varJanelaMin / 36 And _t.fim > varJanelaIni + 8 * varJanelaMin / 36).id),
-                                                Set(varPosSel, ThisItem);
-                                                Set(varNovoIni, varJanelaIni + 8 * varJanelaMin / 36);
-                                                Select(btnAbrirNovoMap),
-                                                Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 9 * varJanelaMin / 36 And _t.fim > varJanelaIni + 8 * varJanelaMin / 36).id));
-                                                Select(btnAbrirEdicaoMap)
+                                                varCliqueCel = "8|" & ThisItem.posicao And DateDiff(varCliqueEm, Now(), TimeUnit.Milliseconds) <= mapDuploCliqueMs,
+                                                    Set(varCliqueCel, "");
+                                                    If(
+                                                        IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 9 * varJanelaMin / 36 And _t.fim > varJanelaIni + 8 * varJanelaMin / 36).id),
+                                                        Set(varPosSel, ThisItem);
+                                                        Set(varNovoIni, varJanelaIni + 8 * varJanelaMin / 36);
+                                                        Select(btnAbrirNovoMap),
+                                                        Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 9 * varJanelaMin / 36 And _t.fim > varJanelaIni + 8 * varJanelaMin / 36).id));
+                                                        Select(btnAbrirEdicaoMap)
+                                                    ),
+                                                Set(varCliqueCel, "8|" & ThisItem.posicao);
+                                                Set(varCliqueEm, Now())
                                             )
                                           Text: =""
                                           Tooltip: =Coalesce(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 9 * varJanelaMin / 36 And _t.fim > varJanelaIni + 8 * varJanelaMin / 36).dica_txt, "")
@@ -1500,12 +1562,18 @@ Screens:
                                           LayoutMinWidth: =0
                                           OnSelect: |-
                                             =If(
-                                                IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 10 * varJanelaMin / 36 And _t.fim > varJanelaIni + 9 * varJanelaMin / 36).id),
-                                                Set(varPosSel, ThisItem);
-                                                Set(varNovoIni, varJanelaIni + 9 * varJanelaMin / 36);
-                                                Select(btnAbrirNovoMap),
-                                                Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 10 * varJanelaMin / 36 And _t.fim > varJanelaIni + 9 * varJanelaMin / 36).id));
-                                                Select(btnAbrirEdicaoMap)
+                                                varCliqueCel = "9|" & ThisItem.posicao And DateDiff(varCliqueEm, Now(), TimeUnit.Milliseconds) <= mapDuploCliqueMs,
+                                                    Set(varCliqueCel, "");
+                                                    If(
+                                                        IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 10 * varJanelaMin / 36 And _t.fim > varJanelaIni + 9 * varJanelaMin / 36).id),
+                                                        Set(varPosSel, ThisItem);
+                                                        Set(varNovoIni, varJanelaIni + 9 * varJanelaMin / 36);
+                                                        Select(btnAbrirNovoMap),
+                                                        Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 10 * varJanelaMin / 36 And _t.fim > varJanelaIni + 9 * varJanelaMin / 36).id));
+                                                        Select(btnAbrirEdicaoMap)
+                                                    ),
+                                                Set(varCliqueCel, "9|" & ThisItem.posicao);
+                                                Set(varCliqueEm, Now())
                                             )
                                           Text: =""
                                           Tooltip: =Coalesce(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 10 * varJanelaMin / 36 And _t.fim > varJanelaIni + 9 * varJanelaMin / 36).dica_txt, "")
@@ -1517,12 +1585,18 @@ Screens:
                                           LayoutMinWidth: =0
                                           OnSelect: |-
                                             =If(
-                                                IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 11 * varJanelaMin / 36 And _t.fim > varJanelaIni + 10 * varJanelaMin / 36).id),
-                                                Set(varPosSel, ThisItem);
-                                                Set(varNovoIni, varJanelaIni + 10 * varJanelaMin / 36);
-                                                Select(btnAbrirNovoMap),
-                                                Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 11 * varJanelaMin / 36 And _t.fim > varJanelaIni + 10 * varJanelaMin / 36).id));
-                                                Select(btnAbrirEdicaoMap)
+                                                varCliqueCel = "10|" & ThisItem.posicao And DateDiff(varCliqueEm, Now(), TimeUnit.Milliseconds) <= mapDuploCliqueMs,
+                                                    Set(varCliqueCel, "");
+                                                    If(
+                                                        IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 11 * varJanelaMin / 36 And _t.fim > varJanelaIni + 10 * varJanelaMin / 36).id),
+                                                        Set(varPosSel, ThisItem);
+                                                        Set(varNovoIni, varJanelaIni + 10 * varJanelaMin / 36);
+                                                        Select(btnAbrirNovoMap),
+                                                        Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 11 * varJanelaMin / 36 And _t.fim > varJanelaIni + 10 * varJanelaMin / 36).id));
+                                                        Select(btnAbrirEdicaoMap)
+                                                    ),
+                                                Set(varCliqueCel, "10|" & ThisItem.posicao);
+                                                Set(varCliqueEm, Now())
                                             )
                                           Text: =""
                                           Tooltip: =Coalesce(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 11 * varJanelaMin / 36 And _t.fim > varJanelaIni + 10 * varJanelaMin / 36).dica_txt, "")
@@ -1534,12 +1608,18 @@ Screens:
                                           LayoutMinWidth: =0
                                           OnSelect: |-
                                             =If(
-                                                IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 12 * varJanelaMin / 36 And _t.fim > varJanelaIni + 11 * varJanelaMin / 36).id),
-                                                Set(varPosSel, ThisItem);
-                                                Set(varNovoIni, varJanelaIni + 11 * varJanelaMin / 36);
-                                                Select(btnAbrirNovoMap),
-                                                Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 12 * varJanelaMin / 36 And _t.fim > varJanelaIni + 11 * varJanelaMin / 36).id));
-                                                Select(btnAbrirEdicaoMap)
+                                                varCliqueCel = "11|" & ThisItem.posicao And DateDiff(varCliqueEm, Now(), TimeUnit.Milliseconds) <= mapDuploCliqueMs,
+                                                    Set(varCliqueCel, "");
+                                                    If(
+                                                        IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 12 * varJanelaMin / 36 And _t.fim > varJanelaIni + 11 * varJanelaMin / 36).id),
+                                                        Set(varPosSel, ThisItem);
+                                                        Set(varNovoIni, varJanelaIni + 11 * varJanelaMin / 36);
+                                                        Select(btnAbrirNovoMap),
+                                                        Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 12 * varJanelaMin / 36 And _t.fim > varJanelaIni + 11 * varJanelaMin / 36).id));
+                                                        Select(btnAbrirEdicaoMap)
+                                                    ),
+                                                Set(varCliqueCel, "11|" & ThisItem.posicao);
+                                                Set(varCliqueEm, Now())
                                             )
                                           Text: =""
                                           Tooltip: =Coalesce(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 12 * varJanelaMin / 36 And _t.fim > varJanelaIni + 11 * varJanelaMin / 36).dica_txt, "")
@@ -1551,12 +1631,18 @@ Screens:
                                           LayoutMinWidth: =0
                                           OnSelect: |-
                                             =If(
-                                                IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 13 * varJanelaMin / 36 And _t.fim > varJanelaIni + 12 * varJanelaMin / 36).id),
-                                                Set(varPosSel, ThisItem);
-                                                Set(varNovoIni, varJanelaIni + 12 * varJanelaMin / 36);
-                                                Select(btnAbrirNovoMap),
-                                                Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 13 * varJanelaMin / 36 And _t.fim > varJanelaIni + 12 * varJanelaMin / 36).id));
-                                                Select(btnAbrirEdicaoMap)
+                                                varCliqueCel = "12|" & ThisItem.posicao And DateDiff(varCliqueEm, Now(), TimeUnit.Milliseconds) <= mapDuploCliqueMs,
+                                                    Set(varCliqueCel, "");
+                                                    If(
+                                                        IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 13 * varJanelaMin / 36 And _t.fim > varJanelaIni + 12 * varJanelaMin / 36).id),
+                                                        Set(varPosSel, ThisItem);
+                                                        Set(varNovoIni, varJanelaIni + 12 * varJanelaMin / 36);
+                                                        Select(btnAbrirNovoMap),
+                                                        Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 13 * varJanelaMin / 36 And _t.fim > varJanelaIni + 12 * varJanelaMin / 36).id));
+                                                        Select(btnAbrirEdicaoMap)
+                                                    ),
+                                                Set(varCliqueCel, "12|" & ThisItem.posicao);
+                                                Set(varCliqueEm, Now())
                                             )
                                           Text: =""
                                           Tooltip: =Coalesce(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 13 * varJanelaMin / 36 And _t.fim > varJanelaIni + 12 * varJanelaMin / 36).dica_txt, "")
@@ -1568,12 +1654,18 @@ Screens:
                                           LayoutMinWidth: =0
                                           OnSelect: |-
                                             =If(
-                                                IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 14 * varJanelaMin / 36 And _t.fim > varJanelaIni + 13 * varJanelaMin / 36).id),
-                                                Set(varPosSel, ThisItem);
-                                                Set(varNovoIni, varJanelaIni + 13 * varJanelaMin / 36);
-                                                Select(btnAbrirNovoMap),
-                                                Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 14 * varJanelaMin / 36 And _t.fim > varJanelaIni + 13 * varJanelaMin / 36).id));
-                                                Select(btnAbrirEdicaoMap)
+                                                varCliqueCel = "13|" & ThisItem.posicao And DateDiff(varCliqueEm, Now(), TimeUnit.Milliseconds) <= mapDuploCliqueMs,
+                                                    Set(varCliqueCel, "");
+                                                    If(
+                                                        IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 14 * varJanelaMin / 36 And _t.fim > varJanelaIni + 13 * varJanelaMin / 36).id),
+                                                        Set(varPosSel, ThisItem);
+                                                        Set(varNovoIni, varJanelaIni + 13 * varJanelaMin / 36);
+                                                        Select(btnAbrirNovoMap),
+                                                        Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 14 * varJanelaMin / 36 And _t.fim > varJanelaIni + 13 * varJanelaMin / 36).id));
+                                                        Select(btnAbrirEdicaoMap)
+                                                    ),
+                                                Set(varCliqueCel, "13|" & ThisItem.posicao);
+                                                Set(varCliqueEm, Now())
                                             )
                                           Text: =""
                                           Tooltip: =Coalesce(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 14 * varJanelaMin / 36 And _t.fim > varJanelaIni + 13 * varJanelaMin / 36).dica_txt, "")
@@ -1585,12 +1677,18 @@ Screens:
                                           LayoutMinWidth: =0
                                           OnSelect: |-
                                             =If(
-                                                IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 15 * varJanelaMin / 36 And _t.fim > varJanelaIni + 14 * varJanelaMin / 36).id),
-                                                Set(varPosSel, ThisItem);
-                                                Set(varNovoIni, varJanelaIni + 14 * varJanelaMin / 36);
-                                                Select(btnAbrirNovoMap),
-                                                Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 15 * varJanelaMin / 36 And _t.fim > varJanelaIni + 14 * varJanelaMin / 36).id));
-                                                Select(btnAbrirEdicaoMap)
+                                                varCliqueCel = "14|" & ThisItem.posicao And DateDiff(varCliqueEm, Now(), TimeUnit.Milliseconds) <= mapDuploCliqueMs,
+                                                    Set(varCliqueCel, "");
+                                                    If(
+                                                        IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 15 * varJanelaMin / 36 And _t.fim > varJanelaIni + 14 * varJanelaMin / 36).id),
+                                                        Set(varPosSel, ThisItem);
+                                                        Set(varNovoIni, varJanelaIni + 14 * varJanelaMin / 36);
+                                                        Select(btnAbrirNovoMap),
+                                                        Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 15 * varJanelaMin / 36 And _t.fim > varJanelaIni + 14 * varJanelaMin / 36).id));
+                                                        Select(btnAbrirEdicaoMap)
+                                                    ),
+                                                Set(varCliqueCel, "14|" & ThisItem.posicao);
+                                                Set(varCliqueEm, Now())
                                             )
                                           Text: =""
                                           Tooltip: =Coalesce(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 15 * varJanelaMin / 36 And _t.fim > varJanelaIni + 14 * varJanelaMin / 36).dica_txt, "")
@@ -1602,12 +1700,18 @@ Screens:
                                           LayoutMinWidth: =0
                                           OnSelect: |-
                                             =If(
-                                                IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 16 * varJanelaMin / 36 And _t.fim > varJanelaIni + 15 * varJanelaMin / 36).id),
-                                                Set(varPosSel, ThisItem);
-                                                Set(varNovoIni, varJanelaIni + 15 * varJanelaMin / 36);
-                                                Select(btnAbrirNovoMap),
-                                                Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 16 * varJanelaMin / 36 And _t.fim > varJanelaIni + 15 * varJanelaMin / 36).id));
-                                                Select(btnAbrirEdicaoMap)
+                                                varCliqueCel = "15|" & ThisItem.posicao And DateDiff(varCliqueEm, Now(), TimeUnit.Milliseconds) <= mapDuploCliqueMs,
+                                                    Set(varCliqueCel, "");
+                                                    If(
+                                                        IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 16 * varJanelaMin / 36 And _t.fim > varJanelaIni + 15 * varJanelaMin / 36).id),
+                                                        Set(varPosSel, ThisItem);
+                                                        Set(varNovoIni, varJanelaIni + 15 * varJanelaMin / 36);
+                                                        Select(btnAbrirNovoMap),
+                                                        Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 16 * varJanelaMin / 36 And _t.fim > varJanelaIni + 15 * varJanelaMin / 36).id));
+                                                        Select(btnAbrirEdicaoMap)
+                                                    ),
+                                                Set(varCliqueCel, "15|" & ThisItem.posicao);
+                                                Set(varCliqueEm, Now())
                                             )
                                           Text: =""
                                           Tooltip: =Coalesce(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 16 * varJanelaMin / 36 And _t.fim > varJanelaIni + 15 * varJanelaMin / 36).dica_txt, "")
@@ -1619,12 +1723,18 @@ Screens:
                                           LayoutMinWidth: =0
                                           OnSelect: |-
                                             =If(
-                                                IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 17 * varJanelaMin / 36 And _t.fim > varJanelaIni + 16 * varJanelaMin / 36).id),
-                                                Set(varPosSel, ThisItem);
-                                                Set(varNovoIni, varJanelaIni + 16 * varJanelaMin / 36);
-                                                Select(btnAbrirNovoMap),
-                                                Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 17 * varJanelaMin / 36 And _t.fim > varJanelaIni + 16 * varJanelaMin / 36).id));
-                                                Select(btnAbrirEdicaoMap)
+                                                varCliqueCel = "16|" & ThisItem.posicao And DateDiff(varCliqueEm, Now(), TimeUnit.Milliseconds) <= mapDuploCliqueMs,
+                                                    Set(varCliqueCel, "");
+                                                    If(
+                                                        IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 17 * varJanelaMin / 36 And _t.fim > varJanelaIni + 16 * varJanelaMin / 36).id),
+                                                        Set(varPosSel, ThisItem);
+                                                        Set(varNovoIni, varJanelaIni + 16 * varJanelaMin / 36);
+                                                        Select(btnAbrirNovoMap),
+                                                        Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 17 * varJanelaMin / 36 And _t.fim > varJanelaIni + 16 * varJanelaMin / 36).id));
+                                                        Select(btnAbrirEdicaoMap)
+                                                    ),
+                                                Set(varCliqueCel, "16|" & ThisItem.posicao);
+                                                Set(varCliqueEm, Now())
                                             )
                                           Text: =""
                                           Tooltip: =Coalesce(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 17 * varJanelaMin / 36 And _t.fim > varJanelaIni + 16 * varJanelaMin / 36).dica_txt, "")
@@ -1636,12 +1746,18 @@ Screens:
                                           LayoutMinWidth: =0
                                           OnSelect: |-
                                             =If(
-                                                IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 18 * varJanelaMin / 36 And _t.fim > varJanelaIni + 17 * varJanelaMin / 36).id),
-                                                Set(varPosSel, ThisItem);
-                                                Set(varNovoIni, varJanelaIni + 17 * varJanelaMin / 36);
-                                                Select(btnAbrirNovoMap),
-                                                Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 18 * varJanelaMin / 36 And _t.fim > varJanelaIni + 17 * varJanelaMin / 36).id));
-                                                Select(btnAbrirEdicaoMap)
+                                                varCliqueCel = "17|" & ThisItem.posicao And DateDiff(varCliqueEm, Now(), TimeUnit.Milliseconds) <= mapDuploCliqueMs,
+                                                    Set(varCliqueCel, "");
+                                                    If(
+                                                        IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 18 * varJanelaMin / 36 And _t.fim > varJanelaIni + 17 * varJanelaMin / 36).id),
+                                                        Set(varPosSel, ThisItem);
+                                                        Set(varNovoIni, varJanelaIni + 17 * varJanelaMin / 36);
+                                                        Select(btnAbrirNovoMap),
+                                                        Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 18 * varJanelaMin / 36 And _t.fim > varJanelaIni + 17 * varJanelaMin / 36).id));
+                                                        Select(btnAbrirEdicaoMap)
+                                                    ),
+                                                Set(varCliqueCel, "17|" & ThisItem.posicao);
+                                                Set(varCliqueEm, Now())
                                             )
                                           Text: =""
                                           Tooltip: =Coalesce(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 18 * varJanelaMin / 36 And _t.fim > varJanelaIni + 17 * varJanelaMin / 36).dica_txt, "")
@@ -1653,12 +1769,18 @@ Screens:
                                           LayoutMinWidth: =0
                                           OnSelect: |-
                                             =If(
-                                                IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 19 * varJanelaMin / 36 And _t.fim > varJanelaIni + 18 * varJanelaMin / 36).id),
-                                                Set(varPosSel, ThisItem);
-                                                Set(varNovoIni, varJanelaIni + 18 * varJanelaMin / 36);
-                                                Select(btnAbrirNovoMap),
-                                                Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 19 * varJanelaMin / 36 And _t.fim > varJanelaIni + 18 * varJanelaMin / 36).id));
-                                                Select(btnAbrirEdicaoMap)
+                                                varCliqueCel = "18|" & ThisItem.posicao And DateDiff(varCliqueEm, Now(), TimeUnit.Milliseconds) <= mapDuploCliqueMs,
+                                                    Set(varCliqueCel, "");
+                                                    If(
+                                                        IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 19 * varJanelaMin / 36 And _t.fim > varJanelaIni + 18 * varJanelaMin / 36).id),
+                                                        Set(varPosSel, ThisItem);
+                                                        Set(varNovoIni, varJanelaIni + 18 * varJanelaMin / 36);
+                                                        Select(btnAbrirNovoMap),
+                                                        Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 19 * varJanelaMin / 36 And _t.fim > varJanelaIni + 18 * varJanelaMin / 36).id));
+                                                        Select(btnAbrirEdicaoMap)
+                                                    ),
+                                                Set(varCliqueCel, "18|" & ThisItem.posicao);
+                                                Set(varCliqueEm, Now())
                                             )
                                           Text: =""
                                           Tooltip: =Coalesce(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 19 * varJanelaMin / 36 And _t.fim > varJanelaIni + 18 * varJanelaMin / 36).dica_txt, "")
@@ -1670,12 +1792,18 @@ Screens:
                                           LayoutMinWidth: =0
                                           OnSelect: |-
                                             =If(
-                                                IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 20 * varJanelaMin / 36 And _t.fim > varJanelaIni + 19 * varJanelaMin / 36).id),
-                                                Set(varPosSel, ThisItem);
-                                                Set(varNovoIni, varJanelaIni + 19 * varJanelaMin / 36);
-                                                Select(btnAbrirNovoMap),
-                                                Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 20 * varJanelaMin / 36 And _t.fim > varJanelaIni + 19 * varJanelaMin / 36).id));
-                                                Select(btnAbrirEdicaoMap)
+                                                varCliqueCel = "19|" & ThisItem.posicao And DateDiff(varCliqueEm, Now(), TimeUnit.Milliseconds) <= mapDuploCliqueMs,
+                                                    Set(varCliqueCel, "");
+                                                    If(
+                                                        IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 20 * varJanelaMin / 36 And _t.fim > varJanelaIni + 19 * varJanelaMin / 36).id),
+                                                        Set(varPosSel, ThisItem);
+                                                        Set(varNovoIni, varJanelaIni + 19 * varJanelaMin / 36);
+                                                        Select(btnAbrirNovoMap),
+                                                        Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 20 * varJanelaMin / 36 And _t.fim > varJanelaIni + 19 * varJanelaMin / 36).id));
+                                                        Select(btnAbrirEdicaoMap)
+                                                    ),
+                                                Set(varCliqueCel, "19|" & ThisItem.posicao);
+                                                Set(varCliqueEm, Now())
                                             )
                                           Text: =""
                                           Tooltip: =Coalesce(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 20 * varJanelaMin / 36 And _t.fim > varJanelaIni + 19 * varJanelaMin / 36).dica_txt, "")
@@ -1687,12 +1815,18 @@ Screens:
                                           LayoutMinWidth: =0
                                           OnSelect: |-
                                             =If(
-                                                IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 21 * varJanelaMin / 36 And _t.fim > varJanelaIni + 20 * varJanelaMin / 36).id),
-                                                Set(varPosSel, ThisItem);
-                                                Set(varNovoIni, varJanelaIni + 20 * varJanelaMin / 36);
-                                                Select(btnAbrirNovoMap),
-                                                Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 21 * varJanelaMin / 36 And _t.fim > varJanelaIni + 20 * varJanelaMin / 36).id));
-                                                Select(btnAbrirEdicaoMap)
+                                                varCliqueCel = "20|" & ThisItem.posicao And DateDiff(varCliqueEm, Now(), TimeUnit.Milliseconds) <= mapDuploCliqueMs,
+                                                    Set(varCliqueCel, "");
+                                                    If(
+                                                        IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 21 * varJanelaMin / 36 And _t.fim > varJanelaIni + 20 * varJanelaMin / 36).id),
+                                                        Set(varPosSel, ThisItem);
+                                                        Set(varNovoIni, varJanelaIni + 20 * varJanelaMin / 36);
+                                                        Select(btnAbrirNovoMap),
+                                                        Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 21 * varJanelaMin / 36 And _t.fim > varJanelaIni + 20 * varJanelaMin / 36).id));
+                                                        Select(btnAbrirEdicaoMap)
+                                                    ),
+                                                Set(varCliqueCel, "20|" & ThisItem.posicao);
+                                                Set(varCliqueEm, Now())
                                             )
                                           Text: =""
                                           Tooltip: =Coalesce(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 21 * varJanelaMin / 36 And _t.fim > varJanelaIni + 20 * varJanelaMin / 36).dica_txt, "")
@@ -1704,12 +1838,18 @@ Screens:
                                           LayoutMinWidth: =0
                                           OnSelect: |-
                                             =If(
-                                                IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 22 * varJanelaMin / 36 And _t.fim > varJanelaIni + 21 * varJanelaMin / 36).id),
-                                                Set(varPosSel, ThisItem);
-                                                Set(varNovoIni, varJanelaIni + 21 * varJanelaMin / 36);
-                                                Select(btnAbrirNovoMap),
-                                                Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 22 * varJanelaMin / 36 And _t.fim > varJanelaIni + 21 * varJanelaMin / 36).id));
-                                                Select(btnAbrirEdicaoMap)
+                                                varCliqueCel = "21|" & ThisItem.posicao And DateDiff(varCliqueEm, Now(), TimeUnit.Milliseconds) <= mapDuploCliqueMs,
+                                                    Set(varCliqueCel, "");
+                                                    If(
+                                                        IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 22 * varJanelaMin / 36 And _t.fim > varJanelaIni + 21 * varJanelaMin / 36).id),
+                                                        Set(varPosSel, ThisItem);
+                                                        Set(varNovoIni, varJanelaIni + 21 * varJanelaMin / 36);
+                                                        Select(btnAbrirNovoMap),
+                                                        Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 22 * varJanelaMin / 36 And _t.fim > varJanelaIni + 21 * varJanelaMin / 36).id));
+                                                        Select(btnAbrirEdicaoMap)
+                                                    ),
+                                                Set(varCliqueCel, "21|" & ThisItem.posicao);
+                                                Set(varCliqueEm, Now())
                                             )
                                           Text: =""
                                           Tooltip: =Coalesce(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 22 * varJanelaMin / 36 And _t.fim > varJanelaIni + 21 * varJanelaMin / 36).dica_txt, "")
@@ -1721,12 +1861,18 @@ Screens:
                                           LayoutMinWidth: =0
                                           OnSelect: |-
                                             =If(
-                                                IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 23 * varJanelaMin / 36 And _t.fim > varJanelaIni + 22 * varJanelaMin / 36).id),
-                                                Set(varPosSel, ThisItem);
-                                                Set(varNovoIni, varJanelaIni + 22 * varJanelaMin / 36);
-                                                Select(btnAbrirNovoMap),
-                                                Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 23 * varJanelaMin / 36 And _t.fim > varJanelaIni + 22 * varJanelaMin / 36).id));
-                                                Select(btnAbrirEdicaoMap)
+                                                varCliqueCel = "22|" & ThisItem.posicao And DateDiff(varCliqueEm, Now(), TimeUnit.Milliseconds) <= mapDuploCliqueMs,
+                                                    Set(varCliqueCel, "");
+                                                    If(
+                                                        IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 23 * varJanelaMin / 36 And _t.fim > varJanelaIni + 22 * varJanelaMin / 36).id),
+                                                        Set(varPosSel, ThisItem);
+                                                        Set(varNovoIni, varJanelaIni + 22 * varJanelaMin / 36);
+                                                        Select(btnAbrirNovoMap),
+                                                        Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 23 * varJanelaMin / 36 And _t.fim > varJanelaIni + 22 * varJanelaMin / 36).id));
+                                                        Select(btnAbrirEdicaoMap)
+                                                    ),
+                                                Set(varCliqueCel, "22|" & ThisItem.posicao);
+                                                Set(varCliqueEm, Now())
                                             )
                                           Text: =""
                                           Tooltip: =Coalesce(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 23 * varJanelaMin / 36 And _t.fim > varJanelaIni + 22 * varJanelaMin / 36).dica_txt, "")
@@ -1738,12 +1884,18 @@ Screens:
                                           LayoutMinWidth: =0
                                           OnSelect: |-
                                             =If(
-                                                IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 24 * varJanelaMin / 36 And _t.fim > varJanelaIni + 23 * varJanelaMin / 36).id),
-                                                Set(varPosSel, ThisItem);
-                                                Set(varNovoIni, varJanelaIni + 23 * varJanelaMin / 36);
-                                                Select(btnAbrirNovoMap),
-                                                Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 24 * varJanelaMin / 36 And _t.fim > varJanelaIni + 23 * varJanelaMin / 36).id));
-                                                Select(btnAbrirEdicaoMap)
+                                                varCliqueCel = "23|" & ThisItem.posicao And DateDiff(varCliqueEm, Now(), TimeUnit.Milliseconds) <= mapDuploCliqueMs,
+                                                    Set(varCliqueCel, "");
+                                                    If(
+                                                        IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 24 * varJanelaMin / 36 And _t.fim > varJanelaIni + 23 * varJanelaMin / 36).id),
+                                                        Set(varPosSel, ThisItem);
+                                                        Set(varNovoIni, varJanelaIni + 23 * varJanelaMin / 36);
+                                                        Select(btnAbrirNovoMap),
+                                                        Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 24 * varJanelaMin / 36 And _t.fim > varJanelaIni + 23 * varJanelaMin / 36).id));
+                                                        Select(btnAbrirEdicaoMap)
+                                                    ),
+                                                Set(varCliqueCel, "23|" & ThisItem.posicao);
+                                                Set(varCliqueEm, Now())
                                             )
                                           Text: =""
                                           Tooltip: =Coalesce(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 24 * varJanelaMin / 36 And _t.fim > varJanelaIni + 23 * varJanelaMin / 36).dica_txt, "")
@@ -1755,12 +1907,18 @@ Screens:
                                           LayoutMinWidth: =0
                                           OnSelect: |-
                                             =If(
-                                                IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 25 * varJanelaMin / 36 And _t.fim > varJanelaIni + 24 * varJanelaMin / 36).id),
-                                                Set(varPosSel, ThisItem);
-                                                Set(varNovoIni, varJanelaIni + 24 * varJanelaMin / 36);
-                                                Select(btnAbrirNovoMap),
-                                                Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 25 * varJanelaMin / 36 And _t.fim > varJanelaIni + 24 * varJanelaMin / 36).id));
-                                                Select(btnAbrirEdicaoMap)
+                                                varCliqueCel = "24|" & ThisItem.posicao And DateDiff(varCliqueEm, Now(), TimeUnit.Milliseconds) <= mapDuploCliqueMs,
+                                                    Set(varCliqueCel, "");
+                                                    If(
+                                                        IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 25 * varJanelaMin / 36 And _t.fim > varJanelaIni + 24 * varJanelaMin / 36).id),
+                                                        Set(varPosSel, ThisItem);
+                                                        Set(varNovoIni, varJanelaIni + 24 * varJanelaMin / 36);
+                                                        Select(btnAbrirNovoMap),
+                                                        Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 25 * varJanelaMin / 36 And _t.fim > varJanelaIni + 24 * varJanelaMin / 36).id));
+                                                        Select(btnAbrirEdicaoMap)
+                                                    ),
+                                                Set(varCliqueCel, "24|" & ThisItem.posicao);
+                                                Set(varCliqueEm, Now())
                                             )
                                           Text: =""
                                           Tooltip: =Coalesce(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 25 * varJanelaMin / 36 And _t.fim > varJanelaIni + 24 * varJanelaMin / 36).dica_txt, "")
@@ -1772,12 +1930,18 @@ Screens:
                                           LayoutMinWidth: =0
                                           OnSelect: |-
                                             =If(
-                                                IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 26 * varJanelaMin / 36 And _t.fim > varJanelaIni + 25 * varJanelaMin / 36).id),
-                                                Set(varPosSel, ThisItem);
-                                                Set(varNovoIni, varJanelaIni + 25 * varJanelaMin / 36);
-                                                Select(btnAbrirNovoMap),
-                                                Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 26 * varJanelaMin / 36 And _t.fim > varJanelaIni + 25 * varJanelaMin / 36).id));
-                                                Select(btnAbrirEdicaoMap)
+                                                varCliqueCel = "25|" & ThisItem.posicao And DateDiff(varCliqueEm, Now(), TimeUnit.Milliseconds) <= mapDuploCliqueMs,
+                                                    Set(varCliqueCel, "");
+                                                    If(
+                                                        IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 26 * varJanelaMin / 36 And _t.fim > varJanelaIni + 25 * varJanelaMin / 36).id),
+                                                        Set(varPosSel, ThisItem);
+                                                        Set(varNovoIni, varJanelaIni + 25 * varJanelaMin / 36);
+                                                        Select(btnAbrirNovoMap),
+                                                        Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 26 * varJanelaMin / 36 And _t.fim > varJanelaIni + 25 * varJanelaMin / 36).id));
+                                                        Select(btnAbrirEdicaoMap)
+                                                    ),
+                                                Set(varCliqueCel, "25|" & ThisItem.posicao);
+                                                Set(varCliqueEm, Now())
                                             )
                                           Text: =""
                                           Tooltip: =Coalesce(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 26 * varJanelaMin / 36 And _t.fim > varJanelaIni + 25 * varJanelaMin / 36).dica_txt, "")
@@ -1789,12 +1953,18 @@ Screens:
                                           LayoutMinWidth: =0
                                           OnSelect: |-
                                             =If(
-                                                IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 27 * varJanelaMin / 36 And _t.fim > varJanelaIni + 26 * varJanelaMin / 36).id),
-                                                Set(varPosSel, ThisItem);
-                                                Set(varNovoIni, varJanelaIni + 26 * varJanelaMin / 36);
-                                                Select(btnAbrirNovoMap),
-                                                Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 27 * varJanelaMin / 36 And _t.fim > varJanelaIni + 26 * varJanelaMin / 36).id));
-                                                Select(btnAbrirEdicaoMap)
+                                                varCliqueCel = "26|" & ThisItem.posicao And DateDiff(varCliqueEm, Now(), TimeUnit.Milliseconds) <= mapDuploCliqueMs,
+                                                    Set(varCliqueCel, "");
+                                                    If(
+                                                        IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 27 * varJanelaMin / 36 And _t.fim > varJanelaIni + 26 * varJanelaMin / 36).id),
+                                                        Set(varPosSel, ThisItem);
+                                                        Set(varNovoIni, varJanelaIni + 26 * varJanelaMin / 36);
+                                                        Select(btnAbrirNovoMap),
+                                                        Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 27 * varJanelaMin / 36 And _t.fim > varJanelaIni + 26 * varJanelaMin / 36).id));
+                                                        Select(btnAbrirEdicaoMap)
+                                                    ),
+                                                Set(varCliqueCel, "26|" & ThisItem.posicao);
+                                                Set(varCliqueEm, Now())
                                             )
                                           Text: =""
                                           Tooltip: =Coalesce(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 27 * varJanelaMin / 36 And _t.fim > varJanelaIni + 26 * varJanelaMin / 36).dica_txt, "")
@@ -1806,12 +1976,18 @@ Screens:
                                           LayoutMinWidth: =0
                                           OnSelect: |-
                                             =If(
-                                                IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 28 * varJanelaMin / 36 And _t.fim > varJanelaIni + 27 * varJanelaMin / 36).id),
-                                                Set(varPosSel, ThisItem);
-                                                Set(varNovoIni, varJanelaIni + 27 * varJanelaMin / 36);
-                                                Select(btnAbrirNovoMap),
-                                                Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 28 * varJanelaMin / 36 And _t.fim > varJanelaIni + 27 * varJanelaMin / 36).id));
-                                                Select(btnAbrirEdicaoMap)
+                                                varCliqueCel = "27|" & ThisItem.posicao And DateDiff(varCliqueEm, Now(), TimeUnit.Milliseconds) <= mapDuploCliqueMs,
+                                                    Set(varCliqueCel, "");
+                                                    If(
+                                                        IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 28 * varJanelaMin / 36 And _t.fim > varJanelaIni + 27 * varJanelaMin / 36).id),
+                                                        Set(varPosSel, ThisItem);
+                                                        Set(varNovoIni, varJanelaIni + 27 * varJanelaMin / 36);
+                                                        Select(btnAbrirNovoMap),
+                                                        Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 28 * varJanelaMin / 36 And _t.fim > varJanelaIni + 27 * varJanelaMin / 36).id));
+                                                        Select(btnAbrirEdicaoMap)
+                                                    ),
+                                                Set(varCliqueCel, "27|" & ThisItem.posicao);
+                                                Set(varCliqueEm, Now())
                                             )
                                           Text: =""
                                           Tooltip: =Coalesce(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 28 * varJanelaMin / 36 And _t.fim > varJanelaIni + 27 * varJanelaMin / 36).dica_txt, "")
@@ -1823,12 +1999,18 @@ Screens:
                                           LayoutMinWidth: =0
                                           OnSelect: |-
                                             =If(
-                                                IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 29 * varJanelaMin / 36 And _t.fim > varJanelaIni + 28 * varJanelaMin / 36).id),
-                                                Set(varPosSel, ThisItem);
-                                                Set(varNovoIni, varJanelaIni + 28 * varJanelaMin / 36);
-                                                Select(btnAbrirNovoMap),
-                                                Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 29 * varJanelaMin / 36 And _t.fim > varJanelaIni + 28 * varJanelaMin / 36).id));
-                                                Select(btnAbrirEdicaoMap)
+                                                varCliqueCel = "28|" & ThisItem.posicao And DateDiff(varCliqueEm, Now(), TimeUnit.Milliseconds) <= mapDuploCliqueMs,
+                                                    Set(varCliqueCel, "");
+                                                    If(
+                                                        IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 29 * varJanelaMin / 36 And _t.fim > varJanelaIni + 28 * varJanelaMin / 36).id),
+                                                        Set(varPosSel, ThisItem);
+                                                        Set(varNovoIni, varJanelaIni + 28 * varJanelaMin / 36);
+                                                        Select(btnAbrirNovoMap),
+                                                        Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 29 * varJanelaMin / 36 And _t.fim > varJanelaIni + 28 * varJanelaMin / 36).id));
+                                                        Select(btnAbrirEdicaoMap)
+                                                    ),
+                                                Set(varCliqueCel, "28|" & ThisItem.posicao);
+                                                Set(varCliqueEm, Now())
                                             )
                                           Text: =""
                                           Tooltip: =Coalesce(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 29 * varJanelaMin / 36 And _t.fim > varJanelaIni + 28 * varJanelaMin / 36).dica_txt, "")
@@ -1840,12 +2022,18 @@ Screens:
                                           LayoutMinWidth: =0
                                           OnSelect: |-
                                             =If(
-                                                IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 30 * varJanelaMin / 36 And _t.fim > varJanelaIni + 29 * varJanelaMin / 36).id),
-                                                Set(varPosSel, ThisItem);
-                                                Set(varNovoIni, varJanelaIni + 29 * varJanelaMin / 36);
-                                                Select(btnAbrirNovoMap),
-                                                Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 30 * varJanelaMin / 36 And _t.fim > varJanelaIni + 29 * varJanelaMin / 36).id));
-                                                Select(btnAbrirEdicaoMap)
+                                                varCliqueCel = "29|" & ThisItem.posicao And DateDiff(varCliqueEm, Now(), TimeUnit.Milliseconds) <= mapDuploCliqueMs,
+                                                    Set(varCliqueCel, "");
+                                                    If(
+                                                        IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 30 * varJanelaMin / 36 And _t.fim > varJanelaIni + 29 * varJanelaMin / 36).id),
+                                                        Set(varPosSel, ThisItem);
+                                                        Set(varNovoIni, varJanelaIni + 29 * varJanelaMin / 36);
+                                                        Select(btnAbrirNovoMap),
+                                                        Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 30 * varJanelaMin / 36 And _t.fim > varJanelaIni + 29 * varJanelaMin / 36).id));
+                                                        Select(btnAbrirEdicaoMap)
+                                                    ),
+                                                Set(varCliqueCel, "29|" & ThisItem.posicao);
+                                                Set(varCliqueEm, Now())
                                             )
                                           Text: =""
                                           Tooltip: =Coalesce(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 30 * varJanelaMin / 36 And _t.fim > varJanelaIni + 29 * varJanelaMin / 36).dica_txt, "")
@@ -1857,12 +2045,18 @@ Screens:
                                           LayoutMinWidth: =0
                                           OnSelect: |-
                                             =If(
-                                                IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 31 * varJanelaMin / 36 And _t.fim > varJanelaIni + 30 * varJanelaMin / 36).id),
-                                                Set(varPosSel, ThisItem);
-                                                Set(varNovoIni, varJanelaIni + 30 * varJanelaMin / 36);
-                                                Select(btnAbrirNovoMap),
-                                                Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 31 * varJanelaMin / 36 And _t.fim > varJanelaIni + 30 * varJanelaMin / 36).id));
-                                                Select(btnAbrirEdicaoMap)
+                                                varCliqueCel = "30|" & ThisItem.posicao And DateDiff(varCliqueEm, Now(), TimeUnit.Milliseconds) <= mapDuploCliqueMs,
+                                                    Set(varCliqueCel, "");
+                                                    If(
+                                                        IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 31 * varJanelaMin / 36 And _t.fim > varJanelaIni + 30 * varJanelaMin / 36).id),
+                                                        Set(varPosSel, ThisItem);
+                                                        Set(varNovoIni, varJanelaIni + 30 * varJanelaMin / 36);
+                                                        Select(btnAbrirNovoMap),
+                                                        Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 31 * varJanelaMin / 36 And _t.fim > varJanelaIni + 30 * varJanelaMin / 36).id));
+                                                        Select(btnAbrirEdicaoMap)
+                                                    ),
+                                                Set(varCliqueCel, "30|" & ThisItem.posicao);
+                                                Set(varCliqueEm, Now())
                                             )
                                           Text: =""
                                           Tooltip: =Coalesce(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 31 * varJanelaMin / 36 And _t.fim > varJanelaIni + 30 * varJanelaMin / 36).dica_txt, "")
@@ -1874,12 +2068,18 @@ Screens:
                                           LayoutMinWidth: =0
                                           OnSelect: |-
                                             =If(
-                                                IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 32 * varJanelaMin / 36 And _t.fim > varJanelaIni + 31 * varJanelaMin / 36).id),
-                                                Set(varPosSel, ThisItem);
-                                                Set(varNovoIni, varJanelaIni + 31 * varJanelaMin / 36);
-                                                Select(btnAbrirNovoMap),
-                                                Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 32 * varJanelaMin / 36 And _t.fim > varJanelaIni + 31 * varJanelaMin / 36).id));
-                                                Select(btnAbrirEdicaoMap)
+                                                varCliqueCel = "31|" & ThisItem.posicao And DateDiff(varCliqueEm, Now(), TimeUnit.Milliseconds) <= mapDuploCliqueMs,
+                                                    Set(varCliqueCel, "");
+                                                    If(
+                                                        IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 32 * varJanelaMin / 36 And _t.fim > varJanelaIni + 31 * varJanelaMin / 36).id),
+                                                        Set(varPosSel, ThisItem);
+                                                        Set(varNovoIni, varJanelaIni + 31 * varJanelaMin / 36);
+                                                        Select(btnAbrirNovoMap),
+                                                        Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 32 * varJanelaMin / 36 And _t.fim > varJanelaIni + 31 * varJanelaMin / 36).id));
+                                                        Select(btnAbrirEdicaoMap)
+                                                    ),
+                                                Set(varCliqueCel, "31|" & ThisItem.posicao);
+                                                Set(varCliqueEm, Now())
                                             )
                                           Text: =""
                                           Tooltip: =Coalesce(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 32 * varJanelaMin / 36 And _t.fim > varJanelaIni + 31 * varJanelaMin / 36).dica_txt, "")
@@ -1891,12 +2091,18 @@ Screens:
                                           LayoutMinWidth: =0
                                           OnSelect: |-
                                             =If(
-                                                IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 33 * varJanelaMin / 36 And _t.fim > varJanelaIni + 32 * varJanelaMin / 36).id),
-                                                Set(varPosSel, ThisItem);
-                                                Set(varNovoIni, varJanelaIni + 32 * varJanelaMin / 36);
-                                                Select(btnAbrirNovoMap),
-                                                Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 33 * varJanelaMin / 36 And _t.fim > varJanelaIni + 32 * varJanelaMin / 36).id));
-                                                Select(btnAbrirEdicaoMap)
+                                                varCliqueCel = "32|" & ThisItem.posicao And DateDiff(varCliqueEm, Now(), TimeUnit.Milliseconds) <= mapDuploCliqueMs,
+                                                    Set(varCliqueCel, "");
+                                                    If(
+                                                        IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 33 * varJanelaMin / 36 And _t.fim > varJanelaIni + 32 * varJanelaMin / 36).id),
+                                                        Set(varPosSel, ThisItem);
+                                                        Set(varNovoIni, varJanelaIni + 32 * varJanelaMin / 36);
+                                                        Select(btnAbrirNovoMap),
+                                                        Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 33 * varJanelaMin / 36 And _t.fim > varJanelaIni + 32 * varJanelaMin / 36).id));
+                                                        Select(btnAbrirEdicaoMap)
+                                                    ),
+                                                Set(varCliqueCel, "32|" & ThisItem.posicao);
+                                                Set(varCliqueEm, Now())
                                             )
                                           Text: =""
                                           Tooltip: =Coalesce(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 33 * varJanelaMin / 36 And _t.fim > varJanelaIni + 32 * varJanelaMin / 36).dica_txt, "")
@@ -1908,12 +2114,18 @@ Screens:
                                           LayoutMinWidth: =0
                                           OnSelect: |-
                                             =If(
-                                                IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 34 * varJanelaMin / 36 And _t.fim > varJanelaIni + 33 * varJanelaMin / 36).id),
-                                                Set(varPosSel, ThisItem);
-                                                Set(varNovoIni, varJanelaIni + 33 * varJanelaMin / 36);
-                                                Select(btnAbrirNovoMap),
-                                                Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 34 * varJanelaMin / 36 And _t.fim > varJanelaIni + 33 * varJanelaMin / 36).id));
-                                                Select(btnAbrirEdicaoMap)
+                                                varCliqueCel = "33|" & ThisItem.posicao And DateDiff(varCliqueEm, Now(), TimeUnit.Milliseconds) <= mapDuploCliqueMs,
+                                                    Set(varCliqueCel, "");
+                                                    If(
+                                                        IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 34 * varJanelaMin / 36 And _t.fim > varJanelaIni + 33 * varJanelaMin / 36).id),
+                                                        Set(varPosSel, ThisItem);
+                                                        Set(varNovoIni, varJanelaIni + 33 * varJanelaMin / 36);
+                                                        Select(btnAbrirNovoMap),
+                                                        Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 34 * varJanelaMin / 36 And _t.fim > varJanelaIni + 33 * varJanelaMin / 36).id));
+                                                        Select(btnAbrirEdicaoMap)
+                                                    ),
+                                                Set(varCliqueCel, "33|" & ThisItem.posicao);
+                                                Set(varCliqueEm, Now())
                                             )
                                           Text: =""
                                           Tooltip: =Coalesce(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 34 * varJanelaMin / 36 And _t.fim > varJanelaIni + 33 * varJanelaMin / 36).dica_txt, "")
@@ -1925,12 +2137,18 @@ Screens:
                                           LayoutMinWidth: =0
                                           OnSelect: |-
                                             =If(
-                                                IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 35 * varJanelaMin / 36 And _t.fim > varJanelaIni + 34 * varJanelaMin / 36).id),
-                                                Set(varPosSel, ThisItem);
-                                                Set(varNovoIni, varJanelaIni + 34 * varJanelaMin / 36);
-                                                Select(btnAbrirNovoMap),
-                                                Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 35 * varJanelaMin / 36 And _t.fim > varJanelaIni + 34 * varJanelaMin / 36).id));
-                                                Select(btnAbrirEdicaoMap)
+                                                varCliqueCel = "34|" & ThisItem.posicao And DateDiff(varCliqueEm, Now(), TimeUnit.Milliseconds) <= mapDuploCliqueMs,
+                                                    Set(varCliqueCel, "");
+                                                    If(
+                                                        IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 35 * varJanelaMin / 36 And _t.fim > varJanelaIni + 34 * varJanelaMin / 36).id),
+                                                        Set(varPosSel, ThisItem);
+                                                        Set(varNovoIni, varJanelaIni + 34 * varJanelaMin / 36);
+                                                        Select(btnAbrirNovoMap),
+                                                        Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 35 * varJanelaMin / 36 And _t.fim > varJanelaIni + 34 * varJanelaMin / 36).id));
+                                                        Select(btnAbrirEdicaoMap)
+                                                    ),
+                                                Set(varCliqueCel, "34|" & ThisItem.posicao);
+                                                Set(varCliqueEm, Now())
                                             )
                                           Text: =""
                                           Tooltip: =Coalesce(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 35 * varJanelaMin / 36 And _t.fim > varJanelaIni + 34 * varJanelaMin / 36).dica_txt, "")
@@ -1942,12 +2160,18 @@ Screens:
                                           LayoutMinWidth: =0
                                           OnSelect: |-
                                             =If(
-                                                IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 36 * varJanelaMin / 36 And _t.fim > varJanelaIni + 35 * varJanelaMin / 36).id),
-                                                Set(varPosSel, ThisItem);
-                                                Set(varNovoIni, varJanelaIni + 35 * varJanelaMin / 36);
-                                                Select(btnAbrirNovoMap),
-                                                Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 36 * varJanelaMin / 36 And _t.fim > varJanelaIni + 35 * varJanelaMin / 36).id));
-                                                Select(btnAbrirEdicaoMap)
+                                                varCliqueCel = "35|" & ThisItem.posicao And DateDiff(varCliqueEm, Now(), TimeUnit.Milliseconds) <= mapDuploCliqueMs,
+                                                    Set(varCliqueCel, "");
+                                                    If(
+                                                        IsBlank(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 36 * varJanelaMin / 36 And _t.fim > varJanelaIni + 35 * varJanelaMin / 36).id),
+                                                        Set(varPosSel, ThisItem);
+                                                        Set(varNovoIni, varJanelaIni + 35 * varJanelaMin / 36);
+                                                        Select(btnAbrirNovoMap),
+                                                        Set(varAlocSel, LookUp(colDia As _d, _d.id = LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 36 * varJanelaMin / 36 And _t.fim > varJanelaIni + 35 * varJanelaMin / 36).id));
+                                                        Select(btnAbrirEdicaoMap)
+                                                    ),
+                                                Set(varCliqueCel, "35|" & ThisItem.posicao);
+                                                Set(varCliqueEm, Now())
                                             )
                                           Text: =""
                                           Tooltip: =Coalesce(LookUp(ThisItem.trechos As _t, _t.ini < varJanelaIni + 36 * varJanelaMin / 36 And _t.fim > varJanelaIni + 35 * varJanelaMin / 36).dica_txt, "")
