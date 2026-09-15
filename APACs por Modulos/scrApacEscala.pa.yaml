@@ -477,7 +477,7 @@ Screens:
                                         Concat(
                                             Sort(Filter(colEscalaCad, ativo = 1), ordem, SortOrder.Ascending) As _t,
                                             "<tr><td style='" & rotR & "' title='" & Coalesce(_t.rotulo, "") & "'>" &
-                                            If(_t.papel = "SUPERVISOR", "SUP", "APAC") & " · " & Coalesce(_t.rotulo, "") & "</td>" &
+                                            Coalesce(_t.rotulo, "") & "</td>" &
                                             "<td style='" & celR & "font-weight:700;'>" & Text(_t.quantidade) & "</td>" &
                                             Concat(
                                                 Sequence(apacHorasDia, 0) As _h,
@@ -491,7 +491,8 @@ Screens:
                                                                 (_h.Value * 60 + 1440 < _t.intervalo_inicio + _t.intervalo_min And _h.Value * 60 + 1500 > _t.intervalo_inicio)
                                                             )
                                                     },
-                                                    "<td style='" & celR & "background:" &
+                                                    "<td title='" & If(pres And inter, "intervalo: nesta hora o turno está em pausa e não conta", "") &
+                                                    "' style='" & celR & "background:" &
                                                     If(
                                                         pres And inter, hxAmbarSuave,
                                                         pres And _t.papel = "SUPERVISOR", hxCarga3,

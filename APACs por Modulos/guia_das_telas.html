@@ -1,0 +1,395 @@
+<title>Como ler o APACs por Módulos</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@500;600;700&family=Source+Sans+3:ital,wght@0,400;0,600;0,700;1,400&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<style>
+:root{
+  --chao:#F5F9F9; --folha:#FFFFFF; --tinta:#16303A; --tinta-fraca:#5A7078; --linha:#CFE2E5; --linha-fina:#E6F0F1;
+  --teal:#0E7C8C; --teal-escuro:#0A5A66; --teal-claro:#E4F2F4;
+  --c0:#F8FAFC; --c1:#D8ECEF; --c2:#8FCBD4; --c3:#3E9EAD; --c-txt-forte:#FFFFFF;
+  --ok-fundo:#DCFCE7; --ok:#15803D; --rem-fundo:#FDE68A; --rem:#92400E; --falta:#B91C1C; --falta-suave:#FEF2F2;
+  --int-fundo:#FFFBEB; --int:#B45309;
+  --display:"Barlow Semi Condensed","Arial Narrow",Arial,sans-serif;
+  --corpo:"Source Sans 3","Segoe UI",Arial,sans-serif;
+  --dado:"IBM Plex Mono",Consolas,"Courier New",monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --chao:#0C1A1E; --folha:#12262B; --tinta:#DCE9EB; --tinta-fraca:#93AAB0; --linha:#24444B; --linha-fina:#1B353B;
+    --teal:#4FB3C1; --teal-escuro:#7FCBD6; --teal-claro:#173A41;
+    --c0:#15292E; --c1:#1F4A52; --c2:#2F7580; --c3:#4FA9B6; --c-txt-forte:#08171A;
+    --ok-fundo:#123B25; --ok:#6EE7A0; --rem-fundo:#4A3710; --rem:#FCD58A; --falta:#F87171; --falta-suave:#3A1717;
+    --int-fundo:#3A2E12; --int:#FBBF6A;
+  }
+}
+:root[data-theme="dark"]{
+  --chao:#0C1A1E; --folha:#12262B; --tinta:#DCE9EB; --tinta-fraca:#93AAB0; --linha:#24444B; --linha-fina:#1B353B;
+  --teal:#4FB3C1; --teal-escuro:#7FCBD6; --teal-claro:#173A41;
+  --c0:#15292E; --c1:#1F4A52; --c2:#2F7580; --c3:#4FA9B6; --c-txt-forte:#08171A;
+  --ok-fundo:#123B25; --ok:#6EE7A0; --rem-fundo:#4A3710; --rem:#FCD58A; --falta:#F87171; --falta-suave:#3A1717;
+  --int-fundo:#3A2E12; --int:#FBBF6A;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--chao);color:var(--tinta);font-family:var(--corpo);font-size:16px;line-height:1.6;padding-inline:20px;padding-block:0 64px}
+a{color:var(--teal)}
+a:focus-visible{outline:2px solid var(--teal);outline-offset:2px}
+.moldura{max-width:1120px;margin:0 auto;display:grid;grid-template-columns:220px minmax(0,1fr);gap:48px}
+header.topo{max-width:1120px;margin:0 auto;padding-block:40px 28px;border-bottom:1px solid var(--linha);margin-bottom:36px}
+.sobrancelha{font-family:var(--display);font-weight:600;font-size:13px;letter-spacing:.2em;text-transform:uppercase;color:var(--teal)}
+h1{font-family:var(--display);font-weight:700;font-size:clamp(34px,5vw,52px);line-height:1.02;margin:6px 0 12px;text-wrap:balance;letter-spacing:-.005em}
+.abre{max-width:64ch;color:var(--tinta-fraca);font-size:18px;margin:0}
+nav.indice{position:sticky;top:20px;align-self:start;font-size:15px}
+nav.indice p{font-family:var(--display);font-weight:600;letter-spacing:.16em;text-transform:uppercase;font-size:12px;color:var(--tinta-fraca);margin:0 0 8px}
+nav.indice ol{list-style:none;margin:0;padding:0;display:grid;gap:2px;border-left:1px solid var(--linha)}
+nav.indice a{display:block;padding:4px 0 4px 14px;text-decoration:none;color:var(--tinta)}
+nav.indice a:hover{color:var(--teal)}
+main{min-width:0}
+section{padding-bottom:44px;margin-bottom:44px;border-bottom:1px solid var(--linha)}
+section:last-child{border-bottom:0}
+h2{font-family:var(--display);font-weight:700;font-size:32px;line-height:1.1;margin:0 0 4px;text-wrap:balance}
+.nome-tela{font-family:var(--dado);font-size:13px;color:var(--tinta-fraca)}
+h3{font-family:var(--display);font-weight:600;font-size:21px;margin:30px 0 8px;text-wrap:balance}
+p{max-width:68ch;margin:0 0 12px}
+.serve{font-size:18px;max-width:64ch;margin:10px 0 18px}
+dl.termos{display:grid;grid-template-columns:minmax(150px,210px) minmax(0,1fr);gap:10px 22px;margin:14px 0 0;max-width:820px}
+dl.termos dt{font-weight:700}
+dl.termos dt code,.botao{font-family:var(--display);font-weight:600;letter-spacing:.04em;font-size:14px;text-transform:uppercase;border:1px solid var(--linha);background:var(--folha);padding:1px 8px;white-space:nowrap}
+dl.termos dd{margin:0;color:var(--tinta)}
+.passos{counter-reset:p;list-style:none;padding:0;margin:14px 0 0;display:grid;gap:10px;max-width:760px}
+.passos li{counter-increment:p;display:grid;grid-template-columns:34px minmax(0,1fr);gap:12px;align-items:baseline}
+.passos li::before{content:counter(p);font-family:var(--display);font-weight:700;font-size:22px;color:var(--teal);text-align:right}
+.amostra{margin:16px 0 6px;background:var(--folha);border:1px solid var(--linha);padding:14px 16px 12px;overflow-x:auto}
+.amostra .rot{font-family:var(--display);font-weight:600;letter-spacing:.14em;text-transform:uppercase;font-size:11px;color:var(--tinta-fraca);margin:0 0 8px}
+table.grade{border-collapse:collapse;font-family:var(--dado);font-size:12px;font-variant-numeric:tabular-nums}
+table.grade td,table.grade th{border:1px solid var(--linha-fina);text-align:center;padding:4px 0;min-width:38px}
+table.grade th{background:var(--teal-claro);font-weight:600}
+table.grade td.r,table.grade th.r{text-align:left;padding:4px 10px;font-family:var(--corpo);font-weight:600;white-space:nowrap;min-width:0}
+.c0{background:var(--c0)} .c1{background:var(--c1)} .c2{background:var(--c2)} .c3{background:var(--c3);color:var(--c-txt-forte)}
+.est{background:var(--falta);color:#fff}
+.ok{background:var(--ok-fundo);color:var(--ok);font-weight:600}
+.rem{background:var(--rem-fundo);color:var(--rem);font-weight:600}
+.fal{background:var(--falta);color:#fff;font-weight:600}
+.pico{background:var(--teal-claro);font-weight:600}
+.estrela{background:var(--int-fundo)}
+.turno{background:var(--c2)} .turno-sup{background:var(--c3)}
+.int{background:var(--int-fundo);color:var(--int);font-weight:600}
+.legenda{display:flex;flex-wrap:wrap;gap:8px 20px;margin:12px 0 0;font-size:14px;color:var(--tinta-fraca)}
+.legenda span{display:inline-flex;align-items:center;gap:7px}
+.legenda i{display:inline-block;width:20px;height:12px;border:1px solid var(--linha)}
+.nota{font-size:14px;color:var(--tinta-fraca);margin-top:6px}
+.cartoes{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;margin:16px 0 8px;max-width:820px}
+.cartao{border:1px solid var(--linha);padding:12px 14px;background:var(--folha)}
+.cartao .eti{font-family:var(--display);font-weight:600;letter-spacing:.12em;text-transform:uppercase;font-size:12px;color:var(--teal-escuro)}
+.cartao .vered{font-family:var(--display);font-weight:700;font-size:24px;line-height:1.15}
+.cartao p{font-size:14px;margin:4px 0 0}
+.cartao.v-ok{background:var(--ok-fundo)} .cartao.v-ok .vered{color:var(--ok)}
+.cartao.v-rem{background:var(--rem-fundo)} .cartao.v-rem .vered{color:var(--rem)}
+.cartao.v-fal{background:var(--falta-suave)} .cartao.v-fal .vered{color:var(--falta)}
+.aviso{border-left:3px solid var(--teal);background:var(--teal-claro);padding:10px 14px;max-width:760px;margin:16px 0}
+.aviso p{margin:0}
+.num{font-family:var(--dado);font-variant-numeric:tabular-nums;font-size:.92em}
+@media (max-width:820px){
+  .moldura{grid-template-columns:minmax(0,1fr);gap:0}
+  nav.indice{position:static;margin-bottom:28px}
+  nav.indice ol{grid-template-columns:repeat(auto-fit,minmax(150px,1fr));border-left:0}
+  dl.termos{grid-template-columns:minmax(0,1fr);gap:2px}
+  dl.termos dd{margin-bottom:10px}
+}
+</style>
+
+<header class="topo">
+  <div class="sobrancelha">ASUR Brasil · AVSEC Navegantes</div>
+  <h1>Como ler o APACs por Módulos</h1>
+  <p class="abre">O app transforma a malha de decolagens em quantos agentes de proteção (APACs) e supervisores precisam estar trabalhando em cada hora, e confere se a escala entrega isso. Este guia explica cada tela, cada número e cada cor.</p>
+</header>
+
+<div class="moldura">
+<nav class="indice" aria-label="Telas">
+  <p>Neste guia</p>
+  <ol>
+    <li><a href="#ordem">Por onde começar</a></li>
+    <li><a href="#mes">Tela do mês</a></li>
+    <li><a href="#dia">Tela do dia</a></li>
+    <li><a href="#escala">Tela da escala</a></li>
+    <li><a href="#cadastros">Cadastros</a></li>
+    <li><a href="#importar">Importar malha</a></li>
+    <li><a href="#termos">Palavras do app</a></li>
+    <li><a href="#fora">O que fica de fora</a></li>
+  </ol>
+</nav>
+
+<main>
+
+<section id="ordem">
+  <h2>Por onde começar</h2>
+  <p class="serve">As telas dependem umas das outras nesta ordem. Pular um passo não dá erro: dá número vazio ou aviso âmbar.</p>
+  <ol class="passos">
+    <li><div><b>Importar a malha</b> do mês ou da temporada. Sem malha, nenhuma tela tem o que calcular.</div></li>
+    <li><div><b>Conferir os cadastros</b>: as premissas do cálculo e os postos fixos.</div></li>
+    <li><div><b>Abrir o mês</b> para ver o que a malha exige, hora a hora, e o efetivo mínimo.</div></li>
+    <li><div><b>Abrir o dia</b> quando precisar entender por que uma hora pediu o que pediu.</div></li>
+    <li><div><b>Abrir a escala</b> para ver se os turnos cadastrados cobrem o mês, e o que fazer se não cobrem.</div></li>
+  </ol>
+  <div class="aviso"><p>Os números de exemplo neste guia são de <b>outubro de 2026 em Navegantes</b>, com as premissas em vigor: 185 passageiros por hora por módulo, 85% de ocupação, 90 minutos de antecedência, corte de 150 assentos, 3 APACs por módulo, 1 supervisor a cada 2 módulos e 3 raios-X. Com outra malha ou outra premissa, os números mudam.</p></div>
+</section>
+
+<section id="mes">
+  <h2>Tela do mês</h2>
+  <div class="nome-tela">scrApacMes · a tela principal</div>
+  <p class="serve">Responde: <b>quantas pessoas a malha deste mês exige em cada hora de cada dia, e qual o menor quadro que dá conta disso.</b></p>
+
+  <h3>A barra do topo</h3>
+  <dl class="termos">
+    <dt><code>◀</code> <code>▶</code></dt><dd>Mês anterior e seguinte. Tudo abaixo é refeito para o mês escolhido.</dd>
+    <dt><code>Abrir o dia de pico</code></dt><dd>Abre a tela do dia no dia de maior carga do mês, o que está marcado com ★.</dd>
+    <dt><code>Escala</code></dt><dd>Abre a comparação da escala com o que este mês exige. Fica apagado enquanto o mês não tem malha.</dd>
+    <dt><code>Cadastros</code></dt><dd>Premissas e postos fixos.</dd>
+    <dt><code>Importar malha</code></dt><dd>Envia o export de decolagens do Power BI.</dd>
+  </dl>
+
+  <h3>As premissas</h3>
+  <p>Os campos logo abaixo da barra são os coeficientes do cálculo. Mudar um campo e tocar <span class="botao">Recalcular</span> refaz a tela inteira <b>sem gravar nada</b>. Serve para testar cenários, como "e se a ocupação fosse 95%?". Para mudar de verdade, grave uma vigência nova em Cadastros.</p>
+  <dl class="termos">
+    <dt>Pax por módulo/h</dt><dd>Quantos passageiros um módulo de inspeção processa em uma hora.</dd>
+    <dt>Ocupação %</dt><dd>Que parte dos assentos ofertados vira passageiro.</dd>
+    <dt>Antecedência</dt><dd>Quantos minutos antes da decolagem os passageiros passam pela inspeção.</dd>
+    <dt>Assentos mín.</dt><dd>Voo com <b>mais</b> assentos que isso abre módulo sozinho pela contagem.</dd>
+    <dt>APAC/módulo</dt><dd>Quantos APACs trabalham em cada módulo aberto.</dd>
+    <dt>Raios-X</dt><dd>Quantos módulos existem de fato. A conta nunca passa disso.</dd>
+    <dt>Botão do olho</dt><dd>Troca a grade entre <b>APAC</b> (pessoas) e <b>MÓDULOS</b> (canais abertos). O texto do botão diz o que está sendo mostrado agora.</dd>
+  </dl>
+
+  <h3>O quadro de efetivo mínimo</h3>
+  <p>Dois cartões, um para agentes de proteção e um para supervisores.</p>
+  <dl class="termos">
+    <dt>Em escala por dia</dt><dd>O menor número de pessoas trabalhando no dia que cobre todas as horas do mês, com turnos de 8 horas e 1 hora de intervalo. Em outubro: <span class="num">36</span> APACs e <span class="num">5</span> supervisores.</dd>
+    <dt>Folguistas</dt><dd>Quem cobre as folgas da escala 6x2: 1 para cada 3 em escala.</dd>
+    <dt>No quadro</dt><dd>Em escala + folguistas. É o número que vai para o contrato. Em outubro: <span class="num">48</span> APACs e <span class="num">7</span> supervisores.</dd>
+    <dt>Pico por hora</dt><dd>A maior quantidade exigida numa única hora do mês.</dd>
+    <dt>Homem-hora no dia</dt><dd>A soma do exigido nas 24 horas. Dividida pelas 7 horas trabalhadas de cada turno, dá um piso para o quadro.</dd>
+    <dt>Linha EXIGIDO</dt><dd>Para cada hora, o dia mais pesado do mês. É contra essa linha que o mínimo é calculado. As horas destacadas são as de pico.</dd>
+  </dl>
+
+  <h3>A grade dias × horas</h3>
+  <p>Cada linha é um dia; cada coluna é uma hora cheia (a coluna <span class="num">19</span> vai de 19:00 a 19:59). O número é quantos APACs, ou quantos módulos, a malha pede naquela hora.</p>
+  <div class="amostra" role="img" aria-label="Trecho da grade do mês">
+    <div class="rot">Trecho da grade · APAC · outubro de 2026</div>
+    <table class="grade">
+      <tr><th class="r">Dia</th><th>03</th><th>04</th><th>05</th><th>10</th><th>11</th><th>12</th><th>19</th><th>20</th><th>21</th><th>22</th><th class="r">Pico</th></tr>
+      <tr><td class="r">01</td><td class="c1">8</td><td class="c1">8</td><td class="c2">11</td><td class="c3">14</td><td class="c2">11</td><td class="c0">5</td><td class="c3">14</td><td class="c2">11</td><td class="c0">5</td><td class="c0">5</td><td class="pico">14</td></tr>
+      <tr><td class="r estrela">28 ★</td><td class="c1">8</td><td class="c2">11</td><td class="c2">11</td><td class="c3">14</td><td class="c2">11</td><td class="c1">8</td><td class="c3">14</td><td class="c3">14</td><td class="c0">5</td><td class="c0">5</td><td class="pico">14</td></tr>
+    </table>
+    <div class="legenda">
+      <span><i class="c0"></i>nenhum módulo (só postos fixos)</span>
+      <span><i class="c1"></i>1 módulo</span>
+      <span><i class="c2"></i>2 módulos</span>
+      <span><i class="c3"></i>3 ou mais</span>
+      <span><i class="est"></i>pediu mais módulos que os raios-X</span>
+      <span><i class="estrela"></i>★ dia de maior carga</span>
+    </div>
+  </div>
+  <p class="nota">Na tela, hora sem nenhum módulo aparece em branco. Na visão APAC, o número é módulos × 3 + os postos fixos da hora: <span class="num">1</span> módulo dá <span class="num">8</span>, 2 dão <span class="num">11</span>, 3 dão <span class="num">14</span>.</p>
+  <dl class="termos">
+    <dt>Coluna PICO</dt><dd>O maior número daquele dia.</dd>
+    <dt>Dia ★</dt><dd>O dia com mais APAC-hora somados nas 24 horas.</dd>
+    <dt>Rodapé</dt><dd>Quantas decolagens o mês tem, quantos voos ficaram abaixo do corte de assentos e com que premissas a tela foi desenhada.</dd>
+    <dt>Aviso âmbar</dt><dd>O mês não tem malha importada. Grade vazia aqui é falta de importação, nunca falta de gente.</dd>
+  </dl>
+
+  <h3>De onde sai o número de cada hora</h3>
+  <ol class="passos">
+    <li><div><b>Passageiros.</b> Assentos × ocupação, espalhados pelos 90 minutos antes da decolagem. Um voo das 05:00 carrega as horas 03 e 04; um voo das 00:30 carrega a hora 23 do dia anterior.</div></li>
+    <li><div><b>Módulos.</b> O maior de dois pisos: passageiros da hora ÷ 185, arredondado para cima, ou o número de decolagens com mais de 150 assentos dentro da hora. Nunca passa dos 3 raios-X.</div></li>
+    <li><div><b>Pessoas.</b> APACs = módulos × 3 + postos fixos. Supervisores = 1 a cada 2 módulos, arredondado para cima.</div></li>
+  </ol>
+</section>
+
+<section id="dia">
+  <h2>Tela do dia</h2>
+  <div class="nome-tela">scrApacDia · aberta pelo botão Abrir o dia de pico</div>
+  <p class="serve">Responde: <b>por que esta hora pediu o que pediu.</b> É a planilha do escopo reproduzida para um dia, hora a hora.</p>
+  <div class="amostra" role="img" aria-label="Trecho da tela do dia">
+    <div class="rot">24/12/2026 · às 20:00</div>
+    <table class="grade">
+      <tr><th class="r">Hora</th><th>20</th></tr>
+      <tr><td class="r">Volumetria</td><td>171</td></tr>
+      <tr><td class="r">Módulos abertos</td><td class="c3">3</td></tr>
+      <tr><td class="r">Embarque — APAC</td><td>9</td></tr>
+      <tr><td class="r">Embarque — supervisor</td><td>2</td></tr>
+      <tr><td class="r">Postos fixos</td><td>5</td></tr>
+      <tr><td class="r pico">Total APAC</td><td class="pico">14</td></tr>
+      <tr><td class="r pico">Total supervisor</td><td class="pico">2</td></tr>
+      <tr><td class="r">quem mandou</td><td>voos</td></tr>
+    </table>
+    <p class="nota">Na tela aparecem as 24 horas lado a lado; aqui só a coluna das 20:00.</p>
+  </div>
+  <dl class="termos">
+    <dt>Volumetria</dt><dd>Passageiros passando pela inspeção naquela hora (assentos × ocupação, espalhados na antecedência).</dd>
+    <dt>Módulos abertos</dt><dd>Quantos módulos a hora pede, com as mesmas cores do mês. Um <b>!</b> indica que pediu mais do que os raios-X existentes.</dd>
+    <dt>Embarque — APAC</dt><dd>Módulos × APACs por módulo.</dd>
+    <dt>Embarque — supervisor</dt><dd>1 supervisor a cada 2 módulos.</dd>
+    <dt>Postos fixos</dt><dd>Os postos cadastrados que não dependem de voo.</dd>
+    <dt>Total geral</dt><dd>Todo mundo que precisa estar trabalhando naquela hora.</dd>
+    <dt>Quem mandou</dt><dd><b>voos</b> quando a contagem de aeronaves grandes decidiu os módulos; <b>volumetria</b> quando foi a soma de passageiros.</dd>
+    <dt><code>Ver o mês</code></dt><dd>Volta para a tela do mês.</dd>
+    <dt><code>Salvar premissas</code></dt><dd>Grava os campos de premissa desta tela como uma vigência nova.</dd>
+  </dl>
+  <p>O exemplo mostra por que existem dois pisos. Às 20:00 de 24/12 há só <span class="num">171</span> passageiros, que pela volumetria dariam 1 módulo. Mas saem 3 aeronaves com mais de 150 assentos na mesma hora, então abrem 3 módulos e o total é de <span class="num">14</span> APACs.</p>
+</section>
+
+<section id="escala">
+  <h2>Tela da escala</h2>
+  <div class="nome-tela">scrApacEscala · aberta pelo botão Escala do mês</div>
+  <p class="serve">Responde: <b>os turnos cadastrados põem, em cada hora de cada dia, pelo menos a quantidade que a malha exige? Se não, é preciso remanejar ou contratar?</b></p>
+  <p>O exigido vem pronto da tela do mês, com as premissas que estavam lá. Mudou uma premissa? Volte ao mês, toque em Recalcular e abra a escala de novo. A tela tem duas abas: <span class="botao">Análise</span> e <span class="botao">Turnos</span>.</p>
+
+  <h3>O veredito</h3>
+  <p>Um cartão para APACs e um para supervisores, com uma de três respostas:</p>
+  <div class="cartoes">
+    <div class="cartao v-ok"><div class="eti">Verde</div><div class="vered">Cobre o mês</div><p>Nenhuma hora de nenhum dia fica abaixo do exigido.</p></div>
+    <div class="cartao v-rem"><div class="eti">Amarelo</div><div class="vered">Reposicionar turnos</div><p>Falta gente em algumas horas, mas o total em escala já alcança o mínimo do mês. Mudar os horários resolve.</p></div>
+    <div class="cartao v-fal"><div class="eti">Vermelho</div><div class="vered">Contratar n</div><p>Falta gente, e o total em escala está abaixo do mínimo. Nenhum rearranjo resolve; n é quanto falta até o mínimo.</p></div>
+  </div>
+  <p class="nota">Cada cartão mostra ainda quantas pessoas estão em escala por dia, o mínimo do mês, quantos dias têm falta e o quadro com folguistas.</p>
+
+  <h3>Hora a hora</h3>
+  <dl class="termos">
+    <dt>Exigido</dt><dd>O pior dia do mês naquela hora.</dd>
+    <dt>Escalado</dt><dd>Quantas pessoas os turnos põem trabalhando naquela hora, já sem quem está no intervalo.</dd>
+    <dt>Saldo</dt><dd>Escalado − exigido. Positivo sobra, negativo falta, com as mesmas três cores do veredito.</dd>
+    <dt>Dias com falta</dt><dd>Em quantos dias do mês aquela hora fica abaixo do exigido.</dd>
+  </dl>
+
+  <h3>A régua dos turnos</h3>
+  <p>Cada linha é um turno cadastrado, pintado nas horas em que conta. <b>QTD</b> é quantas pessoas trabalham nele.</p>
+  <div class="amostra" role="img" aria-label="Trecho da régua dos turnos">
+    <div class="rot">Trecho da régua</div>
+    <table class="grade">
+      <tr><th class="r">Turno</th><th>Qtd</th><th>02</th><th>03</th><th>04</th><th>05</th><th>06</th><th>07</th><th>08</th><th>09</th><th>10</th><th>11</th></tr>
+      <tr><td class="r">APAC 22h–06h (intervalo 03h)</td><td>2</td><td class="turno"></td><td class="int">int</td><td class="turno"></td><td class="turno"></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+      <tr><td class="r">APAC 03h–11h (intervalo 07h)</td><td>4</td><td></td><td class="turno"></td><td class="turno"></td><td class="turno"></td><td class="turno"></td><td class="int">int</td><td class="turno"></td><td class="turno"></td><td class="turno"></td><td></td></tr>
+      <tr><td class="r">Supervisor 03h–11h (intervalo 07h)</td><td>1</td><td></td><td class="turno-sup"></td><td class="turno-sup"></td><td class="turno-sup"></td><td class="turno-sup"></td><td class="int">int</td><td class="turno-sup"></td><td class="turno-sup"></td><td class="turno-sup"></td><td></td></tr>
+    </table>
+    <div class="legenda">
+      <span><i class="turno"></i>APAC trabalhando</span>
+      <span><i class="turno-sup"></i>supervisor trabalhando</span>
+      <span><i class="int"></i><b>int</b> = hora de intervalo</span>
+    </div>
+  </div>
+  <p><b>O que é "int".</b> É a hora de <b>intervalo</b> do turno: a pausa de 1 hora dentro das 8 horas de presença. Nessa hora a pessoa está no turno, mas não está trabalhando, então <b>não conta</b> no escalado. No exemplo, os 2 APACs das 22h às 06h param às 03h: eles contam às 02h e às 04h, mas não às 03h. Na tela, parar o mouse sobre a célula mostra essa explicação.</p>
+  <p>Um turno conta numa hora só quando a <b>hora inteira</b> está dentro dele. Um turno das 22h às 06h conta das 22h às 05h. As duas últimas linhas da régua somam o escalado de APACs e de supervisores em cada hora.</p>
+
+  <h3>Dia a dia</h3>
+  <p>Cada célula é <b>exigido/escalado</b> naquela hora daquele dia. O botão do olho troca entre APACs e supervisores.</p>
+  <div class="amostra" role="img" aria-label="Exemplo de células exigido/escalado">
+    <div class="rot">Como ler as células</div>
+    <table class="grade">
+      <tr><th class="r">Dia</th><th>18</th><th>19</th><th>20</th><th class="r">Horas</th></tr>
+      <tr><td class="r">Mês que cobre</td><td class="ok">14/14</td><td class="ok">14/16</td><td class="ok">11/13</td><td class="ok">ok</td></tr>
+      <tr><td class="r">Mês para remanejar</td><td class="ok">14/14</td><td class="rem">14/11</td><td class="rem">14/11</td><td class="rem">2</td></tr>
+      <tr><td class="r">Mês para contratar</td><td class="ok">14/14</td><td class="fal">14/10</td><td class="fal">14/9</td><td class="fal">2</td></tr>
+    </table>
+    <div class="legenda">
+      <span><i class="ok"></i>tem o exigido ou mais</span>
+      <span><i class="rem"></i>falta, mas remanejando cobre</span>
+      <span><i class="fal"></i>falta, só contratando</span>
+    </div>
+  </div>
+  <p><b>14/11</b> quer dizer que a malha pede 14 e a escala põe 11: faltam 3. <b>Horas</b> é quantas horas daquele dia ficam abaixo do exigido.</p>
+  <p><b>Por que as faltas de um mês são todas amarelas ou todas vermelhas.</b> A escala é uma só para todos os dias do mês, então a decisão entre remanejar e contratar vale para o mês inteiro. Se o total em escala alcança o mínimo do mês, existe uma arrumação de turnos que cobre tudo: amarelo. Se não alcança, nenhuma arrumação cobre: vermelho.</p>
+
+  <h3>A aba Turnos</h3>
+  <p>À esquerda, a lista dos turnos do mês; tocar num turno abre o formulário para corrigir. À direita, o formulário.</p>
+  <dl class="termos">
+    <dt>Quem trabalha</dt><dd>APAC ou supervisor.</dd>
+    <dt>Começa às</dt><dd>Hora cheia de início.</dd>
+    <dt>Presença</dt><dd>Horas no turno, contando o intervalo. O padrão é 8h.</dd>
+    <dt>Intervalo começa às</dt><dd>Hora da pausa. Tem de cair dentro do turno, ou o app recusa. "sem intervalo" quando não há pausa.</dd>
+    <dt>Duração do intervalo</dt><dd>Em minutos. O padrão é 60.</dd>
+    <dt>Quantas pessoas</dt><dd>Quantas pessoas fazem exatamente esse turno.</dd>
+    <dt>Nome do turno</dt><dd>Opcional; em branco, o app monta, como "APAC 03h–11h (intervalo 07h)".</dd>
+    <dt>Ativo</dt><dd>Turno não se apaga: desligue para ele sair da conta.</dd>
+  </dl>
+  <p class="nota">Turno que atravessa a meia-noite é um cadastro só: começa às 22:00 com 8h e termina às 06:00. Cada mês tem a sua escala; para carregar muitos turnos de uma vez, cole o arquivo da escala na lista <span class="num">tb_apacEscala</span> em "Editar no modo de grade".</p>
+</section>
+
+<section id="cadastros">
+  <h2>Cadastros</h2>
+  <div class="nome-tela">scrApacCadastro · aberta pelo botão Cadastros do mês</div>
+  <p class="serve">Responde: <b>com que premissas o app calcula, desde quando, e quais postos existem independentemente dos voos.</b></p>
+
+  <h3>Aba Premissas</h3>
+  <p>Cada linha da lista é uma <b>vigência</b>: um conjunto de premissas que vale a partir de uma data. O cálculo usa a vigência ativa mais recente.</p>
+  <dl class="termos">
+    <dt>EM VIGOR</dt><dd>A vigência que o cálculo está usando agora.</dd>
+    <dt>INATIVA</dt><dd>Desligada. Fica na lista para explicar números antigos.</dd>
+    <dt><code>Nova vigência</code></dt><dd>Abre o formulário preenchido com a vigência em vigor. Mude o que mudou e informe a data.</dd>
+    <dt><code>Salvar</code></dt><dd>Grava. O app recusa duas vigências na mesma data.</dd>
+  </dl>
+  <p>Por que não se sobrescreve: o dimensionamento vira número de contrato. Daqui a meses alguém vai perguntar com que premissa aquele número foi feito, e a resposta tem de estar gravada.</p>
+
+  <h3>Aba Postos fixos</h3>
+  <p>Postos que precisam de gente independentemente da malha, como Acesso C (3), Portão Principal (1) e Apoio (1). O app soma a quantidade em cada hora cheia entre <b>Das</b> e <b>Até</b>, por cima dos módulos.</p>
+  <dl class="termos">
+    <dt>Posto</dt><dd>Nome do posto.</dd>
+    <dt>Quem ocupa</dt><dd>APAC ou supervisor.</dd>
+    <dt>Das · Até</dt><dd>Faixa de horário em horas cheias. Posto que atravessa a meia-noite vira dois cadastros: 22:00 às 24:00 e 00:00 às 06:00.</dd>
+    <dt>Quantidade</dt><dd>Pessoas no posto ao mesmo tempo.</dd>
+    <dt>Ativo</dt><dd>Desligar tira o posto de todas as contas.</dd>
+  </dl>
+  <div class="aviso"><p>Os postos fixos pesam muito no resultado. Em outubro, com os 5 APACs de posto fixo por hora, a escala do escopo pede contratar 4; sem eles, cobre o mês com folga.</p></div>
+</section>
+
+<section id="importar">
+  <h2>Importar malha</h2>
+  <div class="nome-tela">scrApacImport · aberta pelo botão Importar malha do mês</div>
+  <p class="serve">Responde: <b>a malha que o app está usando é a do arquivo mais recente?</b></p>
+  <ol class="passos">
+    <li><div><b>O que importar.</b> <b>TODAS</b> grava todas as competências do arquivo, a temporada inteira (cerca de 3.800 voos). Escolher um mês grava só aquele mês e não toca nos outros.</div></li>
+    <li><div><b>Anexar</b> o export de DECOLAGENS do Power BI (.xlsx).</div></li>
+    <li><div><b>Importar.</b> A barra mostra o andamento. A malha anterior das mesmas competências é apagada e a nova é gravada; reimportar o mesmo arquivo não duplica.</div></li>
+  </ol>
+  <dl class="termos">
+    <dt>PRONTO</dt><dd>Arquivo enviado, esperando o processamento (até um minuto).</dd>
+    <dt>PROCESSANDO</dt><dd>Lendo e gravando.</dd>
+    <dt>CONCLUIDO</dt><dd>Terminou. Confira <b>gravados / lidos</b>: os dois números devem ser iguais.</dd>
+    <dt>ERRO</dt><dd>Parou. A mensagem diz o motivo; nada fica pela metade sem aviso.</dd>
+    <dt>Histórico</dt><dd>As importações anteriores: o que foi importado, situação, gravados/lidos e o arquivo.</dd>
+  </dl>
+  <p class="nota">O arquivo precisa ter as colunas Horário, Data, Voo e Assentos, achadas pelo nome, em qualquer ordem. Linha sem data ou horário de verdade é ignorada; é assim que o rodapé de filtros do Power BI fica de fora.</p>
+</section>
+
+<section id="termos">
+  <h2>Palavras do app</h2>
+  <dl class="termos">
+    <dt>APAC</dt><dd>Agente de Proteção da Aviação Civil.</dd>
+    <dt>Módulo</dt><dd>Um canal de inspeção de passageiros com raio-X, operado por 3 APACs.</dd>
+    <dt>Competência</dt><dd>O mês de referência, escrito AAAA-MM (2026-10 = outubro de 2026).</dd>
+    <dt>Malha</dt><dd>As decolagens planejadas do aeroporto, com assentos ofertados.</dd>
+    <dt>Volumetria</dt><dd>Passageiros passando pela inspeção numa hora.</dd>
+    <dt>Antecedência</dt><dd>Quanto tempo antes da decolagem o passageiro é inspecionado.</dd>
+    <dt>Exigido</dt><dd>Quantas pessoas a malha pede numa hora.</dd>
+    <dt>Escalado</dt><dd>Quantas pessoas os turnos põem trabalhando numa hora, sem quem está em intervalo.</dd>
+    <dt>Mínimo do mês</dt><dd>O menor quadro diário, com turnos de 8h e 1h de intervalo, que cobre o pior dia de cada hora.</dd>
+    <dt>Folguista</dt><dd>Quem cobre as folgas da escala 6x2; 1 para cada 3 em escala.</dd>
+    <dt>No quadro</dt><dd>Em escala + folguistas; o número de contrato.</dd>
+    <dt>int</dt><dd>Hora de intervalo de um turno, na régua da escala. Não conta como gente trabalhando.</dd>
+    <dt>Vigência</dt><dd>Conjunto de premissas que vale a partir de uma data.</dd>
+    <dt>Posto fixo</dt><dd>Posto que precisa de gente independentemente dos voos.</dd>
+    <dt>Estouro</dt><dd>Hora que pede mais módulos do que há raios-X.</dd>
+  </dl>
+</section>
+
+<section id="fora">
+  <h2>O que fica de fora</h2>
+  <p class="serve">Nenhuma tela conta:</p>
+  <dl class="termos">
+    <dt>Vigilância</dt><dd>Não é o foco deste app. Turnos de vigilância não entram em nenhuma conta, nem aparecem.</dd>
+    <dt>Ausências</dt><dd>Férias, afastamentos, absenteísmo e treinamento. O "no quadro" é o mínimo sem essas perdas.</dd>
+    <dt>Outras funções</dt><dd>Técnico de segurança, administrativo e preposto.</dd>
+    <dt>Realizado</dt><dd>O app trabalha com a malha planejada, não com os voos que de fato aconteceram.</dd>
+  </dl>
+</section>
+
+</main>
+</div>
