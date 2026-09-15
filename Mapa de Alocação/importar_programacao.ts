@@ -11,44 +11,24 @@
  *   4. devolve os registros prontos e as pendências, sem gravar nada.
  *
  * Ele NÃO grava no SharePoint: quem grava é o fluxo, que recebe este retorno.
- * Assim dá para rodar o script sozinho e conferir a saída antes de existir fluxo.
  *
- * ⚠️ As tabelas de configuração abaixo são um ESPELHO do App.Formulas
- * (colPrefPosicao, colPosicoes, colCias). O Office Script não consegue ler o app,
- * então as duas convivem. Mexeu numa, mexa na outra — e a divergência não dá erro,
- * só produz alocação diferente da que a tela recusaria depois.
+ * A configuração do aeroporto NÃO mora mais aqui (15/09/2026). O fluxo lê as listas
+ * tb_prefPosicao e tb_posicoes do aeroporto do pedido e passa tudo no parâmetro `config`.
+ * Antes eram constantes de Navegantes espelhando o App.Formulas: com um segundo aeroporto,
+ * o script alocaria com a tabela do aeroporto errado sem erro nenhum. Agora, configuração
+ * faltando ou incoerente faz o script RECUSAR com mensagem — erro visível em vez de
+ * alocação errada calada.
+ *
+ * Formato de `config` (texto JSON):
+ *   {
+ *     "aeroporto": "NAVEGANTES",
+ *     "preferencias": [ { "cia": "GLO", "nome_planilha": "GOL", "posicoes": "T4,T3", "portoes": "4,5", "prioridade": 0 }, ...
+ *                       { "cia": "*", "nome_planilha": "*", "posicoes": "T6,T5,...", "portoes": "1,2,..." } ],
+ *     "posicoes":     [ { "posicao": "T1", "id_posicao": 1, "patio": "PRINCIPAL", "ocupa": null }, ... ]
+ *   }
  */
 
-// ============================================================ configuração
-const AEROPORTO = "NAVEGANTES";
-
-/** Preferência por companhia: espelha colPrefPosicao. */
-const PREF: {
-  [nomePlanilha: string]: { sigla: string; posicoes: string[]; portoes: string[]; prioridade?: boolean };
-} = {
-  GOL: { sigla: "GLO", posicoes: ["T4", "T3", "T5", "T2"], portoes: ["4", "5"] },
-  LATAM: { sigla: "TAM", posicoes: ["T6", "T5", "T4", "T3"], portoes: ["1", "2", "3", "5"] },
-  AZUL: { sigla: "AZU", posicoes: ["T5", "T3", "T2", "T6"], portoes: ["3", "2", "4", "1"] },
-  // prioridade: alocada antes das demais. A T6C é a única que comporta o cargueiro, e consome T5+T6;
-  // quem cede é quem tem para onde ir. Sem isso o cargueiro perdia a posição dele para um 737 que
-  // chegou antes no relógio, e caía numa T que não o comporta.
-  ABSA: { sigla: "ABS", posicoes: ["T6C"], portoes: [], prioridade: true },
-};
-
-/** Queda quando a preferência está toda ocupada: a linha cia "*" de colPrefPosicao. */
-const QUEDA_POSICOES = ["T6", "T5", "T4", "T3", "T2", "T1"];
-const QUEDA_PORTOES = ["1", "2", "3", "4", "5"];
-
-/** id_posicao e pátio: espelha colPosicoes. */
-const POSICAO: { [codigo: string]: { id: number; patio: string } } = {
-  T1: { id: 1, patio: "PRINCIPAL" }, T2: { id: 2, patio: "PRINCIPAL" },
-  T3: { id: 3, patio: "PRINCIPAL" }, T4: { id: 4, patio: "PRINCIPAL" },
-  T5: { id: 5, patio: "PRINCIPAL" }, T6: { id: 6, patio: "PRINCIPAL" },
-  T7: { id: 7, patio: "PRINCIPAL" }, T6C: { id: 26, patio: "PRINCIPAL" },
-};
-
-/** Posição que consome outras: espelha a coluna 'ocupa'. Declarado num lado só. */
-const OCUPA: { [codigo: string]: string[] } = { T6C: ["T5", "T6"] };
+// ============================================================ configuração que não depende do aeroporto
 
 /** Equivalência IATA da planilha → código do catálogo tb_equipamentos. */
 const EQUIPAMENTO: { [iata: string]: string } = {
@@ -88,6 +68,18 @@ interface Resultado {
   ok: boolean; mensagem: string; mes_ref: string;
   total: number; registros: Registro[]; pendencias: Pendencia[];
 }
+interface ConfigPref {
+  cia: string; nome_planilha: string; posicoes: string; portoes?: string; prioridade?: number;
+}
+interface ConfigPosicao {
+  posicao: string; id_posicao: number; patio: string; ocupa?: string;
+}
+interface Config {
+  aeroporto: string; preferencias: ConfigPref[]; posicoes: ConfigPosicao[];
+}
+interface Pref {
+  sigla: string; posicoes: string[]; portoes: string[]; prioridade: boolean;
+}
 
 // ============================================================ utilidades
 function semAcento(t: string): string {
@@ -104,23 +96,93 @@ function dataIso(serial: number): string {
 function hhmm(min: number): string {
   return String(Math.floor(min / 60)).padStart(2, "0") + ":" + String(min % 60).padStart(2, "0");
 }
+/** "T4, T3,,T5" → ["T4", "T3", "T5"]. Vazio e nulo (o SharePoint manda null em texto vazio) → []. */
+function lista(t: string | undefined): string[] {
+  return String(t === undefined || t === null ? "" : t).split(",").map(x => x.trim()).filter(x => x !== "");
+}
 /** Posições cuja ocupação impede <codigo>: as que ele consome, mais as que o consomem. */
-function bloqueadasPor(codigo: string): string[] {
+function bloqueadasPor(codigo: string, ocupa: { [codigo: string]: string[] }): string[] {
   const fora: string[] = [codigo];
-  const consome = OCUPA[codigo];
+  const consome = ocupa[codigo];
   if (consome) { for (const c of consome) fora.push(c); }
-  for (const chave of Object.keys(OCUPA)) {
-    if (OCUPA[chave].indexOf(codigo) >= 0 && fora.indexOf(chave) < 0) fora.push(chave);
+  for (const chave of Object.keys(ocupa)) {
+    if (ocupa[chave].indexOf(codigo) >= 0 && fora.indexOf(chave) < 0) fora.push(chave);
   }
   return fora;
 }
+function recusa(mesRef: string, mensagem: string): Resultado {
+  return { ok: false, mensagem: mensagem, mes_ref: mesRef, total: 0, registros: [], pendencias: [] };
+}
 
 // ============================================================ principal
-function main(workbook: ExcelScript.Workbook, mesRef: string = ""): Resultado {
+function main(workbook: ExcelScript.Workbook, mesRef: string = "", config: string = ""): Resultado {
+  // --- configuração do aeroporto: vem do fluxo, e é conferida ANTES de ler a planilha
+  if (!config || !config.trim()) {
+    return recusa(mesRef, "Configuração do aeroporto não recebida. O fluxo precisa passar as listas tb_prefPosicao e tb_posicoes no parâmetro config do script.");
+  }
+  let cfg: Config;
+  try {
+    cfg = JSON.parse(config) as Config;
+  } catch (e) {
+    return recusa(mesRef, "Configuração do aeroporto com JSON inválido: " + String(e));
+  }
+  const AEROPORTO = String(cfg.aeroporto || "").trim();
+  if (!AEROPORTO) return recusa(mesRef, "Configuração sem aeroporto.");
+  const cfgPosicoes = cfg.posicoes || [];
+  const cfgPref = cfg.preferencias || [];
+  if (!cfgPosicoes.length) return recusa(mesRef, "Nenhuma posição ativa em tb_posicoes para " + AEROPORTO + ".");
+
+  /** id_posicao e pátio por código de posição. */
+  const POSICAO: { [codigo: string]: { id: number; patio: string } } = {};
+  /** Posição que consome outras (coluna ocupa). */
+  const OCUPA: { [codigo: string]: string[] } = {};
+  for (const p of cfgPosicoes) {
+    const codigo = String(p.posicao || "").trim();
+    if (!codigo) continue;
+    POSICAO[codigo] = { id: Number(p.id_posicao), patio: String(p.patio || "") };
+    const consome = lista(p.ocupa);
+    if (consome.length) OCUPA[codigo] = consome;
+  }
+
+  /** Preferência por companhia, pelo nome como aparece na planilha. */
+  const PREF: { [nomePlanilha: string]: Pref } = {};
+  let QUEDA_POSICOES: string[] = [];
+  let QUEDA_PORTOES: string[] = [];
+  let temQueda = false;
+  const problemas: string[] = [];
+  for (const r of cfgPref) {
+    const cia = String(r.cia || "").trim();
+    const nome = String(r.nome_planilha || "").trim();
+    const posicoes = lista(r.posicoes);
+    const portoes = lista(r.portoes);
+    for (const c of posicoes) {
+      if (!POSICAO[c]) problemas.push("posição " + c + " (cia " + cia + ") não existe em tb_posicoes");
+    }
+    if (cia === "*") {
+      temQueda = true;
+      QUEDA_POSICOES = posicoes;
+      QUEDA_PORTOES = portoes;
+      continue;
+    }
+    if (!nome) { problemas.push("cia " + cia + " sem nome_planilha"); continue; }
+    if (PREF[nome]) { problemas.push("nome_planilha " + nome + " repetido"); continue; }
+    PREF[nome] = { sigla: cia, posicoes: posicoes, portoes: portoes, prioridade: Number(r.prioridade) === 1 };
+  }
+  for (const codigo of Object.keys(OCUPA)) {
+    for (const c of OCUPA[codigo]) {
+      if (!POSICAO[c]) problemas.push("ocupa de " + codigo + " cita " + c + ", que não existe em tb_posicoes");
+    }
+  }
+  if (!temQueda) problemas.push("falta a linha de queda (cia *)");
+  if (!Object.keys(PREF).length) problemas.push("nenhuma companhia cadastrada");
+  if (problemas.length) {
+    return recusa(mesRef, "Configuração de " + AEROPORTO + " incoerente em tb_prefPosicao/tb_posicoes: " + problemas.join("; ") + ".");
+  }
+
   const planilha = workbook.getWorksheets()[0];
   const dados = planilha.getUsedRange().getValues();
   if (dados.length < 2) {
-    return { ok: false, mensagem: "A planilha não tem linhas de dados.", mes_ref: mesRef, total: 0, registros: [], pendencias: [] };
+    return recusa(mesRef, "A planilha não tem linhas de dados.");
   }
 
   // --- cabeçalho por nome, não por posição: a ordem das colunas pode mudar entre meses
@@ -145,7 +207,7 @@ function main(workbook: ExcelScript.Workbook, mesRef: string = ""): Resultado {
   if (col.aeronave < 0) faltando.push("Aeronave");
   if (col.movimento < 0) faltando.push("POUSO ou DECOLAGEM");
   if (faltando.length) {
-    return { ok: false, mensagem: "Colunas não encontradas na planilha: " + faltando.join(", "), mes_ref: mesRef, total: 0, registros: [], pendencias: [] };
+    return recusa(mesRef, "Colunas não encontradas na planilha: " + faltando.join(", "));
   }
 
   // --- leitura
@@ -166,7 +228,7 @@ function main(workbook: ExcelScript.Workbook, mesRef: string = ""): Resultado {
     });
   }
   if (!movimentos.length) {
-    return { ok: false, mensagem: "Nenhuma linha com data e horário válidos.", mes_ref: mesRef, total: 0, registros: [], pendencias: [] };
+    return recusa(mesRef, "Nenhuma linha com data e horário válidos.");
   }
 
   const pousos = movimentos.filter(m => m.movimento.indexOf("pouso") >= 0).sort((a, b) => a.abs - b.abs);
@@ -243,7 +305,7 @@ function main(workbook: ExcelScript.Workbook, mesRef: string = ""): Resultado {
   for (const par of paresDoMes.sort((a, b) => prio(a) - prio(b) || a.p.abs - b.p.abs)) {
     const pref = PREF[par.p.cia];
     if (!pref) {
-      pendencias.push(pendencia("EMPRESA DESCONHECIDA", par.p, par.d, "empresa sem preferência cadastrada"));
+      pendencias.push(pendencia("EMPRESA DESCONHECIDA", par.p, par.d, "empresa sem preferência cadastrada em tb_prefPosicao"));
       continue;
     }
     const ini = par.p.abs;
@@ -264,7 +326,7 @@ function main(workbook: ExcelScript.Workbook, mesRef: string = ""): Resultado {
     let posicao = "";
     for (const c of candidatas) {
       let cabe = true;
-      for (const b of bloqueadasPor(c)) { if (!livre(ocupPosicao, b, ini, fim)) { cabe = false; break; } }
+      for (const b of bloqueadasPor(c, OCUPA)) { if (!livre(ocupPosicao, b, ini, fim)) { cabe = false; break; } }
       if (cabe) { posicao = c; break; }
     }
     if (!posicao) {
@@ -272,7 +334,7 @@ function main(workbook: ExcelScript.Workbook, mesRef: string = ""): Resultado {
       continue;
     }
     const foraPreferencia = pref.posicoes.indexOf(posicao) < 0;
-    for (const b of bloqueadasPor(posicao)) marcar(ocupPosicao, b, ini, fim);
+    for (const b of bloqueadasPor(posicao, OCUPA)) marcar(ocupPosicao, b, ini, fim);
 
     // portão: preferência, depois qualquer um livre. Melhor um portão fora do habitual que nenhum.
     let portao = "";
@@ -340,7 +402,7 @@ function main(workbook: ExcelScript.Workbook, mesRef: string = ""): Resultado {
   // Uma chamada por bloco, nao uma por linha: console.log dentro de laco e lento e o editor avisa.
   const log: string[] = [];
   log.push(resultado.mensagem);
-  log.push("mes: " + (mesRef || "todos") + " | registros: " + registros.length + " | pendencias: " + pendencias.length);
+  log.push("aeroporto: " + AEROPORTO + " | mes: " + (mesRef || "todos") + " | registros: " + registros.length + " | pendencias: " + pendencias.length);
   if (pendencias.length) {
     log.push("--- pendencias ---");
     log.push(pendencias.map(p =>

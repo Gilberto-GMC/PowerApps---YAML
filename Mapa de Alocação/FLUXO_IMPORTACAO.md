@@ -12,6 +12,61 @@ grava os registros em `tb_alocacoesMapa`, atualizando o progresso que a barra da
 
 ---
 
+## ⚠️ 15/09/2026 — configuração do aeroporto vem das listas, e a recusa do script para o fluxo
+
+**Duas mudanças no mesmo pacote.**
+
+1. **O script não tem mais Navegantes dentro.** O fluxo lê `tb_prefPosicao` e `tb_posicoes` filtradas pelo
+   aeroporto do pedido (`Obter_preferencias`, `Obter_posicoes`), monta o texto em `Montar_config` e passa ao
+   script no parâmetro novo **`config`**. Aeroporto novo passa a ser linha nas listas.
+2. **Defeito anterior, corrigido junto.** Quando o script devolvia `ok: false` — planilha errada, costura não
+   ligada — o fluxo **seguia**, apagava a importação anterior daquele mês, gravava zero e fechava como
+   `CONCLUIDO`. Agora `Conferir_resultado`, logo depois de `Guardar_total`, testa o `ok`: se não for
+   verdadeiro, grava `ERRO` com a mensagem do script e encerra o fluxo **antes** de apagar qualquer coisa.
+
+```
+Processar (escopo)
+  Obter_anexos → Obter_conteudo_do_anexo → Salvar_planilha
+  Obter_preferencias → Obter_posicoes → Montar_config          ← novas
+  [Executar script]                                            ← a costura, com o campo config
+  Resultado_script → Guardar_total
+  Conferir_resultado  (ok? senão: Gravar_recusa → Encerrar_recusa)   ← nova
+  Obter_importacao_anterior → Apagar_anteriores → Gravar_registros → Fechar
+```
+
+**Como foi conferido.** O script novo rodou no Node sobre a planilha de setembro com a configuração vinda
+dos JSONs das listas: **705 registros idênticos campo a campo** aos da versão anterior, e recusa com
+mensagem nos quatro casos de configuração faltando. O `montar_fluxo_importacao.js` insere as ações novas
+na definição antiga (a migração dá byte a byte o pacote do repositório) e confere: coluna citada em
+`$filter` existe na lista, ordem da cadeia, trava do `ok` testando `Resultado_script` com ramo senão que
+grava `ERRO` e encerra, `Montar_config` levando as duas listas. Os defeitos plantados em
+`testar_montar_fluxo_importacao.js` cobrem cada uma — inclusive **religar o `Obter_importacao_anterior`
+direto no `Guardar_total`**, que pularia a trava sem remover ação nenhuma.
+
+### Implantação — nesta ordem, sem gerar importação no meio
+
+Script novo com fluxo velho recusa toda importação (sem `config`). Fluxo velho **sem a trava** seguiria e
+apagaria o mês. Por isso a ordem importa, e ninguém deve tocar em GERAR até o passo 6.
+
+1. **Crie a lista** `tb_prefPosicao` pelo gerador de listas, com `lista_tb_prefPosicao.json`. Confira as cinco
+   linhas de Navegantes, inclusive a de `cia = *`.
+2. **Desligue** o fluxo `Importar programacao` atual (não apague) e **importe o `.zip` novo** como fluxo novo
+   (seção "Atalho" abaixo).
+3. **Refaça os ajustes de sempre** (os mesmos da opção A de 14/09): pasta da `Salvar_planilha`; listas que
+   abrirem em branco — agora também `tb_prefPosicao` e `tb_posicoes` nas duas ações `Obter_`; e a ação do
+   Excel **dentro do escopo, entre `Montar_config` e `Resultado_script`**, com o `Resultado_script` apontando
+   para ela.
+4. **Atualize o Office Script**: abra `Roteiros › Importar programacao` no Excel Online → **Automatizar** →
+   editar, cole o `importar_programacao.ts` novo inteiro e salve.
+5. **Na ação do Excel, escolha o script de novo** para o campo `config` aparecer, e preencha:
+   `config` = `@{outputs('Montar_config')}`. O `mesRef` continua como estava.
+6. **Teste a recusa, sem risco:** na `tb_prefPosicao`, ponha `ativo = 0` na linha `cia = *`. Gere uma importação
+   de um mês **sem registros** (dezembro, por exemplo). O item tem de terminar em **ERRO** com *"falta a linha
+   de queda (cia \*)"*, e o histórico do fluxo tem de mostrar `Encerrar_recusa` executado e
+   `Obter_importacao_anterior` **não** executado. Volte a linha para `ativo = 1`.
+7. **Teste uma importação normal** (seção "Como testar sem risco").
+8. Só depois **apague o fluxo antigo**.
+
 ## ⚠️ 14/09/2026 — o pacote foi refeito: o tratamento de erro não disparava
 
 **O defeito.** O `Marcar_erro` tinha `runAfter` apontando para seis ações ao mesmo tempo
@@ -127,9 +182,12 @@ sublinhado.
 Todas as ações seguintes já leem de `outputs('Resultado_script')`. Ligando essa junta, o resto anda
 sozinho.
 
-> Se você rodar sem ligar a costura, o fluxo **não quebra e não estraga nada**: importa zero
-> registros e escreve o motivo no campo `mensagem` do item. Foi de propósito — falha barulhenta e
-> inofensiva é melhor que falha silenciosa.
+> Se você rodar sem ligar a costura, o `Resultado_script` devolve `ok: false` e o `Conferir_resultado` grava
+> **ERRO** com o motivo no campo `mensagem` e encerra — sem apagar nada.
+>
+> ⚠️ **Até 15/09/2026 este aviso dizia que o fluxo "não estraga nada" nesse caso, e estava errado.** Sem a
+> trava do `ok`, o fluxo seguia para `Obter_importacao_anterior` e **apagava a importação anterior do mês**
+> antes de gravar zero registros. A frase descrevia a intenção, não o que a definição fazia.
 
 ### O `operationId` não é o nome que aparece na tela
 
@@ -375,9 +433,14 @@ Nomear pelo `ID` evita duas importações simultâneas sobrescreverem o arquivo 
 | Arquivo | `Id` do "Criar arquivo" |
 | Script | `Importar programacao` |
 | mesRef | `@{formatDateTime(triggerOutputs()?['body/mes_ref'], 'yyyy-MM')}` |
+| config | `@{outputs('Montar_config')}` |
 
 O `mesRef` tem que sair no formato `aaaa-MM`. Digitar `09` não casa com nada e o script devolve zero
 registros sem erro nenhum.
+
+O `config` é o texto que `Montar_config` monta com `tb_prefPosicao` e `tb_posicoes` do aeroporto do pedido.
+Vazio, o script recusa com *"Configuração do aeroporto não recebida"*. O campo só aparece na ação depois que
+o script novo foi salvo — se não aparecer, escolha o script de novo no campo **Script**.
 
 ---
 
@@ -395,9 +458,10 @@ registros sem erro nenhum.
 > Se o nome interno da ação for outro, ajuste o `'Executar_script'`. O nome interno usa sublinhado no
 > lugar de espaço — veja em **Código-fonte** (⋯ → Exibição de código) se não tiver certeza.
 
-Vale pôr um **Condition** aqui: se `ok` do retorno for `false`, grave `status = ERRO` com a `mensagem`
-e encerre. O script devolve `ok: false` com motivo legível quando a planilha está errada — arquivo
-trocado, por exemplo.
+Logo depois vem o **`Conferir_resultado`** (desde 15/09/2026 — antes era só sugestão aqui, e a falta dele
+apagava o mês): se `ok` do retorno não for `true`, grava `status = ERRO` com a `mensagem` do script e encerra
+com **Encerrar → Cancelado**. O script devolve `ok: false` com motivo legível quando a planilha está errada
+ou a configuração do aeroporto falta.
 
 ---
 

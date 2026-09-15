@@ -130,17 +130,24 @@ coluna `ocupa` de `colPosicoes` declara para a tela.
 
 ---
 
-## ⚠️ A duplicação que não dá erro
+## A configuração do aeroporto vem das listas (desde 15/09/2026)
 
-As tabelas no topo do script — preferências, `id_posicao`, `ocupa`, equivalência IATA — são um
-**espelho do `App.Formulas`**. O Office Script não consegue ler o app, então as duas convivem.
+Até 15/09/2026 as preferências, o `id_posicao` e o `ocupa` eram constantes de Navegantes no topo do
+script, espelhando o `App.Formulas`. Divergência não dava erro — e com um segundo aeroporto o script
+alocaria com a tabela do aeroporto errado, calado.
 
-**Divergência entre elas não gera erro nenhum.** Produz alocação que a tela recusaria depois, ou pior,
-que ela aceita mas que não é a que a operação combinou. Mexeu em `colPrefPosicao`, `colPosicoes` ou
-`colCias`, abra o script e confira o bloco de configuração.
+Agora o fluxo lê **`tb_prefPosicao`** e **`tb_posicoes`** filtradas pelo aeroporto do pedido e passa as duas
+ao script no parâmetro `config`. Aeroporto novo é linha nova nas listas, sem mexer em código.
 
-É o preço de ter escolhido guardar as preferências no `App.Formulas`. A alternativa seria uma lista do
-SharePoint que as duas pontas leem — vale trocar se as preferências começarem a mudar com frequência.
+O script **recusa** (`ok: false`, com a mensagem na tela) quando a configuração falta ou não fecha: sem
+`config`, sem a linha de queda `cia = *`, posição citada na preferência que não existe em `tb_posicoes`,
+`ocupa` apontando para posição inexistente, `nome_planilha` repetido.
+
+**Continua no código, porque não depende do aeroporto:** a equivalência IATA → catálogo e as rotas
+internacionais. O `colPrefPosicao` do `App.Formulas` não é lido por nenhuma tela e ficou obsoleto.
+
+A troca foi provada rodando o próprio script no Node sobre a planilha de setembro: com a configuração
+vinda das listas, **os mesmos 705 registros, idênticos campo a campo**, zero pendências.
 
 ---
 

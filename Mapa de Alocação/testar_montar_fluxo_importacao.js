@@ -98,6 +98,35 @@ const CASOS = [
     planta: (wf) => { for (const t of Object.values(wf.triggers)) delete t.conditions; },
     espera: "condição de gatilho status = PRONTO ausente",
   },
+  {
+    nome: "$filter com coluna que não existe na lista",
+    planta: (wf) => { acao(wf, "Obter_posicoes").inputs.parameters.$filter = "aeroportoX eq 'NAVEGANTES'"; },
+    espera: "Obter_posicoes: coluna 'aeroportoX' do $filter não existe em tb_posicoes",
+  },
+  {
+    nome: "trava do ok trocada por condição sempre verdadeira",
+    planta: (wf) => { acao(wf, "Conferir_resultado").expression = { equals: [1, 1] }; },
+    espera: "Conferir_resultado tem de testar outputs('Resultado_script')?['ok']",
+  },
+  {
+    nome: "recusa do script sem gravar ERRO",
+    planta: (wf) => {
+      const s = acao(wf, "Conferir_resultado").else.actions;
+      delete s.Gravar_recusa;
+      s.Encerrar_recusa.runAfter = {};
+    },
+    espera: "Conferir_resultado: o ramo senão tem de gravar ERRO e encerrar",
+  },
+  {
+    nome: "apagar a importação anterior pulando a trava do ok",
+    planta: (wf) => { acao(wf, "Obter_importacao_anterior").runAfter = { Guardar_total: ["Succeeded"] }; },
+    espera: "Obter_importacao_anterior: tem de vir logo depois de Conferir_resultado",
+  },
+  {
+    nome: "script sem a configuração do aeroporto",
+    planta: (wf) => { acao(wf, "Montar_config").inputs = "{}"; },
+    espera: "Montar_config tem de levar Obter_preferencias e Obter_posicoes",
+  },
 ];
 
 let falhas = 0;

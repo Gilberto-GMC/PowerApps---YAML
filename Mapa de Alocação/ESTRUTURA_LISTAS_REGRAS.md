@@ -65,9 +65,12 @@ Uma forma só para os dois casos: **é proibido ter `equip_a` em `posicao` junto
 ```
 | aeroporto | posicao | equip_a     | vizinha | equip_b     | mensagem                                          |
 | NAVEGANTES | T4      | E295        |         |             | T4 não recebe E195-E2.                            |
-| NAVEGANTES | T3      | B738,B38M   | T4      | B738,B38M   | T3 e T4 não comportam dois 737 ao mesmo tempo.    |
-| NAVEGANTES | T4      | B738,B38M   | T5      | B738,B38M   | T4 e T5 não comportam dois 737 ao mesmo tempo.    |
+| NAVEGANTES | T3      | B38M        | T4      | B38M        | T3 e T4 não comportam dois 737 MAX ao mesmo tempo. |
+| NAVEGANTES | T4      | B38M        | T5      | B38M        | T4 e T5 não comportam dois 737 MAX ao mesmo tempo. |
 ```
+
+> **Confirmado pelo Douglas em 15/09/2026:** a trava lado a lado vale **só MAX + MAX**. B738 com B738, ou
+> B738 com MAX, passa. Os pares seguem a sequência física T1–T2–…–T7.
 
 > **`equip_a` e `equip_b` são Texto e não Nota de propósito.** Validação de lista do SharePoint **não
 > enxerga coluna de várias linhas**. Como Texto, a lista consegue recusar sozinha uma regra de par pela

@@ -44,8 +44,9 @@ const wf = def.properties && def.properties.definition;
 if (!wf || !wf.actions || !wf.triggers) { console.error("✗ definição com problema — nada foi gravado:\n   arquivo sem properties.definition"); process.exit(1); }
 
 const TOPO = ["Marcar_processando", "Inicializar_contador", "Marcar_erro"];
-const TRABALHO = ["Obter_anexos", "Obter_conteudo_do_anexo", "Salvar_planilha", "Resultado_script",
-  "Guardar_total", "Obter_importacao_anterior", "Apagar_anteriores", "Gravar_registros", "Fechar"];
+const TRABALHO = ["Obter_anexos", "Obter_conteudo_do_anexo", "Salvar_planilha",
+  "Obter_preferencias", "Obter_posicoes", "Montar_config", "Resultado_script",
+  "Guardar_total", "Conferir_resultado", "Obter_importacao_anterior", "Apagar_anteriores", "Gravar_registros", "Fechar"];
 
 // planifica: se já existe o escopo Processar, as ações dele voltam para o mesmo saco
 const plano = {};
@@ -59,6 +60,49 @@ for (const [k, v] of Object.entries(wf.actions)) {
 for (const k of Object.keys(plano)) {
   if (!TOPO.includes(k) && !TRABALHO.includes(k)) erros.push(`ação não prevista no nível de cima: ${k} — acrescente-a em TRABALHO ou TOPO conscientemente`);
 }
+// ------------------------------------------------------------------ 15/09/2026: aeroporto vindo das listas + trava da recusa
+// Inseridas SÓ se faltarem (migração da definição antiga). Se já existem, ficam como estão e passam pelas
+// conferências lá embaixo — regenerar apagaria o defeito que o teste planta e a conferência nunca veria nada.
+//
+// ⚠️ A trava corrige um defeito anterior a esta mudança: com ok = false (planilha errada, costura não ligada)
+// o fluxo seguia, APAGAVA a importação anterior do mês, gravava zero e fechava como CONCLUIDO.
+const INSERIDAS = [];
+if (plano.Guardar_total) {
+  const SITE = plano.Guardar_total.inputs.parameters.dataset;
+  const obterLista = (tabela) => ({
+    runAfter: {}, type: "OpenApiConnection",
+    inputs: {
+      parameters: { dataset: SITE, table: tabela, $filter: "aeroporto eq '@{triggerBody()?['aeroporto']}' and ativo eq 1", $top: 5000 },
+      host: { apiId: "/providers/Microsoft.PowerApps/apis/shared_sharepointonline", connectionName: "shared_sharepointonline", operationId: "GetItems" },
+      authentication: "@parameters('$authentication')",
+    },
+  });
+  const insere = (nome, fabrica) => { if (!plano[nome]) { plano[nome] = fabrica(); INSERIDAS.push(nome); } };
+  insere("Obter_preferencias", () => obterLista("tb_prefPosicao"));
+  insere("Obter_posicoes", () => obterLista("tb_posicoes"));
+  insere("Montar_config", () => ({
+    runAfter: {}, type: "Compose",
+    inputs: "@string(setProperty(setProperty(setProperty(json('{}'), 'aeroporto', triggerBody()?['aeroporto']), 'preferencias', outputs('Obter_preferencias')?['body/value']), 'posicoes', outputs('Obter_posicoes')?['body/value']))",
+  }));
+  insere("Conferir_resultado", () => {
+    const recusa = clone(plano.Guardar_total);
+    recusa.runAfter = {};
+    recusa.inputs.parameters["item/status"] = "ERRO";
+    recusa.inputs.parameters["item/mensagem"] = "@outputs('Resultado_script')?['mensagem']";
+    return {
+      runAfter: {}, type: "If",
+      expression: { equals: ["@outputs('Resultado_script')?['ok']", true] },
+      actions: {},
+      else: {
+        actions: {
+          Gravar_recusa: recusa,
+          Encerrar_recusa: { runAfter: { Gravar_recusa: ["Succeeded"] }, type: "Terminate", inputs: { runStatus: "Cancelled" } },
+        },
+      },
+    };
+  });
+}
+
 for (const n of TOPO.concat(TRABALHO)) if (!plano[n]) erros.push(`falta a ação ${n}`);
 
 if (erros.length) {
@@ -72,6 +116,15 @@ const processar = {};
 for (const n of TRABALHO) processar[n] = clone(plano[n]);
 processar.Obter_anexos.runAfter = {};                                   // primeira do escopo
 processar.Gravar_registros.runAfter = { Apagar_anteriores: ["Succeeded"] }; // antes vinha depois do Inicializar_contador
+// Só as ações inseridas nesta rodada, e a seguinte a cada uma, são religadas na cadeia. NÃO reescrever a
+// cadeia inteira: um runAfter errado que chegasse na definição seria consertado calado e a conferência
+// nunca o veria (foi o que o teste "runAfter para ação de outro nível" pegou em 15/09/2026).
+for (const n of INSERIDAS) {
+  const i = TRABALHO.indexOf(n);
+  processar[n].runAfter = { [TRABALHO[i - 1]]: ["Succeeded"] };
+  const prox = TRABALHO[i + 1];
+  if (prox && !INSERIDAS.includes(prox)) processar[prox].runAfter = { [n]: ["Succeeded"] };
+}
 
 const acoes = {};
 acoes.Marcar_processando = Object.assign(clone(plano.Marcar_processando), { runAfter: {} });
@@ -93,6 +146,8 @@ const LISTAS = {
   "7b5a100a-e601-4ce5-894b-04daee5318c6": "lista_tb_importacaoMapa.json",   // GUID de tb_importacaoMapa, do gatilho
   tb_importacaoMapa: "lista_tb_importacaoMapa.json",
   tb_alocacoesMapa: "lista_tb_alocacoesMapa.json",
+  tb_prefPosicao: "lista_tb_prefPosicao.json",
+  tb_posicoes: "lista_tb_posicoes.json",
 };
 const esquema = {};
 for (const [tabela, arq] of Object.entries(LISTAS)) {
@@ -137,6 +192,16 @@ const iniciadas = new Set();
         }
       }
     }
+    if (op === "GetItems") {
+      const p = a.inputs.parameters;
+      const e = esquema[p.table];
+      if (!e) erros.push(`${n}: lista desconhecida '${p.table}'`);
+      else {
+        for (const m of String(p.$filter || "").matchAll(/([A-Za-z_][A-Za-z0-9_]*)\s+(?:eq|ne|lt|le|gt|ge)\s/g)) {
+          if (!e.todas.includes(m[1])) erros.push(`${n}: coluna '${m[1]}' do $filter não existe em ${e.nome}`);
+        }
+      }
+    }
     if (a.actions) anda(a.actions, nivel + 1);
     if (a.else) anda(a.else.actions, nivel + 1);
   }
@@ -172,6 +237,31 @@ for (const m of texto.matchAll(/variables\('([^']+)'\)/g)) {
 // o próprio defeito corrigido não pode voltar
 const rae = Object.keys(acoes.Marcar_erro.runAfter);
 if (rae.length !== 1 || rae[0] !== "Processar") erros.push("Marcar_erro tem de depender só do escopo Processar");
+
+// a ordem do escopo é a de TRABALHO: cada ação depende só da anterior — é o que garante que a trava do ok
+// vem antes do Obter_importacao_anterior, e a configuração antes do script
+TRABALHO.forEach((n, i) => {
+  const esperado = i === 0 ? "" : TRABALHO[i - 1] + ":Succeeded";
+  const real = Object.entries(processar[n].runAfter || {}).map(([k, v]) => k + ":" + v.join("/")).join(",");
+  if (real !== esperado) erros.push(`${n}: tem de vir logo depois de ${TRABALHO[i - 1] || "(início do escopo)"} — runAfter atual: ${real || "(vazio)"}`);
+});
+
+// a recusa do script tem de parar o fluxo ANTES de apagar a importação anterior
+const cr = processar.Conferir_resultado;
+if (!cr || cr.type !== "If" || !/Resultado_script'\)\?\['ok'\]/.test(JSON.stringify(cr.expression || ""))) {
+  erros.push("Conferir_resultado tem de testar outputs('Resultado_script')?['ok']");
+} else {
+  const senao = Object.values((cr.else && cr.else.actions) || {});
+  const gravaErro = senao.some((x) => x.inputs && x.inputs.parameters && x.inputs.parameters["item/status"] === "ERRO");
+  const encerra = senao.some((x) => x.type === "Terminate");
+  if (!gravaErro || !encerra) erros.push("Conferir_resultado: o ramo senão tem de gravar ERRO e encerrar");
+  if (Object.keys(cr.actions || {}).length) erros.push("Conferir_resultado: o ramo sim tem de ficar vazio — o trabalho segue depois da condição");
+}
+// o script recebe a configuração do aeroporto
+const mc = JSON.stringify((processar.Montar_config && processar.Montar_config.inputs) || "");
+if (!/outputs\('Obter_preferencias'\)/.test(mc) || !/outputs\('Obter_posicoes'\)/.test(mc)) {
+  erros.push("Montar_config tem de levar Obter_preferencias e Obter_posicoes");
+}
 
 // nenhuma ação sumiu nem apareceu na remontagem
 const antes = Object.keys(plano).sort().join(",");
@@ -257,4 +347,6 @@ fs.writeFileSync(path.join(SAIDA, "fluxo_importar_programacao.definition.json"),
 
 console.log(`✓ ${nomes.size} ações (${Object.keys(processar).length} dentro do escopo Processar), 0 problemas nas conferências`);
 console.log(`✓ Marcar_erro depende só de Processar; Inicializar_contador no nível de cima`);
+console.log(`✓ Conferir_resultado para o fluxo antes de apagar quando o script recusa; config do aeroporto montada das listas`);
+if (INSERIDAS.length) console.log(`  inseridas nesta rodada: ${INSERIDAS.join(", ")}`);
 console.log(`✓ ${path.join(SAIDA, "Importarprogramacao_COMPLETO.zip")} (${entradas.length} entradas, mesma ordem do pacote-base)`);

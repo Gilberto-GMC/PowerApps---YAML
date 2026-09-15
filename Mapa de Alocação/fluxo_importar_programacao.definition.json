@@ -181,9 +181,62 @@
                 ]
               }
             },
-            "Resultado_script": {
+            "Obter_preferencias": {
               "runAfter": {
                 "Salvar_planilha": [
+                  "Succeeded"
+                ]
+              },
+              "type": "OpenApiConnection",
+              "inputs": {
+                "parameters": {
+                  "dataset": "https://grupoccr.sharepoint.com/sites/AIRPORTNOW",
+                  "table": "tb_prefPosicao",
+                  "$filter": "aeroporto eq '@{triggerBody()?['aeroporto']}' and ativo eq 1",
+                  "$top": 5000
+                },
+                "host": {
+                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+                  "connectionName": "shared_sharepointonline",
+                  "operationId": "GetItems"
+                },
+                "authentication": "@parameters('$authentication')"
+              }
+            },
+            "Obter_posicoes": {
+              "runAfter": {
+                "Obter_preferencias": [
+                  "Succeeded"
+                ]
+              },
+              "type": "OpenApiConnection",
+              "inputs": {
+                "parameters": {
+                  "dataset": "https://grupoccr.sharepoint.com/sites/AIRPORTNOW",
+                  "table": "tb_posicoes",
+                  "$filter": "aeroporto eq '@{triggerBody()?['aeroporto']}' and ativo eq 1",
+                  "$top": 5000
+                },
+                "host": {
+                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+                  "connectionName": "shared_sharepointonline",
+                  "operationId": "GetItems"
+                },
+                "authentication": "@parameters('$authentication')"
+              }
+            },
+            "Montar_config": {
+              "runAfter": {
+                "Obter_posicoes": [
+                  "Succeeded"
+                ]
+              },
+              "type": "Compose",
+              "inputs": "@string(setProperty(setProperty(setProperty(json('{}'), 'aeroporto', triggerBody()?['aeroporto']), 'preferencias', outputs('Obter_preferencias')?['body/value']), 'posicoes', outputs('Obter_posicoes')?['body/value']))"
+            },
+            "Resultado_script": {
+              "runAfter": {
+                "Montar_config": [
                   "Succeeded"
                 ]
               },
@@ -226,6 +279,62 @@
                 ]
               }
             },
+            "Conferir_resultado": {
+              "runAfter": {
+                "Guardar_total": [
+                  "Succeeded"
+                ]
+              },
+              "type": "If",
+              "expression": {
+                "equals": [
+                  "@outputs('Resultado_script')?['ok']",
+                  true
+                ]
+              },
+              "actions": {},
+              "else": {
+                "actions": {
+                  "Gravar_recusa": {
+                    "type": "OpenApiConnection",
+                    "inputs": {
+                      "parameters": {
+                        "dataset": "https://grupoccr.sharepoint.com/sites/AIRPORTNOW",
+                        "table": "7b5a100a-e601-4ce5-894b-04daee5318c6",
+                        "id": "@triggerBody()?['ID']",
+                        "item/aeroporto": "@triggerBody()?['aeroporto']",
+                        "item/mes_ref": "@triggerBody()?['mes_ref']",
+                        "item/ativo": "@triggerBody()?['ativo']",
+                        "item/status": "ERRO",
+                        "item/total": "@outputs('Resultado_script')?['total']",
+                        "item/processados": "@triggerBody()?['processados']",
+                        "item/criados": "@triggerBody()?['criados']",
+                        "item/pendencias": "@triggerBody()?['pendencias']",
+                        "item/mensagem": "@outputs('Resultado_script')?['mensagem']"
+                      },
+                      "host": {
+                        "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+                        "connectionName": "shared_sharepointonline",
+                        "operationId": "PatchItem"
+                      },
+                      "authentication": "@parameters('$authentication')"
+                    },
+                    "runAfter": {}
+                  },
+                  "Encerrar_recusa": {
+                    "runAfter": {
+                      "Gravar_recusa": [
+                        "Succeeded"
+                      ]
+                    },
+                    "type": "Terminate",
+                    "inputs": {
+                      "runStatus": "Cancelled"
+                    }
+                  }
+                }
+              }
+            },
             "Obter_importacao_anterior": {
               "type": "OpenApiConnection",
               "inputs": {
@@ -243,7 +352,7 @@
                 "authentication": "@parameters('$authentication')"
               },
               "runAfter": {
-                "Guardar_total": [
+                "Conferir_resultado": [
                   "Succeeded"
                 ]
               },
