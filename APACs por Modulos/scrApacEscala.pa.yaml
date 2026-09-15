@@ -5,7 +5,6 @@ Screens:
       OnVisible: |-
         =If(IsBlank(varAero), Set(varAero, First(colAerosApac).Aeroporto));
         Set(varModoEsc, Coalesce(varModoEsc, "ANALISE"));
-        Set(varVigCobreEsc, Coalesce(varVigCobreEsc, true));
         Set(varPapelVerEsc, Coalesce(varPapelVerEsc, "APAC"));
         Select(btnLerEsc)
     Children:
@@ -20,7 +19,12 @@ Screens:
             Height: =1
             OnSelect: |-
               =Refresh(tb_apacEscala);
-              ClearCollect(colEscalaCad, Filter(tb_apacEscala, aeroporto = varAero, competencia = varComp));
+              // Só APAC e supervisor. Vigilância não é o foco do app (Douglas, 15/09/2026): turno de vigilância
+              // que estiver na lista não entra em conta nenhuma nem aparece na tela.
+              ClearCollect(
+                  colEscalaCad,
+                  Filter(tb_apacEscala, aeroporto = varAero, competencia = varComp, papel = "APAC" Or papel = "SUPERVISOR")
+              );
               ClearCollect(
                   colHorasEsc,
                   ForAll(Sequence(apacHorasDia, 0) As _h, { Value: Right("0" & Text(_h.Value), 2) & ":00" })
@@ -36,7 +40,7 @@ Screens:
                       { Value: If(_h.Value = 0, "sem intervalo", Right("0" & Text(_h.Value - 1), 2) & ":00") }
                   )
               );
-              ClearCollect(colPapeisEsc, Table({ Value: "APAC" }, { Value: "SUPERVISOR" }, { Value: "VIGILANCIA" }));
+              ClearCollect(colPapeisEsc, Table({ Value: "APAC" }, { Value: "SUPERVISOR" }));
               If(
                   IsBlank(varFormEsc),
                   Set(
@@ -92,9 +96,7 @@ Screens:
                           },
                           {
                               hora: _h.Value,
-                              apac: Coalesce(Sum(Filter(vale, papel = "APAC"), quantidade), 0) +
-                                  If(varVigCobreEsc, Coalesce(Sum(Filter(vale, papel = "VIGILANCIA"), quantidade), 0), 0),
-                              vig: Coalesce(Sum(Filter(vale, papel = "VIGILANCIA"), quantidade), 0),
+                              apac: Coalesce(Sum(Filter(vale, papel = "APAC"), quantidade), 0),
                               sup: Coalesce(Sum(Filter(vale, papel = "SUPERVISOR"), quantidade), 0)
                           }
                       )
@@ -158,11 +160,7 @@ Screens:
                       )
                   )
               );
-              Set(
-                  varPessoasAEsc,
-                  Coalesce(Sum(Filter(colEscalaCad, ativo = 1, papel = "APAC"), quantidade), 0) +
-                  If(varVigCobreEsc, Coalesce(Sum(Filter(colEscalaCad, ativo = 1, papel = "VIGILANCIA"), quantidade), 0), 0)
-              );
+              Set(varPessoasAEsc, Coalesce(Sum(Filter(colEscalaCad, ativo = 1, papel = "APAC"), quantidade), 0));
               Set(varPessoasSEsc, Coalesce(Sum(Filter(colEscalaCad, ativo = 1, papel = "SUPERVISOR"), quantidade), 0));
               Set(varMinAEsc, LookUp(colMinMes, papel = "APAC").minimo);
               Set(varMinSEsc, LookUp(colMinMes, papel = "SUPERVISOR").minimo);
@@ -268,18 +266,6 @@ Screens:
                               OnSelect: =Set(varModoEsc, "TURNOS")
                               Text: ="TURNOS"
                               Width: =110
-                        # Vigilância cobre os postos fixos (Acesso C, Portão, Apoio), que já estão dentro do exigido de
-                        # APAC. Desligar mostra o que sobra se a vigilância não puder assumir posto de APAC.
-                        - btnVigEsc:
-                            Control: Button@0.0.45
-                            Properties:
-                              Appearance: ='ButtonCanvas.Appearance'.Secondary
-                              Height: =thmAlturaCampo
-                              OnSelect: |-
-                                =Set(varVigCobreEsc, !varVigCobreEsc);
-                                Select(btnCalcEsc)
-                              Text: =If(varVigCobreEsc, "VIGILÂNCIA CONTA COMO APAC", "VIGILÂNCIA NÃO CONTA")
-                              Width: =250
                         - btnVoltarEsc:
                             Control: Button@0.0.45
                             Properties:
@@ -348,7 +334,7 @@ Screens:
                                             "<div style='font-size:24px;font-weight:800;line-height:1.2;color:" & If(ok, hxVerde, contratar, hxVermelho, hxAmbar) & ";'>" &
                                             If(ok, "COBRE O MÊS", contratar, "CONTRATAR " & Text(varMinAEsc - varPessoasAEsc), "REPOSICIONAR TURNOS") & "</div>" &
                                             "<div style='font-size:12px;margin-top:6px;line-height:1.5;'><b>" & Text(varPessoasAEsc) & "</b> em escala por dia" &
-                                            If(varVigCobreEsc, " (APAC + vigilância)", " (só APAC)") & " · mínimo do mês <b>" & Text(varMinAEsc) & "</b>" &
+                                            " · mínimo do mês <b>" & Text(varMinAEsc) & "</b>" &
                                             " · <b>" & Text(varDiasFaltaAEsc) & "</b> dia(s) com falta</div>" &
                                             "<div style='font-size:11px;color:" & hxTextoFraco & ";margin-top:4px;line-height:1.5;'>" &
                                             If(
@@ -491,7 +477,7 @@ Screens:
                                         Concat(
                                             Sort(Filter(colEscalaCad, ativo = 1), ordem, SortOrder.Ascending) As _t,
                                             "<tr><td style='" & rotR & "' title='" & Coalesce(_t.rotulo, "") & "'>" &
-                                            If(_t.papel = "SUPERVISOR", "SUP", _t.papel = "VIGILANCIA", "VIG", "APAC") & " · " & Coalesce(_t.rotulo, "") & "</td>" &
+                                            If(_t.papel = "SUPERVISOR", "SUP", "APAC") & " · " & Coalesce(_t.rotulo, "") & "</td>" &
                                             "<td style='" & celR & "font-weight:700;'>" & Text(_t.quantidade) & "</td>" &
                                             Concat(
                                                 Sequence(apacHorasDia, 0) As _h,
@@ -509,7 +495,6 @@ Screens:
                                                     If(
                                                         pres And inter, hxAmbarSuave,
                                                         pres And _t.papel = "SUPERVISOR", hxCarga3,
-                                                        pres And _t.papel = "VIGILANCIA", hxCarga1,
                                                         pres, hxCarga2,
                                                         hxSuperficie
                                                     ) &
@@ -519,7 +504,7 @@ Screens:
                                             ) & "</tr>"
                                         ) &
                                         "<tr><td style='" & rotR & "font-weight:700;border-top:2px solid " & hxBorda & ";'>ESCALADOS APAC" &
-                                        If(varVigCobreEsc, " + VIG", "") & "</td><td style='" & celR & "border-top:2px solid " & hxBorda & ";'></td>" &
+                                        "</td><td style='" & celR & "border-top:2px solid " & hxBorda & ";'></td>" &
                                         Concat(
                                             Sort(colCobEsc, hora, SortOrder.Ascending),
                                             "<td style='" & celR & "font-weight:700;border-top:2px solid " & hxBorda & ";'>" & Text(apac) & "</td>"
@@ -679,9 +664,8 @@ Screens:
                                     "Turno das 22:00 às 06:00 conta de 22 a 05; com intervalo às 03:00, a hora 03 fica sem ele. É a mesma regra que reproduz, " &
                                     "hora a hora, as linhas de total da planilha do escopo. A mesma escala vale para todos os dias do mês (6x2: quem folga é " &
                                     "coberto pelo folguista, que não entra na conta da hora).</div>" &
-                                    "<div style='" & par & "'>" & If(varVigCobreEsc, "<b>Vigilância está contando como APAC</b>: ", "<b>Vigilância não está contando</b>: ") &
-                                    "os postos fixos (Acesso C, Portão Principal, Apoio) já estão dentro do exigido de APAC, e na planilha são cobertos pelos " &
-                                    "turnos de vigilância. O botão na barra liga e desliga.</div>" &
+                                    "<div style='" & par & "'>Só contam turnos de <b>APAC</b> e de <b>supervisor</b>. Os postos fixos cadastrados em " &
+                                    "CADASTROS estão dentro do exigido de APAC e precisam ser cobertos por turnos de APAC.</div>" &
                                     "<div style='" & tit & "'>COMO LER O VEREDITO</div>" &
                                     "<div style='" & par & "'><b style='color:" & hxVerde & ";'>COBRE O MÊS</b> — nenhuma hora de nenhum dia fica abaixo do exigido. " &
                                     "<b style='color:" & hxVermelho & ";'>CONTRATAR n</b> — há falta e a escala tem menos gente que o <b>mínimo do mês</b> " &
@@ -706,7 +690,6 @@ Screens:
                                     "amarelas ou todas vermelhas.</div>" &
                                     "<div style='margin:6px 0 2px 0;'>" &
                                     "<span style='" & item & "'><span style='" & sw & hxCarga2 & ";'></span>régua: APAC no turno</span>" &
-                                    "<span style='" & item & "'><span style='" & sw & hxCarga1 & ";'></span>vigilância no turno</span>" &
                                     "<span style='" & item & "'><span style='" & sw & hxCarga3 & ";'></span>supervisor no turno</span>" &
                                     "<span style='" & item & "'><span style='" & sw & hxAmbarSuave & ";'></span>intervalo</span>" &
                                     "</div>" &
@@ -774,7 +757,6 @@ Screens:
                                       "<div style='font-size:10px;font-weight:700;letter-spacing:.12em;color:" & hxTextoFraco & ";'>TURNOS DE " & varComp & " · " & varAero & "</div>" &
                                       "<div style='font-size:11px;color:" & hxTexto & ";line-height:1.5;margin-top:4px;'>" &
                                       "Ativos: <b>" & Text(Coalesce(Sum(Filter(colEscalaCad, ativo = 1, papel = "APAC"), quantidade), 0)) & " APAC</b> · <b>" &
-                                      Text(Coalesce(Sum(Filter(colEscalaCad, ativo = 1, papel = "VIGILANCIA"), quantidade), 0)) & " vigilância</b> · <b>" &
                                       Text(Coalesce(Sum(Filter(colEscalaCad, ativo = 1, papel = "SUPERVISOR"), quantidade), 0)) & " supervisores</b> por dia. " &
                                       "Cada competência tem a sua escala. Para carregar a escala da planilha do escopo de uma vez, abra a lista " &
                                       "tb_apacEscala em <b>Editar no modo de grade</b> e cole o arquivo <b>escala_escopo_" & varComp & ".csv</b>." &

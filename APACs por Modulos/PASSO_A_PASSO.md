@@ -131,14 +131,15 @@ Na ordem, porque cada uma cobre uma classe de defeito diferente:
 | **Premissas** | trocar 185 por 150 e RECALCULAR | os módulos sobem e o rodapé passa a dizer 150 |
 | **Corte de 150** | olhar o rodapé | quantos voos ficaram fora do critério de contagem |
 | **Escala sem turno** | ESCALA num mês sem os CSVs colados | aviso âmbar dizendo que não há turno ativo — **nunca "cobre o mês"** |
-| **Escala de outubro** | colar `escala_escopo_2026-10.csv`, mês em **2026-10**, ESCALA | APAC **amarelo, REPOSICIONAR TURNOS**: 38 em escala, mínimo 36, **24 dias** com falta. SUP **vermelho, CONTRATAR 1**: 4 em escala, mínimo 5, 24 dias |
-| **Onde falta em outubro** | tabela hora a hora | APAC: saldo **−2 às 11h** (7 dias), **−3 às 19h** (20 dias) e **−3 às 20h** (7 dias); todas as outras horas verdes. SUP: −1 nas mesmas três horas |
-| **Célula exigido/escalado** | grade dia a dia, hora 19, um dia com falta | **14/11** em amarelo; em SUPERVISORES (olho), **2/1** em vermelho |
-| **Régua bate com a planilha** | linha ESCALADOS da régua | **5 5 5 12 11 14 14 11 11 14 14 12 14 12 15 14 11 14 15 11 11 11 5 5** — a linha 56 + 48–55 do escopo |
-| **Vigilância desligada** | em 2026-10, botão VIGILÂNCIA CONTA COMO APAC | vira VIGILÂNCIA NÃO CONTA; APAC passa a **32** em escala e **CONTRATAR 4**, em vermelho; a hora 00 fica **5/3** |
-| **Escala de dezembro** | colar `escala_escopo_2026-12.csv`, mês **2026-12**, ESCALA | APAC amarelo com **30 dias** com falta, inclusive **01h e 02h** (2 dias, voos de madrugada); SUP **CONTRATAR 1** |
-| **Novembro não pede supervisor** | mês **2026-11**, ESCALA | APAC e SUP **amarelos**, 11 dias com falta, só às 19h e 20h |
-| **Turno novo muda a análise** | em 2026-10, TURNOS → NOVO TURNO: APAC, começa 17:00, 08h, intervalo 22:00, 3 pessoas → SALVAR → ANÁLISE | APAC passa a **41** em escala e **7 dias** com falta, só às **11h**; 19h e 20h ficam verdes. Desligar **Ativo** desse turno e SALVAR volta a **24 dias** (`node testar_escala.js --extra=APAC:1020:480:1320:60:3`) |
+| **Escala sem vigilância** | se colou os CSVs antigos (25 turnos), apague as 5 linhas VIGILANCIA ou deixe — a tela não lê | a aba TURNOS lista só APAC e SUPERVISOR; os CSVs novos têm **20 turnos** |
+| **Escala de outubro** | colar `escala_escopo_2026-10.csv`, mês em **2026-10**, ESCALA | APAC **vermelho, CONTRATAR 4**: 32 em escala, mínimo 36, **31 dias** com falta. SUP **vermelho, CONTRATAR 1**: 4 em escala, mínimo 5, 24 dias |
+| **Onde falta em outubro** | tabela hora a hora | APAC: **−2** às 00, 01, 02, 22 e 23h (31 dias), 07h (5), 08h (22), 10h (26), 15h (4) e 16h (20); **−4** às 11h (28) e 19h (30); **−5** às 20h (17). SUP: −1 às 11h, 19h e 20h |
+| **Célula exigido/escalado** | grade dia a dia, hora 20, um dia com falta | **14/9** em vermelho; em SUPERVISORES (olho), hora 19, **2/1** em vermelho |
+| **Régua bate com a planilha** | linha ESCALADOS APAC da régua | **3 3 3 10 11 12 12 9 9 12 12 10 12 11 14 12 9 12 14 10 9 9 3 3** — a linha 56 do escopo |
+| **Escala de dezembro** | colar `escala_escopo_2026-12.csv`, mês **2026-12**, ESCALA | APAC **CONTRATAR 4**, 31 dias, com **−5 às 01h e 02h** (voos de madrugada); SUP **CONTRATAR 1** |
+| **Novembro** | mês **2026-11**, ESCALA | APAC **CONTRATAR 1** (32 contra mínimo 33); SUP **amarelo**, 11 dias com falta, só às 19h e 20h |
+| **Postos fixos decidem** | CADASTROS → POSTOS FIXOS → desligar **Ativo** dos três → voltar ao mês → ESCALA em 2026-10 | APAC **verde, COBRE O MÊS**: 32 em escala, mínimo **21**. Religar os três volta a CONTRATAR 4 (`node testar_escala.js --fixos=0`) |
+| **Turno novo muda a análise** | em 2026-10, TURNOS → NOVO TURNO: APAC, começa 17:00, 08h, intervalo 22:00, 4 pessoas → SALVAR → ANÁLISE | APAC passa a **36** em escala, igual ao mínimo, e sai de vermelho para **amarelo, REPOSICIONAR TURNOS**; a hora 19 fica **14/14** verde. Desligar **Ativo** desse turno e SALVAR volta a CONTRATAR 4 (`node testar_escala.js --extra=APAC:1020:480:1320:60:4`) |
 | **Intervalo fora do turno** | TURNOS → NOVO TURNO, começa 06:00, 08h, intervalo 20:00 → SALVAR | recusa com aviso vermelho; nada é gravado |
 
 A prova da aritmética é a que vale por todas: **20:00 de 24/12 tem 171 passageiros**, que pela

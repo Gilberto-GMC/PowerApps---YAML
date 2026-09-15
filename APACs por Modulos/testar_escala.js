@@ -19,7 +19,11 @@ const fs = require("fs");
 const path = require("path");
 const DIR = path.join(__dirname, "dados");
 const P = { cap: 185, ocup: 85, antec: 90, assmin: 150, apacMod: 3, modSup: 2, raiosx: 3, fixoA: 5, fixoS: 0 };
-const PLAN_A = [5, 5, 5, 12, 11, 14, 14, 11, 11, 14, 14, 12, 14, 12, 15, 14, 11, 14, 15, 11, 11, 11, 5, 5];
+// --fixos=N troca os APACs de posto fixo por hora (padrão 5: Acesso C 3 + Portão 1 + Apoio 1, como cadastrado)
+const FIXOS = process.argv.find((a) => a.startsWith("--fixos="));
+if (FIXOS) { P.fixoA = +FIXOS.slice(8); console.log(`postos fixos de APAC por hora: ${P.fixoA}`); }
+// linha 56 do escopo (TOTAL APAC 8HRS) — sem as linhas 48–55: vigilância fora do app
+const PLAN_A = [3, 3, 3, 10, 11, 12, 12, 9, 9, 12, 12, 10, 12, 11, 14, 12, 9, 12, 14, 10, 9, 9, 3, 3];
 const PLAN_S = [0, 0, 0, 1, 1, 2, 2, 1, 1, 2, 2, 1, 2, 1, 2, 2, 1, 2, 2, 1, 1, 1, 0, 0];
 const VOOS_ESPERADOS = { "2026-10": 727 };
 
@@ -67,11 +71,11 @@ for (const comp of comps) {
     ii: r.intervalo_inicio === "" ? 0 : +r.intervalo_inicio, im: r.intervalo_inicio === "" ? 0 : +r.intervalo_min, qtd: +r.quantidade,
   }));
   const cob = (papeis) => Array.from({ length: 24 }, (_, h) => turnos.filter((t) => papeis.includes(t.papel) && cobre(t, h)).reduce((a, t) => a + t.qtd, 0));
-  const escA = cob(["APAC", "VIGILANCIA"]), escS = cob(["SUPERVISOR"]);
+  const escA = cob(["APAC"]), escS = cob(["SUPERVISOR"]);
   if (turnoExtra) {
     turnos.push(turnoExtra);
     const extraCob = (papeis) => Array.from({ length: 24 }, (_, h) => (papeis.includes(turnoExtra.papel) && cobre(turnoExtra, h) ? turnoExtra.qtd : 0));
-    const eA = extraCob(["APAC", "VIGILANCIA"]), eS = extraCob(["SUPERVISOR"]);
+    const eA = extraCob(["APAC"]), eS = extraCob(["SUPERVISOR"]);
     for (let h = 0; h < 24; h++) { escA[h] += eA[h]; escS[h] += eS[h]; }
   } else if (escA.join() !== PLAN_A.join() || escS.join() !== PLAN_S.join()) { console.log(`✗ ${comp}: cobertura do CSV não é a da planilha`); falhas++; continue; }
 
@@ -107,14 +111,14 @@ for (const comp of comps) {
   const porHora = (k) => Array.from({ length: 24 }, (_, h) => Math.max(...cel.filter((c) => c.h === h).map((c) => c[k])));
   const diasHora = (k) => Array.from({ length: 24 }, (_, h) => cel.filter((c) => c.h === h && c[k] > 0).length);
   const diasComFalta = (k) => new Set(cel.filter((c) => c[k] > 0).map((c) => c.d)).size;
-  const pessoasA = turnos.filter((t) => t.papel !== "SUPERVISOR").reduce((a, t) => a + t.qtd, 0);
+  const pessoasA = turnos.filter((t) => t.papel === "APAC").reduce((a, t) => a + t.qtd, 0);
   const pessoasS = turnos.filter((t) => t.papel === "SUPERVISOR").reduce((a, t) => a + t.qtd, 0);
   const minA = minimo(envA), minS = minimo(envS);
   const veredito = (dias, pessoas, min) =>
     dias === 0 ? "COBRE O MÊS" : pessoas < min ? `CONTRATAR ${min - pessoas}` : "REPOSICIONAR TURNOS";
 
   console.log(`\n══ ${comp} · ${voos.length} voos · ${diasNoMes} dias`);
-  console.log(`APAC: ${pessoasA} em escala (APAC + vigilância) · mínimo ${minA} · ${diasComFalta("fA")} dia(s) com falta → ${veredito(diasComFalta("fA"), pessoasA, minA)}`);
+  console.log(`APAC: ${pessoasA} em escala · mínimo ${minA} · ${diasComFalta("fA")} dia(s) com falta → ${veredito(diasComFalta("fA"), pessoasA, minA)}`);
   console.log(`SUP : ${pessoasS} em escala · mínimo ${minS} · ${diasComFalta("fS")} dia(s) com falta → ${veredito(diasComFalta("fS"), pessoasS, minS)}`);
   console.log(linha("hora", [...Array(24)].map((_, h) => hh(h))));
   console.log(linha("APAC exigido", envA));

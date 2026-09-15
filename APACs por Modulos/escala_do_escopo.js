@@ -7,7 +7,8 @@
 //
 // A PROVA. A cobertura hora a hora é calculada com a MESMA regra da tela (função cobre(), abaixo — gêmea
 // da fórmula do btnCalcEsc) e comparada com as linhas de total da própria planilha:
-//   APAC  = linha 56 (TOTAL APAC 8HRS) + linhas 48–55 (posto de vigilância)
+//   APAC  = linha 56 (TOTAL APAC 8HRS)
+// Vigilância (linhas 48–55) fica FORA: não é o foco do app (Douglas, 15/09/2026). Não gera turno nem entra na conta.
 //   SUPER = linha 58 (TOTAL SUPERVISORES)
 // Se não bater hora a hora, nada é gravado. Assim a regra da tela é testada contra a planilha antes de
 // virar Power Fx, e os turnos gerados são provadamente a escala da planilha.
@@ -66,8 +67,7 @@ function papelDe(rotulo) {
   const r = String(rotulo || "").toLowerCase();
   if (r.startsWith("apac 8")) return "APAC";
   if (r.startsWith("supervisor")) return "SUPERVISOR";
-  if (r.includes("vigil")) return "VIGILANCIA";
-  return null;
+  return null;   // vigilância e o resto: fora
 }
 const hh = (h) => String(h).padStart(2, "0") + "h";
 const turnos = [];
@@ -77,14 +77,14 @@ for (let n = 19; n <= 55; n++) {
   if (!papel) continue;
   const pres = serie(n);
   const horas = pres.map((v, h) => (v > 0 ? h : -1)).filter((h) => h >= 0);
-  if (!horas.length) continue;                                   // turno vazio (ex.: vigilância 18h–00h)
+  if (!horas.length) continue;                                   // turno vazio
   const qtd = Math.max(...pres);
   if (horas.some((h) => pres[h] !== qtd)) problemas.push(`linha ${n}: quantidade varia ao longo do turno`);
   const inicio = horas.find((h) => !horas.includes((h + 23) % 24));
   const dur = horas.length;
   for (let k = 0; k < dur; k++) if (!horas.includes((inicio + k) % 24)) problemas.push(`linha ${n}: presença não é contígua`);
 
-  const rotuloBase = (papel === "APAC" ? "APAC" : papel === "SUPERVISOR" ? "Supervisor" : "Vigilância") +
+  const rotuloBase = (papel === "APAC" ? "APAC" : "Supervisor") +
     " " + hh(inicio) + "–" + hh((inicio + dur) % 24);
   const intervalo = linhas[n + 1] && String(linhas[n + 1].B || "").toLowerCase().includes("intervalo") ? serie(n + 1) : Array(24).fill(0);
   let resto = qtd;
@@ -110,15 +110,14 @@ function cobre(t, h) {
 const cobertura = (papeis) => Array.from({ length: 24 }, (_, h) =>
   turnos.filter((t) => papeis.includes(t.papel) && cobre(t, h)).reduce((a, t) => a + t.qtd, 0));
 
-const planApac = serie(56).map((v, h) => v + somaLinhas(48, 55)[h]);
+const planApac = serie(56);
 const planSup = serie(58);
-const minhaApac = cobertura(["APAC", "VIGILANCIA"]);
+const minhaApac = cobertura(["APAC"]);
 const minhaSup = cobertura(["SUPERVISOR"]);
 
 console.log(`turnos gerados: ${turnos.length} (${turnos.filter((t) => t.papel === "APAC").length} APAC, ` +
-  `${turnos.filter((t) => t.papel === "SUPERVISOR").length} supervisor, ${turnos.filter((t) => t.papel === "VIGILANCIA").length} vigilância)`);
+  `${turnos.filter((t) => t.papel === "SUPERVISOR").length} supervisor)`);
 console.log(`pessoas em escala por dia: APAC ${turnos.filter((t) => t.papel === "APAC").reduce((a, t) => a + t.qtd, 0)}` +
-  ` + vigilância ${turnos.filter((t) => t.papel === "VIGILANCIA").reduce((a, t) => a + t.qtd, 0)}` +
   ` · supervisores ${turnos.filter((t) => t.papel === "SUPERVISOR").reduce((a, t) => a + t.qtd, 0)}`);
 console.log("\nhora            " + Array.from({ length: 24 }, (_, h) => String(h).padStart(3)).join(""));
 console.log("APAC planilha   " + planApac.map((v) => String(v).padStart(3)).join(""));

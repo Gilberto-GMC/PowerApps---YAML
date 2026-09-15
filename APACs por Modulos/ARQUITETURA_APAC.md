@@ -308,15 +308,18 @@ turnos de um mês com a malha de outro.
 **A regra de cobertura é uma só nos três lugares** — `btnCalcEsc`, a régua da tela e o `cobre()` de
 `escala_do_escopo.js`: o turno conta na hora h se a hora inteira está dentro da presença (atravessando
 a meia-noite) e não encosta no intervalo. Essa regra foi conferida contra a planilha antes de virar
-Power Fx: os 25 turnos gerados reproduzem, nas 24 horas, a linha 56 + 48–55 (APAC) e a linha 58
+Power Fx: os 20 turnos gerados reproduzem, nas 24 horas, a linha 56 (APAC) e a linha 58
 (supervisor). Mudar a regra num lugar exige mudar nos outros e rodar o script de novo.
 
 **Um turno por hora de intervalo.** A planilha tem, por turno, uma linha "efetivo em intervalo" com
 quantas pessoas param em cada hora. Cada hora negativa vira um registro; quem não para vira um
-registro "sem intervalo". Por isso a escala do escopo tem 25 turnos para 42 pessoas.
+registro "sem intervalo". Por isso a escala do escopo tem 20 turnos para 36 pessoas.
 
-**Vigilância conta como APAC por padrão.** Os postos fixos já estão dentro do exigido de APAC, e na
-planilha quem os cobre são os turnos de vigilância. O botão da barra desliga, para ver o que sobra.
+**Vigilância fica fora de tudo** (Douglas, 15/09/2026: não é o foco do app). As linhas 48–55 do escopo
+não viram turno, e a tela só lê da `tb_apacEscala` os papéis APAC e SUPERVISOR — vigilância colada na
+lista não aparece nem conta. Os **postos fixos de APAC** cadastrados continuam no exigido, e são eles
+que decidem o veredito: com os 5 por hora, os 32 APACs da planilha não cobrem nenhum mês; sem eles,
+cobrem todos com folga (`node testar_escala.js --fixos=0`).
 
 **Verde, amarelo, vermelho.** Em cada célula, `exigido/escalado`:
 
@@ -334,6 +337,10 @@ não tem, não tem nenhuma.
 **Sem intervalo** grava `intervalo_inicio = hora_inicio` e `intervalo_min = 0`, que a regra ignora — em
 vez de gravar `Blank()` num número, que não tem precedente de `Patch` neste repositório.
 
-**Números esperados:** `node testar_escala.js`. Outubro: APAC 38 em escala contra mínimo 36, faltas
-às 11h, 19h e 20h em 24 dias → amarelo; supervisores 4 contra 5 → vermelho, contratar 1. É a mesma
-resposta do `CONTRATACAO_APAC.md`, agora chegando pela tela.
+**Números esperados:** `node testar_escala.js`. Com os postos fixos cadastrados: APAC 32 em escala
+contra mínimo 36 em outubro e dezembro (contratar 4) e 33 nos outros meses (contratar 1);
+supervisores 4 contra 5 em outubro e dezembro (contratar 1), amarelo nos outros. Sem postos fixos,
+o mínimo de APAC cai para 21 (out, dez) e 18 (nov, jan, fev), e a escala cobre todos os meses.
+
+⚠️ O `CONTRATACAO_APAC.md` e a página da Simone ainda contam a vigilância como oferta de APAC (linha 56 +
+48–55) — é de lá que vinha o "zero APAC". Sem vigilância, aquela resposta não vale.

@@ -139,8 +139,8 @@ ainda não existe**; a estrutura vai criada para não virar migração depois.
 | Coluna | Tipo | Observação |
 |---|---|---|
 | `aeroporto` · `competencia` | Texto | indexadas |
-| `papel` | Texto | `APAC`, `SUPERVISOR` ou `VIGILANCIA` |
-| `rotulo` | Texto (80) | ex.: `Agente de Proteção 6hs (Posto de Vigilância) 06:00X12:00` |
+| `papel` | Texto | `APAC` ou `SUPERVISOR` — vigilância fica fora do app; a tela ignora outro valor |
+| `rotulo` | Texto (80) | ex.: `APAC 03h–11h (intervalo 07h)` |
 | `hora_inicio` | Número | minutos |
 | `duracao_min` | Número | 480 = as 8 horas da jornada |
 | `intervalo_inicio` | Número | minutos; opcional |
