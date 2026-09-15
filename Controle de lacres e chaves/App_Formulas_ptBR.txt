@@ -1,0 +1,76 @@
+// ══════════════════════════════════════════════════════════════════════════════
+// AirportNow — Controle de Chaves e Lacres  ·  App.Formulas
+// ══════════════════════════════════════════════════════════════════════════════
+// COLAR EM: Studio > árvore de controles > App > propriedade "Formulas".
+// LOCALE pt-BR (barra de fórmulas): ";" separa argumentos, ";;" termina definição.
+//
+// Colar ANTES do OnStart novo (App_OnStart_ptBR.txt), que usa nfAeros.
+//
+// Por que named formula e não OnStart:
+//   · só calcula quando alguém lê — não pesa na abertura do app;
+//   · não pode ser sobrescrita por engano no meio da sessão.
+// ══════════════════════════════════════════════════════════════════════════════
+
+
+// ─── AEROPORTOS ───────────────────────────────────────────────────────────────
+// Mesmas colunas e mesma grafia da antiga colAeros do OnStart ("SÃO LUIS" sem
+// acento: é a grafia gravada nas listas e nas tabelas de credenciados).
+// O OnStart continua materializando colAeros a partir daqui, para as telas antigas.
+nfAeros =
+Table(
+    {IATA: "GYN"; ICAO: "SBGO"; Bloco: "CENTRAL"; Aeroporto: "GOIÂNIA"      ; Cluster: "GOIÂNIA"};
+    {IATA: "IMP"; ICAO: "SBIZ"; Bloco: "CENTRAL"; Aeroporto: "IMPERATRIZ"   ; Cluster: "GOIÂNIA"};
+    {IATA: "PMW"; ICAO: "SBPJ"; Bloco: "CENTRAL"; Aeroporto: "PALMAS"       ; Cluster: "GOIÂNIA"};
+    {IATA: "PLU"; ICAO: "SBBH"; Bloco: "CENTRAL"; Aeroporto: "PAMPULHA"     ; Cluster: "GOIÂNIA"};
+    {IATA: "PNZ"; ICAO: "SBPL"; Bloco: "CENTRAL"; Aeroporto: "PETROLINA"    ; Cluster: "SÃO LUÍS"};
+    {IATA: "SLZ"; ICAO: "SBSL"; Bloco: "CENTRAL"; Aeroporto: "SÃO LUIS"     ; Cluster: "SÃO LUÍS"};
+    {IATA: "THE"; ICAO: "SBTE"; Bloco: "CENTRAL"; Aeroporto: "TERESINA"     ; Cluster: "SÃO LUÍS"};
+    {IATA: "BFH"; ICAO: "SBBI"; Bloco: "SUL"    ; Aeroporto: "BACACHERI"    ; Cluster: "CURITIBA"};
+    {IATA: "CWB"; ICAO: "SBCT"; Bloco: "SUL"    ; Aeroporto: "CURITIBA"     ; Cluster: "CURITIBA"};
+    {IATA: "JOI"; ICAO: "SBJV"; Bloco: "SUL"    ; Aeroporto: "JOINVILLE"    ; Cluster: "CURITIBA"};
+    {IATA: "NVT"; ICAO: "SBNF"; Bloco: "SUL"    ; Aeroporto: "NAVEGANTES"   ; Cluster: "CURITIBA"};
+    {IATA: "BGX"; ICAO: "SBBG"; Bloco: "SUL"    ; Aeroporto: "BAGÉ"         ; Cluster: "FOZ DO IGUAÇU"};
+    {IATA: "IGU"; ICAO: "SBFI"; Bloco: "SUL"    ; Aeroporto: "FOZ DO IGUAÇU"; Cluster: "FOZ DO IGUAÇU"};
+    {IATA: "LDB"; ICAO: "SBLO"; Bloco: "SUL"    ; Aeroporto: "LONDRINA"     ; Cluster: "FOZ DO IGUAÇU"};
+    {IATA: "PET"; ICAO: "SBPK"; Bloco: "SUL"    ; Aeroporto: "PELOTAS"      ; Cluster: "FOZ DO IGUAÇU"};
+    {IATA: "URG"; ICAO: "SBUG"; Bloco: "SUL"    ; Aeroporto: "URUGUAIANA"   ; Cluster: "FOZ DO IGUAÇU"}
+);;
+
+
+// ─── CREDENCIADOS DE TODOS OS AEROPORTOS ──────────────────────────────────────
+// Substitui a col_colaboradores do OnStart, que trazia só o aeroporto do USUÁRIO —
+// quem operava outro aeroporto abria o campo de nome e não achava ninguém.
+//
+// Junta as 17 tabelas da planilha (CWB em duas) numa só. Cada tela filtra pela
+// coluna Aeroporto do próprio formulário:
+//     Filter(nfColaboradores; Aeroporto = <aeroporto da tela>)
+//
+// ShowColumns deixa só as duas colunas que o app usa. Não é enfeite: as tabelas
+// precisam ter exatamente o mesmo formato para caberem juntas, e as outras colunas
+// (datas, por exemplo) podem vir com tipos diferentes de uma tabela para outra.
+//
+// A primeira leitura busca as 17 tabelas (cerca de 13 mil nomes); depois fica em
+// memória durante a sessão. Tabela nova (ex.: PLU_2) entra como mais uma linha aqui.
+nfColaboradores =
+Ungroup(
+    Table(
+        {t: ShowColumns(BFH; Nome; Aeroporto)};
+        {t: ShowColumns(BGX; Nome; Aeroporto)};
+        {t: ShowColumns(CWB_1; Nome; Aeroporto)};
+        {t: ShowColumns(CWB_2; Nome; Aeroporto)};
+        {t: ShowColumns(GYN; Nome; Aeroporto)};
+        {t: ShowColumns(IGU; Nome; Aeroporto)};
+        {t: ShowColumns(IMP; Nome; Aeroporto)};
+        {t: ShowColumns(JOI; Nome; Aeroporto)};
+        {t: ShowColumns(LDB; Nome; Aeroporto)};
+        {t: ShowColumns(NVT; Nome; Aeroporto)};
+        {t: ShowColumns(PET; Nome; Aeroporto)};
+        {t: ShowColumns(PMW; Nome; Aeroporto)};
+        {t: ShowColumns(PNZ; Nome; Aeroporto)};
+        {t: ShowColumns(SLZ; Nome; Aeroporto)};
+        {t: ShowColumns(THE; Nome; Aeroporto)};
+        {t: ShowColumns(URG; Nome; Aeroporto)};
+        {t: ShowColumns(PLU; Nome; Aeroporto)}
+    );
+    t
+);;
