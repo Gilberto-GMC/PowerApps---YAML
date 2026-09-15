@@ -817,14 +817,18 @@ Screens:
                                 Select(btnCalcMes)
                               Text: ="RECALCULAR"
                               Width: =144
+                        # Olho = o que a grade mostra agora; tocar alterna APAC e MÓDULOS.
+                        # Icon "Eye" em Button@0.0.45 tem precedente em SAFETY/out (3 telas). Plano B se o
+                        # Studio recusar: apagar a linha Icon; o texto continua dizendo a visão.
                         - btnVerModulos:
                             Control: Button@0.0.45
                             Properties:
                               Appearance: ='ButtonCanvas.Appearance'.Secondary
                               Height: =thmAlturaCampo
+                              Icon: ="Eye"
                               OnSelect: =Set(varVerApac, !varVerApac)
-                              Text: =If(varVerApac, "VENDO APACs", "VENDO MÓDULOS")
-                              Width: =176
+                              Text: =If(varVerApac, "APAC", "MÓDULOS")
+                              Width: =128
                   # ------------------------------------------------ grade do mês
                   - cntGradeApacMes:
                       Control: GroupContainer@1.5.0
@@ -983,7 +987,7 @@ Screens:
                                                     ) & "</td>"
                                                 ) &
                                                 "<td style='" & celBase & "background:" & hxPrimariaClara &
-                                                ";font-weight:800;'>" & Text(apac_pico) & "</td></tr>"
+                                                ";font-weight:800;'>" & If(varVerApac, Text(apac_pico), Text(mod_pico)) & "</td></tr>"
                                             )
                                         ) &
                                         "</table>"
@@ -1003,27 +1007,95 @@ Screens:
                               Fill: =thmTransparente
                               Font: =thmFonte
                               HtmlText: |-
-                                ="<div style='" & htmlFonte & "font-size:11px;color:" & hxTextoFraco & ";margin-top:14px;'>" &
-                                If(
+                                =If(
                                     CountRows(colVoosMes) = 0,
                                     "",
-                                    "<div><b style='color:" & hxTexto & ";'>" & Text(CountRows(colVoosMes)) &
-                                    " decolagens</b> na competência " & varComp & " · pico do mês: <b style='color:" & hxTexto &
-                                    ";'>" & Text(Max(colMesDia, apac_pico)) & " APACs</b> e <b style='color:" & hxTexto & ";'>" &
-                                    Text(Max(colMesDia, sup_pico)) & " supervisores</b> por hora" &
-                                    If(
-                                        Sum(colMesDia, horas_estouro) > 0,
-                                        " · <b style='color:" & hxVermelho & ";'>" & Text(Sum(colMesDia, horas_estouro)) &
-                                        " hora(s) do mês pedindo mais que os " & Text(varRaiosX) & " raios-X</b>",
-                                        ""
-                                    ) &
-                                    "</div>" &
-                                    "<div style='margin-top:6px;'>" & Text(CountRows(Filter(colVoosMes, assentos <= varAssentosMin))) &
-                                    " voos abaixo de " & Text(varAssentosMin) & " assentos — não abrem módulo por contagem, só por volumetria</div>" &
-                                    "<div style='margin-top:6px;font-size:10px;'>★ dia de maior carga do mês, o que alimenta o escopo do contrato · " &
-                                    "premissas: " & Text(varCap) & " pax/h · " & Text(varOcup) & "% · " & Text(varAntec) & " min</div>"
-                                ) &
-                                "</div>"
+                                    With(
+                                        {
+                                            sw: "display:inline-block;width:18px;height:11px;vertical-align:middle;margin:0 5px 0 0;border:1px solid " & hxGradeFina & ";background:",
+                                            item: "margin:0 16px 4px 0;display:inline-block;white-space:nowrap;",
+                                            tit: "font-size:10px;font-weight:700;letter-spacing:1px;color:" & hxPrimariaEscura & ";margin:12px 0 4px 0;",
+                                            par: "margin:0 0 4px 0;line-height:1.55;",
+                                            fixoMax: Max(colFixoHoraMes, apac),
+                                            fixoMin: Min(colFixoHoraMes, apac),
+                                            supFixoMax: Max(colFixoHoraMes, sup),
+                                            abaixo: CountRows(Filter(colVoosMes, assentos <= varAssentosMin)),
+                                            semAssento: CountRows(Filter(colVoosMes, assentos = 0)),
+                                            estouros: Sum(colMesDia, horas_estouro),
+                                            diaPicoR: First(Sort(colMesDia, carga, SortOrder.Descending))
+                                        },
+                                        "<div style='" & htmlFonte & "font-size:11px;color:" & hxTextoFraco & ";margin-top:14px;padding:12px 14px;border:1px solid " &
+                                        hxBorda & ";background:" & hxSuperficie & ";'>" &
+                                        // ---------------------------------------- o mês em uma linha
+                                        "<div style='font-size:12px;color:" & hxTexto & ";'><b>" & Text(CountRows(colVoosMes)) &
+                                        " decolagens</b> na competência " & varComp & " · pico do mês: <b>" & Text(Max(colMesDia, apac_pico)) &
+                                        " APACs</b> e <b>" & Text(Max(colMesDia, sup_pico)) & " supervisores</b> por hora · ★ dia " &
+                                        Right("0" & Text(diaPicoR.dia), 2) & ", com " & Text(diaPicoR.carga) & " APAC-hora" &
+                                        If(
+                                            estouros > 0,
+                                            " · <b style='color:" & hxVermelho & ";'>" & Text(estouros) & " hora(s) pedindo mais que os " &
+                                            Text(varRaiosX) & " raios-X</b>",
+                                            " · nenhuma hora pede mais que os " & Text(varRaiosX) & " raios-X"
+                                        ) & "</div>" &
+                                        // ---------------------------------------- como ler a grade
+                                        "<div style='" & tit & "'>COMO LER A GRADE</div>" &
+                                        "<div style='" & par & "'>Cada linha é um dia do mês e cada coluna é uma hora cheia (a coluna 03 vai de 03:00 a 03:59). " &
+                                        If(
+                                            varVerApac,
+                                            "O número é quantos <b>APACs</b> precisam estar trabalhando naquela hora: módulos abertos × " & Text(varApacMod) &
+                                            " + os postos fixos da hora (hoje de " & Text(fixoMin) & " a " & Text(fixoMax) & " APACs, cadastrados em CADASTROS).",
+                                            "O número é quantos <b>módulos de inspeção</b> precisam estar abertos naquela hora."
+                                        ) &
+                                        " Célula em branco = nenhum módulo aberto; só os postos fixos estão de serviço. A coluna PICO é o maior número do dia. " &
+                                        "O botão com o olho troca a grade entre APAC e MÓDULOS; as cores são sempre por módulos.</div>" &
+                                        "<div style='margin:6px 0 2px 0;'>" &
+                                        "<span style='" & item & "'><span style='" & sw & hxCarga0 & ";'></span>sem módulo</span>" &
+                                        "<span style='" & item & "'><span style='" & sw & hxCarga1 & ";'></span>1 módulo</span>" &
+                                        "<span style='" & item & "'><span style='" & sw & hxCarga2 & ";'></span>2 módulos</span>" &
+                                        "<span style='" & item & "'><span style='" & sw & hxCarga3 & ";'></span>3 módulos ou mais</span>" &
+                                        "<span style='" & item & "'><span style='" & sw & hxCargaEstouro & ";'></span>pediu mais módulos que os " &
+                                        Text(varRaiosX) & " raios-X (a grade para em " & Text(varRaiosX) & ")</span>" &
+                                        "<span style='" & item & "'><span style='" & sw & hxAmbarSuave & ";'></span>★ dia de maior carga</span>" &
+                                        "</div>" &
+                                        // ---------------------------------------- de onde sai o número
+                                        "<div style='" & tit & "'>DE ONDE SAI O NÚMERO DE CADA HORA</div>" &
+                                        "<div style='" & par & "'><b>1. Passageiros.</b> Cada voo leva assentos × " & Text(varOcup) &
+                                        "% de ocupação. Esse público é espalhado pelos " & Text(varAntec) &
+                                        " minutos antes da decolagem, porque é quando passa pela inspeção: um voo das 05:00 carrega as horas 03 e 04, " &
+                                        "e um voo das 00:30 carrega a hora 23 do dia anterior.</div>" &
+                                        "<div style='" & par & "'><b>2. Módulos.</b> Vale o maior de dois pisos: passageiros da hora ÷ " & Text(varCap) &
+                                        " por módulo, arredondado para cima; ou o número de decolagens com mais de " & Text(varAssentosMin) &
+                                        " assentos dentro da hora (três aeronaves grandes na mesma hora abrem três módulos, mesmo que o público caiba em dois). " &
+                                        "O resultado nunca passa dos " & Text(varRaiosX) & " raios-X.</div>" &
+                                        "<div style='" & par & "'><b>3. APACs.</b> Módulos × " & Text(varApacMod) &
+                                        " + postos fixos da hora. <b>Supervisores:</b> 1 a cada " & Text(varModSup) &
+                                        " módulos, arredondado para cima" & If(supFixoMax > 0, ", + os supervisores de posto fixo", "") & ".</div>" &
+                                        "<div style='" & par & "'><b>Fora do corte por contagem:</b> " & Text(abaixo) & " voos com até " &
+                                        Text(varAssentosMin) & " assentos (E195, A319, 737-700 e similares). Eles só abrem módulo pela soma de passageiros" &
+                                        If(semAssento > 0, "; " & Text(semAssento) & " deles são cargueiros com 0 assento e não geram módulo nenhum", "") &
+                                        ".</div>" &
+                                        // ---------------------------------------- o quadro de cima
+                                        "<div style='" & tit & "'>O QUADRO DE CIMA</div>" &
+                                        "<div style='" & par & "'><b>EXIGIDO</b> pega, para cada hora, o dia mais pesado do mês. Os destaques marcam a hora de pico. " &
+                                        "<b>Em escala por dia</b> é o menor número de pessoas trabalhando no dia que cobre todo o EXIGIDO, com turnos de " &
+                                        Text(apacJornadaPresenca) & "h de presença e 1h de intervalo. <b>Folguistas</b> cobrem a escala 6x2: 1 para cada " &
+                                        Text(apacTurnosPorFolguista) & ". <b>No quadro</b> = em escala + folguistas, o número de contrato. " &
+                                        "Não inclui férias, afastamentos, absenteísmo nem treinamento.</div>" &
+                                        // ---------------------------------------- a pergunta que a tela responde
+                                        "<div style='" & tit & "'>COMO SABER SE UM DIA ESTÁ COBERTO</div>" &
+                                        "<div style='" & par & "'>O dia está coberto quando, em cada hora, há <b>pelo menos o número da célula</b> de APACs trabalhando, " &
+                                        "já descontado quem está em intervalo. Compare com a escala hora a hora: onde a escala tem menos, falta gente naquela hora. " &
+                                        "Se o total em escala é menor que o mínimo do quadro de cima, é preciso contratar; se é maior ou igual e ainda falta, é preciso mudar o horário dos turnos.</div>" &
+                                        // ---------------------------------------- premissas
+                                        "<div style='margin-top:10px;padding-top:8px;border-top:1px solid " & hxGradeFina & ";font-size:10px;'>" &
+                                        "Premissas deste cálculo: " & Text(varCap) & " pax/h por módulo · ocupação " & Text(varOcup) & "% · antecedência " &
+                                        Text(varAntec) & " min · corte " & Text(varAssentosMin) & " assentos · " & Text(varApacMod) & " APACs por módulo · " &
+                                        Text(varModSup) & " módulos por supervisor · " & Text(varRaiosX) &
+                                        " raios-X · aeroporto " & varAero & ". Mudar um campo lá em cima e tocar RECALCULAR refaz tudo sem gravar; " &
+                                        "para virar padrão, salve uma vigência nova em CADASTROS.</div>" &
+                                        "</div>"
+                                    )
+                                )
                               PaddingBottom: =0
                               PaddingLeft: =0
                               PaddingRight: =0
