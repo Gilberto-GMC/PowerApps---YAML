@@ -90,7 +90,8 @@ lidos**, e importar dezembro de novo mantém a lista em 814 — não 1.628.
    `apacJornadaPresenca`, `apacHorasTrabalhadas` e `apacTurnosPorFolguista`, e a tela do mês não
    compila sem elas.
 4. Cole `scrApacMes.pa.yaml`, `scrApacDia.pa.yaml`, `scrApacCadastro.pa.yaml`, `scrApacImport.pa.yaml`
-   e `scrApacEscala.pa.yaml`, cada um numa tela nova. Estes estão em
+   `scrApacEscala.pa.yaml` e `scrApacGuia.pa.yaml` (o guia de leitura, chamado pelo botão COMO LER de
+   cada tela), cada um numa tela nova. Estes estão em
    **en-US** (vírgula separa argumento), que é o formato do código-fonte.
    ⚠️ **Se já tinha colado a `scrApacMes` antes, cole de novo:** a versão de 15/09/2026 tem o botão
    ESCALA e grava `varCompCalc`, sem o qual a tela da escala diz que o mês não está calculado.
