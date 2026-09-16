@@ -57,10 +57,59 @@ const LINHA =
   "coalesce(item()?['responsavel'],'')," + q + asp + ";" + asp + q + ",coalesce(item()?['contato'],'')," + q + asp + ";" + asp + q + "," +
   "replace(coalesce(item()?['observacao'],''),'" + asp + "','''')," + q + asp + q + ")";
 
+// ---- 16/09/2026: autoria e historico de versoes ---------------------------------------------------
+// O Douglas pediu para ver "as acoes que foram feitas" num movimento: quem reservou, quem alterou,
+// com data e hora. Menor impacto: nada novo gravando log — le o que o SharePoint ja guarda (Author,
+// Editor, Created, Modified e o historico de versoes da lista).
+const SEP = q + asp + ";" + asp + q;                         // '";"' dentro do concat
+const FUSO = "'E. South America Standard Time'";
+const quando = (campo) => "formatDateTime(convertFromUtc(" + campo + "," + FUSO + "),'dd/MM/yyyy HH:mm')";
+
+// CSV normal: as mesmas 20 colunas de antes + 4 de autoria no fim (quem abre o arquivo antigo nao
+// perde coluna de lugar).
+const LINHA_AUTORIA = LINHA.slice(0, -("," + q + asp + q + ")").length) + "," + SEP + "," +
+  "coalesce(item()?['Author']?['DisplayName'],'')," + SEP + "," + quando("item()?['Created']") + "," + SEP + "," +
+  "coalesce(item()?['Editor']?['DisplayName'],'')," + SEP + "," + quando("item()?['Modified']") + "," + q + asp + q + ")";
+
+// Historico: a API de versoes do SharePoint costuma devolver nome interno com sublinhado codificado
+// (data_operacao -> data_x005f_operacao). Nao deu para confirmar daqui, entao aceita as duas formas.
+const v = (nome) => nome.includes("_")
+  ? "coalesce(item()?['" + nome + "'],item()?['" + nome.replace(/_/g, "_x005f_") + "'])"
+  : "item()?['" + nome + "']";
+// Numero pela API REST pode vir 380 ou 380.0; int() recusa o segundo. formatNumber(...,'0') normaliza.
+const inteiro = (x) => "int(formatNumber(float(coalesce(" + x + ",0)),'0','en-US'))";
+const hhmm = (x) => "formatNumber(div(" + inteiro(x) + ",60),'00'),':',formatNumber(mod(" + inteiro(x) + ",60),'00')";
+// Versao antiga pode nao ter a coluna (data_fim entrou depois): formatDateTime de vazio derruba o pedido.
+const data = (x) => "if(empty(" + x + "),'',formatDateTime(" + x + ",'dd/MM/yyyy'))";
+const txt = (x) => "coalesce(string(" + x + "),'')";
+
+const LINHA_VERSAO =
+  "@concat(" + q + asp + q + "," +
+  "string(items('Para_cada_registro')?['ID'])," + SEP + "," +
+  "coalesce(item()?['VersionLabel'],'')," + SEP + "," +
+  quando("item()?['Created']") + "," + SEP + "," +
+  "coalesce(item()?['Editor']?['LookupValue'],'')," + SEP + "," +
+  data(v("data_operacao")) + "," + SEP + "," +
+  data(v("data_fim")) + "," + SEP + "," +
+  txt(v("posicao_txt")) + "," + SEP + "," +
+  hhmm(v("hora_inicio")) + "," + SEP + "," + hhmm(v("hora_fim")) + "," + SEP + "," +
+  txt(v("tipo_registro")) + "," + SEP + "," + txt(v("cia_sigla")) + "," + SEP + "," +
+  txt(v("voo_chegada")) + "," + SEP + "," + txt(v("voo_saida")) + "," + SEP + "," +
+  txt(v("prefixo")) + "," + SEP + "," + txt(v("equipamento")) + "," + SEP + "," +
+  txt(v("portao")) + "," + SEP + "," + txt(v("condicao")) + "," + SEP + "," +
+  "if(equals(" + inteiro(v("ativo")) + ",0),'EXCLUIDO','ATIVO')," + SEP + "," +
+  "replace(" + txt(v("observacao")) + ",'" + asp + "','''')," + q + asp + q + ")";
+
 const COLS = ["Data", "Data fim", "Posicao", "Patio", "Inicio", "Fim", "Tipo", "Companhia", "Voo chegada",
   "Voo saida", "Prefixo", "Equipamento", "Portao", "Condicao", "Internacional", "Pesquisado",
-  "Alternativa", "Responsavel", "Contato", "Observacao"];
+  "Alternativa", "Responsavel", "Contato", "Observacao", "Criado por", "Criado em", "Alterado por", "Alterado em"];
 const CABECALHO = COLS.map((c) => '"' + c + '"').join(";");
+const COLS_HIST = ["Registro", "Versao", "Data e hora da acao", "Usuario", "Data", "Data fim", "Posicao", "Inicio", "Fim",
+  "Tipo", "Companhia", "Voo chegada", "Voo saida", "Prefixo", "Equipamento", "Portao", "Condicao", "Situacao", "Observacao"];
+const CABECALHO_HIST = COLS_HIST.map((c) => '"' + c + '"').join(";");
+const LIMITE_HISTORICO = 50;
+const EH_HISTORICO = "equals(coalesce(triggerBody()?['historico'],0),1)";
+const CRLF = "decodeUriComponent('%0D%0A')";
 
 const definition = {
   name: FLOW_ID,
@@ -109,12 +158,21 @@ const definition = {
           { runAfter: {} }
         ),
 
+        // Variavel so se inicializa no nivel de cima; o ramo do historico acumula o CSV aqui.
+        Inicializar_historico: {
+          type: "InitializeVariable",
+          inputs: { variables: [{ name: "csv_historico", type: "string", value: "" }] },
+          runAfter: { Marcar_processando: ["Succeeded"] },
+        },
+
         Obter_movimentacao: Object.assign(
           sp("GetItems", {
             dataset: SITE,
             table: "tb_alocacoesMapa",
+            // Sem "ativo eq 1" desde 16/09/2026: o historico precisa do registro excluido (ativo = 0) para
+            // mostrar quem excluiu. O corte de ativo foi para o Filtrar_opcionais, que ja e condicional.
             $filter:
-              "aeroporto eq '@{triggerBody()?['aeroporto']}' and ativo eq 1 and " +
+              "aeroporto eq '@{triggerBody()?['aeroporto']}' and " +
               "data_operacao ge '@{formatDateTime(triggerBody()?['data_de'],'yyyy-MM-dd')}' and " +
               "data_operacao le '@{formatDateTime(triggerBody()?['data_ate'],'yyyy-MM-dd')}'",
             // Sem isto o arquivo sai na ordem em que o SharePoint devolve, que e por ID:
@@ -123,7 +181,7 @@ const definition = {
             $top: 5000,
           }),
           {
-            runAfter: { Marcar_processando: ["Succeeded"] },
+            runAfter: { Inicializar_historico: ["Succeeded"] },
             runtimeConfiguration: { paginationPolicy: { minimumItemCount: 5000 } },
           }
         ),
@@ -137,8 +195,14 @@ const definition = {
             where:
               "@and(or(equals(coalesce(triggerBody()?['so_internacional'],0),0),equals(item()?['internacional'],1))," +
               "or(equals(coalesce(triggerBody()?['so_pesquisado'],0),0),equals(item()?['pesquisado'],1))," +
-              "or(equals(coalesce(triggerBody()?['incluir_finalizados'],0),1),not(equals(item()?['condicao'],'FINALIZADO')))," +
-              "or(empty(coalesce(triggerBody()?['patio'],'')),equals(item()?['patio_txt'],triggerBody()?['patio'])))",
+              // historico ligado inclui finalizados e excluidos: e justamente o que se quer investigar
+              "or(" + EH_HISTORICO + ",equals(coalesce(triggerBody()?['incluir_finalizados'],0),1),not(equals(item()?['condicao'],'FINALIZADO')))," +
+              "or(" + EH_HISTORICO + ",equals(item()?['ativo'],1))," +
+              "or(empty(coalesce(triggerBody()?['patio'],'')),equals(item()?['patio_txt'],triggerBody()?['patio']))," +
+              // busca: voo de chegada, voo de saida, prefixo ou companhia, sem diferenciar maiuscula
+              "or(empty(trim(coalesce(triggerBody()?['busca'],''))),contains(toUpper(concat(" +
+              "string(coalesce(item()?['voo_chegada'],'')),'|',string(coalesce(item()?['voo_saida'],'')),'|'," +
+              "coalesce(item()?['prefixo'],''),'|',coalesce(item()?['cia_sigla'],''))),toUpper(trim(triggerBody()?['busca'])))))",
           },
           runAfter: { Obter_movimentacao: ["Succeeded"] },
         },
@@ -149,8 +213,75 @@ const definition = {
         // tudo numa coluna so.
         Montar_linhas: {
           type: "Select",
-          inputs: { from: "@body('Filtrar_opcionais')", select: LINHA },
+          inputs: { from: "@body('Filtrar_opcionais')", select: LINHA_AUTORIA },
           runAfter: { Filtrar_opcionais: ["Succeeded"] },
+        },
+
+        // Historico de versoes. So com poucos registros: e uma chamada ao SharePoint por registro.
+        Modo_historico: {
+          type: "If",
+          expression: { equals: ["@coalesce(triggerBody()?['historico'],0)", 1] },
+          actions: {
+            Limite_historico: {
+              type: "If",
+              expression: { greater: ["@length(body('Filtrar_opcionais'))", LIMITE_HISTORICO] },
+              actions: {
+                Recusar_historico: Object.assign(
+                  sp("PatchItem", Object.assign({}, patchBase, {
+                    "item/status": "ERRO",
+                    "item/total": "@length(body('Filtrar_opcionais'))",
+                    "item/mensagem":
+                      "@{concat('O historico foi pedido para ', string(length(body('Filtrar_opcionais'))), " +
+                      "' registros; o limite e " + LIMITE_HISTORICO + ". Use a busca por voo, prefixo ou companhia, ou um periodo menor.')}",
+                  })),
+                  { runAfter: {} }
+                ),
+                Encerrar_historico: {
+                  type: "Terminate",
+                  inputs: { runStatus: "Cancelled" },
+                  runAfter: { Recusar_historico: ["Succeeded"] },
+                },
+              },
+              else: { actions: {} },
+              runAfter: {},
+            },
+            Para_cada_registro: {
+              type: "Foreach",
+              foreach: "@body('Filtrar_opcionais')",
+              // 1 por vez: o texto e acumulado numa variavel, e em paralelo as linhas se misturariam
+              runtimeConfiguration: { concurrency: { repetitions: 1 } },
+              actions: {
+                // Mesma acao "Enviar solicitacao HTTP ao SharePoint" do List_Generator, que roda neste ambiente.
+                Obter_versoes: Object.assign(
+                  sp("HttpRequest", {
+                    dataset: SITE,
+                    "parameters/method": "GET",
+                    "parameters/uri":
+                      "_api/web/lists/getbytitle('tb_alocacoesMapa')/items(@{items('Para_cada_registro')?['ID']})/versions",
+                    "parameters/headers": { Accept: "application/json;odata=nometadata" },
+                  }),
+                  { runAfter: {} }
+                ),
+                // A API devolve da versao mais nova para a mais antiga; reverse() poe em ordem de acontecimento.
+                Montar_versoes: {
+                  type: "Select",
+                  inputs: { from: "@reverse(body('Obter_versoes')?['value'])", select: LINHA_VERSAO },
+                  runAfter: { Obter_versoes: ["Succeeded"] },
+                },
+                Acumular_versoes: {
+                  type: "AppendToStringVariable",
+                  inputs: {
+                    name: "csv_historico",
+                    value: "@{concat(join(body('Montar_versoes')," + CRLF + ")," + CRLF + ")}",
+                  },
+                  runAfter: { Montar_versoes: ["Succeeded"] },
+                },
+              },
+              runAfter: { Limite_historico: ["Succeeded"] },
+            },
+          },
+          else: { actions: {} },
+          runAfter: { Montar_linhas: ["Succeeded"] },
         },
 
         Criar_arquivo: Object.assign(
@@ -159,15 +290,15 @@ const definition = {
             // "Partilhados", nao "Compartilhados": confirmado pela URL do arquivo gerado em 09/09/2026.
             folderPath: "/Documentos Partilhados/exportacoes",
             name:
-              "programacao_@{triggerBody()?['aeroporto']}_@{formatDateTime(triggerBody()?['data_de'],'yyyyMMdd')}" +
+              "programacao@{if(" + EH_HISTORICO + ",'_historico','')}_@{triggerBody()?['aeroporto']}_@{formatDateTime(triggerBody()?['data_de'],'yyyyMMdd')}" +
               "_a_@{formatDateTime(triggerBody()?['data_ate'],'yyyyMMdd')}.csv",
             // decodeUriComponent('%EF%BB%BF') e a marca UTF-8. Sem ela o Excel abre
             // "Navegantes" corrompido e o operador conclui que o arquivo quebrou.
             body:
-              "@{concat(decodeUriComponent('%EF%BB%BF'),'" + CABECALHO + "'," +
-              "decodeUriComponent('%0D%0A'),join(body('Montar_linhas'),decodeUriComponent('%0D%0A')))}",
+              "@{concat(decodeUriComponent('%EF%BB%BF'),if(" + EH_HISTORICO + ",'" + CABECALHO_HIST + "','" + CABECALHO + "')," +
+              CRLF + ",if(" + EH_HISTORICO + ",variables('csv_historico'),join(body('Montar_linhas')," + CRLF + ")))}",
           }),
-          { runAfter: { Montar_linhas: ["Succeeded"] } }
+          { runAfter: { Modo_historico: ["Succeeded"] } }
         ),
 
         Concluir: Object.assign(

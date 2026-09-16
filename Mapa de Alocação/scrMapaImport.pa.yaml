@@ -691,7 +691,7 @@ Screens:
                               DropShadow: =DropShadow.None
                               Fill: =thmSuperficie
                               FillPortions: =0
-                              Height: =258
+                              Height: =306
                               LayoutAlignItems: =LayoutAlignItems.Stretch
                               LayoutDirection: =LayoutDirection.Vertical
                               LayoutGap: =4
@@ -823,6 +823,38 @@ Screens:
                                                 DefaultSelectedItems: =["TODOS OS PÁTIOS"]
                                                 Height: =44
                                                 Items: =colPatiosSel
+                                    - cntExpBuscaImp:
+                                        Control: GroupContainer@1.5.0
+                                        Variant: AutoLayout
+                                        Properties:
+                                          DropShadow: =DropShadow.None
+                                          Fill: =thmSuperficie
+                                          FillPortions: =0
+                                          LayoutAlignItems: =LayoutAlignItems.Stretch
+                                          LayoutDirection: =LayoutDirection.Vertical
+                                          LayoutGap: =2
+                                          LayoutMinHeight: =0
+                                          LayoutMinWidth: =0
+                                          RadiusBottomLeft: =0
+                                          RadiusBottomRight: =0
+                                          RadiusTopLeft: =0
+                                          RadiusTopRight: =0
+                                          Width: =230
+                                        Children:
+                                          - lblExpBuscaImp:
+                                              Control: Label@2.5.1
+                                              Properties:
+                                                Color: =thmTextoFraco
+                                                Font: =thmFonte
+                                                FontWeight: =FontWeight.Bold
+                                                Height: =18
+                                                Size: =10
+                                                Text: ="VOO, PREFIXO OU CIA"
+                                          - txtExpBuscaImp:
+                                              Control: TextInput@0.0.54
+                                              Properties:
+                                                Height: =44
+                                                MaxLength: =20
                                     - lblExpEspacoImp:
                                         Control: Label@2.5.1
                                         Properties:
@@ -857,6 +889,15 @@ Screens:
                                     Height: =44
                                     Label: ="Incluir movimentos já finalizados"
                                     LabelPosition: ='Toggle.LabelPosition'.Before
+                              - tglExpHistImp:
+                                  Control: Toggle@1.1.5
+                                  Properties:
+                                    AccessibleLabel: ="Com histórico de alterações: quem fez e quando, até 50 registros"
+                                    BasePaletteColor: =thmPrimaria
+                                    FontColor: =thmTexto
+                                    Height: =44
+                                    Label: ="Com histórico de alterações — quem fez e quando (até 50 registros)"
+                                    LabelPosition: ='Toggle.LabelPosition'.Before
                         - htmExpResumoImp:
                             Control: HtmlViewer@2.1.0
                             Properties:
@@ -877,7 +918,13 @@ Screens:
                                     "<div style='" & htmlFonte & "font-size:12px;color:" & hxTexto & ";padding:6px 0;'>" &
                                     "<b>" & Text(CountRows(Filter(tb_alocacoesMapa, aeroporto = varAero And ativo = 1 And data_operacao >= dtpExpDeImp.SelectedDate And data_operacao <= dtpExpAteImp.SelectedDate))) & "</b> registro(s) no período" &
                                     " &nbsp;&middot;&nbsp; " & Text(DateDiff(dtpExpDeImp.SelectedDate, dtpExpAteImp.SelectedDate, TimeUnit.Days) + 1) & " dia(s)" &
-                                    If(tglExpIntlImp.Checked Or tglExpPesqImp.Checked Or tglExpFinImp.Checked, " &nbsp;&middot;&nbsp; os filtros abaixo ainda serão aplicados pelo fluxo", "") &
+                                    If(tglExpIntlImp.Checked Or tglExpPesqImp.Checked Or tglExpFinImp.Checked Or !IsBlank(Trim(txtExpBuscaImp.Value)), " &nbsp;&middot;&nbsp; os filtros abaixo ainda serão aplicados pelo fluxo", "") &
+                                    If(
+                                        tglExpHistImp.Checked,
+                                        "<br><span style='color:" & hxAmbar & ";font-weight:700;'>Com histórico:</span> uma linha por alteração de cada registro, inclusive excluídos. " &
+                                        "Só sai com até 50 registros depois dos filtros — use a busca por voo, prefixo ou companhia para chegar num movimento.",
+                                        ""
+                                    ) &
                                     "</div>"
                                 )
                               Size: =12
@@ -934,6 +981,8 @@ Screens:
                                               so_internacional: If(tglExpIntlImp.Checked, 1, 0),
                                               so_pesquisado: If(tglExpPesqImp.Checked, 1, 0),
                                               incluir_finalizados: If(tglExpFinImp.Checked, 1, 0),
+                                              historico: If(tglExpHistImp.Checked, 1, 0),
+                                              busca: Trim(txtExpBuscaImp.Value),
                                               solicitante: User().FullName,
                                               status: "PRONTO",
                                               total: 0,

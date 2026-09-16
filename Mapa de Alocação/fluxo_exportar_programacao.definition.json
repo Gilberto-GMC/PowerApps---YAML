@@ -83,13 +83,30 @@
           },
           "runAfter": {}
         },
+        "Inicializar_historico": {
+          "type": "InitializeVariable",
+          "inputs": {
+            "variables": [
+              {
+                "name": "csv_historico",
+                "type": "string",
+                "value": ""
+              }
+            ]
+          },
+          "runAfter": {
+            "Marcar_processando": [
+              "Succeeded"
+            ]
+          }
+        },
         "Obter_movimentacao": {
           "type": "OpenApiConnection",
           "inputs": {
             "parameters": {
               "dataset": "https://grupoccr.sharepoint.com/sites/AIRPORTNOW",
               "table": "tb_alocacoesMapa",
-              "$filter": "aeroporto eq '@{triggerBody()?['aeroporto']}' and ativo eq 1 and data_operacao ge '@{formatDateTime(triggerBody()?['data_de'],'yyyy-MM-dd')}' and data_operacao le '@{formatDateTime(triggerBody()?['data_ate'],'yyyy-MM-dd')}'",
+              "$filter": "aeroporto eq '@{triggerBody()?['aeroporto']}' and data_operacao ge '@{formatDateTime(triggerBody()?['data_de'],'yyyy-MM-dd')}' and data_operacao le '@{formatDateTime(triggerBody()?['data_ate'],'yyyy-MM-dd')}'",
               "$orderby": "data_operacao asc,hora_inicio asc",
               "$top": 5000
             },
@@ -101,7 +118,7 @@
             "authentication": "@parameters('$authentication')"
           },
           "runAfter": {
-            "Marcar_processando": [
+            "Inicializar_historico": [
               "Succeeded"
             ]
           },
@@ -115,7 +132,7 @@
           "type": "Query",
           "inputs": {
             "from": "@outputs('Obter_movimentacao')?['body/value']",
-            "where": "@and(or(equals(coalesce(triggerBody()?['so_internacional'],0),0),equals(item()?['internacional'],1)),or(equals(coalesce(triggerBody()?['so_pesquisado'],0),0),equals(item()?['pesquisado'],1)),or(equals(coalesce(triggerBody()?['incluir_finalizados'],0),1),not(equals(item()?['condicao'],'FINALIZADO'))),or(empty(coalesce(triggerBody()?['patio'],'')),equals(item()?['patio_txt'],triggerBody()?['patio'])))"
+            "where": "@and(or(equals(coalesce(triggerBody()?['so_internacional'],0),0),equals(item()?['internacional'],1)),or(equals(coalesce(triggerBody()?['so_pesquisado'],0),0),equals(item()?['pesquisado'],1)),or(equals(coalesce(triggerBody()?['historico'],0),1),equals(coalesce(triggerBody()?['incluir_finalizados'],0),1),not(equals(item()?['condicao'],'FINALIZADO'))),or(equals(coalesce(triggerBody()?['historico'],0),1),equals(item()?['ativo'],1)),or(empty(coalesce(triggerBody()?['patio'],'')),equals(item()?['patio_txt'],triggerBody()?['patio'])),or(empty(trim(coalesce(triggerBody()?['busca'],''))),contains(toUpper(concat(string(coalesce(item()?['voo_chegada'],'')),'|',string(coalesce(item()?['voo_saida'],'')),'|',coalesce(item()?['prefixo'],''),'|',coalesce(item()?['cia_sigla'],''))),toUpper(trim(triggerBody()?['busca'])))))"
           },
           "runAfter": {
             "Obter_movimentacao": [
@@ -127,10 +144,137 @@
           "type": "Select",
           "inputs": {
             "from": "@body('Filtrar_opcionais')",
-            "select": "@concat('\"',formatDateTime(item()?['data_operacao'],'dd/MM/yyyy'),'\";\"',formatDateTime(item()?['data_fim'],'dd/MM/yyyy'),'\";\"',item()?['posicao_txt'],'\";\"',item()?['patio_txt'],'\";\"',formatNumber(div(item()?['hora_inicio'],60),'00'),':',formatNumber(mod(item()?['hora_inicio'],60),'00'),'\";\"',formatNumber(div(item()?['hora_fim'],60),'00'),':',formatNumber(mod(item()?['hora_fim'],60),'00'),'\";\"',item()?['tipo_registro'],'\";\"',coalesce(item()?['cia_sigla'],''),'\";\"',coalesce(item()?['voo_chegada'],''),'\";\"',coalesce(item()?['voo_saida'],''),'\";\"',coalesce(item()?['prefixo'],''),'\";\"',coalesce(item()?['equipamento'],''),'\";\"',coalesce(item()?['portao'],''),'\";\"',coalesce(item()?['condicao'],'PREVISTO'),'\";\"',if(equals(item()?['internacional'],1),'SIM','NAO'),'\";\"',if(equals(item()?['pesquisado'],1),'SIM','NAO'),'\";\"',if(equals(item()?['alternativa'],1),'SIM','NAO'),'\";\"',coalesce(item()?['responsavel'],''),'\";\"',coalesce(item()?['contato'],''),'\";\"',replace(coalesce(item()?['observacao'],''),'\"',''''),'\"')"
+            "select": "@concat('\"',formatDateTime(item()?['data_operacao'],'dd/MM/yyyy'),'\";\"',formatDateTime(item()?['data_fim'],'dd/MM/yyyy'),'\";\"',item()?['posicao_txt'],'\";\"',item()?['patio_txt'],'\";\"',formatNumber(div(item()?['hora_inicio'],60),'00'),':',formatNumber(mod(item()?['hora_inicio'],60),'00'),'\";\"',formatNumber(div(item()?['hora_fim'],60),'00'),':',formatNumber(mod(item()?['hora_fim'],60),'00'),'\";\"',item()?['tipo_registro'],'\";\"',coalesce(item()?['cia_sigla'],''),'\";\"',coalesce(item()?['voo_chegada'],''),'\";\"',coalesce(item()?['voo_saida'],''),'\";\"',coalesce(item()?['prefixo'],''),'\";\"',coalesce(item()?['equipamento'],''),'\";\"',coalesce(item()?['portao'],''),'\";\"',coalesce(item()?['condicao'],'PREVISTO'),'\";\"',if(equals(item()?['internacional'],1),'SIM','NAO'),'\";\"',if(equals(item()?['pesquisado'],1),'SIM','NAO'),'\";\"',if(equals(item()?['alternativa'],1),'SIM','NAO'),'\";\"',coalesce(item()?['responsavel'],''),'\";\"',coalesce(item()?['contato'],''),'\";\"',replace(coalesce(item()?['observacao'],''),'\"',''''),'\";\"',coalesce(item()?['Author']?['DisplayName'],''),'\";\"',formatDateTime(convertFromUtc(item()?['Created'],'E. South America Standard Time'),'dd/MM/yyyy HH:mm'),'\";\"',coalesce(item()?['Editor']?['DisplayName'],''),'\";\"',formatDateTime(convertFromUtc(item()?['Modified'],'E. South America Standard Time'),'dd/MM/yyyy HH:mm'),'\"')"
           },
           "runAfter": {
             "Filtrar_opcionais": [
+              "Succeeded"
+            ]
+          }
+        },
+        "Modo_historico": {
+          "type": "If",
+          "expression": {
+            "equals": [
+              "@coalesce(triggerBody()?['historico'],0)",
+              1
+            ]
+          },
+          "actions": {
+            "Limite_historico": {
+              "type": "If",
+              "expression": {
+                "greater": [
+                  "@length(body('Filtrar_opcionais'))",
+                  50
+                ]
+              },
+              "actions": {
+                "Recusar_historico": {
+                  "type": "OpenApiConnection",
+                  "inputs": {
+                    "parameters": {
+                      "dataset": "https://grupoccr.sharepoint.com/sites/AIRPORTNOW",
+                      "table": "tb_exportacaoMapa",
+                      "id": "@triggerBody()?['ID']",
+                      "item/aeroporto": "@triggerBody()?['aeroporto']",
+                      "item/ativo": "@triggerBody()?['ativo']",
+                      "item/status": "ERRO",
+                      "item/total": "@length(body('Filtrar_opcionais'))",
+                      "item/mensagem": "@{concat('O historico foi pedido para ', string(length(body('Filtrar_opcionais'))), ' registros; o limite e 50. Use a busca por voo, prefixo ou companhia, ou um periodo menor.')}"
+                    },
+                    "host": {
+                      "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+                      "connectionName": "shared_sharepointonline",
+                      "operationId": "PatchItem"
+                    },
+                    "authentication": "@parameters('$authentication')"
+                  },
+                  "runAfter": {}
+                },
+                "Encerrar_historico": {
+                  "type": "Terminate",
+                  "inputs": {
+                    "runStatus": "Cancelled"
+                  },
+                  "runAfter": {
+                    "Recusar_historico": [
+                      "Succeeded"
+                    ]
+                  }
+                }
+              },
+              "else": {
+                "actions": {}
+              },
+              "runAfter": {}
+            },
+            "Para_cada_registro": {
+              "type": "Foreach",
+              "foreach": "@body('Filtrar_opcionais')",
+              "runtimeConfiguration": {
+                "concurrency": {
+                  "repetitions": 1
+                }
+              },
+              "actions": {
+                "Obter_versoes": {
+                  "type": "OpenApiConnection",
+                  "inputs": {
+                    "parameters": {
+                      "dataset": "https://grupoccr.sharepoint.com/sites/AIRPORTNOW",
+                      "parameters/method": "GET",
+                      "parameters/uri": "_api/web/lists/getbytitle('tb_alocacoesMapa')/items(@{items('Para_cada_registro')?['ID']})/versions",
+                      "parameters/headers": {
+                        "Accept": "application/json;odata=nometadata"
+                      }
+                    },
+                    "host": {
+                      "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+                      "connectionName": "shared_sharepointonline",
+                      "operationId": "HttpRequest"
+                    },
+                    "authentication": "@parameters('$authentication')"
+                  },
+                  "runAfter": {}
+                },
+                "Montar_versoes": {
+                  "type": "Select",
+                  "inputs": {
+                    "from": "@reverse(body('Obter_versoes')?['value'])",
+                    "select": "@concat('\"',string(items('Para_cada_registro')?['ID']),'\";\"',coalesce(item()?['VersionLabel'],''),'\";\"',formatDateTime(convertFromUtc(item()?['Created'],'E. South America Standard Time'),'dd/MM/yyyy HH:mm'),'\";\"',coalesce(item()?['Editor']?['LookupValue'],''),'\";\"',if(empty(coalesce(item()?['data_operacao'],item()?['data_x005f_operacao'])),'',formatDateTime(coalesce(item()?['data_operacao'],item()?['data_x005f_operacao']),'dd/MM/yyyy')),'\";\"',if(empty(coalesce(item()?['data_fim'],item()?['data_x005f_fim'])),'',formatDateTime(coalesce(item()?['data_fim'],item()?['data_x005f_fim']),'dd/MM/yyyy')),'\";\"',coalesce(string(coalesce(item()?['posicao_txt'],item()?['posicao_x005f_txt'])),''),'\";\"',formatNumber(div(int(formatNumber(float(coalesce(coalesce(item()?['hora_inicio'],item()?['hora_x005f_inicio']),0)),'0','en-US')),60),'00'),':',formatNumber(mod(int(formatNumber(float(coalesce(coalesce(item()?['hora_inicio'],item()?['hora_x005f_inicio']),0)),'0','en-US')),60),'00'),'\";\"',formatNumber(div(int(formatNumber(float(coalesce(coalesce(item()?['hora_fim'],item()?['hora_x005f_fim']),0)),'0','en-US')),60),'00'),':',formatNumber(mod(int(formatNumber(float(coalesce(coalesce(item()?['hora_fim'],item()?['hora_x005f_fim']),0)),'0','en-US')),60),'00'),'\";\"',coalesce(string(coalesce(item()?['tipo_registro'],item()?['tipo_x005f_registro'])),''),'\";\"',coalesce(string(coalesce(item()?['cia_sigla'],item()?['cia_x005f_sigla'])),''),'\";\"',coalesce(string(coalesce(item()?['voo_chegada'],item()?['voo_x005f_chegada'])),''),'\";\"',coalesce(string(coalesce(item()?['voo_saida'],item()?['voo_x005f_saida'])),''),'\";\"',coalesce(string(item()?['prefixo']),''),'\";\"',coalesce(string(item()?['equipamento']),''),'\";\"',coalesce(string(item()?['portao']),''),'\";\"',coalesce(string(item()?['condicao']),''),'\";\"',if(equals(int(formatNumber(float(coalesce(item()?['ativo'],0)),'0','en-US')),0),'EXCLUIDO','ATIVO'),'\";\"',replace(coalesce(string(item()?['observacao']),''),'\"',''''),'\"')"
+                  },
+                  "runAfter": {
+                    "Obter_versoes": [
+                      "Succeeded"
+                    ]
+                  }
+                },
+                "Acumular_versoes": {
+                  "type": "AppendToStringVariable",
+                  "inputs": {
+                    "name": "csv_historico",
+                    "value": "@{concat(join(body('Montar_versoes'),decodeUriComponent('%0D%0A')),decodeUriComponent('%0D%0A'))}"
+                  },
+                  "runAfter": {
+                    "Montar_versoes": [
+                      "Succeeded"
+                    ]
+                  }
+                }
+              },
+              "runAfter": {
+                "Limite_historico": [
+                  "Succeeded"
+                ]
+              }
+            }
+          },
+          "else": {
+            "actions": {}
+          },
+          "runAfter": {
+            "Montar_linhas": [
               "Succeeded"
             ]
           }
@@ -141,8 +285,8 @@
             "parameters": {
               "dataset": "https://grupoccr.sharepoint.com/sites/AIRPORTNOW",
               "folderPath": "/Documentos Partilhados/exportacoes",
-              "name": "programacao_@{triggerBody()?['aeroporto']}_@{formatDateTime(triggerBody()?['data_de'],'yyyyMMdd')}_a_@{formatDateTime(triggerBody()?['data_ate'],'yyyyMMdd')}.csv",
-              "body": "@{concat(decodeUriComponent('%EF%BB%BF'),'\"Data\";\"Data fim\";\"Posicao\";\"Patio\";\"Inicio\";\"Fim\";\"Tipo\";\"Companhia\";\"Voo chegada\";\"Voo saida\";\"Prefixo\";\"Equipamento\";\"Portao\";\"Condicao\";\"Internacional\";\"Pesquisado\";\"Alternativa\";\"Responsavel\";\"Contato\";\"Observacao\"',decodeUriComponent('%0D%0A'),join(body('Montar_linhas'),decodeUriComponent('%0D%0A')))}"
+              "name": "programacao@{if(equals(coalesce(triggerBody()?['historico'],0),1),'_historico','')}_@{triggerBody()?['aeroporto']}_@{formatDateTime(triggerBody()?['data_de'],'yyyyMMdd')}_a_@{formatDateTime(triggerBody()?['data_ate'],'yyyyMMdd')}.csv",
+              "body": "@{concat(decodeUriComponent('%EF%BB%BF'),if(equals(coalesce(triggerBody()?['historico'],0),1),'\"Registro\";\"Versao\";\"Data e hora da acao\";\"Usuario\";\"Data\";\"Data fim\";\"Posicao\";\"Inicio\";\"Fim\";\"Tipo\";\"Companhia\";\"Voo chegada\";\"Voo saida\";\"Prefixo\";\"Equipamento\";\"Portao\";\"Condicao\";\"Situacao\";\"Observacao\"','\"Data\";\"Data fim\";\"Posicao\";\"Patio\";\"Inicio\";\"Fim\";\"Tipo\";\"Companhia\";\"Voo chegada\";\"Voo saida\";\"Prefixo\";\"Equipamento\";\"Portao\";\"Condicao\";\"Internacional\";\"Pesquisado\";\"Alternativa\";\"Responsavel\";\"Contato\";\"Observacao\";\"Criado por\";\"Criado em\";\"Alterado por\";\"Alterado em\"'),decodeUriComponent('%0D%0A'),if(equals(coalesce(triggerBody()?['historico'],0),1),variables('csv_historico'),join(body('Montar_linhas'),decodeUriComponent('%0D%0A'))))}"
             },
             "host": {
               "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
@@ -152,7 +296,7 @@
             "authentication": "@parameters('$authentication')"
           },
           "runAfter": {
-            "Montar_linhas": [
+            "Modo_historico": [
               "Succeeded"
             ]
           }

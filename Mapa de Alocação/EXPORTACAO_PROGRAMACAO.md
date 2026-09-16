@@ -5,6 +5,66 @@ programação a quem não usa o app e para consultar o que já passou — **não
 Isso foi decidido: o importador existente lê programação de companhia e *calcula* posição; exportar
 naquele formato jogaria fora exatamente o trabalho que o app faz.
 
+## ⚠️ 16/09/2026 — autoria e histórico de alterações
+
+O Douglas pediu para ver **as ações feitas num movimento**: quem reservou, quem alterou, com data e hora.
+Decisão dele: *o que causa menos impacto*. Por isso **nada novo grava log** — o fluxo lê o que o SharePoint
+já guarda sozinho em toda lista: `Author`/`Created`, `Editor`/`Modified` e o **histórico de versões**.
+
+**O que mudou.**
+
+- **CSV normal**: 4 colunas no fim — *Criado por, Criado em, Alterado por, Alterado em*. As 20 de antes
+  não mudam de lugar.
+- **Busca** (campo novo *VOO, PREFIXO OU CIA*): filtra por voo de chegada, voo de saída, prefixo ou
+  companhia, sem diferenciar maiúscula.
+- **Com histórico** (liga/desliga novo): o arquivo vira `programacao_historico_…csv`, com **uma linha por
+  versão** de cada registro, da mais antiga para a mais nova — *Registro, Versão, Data e hora da ação,
+  Usuário* e o estado do registro naquela versão (datas, posição, horário, companhia, voos, prefixo,
+  equipamento, portão, condição, **Situação ATIVO/EXCLUIDO**, observação). Lendo as linhas de um mesmo
+  registro em ordem, vê-se o que cada pessoa mudou.
+- Com histórico ligado, **finalizados e excluídos entram**: o EXCLUIR do app grava `ativo = 0`, não
+  apaga, então dá para ver quem excluiu e quando.
+- **Limite de 50 registros** depois dos filtros: é uma chamada ao SharePoint por registro. Passou disso,
+  o pedido termina em **ERRO** dizendo quantos eram e pedindo para usar a busca.
+
+**O que o histórico NÃO mostra, e por quê.**
+
+- Registro vindo da **importação** aparece como criado pela **conta do fluxo** (`processos.aeroservice`),
+  não por quem tocou em GERAR — quem gerou está no pedido da `tb_importacaoMapa`.
+- **Reimportar um mês apaga e recria** os registros `IMPORTACAO` daquele mês: o histórico dos antigos vai
+  junto.
+- Se o **controle de versão** da `tb_alocacoesMapa` estiver desligado, cada registro tem uma versão só.
+
+**Suposição não confirmada.** A API de versões costuma devolver nome de coluna com sublinhado codificado
+(`data_operacao` → `data_x005f_operacao`). O fluxo lê as duas formas. Se o primeiro histórico sair com
+colunas vazias, é aqui que olhar: abra a execução, ação `Obter_versoes`, e veja os nomes na saída.
+
+**Como foi conferido.** `montar_zip_exportacao.js` gera o pacote; um conferidor à parte verificou
+parênteses fora de literal, referências a ações e variáveis, `items()` só dentro do laço, e o número de
+campos das duas linhas contra os dois cabeçalhos (24 e 19) — e **recusou quatro defeitos plantados**
+(parêntese, ação inexistente, `items()` fora do laço, coluna faltando). A chamada HTTP copia a forma da
+ação do `List_Generator`, que roda neste ambiente.
+
+### Implantação — nesta ordem
+
+1. **Controle de versão da `tb_alocacoesMapa`.** Configurações da lista → *Configurações de controle de
+   versão* → *Criar uma versão cada vez que você editar um item* = **Sim**. Se estava *Não*, o histórico
+   só começa a partir de agora.
+2. **Duas colunas na `tb_exportacaoMapa`** (a lista existe, o gerador não acrescenta coluna), nomes em
+   minúsculas exatamente assim:
+   - `historico` — Número, 0 casas decimais, valor padrão **0**, não obrigatória;
+   - `busca` — Linha única de texto, 60 caracteres, não obrigatória.
+   **Antes de colar a tela**: o `Patch` do GERAR grava as duas e falharia sem elas.
+3. **Desligue** o fluxo `Exportar programacao` atual e **importe o `Exportarprogramacao.zip`** como fluxo
+   novo (mesma rotina da primeira vez, seção "Caminho curto"). Ajuste a pasta do `Criar_arquivo` **pelo
+   seletor** (`Documentos Partilhados › exportacoes`) e qualquer lista que abrir em branco.
+4. **Cole a `scrMapaImport.pa.yaml`.**
+5. **Teste, nesta ordem:**
+   - exportação normal de um dia → o CSV tem as 4 colunas de autoria no fim;
+   - busca por um voo conhecido **com histórico** → `programacao_historico_…csv` com as versões dele;
+   - histórico **sem** busca num mês inteiro → **ERRO** com *"o limite e 50"*.
+6. Só depois **apague o fluxo antigo**.
+
 ## Desenho
 
 Três peças, no mesmo padrão da importação:
