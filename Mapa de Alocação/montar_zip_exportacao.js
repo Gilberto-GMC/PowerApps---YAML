@@ -63,7 +63,10 @@ const LINHA =
 // Editor, Created, Modified e o historico de versoes da lista).
 const SEP = q + asp + ";" + asp + q;                         // '";"' dentro do concat
 const FUSO = "'E. South America Standard Time'";
-const quando = (campo) => "formatDateTime(convertFromUtc(" + campo + "," + FUSO + "),'dd/MM/yyyy HH:mm')";
+// convertTimeZone e nao convertFromUtc: a API de versoes devolve Created SEM o Z ("2026-09-04T18:12:50.0000000")
+// e o convertFromUtc recusa — foi o erro da primeira execucao, 16/09/2026. O valor e UTC (o Modified da mesma
+// versao vem com Z e bate), e convertTimeZone recebe a origem explicita, com ou sem Z.
+const quando = (campo) => "convertTimeZone(" + campo + ",'UTC'," + FUSO + ",'dd/MM/yyyy HH:mm')";
 
 // CSV normal: as mesmas 20 colunas de antes + 4 de autoria no fim (quem abre o arquivo antigo nao
 // perde coluna de lugar).
@@ -76,11 +79,15 @@ const LINHA_AUTORIA = LINHA.slice(0, -("," + q + asp + q + ")").length) + "," + 
 const v = (nome) => nome.includes("_")
   ? "coalesce(item()?['" + nome + "'],item()?['" + nome.replace(/_/g, "_x005f_") + "'])"
   : "item()?['" + nome + "']";
-// Numero pela API REST pode vir 380 ou 380.0; int() recusa o segundo. formatNumber(...,'0') normaliza.
-const inteiro = (x) => "int(formatNumber(float(coalesce(" + x + ",0)),'0','en-US'))";
+// Confirmado na execucao de 16/09/2026: a API de versoes devolve numero como TEXTO no formato do site
+// (envergadura "16,2"; milhar viria "1.080"). float("1.080") quebra. Tira o ponto de milhar, troca a
+// virgula por ponto e fica com a parte inteira. coalesce antes de string: string(null) nao entra.
+const inteiro = (x) => "int(first(split(replace(replace(string(coalesce(" + x + ",'0')),'.',''),',','.'),'.')))";
 const hhmm = (x) => "formatNumber(div(" + inteiro(x) + ",60),'00'),':',formatNumber(mod(" + inteiro(x) + ",60),'00')";
 // Versao antiga pode nao ter a coluna (data_fim entrou depois): formatDateTime de vazio derruba o pedido.
-const data = (x) => "if(empty(" + x + "),'',formatDateTime(" + x + ",'dd/MM/yyyy'))";
+// if() do Power Automate avalia os dois lados: if(empty(x),'',formatDateTime(x)) ainda quebra com x vazio.
+// Data substituta impossivel, formatada e depois apagada — formatDateTime nunca recebe vazio.
+const data = (x) => "replace(formatDateTime(coalesce(" + x + ",'1900-01-01T12:00:00Z'),'dd/MM/yyyy'),'01/01/1900','')";
 const txt = (x) => "coalesce(string(" + x + "),'')";
 
 const LINHA_VERSAO =
