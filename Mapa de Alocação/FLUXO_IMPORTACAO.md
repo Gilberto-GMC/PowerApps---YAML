@@ -610,17 +610,26 @@ barra parada sem explicar por quê.
 
 ## Como testar sem risco
 
-**Não teste com o mês inteiro na primeira vez.** Faça assim:
+> ⚠️ **Nunca teste num mês que já está em uso.** Importar um mês apaga **todos** os registros
+> `origem = IMPORTACAO <mês>` antes de gravar — é assim que a reimportação substitui. Com o mês em
+> produção, vão junto os ajustes que a operação fez nesses registros (posição trocada, finalizado,
+> pesquisado). Até 16/09/2026 este guia mandava testar reimportando setembro, que já estava em uso —
+> escrito antes de setembro entrar em produção, virou instrução destrutiva sem ninguém mexer nele.
 
-1. Duplique a planilha de setembro e apague tudo menos **dois ou três dias** de movimentos.
-2. Anexe essa planilha reduzida pela tela, com o mês de referência de setembro.
-3. Confira: o item vai a `CONCLUIDO`, a barra chega a 100%, e a `tb_alocacoesMapa` recebe umas
-   40 linhas com `origem = IMPORTACAO 2026-09`.
-4. Abra o **Mapa do Dia** num dos dias importados e veja se a grade desenha.
-5. **Rode de novo com a mesma planilha.** O total tem que ficar igual, não dobrar — é o teste do
-   passo 7.
+**Teste num mês que ainda não foi importado.** O fluxo só apaga `IMPORTACAO` do mês pedido, então os
+outros meses não são tocados:
 
-Só depois solte o mês completo.
+1. Use a planilha de um mês **ainda não importado** (foi novembro/2026, em 16/09/2026).
+2. Confira: o item vai a `CONCLUIDO`, a barra chega a 100%, e o histórico mostra `Conferir_resultado`
+   pelo ramo **Sim**.
+3. Abra o **Mapa do Dia** num dos dias importados e veja se a grade desenha — e num dia de **outro** mês,
+   para ver que ficou igual.
+4. **Rodar de novo com a mesma planilha** só enquanto ninguém mexeu nos registros daquele mês: o total
+   tem que ficar igual, não dobrar.
+
+**Para testar a recusa sem gravar nada:** desative a linha `cia = *` da `tb_prePosicao` e gere qualquer
+mês. Tem de terminar em `ERRO` com *"falta a linha de queda"*, execução **Cancelada**,
+`Obter_importacao_anterior` não executado. Reative a linha depois.
 
 ---
 
