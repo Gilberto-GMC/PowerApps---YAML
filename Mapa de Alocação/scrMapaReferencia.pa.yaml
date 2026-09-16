@@ -388,6 +388,25 @@ Screens:
                                     PaddingRight: =14
                                     Text: ="PÁTIOS"
                                     Width: =130
+                              - btnAjudaRef:
+                                  Control: Button@0.0.45
+                                  Properties:
+                                    Appearance: ='ButtonCanvas.Appearance'.Secondary
+                                    BasePaletteColor: =If(varAjudaRef, thmAcao, thmPrimaria)
+                                    BorderRadius: =0
+                                    FontColor: =If(varAjudaRef, thmAcao, thmPrimaria)
+                                    FontSize: =12
+                                    FontWeight: =FontWeight.Semibold
+                                    Height: =38
+                                    Icon: ="DocumentBulletList"
+                                    IconStyle: ='ButtonCanvas.IconStyle'.Filled
+                                    LayoutMinHeight: =38
+                                    LayoutMinWidth: =0
+                                    OnSelect: =Set(varAjudaRef, !varAjudaRef)
+                                    PaddingLeft: =14
+                                    PaddingRight: =14
+                                    Text: =If(varAjudaRef, "FECHAR GUIA", "COMO CADASTRAR")
+                                    Width: =190
                               - lblEspacoModoRef:
                                   Control: Label@2.5.1
                                   Properties:
@@ -414,6 +433,60 @@ Screens:
                                     PaddingRight: =12
                                     Text: ="RECARREGAR"
                                     Width: =150
+                        - htmAjudaRef:
+                            Control: HtmlViewer@2.1.0
+                            Properties:
+                              AutoHeight: =true
+                              Color: =thmTexto
+                              Fill: =thmFundo
+                              FillPortions: =0
+                              Font: =thmFonte
+                              HtmlText: |-
+                                ="<div style='" & htmlFonte & "background:" & hxPrimariaClara & ";padding:14px 18px;font-size:12px;line-height:1.6;color:" & hxTexto & ";'>" &
+                                "<div style='font-size:10px;font-weight:700;letter-spacing:.14em;color:" & hxTextoFraco & ";'>GUIA DE CADASTRO</div>" &
+                                "<div style='margin-top:6px;'><b>A ordem importa: primeiro o pátio, depois as posições dele.</b> " &
+                                "Tudo que se grava aqui vale para o aeroporto em uso (" & varAeroNome & "). Não há excluir: desmarque <b>Ativa</b>. " &
+                                "Depois de salvar, toque em <b>ATUALIZAR</b> no Mapa do Dia; se não mudar, feche e abra o app.</div>" &
+
+                                "<div style='margin-top:12px;font-weight:800;color:" & hxPrimaria & ";'>1. PÁTIO</div>" &
+                                "<table style='border-collapse:collapse;font-size:12px;'>" &
+                                "<tr><td style='padding:2px 14px 2px 0;vertical-align:top;white-space:nowrap;'><b>Código do pátio</b></td><td>Único, em maiúsculas e sem espaço (ex. PRINCIPAL, PATIO3, HANGARES). É o que cada posição guarda — <b>não troque depois de ter posições</b>.</td></tr>" &
+                                "<tr><td style='padding:2px 14px 2px 0;vertical-align:top;'><b>Nome exibido</b></td><td>O que aparece para o operador (ex. Pátio 3).</td></tr>" &
+                                "<tr><td style='padding:2px 14px 2px 0;vertical-align:top;'><b>Ordem</b></td><td>Posição do pátio na grade: 1 fica em cima.</td></tr>" &
+                                "<tr><td style='padding:2px 14px 2px 0;vertical-align:top;'><b>Sigla</b></td><td>Até 4 letras, escritas na faixa vertical à esquerda da grade (ex. P1).</td></tr>" &
+                                "<tr><td style='padding:2px 14px 2px 0;vertical-align:top;'><b>Cores</b></td><td>Fundo da faixa e cor do texto — toque numa amostra da paleta.</td></tr>" &
+                                "</table>" &
+
+                                "<div style='margin-top:12px;font-weight:800;color:" & hxPrimaria & ";'>2. POSIÇÃO</div>" &
+                                "<table style='border-collapse:collapse;font-size:12px;'>" &
+                                "<tr><td style='padding:2px 14px 2px 0;vertical-align:top;white-space:nowrap;'><b>Posição</b></td><td>Nome único no aeroporto (ex. T4, 6A). Fica gravado em cada lançamento — <b>não renomeie posição que já tem lançamento</b>. O número interno é dado sozinho ao salvar.</td></tr>" &
+                                "<tr><td style='padding:2px 14px 2px 0;vertical-align:top;'><b>Pátio</b></td><td>A que pátio pertence.</td></tr>" &
+                                "<tr><td style='padding:2px 14px 2px 0;vertical-align:top;'><b>Ordem na grade</b></td><td>Posição da linha dentro do pátio. Aceita decimal para encaixar entre duas: <b>6,5</b> fica entre a 6 e a 7.</td></tr>" &
+                                "<tr><td style='padding:2px 14px 2px 0;vertical-align:top;'><b>Tipo</b></td><td><b>PONTE</b> tem portão (voo sem portão aparece tracejado) · <b>REMOTA</b> · <b>HELIPONTO</b> · <b>HANGAR</b> (ver item 3). " &
+                                "<span style='color:" & hxVermelho & ";font-weight:700;'>O tipo vem REMOTA por padrão — confira antes de salvar.</span></td></tr>" &
+                                "<tr><td style='padding:2px 14px 2px 0;vertical-align:top;'><b>Classe / Aeronave máxima</b></td><td>Rótulos de referência que aparecem na linha da posição (ex. CLASSE A, B-738).</td></tr>" &
+                                "<tr><td style='padding:2px 14px 2px 0;vertical-align:top;'><b>Equipamento máximo</b></td><td>Código do maior equipamento aceito (ex. B738).</td></tr>" &
+                                "<tr><td style='padding:2px 14px 2px 0;vertical-align:top;'><b>Comprimento / Envergadura</b></td><td>Travas físicas em metros. <b>0 desliga</b> a trava.</td></tr>" &
+                                "<tr><td style='padding:2px 14px 2px 0;vertical-align:top;'><b>OCUPA</b></td><td>Posições que esta consome quando usada, separadas por vírgula. Ex.: T6C ocupa <b>T5,T6</b> — ocupar uma bloqueia as outras. Cada nome precisa existir.</td></tr>" &
+                                "<tr><td style='padding:2px 14px 2px 0;vertical-align:top;'><b>Contingência</b></td><td>Posição reservada para emergência (em Navegantes, a T7). Gravar nela pede um segundo toque em SALVAR para confirmar.</td></tr>" &
+                                "</table>" &
+
+                                "<div style='margin-top:12px;font-weight:800;color:" & hxPrimaria & ";'>3. HANGAR</div>" &
+                                "<div>Hangar não é posição de pátio: não tem capacidade, restrição nem conflito, e <b>não aparece na grade</b>. " &
+                                "Aparece no botão <b>HANGARES</b> do Mapa do Dia. Para criar:</div>" &
+                                "<ol style='margin:4px 0 0 18px;padding:0;'>" &
+                                "<li>Em PÁTIOS, crie um pátio para os hangares (ex. código HANGARES, nome Hangares).</li>" &
+                                "<li>Em POSIÇÕES, crie uma posição por hangar (ex. HAVAN, POLY) nesse pátio, com <b>Tipo = HANGAR</b>.</li>" &
+                                "<li>Classe, aeronave, equipamento, travas e OCUPA ficam em branco ou zero.</li>" &
+                                "</ol>" &
+                                "<div style='margin-top:4px;'>Se o hangar aparecer como linha na grade, o tipo ficou errado: abra a posição e troque para HANGAR.</div>" &
+
+                                "<div style='margin-top:12px;font-weight:800;color:" & hxPrimaria & ";'>4. AEROPORTO NOVO</div>" &
+                                "<div>Pátios e posições se cadastram aqui, mas colocar um aeroporto novo no app, os portões, as companhias e a pré-posição da importação " &
+                                "<b>não se fazem por esta tela</b> — peça ao responsável pelo app (guia <i>CADASTRO_AEROPORTO</i>).</div>" &
+                                "</div>"
+                              Size: =12
+                              Visible: =varAjudaRef
                         - cntPosRef:
                             Control: GroupContainer@1.5.0
                             Variant: AutoLayout
