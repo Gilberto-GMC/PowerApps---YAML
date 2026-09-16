@@ -70,6 +70,14 @@ function analisa(arquivo) {
         const d = x.match(/<Default>([^<]*)<\/Default>/)[1];
         if (d.trim() === "" || isNaN(Number(d))) erros.push(`${onde}: <Default>${d}</Default> não é número`);
       }
+      // Fórmula de validação com ';' (=OU(a;b), =E(a;b)) derruba o CreateFieldAsXml deste tenant:
+      // "A fórmula contém um erro de sintaxe ou não é suportada", devolvido como 502 BadGateway.
+      // Aconteceu com tb_chamadoInteracao e de novo com tb_prePosicao (16/09/2026). Nas duas, a
+      // lista fica criada pela metade. AVISO e não erro: tb_equipamentos, tb_alocacoesMapa e outras já
+      // criadas têm a mesma fórmula, então o ';' sozinho não explica tudo.
+      if (/<Validation[^>]*>[^<]*;[^<]*<\/Validation>/.test(x)) {
+        avisos.push(`${onde}: <Validation> com ';' na fórmula — falhou com 502 "erro de sintaxe" em tb_chamadoInteracao e tb_prePosicao; na dúvida, tire`);
+      }
       // Coluna obrigatória sem Default é armadilha para o fluxo, que precisa reenviar
       // todo campo obrigatório em cada Atualizar item.
       if (/Required='TRUE'/.test(x) && !/<Default>/.test(x) && tipo !== "Text" && tipo !== "DateTime") {
