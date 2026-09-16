@@ -173,6 +173,12 @@ function analisa(arquivo, mortos) {
       fim = j - 1;
     } else if (inline) {
       formula = inline[2];
+      // Valor inline é escalar YAML simples: ": " (ou " #") dentro dele vira chave/comentário e o Studio
+      // recusa com PA1001 "found invalid mapping". Aconteceu em 16/09/2026 num AccessibleLabel com
+      // "alterações: quem fez". Dentro de bloco |- pode — é por isso que só o inline é conferido.
+      if (/: | #/.test(inline[2])) {
+        erros.push(`${i + 1}: '${inline[1]}' inline contém ': ' ou ' #' — o YAML quebra (PA1001); troque o caractere ou use bloco |-`);
+      }
     }
 
     if (formula !== null) {
