@@ -43,14 +43,23 @@ ForAll(
 colPosicoesAero =
 With(
     { _f: Filter(colPosicoesTodas; aeroporto = varAero) };
-    If(CountRows(_f) = 0; colPosicoesTodas; _f)
+    Filter(If(CountRows(_f) = 0; colPosicoesTodas; _f); Coalesce(tipo; "") <> "HANGAR")
 );;
 
+// Pátio que só tem hangar (HANGARES) não vira faixa na grade nem opção no filtro de pátio.
 colPatiosAero =
 With(
     { _f: Filter(colPatiosTodos; aeroporto = varAero) };
-    If(CountRows(_f) = 0; colPatiosTodos; _f)
+    Filter(If(CountRows(_f) = 0; colPatiosTodos; _f) As _pt; !IsEmpty(Filter(colPosicoesAero As _pp; _pp.patio = _pt.patio)))
 );;
+
+// 🏭 Hangares — posição cadastrada com tipo HANGAR (tela POSIÇÕES E CORES), desde 16/09/2026.
+// Não é posição de pátio: sem capacidade, sem restrição, sem conflito, fora da grade. Aparece só no
+// painel HANGARES do Mapa do Dia. O lançamento é RESERVA na posição do hangar — a lista não aceita outro
+// tipo — e é reconhecido pela posição, não pelo tipo_registro.
+colHangaresAero = Filter(colPosicoesTodas; aeroporto = varAero And tipo = "HANGAR");;
+// Saída "em aberto": aeronave entra no hangar sem data de saída. Data impossível, mostrada como "em aberto".
+mapSaidaEmAberto = Date(2099; 12; 31);;
 
 // 🚪 Portões da sala de embarque — cor do contorno do bloco
 // 1 verde · 2 amarelo · 3 ciano · 4 rosa · 5 cinza

@@ -8,6 +8,7 @@ Screens:
         Set(varMapaVisivel, true);
         Set(varLegendaAberta, Coalesce(varLegendaAberta, true));
         Set(varPainelAberto, false);
+        Set(varHangarAberto, false);
         Set(varAlocSel, Blank());
         Set(varNovoIni, -1);
         UpdateContext(
@@ -18,6 +19,9 @@ Screens:
                 locConfirmaPortao: "", locConfirmaEnv: 0, locConfirmaAlt: "",
                 locConfirmaExcluir: 0,
                 locSalvando: false,
+                locHangarForm: false, locHangarExcluir: 0, locHangarSalvando: false,
+                locHangarPos: Blank(), locHangarEdit: Blank(),
+                locHangarDados: { prefixo: "", equip: "—", data: Today(), hora: "", obs: "" },
                 locOcupado: Blank()
             }
         );
@@ -997,6 +1001,9 @@ Screens:
                                         )
                                     )
                                 );
+                                // Hangar nao e posicao de patio: sai da grade e dos contadores e vai para o painel HANGARES.
+                                ClearCollect(colHangarDia, Filter(colDia, id_posicao in colHangaresAero.id));
+                                RemoveIf(colDia, id_posicao in colHangaresAero.id);
                                 // FINALIZADO sai AQUI, na colecao ja baixada, e nao no filtro do servidor.
                                 // Desigualdade em texto nao delega: no filtro, ela fazia o Power Apps baixar so as
                                 // primeiras 500 linhas por ID e filtrar localmente — tudo criado depois da
@@ -1156,6 +1163,28 @@ Screens:
                                     PaddingRight: =10
                                     Text: =If(varVerFinalizados, "OCULTAR FINALIZADOS", "FINALIZADOS")
                                     Width: =If(varVerFinalizados, 188, 136)
+                              - btnHangaresMap:
+                                  Control: Button@0.0.45
+                                  Properties:
+                                    Appearance: ='ButtonCanvas.Appearance'.Secondary
+                                    BasePaletteColor: =thmPrimaria
+                                    BorderRadius: =0
+                                    FontColor: =thmPrimaria
+                                    FontSize: =11
+                                    FontWeight: =FontWeight.Semibold
+                                    Height: =28
+                                    Icon: ="Airplane"
+                                    IconStyle: ='ButtonCanvas.IconStyle'.Filled
+                                    LayoutMinHeight: =28
+                                    LayoutMinWidth: =0
+                                    OnSelect: |-
+                                      =UpdateContext({ locHangarForm: false, locHangarExcluir: 0 });
+                                      Set(varHangarAberto, true)
+                                    PaddingLeft: =10
+                                    PaddingRight: =10
+                                    Text: ="HANGARES · " & CountRows(colHangarDia)
+                                    Visible: =!IsEmpty(colHangaresAero)
+                                    Width: =140
                               - lblEspacoJanMap:
                                   Control: Label@2.5.1
                                   Properties:
@@ -3469,3 +3498,602 @@ Screens:
                         PaddingLeft: =12
                         PaddingRight: =12
                         Text: ="FECHAR"
+      - recVeuHangarMap:
+          Control: Rectangle@2.3.0
+          Properties:
+            BorderStyle: =BorderStyle.None
+            Fill: =thmVeu
+            Height: =Parent.Height
+            OnSelect: =Set(varHangarAberto, false)
+            Visible: =varHangarAberto
+            Width: =Parent.Width
+      - cntHangarMap:
+          Control: GroupContainer@1.5.0
+          Variant: AutoLayout
+          Properties:
+            BorderColor: =thmBorda
+            BorderThickness: =1
+            DropShadow: =DropShadow.None
+            Fill: =thmFundo
+            Height: =Parent.Height
+            LayoutAlignItems: =LayoutAlignItems.Stretch
+            LayoutDirection: =LayoutDirection.Vertical
+            LayoutGap: =8
+            LayoutMinHeight: =0
+            LayoutMinWidth: =0
+            LayoutOverflowY: =LayoutOverflow.Scroll
+            PaddingBottom: =12
+            PaddingLeft: =16
+            PaddingRight: =16
+            PaddingTop: =12
+            RadiusBottomLeft: =0
+            RadiusBottomRight: =0
+            RadiusTopLeft: =0
+            RadiusTopRight: =0
+            Visible: =varHangarAberto
+            Width: =Min(640, Parent.Width)
+            X: =Parent.Width - Self.Width
+          Children:
+            - cntHangarTopoMap:
+                Control: GroupContainer@1.5.0
+                Variant: AutoLayout
+                Properties:
+                  DropShadow: =DropShadow.None
+                  Fill: =thmFundo
+                  FillPortions: =0
+                  Height: =40
+                  LayoutAlignItems: =LayoutAlignItems.Stretch
+                  LayoutDirection: =LayoutDirection.Horizontal
+                  LayoutGap: =8
+                  LayoutMinHeight: =0
+                  LayoutMinWidth: =0
+                  RadiusBottomLeft: =0
+                  RadiusBottomRight: =0
+                  RadiusTopLeft: =0
+                  RadiusTopRight: =0
+                Children:
+                  - lblHangarTituloMap:
+                      Control: Label@2.5.1
+                      Properties:
+                        Color: =thmPrimaria
+                        FillPortions: =1
+                        Font: =thmFonte
+                        FontWeight: =FontWeight.Bold
+                        LayoutMinWidth: =0
+                        Size: =16
+                        Text: ="HANGARES"
+                  - btnFecharHangarMap:
+                      Control: Button@0.0.45
+                      Properties:
+                        Appearance: ='ButtonCanvas.Appearance'.Secondary
+                        BasePaletteColor: =thmTextoFraco
+                        BorderRadius: =0
+                        FontColor: =thmTextoFraco
+                        FontSize: =12
+                        FontWeight: =FontWeight.Semibold
+                        Height: =40
+                        Icon: ="Dismiss"
+                        IconStyle: ='ButtonCanvas.IconStyle'.Filled
+                        LayoutMinWidth: =0
+                        OnSelect: =Set(varHangarAberto, false)
+                        Text: ="FECHAR"
+                        Width: =110
+            - htmHangarCartoesMap:
+                Control: HtmlViewer@2.1.0
+                Properties:
+                  AutoHeight: =true
+                  Color: =thmTexto
+                  Fill: =thmFundo
+                  Font: =thmFonte
+                  HtmlText: |-
+                    ="<div style='" & htmlFonte & "'>" &
+                    "<div style='font-size:10px;font-weight:700;letter-spacing:.14em;color:" & hxTextoFraco & ";'>HANGARES &nbsp;&middot;&nbsp; " & Upper(Text(varData, "ddd dd/mm/yyyy")) & "</div>" &
+                    "<div style='font-size:11px;color:" & hxTextoFraco & ";margin-top:4px;'>Aeronaves dentro dos hangares nesta data. Sem posição, capacidade ou restrição: o hangar não é controlado por nós.</div>" &
+                    "<table style='width:100%;border-collapse:separate;border-spacing:8px 8px;margin:4px -8px 0 -8px;'><tr>" &
+                    Concat(
+                        Sort(colHangaresAero, ordem, SortOrder.Ascending) As _h,
+                        With(
+                            {
+                                _cor: Coalesce(LookUp(colPatiosTodos As _p, _p.patio = _h.patio And _p.aeroporto = _h.aeroporto).cor_hex, hxPrimaria),
+                                _dentro: Sort(Filter(colHangarDia As _a, _a.id_posicao = _h.id), abs_ini, SortOrder.Ascending)
+                            },
+                            "<td style='vertical-align:top;width:" & Text(100 / Max(CountRows(colHangaresAero), 1), "0") & "%;background:" & hxSuperficie &
+                            ";border:1px solid " & hxBorda & ";border-top:3px solid " & _cor & ";padding:10px 12px;'>" &
+                            "<div style='font-size:20px;font-weight:800;color:" & hxPrimaria & ";'>" & _h.posicao & "</div>" &
+                            "<div style='font-size:11px;color:" & hxTexto & ";margin-bottom:6px;'>" & CountRows(_dentro) & " aeronave(s)</div>" &
+                            If(
+                                IsEmpty(_dentro),
+                                "<div style='font-size:11px;color:" & hxTextoFraco & ";'>vazio</div>",
+                                Concat(
+                                    _dentro As _a,
+                                    With(
+                                        {
+                                            _aberto: _a.data_f = mapSaidaEmAberto,
+                                            _min: DateDiff(
+                                                DateAdd(_a.data_ini, _a.h_ini, TimeUnit.Minutes),
+                                                If(_a.data_f = mapSaidaEmAberto, Now(), DateAdd(_a.data_f, _a.h_fim, TimeUnit.Minutes)),
+                                                TimeUnit.Minutes
+                                            )
+                                        },
+                                        "<div style='border-top:1px solid " & hxGradeLinha & ";padding:5px 0;font-size:11px;color:" & hxTexto & ";'>" &
+                                        "<b style='font-size:12px;'>" & Coalesce(_a.prefixo, "&mdash;") & "</b>" &
+                                        If(IsBlank(_a.equip), "", " &nbsp;&middot;&nbsp; " & _a.equip) &
+                                        "<br>entrada " & Text(_a.data_ini, "dd/mm") & " " & Text(Int(_a.h_ini / 60), "00") & ":" & Text(Mod(_a.h_ini, 60), "00") &
+                                        If(_aberto, " &nbsp;&middot;&nbsp; <span style='color:" & hxVerde & ";font-weight:700;'>em aberto</span>",
+                                            " &nbsp;&middot;&nbsp; saída " & Text(_a.data_f, "dd/mm") & " " & Text(Int(_a.h_fim / 60), "00") & ":" & Text(Mod(_a.h_fim, 60), "00")) &
+                                        If(_min >= 0, " &nbsp;&middot;&nbsp; " & If(_min >= 1440, Text(RoundDown(_min / 1440, 0)) & "d ", "") & Text(RoundDown(Mod(_min, 1440) / 60, 0)) & "h", "") &
+                                        If(IsBlank(_a.obs), "", "<br><span style='color:" & hxTextoFraco & ";'>" & Substitute(Substitute(_a.obs, "&", "&amp;"), "<", "&lt;") & "</span>") &
+                                        "</div>"
+                                    )
+                                )
+                            ) &
+                            "</td>"
+                        )
+                    ) &
+                    "</tr></table></div>"
+                  Size: =11
+            - galHangarEntradaMap:
+                Control: Gallery@2.15.0
+                Variant: Vertical
+                Properties:
+                  BorderStyle: =BorderStyle.None
+                  DisplayMode: =If(varPodeEditar, DisplayMode.Edit, DisplayMode.Disabled)
+                  Fill: =thmFundo
+                  FillPortions: =0
+                  Height: =CountRows(colHangaresAero) * 46
+                  Items: =Sort(colHangaresAero, ordem, SortOrder.Ascending)
+                  LayoutMinWidth: =0
+                  ShowScrollbar: =false
+                  TemplatePadding: =0
+                  TemplateSize: =46
+                Children:
+                  - btnHangarEntradaMap:
+                      Control: Button@0.0.45
+                      Properties:
+                        Appearance: ='ButtonCanvas.Appearance'.Primary
+                        BasePaletteColor: =thmAcao
+                        BorderRadius: =0
+                        FontColor: =thmTextoBarra
+                        FontSize: =12
+                        FontWeight: =FontWeight.Semibold
+                        Height: =40
+                        Icon: ="Add"
+                        IconStyle: ='ButtonCanvas.IconStyle'.Filled
+                        LayoutMinWidth: =0
+                        OnSelect: |-
+                          =UpdateContext(
+                              {
+                                  locHangarPos: ThisItem,
+                                  locHangarEdit: Blank(),
+                                  locHangarExcluir: 0,
+                                  locHangarDados: {
+                                      prefixo: "",
+                                      equip: "—",
+                                      data: Today(),
+                                      hora: Text(Hour(Now()), "00") & ":" & Text(Minute(Now()), "00"),
+                                      obs: ""
+                                  },
+                                  locHangarForm: true
+                              }
+                          )
+                        Text: ="ENTRADA NO " & ThisItem.posicao
+                        Width: =galHangarEntradaMap.Width
+            - cntHangarFormMap:
+                Control: GroupContainer@1.5.0
+                Variant: AutoLayout
+                Properties:
+                  BorderColor: =thmBorda
+                  BorderThickness: =1
+                  DropShadow: =DropShadow.None
+                  Fill: =thmSuperficie
+                  FillPortions: =0
+                  Height: =392
+                  LayoutAlignItems: =LayoutAlignItems.Stretch
+                  LayoutDirection: =LayoutDirection.Vertical
+                  LayoutGap: =6
+                  LayoutMinHeight: =0
+                  LayoutMinWidth: =0
+                  PaddingBottom: =12
+                  PaddingLeft: =12
+                  PaddingRight: =12
+                  PaddingTop: =12
+                  RadiusBottomLeft: =0
+                  RadiusBottomRight: =0
+                  RadiusTopLeft: =0
+                  RadiusTopRight: =0
+                  Visible: =locHangarForm
+                Children:
+                  - lblHangarFormTituloMap:
+                      Control: Label@2.5.1
+                      Properties:
+                        Color: =thmPrimaria
+                        Font: =thmFonte
+                        FontWeight: =FontWeight.Bold
+                        Height: =24
+                        Size: =13
+                        Text: =If(IsBlank(locHangarEdit.id), "ENTRADA NO ", "EDITAR NO ") & locHangarPos.posicao
+                  - lblHangarPrefixoMap:
+                      Control: Label@2.5.1
+                      Properties:
+                        Color: =thmTextoFraco
+                        Font: =thmFonte
+                        FontWeight: =FontWeight.Bold
+                        Height: =18
+                        Size: =10
+                        Text: ="PREFIXO *"
+                  - txtHangarPrefixoMap:
+                      Control: TextInput@0.0.54
+                      Properties:
+                        AccessibleLabel: ="Prefixo da aeronave"
+                        DisplayMode: =If(varPodeEditar, DisplayMode.Edit, DisplayMode.View)
+                        Height: =40
+                        MaxLength: =10
+                        Placeholder: ="ex. PSESP"
+                        Value: =locHangarDados.prefixo
+                  - lblHangarEquipMap:
+                      Control: Label@2.5.1
+                      Properties:
+                        Color: =thmTextoFraco
+                        Font: =thmFonte
+                        FontWeight: =FontWeight.Bold
+                        Height: =18
+                        Size: =10
+                        Text: ="EQUIPAMENTO"
+                  - drpHangarEquipMap:
+                      Control: DropDown@0.0.45
+                      Properties:
+                        DefaultSelectedItems: =[Coalesce(locHangarDados.equip, "—")]
+                        DisplayMode: =If(varPodeEditar, DisplayMode.Edit, DisplayMode.View)
+                        Height: =40
+                        Items: =colEquipSel
+                  - cntHangarEntradaMap:
+                      Control: GroupContainer@1.5.0
+                      Variant: AutoLayout
+                      Properties:
+                        DropShadow: =DropShadow.None
+                        Fill: =thmSuperficie
+                        FillPortions: =0
+                        Height: =62
+                        LayoutAlignItems: =LayoutAlignItems.Stretch
+                        LayoutDirection: =LayoutDirection.Horizontal
+                        LayoutGap: =10
+                        LayoutMinHeight: =0
+                        LayoutMinWidth: =0
+                        RadiusBottomLeft: =0
+                        RadiusBottomRight: =0
+                        RadiusTopLeft: =0
+                        RadiusTopRight: =0
+                      Children:
+                        - cntHangarDataMap:
+                            Control: GroupContainer@1.5.0
+                            Variant: AutoLayout
+                            Properties:
+                              DropShadow: =DropShadow.None
+                              Fill: =thmSuperficie
+                              LayoutAlignItems: =LayoutAlignItems.Stretch
+                              LayoutDirection: =LayoutDirection.Vertical
+                              LayoutGap: =4
+                              LayoutMinHeight: =0
+                              LayoutMinWidth: =0
+                              RadiusBottomLeft: =0
+                              RadiusBottomRight: =0
+                              RadiusTopLeft: =0
+                              RadiusTopRight: =0
+                            Children:
+                              - lblHangarDataMap:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    Color: =thmTextoFraco
+                                    Font: =thmFonte
+                                    FontWeight: =FontWeight.Bold
+                                    Height: =18
+                                    Size: =10
+                                    Text: ="ENTRADA — DATA *"
+                              - dtpHangarDataMap:
+                                  Control: DatePicker@0.0.46
+                                  Properties:
+                                    AccessibleLabel: ="Data de entrada no hangar"
+                                    DisplayMode: =If(varPodeEditar, DisplayMode.Edit, DisplayMode.View)
+                                    Format: =DateTimeFormat.ShortDate
+                                    Height: =40
+                                    SelectedDate: =locHangarDados.data
+                        - cntHangarHoraMap:
+                            Control: GroupContainer@1.5.0
+                            Variant: AutoLayout
+                            Properties:
+                              DropShadow: =DropShadow.None
+                              Fill: =thmSuperficie
+                              LayoutAlignItems: =LayoutAlignItems.Stretch
+                              LayoutDirection: =LayoutDirection.Vertical
+                              LayoutGap: =4
+                              LayoutMinHeight: =0
+                              LayoutMinWidth: =0
+                              RadiusBottomLeft: =0
+                              RadiusBottomRight: =0
+                              RadiusTopLeft: =0
+                              RadiusTopRight: =0
+                            Children:
+                              - lblHangarHoraMap:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    Color: =thmTextoFraco
+                                    Font: =thmFonte
+                                    FontWeight: =FontWeight.Bold
+                                    Height: =18
+                                    Size: =10
+                                    Text: ="HORA (HH MM) *"
+                              - txtHangarHoraMap:
+                                  Control: TextInput@0.0.54
+                                  Properties:
+                                    AccessibleLabel: ="Hora de entrada no hangar"
+                                    DisplayMode: =If(varPodeEditar, DisplayMode.Edit, DisplayMode.View)
+                                    Height: =40
+                                    Placeholder: ="ex. 09:30"
+                                    Value: =locHangarDados.hora
+                  - lblHangarObsMap:
+                      Control: Label@2.5.1
+                      Properties:
+                        Color: =thmTextoFraco
+                        Font: =thmFonte
+                        FontWeight: =FontWeight.Bold
+                        Height: =18
+                        Size: =10
+                        Text: ="OBSERVAÇÃO"
+                  - txtHangarObsMap:
+                      Control: TextInput@0.0.54
+                      Properties:
+                        AccessibleLabel: ="Observação"
+                        DisplayMode: =If(varPodeEditar, DisplayMode.Edit, DisplayMode.View)
+                        Height: =40
+                        MaxLength: =255
+                        Value: =locHangarDados.obs
+                  - cntHangarBotoesMap:
+                      Control: GroupContainer@1.5.0
+                      Variant: AutoLayout
+                      Properties:
+                        DropShadow: =DropShadow.None
+                        Fill: =thmSuperficie
+                        FillPortions: =0
+                        Height: =44
+                        LayoutAlignItems: =LayoutAlignItems.Stretch
+                        LayoutDirection: =LayoutDirection.Horizontal
+                        LayoutGap: =8
+                        LayoutMinHeight: =0
+                        LayoutMinWidth: =0
+                        RadiusBottomLeft: =0
+                        RadiusBottomRight: =0
+                        RadiusTopLeft: =0
+                        RadiusTopRight: =0
+                      Children:
+                        - btnHangarSalvarMap:
+                            Control: Button@0.0.45
+                            Properties:
+                              Appearance: ='ButtonCanvas.Appearance'.Primary
+                              BasePaletteColor: =thmAcao
+                              BorderRadius: =0
+                              DisplayMode: =If(varPodeEditar And !locHangarSalvando, DisplayMode.Edit, DisplayMode.Disabled)
+                              FontColor: =thmTextoBarra
+                              FontSize: =12
+                              FontWeight: =FontWeight.Semibold
+                              Height: =40
+                              Icon: ="Save"
+                              IconStyle: ='ButtonCanvas.IconStyle'.Filled
+                              LayoutMinWidth: =0
+                              OnSelect: |-
+                                =With(
+                                    {
+                                        _hora: If(
+                                            IsMatch(txtHangarHoraMap.Value, "^([01][0-9]|2[0-3]):[0-5][0-9]$"),
+                                            Value(Left(txtHangarHoraMap.Value, 2)) * 60 + Value(Right(txtHangarHoraMap.Value, 2)),
+                                            -1
+                                        ),
+                                        _prefixo: Upper(Trim(txtHangarPrefixoMap.Value)),
+                                        _novo: IsBlank(locHangarEdit.id)
+                                    },
+                                    If(
+                                        locHangarSalvando,
+                                        false,
+                                        IsBlank(_prefixo),
+                                        Notify("Informe o prefixo da aeronave.", NotificationType.Error, 5000),
+                                        IsBlank(dtpHangarDataMap.SelectedDate),
+                                        Notify("Informe a data de entrada.", NotificationType.Error, 5000),
+                                        _hora < 0,
+                                        Notify("Hora de entrada inválida. Use HH:MM, por exemplo 09:30.", NotificationType.Error, 5000),
+                                        !_novo And (
+                                            locHangarEdit.data_f < dtpHangarDataMap.SelectedDate Or
+                                            (locHangarEdit.data_f = dtpHangarDataMap.SelectedDate And locHangarEdit.h_fim <= _hora)
+                                        ),
+                                        Notify("A entrada ficaria depois da saída já registrada.", NotificationType.Error, 6000),
+                                        UpdateContext({ locHangarSalvando: true });
+                                        IfError(
+                                            Patch(
+                                                tb_alocacoesMapa,
+                                                If(_novo, Defaults(tb_alocacoesMapa), LookUp(tb_alocacoesMapa, ID = locHangarEdit.id)),
+                                                {
+                                                    aeroporto: varAero,
+                                                    data_operacao: dtpHangarDataMap.SelectedDate,
+                                                    hora_inicio: _hora,
+                                                    data_fim: If(_novo, mapSaidaEmAberto, locHangarEdit.data_f),
+                                                    hora_fim: If(_novo, mapMinutosDia, locHangarEdit.h_fim),
+                                                    id_posicao: locHangarPos.id,
+                                                    posicao_txt: locHangarPos.posicao,
+                                                    patio_txt: locHangarPos.patio,
+                                                    tipo_registro: "RESERVA",
+                                                    prefixo: _prefixo,
+                                                    equipamento: If(drpHangarEquipMap.Selected.Value = "—", "", drpHangarEquipMap.Selected.Value),
+                                                    observacao: Trim(txtHangarObsMap.Value),
+                                                    pesquisado: 0,
+                                                    internacional: 0,
+                                                    ativo: 1
+                                                }
+                                            );
+                                            UpdateContext({ locHangarForm: false, locHangarSalvando: false });
+                                            Notify(If(_novo, "Entrada registrada no ", "Registro atualizado no ") & locHangarPos.posicao & ".", NotificationType.Success, 4000);
+                                            Select(btnAtualizarMap),
+                                            UpdateContext({ locHangarSalvando: false });
+                                            Notify("Não foi possível gravar. Nada foi alterado.", NotificationType.Error, 7000)
+                                        )
+                                    )
+                                )
+                              Text: ="SALVAR"
+                              Width: =130
+                        - btnHangarCancelarMap:
+                            Control: Button@0.0.45
+                            Properties:
+                              Appearance: ='ButtonCanvas.Appearance'.Secondary
+                              BasePaletteColor: =thmTextoFraco
+                              BorderRadius: =0
+                              FontColor: =thmTextoFraco
+                              FontSize: =12
+                              FontWeight: =FontWeight.Semibold
+                              Height: =40
+                              IconStyle: ='ButtonCanvas.IconStyle'.Filled
+                              LayoutMinWidth: =0
+                              OnSelect: |-
+                                =UpdateContext({ locHangarForm: false, locHangarExcluir: 0 })
+                              Text: ="CANCELAR"
+                              Width: =120
+                        - lblHangarEspacoMap:
+                            Control: Label@2.5.1
+                            Properties:
+                              Fill: =thmTransparente
+                              FillPortions: =1
+                              LayoutMinWidth: =0
+                              Text: =""
+                        - btnHangarExcluirMap:
+                            Control: Button@0.0.45
+                            Properties:
+                              Appearance: ='ButtonCanvas.Appearance'.Secondary
+                              BasePaletteColor: =thmVermelho
+                              BorderRadius: =0
+                              DisplayMode: =If(varPodeEditar, DisplayMode.Edit, DisplayMode.Disabled)
+                              FontColor: =thmVermelho
+                              FontSize: =12
+                              FontWeight: =FontWeight.Semibold
+                              Height: =40
+                              Icon: ="Delete"
+                              IconStyle: ='ButtonCanvas.IconStyle'.Filled
+                              LayoutMinWidth: =0
+                              OnSelect: |-
+                                =If(
+                                    locHangarExcluir = 0,
+                                    UpdateContext({ locHangarExcluir: 1 });
+                                    Notify("Toque de novo em EXCLUIR para confirmar.", NotificationType.Warning, 4000),
+                                    IfError(
+                                        Patch(tb_alocacoesMapa, LookUp(tb_alocacoesMapa, ID = locHangarEdit.id), { ativo: 0 });
+                                        UpdateContext({ locHangarForm: false, locHangarExcluir: 0 });
+                                        Notify("Registro excluído.", NotificationType.Success, 3000);
+                                        Select(btnAtualizarMap),
+                                        Notify("Não foi possível excluir. Nada foi alterado.", NotificationType.Error, 6000)
+                                    )
+                                )
+                              Text: =If(locHangarExcluir = 1, "CONFIRMAR", "EXCLUIR")
+                              Visible: =!IsBlank(locHangarEdit.id)
+                              Width: =130
+            - lblHangarListaMap:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =thmTextoFraco
+                  Font: =thmFonte
+                  FontWeight: =FontWeight.Bold
+                  Height: =18
+                  Size: =10
+                  Text: ="NESTA DATA — TOQUE PARA EDITAR"
+            - galHangarListaMap:
+                Control: Gallery@2.15.0
+                Variant: Vertical
+                Properties:
+                  BorderStyle: =BorderStyle.None
+                  Fill: =thmFundo
+                  FillPortions: =0
+                  Height: =Max(46, CountRows(colHangarDia) * 46)
+                  Items: =SortByColumns(colHangarDia, "posicao_txt", SortOrder.Ascending, "abs_ini", SortOrder.Ascending)
+                  LayoutMinWidth: =0
+                  ShowScrollbar: =false
+                  TemplatePadding: =0
+                  TemplateSize: =46
+                Children:
+                  - cntLinhaHangarMap:
+                      Control: GroupContainer@1.5.0
+                      Variant: AutoLayout
+                      Properties:
+                        DropShadow: =DropShadow.None
+                        Fill: =thmTransparente
+                        Height: =44
+                        LayoutAlignItems: =LayoutAlignItems.Stretch
+                        LayoutDirection: =LayoutDirection.Horizontal
+                        LayoutGap: =2
+                        LayoutMinHeight: =0
+                        LayoutMinWidth: =0
+                        RadiusBottomLeft: =0
+                        RadiusBottomRight: =0
+                        RadiusTopLeft: =0
+                        RadiusTopRight: =0
+                        Width: =galHangarListaMap.Width
+                      Children:
+                        - btnHangarItemMap:
+                            Control: Button@0.0.45
+                            Properties:
+                              Align: =Align.Left
+                              Appearance: ='ButtonCanvas.Appearance'.Secondary
+                              BasePaletteColor: =thmPrimaria
+                              BorderRadius: =0
+                              FillPortions: =1
+                              FontSize: =11
+                              FontWeight: =FontWeight.Semibold
+                              Height: =44
+                              IconStyle: ='ButtonCanvas.IconStyle'.Filled
+                              LayoutMinWidth: =0
+                              OnSelect: |-
+                                =UpdateContext(
+                                    {
+                                        locHangarPos: LookUp(colHangaresAero As _h, _h.id = ThisItem.id_posicao),
+                                        locHangarEdit: ThisItem,
+                                        locHangarExcluir: 0,
+                                        locHangarDados: {
+                                            prefixo: Coalesce(ThisItem.prefixo, ""),
+                                            equip: Coalesce(ThisItem.equip, "—"),
+                                            data: ThisItem.data_ini,
+                                            hora: Text(Int(ThisItem.h_ini / 60), "00") & ":" & Text(Mod(ThisItem.h_ini, 60), "00"),
+                                            obs: Coalesce(ThisItem.obs, "")
+                                        },
+                                        locHangarForm: true
+                                    }
+                                )
+                              PaddingLeft: =10
+                              PaddingRight: =10
+                              Text: |-
+                                =ThisItem.posicao_txt & "   " & Coalesce(ThisItem.prefixo, "—") & If(IsBlank(ThisItem.equip), "", " · " & ThisItem.equip) &
+                                "   entrada " & Text(ThisItem.data_ini, "dd/mm") & " " & Text(Int(ThisItem.h_ini / 60), "00") & ":" & Text(Mod(ThisItem.h_ini, 60), "00") &
+                                If(ThisItem.data_f = mapSaidaEmAberto, "   em aberto", "   saída " & Text(ThisItem.data_f, "dd/mm") & " " & Text(Int(ThisItem.h_fim / 60), "00") & ":" & Text(Mod(ThisItem.h_fim, 60), "00"))
+                        - btnHangarSaidaMap:
+                            Control: Button@0.0.45
+                            Properties:
+                              Appearance: ='ButtonCanvas.Appearance'.Primary
+                              BasePaletteColor: =thmOperacional
+                              BorderRadius: =0
+                              DisplayMode: =If(varPodeEditar, DisplayMode.Edit, DisplayMode.Disabled)
+                              FontColor: =thmTextoBarra
+                              FontSize: =11
+                              FontWeight: =FontWeight.Semibold
+                              Height: =44
+                              Icon: ="ArrowExit"
+                              IconStyle: ='ButtonCanvas.IconStyle'.Filled
+                              LayoutMinWidth: =0
+                              OnSelect: |-
+                                =With(
+                                    { _agora: Hour(Now()) * 60 + Minute(Now()) },
+                                    If(
+                                        ThisItem.data_ini > Today() Or (ThisItem.data_ini = Today() And _agora <= ThisItem.h_ini),
+                                        Notify("A saída não pode ser antes da entrada.", NotificationType.Error, 5000),
+                                        IfError(
+                                            Patch(tb_alocacoesMapa, LookUp(tb_alocacoesMapa, ID = ThisItem.id), { data_fim: Today(), hora_fim: Max(1, _agora) });
+                                            Notify("Saída registrada: " & Coalesce(ThisItem.prefixo, "") & ".", NotificationType.Success, 4000);
+                                            Select(btnAtualizarMap),
+                                            Notify("Não foi possível gravar. Nada foi alterado.", NotificationType.Error, 6000)
+                                        )
+                                    )
+                                )
+                              Text: ="SAÍDA"
+                              Visible: =ThisItem.data_f = mapSaidaEmAberto
+                              Width: =104
