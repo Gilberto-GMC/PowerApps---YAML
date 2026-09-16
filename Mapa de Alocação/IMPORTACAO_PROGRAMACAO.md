@@ -132,15 +132,15 @@ coluna `ocupa` de `colPosicoes` declara para a tela.
 
 ## A configuração do aeroporto vem das listas (desde 15/09/2026)
 
-Até 15/09/2026 as preferências, o `id_posicao` e o `ocupa` eram constantes de Navegantes no topo do
+Até 15/09/2026 as pré-posições, o `id_posicao` e o `ocupa` eram constantes de Navegantes no topo do
 script, espelhando o `App.Formulas`. Divergência não dava erro — e com um segundo aeroporto o script
 alocaria com a tabela do aeroporto errado, calado.
 
-Agora o fluxo lê **`tb_prefPosicao`** e **`tb_posicoes`** filtradas pelo aeroporto do pedido e passa as duas
+Agora o fluxo lê **`tb_prePosicao`** e **`tb_posicoes`** filtradas pelo aeroporto do pedido e passa as duas
 ao script no parâmetro `config`. Aeroporto novo é linha nova nas listas, sem mexer em código.
 
 O script **recusa** (`ok: false`, com a mensagem na tela) quando a configuração falta ou não fecha: sem
-`config`, sem a linha de queda `cia = *`, posição citada na preferência que não existe em `tb_posicoes`,
+`config`, sem a linha de queda `cia = *`, posição citada na pré-posição que não existe em `tb_posicoes`,
 `ocupa` apontando para posição inexistente, `nome_planilha` repetido.
 
 **Continua no código, porque não depende do aeroporto:** a equivalência IATA → catálogo e as rotas

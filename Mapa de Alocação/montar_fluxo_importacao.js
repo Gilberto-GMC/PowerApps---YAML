@@ -45,7 +45,7 @@ if (!wf || !wf.actions || !wf.triggers) { console.error("✗ definição com pro
 
 const TOPO = ["Marcar_processando", "Inicializar_contador", "Marcar_erro"];
 const TRABALHO = ["Obter_anexos", "Obter_conteudo_do_anexo", "Salvar_planilha",
-  "Obter_preferencias", "Obter_posicoes", "Montar_config", "Resultado_script",
+  "Obter_preposicoes", "Obter_posicoes", "Montar_config", "Resultado_script",
   "Guardar_total", "Conferir_resultado", "Obter_importacao_anterior", "Apagar_anteriores", "Gravar_registros", "Fechar"];
 
 // planifica: se já existe o escopo Processar, as ações dele voltam para o mesmo saco
@@ -78,11 +78,11 @@ if (plano.Guardar_total) {
     },
   });
   const insere = (nome, fabrica) => { if (!plano[nome]) { plano[nome] = fabrica(); INSERIDAS.push(nome); } };
-  insere("Obter_preferencias", () => obterLista("tb_prefPosicao"));
+  insere("Obter_preposicoes", () => obterLista("tb_prePosicao"));
   insere("Obter_posicoes", () => obterLista("tb_posicoes"));
   insere("Montar_config", () => ({
     runAfter: {}, type: "Compose",
-    inputs: "@string(setProperty(setProperty(setProperty(json('{}'), 'aeroporto', triggerBody()?['aeroporto']), 'preferencias', outputs('Obter_preferencias')?['body/value']), 'posicoes', outputs('Obter_posicoes')?['body/value']))",
+    inputs: "@string(setProperty(setProperty(setProperty(json('{}'), 'aeroporto', triggerBody()?['aeroporto']), 'preposicoes', outputs('Obter_preposicoes')?['body/value']), 'posicoes', outputs('Obter_posicoes')?['body/value']))",
   }));
   insere("Conferir_resultado", () => {
     const recusa = clone(plano.Guardar_total);
@@ -146,7 +146,7 @@ const LISTAS = {
   "7b5a100a-e601-4ce5-894b-04daee5318c6": "lista_tb_importacaoMapa.json",   // GUID de tb_importacaoMapa, do gatilho
   tb_importacaoMapa: "lista_tb_importacaoMapa.json",
   tb_alocacoesMapa: "lista_tb_alocacoesMapa.json",
-  tb_prefPosicao: "lista_tb_prefPosicao.json",
+  tb_prePosicao: "lista_tb_prePosicao.json",
   tb_posicoes: "lista_tb_posicoes.json",
 };
 const esquema = {};
@@ -259,8 +259,8 @@ if (!cr || cr.type !== "If" || !/Resultado_script'\)\?\['ok'\]/.test(JSON.string
 }
 // o script recebe a configuração do aeroporto
 const mc = JSON.stringify((processar.Montar_config && processar.Montar_config.inputs) || "");
-if (!/outputs\('Obter_preferencias'\)/.test(mc) || !/outputs\('Obter_posicoes'\)/.test(mc)) {
-  erros.push("Montar_config tem de levar Obter_preferencias e Obter_posicoes");
+if (!/outputs\('Obter_preposicoes'\)/.test(mc) || !/outputs\('Obter_posicoes'\)/.test(mc)) {
+  erros.push("Montar_config tem de levar Obter_preposicoes e Obter_posicoes");
 }
 
 // nenhuma ação sumiu nem apareceu na remontagem

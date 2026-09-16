@@ -7,13 +7,13 @@
  * O que faz, nesta ordem:
  *   1. lê a planilha de movimentos (uma linha por POUSO ou DECOLAGEM);
  *   2. pareia cada pouso com a decolagem correspondente;
- *   3. aloca posição e portão pela preferência da companhia, com queda;
+ *   3. aloca posição e portão pela pré-posição da companhia, com queda;
  *   4. devolve os registros prontos e as pendências, sem gravar nada.
  *
  * Ele NÃO grava no SharePoint: quem grava é o fluxo, que recebe este retorno.
  *
  * A configuração do aeroporto NÃO mora mais aqui (15/09/2026). O fluxo lê as listas
- * tb_prefPosicao e tb_posicoes do aeroporto do pedido e passa tudo no parâmetro `config`.
+ * tb_prePosicao e tb_posicoes do aeroporto do pedido e passa tudo no parâmetro `config`.
  * Antes eram constantes de Navegantes espelhando o App.Formulas: com um segundo aeroporto,
  * o script alocaria com a tabela do aeroporto errado sem erro nenhum. Agora, configuração
  * faltando ou incoerente faz o script RECUSAR com mensagem — erro visível em vez de
@@ -22,7 +22,7 @@
  * Formato de `config` (texto JSON):
  *   {
  *     "aeroporto": "NAVEGANTES",
- *     "preferencias": [ { "cia": "GLO", "nome_planilha": "GOL", "posicoes": "T4,T3", "portoes": "4,5", "prioridade": 0 }, ...
+ *     "preposicoes": [ { "cia": "GLO", "nome_planilha": "GOL", "posicoes": "T4,T3", "portoes": "4,5", "prioridade": 0 }, ...
  *                       { "cia": "*", "nome_planilha": "*", "posicoes": "T6,T5,...", "portoes": "1,2,..." } ],
  *     "posicoes":     [ { "posicao": "T1", "id_posicao": 1, "patio": "PRINCIPAL", "ocupa": null }, ... ]
  *   }
@@ -68,16 +68,16 @@ interface Resultado {
   ok: boolean; mensagem: string; mes_ref: string;
   total: number; registros: Registro[]; pendencias: Pendencia[];
 }
-interface ConfigPref {
+interface ConfigPrePosicao {
   cia: string; nome_planilha: string; posicoes: string; portoes?: string; prioridade?: number;
 }
 interface ConfigPosicao {
   posicao: string; id_posicao: number; patio: string; ocupa?: string;
 }
 interface Config {
-  aeroporto: string; preferencias: ConfigPref[]; posicoes: ConfigPosicao[];
+  aeroporto: string; preposicoes: ConfigPrePosicao[]; posicoes: ConfigPosicao[];
 }
-interface Pref {
+interface PrePosicao {
   sigla: string; posicoes: string[]; portoes: string[]; prioridade: boolean;
 }
 
@@ -118,7 +118,7 @@ function recusa(mesRef: string, mensagem: string): Resultado {
 function main(workbook: ExcelScript.Workbook, mesRef: string = "", config: string = ""): Resultado {
   // --- configuração do aeroporto: vem do fluxo, e é conferida ANTES de ler a planilha
   if (!config || !config.trim()) {
-    return recusa(mesRef, "Configuração do aeroporto não recebida. O fluxo precisa passar as listas tb_prefPosicao e tb_posicoes no parâmetro config do script.");
+    return recusa(mesRef, "Configuração do aeroporto não recebida. O fluxo precisa passar as listas tb_prePosicao e tb_posicoes no parâmetro config do script.");
   }
   let cfg: Config;
   try {
@@ -129,7 +129,7 @@ function main(workbook: ExcelScript.Workbook, mesRef: string = "", config: strin
   const AEROPORTO = String(cfg.aeroporto || "").trim();
   if (!AEROPORTO) return recusa(mesRef, "Configuração sem aeroporto.");
   const cfgPosicoes = cfg.posicoes || [];
-  const cfgPref = cfg.preferencias || [];
+  const cfgPrePos = cfg.preposicoes || [];
   if (!cfgPosicoes.length) return recusa(mesRef, "Nenhuma posição ativa em tb_posicoes para " + AEROPORTO + ".");
 
   /** id_posicao e pátio por código de posição. */
@@ -144,13 +144,13 @@ function main(workbook: ExcelScript.Workbook, mesRef: string = "", config: strin
     if (consome.length) OCUPA[codigo] = consome;
   }
 
-  /** Preferência por companhia, pelo nome como aparece na planilha. */
-  const PREF: { [nomePlanilha: string]: Pref } = {};
+  /** Pré-posição por companhia, pelo nome como aparece na planilha. */
+  const PREPOS: { [nomePlanilha: string]: PrePosicao } = {};
   let QUEDA_POSICOES: string[] = [];
   let QUEDA_PORTOES: string[] = [];
   let temQueda = false;
   const problemas: string[] = [];
-  for (const r of cfgPref) {
+  for (const r of cfgPrePos) {
     const cia = String(r.cia || "").trim();
     const nome = String(r.nome_planilha || "").trim();
     const posicoes = lista(r.posicoes);
@@ -165,8 +165,8 @@ function main(workbook: ExcelScript.Workbook, mesRef: string = "", config: strin
       continue;
     }
     if (!nome) { problemas.push("cia " + cia + " sem nome_planilha"); continue; }
-    if (PREF[nome]) { problemas.push("nome_planilha " + nome + " repetido"); continue; }
-    PREF[nome] = { sigla: cia, posicoes: posicoes, portoes: portoes, prioridade: Number(r.prioridade) === 1 };
+    if (PREPOS[nome]) { problemas.push("nome_planilha " + nome + " repetido"); continue; }
+    PREPOS[nome] = { sigla: cia, posicoes: posicoes, portoes: portoes, prioridade: Number(r.prioridade) === 1 };
   }
   for (const codigo of Object.keys(OCUPA)) {
     for (const c of OCUPA[codigo]) {
@@ -174,9 +174,9 @@ function main(workbook: ExcelScript.Workbook, mesRef: string = "", config: strin
     }
   }
   if (!temQueda) problemas.push("falta a linha de queda (cia *)");
-  if (!Object.keys(PREF).length) problemas.push("nenhuma companhia cadastrada");
+  if (!Object.keys(PREPOS).length) problemas.push("nenhuma companhia cadastrada");
   if (problemas.length) {
-    return recusa(mesRef, "Configuração de " + AEROPORTO + " incoerente em tb_prefPosicao/tb_posicoes: " + problemas.join("; ") + ".");
+    return recusa(mesRef, "Configuração de " + AEROPORTO + " incoerente em tb_prePosicao/tb_posicoes: " + problemas.join("; ") + ".");
   }
 
   const planilha = workbook.getWorksheets()[0];
@@ -301,17 +301,17 @@ function main(workbook: ExcelScript.Workbook, mesRef: string = "", config: strin
   // Companhia com prioridade aloca antes das demais, e só depois vale a ordem do relógio. É o que
   // garante a T6C ao cargueiro: alocada primeiro, ela marca T5 e T6 como ocupadas e os voos seguintes
   // se desviam sozinhos. Deslocar depois exigiria refazer alocação já feita, sem ganho nenhum.
-  const prio = (x: { p: Movimento }): number => (PREF[x.p.cia] && PREF[x.p.cia].prioridade ? 0 : 1);
+  const prio = (x: { p: Movimento }): number => (PREPOS[x.p.cia] && PREPOS[x.p.cia].prioridade ? 0 : 1);
   for (const par of paresDoMes.sort((a, b) => prio(a) - prio(b) || a.p.abs - b.p.abs)) {
-    const pref = PREF[par.p.cia];
-    if (!pref) {
-      pendencias.push(pendencia("EMPRESA DESCONHECIDA", par.p, par.d, "empresa sem preferência cadastrada em tb_prefPosicao"));
+    const prePos = PREPOS[par.p.cia];
+    if (!prePos) {
+      pendencias.push(pendencia("EMPRESA DESCONHECIDA", par.p, par.d, "empresa sem pré-posição cadastrada em tb_prePosicao"));
       continue;
     }
     const ini = par.p.abs;
     const fim = par.d.abs;
 
-    // Posição: preferência da companhia, depois a queda geral — para todas, cargueiro incluído.
+    // Posição: pré-posição da companhia, depois a queda geral — para todas, cargueiro incluído.
     //
     // O cargueiro ficava restrito à T6C, e como ela consome T5+T6 bastava uma delas em uso para o voo
     // não entrar. Virava pendência e sumia do mapa, que é pior: o pátio mostrava livre uma posição
@@ -319,10 +319,10 @@ function main(workbook: ExcelScript.Workbook, mesRef: string = "", config: strin
     //
     // ⚠️ Sem checagem física. A T6C existe porque o 767 cargueiro precisa do espaço de duas posições,
     // e as posições declaram aeronave_max — mas env_max está zerado em todas, então não há como o
-    // código saber se cabe. Por isso quem cai fora da preferência sai dizendo isso na observação, que
+    // código saber se cabe. Por isso quem cai fora da pré-posição sai dizendo isso na observação, que
     // o balão do mapa mostra. O cargueiro forçado para uma T ainda por cima fica sem portão numa
     // posição de ponte, que é a condição do contorno tracejado — aparece na grade sem precisar de nada.
-    const candidatas = pref.posicoes.concat(QUEDA_POSICOES);
+    const candidatas = prePos.posicoes.concat(QUEDA_POSICOES);
     let posicao = "";
     for (const c of candidatas) {
       let cabe = true;
@@ -330,16 +330,16 @@ function main(workbook: ExcelScript.Workbook, mesRef: string = "", config: strin
       if (cabe) { posicao = c; break; }
     }
     if (!posicao) {
-      pendencias.push(pendencia("SEM POSICAO", par.p, par.d, "nenhuma posição livre na preferência nem na queda"));
+      pendencias.push(pendencia("SEM POSICAO", par.p, par.d, "nenhuma posição livre na pré-posição nem na queda"));
       continue;
     }
-    const foraPreferencia = pref.posicoes.indexOf(posicao) < 0;
+    const foraPrePosicao = prePos.posicoes.indexOf(posicao) < 0;
     for (const b of bloqueadasPor(posicao, OCUPA)) marcar(ocupPosicao, b, ini, fim);
 
-    // portão: preferência, depois qualquer um livre. Melhor um portão fora do habitual que nenhum.
+    // portão: pré-posição, depois qualquer um livre. Melhor um portão fora do habitual que nenhum.
     let portao = "";
-    if (pref.portoes.length) {
-      for (const g of pref.portoes.concat(QUEDA_PORTOES)) {
+    if (prePos.portoes.length) {
+      for (const g of prePos.portoes.concat(QUEDA_PORTOES)) {
         if (livre(ocupPortao, g, ini, fim)) { portao = g; break; }
       }
       if (portao) marcar(ocupPortao, portao, ini, fim);
@@ -357,7 +357,7 @@ function main(workbook: ExcelScript.Workbook, mesRef: string = "", config: strin
       id_posicao: POSICAO[posicao].id,
       posicao_txt: posicao,
       patio_txt: POSICAO[posicao].patio,
-      cia_sigla: pref.sigla,
+      cia_sigla: prePos.sigla,
       // sem par, o voo do outro lado nao existe: deixa em branco em vez de repetir o que se tem
       voo_chegada: par.soltoP ? "" : par.p.voo,
       voo_saida: par.soltoD ? "" : par.d.voo,
@@ -371,7 +371,7 @@ function main(workbook: ExcelScript.Workbook, mesRef: string = "", config: strin
       // "CONFERIR" e a marca unica do que o operador precisa olhar — a grade desenha esses blocos
       // com contorno tracejado procurando justamente essa palavra
       observacao: "IMPORTACAO " + (mesRef || dataIso(par.p.serial).substring(0, 7)) +
-        (foraPreferencia ? " - POSICAO FORA DA PREFERENCIA, CONFERIR" : "") +
+        (foraPrePosicao ? " - POSICAO FORA DA PRE-POSICAO, CONFERIR" : "") +
         (par.soltoD ? " - SEM DECOLAGEM NA PLANILHA, CONFERIR HORARIO DE SAIDA" : "") +
         (par.soltoP ? " - SEM POUSO NA PLANILHA, CONFERIR HORARIO DE ENTRADA" : ""),
       origem: "IMPORTACAO " + (mesRef || dataIso(par.p.serial).substring(0, 7)),

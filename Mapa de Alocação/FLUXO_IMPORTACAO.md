@@ -16,8 +16,8 @@ grava os registros em `tb_alocacoesMapa`, atualizando o progresso que a barra da
 
 **Duas mudanças no mesmo pacote.**
 
-1. **O script não tem mais Navegantes dentro.** O fluxo lê `tb_prefPosicao` e `tb_posicoes` filtradas pelo
-   aeroporto do pedido (`Obter_preferencias`, `Obter_posicoes`), monta o texto em `Montar_config` e passa ao
+1. **O script não tem mais Navegantes dentro.** O fluxo lê `tb_prePosicao` e `tb_posicoes` filtradas pelo
+   aeroporto do pedido (`Obter_preposicoes`, `Obter_posicoes`), monta o texto em `Montar_config` e passa ao
    script no parâmetro novo **`config`**. Aeroporto novo passa a ser linha nas listas.
 2. **Defeito anterior, corrigido junto.** Quando o script devolvia `ok: false` — planilha errada, costura não
    ligada — o fluxo **seguia**, apagava a importação anterior daquele mês, gravava zero e fechava como
@@ -27,7 +27,7 @@ grava os registros em `tb_alocacoesMapa`, atualizando o progresso que a barra da
 ```
 Processar (escopo)
   Obter_anexos → Obter_conteudo_do_anexo → Salvar_planilha
-  Obter_preferencias → Obter_posicoes → Montar_config          ← novas
+  Obter_preposicoes → Obter_posicoes → Montar_config          ← novas
   [Executar script]                                            ← a costura, com o campo config
   Resultado_script → Guardar_total
   Conferir_resultado  (ok? senão: Gravar_recusa → Encerrar_recusa)   ← nova
@@ -48,19 +48,19 @@ direto no `Guardar_total`**, que pularia a trava sem remover ação nenhuma.
 Script novo com fluxo velho recusa toda importação (sem `config`). Fluxo velho **sem a trava** seguiria e
 apagaria o mês. Por isso a ordem importa, e ninguém deve tocar em GERAR até o passo 6.
 
-1. **Crie a lista** `tb_prefPosicao` pelo gerador de listas, com `lista_tb_prefPosicao.json`. Confira as cinco
+1. **Crie a lista** `tb_prePosicao` pelo gerador de listas, com `lista_tb_prePosicao.json`. Confira as cinco
    linhas de Navegantes, inclusive a de `cia = *`.
 2. **Desligue** o fluxo `Importar programacao` atual (não apague) e **importe o `.zip` novo** como fluxo novo
    (seção "Atalho" abaixo).
 3. **Refaça os ajustes de sempre** (os mesmos da opção A de 14/09): pasta da `Salvar_planilha`; listas que
-   abrirem em branco — agora também `tb_prefPosicao` e `tb_posicoes` nas duas ações `Obter_`; e a ação do
+   abrirem em branco — agora também `tb_prePosicao` e `tb_posicoes` nas duas ações `Obter_`; e a ação do
    Excel **dentro do escopo, entre `Montar_config` e `Resultado_script`**, com o `Resultado_script` apontando
    para ela.
 4. **Atualize o Office Script**: abra `Roteiros › Importar programacao` no Excel Online → **Automatizar** →
    editar, cole o `importar_programacao.ts` novo inteiro e salve.
 5. **Na ação do Excel, escolha o script de novo** para o campo `config` aparecer, e preencha:
    `config` = `@{outputs('Montar_config')}`. O `mesRef` continua como estava.
-6. **Teste a recusa, sem risco:** na `tb_prefPosicao`, ponha `ativo = 0` na linha `cia = *`. Gere uma importação
+6. **Teste a recusa, sem risco:** na `tb_prePosicao`, ponha `ativo = 0` na linha `cia = *`. Gere uma importação
    de um mês **sem registros** (dezembro, por exemplo). O item tem de terminar em **ERRO** com *"falta a linha
    de queda (cia \*)"*, e o histórico do fluxo tem de mostrar `Encerrar_recusa` executado e
    `Obter_importacao_anterior` **não** executado. Volte a linha para `ativo = 1`.
@@ -438,7 +438,7 @@ Nomear pelo `ID` evita duas importações simultâneas sobrescreverem o arquivo 
 O `mesRef` tem que sair no formato `aaaa-MM`. Digitar `09` não casa com nada e o script devolve zero
 registros sem erro nenhum.
 
-O `config` é o texto que `Montar_config` monta com `tb_prefPosicao` e `tb_posicoes` do aeroporto do pedido.
+O `config` é o texto que `Montar_config` monta com `tb_prePosicao` e `tb_posicoes` do aeroporto do pedido.
 Vazio, o script recusa com *"Configuração do aeroporto não recebida"*. O campo só aparece na ação depois que
 o script novo foi salvo — se não aparecer, escolha o script de novo no campo **Script**.
 

@@ -125,7 +125,7 @@ const CASOS = [
   {
     nome: "script sem a configuração do aeroporto",
     planta: (wf) => { acao(wf, "Montar_config").inputs = "{}"; },
-    espera: "Montar_config tem de levar Obter_preferencias e Obter_posicoes",
+    espera: "Montar_config tem de levar Obter_preposicoes e Obter_posicoes",
   },
 ];
 
