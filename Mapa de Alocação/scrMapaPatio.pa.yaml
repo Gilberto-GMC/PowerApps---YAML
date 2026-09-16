@@ -1296,17 +1296,17 @@ Screens:
                                     Text(Mod(_c.h, 24), "0") & "h</td>"
                                 ) &
                                 "</tr></table>" &
-                                // faixa dos minutos: 0 15 30 45 — no dia inteiro seriam 96 marcas ilegiveis, entao so a das horas
+                                // faixa dos minutos: 0 15 30 45 em toda janela — no dia inteiro com fonte menor (cada quarto tem ~16 px)
                                 If(
-                                    varJanelaMin <= 720,
+                                    varJanelaMin > 0,
                                     "<table style='width:100%;table-layout:fixed;border-collapse:separate;border-spacing:0;margin-top:2px;'><tr>" &
                                     Concat(
                                         ForAll(Sequence(Max(varJanelaMin, 60) / 15, 0) As _k, { m: varJanelaIni + _k.Value * 15 }) As _c,
-                                        "<td style='box-sizing:border-box;padding:1px 0 4px 3px;font-size:9px;white-space:nowrap;border-left:1px solid " &
+                                        "<td style='box-sizing:border-box;padding:1px 0 4px " & If(varJanelaMin > 720, "1", "3") & "px;font-size:" & If(varJanelaMin > 720, "7", "9") & "px;white-space:nowrap;overflow:hidden;border-left:1px solid " &
                                         If(Mod(_c.m, 60) = 0, hxTextoFraco, hxGradeLinha) & ";'>" &
                                         If(
                                             varAgoraMin >= _c.m And varAgoraMin < _c.m + 15,
-                                            "<span style='background:" & hxPrimaria & ";color:" & hxTextoBarra & ";font-weight:700;padding:0 4px;'>" & Text(Mod(_c.m, 60), "0") & "</span>",
+                                            "<span style='background:" & hxPrimaria & ";color:" & hxTextoBarra & ";font-weight:700;padding:0 " & If(varJanelaMin > 720, "1", "4") & "px;'>" & Text(Mod(_c.m, 60), "0") & "</span>",
                                             "<span style='color:" & hxTextoFraco & ";font-weight:" & If(Mod(_c.m, 60) = 0, "700", "500") & ";'>" & Text(Mod(_c.m, 60), "0") & "</span>"
                                         ) & "</td>"
                                     ) &
