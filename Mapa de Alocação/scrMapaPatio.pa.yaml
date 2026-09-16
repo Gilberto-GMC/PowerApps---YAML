@@ -41,7 +41,9 @@ Screens:
           Properties:
             Height: =1
             OnSelect: |-
-              =ClearCollect(
+              =Set(varAgoraMin, If(varData = Today(), Hour(Now()) * 60 + Minute(Now()), -1));
+              // O agora e congelado no desenho: regua e linhas leem daqui. O timer redesenha a cada 5 min no dia de hoje.
+              ClearCollect(
                   colGrade,
                   ForAll(
                       Sort(Filter(colPosicoesAero, IsBlank(ocupa)), ordem, SortOrder.Ascending) As _p,
@@ -277,7 +279,7 @@ Screens:
                                   "<div style='font-size:8px;font-weight:700;letter-spacing:.08em;color:" & hxTextoFraco & ";margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;'>" & _restricao &
                                   If(IsBlank(_consome) Or _consome = "", "", " <span style='opacity:.55;'>(" & _consome & ")</span>") & "</div>" &
                                   "</td>" &
-                                  "<td style='height:" & mapAlturaLinha & "px;box-sizing:border-box;padding:0;border-top:" & _topo & ";" & "background-image:repeating-linear-gradient(to right," & hxGradeLinha & " 0," & hxGradeLinha & " 1px,transparent 1px,transparent " & Text(RoundDown(6000 / Max(varJanelaMin, 60), 4), "0.0000", "en-US") & "%),repeating-linear-gradient(to right," & hxGradeFina & " 0," & hxGradeFina & " 1px,transparent 1px,transparent " & Text(RoundDown(1000 / Max(varJanelaMin, 60), 4), "0.0000", "en-US") & "%);" & "'>" &
+                                  "<td style='height:" & mapAlturaLinha & "px;box-sizing:border-box;padding:0;border-top:" & _topo & ";" & "background-image:" & If(varAgoraMin >= varJanelaIni And varAgoraMin < varJanelaIni + varJanelaMin, "linear-gradient(to right,transparent " & Text((varAgoraMin - varJanelaIni) * 100 / Max(varJanelaMin, 60), "0.000", "en-US") & "%," & hxVermelho & " " & Text((varAgoraMin - varJanelaIni) * 100 / Max(varJanelaMin, 60), "0.000", "en-US") & "%," & hxVermelho & " " & Text((varAgoraMin - varJanelaIni) * 100 / Max(varJanelaMin, 60) + 0.15, "0.000", "en-US") & "%,transparent " & Text((varAgoraMin - varJanelaIni) * 100 / Max(varJanelaMin, 60) + 0.15, "0.000", "en-US") & "%),", "") & "repeating-linear-gradient(to right," & hxTextoFraco & " 0," & hxTextoFraco & " 1px,transparent 1px,transparent " & Text(RoundDown(6000 / Max(varJanelaMin, 60), 4), "0.0000", "en-US") & "%),repeating-linear-gradient(to right," & hxGradeLinha & " 0," & hxGradeLinha & " 1px,transparent 1px,transparent " & Text(RoundDown(1500 / Max(varJanelaMin, 60), 4), "0.0000", "en-US") & "%);" & "'>" &
                                   If(
                                       CountRows(_bl) = 0,
                                       "",
@@ -1283,27 +1285,35 @@ Screens:
                               Font: =thmFonte
                               HtmlText: |-
                                 ="<table style='width:99.3%;table-layout:fixed;border-collapse:separate;border-spacing:0;" & htmlFonte & "'><tr>" &
-                                "<td style='width:" & mapLarguraRotulo & "px;box-sizing:border-box;padding:0 8px 6px 12px;vertical-align:bottom;font-size:9px;font-weight:700;letter-spacing:.14em;color:" & hxTextoFraco & ";'>POSIÇÃO</td>" &
-                                "<td style='box-sizing:border-box;padding:0;" & "background-image:repeating-linear-gradient(to right," & hxGradeLinha & " 0," & hxGradeLinha & " 1px,transparent 1px,transparent " & Text(RoundDown(6000 / Max(varJanelaMin, 60), 4), "0.0000", "en-US") & "%),repeating-linear-gradient(to right," & hxGradeFina & " 0," & hxGradeFina & " 1px,transparent 1px,transparent " & Text(RoundDown(1000 / Max(varJanelaMin, 60), 4), "0.0000", "en-US") & "%);" & "'>" &
-                                "<table style='width:100%;table-layout:fixed;border-collapse:separate;border-spacing:0;'><tr>" &
+                                "<td style='width:" & mapLarguraRotulo & "px;box-sizing:border-box;padding:0 8px 4px 12px;vertical-align:bottom;font-size:9px;font-weight:700;letter-spacing:.14em;color:" & hxTextoFraco & ";'>POSIÇÃO</td>" &
+                                "<td style='box-sizing:border-box;padding:0;'>" &
+                                // faixa das horas: um bloco por hora, a hora de agora na cor da marca
+                                "<table style='width:100%;table-layout:fixed;border-collapse:separate;border-spacing:2px 0;'><tr>" &
                                 Concat(
-                                    ForAll(Sequence(Max(varJanelaMin, 60) / 10, 0) As _k, { m: varJanelaIni + _k.Value * 10 }) As _c,
-                                    With(
-                                        { _m: _c.m },
-                                        "<td style='box-sizing:border-box;width:" & Text(RoundDown(1000 / Max(varJanelaMin, 60), 4), "0.0000", "en-US") & "%;padding:2px 0 6px 2px;font-size:9px;font-weight:700;color:" & hxTextoFraco & ";white-space:nowrap;'>" &
+                                    ForAll(Sequence(RoundUp(Max(varJanelaMin, 60) / 60, 0), 0) As _k, { h: RoundDown(varJanelaIni / 60, 0) + _k.Value }) As _c,
+                                    "<td style='box-sizing:border-box;background:" & If(varAgoraMin >= _c.h * 60 And varAgoraMin < _c.h * 60 + 60, hxPrimaria, hxTextoFraco) &
+                                    ";color:" & hxTextoBarra & ";font-size:10px;font-weight:700;text-align:center;padding:2px 0;white-space:nowrap;overflow:hidden;'>" &
+                                    Text(Mod(_c.h, 24), "0") & "h</td>"
+                                ) &
+                                "</tr></table>" &
+                                // faixa dos minutos: 0 15 30 45 — no dia inteiro seriam 96 marcas ilegiveis, entao so a das horas
+                                If(
+                                    varJanelaMin <= 720,
+                                    "<table style='width:100%;table-layout:fixed;border-collapse:separate;border-spacing:0;margin-top:2px;'><tr>" &
+                                    Concat(
+                                        ForAll(Sequence(Max(varJanelaMin, 60) / 15, 0) As _k, { m: varJanelaIni + _k.Value * 15 }) As _c,
+                                        "<td style='box-sizing:border-box;padding:1px 0 4px 3px;font-size:9px;white-space:nowrap;border-left:1px solid " &
+                                        If(Mod(_c.m, 60) = 0, hxTextoFraco, hxGradeLinha) & ";'>" &
                                         If(
-                                            Mod(_m, 60) = 0,
-                                            If(
-                                                varData = Today() And !IsBlank(varCarregadoEm) And Hour(varCarregadoEm) = RoundDown(_m / 60, 0),
-                                                "<span style='background:" & hxPrimaria & ";color:" & hxTextoBarra & ";padding:1px 4px;'>" & Text(RoundDown(_m / 60, 0), "00") & "</span>",
-                                                Text(RoundDown(_m / 60, 0), "00")
-                                            ),
-                                            varJanelaMin <= 720,
-                                            "<span style='font-size:7px;font-weight:600;opacity:.45;'>" & Text(Mod(_m, 60), "00") & "</span>",
-                                            ""
+                                            varAgoraMin >= _c.m And varAgoraMin < _c.m + 15,
+                                            "<span style='background:" & hxPrimaria & ";color:" & hxTextoBarra & ";font-weight:700;padding:0 4px;'>" & Text(Mod(_c.m, 60), "0") & "</span>",
+                                            "<span style='color:" & hxTextoFraco & ";font-weight:" & If(Mod(_c.m, 60) = 0, "700", "500") & ";'>" & Text(Mod(_c.m, 60), "0") & "</span>"
                                         ) & "</td>"
-                                    )
-                                ) & "</tr></table></td></tr></table>"
+                                    ) &
+                                    "</tr></table>",
+                                    ""
+                                ) &
+                                "</td></tr></table>"
                               PaddingBottom: =0
                               PaddingLeft: =0
                               PaddingRight: =mapLarguraBarra
