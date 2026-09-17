@@ -1004,6 +1004,9 @@ Screens:
                                     )
                                 );
                                 // Hangar nao e posicao de patio: sai da grade e dos contadores e vai para o painel HANGARES.
+                                // Instante de referencia do painel: hoje = agora; outra data = fim daquele dia (quem ficou para a noite).
+                                // Quem saiu antes dele nao esta mais no hangar — sai do cartao e do contador (17/09/2026).
+                                Set(varHangarRefMin, DateDiff(mapDataBase, varData, TimeUnit.Days) * mapMinutosDia + If(varData = Today(), Hour(Now()) * 60 + Minute(Now()), mapMinutosDia));
                                 ClearCollect(colHangarDia, Filter(colDia, id_posicao in colHangaresAero.id));
                                 RemoveIf(colDia, id_posicao in colHangaresAero.id);
                                 // FINALIZADO sai AQUI, na colecao ja baixada, e nao no filtro do servidor.
@@ -1184,7 +1187,7 @@ Screens:
                                       Set(varHangarAberto, true)
                                     PaddingLeft: =10
                                     PaddingRight: =10
-                                    Text: ="HANGARES · " & CountRows(colHangarDia)
+                                    Text: ="HANGARES · " & CountRows(Filter(colHangarDia, abs_fim > varHangarRefMin))
                                     Visible: =!IsEmpty(colHangaresAero)
                                     Width: =140
                               - lblEspacoJanMap:
@@ -3605,7 +3608,7 @@ Screens:
                         With(
                             {
                                 _cor: Coalesce(LookUp(colPatiosTodos As _p, _p.patio = _h.patio And _p.aeroporto = _h.aeroporto).cor_hex, hxPrimaria),
-                                _dentro: Sort(Filter(colHangarDia As _a, _a.id_posicao = _h.id), abs_ini, SortOrder.Ascending)
+                                _dentro: Sort(Filter(colHangarDia As _a, _a.id_posicao = _h.id And _a.abs_fim > varHangarRefMin), abs_ini, SortOrder.Ascending)
                             },
                             "<td style='vertical-align:top;width:" & Text(100 / Max(CountRows(colHangaresAero), 1), "0") & "%;background:" & hxSuperficie &
                             ";border:1px solid " & hxBorda & ";border-top:3px solid " & _cor & ";padding:10px 12px;'>" &
@@ -4017,7 +4020,7 @@ Screens:
                   Fill: =thmFundo
                   FillPortions: =0
                   Height: =Max(46, CountRows(colHangarDia) * 46)
-                  Items: =SortByColumns(colHangarDia, "posicao_txt", SortOrder.Ascending, "abs_ini", SortOrder.Ascending)
+                  Items: =Sort(colHangarDia, If(abs_fim > varHangarRefMin, 0, 100000000) + abs_ini, SortOrder.Ascending)
                   LayoutMinWidth: =0
                   ShowScrollbar: =false
                   TemplatePadding: =0
@@ -4073,7 +4076,7 @@ Screens:
                               PaddingLeft: =10
                               PaddingRight: =10
                               Text: |-
-                                =ThisItem.posicao_txt & "   " & Coalesce(ThisItem.prefixo, "—") & If(IsBlank(ThisItem.equip), "", " · " & ThisItem.equip) &
+                                =If(ThisItem.abs_fim > varHangarRefMin, "", "SAIU · ") & ThisItem.posicao_txt & "   " & Coalesce(ThisItem.prefixo, "—") & If(IsBlank(ThisItem.equip), "", " · " & ThisItem.equip) &
                                 "   entrada " & Text(ThisItem.data_ini, "dd/mm") & " " & Text(Int(ThisItem.h_ini / 60), "00") & ":" & Text(Mod(ThisItem.h_ini, 60), "00") &
                                 If(ThisItem.data_f = mapSaidaEmAberto, "   em aberto", "   saída " & Text(ThisItem.data_f, "dd/mm") & " " & Text(Int(ThisItem.h_fim / 60), "00") & ":" & Text(Mod(ThisItem.h_fim, 60), "00"))
                         - btnHangarSaidaMap:
