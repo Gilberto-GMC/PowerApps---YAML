@@ -3592,6 +3592,152 @@ Screens:
                         OnSelect: =Set(varHangarAberto, false)
                         Text: ="FECHAR"
                         Width: =110
+            - cntHangarFiltroMap:
+                Control: GroupContainer@1.5.0
+                Variant: AutoLayout
+                Properties:
+                  DropShadow: =DropShadow.None
+                  Fill: =thmFundo
+                  FillPortions: =0
+                  Height: =64
+                  LayoutAlignItems: =LayoutAlignItems.Stretch
+                  LayoutDirection: =LayoutDirection.Horizontal
+                  LayoutGap: =8
+                  LayoutMinHeight: =0
+                  LayoutMinWidth: =0
+                  RadiusBottomLeft: =0
+                  RadiusBottomRight: =0
+                  RadiusTopLeft: =0
+                  RadiusTopRight: =0
+                Children:
+                  - cntHangarFiltroSelMap:
+                      Control: GroupContainer@1.5.0
+                      Variant: AutoLayout
+                      Properties:
+                        DropShadow: =DropShadow.None
+                        Fill: =thmFundo
+                        FillPortions: =0
+                        LayoutAlignItems: =LayoutAlignItems.Stretch
+                        LayoutDirection: =LayoutDirection.Vertical
+                        LayoutGap: =4
+                        LayoutMinHeight: =0
+                        LayoutMinWidth: =0
+                        RadiusBottomLeft: =0
+                        RadiusBottomRight: =0
+                        RadiusTopLeft: =0
+                        RadiusTopRight: =0
+                        Width: =200
+                      Children:
+                        - lblHangarFiltroMap:
+                            Control: Label@2.5.1
+                            Properties:
+                              Color: =thmTextoFraco
+                              Font: =thmFonte
+                              FontWeight: =FontWeight.Bold
+                              Height: =18
+                              Size: =10
+                              Text: ="HANGAR"
+                        - drpHangarFiltroMap:
+                            Control: DropDown@0.0.45
+                            Properties:
+                              DefaultSelectedItems: =["TODOS OS HANGARES"]
+                              Height: =40
+                              Items: |-
+                                =ForAll(
+                                    Sequence(CountRows(colHangaresAero) + 1) As _i,
+                                    { Value: If(_i.Value = 1, "TODOS OS HANGARES", Index(Sort(colHangaresAero, ordem, SortOrder.Ascending), _i.Value - 1).posicao) }
+                                )
+                  - cntHangarBuscaMap:
+                      Control: GroupContainer@1.5.0
+                      Variant: AutoLayout
+                      Properties:
+                        DropShadow: =DropShadow.None
+                        Fill: =thmFundo
+                        FillPortions: =1
+                        LayoutAlignItems: =LayoutAlignItems.Stretch
+                        LayoutDirection: =LayoutDirection.Vertical
+                        LayoutGap: =4
+                        LayoutMinHeight: =0
+                        LayoutMinWidth: =0
+                        RadiusBottomLeft: =0
+                        RadiusBottomRight: =0
+                        RadiusTopLeft: =0
+                        RadiusTopRight: =0
+                      Children:
+                        - lblHangarBuscaMap:
+                            Control: Label@2.5.1
+                            Properties:
+                              Color: =thmTextoFraco
+                              Font: =thmFonte
+                              FontWeight: =FontWeight.Bold
+                              Height: =18
+                              Size: =10
+                              Text: ="BUSCAR PREFIXO"
+                        - txtHangarBuscaMap:
+                            Control: TextInput@0.0.54
+                            Properties:
+                              AccessibleLabel: ="Buscar aeronave pelo prefixo"
+                              Height: =40
+                              MaxLength: =10
+                              Placeholder: ="ex. PSMOT"
+                  - cntHangarEntradaBtnMap:
+                      Control: GroupContainer@1.5.0
+                      Variant: AutoLayout
+                      Properties:
+                        DropShadow: =DropShadow.None
+                        Fill: =thmFundo
+                        FillPortions: =0
+                        LayoutAlignItems: =LayoutAlignItems.Stretch
+                        LayoutDirection: =LayoutDirection.Vertical
+                        LayoutGap: =4
+                        LayoutMinHeight: =0
+                        LayoutMinWidth: =0
+                        RadiusBottomLeft: =0
+                        RadiusBottomRight: =0
+                        RadiusTopLeft: =0
+                        RadiusTopRight: =0
+                        Width: =190
+                      Children:
+                        - lblHangarEntradaBtnMap:
+                            Control: Label@2.5.1
+                            Properties:
+                              Color: =thmTextoFraco
+                              Font: =thmFonte
+                              FontWeight: =FontWeight.Bold
+                              Height: =18
+                              Size: =10
+                              Text: =If(drpHangarFiltroMap.Selected.Value = "TODOS OS HANGARES", "ESCOLHA O HANGAR", "")
+                        - btnHangarEntradaMap:
+                            Control: Button@0.0.45
+                            Properties:
+                              Appearance: ='ButtonCanvas.Appearance'.Primary
+                              BasePaletteColor: =thmAcao
+                              BorderRadius: =0
+                              DisplayMode: =If(varPodeEditar And drpHangarFiltroMap.Selected.Value <> "TODOS OS HANGARES", DisplayMode.Edit, DisplayMode.Disabled)
+                              FontColor: =thmTextoBarra
+                              FontSize: =12
+                              FontWeight: =FontWeight.Semibold
+                              Height: =40
+                              Icon: ="Add"
+                              IconStyle: ='ButtonCanvas.IconStyle'.Filled
+                              LayoutMinWidth: =0
+                              OnSelect: |-
+                                =UpdateContext(
+                                    {
+                                        locHangarPos: LookUp(colHangaresAero As _h, _h.posicao = drpHangarFiltroMap.Selected.Value),
+                                        locHangarEdit: Blank(),
+                                        locHangarExcluir: 0,
+                                        locHangarDados: {
+                                            prefixo: "",
+                                            equip: "—",
+                                            data: Today(),
+                                            hora: Text(Hour(Now()), "00") & ":" & Text(Minute(Now()), "00"),
+                                            obs: ""
+                                        },
+                                        locHangarForm: true
+                                    }
+                                )
+                              Text: =If(drpHangarFiltroMap.Selected.Value = "TODOS OS HANGARES", "ENTRADA", "ENTRADA NO " & drpHangarFiltroMap.Selected.Value)
             - htmHangarCartoesMap:
                 Control: HtmlViewer@2.1.0
                 Properties:
@@ -3605,13 +3751,13 @@ Screens:
                     "<div style='font-size:11px;color:" & hxTextoFraco & ";margin-top:4px;'>Aeronaves dentro dos hangares nesta data. Sem posição, capacidade ou restrição: o hangar não é controlado por nós.</div>" &
                     "<table style='width:100%;border-collapse:separate;border-spacing:8px 8px;margin:4px -8px 0 -8px;'><tr>" &
                     Concat(
-                        Sort(colHangaresAero, ordem, SortOrder.Ascending) As _h,
+                        Filter(Sort(colHangaresAero, ordem, SortOrder.Ascending) As _hf, drpHangarFiltroMap.Selected.Value = "TODOS OS HANGARES" Or _hf.posicao = drpHangarFiltroMap.Selected.Value) As _h,
                         With(
                             {
                                 _cor: Coalesce(LookUp(colPatiosTodos As _p, _p.patio = _h.patio And _p.aeroporto = _h.aeroporto).cor_hex, hxPrimaria),
-                                _dentro: Sort(Filter(colHangarDia As _a, _a.id_posicao = _h.id And _a.abs_fim > varHangarRefMin), abs_ini, SortOrder.Ascending)
+                                _dentro: Sort(Filter(colHangarDia As _a, _a.id_posicao = _h.id And _a.abs_fim > varHangarRefMin And (IsBlank(Trim(txtHangarBuscaMap.Value)) Or Upper(Trim(txtHangarBuscaMap.Value)) in Upper(Coalesce(_a.prefixo, "")))), abs_ini, SortOrder.Ascending)
                             },
-                            "<td style='vertical-align:top;width:" & Text(100 / Max(CountRows(colHangaresAero), 1), "0") & "%;background:" & hxSuperficie &
+                            "<td style='vertical-align:top;width:" & Text(100 / Max(CountRows(Filter(colHangaresAero As _hc, drpHangarFiltroMap.Selected.Value = "TODOS OS HANGARES" Or _hc.posicao = drpHangarFiltroMap.Selected.Value)), 1), "0") & "%;background:" & hxSuperficie &
                             ";border:1px solid " & hxBorda & ";border-top:3px solid " & _cor & ";padding:10px 12px;'>" &
                             "<div style='font-size:20px;font-weight:800;color:" & hxPrimaria & ";'>" & _h.posicao & "</div>" &
                             "<div style='font-size:11px;color:" & hxTexto & ";margin-bottom:6px;'>" & CountRows(_dentro) & " aeronave(s)</div>" &
@@ -3646,52 +3792,6 @@ Screens:
                     ) &
                     "</tr></table></div>"
                   Size: =11
-            - galHangarEntradaMap:
-                Control: Gallery@2.15.0
-                Variant: Vertical
-                Properties:
-                  BorderStyle: =BorderStyle.None
-                  DisplayMode: =If(varPodeEditar, DisplayMode.Edit, DisplayMode.Disabled)
-                  Fill: =thmFundo
-                  FillPortions: =0
-                  Height: =CountRows(colHangaresAero) * 46
-                  Items: =Sort(colHangaresAero, ordem, SortOrder.Ascending)
-                  LayoutMinWidth: =0
-                  ShowScrollbar: =false
-                  TemplatePadding: =0
-                  TemplateSize: =46
-                Children:
-                  - btnHangarEntradaMap:
-                      Control: Button@0.0.45
-                      Properties:
-                        Appearance: ='ButtonCanvas.Appearance'.Primary
-                        BasePaletteColor: =thmAcao
-                        BorderRadius: =0
-                        FontColor: =thmTextoBarra
-                        FontSize: =12
-                        FontWeight: =FontWeight.Semibold
-                        Height: =40
-                        Icon: ="Add"
-                        IconStyle: ='ButtonCanvas.IconStyle'.Filled
-                        LayoutMinWidth: =0
-                        OnSelect: |-
-                          =UpdateContext(
-                              {
-                                  locHangarPos: ThisItem,
-                                  locHangarEdit: Blank(),
-                                  locHangarExcluir: 0,
-                                  locHangarDados: {
-                                      prefixo: "",
-                                      equip: "—",
-                                      data: Today(),
-                                      hora: Text(Hour(Now()), "00") & ":" & Text(Minute(Now()), "00"),
-                                      obs: ""
-                                  },
-                                  locHangarForm: true
-                              }
-                          )
-                        Text: ="ENTRADA NO " & ThisItem.posicao
-                        Width: =galHangarEntradaMap.Width
             - cntHangarFormMap:
                 Control: GroupContainer@1.5.0
                 Variant: AutoLayout
@@ -4020,8 +4120,8 @@ Screens:
                   BorderStyle: =BorderStyle.None
                   Fill: =thmFundo
                   FillPortions: =0
-                  Height: =Max(46, CountRows(colHangarDia) * 46)
-                  Items: =Sort(colHangarDia, If(abs_fim > varHangarRefMin, 0, 100000000) + abs_ini, SortOrder.Ascending)
+                  Height: =Max(46, CountRows(Filter(colHangarDia, (drpHangarFiltroMap.Selected.Value = "TODOS OS HANGARES" Or posicao_txt = drpHangarFiltroMap.Selected.Value) And (IsBlank(Trim(txtHangarBuscaMap.Value)) Or Upper(Trim(txtHangarBuscaMap.Value)) in Upper(Coalesce(prefixo, ""))))) * 46)
+                  Items: =Sort(Filter(colHangarDia, (drpHangarFiltroMap.Selected.Value = "TODOS OS HANGARES" Or posicao_txt = drpHangarFiltroMap.Selected.Value) And (IsBlank(Trim(txtHangarBuscaMap.Value)) Or Upper(Trim(txtHangarBuscaMap.Value)) in Upper(Coalesce(prefixo, "")))), If(abs_fim > varHangarRefMin, 0, 100000000) + abs_ini, SortOrder.Ascending)
                   LayoutMinWidth: =0
                   ShowScrollbar: =false
                   TemplatePadding: =0
