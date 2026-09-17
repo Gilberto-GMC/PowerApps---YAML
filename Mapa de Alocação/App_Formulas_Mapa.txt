@@ -61,39 +61,23 @@ colHangaresAero = Filter(colPosicoesTodas; aeroporto = varAero And tipo = "HANGA
 // Saída "em aberto": aeronave entra no hangar sem data de saída. Data impossível, mostrada como "em aberto".
 mapSaidaEmAberto = Date(2099; 12; 31);;
 
-// 🚪 Portões da sala de embarque — cor do contorno do bloco
-// 1 verde · 2 amarelo · 3 ciano · 4 rosa · 5 cinza
+// 🚪 Portões — lista tb_portoes, POR AEROPORTO, desde 17/09/2026 (tela POSIÇÕES E CORES › PORTÕES).
+// A cor pinta o contorno do bloco. Antes eram fixos aqui: um segundo aeroporto herdaria os portões de Navegantes.
 colPortoes =
-Table(
-    { portao: "1"; cor_hex: "#00B050"; ordem: 1 };
-    { portao: "2"; cor_hex: "#FFFF00"; ordem: 2 };
-    { portao: "3"; cor_hex: "#00FFFF"; ordem: 3 };
-    { portao: "4"; cor_hex: "#FF0066"; ordem: 4 };
-    { portao: "5"; cor_hex: "#C9C5E6"; ordem: 5 }
+ForAll(
+    Filter(tb_portoes; aeroporto = varAero And ativo = 1) As _g;
+    { portao: _g.portao; cor_hex: _g.cor_hex; ordem: _g.ordem }
 );;
 
-// 🎫 Companhias aéreas — cor do preenchimento do bloco
+// 🎫 Companhias aéreas — lista tb_companhias, VALE PARA TODOS OS AEROPORTOS, desde 17/09/2026
+// (tela POSIÇÕES E CORES › COMPANHIAS). Cor do preenchimento do bloco; a sigla é a gravada em cada lançamento.
 colCias =
-Table(
-    { sigla: "GLO"; nome_cia: "GOL";      cor_hex: "#FFC000"; cor_texto: "#1E293B"; ordem: 1 };
-    { sigla: "AZU"; nome_cia: "AZUL";     cor_hex: "#1F497D"; cor_texto: "#D6DDE0"; ordem: 2 };
-    { sigla: "TAM"; nome_cia: "LATAM";    cor_hex: "#FF99CC"; cor_texto: "#1E293B"; ordem: 3 };
-    { sigla: "ONE"; nome_cia: "ONE";      cor_hex: "#C9C5E6"; cor_texto: "#1E293B"; ordem: 4 };
-    { sigla: "FAB"; nome_cia: "FAB";      cor_hex: "#92D050"; cor_texto: "#1E293B"; ordem: 5 };
-    { sigla: "GER"; nome_cia: "AV. GERAL"; cor_hex: "#E2E8F0"; cor_texto: "#1E293B"; ordem: 6 };
-    { sigla: "ABS"; nome_cia: "ABSA";     cor_hex: "#6B4423"; cor_texto: "#D6DDE0"; ordem: 7 }
+ForAll(
+    Filter(tb_companhias; ativo = 1) As _c;
+    { sigla: _c.sigla; nome_cia: _c.nome_cia; cor_hex: _c.cor_hex; cor_texto: _c.cor_texto; ordem: _c.ordem }
 );;
-// 🅿️ Pré-lançamento: por onde a importação começa a tentar, em ordem de preferência.
-// Não é regra de negócio — é chute educado. O importador só usa a primeira livre, e depois
-// alguém confere posição e portão na tela. Portão vazio significa "esta companhia não usa portão".
-colPrefPosicao =
-Table(
-    { aeroporto: "NAVEGANTES"; cia: "GLO"; posicoes: "T4,T3,T5,T2"; portoes: "4,5" };
-    { aeroporto: "NAVEGANTES"; cia: "TAM"; posicoes: "T6,T5,T4,T3"; portoes: "1,2,3,5" };
-    { aeroporto: "NAVEGANTES"; cia: "AZU"; posicoes: "T5,T3,T2,T6"; portoes: "3,2,4,1" };
-    { aeroporto: "NAVEGANTES"; cia: "ABS"; posicoes: "T6C";         portoes: "" };
-    { aeroporto: "NAVEGANTES"; cia: "*";   posicoes: "T6,T5,T4,T3,T2,T1"; portoes: "1,2,3,4,5" }
-);;
+
+// (colPrefPosicao saiu em 17/09/2026: nenhuma tela lia, e a importação usa a lista tb_prePosicao.)
 
 // 🗂️ Tipos de registro — enumeração local, gravada como Texto na lista
 colTiposReg =

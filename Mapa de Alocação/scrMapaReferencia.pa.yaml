@@ -13,7 +13,11 @@ Screens:
         UpdateContext({ locErroRef: false });
         Select(btnRecarregarRef);
         Set(varFormPos, Blank());
-        Set(varFormPat, { patio: "", nome: "", ordem: "", sigla: "", cor: "", cor_txt: "", ativo: true })
+        Set(varFormPat, { patio: "", nome: "", ordem: "", sigla: "", cor: "", cor_txt: "", ativo: true });
+        Set(varPrtSelRef, Blank());
+        Set(varCiaSelRef, Blank());
+        Set(varFormPrt, { patio: "", ordem: "", cor: "", ativo: true });
+        Set(varFormCia, { patio: "", nome: "", ordem: "", cor: "", cor_txt: "", ativo: true })
     Children:
       - btnRecarregarRef:
           Control: Button@0.0.45
@@ -22,6 +26,8 @@ Screens:
             OnSelect: |-
                 =ClearCollect(colPosRef, Sort(Filter(tb_posicoes, aeroporto = varAero), ordem, SortOrder.Ascending));
                 ClearCollect(colPatRef, Sort(Filter(tb_patios, aeroporto = varAero), ordem, SortOrder.Ascending));
+                ClearCollect(colPrtRef, Sort(Filter(tb_portoes, aeroporto = varAero), ordem, SortOrder.Ascending));
+                ClearCollect(colCiaRef, Sort(tb_companhias, ordem, SortOrder.Ascending));
                 ClearCollect(colPatiosSelRef, Table({ Value: "—" }));
                 Collect(colPatiosSelRef, ForAll(colPatRef As _p, { Value: _p.nome_patio }));
                 ClearCollect(colEquipSelRef, Table({ Value: "—" }));
@@ -388,6 +394,42 @@ Screens:
                                     PaddingRight: =14
                                     Text: ="PÁTIOS"
                                     Width: =130
+                              - btnModoPrtRef:
+                                  Control: Button@0.0.45
+                                  Properties:
+                                    Appearance: ='ButtonCanvas.Appearance'.Secondary
+                                    BasePaletteColor: =If(varModoRef = "PORTOES", thmAcao, thmTextoFraco)
+                                    BorderRadius: =0
+                                    FontColor: =If(varModoRef = "PORTOES", thmAcao, thmTextoFraco)
+                                    FontSize: =12
+                                    FontWeight: =FontWeight.Semibold
+                                    Height: =38
+                                    LayoutMinHeight: =38
+                                    LayoutMinWidth: =0
+                                    OnSelect: |-
+                                        =Set(varModoRef, "PORTOES")
+                                    PaddingLeft: =14
+                                    PaddingRight: =14
+                                    Text: ="PORTÕES"
+                                    Width: =130
+                              - btnModoCiaRef:
+                                  Control: Button@0.0.45
+                                  Properties:
+                                    Appearance: ='ButtonCanvas.Appearance'.Secondary
+                                    BasePaletteColor: =If(varModoRef = "COMPANHIAS", thmAcao, thmTextoFraco)
+                                    BorderRadius: =0
+                                    FontColor: =If(varModoRef = "COMPANHIAS", thmAcao, thmTextoFraco)
+                                    FontSize: =12
+                                    FontWeight: =FontWeight.Semibold
+                                    Height: =38
+                                    LayoutMinHeight: =38
+                                    LayoutMinWidth: =0
+                                    OnSelect: |-
+                                        =Set(varModoRef, "COMPANHIAS")
+                                    PaddingLeft: =14
+                                    PaddingRight: =14
+                                    Text: ="COMPANHIAS"
+                                    Width: =150
                               - btnAjudaRef:
                                   Control: Button@0.0.45
                                   Properties:
@@ -481,8 +523,11 @@ Screens:
                                 "</ol>" &
                                 "<div style='margin-top:4px;'>Se o hangar aparecer como linha na grade, o tipo ficou errado: abra a posição e troque para HANGAR.</div>" &
 
-                                "<div style='margin-top:12px;font-weight:800;color:" & hxPrimaria & ";'>4. AEROPORTO NOVO</div>" &
-                                "<div>Pátios e posições se cadastram aqui, mas colocar um aeroporto novo no app, os portões, as companhias e a pré-posição da importação " &
+                                "<div style='margin-top:12px;font-weight:800;color:" & hxPrimaria & ";'>4. PORTÕES E COMPANHIAS</div>" &
+                                "<div><b>Portões</b> são <b>deste aeroporto</b>: número e cor do contorno do bloco. <b>Companhias</b> valem para <b>todos os aeroportos</b>: " &
+                                "a sigla (ex. GLO) é a gravada nos lançamentos e usada pela importação; as cores pintam o bloco. Não troque sigla ou número já usado — desative e crie outro.</div>" &
+                                "<div style='margin-top:12px;font-weight:800;color:" & hxPrimaria & ";'>5. AEROPORTO NOVO</div>" &
+                                "<div>Pátios, posições, portões e companhias se cadastram aqui, mas colocar um aeroporto novo no app e a pré-posição da importação " &
                                 "<b>não se fazem por esta tela</b> — peça ao responsável pelo app (guia <i>CADASTRO_AEROPORTO</i>).</div>" &
                                 "</div>"
                               Size: =12
@@ -1965,6 +2010,1613 @@ Screens:
                                                             Select(btnRecarregarRef);
                                                             Set(varPatSelRef, Blank());
                                                             Notify("Pátio gravado.", NotificationType.Success, 4000)
+                                                        )
+                                                    )
+                                                Text: ="SALVAR"
+                        - cntPrtRef:
+                            Control: GroupContainer@1.5.0
+                            Variant: AutoLayout
+                            Properties:
+                              DropShadow: =DropShadow.None
+                              Fill: =thmFundo
+                              FillPortions: =1
+                              LayoutAlignItems: =LayoutAlignItems.Stretch
+                              LayoutDirection: =LayoutDirection.Horizontal
+                              LayoutGap: =16
+                              LayoutMinHeight: =0
+                              LayoutMinWidth: =0
+                              RadiusBottomLeft: =0
+                              RadiusBottomRight: =0
+                              RadiusTopLeft: =0
+                              RadiusTopRight: =0
+                              Visible: =varModoRef = "PORTOES"
+                            Children:
+                              - cntListaPrtRef:
+                                  Control: GroupContainer@1.5.0
+                                  Variant: AutoLayout
+                                  Properties:
+                                    BorderColor: =thmBorda
+                                    BorderThickness: =1
+                                    DropShadow: =DropShadow.None
+                                    Fill: =thmSuperficie
+                                    FillPortions: =1
+                                    LayoutAlignItems: =LayoutAlignItems.Stretch
+                                    LayoutDirection: =LayoutDirection.Vertical
+                                    LayoutGap: =0
+                                    LayoutMinHeight: =0
+                                    LayoutMinWidth: =0
+                                    RadiusBottomLeft: =0
+                                    RadiusBottomRight: =0
+                                    RadiusTopLeft: =0
+                                    RadiusTopRight: =0
+                                  Children:
+                                    - galPrtRef:
+                                        Control: Gallery@2.15.0
+                                        Variant: Vertical
+                                        Properties:
+                                          BorderColor: =thmBorda
+                                          BorderStyle: =BorderStyle.None
+                                          Fill: =thmSuperficie
+                                          FillPortions: =1
+                                          Items: =colPrtRef
+                                          LayoutMinHeight: =0
+                                          LayoutMinWidth: =0
+                                          TemplatePadding: =0
+                                          TemplateSize: =46
+                                        Children:
+                                          - cntLinhaPrtRef:
+                                              Control: GroupContainer@1.5.0
+                                              Variant: AutoLayout
+                                              Properties:
+                                                DropShadow: =DropShadow.None
+                                                Fill: =thmTransparente
+                                                Height: =44
+                                                LayoutAlignItems: =LayoutAlignItems.Stretch
+                                                LayoutDirection: =LayoutDirection.Horizontal
+                                                LayoutGap: =4
+                                                LayoutMinHeight: =0
+                                                LayoutMinWidth: =0
+                                                RadiusBottomLeft: =0
+                                                RadiusBottomRight: =0
+                                                RadiusTopLeft: =0
+                                                RadiusTopRight: =0
+                                                Width: =Parent.Width - 18
+                                              Children:
+                                                - btnItemPrtRef:
+                                                    Control: Button@0.0.45
+                                                    Properties:
+                                                      Align: =Align.Left
+                                                      Appearance: =If(varPrtSelRef.ID = ThisItem.ID, 'ButtonCanvas.Appearance'.Primary, 'ButtonCanvas.Appearance'.Secondary)
+                                                      BasePaletteColor: =If(ThisItem.ativo = 1, thmPrimaria, thmTextoFraco)
+                                                      BorderRadius: =0
+                                                      FillPortions: =1
+                                                      FontSize: =12
+                                                      FontWeight: =FontWeight.Semibold
+                                                      Height: =44
+                                                      LayoutMinWidth: =0
+                                                      OnSelect: |-
+                                                          =Set(varPrtSelRef, ThisItem);
+                                                          Set(
+                                                              varFormPrt,
+                                                              {
+                                                                  patio: ThisItem.portao,
+                                                                  ordem: Text(ThisItem.ordem),
+                                                                  cor: Coalesce(ThisItem.cor_hex, ""),
+                                                                  ativo: ThisItem.ativo = 1
+                                                              }
+                                                          )
+                                                      PaddingLeft: =12
+                                                      PaddingRight: =12
+                                                      Text: |-
+                                                          ="PORTÃO " & ThisItem.portao &
+                                                          If(ThisItem.ativo = 1, "", "   ·   INATIVO")
+                                                - btnCorLinhaPrtRef:
+                                                    Control: Button@0.0.45
+                                                    Properties:
+                                                      Appearance: ='ButtonCanvas.Appearance'.Primary
+                                                      BasePaletteColor: |-
+                                                        =If(
+                                                            IsMatch(Coalesce(ThisItem.cor_hex, ""), "^#[0-9A-Fa-f]{6}$"),
+                                                            ColorValue(ThisItem.cor_hex),
+                                                            thmTextoFraco
+                                                        )
+                                                      BorderRadius: =0
+                                                      Height: =22
+                                                      LayoutMinHeight: =22
+                                                      LayoutMinWidth: =0
+                                                      OnSelect: =Select(btnItemPrtRef)
+                                                      PaddingLeft: =0
+                                                      PaddingRight: =0
+                                                      Text: =""
+                                                      Width: =22
+                              - cntFormPrtRef:
+                                  Control: GroupContainer@1.5.0
+                                  Variant: AutoLayout
+                                  Properties:
+                                    BorderColor: =thmBorda
+                                    BorderThickness: =1
+                                    DropShadow: =DropShadow.None
+                                    Fill: =thmSuperficie
+                                    FillPortions: =0
+                                    LayoutAlignItems: =LayoutAlignItems.Stretch
+                                    LayoutDirection: =LayoutDirection.Vertical
+                                    LayoutGap: =0
+                                    LayoutMinHeight: =0
+                                    LayoutMinWidth: =0
+                                    LayoutOverflowY: =LayoutOverflow.Scroll
+                                    PaddingBottom: =16
+                                    PaddingLeft: =18
+                                    PaddingRight: =18
+                                    PaddingTop: =12
+                                    RadiusBottomLeft: =0
+                                    RadiusBottomRight: =0
+                                    RadiusTopLeft: =0
+                                    RadiusTopRight: =0
+                                    Width: =430
+                                  Children:
+                                    - htmAjudaPrtRef:
+                                        Control: HtmlViewer@2.1.0
+                                        Properties:
+                                          AutoHeight: =true
+                                          Color: =thmTexto
+                                          Fill: =thmSuperficie
+                                          Font: =thmFonte
+                                          HtmlText: |-
+                                              ="<div style='" & htmlFonte & "font-size:10px;font-weight:700;letter-spacing:.12em;color:" & hxTextoFraco & ";'>PORTÃO</div>" &
+                                              "<div style='" & htmlFonte & "font-size:11px;color:" & hxTexto & ";line-height:1.5;padding:6px 0 4px 0;'>" &
+                                              "Portão é <b>deste aeroporto</b>. O <b>portão</b> é gravado em cada lançamento — trocar o de um portão já usado deixa esses lançamentos sem cor. A cor pinta o <b>contorno</b> do bloco na grade." &
+                                              "</div>"
+                                          Size: =11
+                                    - lblCodPrtRef:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          Color: =thmTextoFraco
+                                          Font: =thmFonte
+                                          FontWeight: =FontWeight.Bold
+                                          Height: =18
+                                          PaddingTop: =6
+                                          Size: =10
+                                          Text: ="PORTÃO (número ou nome curto) *"
+                                    - txtCodPrtRef:
+                                        Control: TextInput@0.0.54
+                                        Properties:
+                                          Value: =Coalesce(varFormPrt.patio, "")
+                                          DisplayMode: =If(varPodeCadastro, DisplayMode.Edit, DisplayMode.View)
+                                          Height: =40
+                                          MaxLength: =10
+                                    - lblOrdemPrtRef:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          Color: =thmTextoFraco
+                                          Font: =thmFonte
+                                          FontWeight: =FontWeight.Bold
+                                          Height: =18
+                                          PaddingTop: =6
+                                          Size: =10
+                                          Text: ="ORDEM *"
+                                    - txtOrdemPrtRef:
+                                        Control: TextInput@0.0.54
+                                        Properties:
+                                          Value: =Coalesce(varFormPrt.ordem, "")
+                                          DisplayMode: =If(varPodeCadastro, DisplayMode.Edit, DisplayMode.View)
+                                          Height: =40
+                                          MaxLength: =4
+                                    - lblCorPrtRef:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          Color: =thmTextoFraco
+                                          Font: =thmFonte
+                                          FontWeight: =FontWeight.Bold
+                                          Height: =18
+                                          PaddingTop: =6
+                                          Size: =10
+                                          Text: ="COR DO CONTORNO (#RRGGBB)"
+                                    - txtCorPrtRef:
+                                        Control: TextInput@0.0.54
+                                        Properties:
+                                          Value: =Coalesce(varFormPrt.cor, "")
+                                          DisplayMode: =If(varPodeCadastro, DisplayMode.Edit, DisplayMode.View)
+                                          Height: =40
+                                          MaxLength: =7
+                                    - cntPaletaFundoPrtRef:
+                                        Control: GroupContainer@1.5.0
+                                        Variant: AutoLayout
+                                        Properties:
+                                          DropShadow: =DropShadow.None
+                                          Fill: =thmSuperficie
+                                          FillPortions: =0
+                                          Height: =70
+                                          LayoutAlignItems: =LayoutAlignItems.Center
+                                          LayoutDirection: =LayoutDirection.Horizontal
+                                          LayoutGap: =4
+                                          LayoutMinHeight: =0
+                                          LayoutMinWidth: =0
+                                          LayoutWrap: =true
+                                          PaddingBottom: =6
+                                          PaddingTop: =4
+                                          RadiusBottomLeft: =0
+                                          RadiusBottomRight: =0
+                                          RadiusTopLeft: =0
+                                          RadiusTopRight: =0
+                                        Children:
+                                          - btnCFP01Ref:
+                                              Control: Button@0.0.45
+                                              Properties:
+                                                Appearance: ='ButtonCanvas.Appearance'.Primary
+                                                BasePaletteColor: =ColorValue("#0E7C8C")
+                                                BorderRadius: =0
+                                                DisplayMode: =If(varPodeCadastro, DisplayMode.Edit, DisplayMode.Disabled)
+                                                Height: =26
+                                                LayoutMinHeight: =26
+                                                LayoutMinWidth: =0
+                                                OnSelect: |-
+                                                  =Set(varFormPrt, { patio: txtCodPrtRef.Value, ordem: txtOrdemPrtRef.Value, cor: "#0E7C8C", ativo: tglAtivoPrtRef.Checked })
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                                Text: =""
+                                                Width: =26
+                                          - btnCFP02Ref:
+                                              Control: Button@0.0.45
+                                              Properties:
+                                                Appearance: ='ButtonCanvas.Appearance'.Primary
+                                                BasePaletteColor: =ColorValue("#0A5A66")
+                                                BorderRadius: =0
+                                                DisplayMode: =If(varPodeCadastro, DisplayMode.Edit, DisplayMode.Disabled)
+                                                Height: =26
+                                                LayoutMinHeight: =26
+                                                LayoutMinWidth: =0
+                                                OnSelect: |-
+                                                  =Set(varFormPrt, { patio: txtCodPrtRef.Value, ordem: txtOrdemPrtRef.Value, cor: "#0A5A66", ativo: tglAtivoPrtRef.Checked })
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                                Text: =""
+                                                Width: =26
+                                          - btnCFP03Ref:
+                                              Control: Button@0.0.45
+                                              Properties:
+                                                Appearance: ='ButtonCanvas.Appearance'.Primary
+                                                BasePaletteColor: =ColorValue("#0891B2")
+                                                BorderRadius: =0
+                                                DisplayMode: =If(varPodeCadastro, DisplayMode.Edit, DisplayMode.Disabled)
+                                                Height: =26
+                                                LayoutMinHeight: =26
+                                                LayoutMinWidth: =0
+                                                OnSelect: |-
+                                                  =Set(varFormPrt, { patio: txtCodPrtRef.Value, ordem: txtOrdemPrtRef.Value, cor: "#0891B2", ativo: tglAtivoPrtRef.Checked })
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                                Text: =""
+                                                Width: =26
+                                          - btnCFP04Ref:
+                                              Control: Button@0.0.45
+                                              Properties:
+                                                Appearance: ='ButtonCanvas.Appearance'.Primary
+                                                BasePaletteColor: =ColorValue("#0E7490")
+                                                BorderRadius: =0
+                                                DisplayMode: =If(varPodeCadastro, DisplayMode.Edit, DisplayMode.Disabled)
+                                                Height: =26
+                                                LayoutMinHeight: =26
+                                                LayoutMinWidth: =0
+                                                OnSelect: |-
+                                                  =Set(varFormPrt, { patio: txtCodPrtRef.Value, ordem: txtOrdemPrtRef.Value, cor: "#0E7490", ativo: tglAtivoPrtRef.Checked })
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                                Text: =""
+                                                Width: =26
+                                          - btnCFP05Ref:
+                                              Control: Button@0.0.45
+                                              Properties:
+                                                Appearance: ='ButtonCanvas.Appearance'.Primary
+                                                BasePaletteColor: =ColorValue("#16A34A")
+                                                BorderRadius: =0
+                                                DisplayMode: =If(varPodeCadastro, DisplayMode.Edit, DisplayMode.Disabled)
+                                                Height: =26
+                                                LayoutMinHeight: =26
+                                                LayoutMinWidth: =0
+                                                OnSelect: |-
+                                                  =Set(varFormPrt, { patio: txtCodPrtRef.Value, ordem: txtOrdemPrtRef.Value, cor: "#16A34A", ativo: tglAtivoPrtRef.Checked })
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                                Text: =""
+                                                Width: =26
+                                          - btnCFP06Ref:
+                                              Control: Button@0.0.45
+                                              Properties:
+                                                Appearance: ='ButtonCanvas.Appearance'.Primary
+                                                BasePaletteColor: =ColorValue("#65A30D")
+                                                BorderRadius: =0
+                                                DisplayMode: =If(varPodeCadastro, DisplayMode.Edit, DisplayMode.Disabled)
+                                                Height: =26
+                                                LayoutMinHeight: =26
+                                                LayoutMinWidth: =0
+                                                OnSelect: |-
+                                                  =Set(varFormPrt, { patio: txtCodPrtRef.Value, ordem: txtOrdemPrtRef.Value, cor: "#65A30D", ativo: tglAtivoPrtRef.Checked })
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                                Text: =""
+                                                Width: =26
+                                          - btnCFP07Ref:
+                                              Control: Button@0.0.45
+                                              Properties:
+                                                Appearance: ='ButtonCanvas.Appearance'.Primary
+                                                BasePaletteColor: =ColorValue("#EAB308")
+                                                BorderRadius: =0
+                                                DisplayMode: =If(varPodeCadastro, DisplayMode.Edit, DisplayMode.Disabled)
+                                                Height: =26
+                                                LayoutMinHeight: =26
+                                                LayoutMinWidth: =0
+                                                OnSelect: |-
+                                                  =Set(varFormPrt, { patio: txtCodPrtRef.Value, ordem: txtOrdemPrtRef.Value, cor: "#EAB308", ativo: tglAtivoPrtRef.Checked })
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                                Text: =""
+                                                Width: =26
+                                          - btnCFP08Ref:
+                                              Control: Button@0.0.45
+                                              Properties:
+                                                Appearance: ='ButtonCanvas.Appearance'.Primary
+                                                BasePaletteColor: =ColorValue("#DD511A")
+                                                BorderRadius: =0
+                                                DisplayMode: =If(varPodeCadastro, DisplayMode.Edit, DisplayMode.Disabled)
+                                                Height: =26
+                                                LayoutMinHeight: =26
+                                                LayoutMinWidth: =0
+                                                OnSelect: |-
+                                                  =Set(varFormPrt, { patio: txtCodPrtRef.Value, ordem: txtOrdemPrtRef.Value, cor: "#DD511A", ativo: tglAtivoPrtRef.Checked })
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                                Text: =""
+                                                Width: =26
+                                          - btnCFP09Ref:
+                                              Control: Button@0.0.45
+                                              Properties:
+                                                Appearance: ='ButtonCanvas.Appearance'.Primary
+                                                BasePaletteColor: =ColorValue("#C2410C")
+                                                BorderRadius: =0
+                                                DisplayMode: =If(varPodeCadastro, DisplayMode.Edit, DisplayMode.Disabled)
+                                                Height: =26
+                                                LayoutMinHeight: =26
+                                                LayoutMinWidth: =0
+                                                OnSelect: |-
+                                                  =Set(varFormPrt, { patio: txtCodPrtRef.Value, ordem: txtOrdemPrtRef.Value, cor: "#C2410C", ativo: tglAtivoPrtRef.Checked })
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                                Text: =""
+                                                Width: =26
+                                          - btnCFP10Ref:
+                                              Control: Button@0.0.45
+                                              Properties:
+                                                Appearance: ='ButtonCanvas.Appearance'.Primary
+                                                BasePaletteColor: =ColorValue("#B91C1C")
+                                                BorderRadius: =0
+                                                DisplayMode: =If(varPodeCadastro, DisplayMode.Edit, DisplayMode.Disabled)
+                                                Height: =26
+                                                LayoutMinHeight: =26
+                                                LayoutMinWidth: =0
+                                                OnSelect: |-
+                                                  =Set(varFormPrt, { patio: txtCodPrtRef.Value, ordem: txtOrdemPrtRef.Value, cor: "#B91C1C", ativo: tglAtivoPrtRef.Checked })
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                                Text: =""
+                                                Width: =26
+                                          - btnCFP11Ref:
+                                              Control: Button@0.0.45
+                                              Properties:
+                                                Appearance: ='ButtonCanvas.Appearance'.Primary
+                                                BasePaletteColor: =ColorValue("#7E22CE")
+                                                BorderRadius: =0
+                                                DisplayMode: =If(varPodeCadastro, DisplayMode.Edit, DisplayMode.Disabled)
+                                                Height: =26
+                                                LayoutMinHeight: =26
+                                                LayoutMinWidth: =0
+                                                OnSelect: |-
+                                                  =Set(varFormPrt, { patio: txtCodPrtRef.Value, ordem: txtOrdemPrtRef.Value, cor: "#7E22CE", ativo: tglAtivoPrtRef.Checked })
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                                Text: =""
+                                                Width: =26
+                                          - btnCFP12Ref:
+                                              Control: Button@0.0.45
+                                              Properties:
+                                                Appearance: ='ButtonCanvas.Appearance'.Primary
+                                                BasePaletteColor: =ColorValue("#BE185D")
+                                                BorderRadius: =0
+                                                DisplayMode: =If(varPodeCadastro, DisplayMode.Edit, DisplayMode.Disabled)
+                                                Height: =26
+                                                LayoutMinHeight: =26
+                                                LayoutMinWidth: =0
+                                                OnSelect: |-
+                                                  =Set(varFormPrt, { patio: txtCodPrtRef.Value, ordem: txtOrdemPrtRef.Value, cor: "#BE185D", ativo: tglAtivoPrtRef.Checked })
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                                Text: =""
+                                                Width: =26
+                                          - btnCFP13Ref:
+                                              Control: Button@0.0.45
+                                              Properties:
+                                                Appearance: ='ButtonCanvas.Appearance'.Primary
+                                                BasePaletteColor: =ColorValue("#1E293B")
+                                                BorderRadius: =0
+                                                DisplayMode: =If(varPodeCadastro, DisplayMode.Edit, DisplayMode.Disabled)
+                                                Height: =26
+                                                LayoutMinHeight: =26
+                                                LayoutMinWidth: =0
+                                                OnSelect: |-
+                                                  =Set(varFormPrt, { patio: txtCodPrtRef.Value, ordem: txtOrdemPrtRef.Value, cor: "#1E293B", ativo: tglAtivoPrtRef.Checked })
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                                Text: =""
+                                                Width: =26
+                                          - btnCFP14Ref:
+                                              Control: Button@0.0.45
+                                              Properties:
+                                                Appearance: ='ButtonCanvas.Appearance'.Primary
+                                                BasePaletteColor: =ColorValue("#475569")
+                                                BorderRadius: =0
+                                                DisplayMode: =If(varPodeCadastro, DisplayMode.Edit, DisplayMode.Disabled)
+                                                Height: =26
+                                                LayoutMinHeight: =26
+                                                LayoutMinWidth: =0
+                                                OnSelect: |-
+                                                  =Set(varFormPrt, { patio: txtCodPrtRef.Value, ordem: txtOrdemPrtRef.Value, cor: "#475569", ativo: tglAtivoPrtRef.Checked })
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                                Text: =""
+                                                Width: =26
+                                          - btnCFP15Ref:
+                                              Control: Button@0.0.45
+                                              Properties:
+                                                Appearance: ='ButtonCanvas.Appearance'.Primary
+                                                BasePaletteColor: =ColorValue("#64748B")
+                                                BorderRadius: =0
+                                                DisplayMode: =If(varPodeCadastro, DisplayMode.Edit, DisplayMode.Disabled)
+                                                Height: =26
+                                                LayoutMinHeight: =26
+                                                LayoutMinWidth: =0
+                                                OnSelect: |-
+                                                  =Set(varFormPrt, { patio: txtCodPrtRef.Value, ordem: txtOrdemPrtRef.Value, cor: "#64748B", ativo: tglAtivoPrtRef.Checked })
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                                Text: =""
+                                                Width: =26
+                                          - btnCFP16Ref:
+                                              Control: Button@0.0.45
+                                              Properties:
+                                                Appearance: ='ButtonCanvas.Appearance'.Primary
+                                                BasePaletteColor: =ColorValue("#B9D9DE")
+                                                BorderRadius: =0
+                                                DisplayMode: =If(varPodeCadastro, DisplayMode.Edit, DisplayMode.Disabled)
+                                                Height: =26
+                                                LayoutMinHeight: =26
+                                                LayoutMinWidth: =0
+                                                OnSelect: |-
+                                                  =Set(varFormPrt, { patio: txtCodPrtRef.Value, ordem: txtOrdemPrtRef.Value, cor: "#B9D9DE", ativo: tglAtivoPrtRef.Checked })
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                                Text: =""
+                                                Width: =26
+                                          - btnCFP17Ref:
+                                              Control: Button@0.0.45
+                                              Properties:
+                                                Appearance: ='ButtonCanvas.Appearance'.Primary
+                                                BasePaletteColor: =ColorValue("#D6DDE0")
+                                                BorderRadius: =0
+                                                DisplayMode: =If(varPodeCadastro, DisplayMode.Edit, DisplayMode.Disabled)
+                                                Height: =26
+                                                LayoutMinHeight: =26
+                                                LayoutMinWidth: =0
+                                                OnSelect: |-
+                                                  =Set(varFormPrt, { patio: txtCodPrtRef.Value, ordem: txtOrdemPrtRef.Value, cor: "#D6DDE0", ativo: tglAtivoPrtRef.Checked })
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                                Text: =""
+                                                Width: =26
+                                          - btnCFP18Ref:
+                                              Control: Button@0.0.45
+                                              Properties:
+                                                Appearance: ='ButtonCanvas.Appearance'.Primary
+                                                BasePaletteColor: =ColorValue("#FFFFFF")
+                                                BorderRadius: =0
+                                                DisplayMode: =If(varPodeCadastro, DisplayMode.Edit, DisplayMode.Disabled)
+                                                Height: =26
+                                                LayoutMinHeight: =26
+                                                LayoutMinWidth: =0
+                                                OnSelect: |-
+                                                  =Set(varFormPrt, { patio: txtCodPrtRef.Value, ordem: txtOrdemPrtRef.Value, cor: "#FFFFFF", ativo: tglAtivoPrtRef.Checked })
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                                Text: =""
+                                                Width: =26
+                                    - htmAmostraPrtRef:
+                                        Control: HtmlViewer@2.1.0
+                                        Properties:
+                                          AutoHeight: =true
+                                          Color: =thmTexto
+                                          Fill: =thmSuperficie
+                                          Font: =thmFonte
+                                          HtmlText: |-
+                                              ="<div style='" & htmlFonte & "padding:8px 0;'><span style='display:inline-block;padding:6px 14px;font-weight:800;background:" & hxSuperficie &
+                                              ";border:3px solid " & If(IsMatch(txtCorPrtRef.Value, "^#[0-9A-Fa-f]{6}$"), txtCorPrtRef.Value, hxTextoFraco) & ";color:" & hxTexto & ";'>" &
+                                              "GLO 1234 · P" & If(IsBlank(txtCodPrtRef.Value), "?", Upper(txtCodPrtRef.Value)) & "</span>" &
+                                              "<span style='font-size:11px;color:" & hxTextoFraco & ";margin-left:10px;'>amostra do contorno</span></div>"
+                                          Size: =11
+                                    - tglAtivoPrtRef:
+                                        Control: Toggle@1.1.5
+                                        Properties:
+                                          AccessibleLabel: ="Ativo"
+                                          BasePaletteColor: =thmPrimaria
+                                          Checked: =Coalesce(varFormPrt.ativo, true)
+                                          DisplayMode: =If(varPodeCadastro, DisplayMode.Edit, DisplayMode.View)
+                                          FontColor: =thmTexto
+                                          Height: =44
+                                          Label: ="Ativo"
+                                          LabelPosition: ='Toggle.LabelPosition'.Before
+                                    - cntAcoesPrtRef:
+                                        Control: GroupContainer@1.5.0
+                                        Variant: AutoLayout
+                                        Properties:
+                                          DropShadow: =DropShadow.None
+                                          Fill: =thmFundo
+                                          FillPortions: =0
+                                          Height: =60
+                                          LayoutAlignItems: =LayoutAlignItems.Stretch
+                                          LayoutDirection: =LayoutDirection.Horizontal
+                                          LayoutGap: =8
+                                          LayoutMinHeight: =0
+                                          LayoutMinWidth: =0
+                                          PaddingTop: =10
+                                          RadiusBottomLeft: =0
+                                          RadiusBottomRight: =0
+                                          RadiusTopLeft: =0
+                                          RadiusTopRight: =0
+                                        Children:
+                                          - btnNovoPrtRef:
+                                              Control: Button@0.0.45
+                                              Properties:
+                                                Appearance: ='ButtonCanvas.Appearance'.Secondary
+                                                BasePaletteColor: =thmAcao
+                                                BorderRadius: =0
+                                                DisplayMode: =If(varPodeCadastro, DisplayMode.Edit, DisplayMode.Disabled)
+                                                FillPortions: =1
+                                                FontColor: =thmAcao
+                                                FontSize: =13
+                                                FontWeight: =FontWeight.Semibold
+                                                Height: =44
+                                                Icon: ="Add"
+                                                IconStyle: ='ButtonCanvas.IconStyle'.Filled
+                                                LayoutMinWidth: =0
+                                                OnSelect: |-
+                                                    =Set(varPrtSelRef, Blank());
+                                                    Set(varFormPrt, { patio: "", ordem: "", cor: "#0E7C8C", ativo: true })
+                                                Text: ="NOVO"
+                                          - btnSalvarPrtRef:
+                                              Control: Button@0.0.45
+                                              Properties:
+                                                Appearance: ='ButtonCanvas.Appearance'.Primary
+                                                BasePaletteColor: =thmPrimaria
+                                                BorderRadius: =0
+                                                DisplayMode: =If(varPodeCadastro, DisplayMode.Edit, DisplayMode.Disabled)
+                                                FillPortions: =1
+                                                FontColor: =thmTextoBarra
+                                                FontSize: =13
+                                                FontWeight: =FontWeight.Semibold
+                                                Height: =44
+                                                Icon: ="Save"
+                                                IconStyle: ='ButtonCanvas.IconStyle'.Filled
+                                                LayoutMinWidth: =0
+                                                OnSelect: |-
+                                                    =If(
+                                                        IsBlank(Trim(txtCodPrtRef.Value)),
+                                                        Notify("Informe o portão.", NotificationType.Error, 5000),
+                                                        !IsNumeric(txtOrdemPrtRef.Value),
+                                                        Notify("A ordem tem que ser número.", NotificationType.Error, 5000),
+                                                        !IsMatch(txtCorPrtRef.Value, "^#[0-9A-Fa-f]{6}$"),
+                                                        Notify("A cor tem que estar no formato #RRGGBB.", NotificationType.Error, 5000),
+                                                        !IsBlank(
+                                                            LookUp(colPrtRef As _op, Upper(_op.portao) = Upper(Trim(txtCodPrtRef.Value)) And _op.ID <> Coalesce(varPrtSelRef.ID, 0)).ID
+                                                        ),
+                                                        Notify("Já existe esse portão neste aeroporto. É ele que cada lançamento grava.", NotificationType.Error, 7000),
+                                                        UpdateContext(
+                                                            {
+                                                                locErroRef: IsError(
+                                                                    Patch(
+                                                                        tb_portoes,
+                                                                        If(IsBlank(varPrtSelRef.ID), Defaults(tb_portoes), LookUp(tb_portoes, ID = varPrtSelRef.ID)),
+                                                                        {
+                                                                            aeroporto: varAero,
+                                                                            portao: Upper(Trim(txtCodPrtRef.Value)),
+                                                                            ordem: Value(txtOrdemPrtRef.Value),
+                                                                            cor_hex: Upper(txtCorPrtRef.Value),
+                                                                            ativo: If(tglAtivoPrtRef.Checked, 1, 0)
+                                                                        }
+                                                                    )
+                                                                )
+                                                            }
+                                                        );
+                                                        If(
+                                                            locErroRef,
+                                                            Notify("Não foi possível gravar. Nada foi alterado.", NotificationType.Error, 7000),
+                                                            Select(btnRecarregarRef);
+                                                            Set(varPrtSelRef, Blank());
+                                                            Notify("Portão gravado. A grade muda depois de ATUALIZAR.", NotificationType.Success, 4000)
+                                                        )
+                                                    )
+                                                Text: ="SALVAR"
+                        - cntCiaRef:
+                            Control: GroupContainer@1.5.0
+                            Variant: AutoLayout
+                            Properties:
+                              DropShadow: =DropShadow.None
+                              Fill: =thmFundo
+                              FillPortions: =1
+                              LayoutAlignItems: =LayoutAlignItems.Stretch
+                              LayoutDirection: =LayoutDirection.Horizontal
+                              LayoutGap: =16
+                              LayoutMinHeight: =0
+                              LayoutMinWidth: =0
+                              RadiusBottomLeft: =0
+                              RadiusBottomRight: =0
+                              RadiusTopLeft: =0
+                              RadiusTopRight: =0
+                              Visible: =varModoRef = "COMPANHIAS"
+                            Children:
+                              - cntListaCiaRef:
+                                  Control: GroupContainer@1.5.0
+                                  Variant: AutoLayout
+                                  Properties:
+                                    BorderColor: =thmBorda
+                                    BorderThickness: =1
+                                    DropShadow: =DropShadow.None
+                                    Fill: =thmSuperficie
+                                    FillPortions: =1
+                                    LayoutAlignItems: =LayoutAlignItems.Stretch
+                                    LayoutDirection: =LayoutDirection.Vertical
+                                    LayoutGap: =0
+                                    LayoutMinHeight: =0
+                                    LayoutMinWidth: =0
+                                    RadiusBottomLeft: =0
+                                    RadiusBottomRight: =0
+                                    RadiusTopLeft: =0
+                                    RadiusTopRight: =0
+                                  Children:
+                                    - galCiaRef:
+                                        Control: Gallery@2.15.0
+                                        Variant: Vertical
+                                        Properties:
+                                          BorderColor: =thmBorda
+                                          BorderStyle: =BorderStyle.None
+                                          Fill: =thmSuperficie
+                                          FillPortions: =1
+                                          Items: =colCiaRef
+                                          LayoutMinHeight: =0
+                                          LayoutMinWidth: =0
+                                          TemplatePadding: =0
+                                          TemplateSize: =46
+                                        Children:
+                                          - cntLinhaCiaRef:
+                                              Control: GroupContainer@1.5.0
+                                              Variant: AutoLayout
+                                              Properties:
+                                                DropShadow: =DropShadow.None
+                                                Fill: =thmTransparente
+                                                Height: =44
+                                                LayoutAlignItems: =LayoutAlignItems.Stretch
+                                                LayoutDirection: =LayoutDirection.Horizontal
+                                                LayoutGap: =4
+                                                LayoutMinHeight: =0
+                                                LayoutMinWidth: =0
+                                                RadiusBottomLeft: =0
+                                                RadiusBottomRight: =0
+                                                RadiusTopLeft: =0
+                                                RadiusTopRight: =0
+                                                Width: =Parent.Width - 18
+                                              Children:
+                                                - btnItemCiaRef:
+                                                    Control: Button@0.0.45
+                                                    Properties:
+                                                      Align: =Align.Left
+                                                      Appearance: =If(varCiaSelRef.ID = ThisItem.ID, 'ButtonCanvas.Appearance'.Primary, 'ButtonCanvas.Appearance'.Secondary)
+                                                      BasePaletteColor: =If(ThisItem.ativo = 1, thmPrimaria, thmTextoFraco)
+                                                      BorderRadius: =0
+                                                      FillPortions: =1
+                                                      FontSize: =12
+                                                      FontWeight: =FontWeight.Semibold
+                                                      Height: =44
+                                                      LayoutMinWidth: =0
+                                                      OnSelect: |-
+                                                          =Set(varCiaSelRef, ThisItem);
+                                                          Set(
+                                                              varFormCia,
+                                                              {
+                                                                  patio: ThisItem.sigla,
+                                                                  nome: ThisItem.nome_cia,
+                                                                  ordem: Text(ThisItem.ordem),
+                                                                  cor: Coalesce(ThisItem.cor_hex, ""),
+                                                                  cor_txt: Coalesce(ThisItem.cor_texto, ""),
+                                                                  ativo: ThisItem.ativo = 1
+                                                              }
+                                                          )
+                                                      PaddingLeft: =12
+                                                      PaddingRight: =12
+                                                      Text: |-
+                                                          =ThisItem.sigla & "   ·   " & ThisItem.nome_cia &
+                                                          If(ThisItem.ativo = 1, "", "   ·   INATIVO")
+                                                - btnCorLinhaCiaRef:
+                                                    Control: Button@0.0.45
+                                                    Properties:
+                                                      Appearance: ='ButtonCanvas.Appearance'.Primary
+                                                      BasePaletteColor: |-
+                                                        =If(
+                                                            IsMatch(Coalesce(ThisItem.cor_hex, ""), "^#[0-9A-Fa-f]{6}$"),
+                                                            ColorValue(ThisItem.cor_hex),
+                                                            thmTextoFraco
+                                                        )
+                                                      BorderRadius: =0
+                                                      Height: =22
+                                                      LayoutMinHeight: =22
+                                                      LayoutMinWidth: =0
+                                                      OnSelect: =Select(btnItemCiaRef)
+                                                      PaddingLeft: =0
+                                                      PaddingRight: =0
+                                                      Text: =""
+                                                      Width: =22
+                              - cntFormCiaRef:
+                                  Control: GroupContainer@1.5.0
+                                  Variant: AutoLayout
+                                  Properties:
+                                    BorderColor: =thmBorda
+                                    BorderThickness: =1
+                                    DropShadow: =DropShadow.None
+                                    Fill: =thmSuperficie
+                                    FillPortions: =0
+                                    LayoutAlignItems: =LayoutAlignItems.Stretch
+                                    LayoutDirection: =LayoutDirection.Vertical
+                                    LayoutGap: =0
+                                    LayoutMinHeight: =0
+                                    LayoutMinWidth: =0
+                                    LayoutOverflowY: =LayoutOverflow.Scroll
+                                    PaddingBottom: =16
+                                    PaddingLeft: =18
+                                    PaddingRight: =18
+                                    PaddingTop: =12
+                                    RadiusBottomLeft: =0
+                                    RadiusBottomRight: =0
+                                    RadiusTopLeft: =0
+                                    RadiusTopRight: =0
+                                    Width: =430
+                                  Children:
+                                    - htmAjudaCiaRef:
+                                        Control: HtmlViewer@2.1.0
+                                        Properties:
+                                          AutoHeight: =true
+                                          Color: =thmTexto
+                                          Fill: =thmSuperficie
+                                          Font: =thmFonte
+                                          HtmlText: |-
+                                              ="<div style='" & htmlFonte & "font-size:10px;font-weight:700;letter-spacing:.12em;color:" & hxTextoFraco & ";'>COMPANHIA</div>" &
+                                              "<div style='" & htmlFonte & "font-size:11px;color:" & hxTexto & ";line-height:1.5;padding:6px 0 4px 0;'>" &
+                                              "Vale para <b>todos os aeroportos</b>. A <b>sigla</b> é gravada em cada lançamento (e é o que a importação usa) — mudar a sigla de uma companhia já usada deixa esses lançamentos sem cor. As cores pintam o bloco na grade." &
+                                              "</div>"
+                                          Size: =11
+                                    - lblCodCiaRef:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          Color: =thmTextoFraco
+                                          Font: =thmFonte
+                                          FontWeight: =FontWeight.Bold
+                                          Height: =18
+                                          PaddingTop: =6
+                                          Size: =10
+                                          Text: ="SIGLA (a gravada nos lançamentos, ex. GLO) *"
+                                    - txtCodCiaRef:
+                                        Control: TextInput@0.0.54
+                                        Properties:
+                                          Value: =Coalesce(varFormCia.patio, "")
+                                          DisplayMode: =If(varPodeCadastro, DisplayMode.Edit, DisplayMode.View)
+                                          Height: =40
+                                          MaxLength: =10
+                                    - lblNomeCiaRef:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          Color: =thmTextoFraco
+                                          Font: =thmFonte
+                                          FontWeight: =FontWeight.Bold
+                                          Height: =18
+                                          PaddingTop: =6
+                                          Size: =10
+                                          Text: ="NOME (ex. GOL) *"
+                                    - txtNomeCiaRef:
+                                        Control: TextInput@0.0.54
+                                        Properties:
+                                          Value: =Coalesce(varFormCia.nome, "")
+                                          DisplayMode: =If(varPodeCadastro, DisplayMode.Edit, DisplayMode.View)
+                                          Height: =40
+                                          MaxLength: =80
+                                    - lblOrdemCiaRef:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          Color: =thmTextoFraco
+                                          Font: =thmFonte
+                                          FontWeight: =FontWeight.Bold
+                                          Height: =18
+                                          PaddingTop: =6
+                                          Size: =10
+                                          Text: ="ORDEM *"
+                                    - txtOrdemCiaRef:
+                                        Control: TextInput@0.0.54
+                                        Properties:
+                                          Value: =Coalesce(varFormCia.ordem, "")
+                                          DisplayMode: =If(varPodeCadastro, DisplayMode.Edit, DisplayMode.View)
+                                          Height: =40
+                                          MaxLength: =4
+                                    - lblCorCiaRef:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          Color: =thmTextoFraco
+                                          Font: =thmFonte
+                                          FontWeight: =FontWeight.Bold
+                                          Height: =18
+                                          PaddingTop: =6
+                                          Size: =10
+                                          Text: ="COR DE FUNDO (#RRGGBB)"
+                                    - txtCorCiaRef:
+                                        Control: TextInput@0.0.54
+                                        Properties:
+                                          Value: =Coalesce(varFormCia.cor, "")
+                                          DisplayMode: =If(varPodeCadastro, DisplayMode.Edit, DisplayMode.View)
+                                          Height: =40
+                                          MaxLength: =7
+                                    - cntPaletaFundoCiaRef:
+                                        Control: GroupContainer@1.5.0
+                                        Variant: AutoLayout
+                                        Properties:
+                                          DropShadow: =DropShadow.None
+                                          Fill: =thmSuperficie
+                                          FillPortions: =0
+                                          Height: =70
+                                          LayoutAlignItems: =LayoutAlignItems.Center
+                                          LayoutDirection: =LayoutDirection.Horizontal
+                                          LayoutGap: =4
+                                          LayoutMinHeight: =0
+                                          LayoutMinWidth: =0
+                                          LayoutWrap: =true
+                                          PaddingBottom: =6
+                                          PaddingTop: =4
+                                          RadiusBottomLeft: =0
+                                          RadiusBottomRight: =0
+                                          RadiusTopLeft: =0
+                                          RadiusTopRight: =0
+                                        Children:
+                                          - btnCFC01Ref:
+                                              Control: Button@0.0.45
+                                              Properties:
+                                                Appearance: ='ButtonCanvas.Appearance'.Primary
+                                                BasePaletteColor: =ColorValue("#0E7C8C")
+                                                BorderRadius: =0
+                                                DisplayMode: =If(varPodeCadastro, DisplayMode.Edit, DisplayMode.Disabled)
+                                                Height: =26
+                                                LayoutMinHeight: =26
+                                                LayoutMinWidth: =0
+                                                OnSelect: |-
+                                                  =Set(varFormCia, { patio: txtCodCiaRef.Value, nome: txtNomeCiaRef.Value, ordem: txtOrdemCiaRef.Value, cor: "#0E7C8C", cor_txt: txtCorTxtCiaRef.Value, ativo: tglAtivoCiaRef.Checked })
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                                Text: =""
+                                                Width: =26
+                                          - btnCFC02Ref:
+                                              Control: Button@0.0.45
+                                              Properties:
+                                                Appearance: ='ButtonCanvas.Appearance'.Primary
+                                                BasePaletteColor: =ColorValue("#0A5A66")
+                                                BorderRadius: =0
+                                                DisplayMode: =If(varPodeCadastro, DisplayMode.Edit, DisplayMode.Disabled)
+                                                Height: =26
+                                                LayoutMinHeight: =26
+                                                LayoutMinWidth: =0
+                                                OnSelect: |-
+                                                  =Set(varFormCia, { patio: txtCodCiaRef.Value, nome: txtNomeCiaRef.Value, ordem: txtOrdemCiaRef.Value, cor: "#0A5A66", cor_txt: txtCorTxtCiaRef.Value, ativo: tglAtivoCiaRef.Checked })
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                                Text: =""
+                                                Width: =26
+                                          - btnCFC03Ref:
+                                              Control: Button@0.0.45
+                                              Properties:
+                                                Appearance: ='ButtonCanvas.Appearance'.Primary
+                                                BasePaletteColor: =ColorValue("#0891B2")
+                                                BorderRadius: =0
+                                                DisplayMode: =If(varPodeCadastro, DisplayMode.Edit, DisplayMode.Disabled)
+                                                Height: =26
+                                                LayoutMinHeight: =26
+                                                LayoutMinWidth: =0
+                                                OnSelect: |-
+                                                  =Set(varFormCia, { patio: txtCodCiaRef.Value, nome: txtNomeCiaRef.Value, ordem: txtOrdemCiaRef.Value, cor: "#0891B2", cor_txt: txtCorTxtCiaRef.Value, ativo: tglAtivoCiaRef.Checked })
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                                Text: =""
+                                                Width: =26
+                                          - btnCFC04Ref:
+                                              Control: Button@0.0.45
+                                              Properties:
+                                                Appearance: ='ButtonCanvas.Appearance'.Primary
+                                                BasePaletteColor: =ColorValue("#0E7490")
+                                                BorderRadius: =0
+                                                DisplayMode: =If(varPodeCadastro, DisplayMode.Edit, DisplayMode.Disabled)
+                                                Height: =26
+                                                LayoutMinHeight: =26
+                                                LayoutMinWidth: =0
+                                                OnSelect: |-
+                                                  =Set(varFormCia, { patio: txtCodCiaRef.Value, nome: txtNomeCiaRef.Value, ordem: txtOrdemCiaRef.Value, cor: "#0E7490", cor_txt: txtCorTxtCiaRef.Value, ativo: tglAtivoCiaRef.Checked })
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                                Text: =""
+                                                Width: =26
+                                          - btnCFC05Ref:
+                                              Control: Button@0.0.45
+                                              Properties:
+                                                Appearance: ='ButtonCanvas.Appearance'.Primary
+                                                BasePaletteColor: =ColorValue("#16A34A")
+                                                BorderRadius: =0
+                                                DisplayMode: =If(varPodeCadastro, DisplayMode.Edit, DisplayMode.Disabled)
+                                                Height: =26
+                                                LayoutMinHeight: =26
+                                                LayoutMinWidth: =0
+                                                OnSelect: |-
+                                                  =Set(varFormCia, { patio: txtCodCiaRef.Value, nome: txtNomeCiaRef.Value, ordem: txtOrdemCiaRef.Value, cor: "#16A34A", cor_txt: txtCorTxtCiaRef.Value, ativo: tglAtivoCiaRef.Checked })
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                                Text: =""
+                                                Width: =26
+                                          - btnCFC06Ref:
+                                              Control: Button@0.0.45
+                                              Properties:
+                                                Appearance: ='ButtonCanvas.Appearance'.Primary
+                                                BasePaletteColor: =ColorValue("#65A30D")
+                                                BorderRadius: =0
+                                                DisplayMode: =If(varPodeCadastro, DisplayMode.Edit, DisplayMode.Disabled)
+                                                Height: =26
+                                                LayoutMinHeight: =26
+                                                LayoutMinWidth: =0
+                                                OnSelect: |-
+                                                  =Set(varFormCia, { patio: txtCodCiaRef.Value, nome: txtNomeCiaRef.Value, ordem: txtOrdemCiaRef.Value, cor: "#65A30D", cor_txt: txtCorTxtCiaRef.Value, ativo: tglAtivoCiaRef.Checked })
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                                Text: =""
+                                                Width: =26
+                                          - btnCFC07Ref:
+                                              Control: Button@0.0.45
+                                              Properties:
+                                                Appearance: ='ButtonCanvas.Appearance'.Primary
+                                                BasePaletteColor: =ColorValue("#EAB308")
+                                                BorderRadius: =0
+                                                DisplayMode: =If(varPodeCadastro, DisplayMode.Edit, DisplayMode.Disabled)
+                                                Height: =26
+                                                LayoutMinHeight: =26
+                                                LayoutMinWidth: =0
+                                                OnSelect: |-
+                                                  =Set(varFormCia, { patio: txtCodCiaRef.Value, nome: txtNomeCiaRef.Value, ordem: txtOrdemCiaRef.Value, cor: "#EAB308", cor_txt: txtCorTxtCiaRef.Value, ativo: tglAtivoCiaRef.Checked })
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                                Text: =""
+                                                Width: =26
+                                          - btnCFC08Ref:
+                                              Control: Button@0.0.45
+                                              Properties:
+                                                Appearance: ='ButtonCanvas.Appearance'.Primary
+                                                BasePaletteColor: =ColorValue("#DD511A")
+                                                BorderRadius: =0
+                                                DisplayMode: =If(varPodeCadastro, DisplayMode.Edit, DisplayMode.Disabled)
+                                                Height: =26
+                                                LayoutMinHeight: =26
+                                                LayoutMinWidth: =0
+                                                OnSelect: |-
+                                                  =Set(varFormCia, { patio: txtCodCiaRef.Value, nome: txtNomeCiaRef.Value, ordem: txtOrdemCiaRef.Value, cor: "#DD511A", cor_txt: txtCorTxtCiaRef.Value, ativo: tglAtivoCiaRef.Checked })
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                                Text: =""
+                                                Width: =26
+                                          - btnCFC09Ref:
+                                              Control: Button@0.0.45
+                                              Properties:
+                                                Appearance: ='ButtonCanvas.Appearance'.Primary
+                                                BasePaletteColor: =ColorValue("#C2410C")
+                                                BorderRadius: =0
+                                                DisplayMode: =If(varPodeCadastro, DisplayMode.Edit, DisplayMode.Disabled)
+                                                Height: =26
+                                                LayoutMinHeight: =26
+                                                LayoutMinWidth: =0
+                                                OnSelect: |-
+                                                  =Set(varFormCia, { patio: txtCodCiaRef.Value, nome: txtNomeCiaRef.Value, ordem: txtOrdemCiaRef.Value, cor: "#C2410C", cor_txt: txtCorTxtCiaRef.Value, ativo: tglAtivoCiaRef.Checked })
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                                Text: =""
+                                                Width: =26
+                                          - btnCFC10Ref:
+                                              Control: Button@0.0.45
+                                              Properties:
+                                                Appearance: ='ButtonCanvas.Appearance'.Primary
+                                                BasePaletteColor: =ColorValue("#B91C1C")
+                                                BorderRadius: =0
+                                                DisplayMode: =If(varPodeCadastro, DisplayMode.Edit, DisplayMode.Disabled)
+                                                Height: =26
+                                                LayoutMinHeight: =26
+                                                LayoutMinWidth: =0
+                                                OnSelect: |-
+                                                  =Set(varFormCia, { patio: txtCodCiaRef.Value, nome: txtNomeCiaRef.Value, ordem: txtOrdemCiaRef.Value, cor: "#B91C1C", cor_txt: txtCorTxtCiaRef.Value, ativo: tglAtivoCiaRef.Checked })
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                                Text: =""
+                                                Width: =26
+                                          - btnCFC11Ref:
+                                              Control: Button@0.0.45
+                                              Properties:
+                                                Appearance: ='ButtonCanvas.Appearance'.Primary
+                                                BasePaletteColor: =ColorValue("#7E22CE")
+                                                BorderRadius: =0
+                                                DisplayMode: =If(varPodeCadastro, DisplayMode.Edit, DisplayMode.Disabled)
+                                                Height: =26
+                                                LayoutMinHeight: =26
+                                                LayoutMinWidth: =0
+                                                OnSelect: |-
+                                                  =Set(varFormCia, { patio: txtCodCiaRef.Value, nome: txtNomeCiaRef.Value, ordem: txtOrdemCiaRef.Value, cor: "#7E22CE", cor_txt: txtCorTxtCiaRef.Value, ativo: tglAtivoCiaRef.Checked })
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                                Text: =""
+                                                Width: =26
+                                          - btnCFC12Ref:
+                                              Control: Button@0.0.45
+                                              Properties:
+                                                Appearance: ='ButtonCanvas.Appearance'.Primary
+                                                BasePaletteColor: =ColorValue("#BE185D")
+                                                BorderRadius: =0
+                                                DisplayMode: =If(varPodeCadastro, DisplayMode.Edit, DisplayMode.Disabled)
+                                                Height: =26
+                                                LayoutMinHeight: =26
+                                                LayoutMinWidth: =0
+                                                OnSelect: |-
+                                                  =Set(varFormCia, { patio: txtCodCiaRef.Value, nome: txtNomeCiaRef.Value, ordem: txtOrdemCiaRef.Value, cor: "#BE185D", cor_txt: txtCorTxtCiaRef.Value, ativo: tglAtivoCiaRef.Checked })
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                                Text: =""
+                                                Width: =26
+                                          - btnCFC13Ref:
+                                              Control: Button@0.0.45
+                                              Properties:
+                                                Appearance: ='ButtonCanvas.Appearance'.Primary
+                                                BasePaletteColor: =ColorValue("#1E293B")
+                                                BorderRadius: =0
+                                                DisplayMode: =If(varPodeCadastro, DisplayMode.Edit, DisplayMode.Disabled)
+                                                Height: =26
+                                                LayoutMinHeight: =26
+                                                LayoutMinWidth: =0
+                                                OnSelect: |-
+                                                  =Set(varFormCia, { patio: txtCodCiaRef.Value, nome: txtNomeCiaRef.Value, ordem: txtOrdemCiaRef.Value, cor: "#1E293B", cor_txt: txtCorTxtCiaRef.Value, ativo: tglAtivoCiaRef.Checked })
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                                Text: =""
+                                                Width: =26
+                                          - btnCFC14Ref:
+                                              Control: Button@0.0.45
+                                              Properties:
+                                                Appearance: ='ButtonCanvas.Appearance'.Primary
+                                                BasePaletteColor: =ColorValue("#475569")
+                                                BorderRadius: =0
+                                                DisplayMode: =If(varPodeCadastro, DisplayMode.Edit, DisplayMode.Disabled)
+                                                Height: =26
+                                                LayoutMinHeight: =26
+                                                LayoutMinWidth: =0
+                                                OnSelect: |-
+                                                  =Set(varFormCia, { patio: txtCodCiaRef.Value, nome: txtNomeCiaRef.Value, ordem: txtOrdemCiaRef.Value, cor: "#475569", cor_txt: txtCorTxtCiaRef.Value, ativo: tglAtivoCiaRef.Checked })
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                                Text: =""
+                                                Width: =26
+                                          - btnCFC15Ref:
+                                              Control: Button@0.0.45
+                                              Properties:
+                                                Appearance: ='ButtonCanvas.Appearance'.Primary
+                                                BasePaletteColor: =ColorValue("#64748B")
+                                                BorderRadius: =0
+                                                DisplayMode: =If(varPodeCadastro, DisplayMode.Edit, DisplayMode.Disabled)
+                                                Height: =26
+                                                LayoutMinHeight: =26
+                                                LayoutMinWidth: =0
+                                                OnSelect: |-
+                                                  =Set(varFormCia, { patio: txtCodCiaRef.Value, nome: txtNomeCiaRef.Value, ordem: txtOrdemCiaRef.Value, cor: "#64748B", cor_txt: txtCorTxtCiaRef.Value, ativo: tglAtivoCiaRef.Checked })
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                                Text: =""
+                                                Width: =26
+                                          - btnCFC16Ref:
+                                              Control: Button@0.0.45
+                                              Properties:
+                                                Appearance: ='ButtonCanvas.Appearance'.Primary
+                                                BasePaletteColor: =ColorValue("#B9D9DE")
+                                                BorderRadius: =0
+                                                DisplayMode: =If(varPodeCadastro, DisplayMode.Edit, DisplayMode.Disabled)
+                                                Height: =26
+                                                LayoutMinHeight: =26
+                                                LayoutMinWidth: =0
+                                                OnSelect: |-
+                                                  =Set(varFormCia, { patio: txtCodCiaRef.Value, nome: txtNomeCiaRef.Value, ordem: txtOrdemCiaRef.Value, cor: "#B9D9DE", cor_txt: txtCorTxtCiaRef.Value, ativo: tglAtivoCiaRef.Checked })
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                                Text: =""
+                                                Width: =26
+                                          - btnCFC17Ref:
+                                              Control: Button@0.0.45
+                                              Properties:
+                                                Appearance: ='ButtonCanvas.Appearance'.Primary
+                                                BasePaletteColor: =ColorValue("#D6DDE0")
+                                                BorderRadius: =0
+                                                DisplayMode: =If(varPodeCadastro, DisplayMode.Edit, DisplayMode.Disabled)
+                                                Height: =26
+                                                LayoutMinHeight: =26
+                                                LayoutMinWidth: =0
+                                                OnSelect: |-
+                                                  =Set(varFormCia, { patio: txtCodCiaRef.Value, nome: txtNomeCiaRef.Value, ordem: txtOrdemCiaRef.Value, cor: "#D6DDE0", cor_txt: txtCorTxtCiaRef.Value, ativo: tglAtivoCiaRef.Checked })
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                                Text: =""
+                                                Width: =26
+                                          - btnCFC18Ref:
+                                              Control: Button@0.0.45
+                                              Properties:
+                                                Appearance: ='ButtonCanvas.Appearance'.Primary
+                                                BasePaletteColor: =ColorValue("#FFFFFF")
+                                                BorderRadius: =0
+                                                DisplayMode: =If(varPodeCadastro, DisplayMode.Edit, DisplayMode.Disabled)
+                                                Height: =26
+                                                LayoutMinHeight: =26
+                                                LayoutMinWidth: =0
+                                                OnSelect: |-
+                                                  =Set(varFormCia, { patio: txtCodCiaRef.Value, nome: txtNomeCiaRef.Value, ordem: txtOrdemCiaRef.Value, cor: "#FFFFFF", cor_txt: txtCorTxtCiaRef.Value, ativo: tglAtivoCiaRef.Checked })
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                                Text: =""
+                                                Width: =26
+                                    - lblCorTxtCiaRef:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          Color: =thmTextoFraco
+                                          Font: =thmFonte
+                                          FontWeight: =FontWeight.Bold
+                                          Height: =18
+                                          PaddingTop: =6
+                                          Size: =10
+                                          Text: ="COR DO TEXTO (#RRGGBB)"
+                                    - txtCorTxtCiaRef:
+                                        Control: TextInput@0.0.54
+                                        Properties:
+                                          Value: =Coalesce(varFormCia.cor_txt, "")
+                                          DisplayMode: =If(varPodeCadastro, DisplayMode.Edit, DisplayMode.View)
+                                          Height: =40
+                                          MaxLength: =7
+                                    - cntPaletaTxtCiaRef:
+                                        Control: GroupContainer@1.5.0
+                                        Variant: AutoLayout
+                                        Properties:
+                                          DropShadow: =DropShadow.None
+                                          Fill: =thmSuperficie
+                                          FillPortions: =0
+                                          Height: =70
+                                          LayoutAlignItems: =LayoutAlignItems.Center
+                                          LayoutDirection: =LayoutDirection.Horizontal
+                                          LayoutGap: =4
+                                          LayoutMinHeight: =0
+                                          LayoutMinWidth: =0
+                                          LayoutWrap: =true
+                                          PaddingBottom: =6
+                                          PaddingTop: =4
+                                          RadiusBottomLeft: =0
+                                          RadiusBottomRight: =0
+                                          RadiusTopLeft: =0
+                                          RadiusTopRight: =0
+                                        Children:
+                                          - btnCTC01Ref:
+                                              Control: Button@0.0.45
+                                              Properties:
+                                                Appearance: ='ButtonCanvas.Appearance'.Primary
+                                                BasePaletteColor: =ColorValue("#0E7C8C")
+                                                BorderRadius: =0
+                                                DisplayMode: =If(varPodeCadastro, DisplayMode.Edit, DisplayMode.Disabled)
+                                                Height: =26
+                                                LayoutMinHeight: =26
+                                                LayoutMinWidth: =0
+                                                OnSelect: |-
+                                                  =Set(varFormCia, { patio: txtCodCiaRef.Value, nome: txtNomeCiaRef.Value, ordem: txtOrdemCiaRef.Value, cor: txtCorCiaRef.Value, cor_txt: "#0E7C8C", ativo: tglAtivoCiaRef.Checked })
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                                Text: =""
+                                                Width: =26
+                                          - btnCTC02Ref:
+                                              Control: Button@0.0.45
+                                              Properties:
+                                                Appearance: ='ButtonCanvas.Appearance'.Primary
+                                                BasePaletteColor: =ColorValue("#0A5A66")
+                                                BorderRadius: =0
+                                                DisplayMode: =If(varPodeCadastro, DisplayMode.Edit, DisplayMode.Disabled)
+                                                Height: =26
+                                                LayoutMinHeight: =26
+                                                LayoutMinWidth: =0
+                                                OnSelect: |-
+                                                  =Set(varFormCia, { patio: txtCodCiaRef.Value, nome: txtNomeCiaRef.Value, ordem: txtOrdemCiaRef.Value, cor: txtCorCiaRef.Value, cor_txt: "#0A5A66", ativo: tglAtivoCiaRef.Checked })
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                                Text: =""
+                                                Width: =26
+                                          - btnCTC03Ref:
+                                              Control: Button@0.0.45
+                                              Properties:
+                                                Appearance: ='ButtonCanvas.Appearance'.Primary
+                                                BasePaletteColor: =ColorValue("#0891B2")
+                                                BorderRadius: =0
+                                                DisplayMode: =If(varPodeCadastro, DisplayMode.Edit, DisplayMode.Disabled)
+                                                Height: =26
+                                                LayoutMinHeight: =26
+                                                LayoutMinWidth: =0
+                                                OnSelect: |-
+                                                  =Set(varFormCia, { patio: txtCodCiaRef.Value, nome: txtNomeCiaRef.Value, ordem: txtOrdemCiaRef.Value, cor: txtCorCiaRef.Value, cor_txt: "#0891B2", ativo: tglAtivoCiaRef.Checked })
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                                Text: =""
+                                                Width: =26
+                                          - btnCTC04Ref:
+                                              Control: Button@0.0.45
+                                              Properties:
+                                                Appearance: ='ButtonCanvas.Appearance'.Primary
+                                                BasePaletteColor: =ColorValue("#0E7490")
+                                                BorderRadius: =0
+                                                DisplayMode: =If(varPodeCadastro, DisplayMode.Edit, DisplayMode.Disabled)
+                                                Height: =26
+                                                LayoutMinHeight: =26
+                                                LayoutMinWidth: =0
+                                                OnSelect: |-
+                                                  =Set(varFormCia, { patio: txtCodCiaRef.Value, nome: txtNomeCiaRef.Value, ordem: txtOrdemCiaRef.Value, cor: txtCorCiaRef.Value, cor_txt: "#0E7490", ativo: tglAtivoCiaRef.Checked })
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                                Text: =""
+                                                Width: =26
+                                          - btnCTC05Ref:
+                                              Control: Button@0.0.45
+                                              Properties:
+                                                Appearance: ='ButtonCanvas.Appearance'.Primary
+                                                BasePaletteColor: =ColorValue("#16A34A")
+                                                BorderRadius: =0
+                                                DisplayMode: =If(varPodeCadastro, DisplayMode.Edit, DisplayMode.Disabled)
+                                                Height: =26
+                                                LayoutMinHeight: =26
+                                                LayoutMinWidth: =0
+                                                OnSelect: |-
+                                                  =Set(varFormCia, { patio: txtCodCiaRef.Value, nome: txtNomeCiaRef.Value, ordem: txtOrdemCiaRef.Value, cor: txtCorCiaRef.Value, cor_txt: "#16A34A", ativo: tglAtivoCiaRef.Checked })
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                                Text: =""
+                                                Width: =26
+                                          - btnCTC06Ref:
+                                              Control: Button@0.0.45
+                                              Properties:
+                                                Appearance: ='ButtonCanvas.Appearance'.Primary
+                                                BasePaletteColor: =ColorValue("#65A30D")
+                                                BorderRadius: =0
+                                                DisplayMode: =If(varPodeCadastro, DisplayMode.Edit, DisplayMode.Disabled)
+                                                Height: =26
+                                                LayoutMinHeight: =26
+                                                LayoutMinWidth: =0
+                                                OnSelect: |-
+                                                  =Set(varFormCia, { patio: txtCodCiaRef.Value, nome: txtNomeCiaRef.Value, ordem: txtOrdemCiaRef.Value, cor: txtCorCiaRef.Value, cor_txt: "#65A30D", ativo: tglAtivoCiaRef.Checked })
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                                Text: =""
+                                                Width: =26
+                                          - btnCTC07Ref:
+                                              Control: Button@0.0.45
+                                              Properties:
+                                                Appearance: ='ButtonCanvas.Appearance'.Primary
+                                                BasePaletteColor: =ColorValue("#EAB308")
+                                                BorderRadius: =0
+                                                DisplayMode: =If(varPodeCadastro, DisplayMode.Edit, DisplayMode.Disabled)
+                                                Height: =26
+                                                LayoutMinHeight: =26
+                                                LayoutMinWidth: =0
+                                                OnSelect: |-
+                                                  =Set(varFormCia, { patio: txtCodCiaRef.Value, nome: txtNomeCiaRef.Value, ordem: txtOrdemCiaRef.Value, cor: txtCorCiaRef.Value, cor_txt: "#EAB308", ativo: tglAtivoCiaRef.Checked })
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                                Text: =""
+                                                Width: =26
+                                          - btnCTC08Ref:
+                                              Control: Button@0.0.45
+                                              Properties:
+                                                Appearance: ='ButtonCanvas.Appearance'.Primary
+                                                BasePaletteColor: =ColorValue("#DD511A")
+                                                BorderRadius: =0
+                                                DisplayMode: =If(varPodeCadastro, DisplayMode.Edit, DisplayMode.Disabled)
+                                                Height: =26
+                                                LayoutMinHeight: =26
+                                                LayoutMinWidth: =0
+                                                OnSelect: |-
+                                                  =Set(varFormCia, { patio: txtCodCiaRef.Value, nome: txtNomeCiaRef.Value, ordem: txtOrdemCiaRef.Value, cor: txtCorCiaRef.Value, cor_txt: "#DD511A", ativo: tglAtivoCiaRef.Checked })
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                                Text: =""
+                                                Width: =26
+                                          - btnCTC09Ref:
+                                              Control: Button@0.0.45
+                                              Properties:
+                                                Appearance: ='ButtonCanvas.Appearance'.Primary
+                                                BasePaletteColor: =ColorValue("#C2410C")
+                                                BorderRadius: =0
+                                                DisplayMode: =If(varPodeCadastro, DisplayMode.Edit, DisplayMode.Disabled)
+                                                Height: =26
+                                                LayoutMinHeight: =26
+                                                LayoutMinWidth: =0
+                                                OnSelect: |-
+                                                  =Set(varFormCia, { patio: txtCodCiaRef.Value, nome: txtNomeCiaRef.Value, ordem: txtOrdemCiaRef.Value, cor: txtCorCiaRef.Value, cor_txt: "#C2410C", ativo: tglAtivoCiaRef.Checked })
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                                Text: =""
+                                                Width: =26
+                                          - btnCTC10Ref:
+                                              Control: Button@0.0.45
+                                              Properties:
+                                                Appearance: ='ButtonCanvas.Appearance'.Primary
+                                                BasePaletteColor: =ColorValue("#B91C1C")
+                                                BorderRadius: =0
+                                                DisplayMode: =If(varPodeCadastro, DisplayMode.Edit, DisplayMode.Disabled)
+                                                Height: =26
+                                                LayoutMinHeight: =26
+                                                LayoutMinWidth: =0
+                                                OnSelect: |-
+                                                  =Set(varFormCia, { patio: txtCodCiaRef.Value, nome: txtNomeCiaRef.Value, ordem: txtOrdemCiaRef.Value, cor: txtCorCiaRef.Value, cor_txt: "#B91C1C", ativo: tglAtivoCiaRef.Checked })
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                                Text: =""
+                                                Width: =26
+                                          - btnCTC11Ref:
+                                              Control: Button@0.0.45
+                                              Properties:
+                                                Appearance: ='ButtonCanvas.Appearance'.Primary
+                                                BasePaletteColor: =ColorValue("#7E22CE")
+                                                BorderRadius: =0
+                                                DisplayMode: =If(varPodeCadastro, DisplayMode.Edit, DisplayMode.Disabled)
+                                                Height: =26
+                                                LayoutMinHeight: =26
+                                                LayoutMinWidth: =0
+                                                OnSelect: |-
+                                                  =Set(varFormCia, { patio: txtCodCiaRef.Value, nome: txtNomeCiaRef.Value, ordem: txtOrdemCiaRef.Value, cor: txtCorCiaRef.Value, cor_txt: "#7E22CE", ativo: tglAtivoCiaRef.Checked })
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                                Text: =""
+                                                Width: =26
+                                          - btnCTC12Ref:
+                                              Control: Button@0.0.45
+                                              Properties:
+                                                Appearance: ='ButtonCanvas.Appearance'.Primary
+                                                BasePaletteColor: =ColorValue("#BE185D")
+                                                BorderRadius: =0
+                                                DisplayMode: =If(varPodeCadastro, DisplayMode.Edit, DisplayMode.Disabled)
+                                                Height: =26
+                                                LayoutMinHeight: =26
+                                                LayoutMinWidth: =0
+                                                OnSelect: |-
+                                                  =Set(varFormCia, { patio: txtCodCiaRef.Value, nome: txtNomeCiaRef.Value, ordem: txtOrdemCiaRef.Value, cor: txtCorCiaRef.Value, cor_txt: "#BE185D", ativo: tglAtivoCiaRef.Checked })
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                                Text: =""
+                                                Width: =26
+                                          - btnCTC13Ref:
+                                              Control: Button@0.0.45
+                                              Properties:
+                                                Appearance: ='ButtonCanvas.Appearance'.Primary
+                                                BasePaletteColor: =ColorValue("#1E293B")
+                                                BorderRadius: =0
+                                                DisplayMode: =If(varPodeCadastro, DisplayMode.Edit, DisplayMode.Disabled)
+                                                Height: =26
+                                                LayoutMinHeight: =26
+                                                LayoutMinWidth: =0
+                                                OnSelect: |-
+                                                  =Set(varFormCia, { patio: txtCodCiaRef.Value, nome: txtNomeCiaRef.Value, ordem: txtOrdemCiaRef.Value, cor: txtCorCiaRef.Value, cor_txt: "#1E293B", ativo: tglAtivoCiaRef.Checked })
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                                Text: =""
+                                                Width: =26
+                                          - btnCTC14Ref:
+                                              Control: Button@0.0.45
+                                              Properties:
+                                                Appearance: ='ButtonCanvas.Appearance'.Primary
+                                                BasePaletteColor: =ColorValue("#475569")
+                                                BorderRadius: =0
+                                                DisplayMode: =If(varPodeCadastro, DisplayMode.Edit, DisplayMode.Disabled)
+                                                Height: =26
+                                                LayoutMinHeight: =26
+                                                LayoutMinWidth: =0
+                                                OnSelect: |-
+                                                  =Set(varFormCia, { patio: txtCodCiaRef.Value, nome: txtNomeCiaRef.Value, ordem: txtOrdemCiaRef.Value, cor: txtCorCiaRef.Value, cor_txt: "#475569", ativo: tglAtivoCiaRef.Checked })
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                                Text: =""
+                                                Width: =26
+                                          - btnCTC15Ref:
+                                              Control: Button@0.0.45
+                                              Properties:
+                                                Appearance: ='ButtonCanvas.Appearance'.Primary
+                                                BasePaletteColor: =ColorValue("#64748B")
+                                                BorderRadius: =0
+                                                DisplayMode: =If(varPodeCadastro, DisplayMode.Edit, DisplayMode.Disabled)
+                                                Height: =26
+                                                LayoutMinHeight: =26
+                                                LayoutMinWidth: =0
+                                                OnSelect: |-
+                                                  =Set(varFormCia, { patio: txtCodCiaRef.Value, nome: txtNomeCiaRef.Value, ordem: txtOrdemCiaRef.Value, cor: txtCorCiaRef.Value, cor_txt: "#64748B", ativo: tglAtivoCiaRef.Checked })
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                                Text: =""
+                                                Width: =26
+                                          - btnCTC16Ref:
+                                              Control: Button@0.0.45
+                                              Properties:
+                                                Appearance: ='ButtonCanvas.Appearance'.Primary
+                                                BasePaletteColor: =ColorValue("#B9D9DE")
+                                                BorderRadius: =0
+                                                DisplayMode: =If(varPodeCadastro, DisplayMode.Edit, DisplayMode.Disabled)
+                                                Height: =26
+                                                LayoutMinHeight: =26
+                                                LayoutMinWidth: =0
+                                                OnSelect: |-
+                                                  =Set(varFormCia, { patio: txtCodCiaRef.Value, nome: txtNomeCiaRef.Value, ordem: txtOrdemCiaRef.Value, cor: txtCorCiaRef.Value, cor_txt: "#B9D9DE", ativo: tglAtivoCiaRef.Checked })
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                                Text: =""
+                                                Width: =26
+                                          - btnCTC17Ref:
+                                              Control: Button@0.0.45
+                                              Properties:
+                                                Appearance: ='ButtonCanvas.Appearance'.Primary
+                                                BasePaletteColor: =ColorValue("#D6DDE0")
+                                                BorderRadius: =0
+                                                DisplayMode: =If(varPodeCadastro, DisplayMode.Edit, DisplayMode.Disabled)
+                                                Height: =26
+                                                LayoutMinHeight: =26
+                                                LayoutMinWidth: =0
+                                                OnSelect: |-
+                                                  =Set(varFormCia, { patio: txtCodCiaRef.Value, nome: txtNomeCiaRef.Value, ordem: txtOrdemCiaRef.Value, cor: txtCorCiaRef.Value, cor_txt: "#D6DDE0", ativo: tglAtivoCiaRef.Checked })
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                                Text: =""
+                                                Width: =26
+                                          - btnCTC18Ref:
+                                              Control: Button@0.0.45
+                                              Properties:
+                                                Appearance: ='ButtonCanvas.Appearance'.Primary
+                                                BasePaletteColor: =ColorValue("#FFFFFF")
+                                                BorderRadius: =0
+                                                DisplayMode: =If(varPodeCadastro, DisplayMode.Edit, DisplayMode.Disabled)
+                                                Height: =26
+                                                LayoutMinHeight: =26
+                                                LayoutMinWidth: =0
+                                                OnSelect: |-
+                                                  =Set(varFormCia, { patio: txtCodCiaRef.Value, nome: txtNomeCiaRef.Value, ordem: txtOrdemCiaRef.Value, cor: txtCorCiaRef.Value, cor_txt: "#FFFFFF", ativo: tglAtivoCiaRef.Checked })
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                                Text: =""
+                                                Width: =26
+                                    - htmAmostraCiaRef:
+                                        Control: HtmlViewer@2.1.0
+                                        Properties:
+                                          AutoHeight: =true
+                                          Color: =thmTexto
+                                          Fill: =thmSuperficie
+                                          Font: =thmFonte
+                                          HtmlText: |-
+                                              ="<div style='" & htmlFonte & "padding:8px 0;'><span style='display:inline-block;padding:6px 14px;font-weight:800;background:" &
+                                              If(IsMatch(txtCorCiaRef.Value, "^#[0-9A-Fa-f]{6}$"), txtCorCiaRef.Value, hxTextoFraco) & ";color:" &
+                                              If(IsMatch(txtCorTxtCiaRef.Value, "^#[0-9A-Fa-f]{6}$"), txtCorTxtCiaRef.Value, hxTextoBarra) & ";'>" &
+                                              If(IsBlank(txtCodCiaRef.Value), "??", Upper(txtCodCiaRef.Value) & " 1234") & "</span>" &
+                                              "<span style='font-size:11px;color:" & hxTextoFraco & ";margin-left:10px;'>amostra do bloco</span></div>"
+                                          Size: =11
+                                    - tglAtivoCiaRef:
+                                        Control: Toggle@1.1.5
+                                        Properties:
+                                          AccessibleLabel: ="Ativo"
+                                          BasePaletteColor: =thmPrimaria
+                                          Checked: =Coalesce(varFormCia.ativo, true)
+                                          DisplayMode: =If(varPodeCadastro, DisplayMode.Edit, DisplayMode.View)
+                                          FontColor: =thmTexto
+                                          Height: =44
+                                          Label: ="Ativo"
+                                          LabelPosition: ='Toggle.LabelPosition'.Before
+                                    - cntAcoesCiaRef:
+                                        Control: GroupContainer@1.5.0
+                                        Variant: AutoLayout
+                                        Properties:
+                                          DropShadow: =DropShadow.None
+                                          Fill: =thmFundo
+                                          FillPortions: =0
+                                          Height: =60
+                                          LayoutAlignItems: =LayoutAlignItems.Stretch
+                                          LayoutDirection: =LayoutDirection.Horizontal
+                                          LayoutGap: =8
+                                          LayoutMinHeight: =0
+                                          LayoutMinWidth: =0
+                                          PaddingTop: =10
+                                          RadiusBottomLeft: =0
+                                          RadiusBottomRight: =0
+                                          RadiusTopLeft: =0
+                                          RadiusTopRight: =0
+                                        Children:
+                                          - btnNovoCiaRef:
+                                              Control: Button@0.0.45
+                                              Properties:
+                                                Appearance: ='ButtonCanvas.Appearance'.Secondary
+                                                BasePaletteColor: =thmAcao
+                                                BorderRadius: =0
+                                                DisplayMode: =If(varPodeCadastro, DisplayMode.Edit, DisplayMode.Disabled)
+                                                FillPortions: =1
+                                                FontColor: =thmAcao
+                                                FontSize: =13
+                                                FontWeight: =FontWeight.Semibold
+                                                Height: =44
+                                                Icon: ="Add"
+                                                IconStyle: ='ButtonCanvas.IconStyle'.Filled
+                                                LayoutMinWidth: =0
+                                                OnSelect: |-
+                                                    =Set(varCiaSelRef, Blank());
+                                                    Set(varFormCia, { patio: "", nome: "", ordem: "", cor: "#0E7C8C", cor_txt: "#D6DDE0", ativo: true })
+                                                Text: ="NOVO"
+                                          - btnSalvarCiaRef:
+                                              Control: Button@0.0.45
+                                              Properties:
+                                                Appearance: ='ButtonCanvas.Appearance'.Primary
+                                                BasePaletteColor: =thmPrimaria
+                                                BorderRadius: =0
+                                                DisplayMode: =If(varPodeCadastro, DisplayMode.Edit, DisplayMode.Disabled)
+                                                FillPortions: =1
+                                                FontColor: =thmTextoBarra
+                                                FontSize: =13
+                                                FontWeight: =FontWeight.Semibold
+                                                Height: =44
+                                                Icon: ="Save"
+                                                IconStyle: ='ButtonCanvas.IconStyle'.Filled
+                                                LayoutMinWidth: =0
+                                                OnSelect: |-
+                                                    =If(
+                                                        IsBlank(Trim(txtCodCiaRef.Value)),
+                                                        Notify("Informe a sigla da companhia.", NotificationType.Error, 5000),
+                                                        IsBlank(Trim(txtNomeCiaRef.Value)),
+                                                        Notify("Informe o nome da companhia.", NotificationType.Error, 5000),
+                                                        !IsNumeric(txtOrdemCiaRef.Value),
+                                                        Notify("A ordem tem que ser número.", NotificationType.Error, 5000),
+                                                        !IsMatch(txtCorCiaRef.Value, "^#[0-9A-Fa-f]{6}$") Or !IsMatch(txtCorTxtCiaRef.Value, "^#[0-9A-Fa-f]{6}$"),
+                                                        Notify("As cores têm que estar no formato #RRGGBB.", NotificationType.Error, 5000),
+                                                        !IsBlank(
+                                                            LookUp(colCiaRef As _op, Upper(_op.sigla) = Upper(Trim(txtCodCiaRef.Value)) And _op.ID <> Coalesce(varCiaSelRef.ID, 0)).ID
+                                                        ),
+                                                        Notify("Já existe companhia com essa sigla. É ela que cada lançamento grava.", NotificationType.Error, 7000),
+                                                        UpdateContext(
+                                                            {
+                                                                locErroRef: IsError(
+                                                                    Patch(
+                                                                        tb_companhias,
+                                                                        If(IsBlank(varCiaSelRef.ID), Defaults(tb_companhias), LookUp(tb_companhias, ID = varCiaSelRef.ID)),
+                                                                        {
+                                                                            sigla: Upper(Trim(txtCodCiaRef.Value)),
+                                                                            nome_cia: Upper(Trim(txtNomeCiaRef.Value)),
+                                                                            ordem: Value(txtOrdemCiaRef.Value),
+                                                                            cor_hex: Upper(txtCorCiaRef.Value),
+                                                                            cor_texto: Upper(txtCorTxtCiaRef.Value),
+                                                                            ativo: If(tglAtivoCiaRef.Checked, 1, 0)
+                                                                        }
+                                                                    )
+                                                                )
+                                                            }
+                                                        );
+                                                        If(
+                                                            locErroRef,
+                                                            Notify("Não foi possível gravar. Nada foi alterado.", NotificationType.Error, 7000),
+                                                            Select(btnRecarregarRef);
+                                                            Set(varCiaSelRef, Blank());
+                                                            Notify("Companhia gravada. Vale para todos os aeroportos; a grade muda depois de ATUALIZAR.", NotificationType.Success, 4000)
                                                         )
                                                     )
                                                 Text: ="SALVAR"
