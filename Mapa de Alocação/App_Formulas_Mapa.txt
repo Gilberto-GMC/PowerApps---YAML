@@ -39,15 +39,23 @@ Table(
 // 👤 Usuário conectado — lista User do AirportNow (a mesma do SAFETY e da Gestão de Chamados), desde 17/09/2026.
 // Como o hub abre os módulos: ?USUARIO=<ID na lista User>. Sem parâmetro (app aberto direto), pelo Email do
 // login. Teste explícito de branco: Blank() = 0 é verdadeiro no Power Fx.
+// ⚠️ Um e-mail pode ter VÁRIAS linhas (a conta de processos tem 17: um login Base por aeroporto e um Sede).
+// Vale a de perfil mais alto — Sede, depois Bloco, depois qualquer uma. Cada LookUp é delegável.
 usrMapa =
 With(
     { _p: Value(Param("USUARIO")) };
     If(
         !IsBlank(_p) And _p > 0;
         LookUp(User; ID = _p);
-        LookUp(User; Email = User().Email)
+        Coalesce(
+            LookUp(User; Email = User().Email And Perfil = "Sede");
+            LookUp(User; Email = User().Email And Perfil = "Bloco");
+            LookUp(User; Email = User().Email)
+        )
     )
 );;
+// Todas as linhas do mesmo e-mail: os aeroportos delas também ficam permitidos.
+usrLinhas = Filter(User; Email = usrMapa.Email);;
 usrCadastrado = !IsBlank(usrMapa.ID);;
 // Base: só o próprio aeroporto · Bloco: os do mesmo bloco · Sede: todos · sem registro: CONSULTA (somente leitura)
 usrPerfil = If(usrCadastrado; Upper(Trim(usrMapa.Perfil)); "CONSULTA");;
@@ -74,7 +82,8 @@ With(
                             colAerosMapa;
                             !usrCadastrado Or
                             usrPerfil = "SEDE" Or
-                            (usrPerfil = "BLOCO" And Aeroporto in Filter(colAerosRede; Bloco = usrBloco).Aeroporto)
+                            (usrPerfil = "BLOCO" And Aeroporto in Filter(colAerosRede; Bloco = usrBloco).Aeroporto) Or
+                            Aeroporto in ForAll(usrLinhas As _l; Upper(Trim(_l.Aeroporto)))
                         );
                         Aeroporto;
                         ";"
