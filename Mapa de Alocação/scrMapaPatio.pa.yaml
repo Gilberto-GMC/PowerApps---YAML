@@ -19,7 +19,7 @@ Screens:
                 locConfirmaPortao: "", locConfirmaEnv: 0, locConfirmaAlt: "",
                 locConfirmaExcluir: 0,
                 locSalvando: false,
-                locHangarForm: false, locHangarExcluir: 0, locHangarSalvando: false,
+                locHangarForm: false, locHangarExcluir: 0, locHangarSalvando: false, locHangarExpandido: false,
                 locHangarPos: Blank(), locHangarEdit: Blank(),
                 locHangarDados: { prefixo: "", equip: "—", data: Today(), hora: "", obs: "" },
                 locOcupado: Blank()
@@ -3545,7 +3545,7 @@ Screens:
             RadiusTopLeft: =0
             RadiusTopRight: =0
             Visible: =varHangarAberto
-            Width: =Min(640, Parent.Width)
+            Width: =If(locHangarExpandido, Parent.Width, Min(640, Parent.Width))
             X: =Parent.Width - Self.Width
           Children:
             - cntHangarTopoMap:
@@ -3576,6 +3576,23 @@ Screens:
                         LayoutMinWidth: =0
                         Size: =16
                         Text: ="HANGARES"
+                  - btnExpandirHangarMap:
+                      Control: Button@0.0.45
+                      Properties:
+                        Appearance: ='ButtonCanvas.Appearance'.Secondary
+                        BasePaletteColor: =thmPrimaria
+                        BorderRadius: =0
+                        FontColor: =thmPrimaria
+                        FontSize: =12
+                        FontWeight: =FontWeight.Semibold
+                        Height: =40
+                        Icon: =If(locHangarExpandido, "ChevronRight", "ChevronLeft")
+                        IconStyle: ='ButtonCanvas.IconStyle'.Filled
+                        LayoutMinWidth: =0
+                        OnSelect: |-
+                          =UpdateContext({ locHangarExpandido: !locHangarExpandido })
+                        Text: =If(locHangarExpandido, "RECOLHER", "EXPANDIR")
+                        Width: =130
                   - btnFecharHangarMap:
                       Control: Button@0.0.45
                       Properties:
@@ -3749,15 +3766,25 @@ Screens:
                     ="<div style='" & htmlFonte & "'>" &
                     "<div style='font-size:10px;font-weight:700;letter-spacing:.14em;color:" & hxTextoFraco & ";'>HANGARES &nbsp;&middot;&nbsp; " & Upper(Text(varData, "ddd dd/mm/yyyy")) & "</div>" &
                     "<div style='font-size:11px;color:" & hxTextoFraco & ";margin-top:4px;'>Aeronaves dentro dos hangares nesta data. Sem posição, capacidade ou restrição: o hangar não é controlado por nós.</div>" &
-                    "<table style='width:100%;border-collapse:separate;border-spacing:8px 8px;margin:4px -8px 0 -8px;'><tr>" &
+                    "<table style='width:100%;table-layout:fixed;border-collapse:separate;border-spacing:8px 8px;margin:4px -8px 0 -8px;'><tr>" &
+                    // cartoes em linhas: 2 por linha no painel, 4 com EXPANDIR — com 10 hangares numa fileira so
+                    // cada cartao ficaria com ~60 px
+                    With(
+                        {
+                            _lst: Filter(Sort(colHangaresAero, ordem, SortOrder.Ascending) As _hf, drpHangarFiltroMap.Selected.Value = "TODOS OS HANGARES" Or _hf.posicao = drpHangarFiltroMap.Selected.Value),
+                            _porLinha: If(locHangarExpandido, 4, 2)
+                        },
                     Concat(
-                        Filter(Sort(colHangaresAero, ordem, SortOrder.Ascending) As _hf, drpHangarFiltroMap.Selected.Value = "TODOS OS HANGARES" Or _hf.posicao = drpHangarFiltroMap.Selected.Value) As _h,
+                        Sequence(CountRows(_lst)) As _n,
+                        If(_n.Value > 1 And Mod(_n.Value - 1, _porLinha) = 0, "</tr><tr>", "") &
+                        With(
+                            { _h: Index(_lst, _n.Value) },
                         With(
                             {
                                 _cor: Coalesce(LookUp(colPatiosTodos As _p, _p.patio = _h.patio And _p.aeroporto = _h.aeroporto).cor_hex, hxPrimaria),
                                 _dentro: Sort(Filter(colHangarDia As _a, _a.id_posicao = _h.id And _a.abs_fim > varHangarRefMin And (IsBlank(Trim(txtHangarBuscaMap.Value)) Or Upper(Trim(txtHangarBuscaMap.Value)) in Upper(Coalesce(_a.prefixo, "")))), abs_ini, SortOrder.Ascending)
                             },
-                            "<td style='vertical-align:top;width:" & Text(100 / Max(CountRows(Filter(colHangaresAero As _hc, drpHangarFiltroMap.Selected.Value = "TODOS OS HANGARES" Or _hc.posicao = drpHangarFiltroMap.Selected.Value)), 1), "0") & "%;background:" & hxSuperficie &
+                            "<td style='vertical-align:top;width:" & Text(100 / Max(Min(_porLinha, CountRows(_lst)), 1), "0") & "%;background:" & hxSuperficie &
                             ";border:1px solid " & hxBorda & ";border-top:3px solid " & _cor & ";padding:10px 12px;'>" &
                             "<div style='font-size:20px;font-weight:800;color:" & hxPrimaria & ";'>" & _h.posicao & "</div>" &
                             "<div style='font-size:11px;color:" & hxTexto & ";margin-bottom:6px;'>" & CountRows(_dentro) & " aeronave(s)</div>" &
@@ -3789,6 +3816,8 @@ Screens:
                             ) &
                             "</td>"
                         )
+                        )
+                    )
                     ) &
                     "</tr></table></div>"
                   Size: =11
