@@ -14,7 +14,7 @@ Screens:
         UpdateContext(
             {
                 locPatio: "TODOS",
-                locNonce: 0,
+                locNonce: 0, locNonceEq: 0, locEquipSug: "",
                 locConfirmaConting: 0,
                 locConfirmaPortao: "", locConfirmaEnv: 0, locConfirmaAlt: "",
                 locConfirmaExcluir: 0,
@@ -334,7 +334,7 @@ Screens:
                   }
               );
               Set(varPosSel, LookUp(colGrade As _g, _g.id_posicao = varAlocSel.id_posicao));
-              UpdateContext({locConfirmaExcluir: 0, locConfirmaConting: 0, locConfirmaPortao: "", locConfirmaEnv: 0, locNonce: locNonce + 1});
+              UpdateContext({locConfirmaExcluir: 0, locConfirmaConting: 0, locConfirmaPortao: "", locConfirmaEnv: 0, locNonce: locNonce + 1, locNonceEq: locNonceEq + 1, locEquipSug: ""});
               Set(varPainelAberto, true)
             Text: =""
             Visible: =true
@@ -381,7 +381,7 @@ Screens:
                       contato: ""
                   }
               );
-              UpdateContext({locConfirmaExcluir: 0, locConfirmaConting: 0, locConfirmaPortao: "", locConfirmaEnv: 0, locNonce: locNonce + 1});
+              UpdateContext({locConfirmaExcluir: 0, locConfirmaConting: 0, locConfirmaPortao: "", locConfirmaEnv: 0, locNonce: locNonce + 1, locNonceEq: locNonceEq + 1, locEquipSug: ""});
               Set(varPainelAberto, true)
             Text: =""
             Visible: =true
@@ -2835,10 +2835,10 @@ Screens:
                   - drpEquipMap:
                       Control: DropDown@0.0.45
                       Properties:
-                        DefaultSelectedItems: =[Coalesce(varForm.equip, "—")]
+                        DefaultSelectedItems: =[Coalesce(locEquipSug, varForm.equip, "—")]
                         DisplayMode: =If(varPodeEditar, DisplayMode.Edit, DisplayMode.View)
                         Height: =40
-                        Items: =Filter(colEquipSel, locNonce >= 0)
+                        Items: =Filter(colEquipSel, locNonce >= 0 And locNonceEq >= 0)
                   - cntExtraMap:
                       Control: GroupContainer@1.5.0
                       Variant: AutoLayout
@@ -2887,6 +2887,28 @@ Screens:
                                     AccessibleLabel: ="Prefixo da aeronave"
                                     DisplayMode: =If(varPodeEditar, DisplayMode.Edit, DisplayMode.View)
                                     Height: =40
+                                    OnChange: |-
+                                      =With(
+                                          { _p: Upper(Trim(txtPrefixoMap.Value)) },
+                                          If(
+                                              Len(_p) >= 4 And drpEquipMap.Selected.Value = "—",
+                                              With(
+                                                  {
+                                                      _eq: LookUp(
+                                                          FirstN(
+                                                              Sort(Filter(tb_alocacoesMapa, prefixo = _p, ativo = 1), ID, SortOrder.Descending),
+                                                              30
+                                                          ) As _x,
+                                                          !IsBlank(_x.equipamento)
+                                                      ).equipamento
+                                                  },
+                                                  If(
+                                                      !IsBlank(LookUp(colEquip As _c, _c.equip = _eq).equip),
+                                                      UpdateContext({ locEquipSug: _eq, locNonceEq: locNonceEq + 1 })
+                                                  )
+                                              )
+                                          )
+                                      )
                                     Placeholder: ="ex. PSESP"
                                     Value: =Coalesce(varForm.prefixo, "")
                         - cntEnvMap:
@@ -3508,7 +3530,7 @@ Screens:
                         OnSelect: |-
                           =Set(varPainelAberto, false);
                           Set(varAlocSel, Blank());
-                          UpdateContext({locConfirmaExcluir: 0, locConfirmaConting: 0, locConfirmaPortao: "", locConfirmaEnv: 0, locNonce: locNonce + 1})
+                          UpdateContext({locConfirmaExcluir: 0, locConfirmaConting: 0, locConfirmaPortao: "", locConfirmaEnv: 0, locNonce: locNonce + 1, locNonceEq: locNonceEq + 1, locEquipSug: ""})
                         PaddingLeft: =12
                         PaddingRight: =12
                         Text: ="FECHAR"
@@ -3744,6 +3766,8 @@ Screens:
                                         locHangarPos: LookUp(colHangaresAero As _h, _h.posicao = drpHangarFiltroMap.Selected.Value),
                                         locHangarEdit: Blank(),
                                         locHangarExcluir: 0,
+                                        locNonceEq: locNonceEq + 1,
+                                        locEquipSug: "",
                                         locHangarDados: {
                                             prefixo: "",
                                             equip: "—",
@@ -3871,6 +3895,28 @@ Screens:
                         DisplayMode: =If(varPodeEditar, DisplayMode.Edit, DisplayMode.View)
                         Height: =40
                         MaxLength: =10
+                        OnChange: |-
+                          =With(
+                              { _p: Upper(Trim(txtHangarPrefixoMap.Value)) },
+                              If(
+                                  Len(_p) >= 4 And drpHangarEquipMap.Selected.Value = "—",
+                                  With(
+                                      {
+                                          _eq: LookUp(
+                                              FirstN(
+                                                  Sort(Filter(tb_alocacoesMapa, prefixo = _p, ativo = 1), ID, SortOrder.Descending),
+                                                  30
+                                              ) As _x,
+                                              !IsBlank(_x.equipamento)
+                                          ).equipamento
+                                      },
+                                      If(
+                                          !IsBlank(LookUp(colEquip As _c, _c.equip = _eq).equip),
+                                          UpdateContext({ locEquipSug: _eq, locNonceEq: locNonceEq + 1 })
+                                      )
+                                  )
+                              )
+                          )
                         Placeholder: ="ex. PSESP"
                         Value: =locHangarDados.prefixo
                   - lblHangarEquipMap:
@@ -3885,10 +3931,10 @@ Screens:
                   - drpHangarEquipMap:
                       Control: DropDown@0.0.45
                       Properties:
-                        DefaultSelectedItems: =[Coalesce(locHangarDados.equip, "—")]
+                        DefaultSelectedItems: =[Coalesce(locEquipSug, locHangarDados.equip, "—")]
                         DisplayMode: =If(varPodeEditar, DisplayMode.Edit, DisplayMode.View)
                         Height: =40
-                        Items: =colEquipSel
+                        Items: =Filter(colEquipSel, locNonceEq >= 0)
                   - cntHangarEntradaMap:
                       Control: GroupContainer@1.5.0
                       Variant: AutoLayout
@@ -4193,6 +4239,8 @@ Screens:
                                         locHangarPos: LookUp(colHangaresAero As _h, _h.id = ThisItem.id_posicao),
                                         locHangarEdit: ThisItem,
                                         locHangarExcluir: 0,
+                                        locNonceEq: locNonceEq + 1,
+                                        locEquipSug: "",
                                         locHangarDados: {
                                             prefixo: Coalesce(ThisItem.prefixo, ""),
                                             equip: Coalesce(ThisItem.equip, "—"),
