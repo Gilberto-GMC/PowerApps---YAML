@@ -113,6 +113,7 @@ Screens:
                                   _p.aeronave_max,
                                   If(_p.classe = "HELICOPTERO", "HELICÓPTERO", "CLASSE " & _p.classe)
                               ),
+                              _linha: Coalesce(LookUp(colClasses As _lc, _lc.classe = _p.classe).linha_hex, ""),
                               _topo: If(
                                   _p.ordem = Min(Filter(colPosicoesAero As _q, _q.patio = _p.patio), ordem),
                                   "2px solid " & hxBorda,
@@ -274,12 +275,12 @@ Screens:
                                       )
                                   ) &
                                   "</td>" &
-                                  "<td style='width:" & (mapLarguraRotulo - 22) & "px;height:" & mapAlturaLinha & "px;box-sizing:border-box;padding:6px 8px;vertical-align:middle;border-top:" & _topo & ";border-right:1px solid " & hxGradeLinha & ";'>" &
+                                  "<td style='" & If(_linha = "", "", "background:" & _linha & ";") & "width:" & (mapLarguraRotulo - 22) & "px;height:" & mapAlturaLinha & "px;box-sizing:border-box;padding:6px 8px;vertical-align:middle;border-top:" & _topo & ";border-right:1px solid " & hxGradeLinha & ";'>" &
                                   "<div style='font-size:15px;font-weight:800;color:" & hxPrimaria & ";line-height:1.05;'>" & _p.posicao & "</div>" &
                                   "<div style='font-size:8px;font-weight:700;letter-spacing:.08em;color:" & hxTextoFraco & ";margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;'>" & _restricao &
                                   If(IsBlank(_consome) Or _consome = "", "", " <span style='opacity:.55;'>(" & _consome & ")</span>") & "</div>" &
                                   "</td>" &
-                                  "<td style='height:" & mapAlturaLinha & "px;box-sizing:border-box;padding:0;border-top:" & _topo & ";" & "background-image:" & If(varAgoraMin >= varJanelaIni And varAgoraMin < varJanelaIni + varJanelaMin, "linear-gradient(to right,transparent " & Text((varAgoraMin - varJanelaIni) * 100 / Max(varJanelaMin, 60), "0.000", "en-US") & "%,rgba(185,28,28,.28) " & Text((varAgoraMin - varJanelaIni) * 100 / Max(varJanelaMin, 60), "0.000", "en-US") & "%,rgba(185,28,28,.28) " & Text((varAgoraMin - varJanelaIni) * 100 / Max(varJanelaMin, 60) + 0.15, "0.000", "en-US") & "%,transparent " & Text((varAgoraMin - varJanelaIni) * 100 / Max(varJanelaMin, 60) + 0.15, "0.000", "en-US") & "%),", "") & "repeating-linear-gradient(to right," & hxTextoFraco & " 0," & hxTextoFraco & " 1px,transparent 1px,transparent " & Text(RoundDown(6000 / Max(varJanelaMin, 60), 4), "0.0000", "en-US") & "%),repeating-linear-gradient(to right," & hxGradeLinha & " 0," & hxGradeLinha & " 1px,transparent 1px,transparent " & Text(RoundDown(1500 / Max(varJanelaMin, 60), 4), "0.0000", "en-US") & "%);" & "'>" &
+                                  "<td style='height:" & mapAlturaLinha & "px;box-sizing:border-box;padding:0;border-top:" & _topo & ";" & If(_linha = "", "", "background-color:" & _linha & ";") & "background-image:" & If(varAgoraMin >= varJanelaIni And varAgoraMin < varJanelaIni + varJanelaMin, "linear-gradient(to right,transparent " & Text((varAgoraMin - varJanelaIni) * 100 / Max(varJanelaMin, 60), "0.000", "en-US") & "%,rgba(185,28,28,.28) " & Text((varAgoraMin - varJanelaIni) * 100 / Max(varJanelaMin, 60), "0.000", "en-US") & "%,rgba(185,28,28,.28) " & Text((varAgoraMin - varJanelaIni) * 100 / Max(varJanelaMin, 60) + 0.15, "0.000", "en-US") & "%,transparent " & Text((varAgoraMin - varJanelaIni) * 100 / Max(varJanelaMin, 60) + 0.15, "0.000", "en-US") & "%),", "") & "repeating-linear-gradient(to right," & hxTextoFraco & " 0," & hxTextoFraco & " 1px,transparent 1px,transparent " & Text(RoundDown(6000 / Max(varJanelaMin, 60), 4), "0.0000", "en-US") & "%),repeating-linear-gradient(to right," & hxGradeLinha & " 0," & hxGradeLinha & " 1px,transparent 1px,transparent " & Text(RoundDown(1500 / Max(varJanelaMin, 60), 4), "0.0000", "en-US") & "%);" & "'>" &
                                   If(
                                       CountRows(_bl) = 0,
                                       "",
