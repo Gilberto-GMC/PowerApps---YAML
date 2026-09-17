@@ -3774,6 +3774,43 @@ Screens:
                                     Sequence(CountRows(colPatiosAero) + 1) As _i,
                                     { Value: If(_i.Value = 1, "TODOS OS PÁTIOS", Index(colPatiosAero, _i.Value - 1).patio) }
                                 )
+                  - cntResCondMap:
+                      Control: GroupContainer@1.5.0
+                      Variant: AutoLayout
+                      Properties:
+                        DropShadow: =DropShadow.None
+                        Fill: =thmFundo
+                        FillPortions: =0
+                        LayoutAlignItems: =LayoutAlignItems.Stretch
+                        LayoutDirection: =LayoutDirection.Vertical
+                        LayoutGap: =4
+                        LayoutMinHeight: =0
+                        LayoutMinWidth: =0
+                        RadiusBottomLeft: =0
+                        RadiusBottomRight: =0
+                        RadiusTopLeft: =0
+                        RadiusTopRight: =0
+                        Width: =180
+                      Children:
+                        - lblResCondMap:
+                            Control: Label@2.5.1
+                            Properties:
+                              Color: =thmTextoFraco
+                              Font: =thmFonte
+                              FontWeight: =FontWeight.Bold
+                              Height: =18
+                              Size: =10
+                              Text: ="SITUAÇÃO"
+                        - drpResCondMap:
+                            Control: DropDown@0.0.45
+                            Properties:
+                              DefaultSelectedItems: =["TODAS"]
+                              Height: =40
+                              Items: |-
+                                =ForAll(
+                                    Sequence(CountRows(colCondicoes) + 1) As _i,
+                                    { Value: If(_i.Value = 1, "TODAS", Index(colCondicoes, _i.Value - 1).rotulo) }
+                                )
                   - cntResBuscaMap:
                       Control: GroupContainer@1.5.0
                       Variant: AutoLayout
@@ -3865,6 +3902,10 @@ Screens:
                             _lst: Filter(
                                 colReservas As _f,
                                 (drpResPatioMap.Selected.Value = "TODOS OS PÁTIOS" Or _f.patio = drpResPatioMap.Selected.Value) And
+                                (
+                                    drpResCondMap.Selected.Value = "TODAS" Or
+                                    Coalesce(LookUp(colCondicoes As _cf, _cf.cond = _f.cond).rotulo, "Previsto") = drpResCondMap.Selected.Value
+                                ) And
                                 (
                                     IsBlank(Trim(txtResBuscaMap.Value)) Or
                                     Upper(Trim(txtResBuscaMap.Value)) in Upper(Coalesce(_f.prefixo, "")) Or
