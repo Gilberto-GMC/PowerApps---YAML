@@ -15,6 +15,7 @@ Screens:
             {
                 locPatio: "TODOS",
                 locNonce: 0, locNonceEq: 0, locEquipSug: "",
+                locResExpandido: false,
                 locConfirmaConting: 0,
                 locConfirmaPortao: "", locConfirmaEnv: 0, locConfirmaAlt: "",
                 locConfirmaExcluir: 0,
@@ -1169,6 +1170,56 @@ Screens:
                                     PaddingRight: =10
                                     Text: =If(varVerFinalizados, "OCULTAR FINALIZADOS", "FINALIZADOS")
                                     Width: =If(varVerFinalizados, 188, 136)
+                              - btnReservasMap:
+                                  Control: Button@0.0.45
+                                  Properties:
+                                    Appearance: ='ButtonCanvas.Appearance'.Secondary
+                                    BasePaletteColor: =thmPrimaria
+                                    BorderRadius: =0
+                                    FontColor: =thmPrimaria
+                                    FontSize: =11
+                                    FontWeight: =FontWeight.Semibold
+                                    Height: =28
+                                    Icon: ="DocumentBulletList"
+                                    IconStyle: ='ButtonCanvas.IconStyle'.Filled
+                                    LayoutMinHeight: =28
+                                    LayoutMinWidth: =0
+                                    OnSelect: |-
+                                      =ClearCollect(
+                                          colReservas,
+                                          ForAll(
+                                              Sort(
+                                                  Filter(
+                                                      tb_alocacoesMapa,
+                                                      aeroporto = varAero And tipo_registro = "RESERVA" And ativo = 1 And data_fim >= Today()
+                                                  ),
+                                                  data_operacao,
+                                                  SortOrder.Ascending
+                                              ) As _r,
+                                              {
+                                                  id_posicao: _r.id_posicao,
+                                                  patio: _r.patio_txt,
+                                                  posicao: _r.posicao_txt,
+                                                  data_ini: _r.data_operacao,
+                                                  data_f: _r.data_fim,
+                                                  h_ini: _r.hora_inicio,
+                                                  h_fim: _r.hora_fim,
+                                                  prefixo: _r.prefixo,
+                                                  equip: _r.equipamento,
+                                                  resp: _r.responsavel,
+                                                  contato: _r.contato,
+                                                  obs: _r.observacao,
+                                                  cond: _r.condicao,
+                                                  alt: _r.alternativa
+                                              }
+                                          )
+                                      );
+                                      RemoveIf(colReservas, id_posicao in colHangaresAero.id);
+                                      Set(varResAberto, true)
+                                    PaddingLeft: =10
+                                    PaddingRight: =10
+                                    Text: ="RESERVAS"
+                                    Width: =126
                               - btnHangaresMap:
                                   Control: Button@0.0.45
                                   Properties:
@@ -3558,6 +3609,313 @@ Screens:
                         PaddingLeft: =12
                         PaddingRight: =12
                         Text: ="FECHAR"
+      - recVeuResMap:
+          Control: Rectangle@2.3.0
+          Properties:
+            BorderStyle: =BorderStyle.None
+            Fill: =thmVeu
+            Height: =Parent.Height
+            OnSelect: =Set(varResAberto, false)
+            Visible: =varResAberto
+            Width: =Parent.Width
+      - cntResMap:
+          Control: GroupContainer@1.5.0
+          Variant: AutoLayout
+          Properties:
+            BorderColor: =thmBorda
+            BorderThickness: =1
+            DropShadow: =DropShadow.None
+            Fill: =thmFundo
+            Height: =Parent.Height
+            LayoutAlignItems: =LayoutAlignItems.Stretch
+            LayoutDirection: =LayoutDirection.Vertical
+            LayoutGap: =8
+            LayoutMinHeight: =0
+            LayoutMinWidth: =0
+            LayoutOverflowY: =LayoutOverflow.Scroll
+            PaddingBottom: =12
+            PaddingLeft: =16
+            PaddingRight: =16
+            PaddingTop: =12
+            RadiusBottomLeft: =0
+            RadiusBottomRight: =0
+            RadiusTopLeft: =0
+            RadiusTopRight: =0
+            Visible: =varResAberto
+            Width: =If(locResExpandido, Parent.Width, Min(760, Parent.Width))
+            X: =Parent.Width - Self.Width
+          Children:
+            - cntResTopoMap:
+                Control: GroupContainer@1.5.0
+                Variant: AutoLayout
+                Properties:
+                  DropShadow: =DropShadow.None
+                  Fill: =thmFundo
+                  FillPortions: =0
+                  Height: =40
+                  LayoutAlignItems: =LayoutAlignItems.Stretch
+                  LayoutDirection: =LayoutDirection.Horizontal
+                  LayoutGap: =8
+                  LayoutMinHeight: =0
+                  LayoutMinWidth: =0
+                  RadiusBottomLeft: =0
+                  RadiusBottomRight: =0
+                  RadiusTopLeft: =0
+                  RadiusTopRight: =0
+                Children:
+                  - lblResTituloMap:
+                      Control: Label@2.5.1
+                      Properties:
+                        Color: =thmPrimaria
+                        FillPortions: =1
+                        Font: =thmFonte
+                        FontWeight: =FontWeight.Bold
+                        LayoutMinWidth: =0
+                        Size: =16
+                        Text: ="RESERVAS DE PÁTIO"
+                  - btnExpandirResMap:
+                      Control: Button@0.0.45
+                      Properties:
+                        Appearance: ='ButtonCanvas.Appearance'.Secondary
+                        BasePaletteColor: =thmPrimaria
+                        BorderRadius: =0
+                        FontColor: =thmPrimaria
+                        FontSize: =12
+                        FontWeight: =FontWeight.Semibold
+                        Height: =40
+                        Icon: =If(locResExpandido, "ChevronRight", "ChevronLeft")
+                        IconStyle: ='ButtonCanvas.IconStyle'.Filled
+                        LayoutMinWidth: =0
+                        OnSelect: |-
+                          =UpdateContext({ locResExpandido: !locResExpandido })
+                        Text: =If(locResExpandido, "RECOLHER", "EXPANDIR")
+                        Width: =130
+                  - btnFecharResMap:
+                      Control: Button@0.0.45
+                      Properties:
+                        Appearance: ='ButtonCanvas.Appearance'.Secondary
+                        BasePaletteColor: =thmTextoFraco
+                        BorderRadius: =0
+                        FontColor: =thmTextoFraco
+                        FontSize: =12
+                        FontWeight: =FontWeight.Semibold
+                        Height: =40
+                        Icon: ="Dismiss"
+                        IconStyle: ='ButtonCanvas.IconStyle'.Filled
+                        LayoutMinWidth: =0
+                        OnSelect: =Set(varResAberto, false)
+                        Text: ="FECHAR"
+                        Width: =110
+            - cntResFiltroMap:
+                Control: GroupContainer@1.5.0
+                Variant: AutoLayout
+                Properties:
+                  DropShadow: =DropShadow.None
+                  Fill: =thmFundo
+                  FillPortions: =0
+                  Height: =64
+                  LayoutAlignItems: =LayoutAlignItems.Stretch
+                  LayoutDirection: =LayoutDirection.Horizontal
+                  LayoutGap: =8
+                  LayoutMinHeight: =0
+                  LayoutMinWidth: =0
+                  RadiusBottomLeft: =0
+                  RadiusBottomRight: =0
+                  RadiusTopLeft: =0
+                  RadiusTopRight: =0
+                Children:
+                  - cntResPatioMap:
+                      Control: GroupContainer@1.5.0
+                      Variant: AutoLayout
+                      Properties:
+                        DropShadow: =DropShadow.None
+                        Fill: =thmFundo
+                        FillPortions: =0
+                        LayoutAlignItems: =LayoutAlignItems.Stretch
+                        LayoutDirection: =LayoutDirection.Vertical
+                        LayoutGap: =4
+                        LayoutMinHeight: =0
+                        LayoutMinWidth: =0
+                        RadiusBottomLeft: =0
+                        RadiusBottomRight: =0
+                        RadiusTopLeft: =0
+                        RadiusTopRight: =0
+                        Width: =220
+                      Children:
+                        - lblResPatioMap:
+                            Control: Label@2.5.1
+                            Properties:
+                              Color: =thmTextoFraco
+                              Font: =thmFonte
+                              FontWeight: =FontWeight.Bold
+                              Height: =18
+                              Size: =10
+                              Text: ="PÁTIO"
+                        - drpResPatioMap:
+                            Control: DropDown@0.0.45
+                            Properties:
+                              DefaultSelectedItems: =["TODOS OS PÁTIOS"]
+                              Height: =40
+                              Items: |-
+                                =ForAll(
+                                    Sequence(CountRows(colPatiosAero) + 1) As _i,
+                                    { Value: If(_i.Value = 1, "TODOS OS PÁTIOS", Index(colPatiosAero, _i.Value - 1).patio) }
+                                )
+                  - cntResBuscaMap:
+                      Control: GroupContainer@1.5.0
+                      Variant: AutoLayout
+                      Properties:
+                        DropShadow: =DropShadow.None
+                        Fill: =thmFundo
+                        FillPortions: =1
+                        LayoutAlignItems: =LayoutAlignItems.Stretch
+                        LayoutDirection: =LayoutDirection.Vertical
+                        LayoutGap: =4
+                        LayoutMinHeight: =0
+                        LayoutMinWidth: =0
+                        RadiusBottomLeft: =0
+                        RadiusBottomRight: =0
+                        RadiusTopLeft: =0
+                        RadiusTopRight: =0
+                      Children:
+                        - lblResBuscaMap:
+                            Control: Label@2.5.1
+                            Properties:
+                              Color: =thmTextoFraco
+                              Font: =thmFonte
+                              FontWeight: =FontWeight.Bold
+                              Height: =18
+                              Size: =10
+                              Text: ="BUSCAR MATRÍCULA, RESPONSÁVEL OU POSIÇÃO"
+                        - txtResBuscaMap:
+                            Control: TextInput@0.0.54
+                            Properties:
+                              AccessibleLabel: ="Buscar reserva"
+                              Height: =40
+                              MaxLength: =40
+                              Placeholder: ="ex. PSMOT"
+                  - cntResRecarregarMap:
+                      Control: GroupContainer@1.5.0
+                      Variant: AutoLayout
+                      Properties:
+                        DropShadow: =DropShadow.None
+                        Fill: =thmFundo
+                        FillPortions: =0
+                        LayoutAlignItems: =LayoutAlignItems.Stretch
+                        LayoutDirection: =LayoutDirection.Vertical
+                        LayoutGap: =4
+                        LayoutMinHeight: =0
+                        LayoutMinWidth: =0
+                        RadiusBottomLeft: =0
+                        RadiusBottomRight: =0
+                        RadiusTopLeft: =0
+                        RadiusTopRight: =0
+                        Width: =150
+                      Children:
+                        - lblResRecarregarMap:
+                            Control: Label@2.5.1
+                            Properties:
+                              Color: =thmTextoFraco
+                              Font: =thmFonte
+                              FontWeight: =FontWeight.Bold
+                              Height: =18
+                              Size: =10
+                              Text: =""
+                        - btnResRecarregarMap:
+                            Control: Button@0.0.45
+                            Properties:
+                              Appearance: ='ButtonCanvas.Appearance'.Secondary
+                              BasePaletteColor: =thmPrimaria
+                              BorderRadius: =0
+                              FontColor: =thmPrimaria
+                              FontSize: =12
+                              FontWeight: =FontWeight.Semibold
+                              Height: =40
+                              Icon: ="ArrowClockwise"
+                              IconStyle: ='ButtonCanvas.IconStyle'.Filled
+                              LayoutMinWidth: =0
+                              OnSelect: =Select(btnReservasMap)
+                              Text: ="RECARREGAR"
+            - htmResListaMap:
+                Control: HtmlViewer@2.1.0
+                Properties:
+                  AutoHeight: =true
+                  Color: =thmTexto
+                  Fill: =thmFundo
+                  Font: =thmFonte
+                  HtmlText: |-
+                    ="<div style='" & htmlFonte & "'>" &
+                    "<div style='font-size:10px;font-weight:700;letter-spacing:.14em;color:" & hxTextoFraco & ";'>RESERVAS DE PÁTIO &nbsp;&middot;&nbsp; DE " & Upper(Text(Today(), "dd/mm/yyyy")) & " EM DIANTE</div>" &
+                    "<div style='font-size:11px;color:" & hxTextoFraco & ";margin-top:4px;'>Todas as reservas lançadas para hoje e para os próximos meses. Hangares têm painel próprio e não entram aqui.</div>" &
+                    With(
+                        {
+                            _lst: Filter(
+                                colReservas As _f,
+                                (drpResPatioMap.Selected.Value = "TODOS OS PÁTIOS" Or _f.patio = drpResPatioMap.Selected.Value) And
+                                (
+                                    IsBlank(Trim(txtResBuscaMap.Value)) Or
+                                    Upper(Trim(txtResBuscaMap.Value)) in Upper(Coalesce(_f.prefixo, "")) Or
+                                    Upper(Trim(txtResBuscaMap.Value)) in Upper(Coalesce(_f.resp, "")) Or
+                                    Upper(Trim(txtResBuscaMap.Value)) in Upper(Coalesce(_f.posicao, ""))
+                                )
+                            )
+                        },
+                        If(
+                            CountRows(_lst) = 0,
+                            "<div style='margin-top:14px;font-size:12px;color:" & hxTextoFraco & ";'>Nenhuma reserva para o filtro escolhido.</div>",
+                            "<div style='font-size:11px;color:" & hxTexto & ";margin:10px 0 4px 0;'><b>" & CountRows(_lst) & "</b> reserva(s)</div>" &
+                            "<table style='width:100%;border-collapse:collapse;font-size:11px;color:" & hxTexto & ";'>" &
+                            "<tr style='color:" & hxTextoFraco & ";text-align:left;'>" &
+                            "<th style='padding:4px 6px;border-bottom:1px solid " & hxBorda & ";width:31%;'>QUANDO</th>" &
+                            "<th style='padding:4px 6px;border-bottom:1px solid " & hxBorda & ";width:14%;'>POSIÇÃO</th>" &
+                            "<th style='padding:4px 6px;border-bottom:1px solid " & hxBorda & ";width:19%;'>MATRÍCULA</th>" &
+                            "<th style='padding:4px 6px;border-bottom:1px solid " & hxBorda & ";width:22%;'>RESPONSÁVEL</th>" &
+                            "<th style='padding:4px 6px;border-bottom:1px solid " & hxBorda & ";width:14%;'>SITUAÇÃO</th>" &
+                            "</tr>" &
+                            Concat(
+                                Sequence(CountRows(_lst)) As _n,
+                                With(
+                                    {
+                                        _r: Index(_lst, _n.Value),
+                                        _mesAnt: If(_n.Value = 1, "", Text(Index(_lst, _n.Value - 1).data_ini, "mm/yyyy"))
+                                    },
+                                    If(
+                                        Text(_r.data_ini, "mm/yyyy") <> _mesAnt,
+                                        "<tr><td colspan='5' style='padding:10px 6px 4px 6px;font-size:10px;font-weight:700;letter-spacing:.12em;color:" & hxPrimaria & ";'>" &
+                                        Upper(Text(_r.data_ini, "mmmm yyyy")) & "</td></tr>",
+                                        ""
+                                    ) &
+                                    "<tr style='border-top:1px solid " & hxGradeLinha & ";'>" &
+                                    "<td style='padding:5px 6px;'>" &
+                                    Text(_r.data_ini, "ddd dd/mm") & " " & Text(Int(_r.h_ini / 60), "00") & ":" & Text(Mod(_r.h_ini, 60), "00") &
+                                    If(
+                                        _r.data_f = mapSaidaEmAberto,
+                                        " &rarr; <span style='color:" & hxVerde & ";font-weight:700;'>em aberto</span>",
+                                        " &rarr; " & Text(_r.data_f, "ddd dd/mm") & " " & Text(Int(_r.h_fim / 60), "00") & ":" & Text(Mod(_r.h_fim, 60), "00")
+                                    ) &
+                                    "</td>" &
+                                    "<td style='padding:5px 6px;'><b>" & Coalesce(_r.posicao, "&mdash;") & "</b><br><span style='color:" & hxTextoFraco & ";'>" & Coalesce(_r.patio, "") & "</span></td>" &
+                                    "<td style='padding:5px 6px;'><b>" & Coalesce(_r.prefixo, "&mdash;") & "</b>" &
+                                    If(IsBlank(_r.equip), "", "<br><span style='color:" & hxTextoFraco & ";'>" & _r.equip & "</span>") & "</td>" &
+                                    "<td style='padding:5px 6px;'>" & Coalesce(_r.resp, "&mdash;") &
+                                    If(IsBlank(_r.contato), "", "<br><span style='color:" & hxTextoFraco & ";'>" & _r.contato & "</span>") & "</td>" &
+                                    "<td style='padding:5px 6px;'>" &
+                                    Coalesce(LookUp(colCondicoes As _c, _c.cond = _r.cond).rotulo, "Previsto") &
+                                    If(_r.alt = 1, "<br><span style='color:" & hxTextoFraco & ";'>alternativa</span>", "") &
+                                    "</td></tr>" &
+                                    If(
+                                        IsBlank(_r.obs),
+                                        "",
+                                        "<tr><td colspan='5' style='padding:0 6px 6px 6px;color:" & hxTextoFraco & ";'>" &
+                                        Substitute(Substitute(_r.obs, "&", "&amp;"), "<", "&lt;") & "</td></tr>"
+                                    )
+                                )
+                            ) &
+                            "</table>"
+                        )
+                    ) &
+                    "</div>"
+                  Size: =11
       - recVeuHangarMap:
           Control: Rectangle@2.3.0
           Properties:
