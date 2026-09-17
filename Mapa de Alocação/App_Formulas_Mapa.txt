@@ -5,10 +5,62 @@
 // Documentacao: AppFormulas_Mapa.fx.md
 // ============================================================================
 
-// ✈️ Aeroportos com mapa de pátio publicado
+// ✈️ Aeroportos com mapa: os que têm pátio ativo em tb_patios (desde 17/09/2026 — antes, tabela fixa).
+// Aeroporto novo não é código: o usuário daquele aeroporto entra e cadastra os pátios.
 colAerosMapa =
-Table(
-    { ICAO: "SBNF"; IATA: "NVT"; Aeroporto: "NAVEGANTES" }
+ForAll(
+    Distinct(Filter(tb_patios; ativo = 1); aeroporto) As _d;
+    { Aeroporto: _d.Value }
+);;
+
+// 👤 Usuário conectado — lista tb_usuariosMapa, pelo e-mail do Windows/Power Apps (desde 17/09/2026).
+// A comparação de texto do SharePoint não diferencia maiúsculas, e é delegável.
+usrMapa = LookUp(tb_usuariosMapa; email_usuario = User().Email And ativo = 1);;
+usrCadastrado = !IsBlank(usrMapa.email_usuario);;
+// BASE: só o próprio aeroporto · BLOCO / SEDE: também os de 'aeroportos' (nomes separados por ; ou TODOS)
+// Sem cadastro: CONSULTA — vê os aeroportos com mapa, somente leitura.
+usrPerfil = If(usrCadastrado; Upper(Trim(usrMapa.perfil)); "CONSULTA");;
+usrPodeEditar = usrCadastrado;;
+
+// Aeroportos que o usuário pode abrir. O padrão entra SEMPRE e primeiro, mesmo sem pátio ainda — senão o
+// usuário de um aeroporto novo cairia em outro e cadastraria os pátios no lugar errado.
+colAerosPermitidos =
+With(
+    { _padrao: Upper(Trim(Coalesce(usrMapa.aeroporto_padrao; ""))) };
+    ForAll(
+        Distinct(
+            Filter(
+                Split(
+                    _padrao & ";" &
+                    Concat(
+                        Filter(
+                            colAerosMapa;
+                            !usrCadastrado Or (
+                                usrPerfil <> "BASE" And (
+                                    Upper(Trim(Coalesce(usrMapa.aeroportos; ""))) = "TODOS" Or
+                                    Aeroporto in ForAll(Split(Upper(Coalesce(usrMapa.aeroportos; "")); ";") As _s; Trim(_s.Value))
+                                )
+                            )
+                        );
+                        Aeroporto;
+                        ";"
+                    );
+                    ";"
+                ) As _x;
+                Trim(_x.Value) <> ""
+            );
+            Trim(Value)
+        ) As _d;
+        { Aeroporto: _d.Value }
+    )
+);;
+
+// Aeroporto que abre: o que vier na URL (?aeroporto=, quando o módulo entrar no AirportNow) se for permitido;
+// senão o primeiro permitido — que é o padrão do usuário.
+usrAeroPadrao =
+Coalesce(
+    LookUp(colAerosPermitidos; Aeroporto = Upper(Trim(Param("aeroporto")))).Aeroporto;
+    First(colAerosPermitidos).Aeroporto
 );;
 
 // 🅿️ Pátios — vêm da lista tb_patios desde 09/09/2026. A ordem manda no agrupamento visual da
@@ -121,7 +173,7 @@ Table(
 // 🔽 Tabelas dos seletores — coluna única `Value`, que é o que o Dropdown moderno exibe.
 // Derivadas das tabelas acima: uma fonte de verdade, sem redigitar nada.
 colAerosSel =
-ForAll(colAerosMapa As _a; { Value: _a.Aeroporto });;
+ForAll(colAerosPermitidos As _a; { Value: _a.Aeroporto });;
 
 colCondicoesSel =
 ForAll(colCondicoes As _c; { Value: _c.rotulo });;

@@ -18,7 +18,8 @@ Estado em 16/09/2026. Aeroporto é identificado pelo **nome** (`NAVEGANTES`), n�
 | Restrições entre posições | lista `tb_regrasPosicao` — tela RESTRIÇÕES | operador |
 | Equipamentos | lista `tb_equipamentos` — tela EQUIPAMENTOS (vale para todos os aeroportos) | operador |
 | Pré-posição da importação | lista `tb_prePosicao` (SharePoint, sem tela) | responsável |
-| **Lista de aeroportos** | `colAerosMapa` no `App_Formulas_Mapa.txt` | **código** |
+| Usuários e aeroporto de cada um | lista `tb_usuariosMapa` (SharePoint, sem tela) | responsável |
+| Lista de aeroportos com mapa | **derivada** dos pátios ativos em `tb_patios` + aeroporto padrão do usuário | automático |
 | Portões e cores | lista `tb_portoes` (**por aeroporto**) — tela POSIÇÕES E CORES › PORTÕES | operador |
 | Companhias e cores | lista `tb_companhias` (**vale para todos os aeroportos**) — tela POSIÇÕES E CORES › COMPANHIAS | operador |
 
@@ -29,11 +30,19 @@ Estado em 16/09/2026. Aeroporto é identificado pelo **nome** (`NAVEGANTES`), n�
 
 ## Ordem
 
-1. **Aeroporto no app** — acrescente uma linha em `colAerosMapa` (`App_Formulas_Mapa.txt`) e cole o
-   App.Formulas no Studio. O nome escrito aqui é o que todas as listas gravam em `aeroporto`: escreva igual
-   em todo lugar, em maiúsculas.
-2. **Troque o contexto** no app (TROCAR CONTEXTO) para o aeroporto novo. Tudo o que se cadastra depois vale
-   para ele.
+1. **Usuários** — na lista `tb_usuariosMapa`, uma linha por pessoa. **O aeroporto não é escolhido: vem do
+   usuário conectado** (e-mail do Windows/Power Apps). Não há mais tabela de aeroportos no código.
+   - `email_usuario` exatamente como o do login (a tela Início mostra o e-mail de quem não tem cadastro);
+   - `perfil`: **BASE** (só o próprio aeroporto), **BLOCO** ou **SEDE** (também os de `aeroportos`);
+   - `aeroporto_padrao`: o nome, em maiúsculas, **igual ao gravado nas listas** (ex. NAVEGANTES) — é onde o app abre;
+   - `aeroportos` (BLOCO/SEDE): nomes separados por `;`, ou `TODOS`;
+   - quem **não está na lista** entra **somente leitura**.
+2. **Entre no app com um usuário daquele aeroporto** (ou um SEDE/BLOCO escolhendo-o em TROCAR CONTEXTO). O
+   aeroporto padrão aparece mesmo sem pátio cadastrado; tudo o que se cadastra depois vale para ele. Quando o
+   primeiro pátio ativo existir, o aeroporto passa a aparecer para quem tem acesso.
+
+> **Quando o módulo entrar no AirportNow:** o app já aceita `?aeroporto=NOME` na URL. Esse valor tem prioridade,
+> mas só se for um aeroporto permitido para o usuário — trocar a URL não dá acesso a outro aeroporto.
 3. **Pátios** — tela POSIÇÕES E CORES › PÁTIOS. Um por pátio físico; mais um para hangares, se houver.
 4. **Posições** — tela POSIÇÕES E CORES › POSIÇÕES. Confira o **Tipo** de cada uma: vem REMOTA por padrão.
    - `OCUPA` para posição que consome outras (ex. T6C ocupa `T5,T6`).

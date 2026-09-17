@@ -4,10 +4,10 @@ Screens:
       OnVisible: |-
         =Set(varMapaVisivel, false);
         Set(varUsuarioNome, User().FullName);
-        Set(varPodeEditar, DataSourceInfo('tb_alocacoesMapa', DataSourceInfo.EditPermission));
+        Set(varPodeEditar, DataSourceInfo('tb_alocacoesMapa', DataSourceInfo.EditPermission) And usrPodeEditar);
         Set(varMenuAberto, Coalesce(varMenuAberto, true));
-        If(IsBlank(varAero), Set(varAero, First(colAerosMapa).Aeroporto));
-        If(IsBlank(varAeroNome), Set(varAeroNome, First(colAerosMapa).Aeroporto));
+        If(IsBlank(varAero), Set(varAero, usrAeroPadrao));
+        If(IsBlank(varAeroNome), Set(varAeroNome, usrAeroPadrao));
         If(IsBlank(varData), Set(varData, Today()))
     Children:
       - cntShellIni:
@@ -130,7 +130,14 @@ Screens:
                           "<div style='font-size:24px;font-weight:800;color:" & hxPrimaria & ";line-height:1.15;margin-top:6px;'>" &
                           Upper(Coalesce(varUsuarioNome, "OPERAÇÃO")) & "</div>" &
                           "<div style='font-size:12px;color:" & hxTextoFraco & ";margin-top:4px;margin-bottom:20px;'>" &
-                          If(varPodeEditar, "Perfil de edição — você pode lançar e realocar voos.", "Somente leitura — você vê a programação, mas não altera.") &
+                          If(
+                              !usrCadastrado,
+                              "<span style='color:" & hxAmbar & ";font-weight:700;'>Usuário sem cadastro no Mapa — somente leitura.</span> " &
+                              "Para editar, peça ao administrador para cadastrar <b>" & Lower(User().Email) & "</b>.",
+                              varPodeEditar,
+                              "Perfil " & usrPerfil & " — você pode lançar e realocar voos.",
+                              "Somente leitura — você vê a programação, mas não altera."
+                          ) &
                           "</div></div>"
                         Size: =12
                   - lblAeroIni:
@@ -146,7 +153,8 @@ Screens:
                       Control: DropDown@0.0.45
                       Properties:
                         DefaultSelectedItems: |-
-                          =[Coalesce(LookUp(colAerosMapa As _a, _a.Aeroporto = varAero).Aeroporto, First(colAerosMapa).Aeroporto)]
+                          =[Coalesce(LookUp(colAerosPermitidos As _a, _a.Aeroporto = varAero).Aeroporto, usrAeroPadrao)]
+                        DisplayMode: =If(CountRows(colAerosPermitidos) > 1, DisplayMode.Edit, DisplayMode.View)
                         Height: =44
                         Items: =colAerosSel
                   - htmAeroNomeIni:
