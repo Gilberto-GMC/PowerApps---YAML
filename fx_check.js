@@ -109,6 +109,17 @@ function analisa(arquivo, mortos) {
       }
     }
 
+    // Chave solta depois de uma lista, no mesmo recuo dos itens: o Studio recusa com PA1001
+    // ("did not find expected '-' indicator"). Foi o que aconteceu em 17/09/2026 com um
+    // 'Visible:' que caiu depois do 'Children:' em vez de entrar em 'Properties:'.
+    if (/^\s*[A-Za-z_][A-Za-z0-9_]*:/.test(l) && !/^\s*- /.test(l)) {
+      let j = i - 1;
+      while (j >= 0 && (!linhas[j].trim() || recuoDe(linhas[j]) > r)) j--;
+      if (j >= 0 && recuoDe(linhas[j]) === r && /^\s*- \S/.test(linhas[j])) {
+        erros.push(`${i + 1}: '${l.trim().split(":")[0]}' vem depois de uma lista no mesmo recuo — o Studio recusa com PA1001`);
+      }
+    }
+
     // Itens de uma mesma lista têm que compartilhar o recuo.
     if (/^\s*- \S/.test(l)) {
       let j = i + 1;
