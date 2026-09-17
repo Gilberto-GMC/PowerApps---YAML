@@ -18,7 +18,7 @@ Estado em 16/09/2026. Aeroporto é identificado pelo **nome** (`NAVEGANTES`), n�
 | Restrições entre posições | lista `tb_regrasPosicao` — tela RESTRIÇÕES | operador |
 | Equipamentos | lista `tb_equipamentos` — tela EQUIPAMENTOS (vale para todos os aeroportos) | operador |
 | Pré-posição da importação | lista `tb_prePosicao` (SharePoint, sem tela) | responsável |
-| Usuários e aeroporto de cada um | lista `tb_usuariosMapa` (SharePoint, sem tela) | responsável |
+| Usuários e aeroporto de cada um | lista **`User`** do AirportNow (a mesma do SAFETY e da Gestão de Chamados) | administrador do AirportNow |
 | Lista de aeroportos com mapa | **derivada** dos pátios ativos em `tb_patios` + aeroporto padrão do usuário | automático |
 | Portões e cores | lista `tb_portoes` (**por aeroporto**) — tela POSIÇÕES E CORES › PORTÕES | operador |
 | Companhias e cores | lista `tb_companhias` (**vale para todos os aeroportos**) — tela POSIÇÕES E CORES › COMPANHIAS | operador |
@@ -30,19 +30,23 @@ Estado em 16/09/2026. Aeroporto é identificado pelo **nome** (`NAVEGANTES`), n�
 
 ## Ordem
 
-1. **Usuários** — na lista `tb_usuariosMapa`, uma linha por pessoa. **O aeroporto não é escolhido: vem do
-   usuário conectado** (e-mail do Windows/Power Apps). Não há mais tabela de aeroportos no código.
-   - `email_usuario` exatamente como o do login (a tela Início mostra o e-mail de quem não tem cadastro);
-   - `perfil`: **BASE** (só o próprio aeroporto), **BLOCO** ou **SEDE** (também os de `aeroportos`);
-   - `aeroporto_padrao`: o nome, em maiúsculas, **igual ao gravado nas listas** (ex. NAVEGANTES) — é onde o app abre;
-   - `aeroportos` (BLOCO/SEDE): nomes separados por `;`, ou `TODOS`;
+1. **Usuários** — na lista **`User`** do AirportNow, que o Mapa só lê. **O aeroporto não é escolhido: vem do
+   usuário conectado.** Não há tabela de aeroportos do Mapa no código.
+   - o usuário é achado por `?USUARIO=<ID>` na URL (como o hub AirportNow abre os módulos) ou, sem parâmetro,
+     pela coluna **`Email`** igual ao login (a tela Início mostra o e-mail de quem não é achado);
+   - **`Aeroporto`**: o nome, em maiúsculas, **igual ao gravado nas listas do Mapa** (ex. NAVEGANTES) — é onde o app abre;
+   - **`Perfil`**: **Base** (só o próprio aeroporto), **Bloco** (os aeroportos do mesmo `Bloco`) ou **Sede** (todos);
+   - o bloco de cada aeroporto vem de `colAerosRede` no App.Formulas — a mesma tabela `nfAeros` do SAFETY;
    - quem **não está na lista** entra **somente leitura**.
 2. **Entre no app com um usuário daquele aeroporto** (ou um SEDE/BLOCO escolhendo-o em TROCAR CONTEXTO). O
    aeroporto padrão aparece mesmo sem pátio cadastrado; tudo o que se cadastra depois vale para ele. Quando o
    primeiro pátio ativo existir, o aeroporto passa a aparecer para quem tem acesso.
 
-> **Quando o módulo entrar no AirportNow:** o app já aceita `?aeroporto=NOME` na URL. Esse valor tem prioridade,
-> mas só se for um aeroporto permitido para o usuário — trocar a URL não dá acesso a outro aeroporto.
+> **Quando o módulo entrar no AirportNow:** o app já aceita `?USUARIO=<ID>`, a mesma convenção do SAFETY.
+>
+> ⚠️ **E o mesmo limite do SAFETY:** quem trocar o ID na URL é tratado como outro usuário (outro aeroporto e
+> perfil). Aeroporto e perfil no app são **organização da tela, não segurança**. O que impede gravar de verdade é a
+> **permissão do SharePoint** nas listas — é ela que precisa estar certa para quem não pode editar.
 3. **Pátios** — tela POSIÇÕES E CORES › PÁTIOS. Um por pátio físico; mais um para hangares, se houver.
 4. **Posições** — tela POSIÇÕES E CORES › POSIÇÕES. Confira o **Tipo** de cada uma: vem REMOTA por padrão.
    - `OCUPA` para posição que consome outras (ex. T6C ocupa `T5,T6`).

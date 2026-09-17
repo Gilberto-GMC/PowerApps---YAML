@@ -13,20 +13,57 @@ ForAll(
     { Aeroporto: _d.Value }
 );;
 
-// 👤 Usuário conectado — lista tb_usuariosMapa, pelo e-mail do Windows/Power Apps (desde 17/09/2026).
-// A comparação de texto do SharePoint não diferencia maiúsculas, e é delegável.
-usrMapa = LookUp(tb_usuariosMapa; email_usuario = User().Email And ativo = 1);;
-usrCadastrado = !IsBlank(usrMapa.email_usuario);;
-// BASE: só o próprio aeroporto · BLOCO / SEDE: também os de 'aeroportos' (nomes separados por ; ou TODOS)
-// Sem cadastro: CONSULTA — vê os aeroportos com mapa, somente leitura.
-usrPerfil = If(usrCadastrado; Upper(Trim(usrMapa.perfil)); "CONSULTA");;
-usrPodeEditar = usrCadastrado;;
+// 🌐 Aeroportos da rede e seus blocos — a mesma tabela nfAeros do SAFETY/AirportNow. Não é cadastro de
+// aeroporto do Mapa: só diz a que bloco cada aeroporto pertence, para o perfil Bloco. Quando o módulo entrar
+// no AirportNow, deve vir do sistema.
+colAerosRede =
+Table(
+    { IATA: "GYN"; ICAO: "SBGO"; Bloco: "CENTRAL"; Aeroporto: "GOIÂNIA" };
+    { IATA: "IMP"; ICAO: "SBIZ"; Bloco: "CENTRAL"; Aeroporto: "IMPERATRIZ" };
+    { IATA: "PMW"; ICAO: "SBPJ"; Bloco: "CENTRAL"; Aeroporto: "PALMAS" };
+    { IATA: "PLU"; ICAO: "SBBH"; Bloco: "CENTRAL"; Aeroporto: "PAMPULHA" };
+    { IATA: "PNZ"; ICAO: "SBPL"; Bloco: "CENTRAL"; Aeroporto: "PETROLINA" };
+    { IATA: "SLZ"; ICAO: "SBSL"; Bloco: "CENTRAL"; Aeroporto: "SÃO LUIS" };
+    { IATA: "THE"; ICAO: "SBTE"; Bloco: "CENTRAL"; Aeroporto: "TERESINA" };
+    { IATA: "BFH"; ICAO: "SBBI"; Bloco: "SUL"; Aeroporto: "BACACHERI" };
+    { IATA: "CWB"; ICAO: "SBCT"; Bloco: "SUL"; Aeroporto: "CURITIBA" };
+    { IATA: "JOI"; ICAO: "SBJV"; Bloco: "SUL"; Aeroporto: "JOINVILLE" };
+    { IATA: "NVT"; ICAO: "SBNF"; Bloco: "SUL"; Aeroporto: "NAVEGANTES" };
+    { IATA: "BGX"; ICAO: "SBBG"; Bloco: "SUL"; Aeroporto: "BAGÉ" };
+    { IATA: "IGU"; ICAO: "SBFI"; Bloco: "SUL"; Aeroporto: "FOZ DO IGUAÇU" };
+    { IATA: "LDB"; ICAO: "SBLO"; Bloco: "SUL"; Aeroporto: "LONDRINA" };
+    { IATA: "PET"; ICAO: "SBPK"; Bloco: "SUL"; Aeroporto: "PELOTAS" };
+    { IATA: "URG"; ICAO: "SBUG"; Bloco: "SUL"; Aeroporto: "URUGUAIANA" }
+);;
 
-// Aeroportos que o usuário pode abrir. O padrão entra SEMPRE e primeiro, mesmo sem pátio ainda — senão o
+// 👤 Usuário conectado — lista User do AirportNow (a mesma do SAFETY e da Gestão de Chamados), desde 17/09/2026.
+// Como o hub abre os módulos: ?USUARIO=<ID na lista User>. Sem parâmetro (app aberto direto), pelo Email do
+// login. Teste explícito de branco: Blank() = 0 é verdadeiro no Power Fx.
+usrMapa =
+With(
+    { _p: Value(Param("USUARIO")) };
+    If(
+        !IsBlank(_p) And _p > 0;
+        LookUp(User; ID = _p);
+        LookUp(User; Email = User().Email)
+    )
+);;
+usrCadastrado = !IsBlank(usrMapa.ID);;
+// Base: só o próprio aeroporto · Bloco: os do mesmo bloco · Sede: todos · sem registro: CONSULTA (somente leitura)
+usrPerfil = If(usrCadastrado; Upper(Trim(usrMapa.Perfil)); "CONSULTA");;
+usrPodeEditar = usrCadastrado;;
+usrBloco =
+Upper(Trim(Coalesce(
+    usrMapa.Bloco;
+    LookUp(colAerosRede; Aeroporto = Upper(Trim(usrMapa.Aeroporto))).Bloco;
+    ""
+)));;
+
+// Aeroportos que o usuário pode abrir. O dele entra SEMPRE e primeiro, mesmo sem pátio ainda — senão o
 // usuário de um aeroporto novo cairia em outro e cadastraria os pátios no lugar errado.
 colAerosPermitidos =
 With(
-    { _padrao: Upper(Trim(Coalesce(usrMapa.aeroporto_padrao; ""))) };
+    { _padrao: Upper(Trim(Coalesce(usrMapa.Aeroporto; ""))) };
     ForAll(
         Distinct(
             Filter(
@@ -35,12 +72,9 @@ With(
                     Concat(
                         Filter(
                             colAerosMapa;
-                            !usrCadastrado Or (
-                                usrPerfil <> "BASE" And (
-                                    Upper(Trim(Coalesce(usrMapa.aeroportos; ""))) = "TODOS" Or
-                                    Aeroporto in ForAll(Split(Upper(Coalesce(usrMapa.aeroportos; "")); ";") As _s; Trim(_s.Value))
-                                )
-                            )
+                            !usrCadastrado Or
+                            usrPerfil = "SEDE" Or
+                            (usrPerfil = "BLOCO" And Aeroporto in Filter(colAerosRede; Bloco = usrBloco).Aeroporto)
                         );
                         Aeroporto;
                         ";"
@@ -55,13 +89,8 @@ With(
     )
 );;
 
-// Aeroporto que abre: o que vier na URL (?aeroporto=, quando o módulo entrar no AirportNow) se for permitido;
-// senão o primeiro permitido — que é o padrão do usuário.
-usrAeroPadrao =
-Coalesce(
-    LookUp(colAerosPermitidos; Aeroporto = Upper(Trim(Param("aeroporto")))).Aeroporto;
-    First(colAerosPermitidos).Aeroporto
-);;
+// Aeroporto que abre: o primeiro permitido — que é o do usuário.
+usrAeroPadrao = First(colAerosPermitidos).Aeroporto;;
 
 // 🅿️ Pátios — vêm da lista tb_patios desde 09/09/2026. A ordem manda no agrupamento visual da
 // grade e a cor_hex pinta a borda esquerda da linha; aeroporto novo é linha nova, não código novo.
