@@ -2717,6 +2717,7 @@ Screens:
                         Height: =18
                         Size: =10
                         Text: ="COMPANHIA"
+                        Visible: =drpTipoMap.Selected.Value = "Voo"
                   - drpCiaMap:
                       Control: DropDown@0.0.45
                       Properties:
@@ -2724,6 +2725,7 @@ Screens:
                         DisplayMode: =If(varPodeEditar, DisplayMode.Edit, DisplayMode.View)
                         Height: =40
                         Items: =Filter(colCiasSel, locNonce >= 0)
+                        Visible: =drpTipoMap.Selected.Value = "Voo"
                   - cntVoosMap:
                       Control: GroupContainer@1.5.0
                       Variant: AutoLayout
@@ -2740,6 +2742,7 @@ Screens:
                         RadiusBottomRight: =0
                         RadiusTopLeft: =0
                         RadiusTopRight: =0
+                        Visible: =drpTipoMap.Selected.Value = "Voo"
                       Children:
                         - cntVooIdaMap:
                             Control: GroupContainer@1.5.0
@@ -2816,6 +2819,7 @@ Screens:
                         Height: =18
                         Size: =10
                         Text: ="PORTÃO"
+                        Visible: =drpTipoMap.Selected.Value = "Voo"
                   - drpPortaoMap:
                       Control: DropDown@0.0.45
                       Properties:
@@ -2823,7 +2827,8 @@ Screens:
                         DisplayMode: =If(varPodeEditar, DisplayMode.Edit, DisplayMode.View)
                         Height: =40
                         Items: =Filter(colPortoesSel, locNonce >= 0)
-                  - lblEquipMap:
+                        Visible: =drpTipoMap.Selected.Value = "Voo"
+                  - lblPrefixoMap:
                       Control: Label@2.5.1
                       Properties:
                         Color: =thmTextoFraco
@@ -2831,14 +2836,55 @@ Screens:
                         FontWeight: =FontWeight.Bold
                         Height: =18
                         Size: =10
-                        Text: ="EQUIPAMENTO *"
-                  - drpEquipMap:
-                      Control: DropDown@0.0.45
+                        Text: ="MATRÍCULA / PREFIXO"
+                  - txtPrefixoMap:
+                      Control: TextInput@0.0.54
                       Properties:
-                        DefaultSelectedItems: =[Coalesce(locEquipSug, varForm.equip, "—")]
+                        AccessibleLabel: ="Prefixo da aeronave"
                         DisplayMode: =If(varPodeEditar, DisplayMode.Edit, DisplayMode.View)
                         Height: =40
-                        Items: =Filter(colEquipSel, locNonce >= 0 And locNonceEq >= 0)
+                        OnChange: |-
+                          =With(
+                              { _p: Upper(Trim(txtPrefixoMap.Value)) },
+                              If(
+                                  Len(_p) >= 4 And drpEquipMap.Selected.Value = "—",
+                                  With(
+                                      {
+                                          _eq: LookUp(
+                                              FirstN(
+                                                  Sort(
+                                                      Filter(
+                                                          tb_alocacoesMapa,
+                                                          prefixo = _p Or prefixo = Left(_p, 2) & "-" & Mid(_p, 3),
+                                                          ativo = 1
+                                                      ),
+                                                      ID,
+                                                      SortOrder.Descending
+                                                  ),
+                                                  30
+                                              ) As _x,
+                                              !IsBlank(_x.equipamento)
+                                          ).equipamento
+                                      },
+                                      If(
+                                          !IsBlank(LookUp(colEquip As _c, _c.equip = _eq).equip),
+                                          UpdateContext({ locEquipSug: _eq, locNonceEq: locNonceEq + 1 })
+                                      )
+                                  )
+                              )
+                          )
+                        Placeholder: ="ex. PSESP"
+                        Value: =Coalesce(varForm.prefixo, "")
+                  - lblPrefixoAvisoMap:
+                      Control: Label@2.5.1
+                      Properties:
+                        Color: =thmAmbar
+                        Font: =thmFonte
+                        Height: =16
+                        Size: =9
+                        Text: ="Fora do padrão — só letras e números, sem hífen (ex. PRHLW)"
+                        Visible: |-
+                          =With({ _p: Upper(Trim(txtPrefixoMap.Value)) }, !IsBlank(_p) And !IsMatch(_p, "^[A-Z0-9]{4,7}$"))
                   - cntExtraMap:
                       Control: GroupContainer@1.5.0
                       Variant: AutoLayout
@@ -2846,8 +2892,7 @@ Screens:
                         DropShadow: =DropShadow.None
                         Fill: =thmSuperficie
                         FillPortions: =0
-                        Height: |-
-                          =If(With({ _p: Upper(Trim(txtPrefixoMap.Value)) }, !IsBlank(_p) And !IsMatch(_p, "^[A-Z0-9]{4,7}$")), 84, 62)
+                        Height: =62
                         LayoutAlignItems: =LayoutAlignItems.Stretch
                         LayoutDirection: =LayoutDirection.Horizontal
                         LayoutGap: =10
@@ -2857,7 +2902,7 @@ Screens:
                         RadiusTopLeft: =0
                         RadiusTopRight: =0
                       Children:
-                        - cntPrefixoMap:
+                        - cntEquipMap:
                             Control: GroupContainer@1.5.0
                             Variant: AutoLayout
                             Properties:
@@ -2873,7 +2918,7 @@ Screens:
                               RadiusTopLeft: =0
                               RadiusTopRight: =0
                             Children:
-                              - lblPrefixoMap:
+                              - lblEquipMap:
                                   Control: Label@2.5.1
                                   Properties:
                                     Color: =thmTextoFraco
@@ -2881,55 +2926,14 @@ Screens:
                                     FontWeight: =FontWeight.Bold
                                     Height: =18
                                     Size: =10
-                                    Text: ="PREFIXO"
-                              - txtPrefixoMap:
-                                  Control: TextInput@0.0.54
+                                    Text: ="EQUIPAMENTO *"
+                              - drpEquipMap:
+                                  Control: DropDown@0.0.45
                                   Properties:
-                                    AccessibleLabel: ="Prefixo da aeronave"
+                                    DefaultSelectedItems: =[Coalesce(locEquipSug, varForm.equip, "—")]
                                     DisplayMode: =If(varPodeEditar, DisplayMode.Edit, DisplayMode.View)
                                     Height: =40
-                                    OnChange: |-
-                                      =With(
-                                          { _p: Upper(Trim(txtPrefixoMap.Value)) },
-                                          If(
-                                              Len(_p) >= 4 And drpEquipMap.Selected.Value = "—",
-                                              With(
-                                                  {
-                                                      _eq: LookUp(
-                                                          FirstN(
-                                                              Sort(
-                                                                  Filter(
-                                                                      tb_alocacoesMapa,
-                                                                      prefixo = _p Or prefixo = Left(_p, 2) & "-" & Mid(_p, 3),
-                                                                      ativo = 1
-                                                                  ),
-                                                                  ID,
-                                                                  SortOrder.Descending
-                                                              ),
-                                                              30
-                                                          ) As _x,
-                                                          !IsBlank(_x.equipamento)
-                                                      ).equipamento
-                                                  },
-                                                  If(
-                                                      !IsBlank(LookUp(colEquip As _c, _c.equip = _eq).equip),
-                                                      UpdateContext({ locEquipSug: _eq, locNonceEq: locNonceEq + 1 })
-                                                  )
-                                              )
-                                          )
-                                      )
-                                    Placeholder: ="ex. PSESP"
-                                    Value: =Coalesce(varForm.prefixo, "")
-                              - lblPrefixoAvisoMap:
-                                  Control: Label@2.5.1
-                                  Properties:
-                                    Color: =thmAmbar
-                                    Font: =thmFonte
-                                    Height: =16
-                                    Size: =9
-                                    Text: ="Fora do padrão — só letras e números, sem hífen (ex. PRHLW)"
-                                    Visible: |-
-                                      =With({ _p: Upper(Trim(txtPrefixoMap.Value)) }, !IsBlank(_p) And !IsMatch(_p, "^[A-Z0-9]{4,7}$"))
+                                    Items: =Filter(colEquipSel, locNonce >= 0 And locNonceEq >= 0)
                         - cntEnvMap:
                             Control: GroupContainer@1.5.0
                             Variant: AutoLayout
@@ -2982,6 +2986,7 @@ Screens:
                         Height: =44
                         Label: ="Voo pesquisado (pinta o bloco de vermelho)"
                         LabelPosition: ='Toggle.LabelPosition'.Before
+                        Visible: =drpTipoMap.Selected.Value = "Voo"
                   - tglInternacionalMap:
                       Control: Toggle@1.1.5
                       Properties:
@@ -2993,6 +2998,7 @@ Screens:
                         Height: =44
                         Label: ="Voo internacional (selo I amarelo no bloco)"
                         LabelPosition: ='Toggle.LabelPosition'.Before
+                        Visible: =drpTipoMap.Selected.Value = "Voo"
                   - tglAlternativaMap:
                       Control: Toggle@1.1.5
                       Properties:
@@ -3124,8 +3130,8 @@ Screens:
                                       ),
                                       locPos: LookUp(colPosicoesAero As _p, _p.posicao = drpPosicaoMap.Selected.Value),
                                       locTipo: Coalesce(LookUp(colTiposReg As _t, _t.rotulo = drpTipoMap.Selected.Value).tipo, "VOO"),
-                                      locCia: If(drpCiaMap.Selected.Value = "—", "", drpCiaMap.Selected.Value),
-                                      locPortao: If(drpPortaoMap.Selected.Value = "—", "", drpPortaoMap.Selected.Value),
+                                      locCia: If(drpTipoMap.Selected.Value = "Voo" And drpCiaMap.Selected.Value <> "—", drpCiaMap.Selected.Value, ""),
+                                      locPortao: If(drpTipoMap.Selected.Value = "Voo" And drpPortaoMap.Selected.Value <> "—", drpPortaoMap.Selected.Value, ""),
                                       locEquip: If(
                                           drpEquipMap.Selected.Value = "—",
                                           "",
@@ -3432,15 +3438,15 @@ Screens:
                                                       posicao_txt: locPos.posicao,
                                                       patio_txt: locPos.patio,
                                                       cia_sigla: locCia,
-                                                      voo_chegada: txtVooIdaMap.Value,
-                                                      voo_saida: txtVooVoltaMap.Value,
+                                                      voo_chegada: If(drpTipoMap.Selected.Value = "Voo", txtVooIdaMap.Value, ""),
+                                                      voo_saida: If(drpTipoMap.Selected.Value = "Voo", txtVooVoltaMap.Value, ""),
                                                       prefixo: txtPrefixoMap.Value,
                                                       hora_inicio: locIni,
                                                       hora_fim: locFim,
                                                       portao: locPortao,
                                                       tipo_registro: locTipo,
-                                                      pesquisado: If(tglPesquisadoMap.Checked, 1, 0),
-                                                      internacional: If(tglInternacionalMap.Checked, 1, 0),
+                                                      pesquisado: If(drpTipoMap.Selected.Value = "Voo" And tglPesquisadoMap.Checked, 1, 0),
+                                                      internacional: If(drpTipoMap.Selected.Value = "Voo" And tglInternacionalMap.Checked, 1, 0),
                                                       alternativa: If(tglAlternativaMap.Checked, 1, 0),
                                                       equipamento: locEquip,
                                                       envergadura_m: locEnv,
