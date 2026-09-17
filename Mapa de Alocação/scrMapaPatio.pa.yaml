@@ -2846,7 +2846,8 @@ Screens:
                         DropShadow: =DropShadow.None
                         Fill: =thmSuperficie
                         FillPortions: =0
-                        Height: =62
+                        Height: |-
+                          =If(With({ _p: Upper(Trim(txtPrefixoMap.Value)) }, !IsBlank(_p) And !IsMatch(_p, "^[A-Z0-9]{4,7}$")), 84, 62)
                         LayoutAlignItems: =LayoutAlignItems.Stretch
                         LayoutDirection: =LayoutDirection.Horizontal
                         LayoutGap: =10
@@ -2896,7 +2897,15 @@ Screens:
                                                   {
                                                       _eq: LookUp(
                                                           FirstN(
-                                                              Sort(Filter(tb_alocacoesMapa, prefixo = _p, ativo = 1), ID, SortOrder.Descending),
+                                                              Sort(
+                                                                  Filter(
+                                                                      tb_alocacoesMapa,
+                                                                      prefixo = _p Or prefixo = Left(_p, 2) & "-" & Mid(_p, 3),
+                                                                      ativo = 1
+                                                                  ),
+                                                                  ID,
+                                                                  SortOrder.Descending
+                                                              ),
                                                               30
                                                           ) As _x,
                                                           !IsBlank(_x.equipamento)
@@ -2911,6 +2920,16 @@ Screens:
                                       )
                                     Placeholder: ="ex. PSESP"
                                     Value: =Coalesce(varForm.prefixo, "")
+                              - lblPrefixoAvisoMap:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    Color: =thmAmbar
+                                    Font: =thmFonte
+                                    Height: =16
+                                    Size: =9
+                                    Text: ="Fora do padrão — só letras e números, sem hífen (ex. PRHLW)"
+                                    Visible: |-
+                                      =With({ _p: Upper(Trim(txtPrefixoMap.Value)) }, !IsBlank(_p) And !IsMatch(_p, "^[A-Z0-9]{4,7}$"))
                         - cntEnvMap:
                             Control: GroupContainer@1.5.0
                             Variant: AutoLayout
@@ -3854,7 +3873,8 @@ Screens:
                   DropShadow: =DropShadow.None
                   Fill: =thmSuperficie
                   FillPortions: =0
-                  Height: =392
+                  Height: |-
+                    =If(With({ _p: Upper(Trim(txtHangarPrefixoMap.Value)) }, !IsBlank(_p) And !IsMatch(_p, "^[A-Z0-9]{4,7}$")), 414, 392)
                   LayoutAlignItems: =LayoutAlignItems.Stretch
                   LayoutDirection: =LayoutDirection.Vertical
                   LayoutGap: =6
@@ -3904,7 +3924,15 @@ Screens:
                                       {
                                           _eq: LookUp(
                                               FirstN(
-                                                  Sort(Filter(tb_alocacoesMapa, prefixo = _p, ativo = 1), ID, SortOrder.Descending),
+                                                  Sort(
+                                                      Filter(
+                                                          tb_alocacoesMapa,
+                                                          prefixo = _p Or prefixo = Left(_p, 2) & "-" & Mid(_p, 3),
+                                                          ativo = 1
+                                                      ),
+                                                      ID,
+                                                      SortOrder.Descending
+                                                  ),
                                                   30
                                               ) As _x,
                                               !IsBlank(_x.equipamento)
@@ -3919,6 +3947,16 @@ Screens:
                           )
                         Placeholder: ="ex. PSESP"
                         Value: =locHangarDados.prefixo
+                  - lblHangarPrefixoAvisoMap:
+                      Control: Label@2.5.1
+                      Properties:
+                        Color: =thmAmbar
+                        Font: =thmFonte
+                        Height: =16
+                        Size: =9
+                        Text: ="Fora do padrão — só letras e números, sem hífen (ex. PRHLW)"
+                        Visible: |-
+                          =With({ _p: Upper(Trim(txtHangarPrefixoMap.Value)) }, !IsBlank(_p) And !IsMatch(_p, "^[A-Z0-9]{4,7}$"))
                   - lblHangarEquipMap:
                       Control: Label@2.5.1
                       Properties:
