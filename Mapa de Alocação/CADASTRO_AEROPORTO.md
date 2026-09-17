@@ -19,11 +19,11 @@ Estado em 16/09/2026. Aeroporto é identificado pelo **nome** (`NAVEGANTES`), n�
 | Equipamentos | lista `tb_equipamentos` — tela EQUIPAMENTOS (vale para todos os aeroportos) | operador |
 | Pré-posição da importação | lista `tb_prePosicao` (SharePoint, sem tela) | responsável |
 | **Lista de aeroportos** | `colAerosMapa` no `App_Formulas_Mapa.txt` | **código** |
-| **Portões e cores** | `colPortoes` no `App_Formulas_Mapa.txt` | **código** |
-| **Companhias e cores** | `colCias` no `App_Formulas_Mapa.txt` | **código** |
+| Portões e cores | lista `tb_portoes` (**por aeroporto**) — tela POSIÇÕES E CORES › PORTÕES | operador |
+| Companhias e cores | lista `tb_companhias` (**vale para todos os aeroportos**) — tela POSIÇÕES E CORES › COMPANHIAS | operador |
 
-> Portões e companhias ainda não têm coluna `aeroporto`: um segundo aeroporto hoje **compartilharia** os
-> portões de Navegantes. Antes de um aeroporto com portões diferentes entrar em uso, isso precisa virar lista.
+> Desde 17/09/2026 portões e companhias são listas. Portão é físico, então cada aeroporto cadastra os seus;
+> companhia é a mesma em qualquer aeroporto, então a lista é única — cadastrar uma companhia vale para todos.
 
 ---
 
