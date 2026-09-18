@@ -27,6 +27,7 @@ exemplo). Confira o código antes de mexer: se o seu cadastro usa outro, vale ma
 | E290 | E190-E2 | 33,72 | 36,24 | não |
 | A20N | A320neo | 35,80 | 37,57 | não |
 | A21N | A321neo | 35,80 | 44,51 | não |
+| B38M | B737 MAX 8 | 35,92 | 39,52 | não |
 
 ## Ordem sugerida para mexer
 
@@ -34,8 +35,9 @@ exemplo). Confira o código antes de mexer: se o seu cadastro usa outro, vale ma
    depende a trava nova das posições.
 2. **Envergaduras depois**, só onde estiver diferente — a trava de envergadura já roda hoje, então
    mudar um valor muda o que o app aceita. Se alguma diferença for grande, me avise antes.
-3. **Só então os `comp_max` das posições** (T1 33,70 · T2 41,60 · T3 41,60 · T4 39,50 · T5 41,60 ·
-   T6 41,60). Se os comprimentos ainda estiverem errados no catálogo, a trava barra o que não deve.
+3. **Os `comp_max` das posições** já foram cadastrados em 18/09/2026 (T1 e T4 39,50; T2, T3, T5, T6 e
+   T7 41,60; T6C 54,94; helipontos sem trava). Se os comprimentos ainda estiverem errados no catálogo,
+   a trava barra o que não deve — por isso o catálogo vem primeiro.
 
 ## Dois pontos de atenção
 

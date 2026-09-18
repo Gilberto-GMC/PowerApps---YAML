@@ -7,23 +7,35 @@ de parada e por isso não vale como limite atual.
 
 ## Limite de comprimento por posição (pátio comercial)
 
-| posição | maior aeronave aceita | comprimento | `comp_max` a cadastrar |
+Cadastrado em 18/09/2026, conforme o Douglas:
+
+| posição | maior aeronave aceita | comprimento | `comp_max` |
 |---|---|---|---|
-| T1 | B737-700 | 33,63 m | **33,70** |
+| T1 | B737-800 | 39,48 m | **39,50** |
 | T2 | E195-E2 | 41,50 m | **41,60** |
 | T3 | E195-E2 | 41,50 m | **41,60** |
 | T4 | B737-800 | 39,48 m | **39,50** |
 | T5 | E195-E2 | 41,50 m | **41,60** |
 | T6 | E195-E2 | 41,50 m | **41,60** |
+| T7 | E195-E2 | 41,50 m | **41,60** |
+| T6C | B767-300F | 54,94 m | **54,94** |
+| H1 a H4 | — | — | **sem trava, por decisão dele** |
 
 O `comp_max` vai um pouco acima do comprimento da aeronave de propósito: assim um arredondamento no
 catálogo não barra justamente a aeronave que é aceita.
 
-**T4 não recebe o E2** por causa da via de serviço, que impede a aeronave de vir mais à frente — não
-é limite de pavimento. Mantém a aeronave de projeto de 2016.
+**O B737-800 entra em todas as posições do pátio principal.** O que separa as posições é o E2:
+**T1 e T4 não o recebem** — na T4 por causa da via de serviço, que impede a aeronave de vir mais à
+frente. Por isso a **aeronave máxima de todas as pontes é o B-738**: ela é a de maior envergadura
+aceita (35,80 m), e é dela que sai a trava de envergadura. Deixar o E-2 como aeronave máxima barraria
+o B738 na posição, que foi o que aconteceu em T2 e T3 até 18/09/2026.
+
+A restrição de **B737 MAX lado a lado** é envergadura entre posições vizinhas e vive em
+`tb_regrasPosicao`, não no limite da posição.
 
 Aviação geral e helicópteros seguem por **categoria**, não por medida de posição. A planta registra a
-aeronave crítica do pátio de helicópteros: **Sikorsky S76-C, comprimento máximo 16,00 m**.
+aeronave crítica do pátio de helicópteros: **Sikorsky S76-C, comprimento máximo 16,00 m** — fica de
+referência, sem virar trava.
 
 ## Comprimento e envergadura das aeronaves comerciais
 
