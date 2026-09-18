@@ -3895,20 +3895,48 @@ Screens:
                               LayoutMinWidth: =0
                               OnSelect: =Select(btnReservasMap)
                               Text: ="RECARREGAR"
-            - htmResListaMap:
+            - htmResCabecalhoMap:
                 Control: HtmlViewer@2.1.0
                 Properties:
                   AutoHeight: =true
                   Color: =thmTexto
                   Fill: =thmFundo
+                  FillPortions: =0
                   Font: =thmFonte
                   HtmlText: |-
                     ="<div style='" & htmlFonte & "'>" &
                     "<div style='font-size:10px;font-weight:700;letter-spacing:.14em;color:" & hxTextoFraco & ";'>RESERVAS DE PÁTIO &nbsp;&middot;&nbsp; DE " & Upper(Text(Today(), "dd/mm/yyyy")) & " EM DIANTE</div>" &
-                    "<div style='font-size:11px;color:" & hxTextoFraco & ";margin-top:4px;'>Todas as reservas lançadas para hoje e para os próximos meses. Hangares têm painel próprio e não entram aqui.</div>" &
-                    With(
-                        {
-                            _lst: Filter(
+                    "<div style='font-size:11px;color:" & hxTextoFraco & ";margin-top:4px;'>Todas as reservas lançadas para hoje e para os próximos meses. Hangares têm painel próprio e não entram aqui. Toque na linha para ver os detalhes; IR AO DIA leva a grade para a data da reserva.</div>" &
+                    "<div style='font-size:11px;color:" & hxTexto & ";margin-top:8px;'><b>" &
+                    CountRows(
+                        Filter(
+                            colReservas As _f,
+                            (drpResPatioMap.Selected.Value = "TODOS OS PÁTIOS" Or _f.patio = drpResPatioMap.Selected.Value) And
+                            (
+                                drpResCondMap.Selected.Value = "TODAS" Or
+                                Coalesce(LookUp(colCondicoes As _cf, _cf.cond = _f.cond).rotulo, "Previsto") = drpResCondMap.Selected.Value
+                            ) And
+                            (
+                                IsBlank(Trim(txtResBuscaMap.Text)) Or
+                                Upper(Trim(txtResBuscaMap.Text)) in
+                                    Upper(Coalesce(_f.prefixo, "") & " " & Coalesce(_f.resp, "") & " " & Coalesce(_f.posicao, ""))
+                            )
+                        )
+                    ) & "</b> reserva(s)</div>" &
+                    "</div>"
+                  Size: =11
+            - galResListaMap:
+                Control: Gallery@2.15.0
+                Variant: Vertical
+                Properties:
+                  BorderStyle: =BorderStyle.None
+                  Fill: =thmFundo
+                  FillPortions: =0
+                  Height: |-
+                    =Max(
+                        46,
+                        CountRows(
+                            Filter(
                                 colReservas As _f,
                                 (drpResPatioMap.Selected.Value = "TODOS OS PÁTIOS" Or _f.patio = drpResPatioMap.Selected.Value) And
                                 (
@@ -3917,68 +3945,111 @@ Screens:
                                 ) And
                                 (
                                     IsBlank(Trim(txtResBuscaMap.Text)) Or
-                                    Upper(Trim(txtResBuscaMap.Text)) in Upper(Coalesce(_f.prefixo, "")) Or
-                                    Upper(Trim(txtResBuscaMap.Text)) in Upper(Coalesce(_f.resp, "")) Or
-                                    Upper(Trim(txtResBuscaMap.Text)) in Upper(Coalesce(_f.posicao, ""))
+                                    Upper(Trim(txtResBuscaMap.Text)) in
+                                        Upper(Coalesce(_f.prefixo, "") & " " & Coalesce(_f.resp, "") & " " & Coalesce(_f.posicao, ""))
                                 )
                             )
-                        },
-                        If(
-                            CountRows(_lst) = 0,
-                            "<div style='margin-top:14px;font-size:12px;color:" & hxTextoFraco & ";'>Nenhuma reserva para o filtro escolhido.</div>",
-                            "<div style='font-size:11px;color:" & hxTexto & ";margin:10px 0 4px 0;'><b>" & CountRows(_lst) & "</b> reserva(s)</div>" &
-                            "<table style='width:100%;border-collapse:collapse;font-size:11px;color:" & hxTexto & ";'>" &
-                            "<tr style='color:" & hxTextoFraco & ";text-align:left;'>" &
-                            "<th style='padding:4px 6px;border-bottom:1px solid " & hxBorda & ";width:31%;'>QUANDO</th>" &
-                            "<th style='padding:4px 6px;border-bottom:1px solid " & hxBorda & ";width:14%;'>POSIÇÃO</th>" &
-                            "<th style='padding:4px 6px;border-bottom:1px solid " & hxBorda & ";width:19%;'>MATRÍCULA</th>" &
-                            "<th style='padding:4px 6px;border-bottom:1px solid " & hxBorda & ";width:22%;'>RESPONSÁVEL</th>" &
-                            "<th style='padding:4px 6px;border-bottom:1px solid " & hxBorda & ";width:14%;'>SITUAÇÃO</th>" &
-                            "</tr>" &
-                            Concat(
-                                Sequence(CountRows(_lst)) As _n,
-                                With(
-                                    {
-                                        _r: Index(_lst, _n.Value),
-                                        _mesAnt: If(_n.Value = 1, "", Text(Index(_lst, _n.Value - 1).data_ini, "mm/yyyy"))
-                                    },
-                                    If(
-                                        Text(_r.data_ini, "mm/yyyy") <> _mesAnt,
-                                        "<tr><td colspan='5' style='padding:10px 6px 4px 6px;font-size:10px;font-weight:700;letter-spacing:.12em;color:" & hxPrimaria & ";'>" &
-                                        Upper(Text(_r.data_ini, "mmmm yyyy")) & "</td></tr>",
-                                        ""
-                                    ) &
-                                    "<tr style='border-top:1px solid " & hxGradeLinha & ";'>" &
-                                    "<td style='padding:5px 6px;'>" &
-                                    Text(_r.data_ini, "ddd dd/mm") & " " & Text(Int(_r.h_ini / 60), "00") & ":" & Text(Mod(_r.h_ini, 60), "00") &
-                                    If(
-                                        _r.data_f = mapSaidaEmAberto,
-                                        " &rarr; <span style='color:" & hxVerde & ";font-weight:700;'>em aberto</span>",
-                                        " &rarr; " & Text(_r.data_f, "ddd dd/mm") & " " & Text(Int(_r.h_fim / 60), "00") & ":" & Text(Mod(_r.h_fim, 60), "00")
-                                    ) &
-                                    "</td>" &
-                                    "<td style='padding:5px 6px;'><b>" & Coalesce(_r.posicao, "&mdash;") & "</b><br><span style='color:" & hxTextoFraco & ";'>" & Coalesce(_r.patio, "") & "</span></td>" &
-                                    "<td style='padding:5px 6px;'><b>" & Coalesce(_r.prefixo, "&mdash;") & "</b>" &
-                                    If(IsBlank(_r.equip), "", "<br><span style='color:" & hxTextoFraco & ";'>" & _r.equip & "</span>") & "</td>" &
-                                    "<td style='padding:5px 6px;'>" & Coalesce(_r.resp, "&mdash;") &
-                                    If(IsBlank(_r.contato), "", "<br><span style='color:" & hxTextoFraco & ";'>" & _r.contato & "</span>") & "</td>" &
-                                    "<td style='padding:5px 6px;'>" &
-                                    Coalesce(LookUp(colCondicoes As _c, _c.cond = _r.cond).rotulo, "Previsto") &
-                                    If(_r.alt = 1, "<br><span style='color:" & hxTextoFraco & ";'>alternativa</span>", "") &
-                                    "</td></tr>" &
-                                    If(
-                                        IsBlank(_r.obs),
-                                        "",
-                                        "<tr><td colspan='5' style='padding:0 6px 6px 6px;color:" & hxTextoFraco & ";'>" &
-                                        Substitute(Substitute(_r.obs, "&", "&amp;"), "<", "&lt;") & "</td></tr>"
-                                    )
+                        ) * 46
+                    )
+                  Items: |-
+                    =Sort(
+                        Filter(
+                            colReservas As _f,
+                            (drpResPatioMap.Selected.Value = "TODOS OS PÁTIOS" Or _f.patio = drpResPatioMap.Selected.Value) And
+                            (
+                                drpResCondMap.Selected.Value = "TODAS" Or
+                                Coalesce(LookUp(colCondicoes As _cf, _cf.cond = _f.cond).rotulo, "Previsto") = drpResCondMap.Selected.Value
+                            ) And
+                            (
+                                IsBlank(Trim(txtResBuscaMap.Text)) Or
+                                Upper(Trim(txtResBuscaMap.Text)) in
+                                    Upper(Coalesce(_f.prefixo, "") & " " & Coalesce(_f.resp, "") & " " & Coalesce(_f.posicao, ""))
+                            )
+                        ),
+                        DateAdd(data_ini, h_ini, TimeUnit.Minutes),
+                        SortOrder.Ascending
+                    )
+                  LayoutMinWidth: =0
+                  ShowScrollbar: =false
+                  TemplatePadding: =0
+                  TemplateSize: =46
+                Children:
+                  - cntLinhaResMap:
+                      Control: GroupContainer@1.5.0
+                      Variant: AutoLayout
+                      Properties:
+                        DropShadow: =DropShadow.None
+                        Fill: =thmTransparente
+                        Height: =44
+                        LayoutAlignItems: =LayoutAlignItems.Stretch
+                        LayoutDirection: =LayoutDirection.Horizontal
+                        LayoutGap: =2
+                        LayoutMinHeight: =0
+                        LayoutMinWidth: =0
+                        RadiusBottomLeft: =0
+                        RadiusBottomRight: =0
+                        RadiusTopLeft: =0
+                        RadiusTopRight: =0
+                        Width: =galResListaMap.Width
+                      Children:
+                        - btnResItemMap:
+                            Control: Button@0.0.45
+                            Properties:
+                              Align: =Align.Left
+                              Appearance: ='ButtonCanvas.Appearance'.Secondary
+                              BasePaletteColor: =thmPrimaria
+                              BorderRadius: =0
+                              FillPortions: =1
+                              FontSize: =11
+                              FontWeight: =FontWeight.Semibold
+                              Height: =44
+                              IconStyle: ='ButtonCanvas.IconStyle'.Filled
+                              LayoutMinWidth: =0
+                              OnSelect: |-
+                                =Notify(
+                                    Coalesce(ThisItem.prefixo, "Reserva") &
+                                    If(IsBlank(ThisItem.obs), "", " — " & ThisItem.obs) &
+                                    If(IsBlank(ThisItem.contato), "", "   contato " & ThisItem.contato),
+                                    NotificationType.Information,
+                                    6000
                                 )
-                            ) &
-                            "</table>"
-                        )
-                    ) &
-                    "</div>"
-                  Size: =11
+                              PaddingLeft: =10
+                              PaddingRight: =10
+                              Text: |-
+                                =Text(ThisItem.data_ini, "ddd dd/mm") & " " &
+                                Text(Int(ThisItem.h_ini / 60), "00") & ":" & Text(Mod(ThisItem.h_ini, 60), "00") &
+                                If(
+                                    ThisItem.data_f = mapSaidaEmAberto,
+                                    " → em aberto",
+                                    " → " & Text(ThisItem.data_f, "dd/mm") & " " & Text(Int(ThisItem.h_fim / 60), "00") & ":" & Text(Mod(ThisItem.h_fim, 60), "00")
+                                ) &
+                                "   " & Coalesce(ThisItem.posicao, "—") &
+                                "   " & Coalesce(ThisItem.prefixo, "—") & If(IsBlank(ThisItem.equip), "", " · " & ThisItem.equip) &
+                                If(IsBlank(ThisItem.resp), "", "   " & ThisItem.resp) &
+                                "   " & Coalesce(LookUp(colCondicoes As _cl, _cl.cond = ThisItem.cond).rotulo, "Previsto")
+
+                        - btnResIrDiaMap:
+                            Control: Button@0.0.45
+                            Properties:
+                              Appearance: ='ButtonCanvas.Appearance'.Primary
+                              BasePaletteColor: =thmPrimaria
+                              BorderRadius: =0
+                              FillPortions: =0
+                              FontColor: =thmTextoBarra
+                              FontSize: =11
+                              FontWeight: =FontWeight.Semibold
+                              Height: =44
+                              Icon: ="ArrowRight"
+                              IconStyle: ='ButtonCanvas.IconStyle'.Filled
+                              LayoutMinWidth: =0
+                              OnSelect: |-
+                                =Set(varData, ThisItem.data_ini);
+                                Set(varResAberto, false);
+                                Select(btnAtualizarMap)
+                              PaddingLeft: =8
+                              PaddingRight: =8
+                              Text: ="IR AO DIA"
+                              Width: =120
       - recVeuHangarMap:
           Control: Rectangle@2.3.0
           Properties:
