@@ -361,6 +361,22 @@ Screens:
                                       "</div>"
                                     Size: =11
                                     Visible: =CountRows(colRegrasTodas) = 0
+                              - txtBuscaRgr:
+                                  Control: Classic/TextInput@2.3.2
+                                  Properties:
+                                    AccessibleLabel: ="Buscar restrição"
+                                    BorderColor: =thmBorda
+                                    BorderThickness: =1
+                                    Default: =""
+                                    DelayOutput: =false
+                                    Fill: =thmSuperficie
+                                    FillPortions: =0
+                                    Height: =30
+                                    HintText: ="buscar"
+                                    LayoutMinWidth: =0
+                                    PaddingLeft: =8
+                                    Size: =11
+                                    Width: =200
                               - galRegraRgr:
                                   Control: Gallery@2.15.0
                                   Variant: Vertical
@@ -369,7 +385,13 @@ Screens:
                                     BorderStyle: =BorderStyle.None
                                     Fill: =thmSuperficie
                                     FillPortions: =1
-                                    Items: =colRegrasTodas
+                                    Items: |-
+                                      =Filter(
+                                          colRegrasTodas As _r,
+                                          IsBlank(Trim(txtBuscaRgr.Text)) Or
+                                          Upper(Trim(txtBuscaRgr.Text)) in
+                                              Upper(_r.posicao & " " & Coalesce(_r.vizinha, "") & " " & Coalesce(_r.equip_a, "") & " " & Coalesce(_r.equip_b, "") & " " & Coalesce(_r.tipo_regra, "") & " " & Coalesce(_r.mensagem, ""))
+                                      )
                                     LayoutMinHeight: =0
                                     LayoutMinWidth: =0
                                     TemplatePadding: =0
