@@ -796,10 +796,15 @@ Screens:
                         - btnHojeMap:
                             Control: Button@0.0.45
                             Properties:
-                              Appearance: ='ButtonCanvas.Appearance'.Secondary
-                              BasePaletteColor: =thmPrimaria
+                              Appearance: |-
+                                =If(
+                                    varData = Today(),
+                                    'ButtonCanvas.Appearance'.Secondary,
+                                    'ButtonCanvas.Appearance'.Primary
+                                )
+                              BasePaletteColor: =If(varData = Today(), thmPrimaria, thmAcao)
                               BorderRadius: =0
-                              FontColor: =thmPrimaria
+                              FontColor: =If(varData = Today(), thmPrimaria, thmTextoBarra)
                               FontSize: =12
                               FontWeight: =FontWeight.Semibold
                               Height: =40
@@ -809,8 +814,8 @@ Screens:
                                 Select(btnAtualizarMap)
                               PaddingLeft: =12
                               PaddingRight: =12
-                              Text: ="HOJE"
-                              Width: =78
+                              Text: =If(varData = Today(), "HOJE", "VOLTAR PARA HOJE")
+                              Width: =If(varData = Today(), 78, 168)
                         - btnAmanhaMap:
                             Control: Button@0.0.45
                             Properties:
@@ -3949,25 +3954,76 @@ Screens:
                                         Upper(Coalesce(_f.prefixo, "") & " " & Coalesce(_f.resp, "") & " " & Coalesce(_f.posicao, ""))
                                 )
                             )
-                        ) * 46
+                        ) * 46 +
+                        CountRows(Distinct(
+                            Filter(
+                                colReservas As _f,
+                                (drpResPatioMap.Selected.Value = "TODOS OS PÁTIOS" Or _f.patio = drpResPatioMap.Selected.Value) And
+                                (
+                                    drpResCondMap.Selected.Value = "TODAS" Or
+                                    Coalesce(LookUp(colCondicoes As _cf, _cf.cond = _f.cond).rotulo, "Previsto") = drpResCondMap.Selected.Value
+                                ) And
+                                (
+                                    IsBlank(Trim(txtResBuscaMap.Text)) Or
+                                    Upper(Trim(txtResBuscaMap.Text)) in
+                                        Upper(Coalesce(_f.prefixo, "") & " " & Coalesce(_f.resp, "") & " " & Coalesce(_f.posicao, ""))
+                                )
+                            ),
+                            Text(data_ini, "yyyy/mm")
+                        )) * 46
                     )
                   Items: |-
-                    =Sort(
-                        Filter(
-                            colReservas As _f,
-                            (drpResPatioMap.Selected.Value = "TODOS OS PÁTIOS" Or _f.patio = drpResPatioMap.Selected.Value) And
-                            (
-                                drpResCondMap.Selected.Value = "TODAS" Or
-                                Coalesce(LookUp(colCondicoes As _cf, _cf.cond = _f.cond).rotulo, "Previsto") = drpResCondMap.Selected.Value
-                            ) And
-                            (
-                                IsBlank(Trim(txtResBuscaMap.Text)) Or
-                                Upper(Trim(txtResBuscaMap.Text)) in
-                                    Upper(Coalesce(_f.prefixo, "") & " " & Coalesce(_f.resp, "") & " " & Coalesce(_f.posicao, ""))
+                    =With(
+                        { _lst:
+                            Filter(
+                                colReservas As _f,
+                                (drpResPatioMap.Selected.Value = "TODOS OS PÁTIOS" Or _f.patio = drpResPatioMap.Selected.Value) And
+                                (
+                                    drpResCondMap.Selected.Value = "TODAS" Or
+                                    Coalesce(LookUp(colCondicoes As _cf, _cf.cond = _f.cond).rotulo, "Previsto") = drpResCondMap.Selected.Value
+                                ) And
+                                (
+                                    IsBlank(Trim(txtResBuscaMap.Text)) Or
+                                    Upper(Trim(txtResBuscaMap.Text)) in
+                                        Upper(Coalesce(_f.prefixo, "") & " " & Coalesce(_f.resp, "") & " " & Coalesce(_f.posicao, ""))
+                                )
                             )
-                        ),
-                        DateAdd(data_ini, h_ini, TimeUnit.Minutes),
-                        SortOrder.Ascending
+                        },
+                        Sort(
+                            Ungroup(
+                                Table(
+                                    {
+                                        _t: ForAll(
+                                            Distinct(_lst, Text(data_ini, "yyyy/mm")) As _d,
+                                            {
+                                                _ordem: Date(Value(Left(_d.Value, 4)), Value(Right(_d.Value, 2)), 1),
+                                                mes: Upper(Text(Date(Value(Left(_d.Value, 4)), Value(Right(_d.Value, 2)), 1), "mmmm yyyy")),
+                                                data_ini: Date(Value(Left(_d.Value, 4)), Value(Right(_d.Value, 2)), 1),
+                                                data_f: Date(Value(Left(_d.Value, 4)), Value(Right(_d.Value, 2)), 1),
+                                                h_ini: 0, h_fim: 0,
+                                                posicao: "", prefixo: "", equip: "", resp: "", contato: "", obs: "", cond: ""
+                                            }
+                                        )
+                                    },
+                                    {
+                                        _t: ForAll(
+                                            _lst As _r,
+                                            {
+                                                _ordem: DateAdd(_r.data_ini, _r.h_ini, TimeUnit.Minutes),
+                                                mes: "",
+                                                data_ini: _r.data_ini, data_f: _r.data_f,
+                                                h_ini: _r.h_ini, h_fim: _r.h_fim,
+                                                posicao: _r.posicao, prefixo: _r.prefixo, equip: _r.equip,
+                                                resp: _r.resp, contato: _r.contato, obs: _r.obs, cond: _r.cond
+                                            }
+                                        )
+                                    }
+                                ),
+                                "_t"
+                            ),
+                            _ordem,
+                            SortOrder.Ascending
+                        )
                     )
                   LayoutMinWidth: =0
                   ShowScrollbar: =false
@@ -3992,6 +4048,19 @@ Screens:
                         RadiusTopRight: =0
                         Width: =galResListaMap.Width
                       Children:
+                        - lblResMesMap:
+                            Control: Label@2.5.1
+                            Properties:
+                              Color: =thmPrimaria
+                              FillPortions: =1
+                              Font: =thmFonte
+                              FontWeight: =FontWeight.Bold
+                              Height: =44
+                              LayoutMinWidth: =0
+                              PaddingTop: =14
+                              Size: =11
+                              Text: =ThisItem.mes
+                              Visible: =ThisItem.mes <> ""
                         - btnResItemMap:
                             Control: Button@0.0.45
                             Properties:
@@ -4015,6 +4084,7 @@ Screens:
                                 )
                               PaddingLeft: =10
                               PaddingRight: =10
+                              Visible: =ThisItem.mes = ""
                               Text: |-
                                 =Text(ThisItem.data_ini, "ddd dd/mm") & " " &
                                 Text(Int(ThisItem.h_ini / 60), "00") & ":" & Text(Mod(ThisItem.h_ini, 60), "00") &
@@ -4049,6 +4119,7 @@ Screens:
                               PaddingLeft: =8
                               PaddingRight: =8
                               Text: ="IR AO DIA"
+                              Visible: =ThisItem.mes = ""
                               Width: =120
       - recVeuHangarMap:
           Control: Rectangle@2.3.0
