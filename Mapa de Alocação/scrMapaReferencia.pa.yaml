@@ -315,7 +315,7 @@ Screens:
                                 "<div style='font-size:19px;font-weight:800;letter-spacing:.02em;line-height:1.1;'>POSIÇÕES E PÁTIOS</div>" &
                                 "<div style='font-size:11px;opacity:.75;margin-top:3px;'>" &
                                 varAeroNome & " &nbsp;&middot;&nbsp; " & CountRows(colPosicoesAero) & " posições &nbsp;&middot;&nbsp; " &
-                                CountRows(colPortoes) & " portões &nbsp;&middot;&nbsp; " & CountRows(colCias) & " companhias</div></div>"
+                                CountRows(colPortoes) & " portões &nbsp;&middot;&nbsp; " & CountRows(colCias) & " operadores aéreos</div></div>"
                               LayoutMinWidth: =0
                               Size: =11
                   - cntConteudoRef:
@@ -428,7 +428,7 @@ Screens:
                                         =Set(varModoRef, "COMPANHIAS")
                                     PaddingLeft: =14
                                     PaddingRight: =14
-                                    Text: ="COMPANHIAS"
+                                    Text: ="OPERADORES AÉREOS"
                                     Width: =150
                               - btnAjudaRef:
                                   Control: Button@0.0.45
@@ -523,8 +523,8 @@ Screens:
                                 "</ol>" &
                                 "<div style='margin-top:4px;'>Se o hangar aparecer como linha na grade, o tipo ficou errado: abra a posição e troque para HANGAR.</div>" &
 
-                                "<div style='margin-top:12px;font-weight:800;color:" & hxPrimaria & ";'>4. PORTÕES E COMPANHIAS</div>" &
-                                "<div><b>Portões</b> são <b>deste aeroporto</b>: número e cor do contorno do bloco. <b>Companhias</b> valem para <b>todos os aeroportos</b>: " &
+                                "<div style='margin-top:12px;font-weight:800;color:" & hxPrimaria & ";'>4. PORTÕES E OPERADORES AÉREOS</div>" &
+                                "<div><b>Portões</b> são <b>deste aeroporto</b>: número e cor do contorno do bloco. <b>Operadores aéreos</b> valem para <b>todos os aeroportos</b>: " &
                                 "a sigla (ex. GLO) é a gravada nos lançamentos e usada pela importação; as cores pintam o bloco. Não troque sigla ou número já usado — desative e crie outro.</div>" &
                                 "<div style='margin-top:12px;font-weight:800;color:" & hxPrimaria & ";'>5. AEROPORTO NOVO</div>" &
                                 "<div>Aeroporto novo <b>não precisa de código</b>: o aeroporto vem do <b>usuário conectado</b>, pela lista <b>User</b> do AirportNow (colunas Aeroporto e Perfil). " &
@@ -1067,6 +1067,15 @@ Screens:
                                     RadiusTopLeft: =0
                                     RadiusTopRight: =0
                                   Children:
+                                    - txtBuscaPatRef:
+                                        Control: TextInput@0.0.54
+                                        Properties:
+                                          AccessibleLabel: ="Buscar pátio"
+                                          FillPortions: =0
+                                          Height: =30
+                                          LayoutMinWidth: =0
+                                          Placeholder: ="buscar"
+                                          Width: =200
                                     - galPatRef:
                                         Control: Gallery@2.15.0
                                         Variant: Vertical
@@ -1075,7 +1084,12 @@ Screens:
                                           BorderStyle: =BorderStyle.None
                                           Fill: =thmSuperficie
                                           FillPortions: =1
-                                          Items: =colPatRef
+                                          Items: |-
+                                            =Filter(
+                                                colPatRef As _b,
+                                                IsBlank(Trim(txtBuscaPatRef.Value)) Or
+                                                Upper(Trim(txtBuscaPatRef.Value)) in Upper(_b.patio & " " & _b.nome_patio)
+                                            )
                                           LayoutMinHeight: =0
                                           LayoutMinWidth: =0
                                           TemplatePadding: =0
@@ -2065,6 +2079,15 @@ Screens:
                                     RadiusTopLeft: =0
                                     RadiusTopRight: =0
                                   Children:
+                                    - txtBuscaPrtRef:
+                                        Control: TextInput@0.0.54
+                                        Properties:
+                                          AccessibleLabel: ="Buscar portão"
+                                          FillPortions: =0
+                                          Height: =30
+                                          LayoutMinWidth: =0
+                                          Placeholder: ="buscar"
+                                          Width: =200
                                     - galPrtRef:
                                         Control: Gallery@2.15.0
                                         Variant: Vertical
@@ -2073,7 +2096,12 @@ Screens:
                                           BorderStyle: =BorderStyle.None
                                           Fill: =thmSuperficie
                                           FillPortions: =1
-                                          Items: =colPrtRef
+                                          Items: |-
+                                            =Filter(
+                                                colPrtRef As _b,
+                                                IsBlank(Trim(txtBuscaPrtRef.Value)) Or
+                                                Upper(Trim(txtBuscaPrtRef.Value)) in Upper(_b.portao & " " & Coalesce(_b.patio, ""))
+                                            )
                                           LayoutMinHeight: =0
                                           LayoutMinWidth: =0
                                           TemplatePadding: =0
@@ -2694,6 +2722,15 @@ Screens:
                                     RadiusTopLeft: =0
                                     RadiusTopRight: =0
                                   Children:
+                                    - txtBuscaCiaRef:
+                                        Control: TextInput@0.0.54
+                                        Properties:
+                                          AccessibleLabel: ="Buscar operador aéreo"
+                                          FillPortions: =0
+                                          Height: =30
+                                          LayoutMinWidth: =0
+                                          Placeholder: ="buscar"
+                                          Width: =200
                                     - galCiaRef:
                                         Control: Gallery@2.15.0
                                         Variant: Vertical
@@ -2702,7 +2739,12 @@ Screens:
                                           BorderStyle: =BorderStyle.None
                                           Fill: =thmSuperficie
                                           FillPortions: =1
-                                          Items: =colCiaRef
+                                          Items: |-
+                                            =Filter(
+                                                colCiaRef As _b,
+                                                IsBlank(Trim(txtBuscaCiaRef.Value)) Or
+                                                Upper(Trim(txtBuscaCiaRef.Value)) in Upper(_b.sigla & " " & _b.nome_cia)
+                                            )
                                           LayoutMinHeight: =0
                                           LayoutMinWidth: =0
                                           TemplatePadding: =0
@@ -2808,9 +2850,9 @@ Screens:
                                           Fill: =thmSuperficie
                                           Font: =thmFonte
                                           HtmlText: |-
-                                              ="<div style='" & htmlFonte & "font-size:10px;font-weight:700;letter-spacing:.12em;color:" & hxTextoFraco & ";'>COMPANHIA</div>" &
+                                              ="<div style='" & htmlFonte & "font-size:10px;font-weight:700;letter-spacing:.12em;color:" & hxTextoFraco & ";'>OPERADOR AÉREO</div>" &
                                               "<div style='" & htmlFonte & "font-size:11px;color:" & hxTexto & ";line-height:1.5;padding:6px 0 4px 0;'>" &
-                                              "Vale para <b>todos os aeroportos</b>. A <b>sigla</b> é gravada em cada lançamento (e é o que a importação usa) — mudar a sigla de uma companhia já usada deixa esses lançamentos sem cor. As cores pintam o bloco na grade." &
+                                              "Vale para <b>todos os aeroportos</b>. A <b>sigla</b> é gravada em cada lançamento (e é o que a importação usa) — mudar a sigla de um operador já usado deixa esses lançamentos sem cor. As cores pintam o bloco na grade." &
                                               "</div>"
                                           Size: =11
                                     - lblCodCiaRef:
@@ -3597,9 +3639,9 @@ Screens:
                                                 OnSelect: |-
                                                     =If(
                                                         IsBlank(Trim(txtCodCiaRef.Value)),
-                                                        Notify("Informe a sigla da companhia.", NotificationType.Error, 5000),
+                                                        Notify("Informe a sigla do operador aéreo.", NotificationType.Error, 5000),
                                                         IsBlank(Trim(txtNomeCiaRef.Value)),
-                                                        Notify("Informe o nome da companhia.", NotificationType.Error, 5000),
+                                                        Notify("Informe o nome do operador aéreo.", NotificationType.Error, 5000),
                                                         !IsNumeric(txtOrdemCiaRef.Value),
                                                         Notify("A ordem tem que ser número.", NotificationType.Error, 5000),
                                                         !IsMatch(txtCorCiaRef.Value, "^#[0-9A-Fa-f]{6}$") Or !IsMatch(txtCorTxtCiaRef.Value, "^#[0-9A-Fa-f]{6}$"),
@@ -3607,7 +3649,7 @@ Screens:
                                                         !IsBlank(
                                                             LookUp(colCiaRef As _op, Upper(_op.sigla) = Upper(Trim(txtCodCiaRef.Value)) And _op.ID <> Coalesce(varCiaSelRef.ID, 0)).ID
                                                         ),
-                                                        Notify("Já existe companhia com essa sigla. É ela que cada lançamento grava.", NotificationType.Error, 7000),
+                                                        Notify("Já existe operador com essa sigla. É ela que cada lançamento grava.", NotificationType.Error, 7000),
                                                         UpdateContext(
                                                             {
                                                                 locErroRef: IsError(
@@ -3631,7 +3673,7 @@ Screens:
                                                             Notify("Não foi possível gravar. Nada foi alterado.", NotificationType.Error, 7000),
                                                             Select(btnRecarregarRef);
                                                             Set(varCiaSelRef, Blank());
-                                                            Notify("Companhia gravada. Vale para todos os aeroportos; a grade muda depois de ATUALIZAR.", NotificationType.Success, 4000)
+                                                            Notify("Operador aéreo gravado. Vale para todos os aeroportos; a grade muda depois de ATUALIZAR.", NotificationType.Success, 4000)
                                                         )
                                                     )
                                                 Text: ="SALVAR"
