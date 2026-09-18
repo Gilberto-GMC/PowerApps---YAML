@@ -2,7 +2,7 @@
 
 Documentos irmãos:
 [ARQUITETURA_MAPA.md](ARQUITETURA_MAPA.md) (decisões) ·
-[AppFormulas_Mapa.fx.md](AppFormulas_Mapa.fx.md) (dados de referência e tema) ·
+[App_Formulas_Mapa.txt](App_Formulas_Mapa.txt) (fórmulas nomeadas: dados de referência e tema) ·
 [FLUXO_EXPURGO_MAPA.md](FLUXO_EXPURGO_MAPA.md) (limpeza automática)
 
 O app tem **uma única lista**. Pátios, posições, portões e companhias não são listas — são dados de referência

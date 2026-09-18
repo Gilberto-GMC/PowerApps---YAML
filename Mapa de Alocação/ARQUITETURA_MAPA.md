@@ -2,7 +2,7 @@
 
 Documentos irmãos:
 [ESTRUTURA_LISTA_MAPA.md](ESTRUTURA_LISTA_MAPA.md) (a lista SharePoint) ·
-[AppFormulas_Mapa.fx.md](AppFormulas_Mapa.fx.md) (dados de referência e tema) ·
+[App_Formulas_Mapa.txt](App_Formulas_Mapa.txt) (fórmulas nomeadas: dados de referência e tema) ·
 [FLUXO_EXPURGO_MAPA.md](FLUXO_EXPURGO_MAPA.md) (limpeza automática)
 
 ---
@@ -76,7 +76,7 @@ republicar, cada uma vira lista trocando **só a definição em `App.Formulas`**
 > **Preparado para um segundo aeroporto, ainda cadastrado só pelo desenvolvedor (31/08/2026).** `colPatios` e
 > `colPosicoes` carregam uma coluna `aeroporto` (ICAO). Nenhuma tela lê essas duas direto — todas leem
 > `colPosicoesAero`/`colPatiosAero`, que filtram por `varAero` e caem de volta para a tabela inteira se o filtro
-> não achar nada (rede de segurança contra tela em branco — ver `AppFormulas_Mapa.fx.md` seção 6). Hoje só
+> não achar nada (rede de segurança contra tela em branco — ver os comentários em `App_Formulas_Mapa.txt`). Hoje só
 > existe `SBNF`, então não muda nada visível — mas incluir o segundo aeroporto é acrescentar linhas em
 > `App.Formulas` com o novo ICAO, sem tocar em tela nenhuma. Continua **fora de escopo** dar à operação uma tela
 > para cadastrar posição/pátio sozinha — isso só vira necessário (e só então compensa migrar para lista
@@ -420,7 +420,6 @@ O validador reprova `;;` dentro de `.pa.yaml`.
 Mapa de Alocação/
 ├── ARQUITETURA_MAPA.md          este documento
 ├── ESTRUTURA_LISTA_MAPA.md      criação da lista SharePoint
-├── AppFormulas_Mapa.fx.md       dados de referência e tokens, documentado (pt-BR)
 ├── App_Formulas_Mapa.txt        o mesmo, concatenado, pronto para Ctrl+V
 ├── FLUXO_EXPURGO_MAPA.md        o fluxo agendado
 ├── scrMapaInicio.pa.yaml
