@@ -30,8 +30,14 @@ frente. Por isso a **aeronave máxima de todas as pontes é o B-738**: ela é a 
 aceita (35,80 m), e é dela que sai a trava de envergadura. Deixar o E-2 como aeronave máxima barraria
 o B738 na posição, que foi o que aconteceu em T2 e T3 até 18/09/2026.
 
+**Envergadura das pontes: `env_max` = 35,92 m** (B737 MAX 8), cadastrado em 18/09/2026. Sem isso, a
+trava cairia para a envergadura da aeronave máxima — o B-738, 35,79 m — e **o MAX seria recusado em
+todas as posições**, sozinho, antes mesmo de qualquer regra de vizinhança.
+
 A restrição de **B737 MAX lado a lado** é envergadura entre posições vizinhas e vive em
-`tb_regrasPosicao`, não no limite da posição.
+`tb_regrasPosicao`: há uma regra BLOQUEIO B38M×B38M para cada par vizinho (T1↔T2 … T6↔T7). A regra
+vale nos dois sentidos, mesmo cadastrada como "T1 → T2". Existe também uma regra "T1 B38M" **inativa**,
+resto de um veto antigo do MAX na T1 — não reative por engano.
 
 Aviação geral e helicópteros seguem por **categoria**, não por medida de posição. A planta registra a
 aeronave crítica do pátio de helicópteros: **Sikorsky S76-C, comprimento máximo 16,00 m** — fica de
