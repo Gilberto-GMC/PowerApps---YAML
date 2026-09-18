@@ -375,6 +375,15 @@ Screens:
                                           LayoutMinWidth: =0
                                           Size: =10
                                           Text: ="NA ORDEM EM QUE APARECEM NO SELETOR"
+                                    - txtBuscaEqp:
+                                        Control: TextInput@0.0.54
+                                        Properties:
+                                          AccessibleLabel: ="Buscar equipamento por código ou nome"
+                                          FillPortions: =0
+                                          Height: =30
+                                          LayoutMinWidth: =0
+                                          Placeholder: ="buscar"
+                                          Width: =200
                                     - btnAjudaEqp:
                                         Control: Button@0.0.45
                                         Properties:
@@ -419,7 +428,12 @@ Screens:
                                     BorderStyle: =BorderStyle.None
                                     Fill: =thmSuperficie
                                     FillPortions: =1
-                                    Items: =colEquipTodos
+                                    Items: |-
+                                      =Filter(
+                                          colEquipTodos As _e,
+                                          IsBlank(Trim(txtBuscaEqp.Value)) Or
+                                          Upper(Trim(txtBuscaEqp.Value)) in Upper(_e.equip & " " & _e.nome_equip)
+                                      )
                                     LayoutMinHeight: =0
                                     LayoutMinWidth: =0
                                     TemplatePadding: =0
@@ -574,6 +588,21 @@ Screens:
                                     Height: =40
                                     Placeholder: ="ex. B38M"
                                     Value: =Coalesce(varFormEq.cod, "")
+                              - lblAvisoCodEqp:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    Color: =thmAmbar
+                                    Font: =thmFonte
+                                    Height: =34
+                                    Size: =9
+                                    Text: |-
+                                      ="Código fora do padrão: o designador OACI tem 2 a 4 letras ou números, sem espaço " &
+                                      "(ex. B38M, AT72, E295). O nome da aeronave vai no campo de baixo."
+                                    Visible: |-
+                                      =With(
+                                          { _cod: Upper(Trim(txtCodEqp.Value)) },
+                                          !IsBlank(_cod) And !IsMatch(_cod, "^[A-Z0-9]{2,4}$")
+                                      )
                               - lblNomeEqp:
                                   Control: Label@2.5.1
                                   Properties:
@@ -625,6 +654,24 @@ Screens:
                                     Height: =40
                                     Placeholder: ="ex. 39,52"
                                     Value: =Coalesce(varFormEq.comp, "")
+                              - lblAvisoEqp:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    Color: =thmAmbar
+                                    Font: =thmFonte
+                                    Height: =34
+                                    Size: =9
+                                    Text: |-
+                                      ="Confira as medidas: fora da faixa usual (5 a 90 m) ou muito diferentes entre si. " &
+                                      "Vírgula no lugar errado? 15,64 e 1.564 confundem fácil."
+                                    Visible: |-
+                                      =With(
+                                      {
+                                          _e: If(IsNumeric(txtEnvEqp.Value), Value(txtEnvEqp.Value), 0),
+                                          _c: If(IsNumeric(txtCompEqp.Value), Value(txtCompEqp.Value), 0)
+                                      },
+                                          _e > 0 And _c > 0 And (_e > 90 Or _c > 90 Or _e < 5 Or _c < 5 Or _e > _c * 2.5 Or _c > _e * 2.5)
+                                      )
                               - tglAtivoEqp:
                                   Control: Toggle@1.1.5
                                   Properties:

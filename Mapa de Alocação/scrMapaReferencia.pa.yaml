@@ -569,6 +569,15 @@ Screens:
                                     RadiusTopLeft: =0
                                     RadiusTopRight: =0
                                   Children:
+                                    - txtBuscaPosRef:
+                                        Control: TextInput@0.0.54
+                                        Properties:
+                                          AccessibleLabel: ="Buscar posição"
+                                          FillPortions: =0
+                                          Height: =30
+                                          LayoutMinWidth: =0
+                                          Placeholder: ="buscar"
+                                          Width: =200
                                     - galPosRef:
                                         Control: Gallery@2.15.0
                                         Variant: Vertical
@@ -577,7 +586,13 @@ Screens:
                                           BorderStyle: =BorderStyle.None
                                           Fill: =thmSuperficie
                                           FillPortions: =1
-                                          Items: =colPosRef
+                                          Items: |-
+                                            =Filter(
+                                                colPosRef As _p,
+                                                IsBlank(Trim(txtBuscaPosRef.Value)) Or
+                                                Upper(Trim(txtBuscaPosRef.Value)) in
+                                                    Upper(_p.posicao & " " & _p.patio & " " & Coalesce(_p.aeronave_max, "") & " " & Coalesce(_p.tipo, ""))
+                                            )
                                           LayoutMinHeight: =0
                                           LayoutMinWidth: =0
                                           TemplatePadding: =0
