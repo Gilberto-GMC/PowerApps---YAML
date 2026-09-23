@@ -182,7 +182,7 @@
             "parameters": {
               "dataset": "https://grupoccr.sharepoint.com/sites/ComplianceAeroportos",
               "parameters/method": "GET",
-              "parameters/uri": "@concat('_api/web/lists/getbytitle(''tb_dueDiligence'')/items?$select=ID,status,fluxo_classificacao,classificacao_risco,risco_final,forms_correlacao_id,forms_envio_id,forms_envio_processado_id,forms_ultima_resposta_id&$filter=forms_envio_id eq ''', replace(outputs('Codigo_Acompanhamento'), '''', ''''''), '''')",
+              "parameters/uri": "@concat('_api/web/lists/getbytitle(''tb_dueDiligence'')/items?$select=ID,status,fluxo_classificacao,classificacao_risco,risco_final,gatilho_dd,forms_correlacao_id,forms_envio_id,forms_envio_processado_id,forms_ultima_resposta_id&$filter=forms_envio_id eq ''', replace(outputs('Codigo_Acompanhamento'), '''', ''''''), '''')",
               "parameters/headers": {
                 "Accept": "application/json;odata=nometadata"
               }
@@ -741,8 +741,17 @@
                           ]
                         },
                         "actions": {
-                          "Montar_Atualizacao_Solicitacao": {
+                          "Avaliar_Aprovacao_Automatica": {
                             "runAfter": {},
+                            "type": "Compose",
+                            "inputs": "@and(not(variables('varTerceiroAlto')),not(equals(toLower(trim(string(coalesce(first(body('HTTP_Localizar_Solicitacao')?['value'])?['gatilho_dd'], '')))), 'sim')),contains(createArray('baixo', 'médio', 'medio'), toLower(trim(string(coalesce(first(body('HTTP_Localizar_Solicitacao')?['value'])?['classificacao_risco'], ''))))))"
+                          },
+                          "Montar_Atualizacao_Solicitacao": {
+                            "runAfter": {
+                              "Avaliar_Aprovacao_Automatica": [
+                                "Succeeded"
+                              ]
+                            },
                             "type": "Compose",
                             "inputs": {
                               "terceiro_gatilho_risco": "@if(variables('varTerceiroAlto'), 'Sim', 'Não')",
@@ -750,7 +759,9 @@
                               "risco_final": "@if(variables('varTerceiroAlto'), 'Alto (gatilho do terceiro)', first(body('HTTP_Localizar_Solicitacao')?['value'])?['risco_final'])",
                               "data_resposta_terceiro": "@variables('varDataResposta')",
                               "forms_ultima_resposta_id": "@string(triggerOutputs()?['body/resourceData/responseId'])",
-                              "status": "Pendente Compliance"
+                              "status": "@if(outputs('Avaliar_Aprovacao_Automatica'), 'Aprovado', 'Pendente Compliance')",
+                              "data_conclusao": "@if(outputs('Avaliar_Aprovacao_Automatica'), utcNow(), null)",
+                              "data_vencimento": "@if(outputs('Avaliar_Aprovacao_Automatica'), concat(formatDateTime(addToTime(convertFromUtc(utcNow(), 'E. South America Standard Time', 'yyyy-MM-dd'), if(equals(toLower(trim(string(coalesce(first(body('HTTP_Localizar_Solicitacao')?['value'])?['classificacao_risco'], '')))), 'baixo'), 3, if(or(equals(toLower(trim(string(coalesce(first(body('HTTP_Localizar_Solicitacao')?['value'])?['classificacao_risco'], '')))), 'médio'), equals(toLower(trim(string(coalesce(first(body('HTTP_Localizar_Solicitacao')?['value'])?['classificacao_risco'], '')))), 'medio')), 2, 1)), 'Year'), 'yyyy-MM-dd'), 'T12:00:00Z'), null)"
                             }
                           },
                           "HTTP_Atualizar_Solicitacao": {
@@ -795,8 +806,8 @@
                               "solicitacao_id": "@int(first(body('HTTP_Localizar_Solicitacao')?['value'])?['ID'])",
                               "tipo_desdobramento": "Resposta do terceiro",
                               "status_anterior": "@first(body('HTTP_Localizar_Solicitacao')?['value'])?['status']",
-                              "status_novo": "Pendente Compliance",
-                              "descricao": "@concat('Resposta do terceiro processada. ', string(length(variables('varRespostas'))), ' resposta(s); ', string(variables('varQuantidadeRiscoAlto')), ' classificação(ões) de risco alto. Forms Response ID: ', string(triggerOutputs()?['body/resourceData/responseId']), '.')",
+                              "status_novo": "@if(outputs('Avaliar_Aprovacao_Automatica'), 'Aprovado', 'Pendente Compliance')",
+                              "descricao": "@concat('Resposta do terceiro processada. ', string(length(variables('varRespostas'))), ' resposta(s); ', string(variables('varQuantidadeRiscoAlto')), ' classificação(ões) de risco alto. Forms Response ID: ', string(triggerOutputs()?['body/resourceData/responseId']), '.', if(outputs('Avaliar_Aprovacao_Automatica'), concat(' Aprovação automática: risco ', string(first(body('HTTP_Localizar_Solicitacao')?['value'])?['classificacao_risco']), ', sem gatilho crítico e sem resposta de risco alto do terceiro. Vigência até ', formatDateTime(addToTime(convertFromUtc(utcNow(), 'E. South America Standard Time', 'yyyy-MM-dd'), if(equals(toLower(trim(string(coalesce(first(body('HTTP_Localizar_Solicitacao')?['value'])?['classificacao_risco'], '')))), 'baixo'), 3, if(or(equals(toLower(trim(string(coalesce(first(body('HTTP_Localizar_Solicitacao')?['value'])?['classificacao_risco'], '')))), 'médio'), equals(toLower(trim(string(coalesce(first(body('HTTP_Localizar_Solicitacao')?['value'])?['classificacao_risco'], '')))), 'medio')), 2, 1)), 'Year'), 'dd/MM/yyyy'), '.'), ' Encaminhada para a análise do Compliance.'))",
                               "visivel_solicitante": 1,
                               "ativo": 1
                             }

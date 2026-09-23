@@ -6,6 +6,19 @@ Screens:
       OnVisible: |-
         =UpdateContext(
             {
+                varDdPainelCss: "<div style='display:none'><style>" &
+                    ".ddp-card{transition:transform .2s ease,box-shadow .2s ease,border-color .2s ease}" &
+                    ".ddp-card:hover{transform:translateY(-2px);box-shadow:0 10px 24px rgba(15,23,42,.10);border-color:#8CCBD4 !important}" &
+                    ".ddp-tile{transition:background-color .2s ease,border-color .2s ease}" &
+                    ".ddp-tile:hover{background-color:#F0F9FA !important;border-color:#00879A !important}" &
+                    ".ddp-row td{transition:background-color .15s ease}" &
+                    ".ddp-row:hover td{background-color:#F1F5F9}" &
+                    ".ddp-bar{transform-origin:left center;animation:ddpCresce .8s cubic-bezier(.2,.8,.2,1) both}" &
+                    ".ddp-num{animation:ddpSobe .5s ease-out both}" &
+                    "@keyframes ddpCresce{from{transform:scaleX(0)}to{transform:scaleX(1)}}" &
+                    "@keyframes ddpSobe{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}" &
+                    "@media (prefers-reduced-motion:reduce){.ddp-card,.ddp-tile,.ddp-row td,.ddp-bar,.ddp-num{animation:none !important;transition:none !important}}" &
+                    "</style></div>",
                 varDdPainelAcesso: If(
                     IfError(
                         With(
@@ -32,6 +45,35 @@ Screens:
             ),
             UpdateContext({varDdPainelCarregando: true, varDdPainelDesde: Now()});
             IfError(
+                // Aeroporto -> bloco. Registros antigos não têm bloco gravado: o painel
+                // completa pela tabela. Só é montada uma vez, para os combos não perderem a seleção.
+                If(
+                    IsEmpty(colDdPainelAeroportos),
+                    ClearCollect(
+                        colDdPainelAeroportos,
+                        Table(
+                            {ordem: 0, aeroporto: "Todos os aeroportos", bloco: ""},
+                            {ordem: 1, aeroporto: "BACACHERI", bloco: "SUL"},
+                            {ordem: 2, aeroporto: "BAGÉ", bloco: "SUL"},
+                            {ordem: 3, aeroporto: "CURITIBA", bloco: "SUL"},
+                            {ordem: 4, aeroporto: "FOZ DO IGUAÇU", bloco: "SUL"},
+                            {ordem: 5, aeroporto: "GOIÂNIA", bloco: "CENTRAL"},
+                            {ordem: 6, aeroporto: "IMPERATRIZ", bloco: "CENTRAL"},
+                            {ordem: 7, aeroporto: "JOINVILLE", bloco: "SUL"},
+                            {ordem: 8, aeroporto: "LONDRINA", bloco: "SUL"},
+                            {ordem: 9, aeroporto: "NAVEGANTES", bloco: "SUL"},
+                            {ordem: 10, aeroporto: "PALMAS", bloco: "CENTRAL"},
+                            {ordem: 11, aeroporto: "PAMPULHA", bloco: "CENTRAL"},
+                            {ordem: 12, aeroporto: "PELOTAS", bloco: "SUL"},
+                            {ordem: 13, aeroporto: "PETROLINA", bloco: "CENTRAL"},
+                            {ordem: 14, aeroporto: "SÃO LUÍS", bloco: "CENTRAL"},
+                            {ordem: 15, aeroporto: "TECA GYN", bloco: "CENTRAL"},
+                            {ordem: 16, aeroporto: "TERESINA", bloco: "CENTRAL"},
+                            {ordem: 17, aeroporto: "URUGUAIANA", bloco: "SUL"},
+                            {ordem: 18, aeroporto: "SEDE", bloco: ""}
+                        )
+                    )
+                );
                 With(
                     {
                         _periodo: Coalesce(cmbDdPainelPeriodo.Selected.Value, "Últimos 12 meses"),
@@ -70,6 +112,7 @@ Screens:
                                             ID: _r.ID,
                                             Created: _r.Created,
                                             aeroporto: _r.aeroporto,
+                                            bloco: Coalesce(_r.bloco, LookUp(colDdPainelAeroportos, aeroporto = _r.aeroporto, bloco)),
                                             area_solicitante: _r.area_solicitante,
                                             categoria_contraparte: _r.categoria_contraparte,
                                             tipo_contrato: _r.tipo_contrato,
@@ -106,6 +149,7 @@ Screens:
                             ID: _v.ID,
                             razao_social: _v.razao_social,
                             aeroporto: _v.aeroporto,
+                            bloco: Coalesce(_v.bloco, LookUp(colDdPainelAeroportos, aeroporto = _v.aeroporto, bloco)),
                             classificacao_risco: _v.classificacao_risco,
                             status: _v.status,
                             data_vencimento: _v.data_vencimento
@@ -123,6 +167,8 @@ Screens:
                         {
                             ID: _a.ID,
                             razao_social: _a.razao_social,
+                            aeroporto: _a.aeroporto,
+                            bloco: Coalesce(_a.bloco, LookUp(colDdPainelAeroportos, aeroporto = _a.aeroporto, bloco)),
                             status: _a.status,
                             Created: _a.Created,
                             data_envio_terceiro: _a.data_envio_terceiro,
@@ -264,12 +310,14 @@ Screens:
                   DropShadow: =DropShadow.None
                   Fill: =RGBA(255, 255, 255, 1)
                   FillPortions: =0
-                  Height: =60
+                  Height: =80
                   LayoutAlignItems: =LayoutAlignItems.Center
                   LayoutDirection: =LayoutDirection.Horizontal
                   LayoutGap: =10
-                  PaddingLeft: =24
-                  PaddingRight: =24
+                  LayoutMinWidth: =16
+                  PaddingLeft: =30
+                  PaddingRight: =30
+                  PaddingTop: =7
                   RadiusBottomLeft: =0
                   RadiusBottomRight: =0
                   RadiusTopLeft: =0
@@ -294,7 +342,7 @@ Screens:
                               ScreenTransition.Fade
                           )
                         Text: ="Registros"
-                        Width: =170
+                        Width: =180
                   - btnDdPainelIndicadores:
                       Control: Button@0.0.45
                       Properties:
@@ -309,7 +357,7 @@ Screens:
                         Icon: ="Eye"
                         IconStyle: ='ButtonCanvas.IconStyle'.Filled
                         Text: ="Painel"
-                        Width: =150
+                        Width: =180
                   - txtDdPainelEspaco:
                       Control: ModernText@1.0.0
                       Properties:
@@ -317,6 +365,54 @@ Screens:
                         LayoutMinHeight: =16
                         LayoutMinWidth: =16
                         Text: =
+                  - cmbDdPainelBloco:
+                      Control: ComboBox@0.0.51
+                      Properties:
+                        Appearance: ='ComboboxCanvas.Appearance'.FilledLighter
+                        BorderColor: =RGBA(229, 229, 229, 1)
+                        BorderRadius: =0
+                        BorderThickness: =1
+                        DefaultSelectedItems: =["Todos os blocos"]
+                        Height: =40
+                        InputTextPlaceholder: ="Bloco"
+                        IsSearchable: =false
+                        Items: =["Todos os blocos", "CENTRAL", "SUL"]
+                        OnChange: =Reset(cmbDdPainelAeroporto)
+                        Visible: =varDdPainelAcesso = "sim"
+                        Width: =170
+                  - cmbDdPainelAeroporto:
+                      Control: ComboBox@0.0.51
+                      Properties:
+                        Appearance: ='ComboboxCanvas.Appearance'.FilledLighter
+                        BorderColor: =RGBA(229, 229, 229, 1)
+                        BorderRadius: =0
+                        BorderThickness: =1
+                        DefaultSelectedItems: =["Todos os aeroportos"]
+                        Height: =40
+                        InputTextPlaceholder: ="Aeroporto"
+                        IsSearchable: =false
+                        Items: |-
+                          =ForAll(
+                              Sort(
+                                  Filter(
+                                      colDdPainelAeroportos,
+                                      ordem = 0 || IsBlank(cmbDdPainelBloco.Selected.Value) || cmbDdPainelBloco.Selected.Value = "Todos os blocos" || bloco = cmbDdPainelBloco.Selected.Value
+                                  ),
+                                  ordem,
+                                  SortOrder.Ascending
+                              ) As _a,
+                              {Value: _a.aeroporto}
+                          )
+                        Visible: =varDdPainelAcesso = "sim"
+                        Width: =210
+                  - spnDdPainelCarregando:
+                      Control: Spinner@1.4.6
+                      Properties:
+                        Appearance: ='Spinner.Appearance'.Primary
+                        BasePaletteColor: =RGBA(0, 135, 154, 1)
+                        Height: =32
+                        Visible: =varDdPainelCarregando
+                        Width: =32
                   - btnDdPainelAtualizar:
                       Control: Button@0.0.45
                       Properties:
@@ -330,6 +426,19 @@ Screens:
                           =UpdateContext(
                               // espelho do OnVisible — manter os dois idênticos
                               {
+                                  varDdPainelCss: "<div style='display:none'><style>" &
+                                      ".ddp-card{transition:transform .2s ease,box-shadow .2s ease,border-color .2s ease}" &
+                                      ".ddp-card:hover{transform:translateY(-2px);box-shadow:0 10px 24px rgba(15,23,42,.10);border-color:#8CCBD4 !important}" &
+                                      ".ddp-tile{transition:background-color .2s ease,border-color .2s ease}" &
+                                      ".ddp-tile:hover{background-color:#F0F9FA !important;border-color:#00879A !important}" &
+                                      ".ddp-row td{transition:background-color .15s ease}" &
+                                      ".ddp-row:hover td{background-color:#F1F5F9}" &
+                                      ".ddp-bar{transform-origin:left center;animation:ddpCresce .8s cubic-bezier(.2,.8,.2,1) both}" &
+                                      ".ddp-num{animation:ddpSobe .5s ease-out both}" &
+                                      "@keyframes ddpCresce{from{transform:scaleX(0)}to{transform:scaleX(1)}}" &
+                                      "@keyframes ddpSobe{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}" &
+                                      "@media (prefers-reduced-motion:reduce){.ddp-card,.ddp-tile,.ddp-row td,.ddp-bar,.ddp-num{animation:none !important;transition:none !important}}" &
+                                      "</style></div>",
                                   varDdPainelAcesso: If(
                                       IfError(
                                           With(
@@ -356,6 +465,35 @@ Screens:
                               ),
                               UpdateContext({varDdPainelCarregando: true, varDdPainelDesde: Now()});
                               IfError(
+                                  // Aeroporto -> bloco. Registros antigos não têm bloco gravado: o painel
+                                  // completa pela tabela. Só é montada uma vez, para os combos não perderem a seleção.
+                                  If(
+                                      IsEmpty(colDdPainelAeroportos),
+                                      ClearCollect(
+                                          colDdPainelAeroportos,
+                                          Table(
+                                              {ordem: 0, aeroporto: "Todos os aeroportos", bloco: ""},
+                                              {ordem: 1, aeroporto: "BACACHERI", bloco: "SUL"},
+                                              {ordem: 2, aeroporto: "BAGÉ", bloco: "SUL"},
+                                              {ordem: 3, aeroporto: "CURITIBA", bloco: "SUL"},
+                                              {ordem: 4, aeroporto: "FOZ DO IGUAÇU", bloco: "SUL"},
+                                              {ordem: 5, aeroporto: "GOIÂNIA", bloco: "CENTRAL"},
+                                              {ordem: 6, aeroporto: "IMPERATRIZ", bloco: "CENTRAL"},
+                                              {ordem: 7, aeroporto: "JOINVILLE", bloco: "SUL"},
+                                              {ordem: 8, aeroporto: "LONDRINA", bloco: "SUL"},
+                                              {ordem: 9, aeroporto: "NAVEGANTES", bloco: "SUL"},
+                                              {ordem: 10, aeroporto: "PALMAS", bloco: "CENTRAL"},
+                                              {ordem: 11, aeroporto: "PAMPULHA", bloco: "CENTRAL"},
+                                              {ordem: 12, aeroporto: "PELOTAS", bloco: "SUL"},
+                                              {ordem: 13, aeroporto: "PETROLINA", bloco: "CENTRAL"},
+                                              {ordem: 14, aeroporto: "SÃO LUÍS", bloco: "CENTRAL"},
+                                              {ordem: 15, aeroporto: "TECA GYN", bloco: "CENTRAL"},
+                                              {ordem: 16, aeroporto: "TERESINA", bloco: "CENTRAL"},
+                                              {ordem: 17, aeroporto: "URUGUAIANA", bloco: "SUL"},
+                                              {ordem: 18, aeroporto: "SEDE", bloco: ""}
+                                          )
+                                      )
+                                  );
                                   With(
                                       {
                                           _periodo: Coalesce(cmbDdPainelPeriodo.Selected.Value, "Últimos 12 meses"),
@@ -394,6 +532,7 @@ Screens:
                                                               ID: _r.ID,
                                                               Created: _r.Created,
                                                               aeroporto: _r.aeroporto,
+                                                              bloco: Coalesce(_r.bloco, LookUp(colDdPainelAeroportos, aeroporto = _r.aeroporto, bloco)),
                                                               area_solicitante: _r.area_solicitante,
                                                               categoria_contraparte: _r.categoria_contraparte,
                                                               tipo_contrato: _r.tipo_contrato,
@@ -430,6 +569,7 @@ Screens:
                                               ID: _v.ID,
                                               razao_social: _v.razao_social,
                                               aeroporto: _v.aeroporto,
+                                              bloco: Coalesce(_v.bloco, LookUp(colDdPainelAeroportos, aeroporto = _v.aeroporto, bloco)),
                                               classificacao_risco: _v.classificacao_risco,
                                               status: _v.status,
                                               data_vencimento: _v.data_vencimento
@@ -447,6 +587,8 @@ Screens:
                                           {
                                               ID: _a.ID,
                                               razao_social: _a.razao_social,
+                                              aeroporto: _a.aeroporto,
+                                              bloco: Coalesce(_a.bloco, LookUp(colDdPainelAeroportos, aeroporto = _a.aeroporto, bloco)),
                                               status: _a.status,
                                               Created: _a.Created,
                                               data_envio_terceiro: _a.data_envio_terceiro,
@@ -477,7 +619,7 @@ Screens:
                               UpdateContext({varDdPainelCarregando: false, varDdPainelDesde: Blank()})
                           )
                         Text: ="Atualizar"
-                        Width: =140
+                        Width: =180
                   - btnDdPainelVoltar:
                       Control: Button@0.0.45
                       Properties:
@@ -494,7 +636,7 @@ Screens:
                               ScreenTransition.Fade
                           )
                         Text: ="Voltar ao início"
-                        Width: =190
+                        Width: =180
             - cntDdPainelCorpo:
                 Control: GroupContainer@1.5.0
                 Variant: AutoLayout
@@ -505,6 +647,7 @@ Screens:
                   LayoutDirection: =LayoutDirection.Vertical
                   LayoutGap: =18
                   LayoutMinHeight: =16
+                  LayoutMinWidth: =16
                   LayoutOverflowY: =LayoutOverflow.Scroll
                   PaddingBottom: =24
                   PaddingLeft: =24
@@ -525,115 +668,129 @@ Screens:
                         HtmlText: |-
                           =With(
                               {
-                                  _op: If(varDdPainelCarregando, "opacity:.45;", ""),
-                                  _card: "background:#FFFFFF;border:1px solid #E2E8F0;padding:16px 18px;vertical-align:top;",
-                                  _abertos: ForAll(
-                                      colDdPainelAbertos As _a,
-                                      With(
-                                          {_compliance: _a.status = "Pendente Compliance"},
-                                          {
-                                              ID: _a.ID,
-                                              razao: Coalesce(_a.razao_social, ""),
-                                              etapa: If(_compliance, "Compliance", "Terceiro"),
-                                              dias: DateDiff(If(_compliance, Coalesce(_a.data_resposta_terceiro, _a.Created), Coalesce(_a.data_envio_terceiro, _a.Created)), Now(), TimeUnit.Days),
-                                              prazo: If(_compliance, varDdPainelSlaCompliance, varDdPainelSlaTerceiro)
-                                          }
-                                      )
-                                  )
+                                  _aeroF: If(IsBlank(cmbDdPainelAeroporto.Selected.Value) || cmbDdPainelAeroporto.Selected.Value = "Todos os aeroportos", "", cmbDdPainelAeroporto.Selected.Value),
+                                  _blocoF: If(IsBlank(cmbDdPainelBloco.Selected.Value) || cmbDdPainelBloco.Selected.Value = "Todos os blocos", "", cmbDdPainelBloco.Selected.Value)
                               },
                               With(
                                   {
-                                      _vencidas: CountIf(colDdPainelVigencia, status = "Vencido" || data_vencimento < Today()),
-                                      _ate30: CountIf(colDdPainelVigencia, status <> "Vencido" && data_vencimento >= Today() && data_vencimento <= DateAdd(Today(), 30, TimeUnit.Days)),
-                                      _ate60: CountIf(colDdPainelVigencia, status <> "Vencido" && data_vencimento > DateAdd(Today(), 30, TimeUnit.Days) && data_vencimento <= DateAdd(Today(), 60, TimeUnit.Days)),
-                                      _ate90: CountIf(colDdPainelVigencia, status <> "Vencido" && data_vencimento > DateAdd(Today(), 60, TimeUnit.Days)),
-                                      _proximos: FirstN(Sort(Filter(colDdPainelVigencia, status <> "Vencido" && data_vencimento >= Today()), data_vencimento, SortOrder.Ascending), 8),
-                                      _totTerceiro: CountIf(_abertos, etapa = "Terceiro"),
-                                      _totCompliance: CountIf(_abertos, etapa = "Compliance"),
-                                      _foraTerceiro: CountIf(_abertos, etapa = "Terceiro" && dias > prazo),
-                                      _foraCompliance: CountIf(_abertos, etapa = "Compliance" && dias > prazo),
-                                      _antigos: FirstN(Sort(_abertos, dias, SortOrder.Descending), 6)
+                                      _vig: Filter(colDdPainelVigencia, (_aeroF = "" || aeroporto = _aeroF) && (_blocoF = "" || bloco = _blocoF)),
+                                      _abertosBase: Filter(colDdPainelAbertos, (_aeroF = "" || aeroporto = _aeroF) && (_blocoF = "" || bloco = _blocoF)),
+                                      _escopo: If(_aeroF <> "", _aeroF, _blocoF <> "", "Bloco " & _blocoF, "")
                                   },
-                                  "<div style='font-family:Segoe UI,Arial,sans-serif;" & _op & "'>" &
-                                  "<div style='font-size:11px;font-weight:700;letter-spacing:.7px;color:#00879A;'>SITUAÇÃO ATUAL</div>" &
-                                  "<div style='font-size:11px;color:#64748B;margin:2px 0 10px;'>Vencimentos e pendências de hoje, em todos os aeroportos. Não dependem do período escolhido mais abaixo.</div>" &
-                                  "<table role='presentation' style='width:100%;border-collapse:separate;border-spacing:0;table-layout:fixed;'><tr>" &
-                                  "<td style='" & _card & "width:57%;'>" &
-                                  "<div style='font-size:13px;font-weight:700;color:#0F172A;'>Vigências</div>" &
-                                  "<div style='font-size:11px;color:#64748B;margin:2px 0 12px;'>Vencidas nos últimos 12 meses e vencimentos dos próximos 90 dias</div>" &
-                                  "<table role='presentation' style='width:100%;border-collapse:separate;border-spacing:0;table-layout:fixed;'><tr>" &
-                                  "<td style='vertical-align:top;border:1px solid #E2E8F0;padding:10px 12px;'>" &
-                                  "<div style='height:4px;width:28px;background:#8A1C12;margin-bottom:8px;'></div>" &
-                                  "<div style='font-size:24px;font-weight:700;color:#0F172A;line-height:1.1;'>" & _vencidas & "</div>" &
-                                  "<div style='font-size:11px;color:#475569;margin-top:3px;'>Vencidas</div></td>" &
-                                  "<td style='width:8px;'></td>" &
-                                  "<td style='vertical-align:top;border:1px solid #E2E8F0;padding:10px 12px;'>" &
-                                  "<div style='height:4px;width:28px;background:#B9281B;margin-bottom:8px;'></div>" &
-                                  "<div style='font-size:24px;font-weight:700;color:#0F172A;line-height:1.1;'>" & _ate30 & "</div>" &
-                                  "<div style='font-size:11px;color:#475569;margin-top:3px;'>Vencem em até 30 dias</div></td>" &
-                                  "<td style='width:8px;'></td>" &
-                                  "<td style='vertical-align:top;border:1px solid #E2E8F0;padding:10px 12px;'>" &
-                                  "<div style='height:4px;width:28px;background:#DE5346;margin-bottom:8px;'></div>" &
-                                  "<div style='font-size:24px;font-weight:700;color:#0F172A;line-height:1.1;'>" & _ate60 & "</div>" &
-                                  "<div style='font-size:11px;color:#475569;margin-top:3px;'>Em 31 a 60 dias</div></td>" &
-                                  "<td style='width:8px;'></td>" &
-                                  "<td style='vertical-align:top;border:1px solid #E2E8F0;padding:10px 12px;'>" &
-                                  "<div style='height:4px;width:28px;background:#EC8177;margin-bottom:8px;'></div>" &
-                                  "<div style='font-size:24px;font-weight:700;color:#0F172A;line-height:1.1;'>" & _ate90 & "</div>" &
-                                  "<div style='font-size:11px;color:#475569;margin-top:3px;'>Em 61 a 90 dias</div></td>" &
-                                  "</tr></table>" &
-                                  "<div style='font-size:11px;font-weight:700;color:#475569;margin:16px 0 6px;'>Próximos vencimentos</div>" &
-                                  "<table role='presentation' style='width:100%;border-collapse:collapse;font-size:11px;font-variant-numeric:tabular-nums;'>" &
-                                  If(
-                                      IsEmpty(_proximos),
-                                      "<tr><td style='padding:10px 0;color:#64748B;border-top:1px solid #F1F5F9;'>Nenhum vencimento nos próximos 90 dias.</td></tr>",
-                                      Concat(
-                                          _proximos As P,
-                                          "<tr>" &
-                                          "<td style='padding:7px 8px 7px 0;border-top:1px solid #F1F5F9;'><span style='font-weight:700;color:#0F172A;'>DD-" & Text(P.ID, "000000") & "</span> <span style='color:#475569;'>" & Substitute(Substitute(Substitute(Left(Coalesce(P.razao_social, ""), 34), "&", "&amp;"), "<", "&lt;"), ">", "&gt;") & If(Len(Coalesce(P.razao_social, "")) > 34, "…", "") & "</span></td>" &
-                                          "<td style='padding:7px 8px 7px 0;border-top:1px solid #F1F5F9;color:#475569;width:22%;'>" & Coalesce(P.aeroporto, "—") & "</td>" &
-                                          "<td style='padding:7px 8px 7px 0;border-top:1px solid #F1F5F9;color:#475569;width:12%;'>" & Coalesce(P.classificacao_risco, "—") & "</td>" &
-                                          "<td style='padding:7px 0;border-top:1px solid #F1F5F9;text-align:right;white-space:nowrap;color:#0F172A;width:26%;'>" & Text(P.data_vencimento, "[$-pt-BR]dd/mm/yyyy") & "<span style='color:#64748B;'> · em " & DateDiff(Today(), P.data_vencimento, TimeUnit.Days) & " d</span></td>" &
-                                          "</tr>"
+                                  With(
+                                      {
+                                          _op: If(varDdPainelCarregando, "opacity:.45;", ""),
+                                          _card: "background:#FFFFFF;border:1px solid #E2E8F0;padding:16px 18px;vertical-align:top;",
+                                          _abertos: ForAll(
+                                              _abertosBase As _a,
+                                              With(
+                                                  {_compliance: _a.status = "Pendente Compliance"},
+                                                  {
+                                                      ID: _a.ID,
+                                                      razao: Coalesce(_a.razao_social, ""),
+                                                      etapa: If(_compliance, "Compliance", "Terceiro"),
+                                                      dias: DateDiff(If(_compliance, Coalesce(_a.data_resposta_terceiro, _a.Created), Coalesce(_a.data_envio_terceiro, _a.Created)), Now(), TimeUnit.Days),
+                                                      prazo: If(_compliance, varDdPainelSlaCompliance, varDdPainelSlaTerceiro)
+                                                  }
+                                              )
+                                          )
+                                      },
+                                      With(
+                                          {
+                                              _vencidas: CountIf(_vig, status = "Vencido" || data_vencimento < Today()),
+                                              _ate30: CountIf(_vig, status <> "Vencido" && data_vencimento >= Today() && data_vencimento <= DateAdd(Today(), 30, TimeUnit.Days)),
+                                              _ate60: CountIf(_vig, status <> "Vencido" && data_vencimento > DateAdd(Today(), 30, TimeUnit.Days) && data_vencimento <= DateAdd(Today(), 60, TimeUnit.Days)),
+                                              _ate90: CountIf(_vig, status <> "Vencido" && data_vencimento > DateAdd(Today(), 60, TimeUnit.Days)),
+                                              _proximos: FirstN(Sort(Filter(_vig, status <> "Vencido" && data_vencimento >= Today()), data_vencimento, SortOrder.Ascending), 8),
+                                              _totTerceiro: CountIf(_abertos, etapa = "Terceiro"),
+                                              _totCompliance: CountIf(_abertos, etapa = "Compliance"),
+                                              _foraTerceiro: CountIf(_abertos, etapa = "Terceiro" && dias > prazo),
+                                              _foraCompliance: CountIf(_abertos, etapa = "Compliance" && dias > prazo),
+                                              _antigos: FirstN(Sort(_abertos, dias, SortOrder.Descending), 6)
+                                          },
+                                          varDdPainelCss & "<div style='font-family:Segoe UI,Arial,sans-serif;" & _op & "'>" &
+                                          "<div style='font-size:11px;font-weight:700;letter-spacing:.7px;color:#00879A;'>SITUAÇÃO ATUAL" & If(_escopo = "", "", " · " & Upper(_escopo)) & "</div>" &
+                                          "<div style='font-size:11px;color:#64748B;margin:2px 0 10px;'>Vencimentos e pendências de hoje, " & If(_escopo = "", "em todos os aeroportos", "em " & _escopo) & ". Não dependem do período escolhido mais abaixo.</div>" &
+                                          "<table role='presentation' style='width:100%;border-collapse:separate;border-spacing:0;table-layout:fixed;'><tr>" &
+                                          "<td class='ddp-card' style='" & _card & "width:57%;'>" &
+                                          "<div style='font-size:13px;font-weight:700;color:#0F172A;'>Vigências</div>" &
+                                          "<div style='font-size:11px;color:#64748B;margin:2px 0 12px;'>Vencidas nos últimos 12 meses e vencimentos dos próximos 90 dias</div>" &
+                                          "<table role='presentation' style='width:100%;border-collapse:separate;border-spacing:0;table-layout:fixed;'><tr>" &
+                                          "<td class='ddp-tile' style='vertical-align:top;border:1px solid #E2E8F0;padding:10px 12px;'>" &
+                                          "<div style='height:4px;width:28px;background:#8A1C12;margin-bottom:8px;'></div>" &
+                                          "<div class='ddp-num' style='font-size:24px;font-weight:700;color:#0F172A;line-height:1.1;'>" & _vencidas & "</div>" &
+                                          "<div style='font-size:11px;color:#475569;margin-top:3px;'>Vencidas</div></td>" &
+                                          "<td style='width:8px;'></td>" &
+                                          "<td class='ddp-tile' style='vertical-align:top;border:1px solid #E2E8F0;padding:10px 12px;'>" &
+                                          "<div style='height:4px;width:28px;background:#B9281B;margin-bottom:8px;'></div>" &
+                                          "<div class='ddp-num' style='font-size:24px;font-weight:700;color:#0F172A;line-height:1.1;'>" & _ate30 & "</div>" &
+                                          "<div style='font-size:11px;color:#475569;margin-top:3px;'>Vencem em até 30 dias</div></td>" &
+                                          "<td style='width:8px;'></td>" &
+                                          "<td class='ddp-tile' style='vertical-align:top;border:1px solid #E2E8F0;padding:10px 12px;'>" &
+                                          "<div style='height:4px;width:28px;background:#DE5346;margin-bottom:8px;'></div>" &
+                                          "<div class='ddp-num' style='font-size:24px;font-weight:700;color:#0F172A;line-height:1.1;'>" & _ate60 & "</div>" &
+                                          "<div style='font-size:11px;color:#475569;margin-top:3px;'>Em 31 a 60 dias</div></td>" &
+                                          "<td style='width:8px;'></td>" &
+                                          "<td class='ddp-tile' style='vertical-align:top;border:1px solid #E2E8F0;padding:10px 12px;'>" &
+                                          "<div style='height:4px;width:28px;background:#EC8177;margin-bottom:8px;'></div>" &
+                                          "<div class='ddp-num' style='font-size:24px;font-weight:700;color:#0F172A;line-height:1.1;'>" & _ate90 & "</div>" &
+                                          "<div style='font-size:11px;color:#475569;margin-top:3px;'>Em 61 a 90 dias</div></td>" &
+                                          "</tr></table>" &
+                                          "<div style='font-size:11px;font-weight:700;color:#475569;margin:16px 0 6px;'>Próximos vencimentos</div>" &
+                                          "<table role='presentation' style='width:100%;border-collapse:collapse;font-size:11px;font-variant-numeric:tabular-nums;'>" &
+                                          If(
+                                              IsEmpty(_proximos),
+                                              "<tr><td style='padding:10px 0;color:#64748B;border-top:1px solid #F1F5F9;'>Nenhum vencimento nos próximos 90 dias.</td></tr>",
+                                              Concat(
+                                                  _proximos As P,
+                                                  "<tr class='ddp-row'>" &
+                                                  "<td style='padding:7px 8px 7px 0;border-top:1px solid #F1F5F9;'><span style='font-weight:700;color:#0F172A;'>DD-" & Text(P.ID, "000000") & "</span> <span style='color:#475569;'>" & Substitute(Substitute(Substitute(Left(Coalesce(P.razao_social, ""), 34), "&", "&amp;"), "<", "&lt;"), ">", "&gt;") & If(Len(Coalesce(P.razao_social, "")) > 34, "…", "") & "</span></td>" &
+                                                  "<td style='padding:7px 8px 7px 0;border-top:1px solid #F1F5F9;color:#475569;width:22%;'>" & Coalesce(P.aeroporto, "—") & "</td>" &
+                                                  "<td style='padding:7px 8px 7px 0;border-top:1px solid #F1F5F9;color:#475569;width:12%;'>" & Coalesce(P.classificacao_risco, "—") & "</td>" &
+                                                  "<td style='padding:7px 0;border-top:1px solid #F1F5F9;text-align:right;white-space:nowrap;color:#0F172A;width:26%;'>" & Text(P.data_vencimento, "[$-pt-BR]dd/mm/yyyy") & "<span style='color:#64748B;'> · em " & DateDiff(Today(), P.data_vencimento, TimeUnit.Days) & " d</span></td>" &
+                                                  "</tr>"
+                                              )
+                                          ) &
+                                          "</table>" &
+                                          "</td>" &
+                                          "<td style='width:16px;'></td>" &
+                                          "<td class='ddp-card' style='" & _card & "'>" &
+                                          "<div style='font-size:13px;font-weight:700;color:#0F172A;'>Pendências fora do prazo</div>" &
+                                          "<div style='font-size:11px;color:#64748B;margin:2px 0 12px;'>Terceiro: " & varDdPainelSlaTerceiro & " dias após o envio · Compliance: " & varDdPainelSlaCompliance & " dias após a resposta</div>" &
+                                          "<table role='presentation' style='width:100%;border-collapse:separate;border-spacing:0;table-layout:fixed;'><tr>" &
+                                          "<td class='ddp-tile' style='vertical-align:top;border:1px solid #E2E8F0;padding:10px 12px;'>" &
+                                          "<div style='height:4px;width:28px;background:" & If(_foraTerceiro > 0, "#D93025", "#118D5C") & ";margin-bottom:8px;'></div>" &
+                                          "<div class='ddp-num' style='font-size:24px;font-weight:700;color:#0F172A;line-height:1.1;'>" & _foraTerceiro & "<span style='font-size:12px;font-weight:400;color:#64748B;'> de " & _totTerceiro & "</span></div>" &
+                                          "<div style='font-size:11px;color:#475569;margin-top:3px;'>Com o terceiro</div></td>" &
+                                          "<td style='width:8px;'></td>" &
+                                          "<td class='ddp-tile' style='vertical-align:top;border:1px solid #E2E8F0;padding:10px 12px;'>" &
+                                          "<div style='height:4px;width:28px;background:" & If(_foraCompliance > 0, "#D93025", "#118D5C") & ";margin-bottom:8px;'></div>" &
+                                          "<div class='ddp-num' style='font-size:24px;font-weight:700;color:#0F172A;line-height:1.1;'>" & _foraCompliance & "<span style='font-size:12px;font-weight:400;color:#64748B;'> de " & _totCompliance & "</span></div>" &
+                                          "<div style='font-size:11px;color:#475569;margin-top:3px;'>No Compliance</div></td>" &
+                                          "</tr></table>" &
+                                          "<div style='font-size:11px;font-weight:700;color:#475569;margin:16px 0 6px;'>Em aberto há mais tempo</div>" &
+                                          "<table role='presentation' style='width:100%;border-collapse:collapse;font-size:11px;font-variant-numeric:tabular-nums;'>" &
+                                          If(
+                                              IsEmpty(_antigos),
+                                              "<tr><td style='padding:10px 0;color:#64748B;border-top:1px solid #F1F5F9;'>Nenhuma solicitação em aberto.</td></tr>",
+                                              Concat(
+                                                  _antigos As A,
+                                                  "<tr class='ddp-row'>" &
+                                                  "<td style='padding:7px 8px 7px 0;border-top:1px solid #F1F5F9;'><span style='font-weight:700;color:#0F172A;'>DD-" & Text(A.ID, "000000") & "</span> <span style='color:#475569;'>" & Substitute(Substitute(Substitute(Left(A.razao, 24), "&", "&amp;"), "<", "&lt;"), ">", "&gt;") & If(Len(A.razao) > 24, "…", "") & "</span></td>" &
+                                                  "<td style='padding:7px 8px 7px 0;border-top:1px solid #F1F5F9;color:#475569;width:24%;'>" & A.etapa & "</td>" &
+                                                  "<td style='padding:7px 0;border-top:1px solid #F1F5F9;text-align:right;white-space:nowrap;color:#0F172A;width:22%;'>" & If(A.dias > A.prazo, "<span style='display:inline-block;width:8px;height:8px;background:#D93025;margin-right:6px;'></span>", "") & A.dias & " d</td>" &
+                                                  "</tr>"
+                                              )
+                                          ) &
+                                          "</table>" &
+                                          "<div style='font-size:10px;color:#64748B;margin-top:8px;'><span style='display:inline-block;width:8px;height:8px;background:#D93025;margin-right:6px;'></span>fora do prazo</div>" &
+                                          "</td>" &
+                                          "</tr></table></div>"
                                       )
-                                  ) &
-                                  "</table>" &
-                                  "</td>" &
-                                  "<td style='width:16px;'></td>" &
-                                  "<td style='" & _card & "'>" &
-                                  "<div style='font-size:13px;font-weight:700;color:#0F172A;'>Pendências fora do prazo</div>" &
-                                  "<div style='font-size:11px;color:#64748B;margin:2px 0 12px;'>Terceiro: " & varDdPainelSlaTerceiro & " dias após o envio · Compliance: " & varDdPainelSlaCompliance & " dias após a resposta</div>" &
-                                  "<table role='presentation' style='width:100%;border-collapse:separate;border-spacing:0;table-layout:fixed;'><tr>" &
-                                  "<td style='vertical-align:top;border:1px solid #E2E8F0;padding:10px 12px;'>" &
-                                  "<div style='height:4px;width:28px;background:" & If(_foraTerceiro > 0, "#D93025", "#118D5C") & ";margin-bottom:8px;'></div>" &
-                                  "<div style='font-size:24px;font-weight:700;color:#0F172A;line-height:1.1;'>" & _foraTerceiro & "<span style='font-size:12px;font-weight:400;color:#64748B;'> de " & _totTerceiro & "</span></div>" &
-                                  "<div style='font-size:11px;color:#475569;margin-top:3px;'>Com o terceiro</div></td>" &
-                                  "<td style='width:8px;'></td>" &
-                                  "<td style='vertical-align:top;border:1px solid #E2E8F0;padding:10px 12px;'>" &
-                                  "<div style='height:4px;width:28px;background:" & If(_foraCompliance > 0, "#D93025", "#118D5C") & ";margin-bottom:8px;'></div>" &
-                                  "<div style='font-size:24px;font-weight:700;color:#0F172A;line-height:1.1;'>" & _foraCompliance & "<span style='font-size:12px;font-weight:400;color:#64748B;'> de " & _totCompliance & "</span></div>" &
-                                  "<div style='font-size:11px;color:#475569;margin-top:3px;'>No Compliance</div></td>" &
-                                  "</tr></table>" &
-                                  "<div style='font-size:11px;font-weight:700;color:#475569;margin:16px 0 6px;'>Em aberto há mais tempo</div>" &
-                                  "<table role='presentation' style='width:100%;border-collapse:collapse;font-size:11px;font-variant-numeric:tabular-nums;'>" &
-                                  If(
-                                      IsEmpty(_antigos),
-                                      "<tr><td style='padding:10px 0;color:#64748B;border-top:1px solid #F1F5F9;'>Nenhuma solicitação em aberto.</td></tr>",
-                                      Concat(
-                                          _antigos As A,
-                                          "<tr>" &
-                                          "<td style='padding:7px 8px 7px 0;border-top:1px solid #F1F5F9;'><span style='font-weight:700;color:#0F172A;'>DD-" & Text(A.ID, "000000") & "</span> <span style='color:#475569;'>" & Substitute(Substitute(Substitute(Left(A.razao, 24), "&", "&amp;"), "<", "&lt;"), ">", "&gt;") & If(Len(A.razao) > 24, "…", "") & "</span></td>" &
-                                          "<td style='padding:7px 8px 7px 0;border-top:1px solid #F1F5F9;color:#475569;width:24%;'>" & A.etapa & "</td>" &
-                                          "<td style='padding:7px 0;border-top:1px solid #F1F5F9;text-align:right;white-space:nowrap;color:#0F172A;width:22%;'>" & If(A.dias > A.prazo, "<span style='display:inline-block;width:8px;height:8px;background:#D93025;margin-right:6px;'></span>", "") & A.dias & " d</td>" &
-                                          "</tr>"
-                                      )
-                                  ) &
-                                  "</table>" &
-                                  "<div style='font-size:10px;color:#64748B;margin-top:8px;'><span style='display:inline-block;width:8px;height:8px;background:#D93025;margin-right:6px;'></span>fora do prazo</div>" &
-                                  "</td>" &
-                                  "</tr></table></div>"
+                                  )
                               )
                           )
+                        LayoutMinWidth: =16
                         PaddingBottom: =0
                         PaddingLeft: =0
                         PaddingRight: =0
@@ -648,6 +805,7 @@ Screens:
                         LayoutAlignItems: =LayoutAlignItems.Center
                         LayoutDirection: =LayoutDirection.Horizontal
                         LayoutGap: =12
+                        LayoutMinWidth: =16
                         RadiusBottomLeft: =0
                         RadiusBottomRight: =0
                         RadiusTopLeft: =0
@@ -660,16 +818,29 @@ Screens:
                               FillPortions: =1
                               Height: =48
                               HtmlText: |-
-                                ="<div style='font-family:Segoe UI,Arial,sans-serif;padding-top:6px;'>" &
-                                "<div style='font-size:11px;font-weight:700;letter-spacing:.7px;color:#00879A;'>SOLICITAÇÕES NO PERÍODO</div>" &
-                                "<div style='font-size:11px;color:#64748B;margin-top:2px;'>" &
-                                If(
-                                    IsBlank(varDdPainelIni),
-                                    "Carregando…",
-                                    "Criadas de " & Text(varDdPainelIni, "[$-pt-BR]dd/mm/yyyy") & " a " & Text(varDdPainelFim, "[$-pt-BR]dd/mm/yyyy") & " · " & CountRows(colDdPainel) & " solicitações carregadas"
-                                ) &
-                                If(varDdPainelCarregando, " · atualizando…", "") &
-                                "</div></div>"
+                                =With(
+                                    {
+                                        _aeroF: If(IsBlank(cmbDdPainelAeroporto.Selected.Value) || cmbDdPainelAeroporto.Selected.Value = "Todos os aeroportos", "", cmbDdPainelAeroporto.Selected.Value),
+                                        _blocoF: If(IsBlank(cmbDdPainelBloco.Selected.Value) || cmbDdPainelBloco.Selected.Value = "Todos os blocos", "", cmbDdPainelBloco.Selected.Value)
+                                    },
+                                    With(
+                                        {
+                                            _base: Filter(colDdPainel, (_aeroF = "" || aeroporto = _aeroF) && (_blocoF = "" || bloco = _blocoF)),
+                                            _escopo: If(_aeroF <> "", _aeroF, _blocoF <> "", "Bloco " & _blocoF, "")
+                                        },
+                                        "<div style='font-family:Segoe UI,Arial,sans-serif;padding-top:6px;'>" &
+                                        "<div style='font-size:11px;font-weight:700;letter-spacing:.7px;color:#00879A;'>SOLICITAÇÕES NO PERÍODO" & If(_escopo = "", "", " · " & Upper(_escopo)) & "</div>" &
+                                        "<div style='font-size:11px;color:#64748B;margin-top:2px;'>" &
+                                        If(
+                                            IsBlank(varDdPainelIni),
+                                            "Carregando…",
+                                            "Criadas de " & Text(varDdPainelIni, "[$-pt-BR]dd/mm/yyyy") & " a " & Text(varDdPainelFim, "[$-pt-BR]dd/mm/yyyy") & " · " & CountRows(_base) & " solicitações" & If(_escopo = "", "", " em " & _escopo)
+                                        ) &
+                                        If(varDdPainelCarregando, " · atualizando…", "") &
+                                        "</div></div>"
+                                    )
+                                )
+                              LayoutMinWidth: =16
                               PaddingBottom: =0
                               PaddingLeft: =0
                               PaddingRight: =0
@@ -697,47 +868,60 @@ Screens:
                         HtmlText: |-
                           =With(
                               {
-                                  _op: If(varDdPainelCarregando, "opacity:.45;", ""),
-                                  _tile: "background:#FFFFFF;border:1px solid #E2E8F0;padding:16px 18px;vertical-align:top;",
-                                  _total: CountRows(colDdPainel),
-                                  _fluxo3: CountIf(colDdPainel, fluxo_classificacao = "FLUXO III"),
-                                  _terceiro: CountIf(colDdPainel, status = "Aguardando Terceiro"),
-                                  _compliance: CountIf(colDdPainel, status = "Pendente Compliance"),
-                                  _aprovado: CountIf(colDdPainel, status = "Aprovado"),
-                                  _ressalvas: CountIf(colDdPainel, status = "Aprovado com Ressalvas"),
-                                  _automaticas: CountIf(colDdPainel, status = "Aprovado" && IsBlank(decisao_compliance)),
-                                  _reprovado: CountIf(colDdPainel, status = "Reprovado"),
-                                  _parcial: CountIf(colDdPainel, status = "Reprovado Parcialmente"),
-                                  _cancelado: CountIf(colDdPainel, status = "Cancelado"),
-                                  _vencido: CountIf(colDdPainel, status = "Vencido")
+                                  _aeroF: If(IsBlank(cmbDdPainelAeroporto.Selected.Value) || cmbDdPainelAeroporto.Selected.Value = "Todos os aeroportos", "", cmbDdPainelAeroporto.Selected.Value),
+                                  _blocoF: If(IsBlank(cmbDdPainelBloco.Selected.Value) || cmbDdPainelBloco.Selected.Value = "Todos os blocos", "", cmbDdPainelBloco.Selected.Value)
                               },
-                              "<table role='presentation' style='width:100%;border-collapse:separate;border-spacing:0;table-layout:fixed;font-family:Segoe UI,Arial,sans-serif;" & _op & "'><tr>" &
-                              "<td style='" & _tile & "width:26%;border-top:3px solid #00879A;'>" &
-                              "<div style='font-size:11px;font-weight:600;color:#475569;'>Solicitações no período</div>" &
-                              "<div style='font-size:48px;font-weight:700;color:#0F172A;line-height:1.05;margin-top:6px;'>" & _total & "</div>" &
-                              "<div style='font-size:11px;color:#64748B;margin-top:4px;'>" & _fluxo3 & " com due diligence (Fluxo III)</div></td>" &
-                              "<td style='width:12px;'></td>" &
-                              "<td style='" & _tile & "'>" &
-                              "<div style='font-size:11px;font-weight:600;color:#475569;'><span style='display:inline-block;width:8px;height:8px;background:#00879A;margin-right:6px;'></span>Em andamento</div>" &
-                              "<div style='font-size:30px;font-weight:700;color:#0F172A;line-height:1.1;margin-top:12px;'>" & (_terceiro + _compliance) & "</div>" &
-                              "<div style='font-size:11px;color:#64748B;margin-top:4px;'>" & _terceiro & " com o terceiro · " & _compliance & " no Compliance</div></td>" &
-                              "<td style='width:12px;'></td>" &
-                              "<td style='" & _tile & "'>" &
-                              "<div style='font-size:11px;font-weight:600;color:#475569;'><span style='display:inline-block;width:8px;height:8px;background:#118D5C;margin-right:6px;'></span>Aprovadas</div>" &
-                              "<div style='font-size:30px;font-weight:700;color:#0F172A;line-height:1.1;margin-top:12px;'>" & (_aprovado + _ressalvas) & "</div>" &
-                              "<div style='font-size:11px;color:#64748B;margin-top:4px;'>" & _ressalvas & " com ressalvas · " & _automaticas & " automáticas</div></td>" &
-                              "<td style='width:12px;'></td>" &
-                              "<td style='" & _tile & "'>" &
-                              "<div style='font-size:11px;font-weight:600;color:#475569;'><span style='display:inline-block;width:8px;height:8px;background:#D93025;margin-right:6px;'></span>Reprovadas</div>" &
-                              "<div style='font-size:30px;font-weight:700;color:#0F172A;line-height:1.1;margin-top:12px;'>" & (_reprovado + _parcial) & "</div>" &
-                              "<div style='font-size:11px;color:#64748B;margin-top:4px;'>" & _parcial & " parcialmente</div></td>" &
-                              "<td style='width:12px;'></td>" &
-                              "<td style='" & _tile & "'>" &
-                              "<div style='font-size:11px;font-weight:600;color:#475569;'><span style='display:inline-block;width:8px;height:8px;background:#64748B;margin-right:6px;'></span>Canceladas</div>" &
-                              "<div style='font-size:30px;font-weight:700;color:#0F172A;line-height:1.1;margin-top:12px;'>" & _cancelado & "</div>" &
-                              "<div style='font-size:11px;color:#64748B;margin-top:4px;'>" & If(_vencido > 0, _vencido & " já vencidas no período", "no período") & "</div></td>" &
-                              "</tr></table>"
+                              With(
+                                  {
+                                      _base: Filter(colDdPainel, (_aeroF = "" || aeroporto = _aeroF) && (_blocoF = "" || bloco = _blocoF)),
+                                      _escopo: If(_aeroF <> "", _aeroF, _blocoF <> "", "Bloco " & _blocoF, "")
+                                  },
+                                  With(
+                                      {
+                                          _op: If(varDdPainelCarregando, "opacity:.45;", ""),
+                                          _tile: "background:#FFFFFF;border:1px solid #E2E8F0;padding:16px 18px;vertical-align:top;",
+                                          _total: CountRows(_base),
+                                          _fluxo3: CountIf(_base, fluxo_classificacao = "FLUXO III"),
+                                          _terceiro: CountIf(_base, status = "Aguardando Terceiro"),
+                                          _compliance: CountIf(_base, status = "Pendente Compliance"),
+                                          _aprovado: CountIf(_base, status = "Aprovado"),
+                                          _ressalvas: CountIf(_base, status = "Aprovado com Ressalvas"),
+                                          _automaticas: CountIf(_base, status = "Aprovado" && IsBlank(decisao_compliance)),
+                                          _reprovado: CountIf(_base, status = "Reprovado"),
+                                          _parcial: CountIf(_base, status = "Reprovado Parcialmente"),
+                                          _cancelado: CountIf(_base, status = "Cancelado"),
+                                          _vencido: CountIf(_base, status = "Vencido")
+                                      },
+                                      varDdPainelCss & "<table role='presentation' style='width:100%;border-collapse:separate;border-spacing:0;table-layout:fixed;font-family:Segoe UI,Arial,sans-serif;" & _op & "'><tr>" &
+                                      "<td class='ddp-card' style='" & _tile & "width:26%;border-top:3px solid #00879A;'>" &
+                                      "<div style='font-size:11px;font-weight:600;color:#475569;'>Solicitações no período</div>" &
+                                      "<div class='ddp-num' style='font-size:48px;font-weight:700;color:#0F172A;line-height:1.05;margin-top:6px;'>" & _total & "</div>" &
+                                      "<div style='font-size:11px;color:#64748B;margin-top:4px;'>" & _fluxo3 & " com due diligence (Fluxo III)</div></td>" &
+                                      "<td style='width:12px;'></td>" &
+                                      "<td class='ddp-card' style='" & _tile & "'>" &
+                                      "<div style='font-size:11px;font-weight:600;color:#475569;'><span style='display:inline-block;width:8px;height:8px;background:#00879A;margin-right:6px;'></span>Em andamento</div>" &
+                                      "<div class='ddp-num' style='font-size:30px;font-weight:700;color:#0F172A;line-height:1.1;margin-top:12px;'>" & (_terceiro + _compliance) & "</div>" &
+                                      "<div style='font-size:11px;color:#64748B;margin-top:4px;'>" & _terceiro & " com o terceiro · " & _compliance & " no Compliance</div></td>" &
+                                      "<td style='width:12px;'></td>" &
+                                      "<td class='ddp-card' style='" & _tile & "'>" &
+                                      "<div style='font-size:11px;font-weight:600;color:#475569;'><span style='display:inline-block;width:8px;height:8px;background:#118D5C;margin-right:6px;'></span>Aprovadas</div>" &
+                                      "<div class='ddp-num' style='font-size:30px;font-weight:700;color:#0F172A;line-height:1.1;margin-top:12px;'>" & (_aprovado + _ressalvas) & "</div>" &
+                                      "<div style='font-size:11px;color:#64748B;margin-top:4px;'>" & _ressalvas & " com ressalvas · " & _automaticas & " automáticas</div></td>" &
+                                      "<td style='width:12px;'></td>" &
+                                      "<td class='ddp-card' style='" & _tile & "'>" &
+                                      "<div style='font-size:11px;font-weight:600;color:#475569;'><span style='display:inline-block;width:8px;height:8px;background:#D93025;margin-right:6px;'></span>Reprovadas</div>" &
+                                      "<div class='ddp-num' style='font-size:30px;font-weight:700;color:#0F172A;line-height:1.1;margin-top:12px;'>" & (_reprovado + _parcial) & "</div>" &
+                                      "<div style='font-size:11px;color:#64748B;margin-top:4px;'>" & _parcial & " parcialmente</div></td>" &
+                                      "<td style='width:12px;'></td>" &
+                                      "<td class='ddp-card' style='" & _tile & "'>" &
+                                      "<div style='font-size:11px;font-weight:600;color:#475569;'><span style='display:inline-block;width:8px;height:8px;background:#64748B;margin-right:6px;'></span>Canceladas</div>" &
+                                      "<div class='ddp-num' style='font-size:30px;font-weight:700;color:#0F172A;line-height:1.1;margin-top:12px;'>" & _cancelado & "</div>" &
+                                      "<div style='font-size:11px;color:#64748B;margin-top:4px;'>" & If(_vencido > 0, _vencido & " já vencidas no período", "no período") & "</div></td>" &
+                                      "</tr></table>"
+                                  )
+                              )
                           )
+                        LayoutMinWidth: =16
                         PaddingBottom: =0
                         PaddingLeft: =0
                         PaddingRight: =0
@@ -751,74 +935,87 @@ Screens:
                         HtmlText: |-
                           =With(
                               {
-                                  _op: If(varDdPainelCarregando, "opacity:.45;", ""),
-                                  _card: "background:#FFFFFF;border:1px solid #E2E8F0;padding:16px 18px;vertical-align:top;",
-                                  _total: CountRows(colDdPainel),
-                                  _porAero: Sort(
-                                      ForAll(
-                                          Distinct(colDdPainel, Coalesce(aeroporto, "Não informado")) As _d,
-                                          {rotulo: _d.Value, qtd: CountIf(colDdPainel, Coalesce(aeroporto, "Não informado") = _d.Value)}
-                                      ),
-                                      If(rotulo = "Não informado", -1, qtd),
-                                      SortOrder.Descending
-                                  ),
-                                  _porArea: Sort(
-                                      ForAll(
-                                          Distinct(colDdPainel, Coalesce(area_solicitante, "Não informado")) As _d,
-                                          {rotulo: _d.Value, qtd: CountIf(colDdPainel, Coalesce(area_solicitante, "Não informado") = _d.Value)}
-                                      ),
-                                      If(rotulo = "Não informado", -1, qtd),
-                                      SortOrder.Descending
-                                  )
+                                  _aeroF: If(IsBlank(cmbDdPainelAeroporto.Selected.Value) || cmbDdPainelAeroporto.Selected.Value = "Todos os aeroportos", "", cmbDdPainelAeroporto.Selected.Value),
+                                  _blocoF: If(IsBlank(cmbDdPainelBloco.Selected.Value) || cmbDdPainelBloco.Selected.Value = "Todos os blocos", "", cmbDdPainelBloco.Selected.Value)
                               },
                               With(
                                   {
-                                      _maxAero: If(IsEmpty(_porAero), 1, Max(_porAero, qtd)),
-                                      _maxArea: If(IsEmpty(_porArea), 1, Max(_porArea, qtd))
+                                      _base: Filter(colDdPainel, (_aeroF = "" || aeroporto = _aeroF) && (_blocoF = "" || bloco = _blocoF)),
+                                      _escopo: If(_aeroF <> "", _aeroF, _blocoF <> "", "Bloco " & _blocoF, "")
                                   },
-                                  "<table role='presentation' style='width:100%;border-collapse:separate;border-spacing:0;table-layout:fixed;font-family:Segoe UI,Arial,sans-serif;" & _op & "'><tr>" &
-                                  "<td style='" & _card & "width:50%;'>" &
-                                  "<div style='font-size:13px;font-weight:700;color:#0F172A;'>Solicitações por aeroporto</div>" &
-                                  "<div style='font-size:11px;color:#64748B;margin:2px 0 12px;'>Quantidade de solicitações e % sobre o total do período</div>" &
-                                  If(
-                                      IsEmpty(_porAero),
-                                      "<div style='padding:12px 0;font-size:11px;color:#64748B;'>Nenhuma solicitação no período.</div>",
-                                      "<table role='presentation' style='width:100%;border-collapse:collapse;'>" &
-                                      Concat(
-                                          _porAero As B,
-                                          "<tr><td style='padding:4px 10px 4px 0;font-size:11px;color:#334155;width:36%;vertical-align:middle;'>" & B.rotulo & "</td>" &
-                                          "<td style='padding:4px 0;white-space:nowrap;vertical-align:middle;'>" &
-                                          "<span style='display:inline-block;vertical-align:middle;height:10px;width:" & Text(Max(1, Round(B.qtd / _maxAero * 78, 0))) & "%;background:" & If(B.rotulo = "Não informado", "#94A3B8", "#00879A") & ";border-radius:0 4px 4px 0;'></span>" &
-                                          "<span style='display:inline-block;vertical-align:middle;margin-left:6px;font-size:12px;font-weight:700;color:#0F172A;'>" & B.qtd & "</span>" &
-                                          "<span style='display:inline-block;vertical-align:middle;margin-left:4px;font-size:10px;color:#64748B;'>" & If(Round(B.qtd / Max(_total, 1) * 100, 0) = 0, "<1%", Text(Round(B.qtd / Max(_total, 1) * 100, 0)) & "%") & "</span>" &
-                                          "</td></tr>"
-                                      ) &
-                                      "</table>"
-                                  ) &
-                                  "</td>" &
-                                  "<td style='width:16px;'></td>" &
-                                  "<td style='" & _card & "'>" &
-                                  "<div style='font-size:13px;font-weight:700;color:#0F172A;'>Solicitações por área solicitante</div>" &
-                                  "<div style='font-size:11px;color:#64748B;margin:2px 0 12px;'>Quantidade de solicitações e % sobre o total do período</div>" &
-                                  If(
-                                      IsEmpty(_porArea),
-                                      "<div style='padding:12px 0;font-size:11px;color:#64748B;'>Nenhuma solicitação no período.</div>",
-                                      "<table role='presentation' style='width:100%;border-collapse:collapse;'>" &
-                                      Concat(
-                                          _porArea As B,
-                                          "<tr><td style='padding:4px 10px 4px 0;font-size:11px;color:#334155;width:40%;vertical-align:middle;'>" & B.rotulo & "</td>" &
-                                          "<td style='padding:4px 0;white-space:nowrap;vertical-align:middle;'>" &
-                                          "<span style='display:inline-block;vertical-align:middle;height:10px;width:" & Text(Max(1, Round(B.qtd / _maxArea * 78, 0))) & "%;background:" & If(B.rotulo = "Não informado", "#94A3B8", "#00879A") & ";border-radius:0 4px 4px 0;'></span>" &
-                                          "<span style='display:inline-block;vertical-align:middle;margin-left:6px;font-size:12px;font-weight:700;color:#0F172A;'>" & B.qtd & "</span>" &
-                                          "<span style='display:inline-block;vertical-align:middle;margin-left:4px;font-size:10px;color:#64748B;'>" & If(Round(B.qtd / Max(_total, 1) * 100, 0) = 0, "<1%", Text(Round(B.qtd / Max(_total, 1) * 100, 0)) & "%") & "</span>" &
-                                          "</td></tr>"
-                                      ) &
-                                      "</table>"
-                                  ) &
-                                  "</td>" &
-                                  "</tr></table>"
+                                  With(
+                                      {
+                                          _op: If(varDdPainelCarregando, "opacity:.45;", ""),
+                                          _card: "background:#FFFFFF;border:1px solid #E2E8F0;padding:16px 18px;vertical-align:top;",
+                                          _total: CountRows(_base),
+                                          _porAero: Sort(
+                                              ForAll(
+                                                  Distinct(_base, Coalesce(aeroporto, "Não informado")) As _d,
+                                                  {rotulo: _d.Value, qtd: CountIf(_base, Coalesce(aeroporto, "Não informado") = _d.Value)}
+                                              ),
+                                              If(rotulo = "Não informado", -1, qtd),
+                                              SortOrder.Descending
+                                          ),
+                                          _porArea: Sort(
+                                              ForAll(
+                                                  Distinct(_base, Coalesce(area_solicitante, "Não informado")) As _d,
+                                                  {rotulo: _d.Value, qtd: CountIf(_base, Coalesce(area_solicitante, "Não informado") = _d.Value)}
+                                              ),
+                                              If(rotulo = "Não informado", -1, qtd),
+                                              SortOrder.Descending
+                                          )
+                                      },
+                                      With(
+                                          {
+                                              _maxAero: If(IsEmpty(_porAero), 1, Max(_porAero, qtd)),
+                                              _maxArea: If(IsEmpty(_porArea), 1, Max(_porArea, qtd))
+                                          },
+                                          varDdPainelCss & "<table role='presentation' style='width:100%;border-collapse:separate;border-spacing:0;table-layout:fixed;font-family:Segoe UI,Arial,sans-serif;" & _op & "'><tr>" &
+                                          "<td class='ddp-card' style='" & _card & "width:50%;'>" &
+                                          "<div style='font-size:13px;font-weight:700;color:#0F172A;'>Solicitações por aeroporto</div>" &
+                                          "<div style='font-size:11px;color:#64748B;margin:2px 0 12px;'>Quantidade de solicitações e % sobre o total do período</div>" &
+                                          If(
+                                              IsEmpty(_porAero),
+                                              "<div style='padding:12px 0;font-size:11px;color:#64748B;'>Nenhuma solicitação no período.</div>",
+                                              "<table role='presentation' style='width:100%;border-collapse:collapse;'>" &
+                                              Concat(
+                                                  _porAero As B,
+                                                  "<tr class='ddp-row'><td style='padding:4px 10px 4px 0;font-size:11px;color:#334155;width:36%;vertical-align:middle;'>" & B.rotulo & "</td>" &
+                                                  "<td style='padding:4px 0;white-space:nowrap;vertical-align:middle;'>" &
+                                                  "<span class='ddp-bar' style='display:inline-block;vertical-align:middle;height:10px;width:" & Text(Max(1, Round(B.qtd / _maxAero * 78, 0))) & "%;background:" & If(B.rotulo = "Não informado", "#94A3B8", "#00879A") & ";border-radius:0 4px 4px 0;'></span>" &
+                                                  "<span style='display:inline-block;vertical-align:middle;margin-left:6px;font-size:12px;font-weight:700;color:#0F172A;'>" & B.qtd & "</span>" &
+                                                  "<span style='display:inline-block;vertical-align:middle;margin-left:4px;font-size:10px;color:#64748B;'>" & If(Round(B.qtd / Max(_total, 1) * 100, 0) = 0, "<1%", Text(Round(B.qtd / Max(_total, 1) * 100, 0)) & "%") & "</span>" &
+                                                  "</td></tr>"
+                                              ) &
+                                              "</table>"
+                                          ) &
+                                          "</td>" &
+                                          "<td style='width:16px;'></td>" &
+                                          "<td class='ddp-card' style='" & _card & "'>" &
+                                          "<div style='font-size:13px;font-weight:700;color:#0F172A;'>Solicitações por área solicitante</div>" &
+                                          "<div style='font-size:11px;color:#64748B;margin:2px 0 12px;'>Quantidade de solicitações e % sobre o total do período</div>" &
+                                          If(
+                                              IsEmpty(_porArea),
+                                              "<div style='padding:12px 0;font-size:11px;color:#64748B;'>Nenhuma solicitação no período.</div>",
+                                              "<table role='presentation' style='width:100%;border-collapse:collapse;'>" &
+                                              Concat(
+                                                  _porArea As B,
+                                                  "<tr class='ddp-row'><td style='padding:4px 10px 4px 0;font-size:11px;color:#334155;width:40%;vertical-align:middle;'>" & B.rotulo & "</td>" &
+                                                  "<td style='padding:4px 0;white-space:nowrap;vertical-align:middle;'>" &
+                                                  "<span class='ddp-bar' style='display:inline-block;vertical-align:middle;height:10px;width:" & Text(Max(1, Round(B.qtd / _maxArea * 78, 0))) & "%;background:" & If(B.rotulo = "Não informado", "#94A3B8", "#00879A") & ";border-radius:0 4px 4px 0;'></span>" &
+                                                  "<span style='display:inline-block;vertical-align:middle;margin-left:6px;font-size:12px;font-weight:700;color:#0F172A;'>" & B.qtd & "</span>" &
+                                                  "<span style='display:inline-block;vertical-align:middle;margin-left:4px;font-size:10px;color:#64748B;'>" & If(Round(B.qtd / Max(_total, 1) * 100, 0) = 0, "<1%", Text(Round(B.qtd / Max(_total, 1) * 100, 0)) & "%") & "</span>" &
+                                                  "</td></tr>"
+                                              ) &
+                                              "</table>"
+                                          ) &
+                                          "</td>" &
+                                          "</tr></table>"
+                                      )
+                                  )
                               )
                           )
+                        LayoutMinWidth: =16
                         PaddingBottom: =0
                         PaddingLeft: =0
                         PaddingRight: =0
@@ -832,74 +1029,87 @@ Screens:
                         HtmlText: |-
                           =With(
                               {
-                                  _op: If(varDdPainelCarregando, "opacity:.45;", ""),
-                                  _card: "background:#FFFFFF;border:1px solid #E2E8F0;padding:16px 18px;vertical-align:top;",
-                                  _total: CountRows(colDdPainel),
-                                  _baixo: CountIf(colDdPainel, classificacao_risco = "Baixo"),
-                                  _medio: CountIf(colDdPainel, classificacao_risco = "Médio" || classificacao_risco = "Medio"),
-                                  _alto: CountIf(colDdPainel, classificacao_risco = "Alto"),
-                                  _porCategoria: Sort(
-                                      ForAll(
-                                          Distinct(colDdPainel, Coalesce(categoria_contraparte, "Não informado")) As _d,
-                                          {rotulo: _d.Value, qtd: CountIf(colDdPainel, Coalesce(categoria_contraparte, "Não informado") = _d.Value)}
-                                      ),
-                                      If(rotulo = "Não informado", -1, qtd),
-                                      SortOrder.Descending
-                                  )
+                                  _aeroF: If(IsBlank(cmbDdPainelAeroporto.Selected.Value) || cmbDdPainelAeroporto.Selected.Value = "Todos os aeroportos", "", cmbDdPainelAeroporto.Selected.Value),
+                                  _blocoF: If(IsBlank(cmbDdPainelBloco.Selected.Value) || cmbDdPainelBloco.Selected.Value = "Todos os blocos", "", cmbDdPainelBloco.Selected.Value)
                               },
                               With(
                                   {
-                                      _classif: _baixo + _medio + _alto,
-                                      _ultimo: If(_alto > 0, "alto", _medio > 0, "medio", "baixo"),
-                                      _maxCat: If(IsEmpty(_porCategoria), 1, Max(_porCategoria, qtd))
+                                      _base: Filter(colDdPainel, (_aeroF = "" || aeroporto = _aeroF) && (_blocoF = "" || bloco = _blocoF)),
+                                      _escopo: If(_aeroF <> "", _aeroF, _blocoF <> "", "Bloco " & _blocoF, "")
                                   },
-                                  "<table role='presentation' style='width:100%;border-collapse:separate;border-spacing:0;table-layout:fixed;font-family:Segoe UI,Arial,sans-serif;" & _op & "'><tr>" &
-                                  "<td style='" & _card & "width:42%;'>" &
-                                  "<div style='font-size:13px;font-weight:700;color:#0F172A;'>Classificação de risco</div>" &
-                                  "<div style='font-size:11px;color:#64748B;margin:2px 0 14px;'>% sobre as solicitações do período com risco definido</div>" &
-                                  If(
-                                      _classif = 0,
-                                      "<div style='padding:12px 0;font-size:11px;color:#64748B;'>Nenhuma solicitação classificada no período.</div>",
-                                      "<table role='presentation' style='width:100%;border-collapse:separate;border-spacing:2px 0;table-layout:fixed;'><tr>" &
-                                      If(_baixo > 0, "<td style='width:" & Text(Max(1, Round(_baixo / _classif * 100, 0))) & "%;height:18px;padding:0;background:#118D5C;" & If(_ultimo = "baixo", "border-radius:0 4px 4px 0;", "") & "'></td>", "") &
-                                      If(_medio > 0, "<td style='width:" & Text(Max(1, Round(_medio / _classif * 100, 0))) & "%;height:18px;padding:0;background:#C47F00;" & If(_ultimo = "medio", "border-radius:0 4px 4px 0;", "") & "'></td>", "") &
-                                      If(_alto > 0, "<td style='width:" & Text(Max(1, Round(_alto / _classif * 100, 0))) & "%;height:18px;padding:0;background:#D93025;border-radius:0 4px 4px 0;'></td>", "") &
-                                      "</tr></table>" &
-                                      "<table role='presentation' style='width:100%;border-collapse:collapse;margin-top:14px;font-size:12px;'>" &
-                                      "<tr><td style='width:18px;padding:6px 0;'><div style='width:10px;height:10px;background:#118D5C;'></div></td><td style='padding:6px 0;color:#0F172A;font-weight:600;'>Baixo <span style='font-weight:400;color:#64748B;font-size:11px;'>· vigência de 3 anos</span></td><td style='padding:6px 0;text-align:right;color:#0F172A;font-weight:700;'>" & _baixo & " <span style='font-weight:400;color:#64748B;font-size:11px;'>" & If(_baixo = 0, "—", Round(_baixo / _classif * 100, 0) = 0, "<1%", Text(Round(_baixo / _classif * 100, 0)) & "%") & "</span></td></tr>" &
-                                      "<tr><td style='width:18px;padding:6px 0;border-top:1px solid #F1F5F9;'><div style='width:10px;height:10px;background:#C47F00;'></div></td><td style='padding:6px 0;border-top:1px solid #F1F5F9;color:#0F172A;font-weight:600;'>Médio <span style='font-weight:400;color:#64748B;font-size:11px;'>· vigência de 2 anos</span></td><td style='padding:6px 0;border-top:1px solid #F1F5F9;text-align:right;color:#0F172A;font-weight:700;'>" & _medio & " <span style='font-weight:400;color:#64748B;font-size:11px;'>" & If(_medio = 0, "—", Round(_medio / _classif * 100, 0) = 0, "<1%", Text(Round(_medio / _classif * 100, 0)) & "%") & "</span></td></tr>" &
-                                      "<tr><td style='width:18px;padding:6px 0;border-top:1px solid #F1F5F9;'><div style='width:10px;height:10px;background:#D93025;'></div></td><td style='padding:6px 0;border-top:1px solid #F1F5F9;color:#0F172A;font-weight:600;'>Alto <span style='font-weight:400;color:#64748B;font-size:11px;'>· vigência de 1 ano</span></td><td style='padding:6px 0;border-top:1px solid #F1F5F9;text-align:right;color:#0F172A;font-weight:700;'>" & _alto & " <span style='font-weight:400;color:#64748B;font-size:11px;'>" & If(_alto = 0, "—", Round(_alto / _classif * 100, 0) = 0, "<1%", Text(Round(_alto / _classif * 100, 0)) & "%") & "</span></td></tr>" &
-                                      "</table>"
-                                  ) &
-                                  If(
-                                      _total - _classif > 0,
-                                      "<div style='font-size:11px;color:#64748B;margin-top:8px;'>" & (_total - _classif) & " sem classificação de risco (registros legados ou incompletos)</div>",
-                                      ""
-                                  ) &
-                                  "</td>" &
-                                  "<td style='width:16px;'></td>" &
-                                  "<td style='" & _card & "'>" &
-                                  "<div style='font-size:13px;font-weight:700;color:#0F172A;'>Categoria da contraparte</div>" &
-                                  "<div style='font-size:11px;color:#64748B;margin:2px 0 12px;'>Quantidade de solicitações e % sobre o total do período</div>" &
-                                  If(
-                                      IsEmpty(_porCategoria),
-                                      "<div style='padding:12px 0;font-size:11px;color:#64748B;'>Nenhuma solicitação no período.</div>",
-                                      "<table role='presentation' style='width:100%;border-collapse:collapse;'>" &
-                                      Concat(
-                                          _porCategoria As B,
-                                          "<tr><td style='padding:5px 10px 5px 0;font-size:11px;color:#334155;width:44%;vertical-align:middle;'>" & B.rotulo & "</td>" &
-                                          "<td style='padding:5px 0;white-space:nowrap;vertical-align:middle;'>" &
-                                          "<span style='display:inline-block;vertical-align:middle;height:10px;width:" & Text(Max(1, Round(B.qtd / _maxCat * 78, 0))) & "%;background:" & If(B.rotulo = "Não informado", "#94A3B8", "#00879A") & ";border-radius:0 4px 4px 0;'></span>" &
-                                          "<span style='display:inline-block;vertical-align:middle;margin-left:6px;font-size:12px;font-weight:700;color:#0F172A;'>" & B.qtd & "</span>" &
-                                          "<span style='display:inline-block;vertical-align:middle;margin-left:4px;font-size:10px;color:#64748B;'>" & If(Round(B.qtd / Max(_total, 1) * 100, 0) = 0, "<1%", Text(Round(B.qtd / Max(_total, 1) * 100, 0)) & "%") & "</span>" &
-                                          "</td></tr>"
-                                      ) &
-                                      "</table>"
-                                  ) &
-                                  "</td>" &
-                                  "</tr></table>"
+                                  With(
+                                      {
+                                          _op: If(varDdPainelCarregando, "opacity:.45;", ""),
+                                          _card: "background:#FFFFFF;border:1px solid #E2E8F0;padding:16px 18px;vertical-align:top;",
+                                          _total: CountRows(_base),
+                                          _baixo: CountIf(_base, classificacao_risco = "Baixo"),
+                                          _medio: CountIf(_base, classificacao_risco = "Médio" || classificacao_risco = "Medio"),
+                                          _alto: CountIf(_base, classificacao_risco = "Alto"),
+                                          _porCategoria: Sort(
+                                              ForAll(
+                                                  Distinct(_base, Coalesce(categoria_contraparte, "Não informado")) As _d,
+                                                  {rotulo: _d.Value, qtd: CountIf(_base, Coalesce(categoria_contraparte, "Não informado") = _d.Value)}
+                                              ),
+                                              If(rotulo = "Não informado", -1, qtd),
+                                              SortOrder.Descending
+                                          )
+                                      },
+                                      With(
+                                          {
+                                              _classif: _baixo + _medio + _alto,
+                                              _ultimo: If(_alto > 0, "alto", _medio > 0, "medio", "baixo"),
+                                              _maxCat: If(IsEmpty(_porCategoria), 1, Max(_porCategoria, qtd))
+                                          },
+                                          varDdPainelCss & "<table role='presentation' style='width:100%;border-collapse:separate;border-spacing:0;table-layout:fixed;font-family:Segoe UI,Arial,sans-serif;" & _op & "'><tr>" &
+                                          "<td class='ddp-card' style='" & _card & "width:42%;'>" &
+                                          "<div style='font-size:13px;font-weight:700;color:#0F172A;'>Classificação de risco</div>" &
+                                          "<div style='font-size:11px;color:#64748B;margin:2px 0 14px;'>% sobre as solicitações do período com risco definido</div>" &
+                                          If(
+                                              _classif = 0,
+                                              "<div style='padding:12px 0;font-size:11px;color:#64748B;'>Nenhuma solicitação classificada no período.</div>",
+                                              "<table class='ddp-bar' role='presentation' style='width:100%;border-collapse:separate;border-spacing:2px 0;table-layout:fixed;'><tr>" &
+                                              If(_baixo > 0, "<td style='width:" & Text(Max(1, Round(_baixo / _classif * 100, 0))) & "%;height:18px;padding:0;background:#118D5C;" & If(_ultimo = "baixo", "border-radius:0 4px 4px 0;", "") & "'></td>", "") &
+                                              If(_medio > 0, "<td style='width:" & Text(Max(1, Round(_medio / _classif * 100, 0))) & "%;height:18px;padding:0;background:#C47F00;" & If(_ultimo = "medio", "border-radius:0 4px 4px 0;", "") & "'></td>", "") &
+                                              If(_alto > 0, "<td style='width:" & Text(Max(1, Round(_alto / _classif * 100, 0))) & "%;height:18px;padding:0;background:#D93025;border-radius:0 4px 4px 0;'></td>", "") &
+                                              "</tr></table>" &
+                                              "<table role='presentation' style='width:100%;border-collapse:collapse;margin-top:14px;font-size:12px;'>" &
+                                              "<tr class='ddp-row'><td style='width:18px;padding:6px 0;'><div style='width:10px;height:10px;background:#118D5C;'></div></td><td style='padding:6px 0;color:#0F172A;font-weight:600;'>Baixo <span style='font-weight:400;color:#64748B;font-size:11px;'>· vigência de 3 anos</span></td><td style='padding:6px 0;text-align:right;color:#0F172A;font-weight:700;'>" & _baixo & " <span style='font-weight:400;color:#64748B;font-size:11px;'>" & If(_baixo = 0, "—", Round(_baixo / _classif * 100, 0) = 0, "<1%", Text(Round(_baixo / _classif * 100, 0)) & "%") & "</span></td></tr>" &
+                                              "<tr class='ddp-row'><td style='width:18px;padding:6px 0;border-top:1px solid #F1F5F9;'><div style='width:10px;height:10px;background:#C47F00;'></div></td><td style='padding:6px 0;border-top:1px solid #F1F5F9;color:#0F172A;font-weight:600;'>Médio <span style='font-weight:400;color:#64748B;font-size:11px;'>· vigência de 2 anos</span></td><td style='padding:6px 0;border-top:1px solid #F1F5F9;text-align:right;color:#0F172A;font-weight:700;'>" & _medio & " <span style='font-weight:400;color:#64748B;font-size:11px;'>" & If(_medio = 0, "—", Round(_medio / _classif * 100, 0) = 0, "<1%", Text(Round(_medio / _classif * 100, 0)) & "%") & "</span></td></tr>" &
+                                              "<tr class='ddp-row'><td style='width:18px;padding:6px 0;border-top:1px solid #F1F5F9;'><div style='width:10px;height:10px;background:#D93025;'></div></td><td style='padding:6px 0;border-top:1px solid #F1F5F9;color:#0F172A;font-weight:600;'>Alto <span style='font-weight:400;color:#64748B;font-size:11px;'>· vigência de 1 ano</span></td><td style='padding:6px 0;border-top:1px solid #F1F5F9;text-align:right;color:#0F172A;font-weight:700;'>" & _alto & " <span style='font-weight:400;color:#64748B;font-size:11px;'>" & If(_alto = 0, "—", Round(_alto / _classif * 100, 0) = 0, "<1%", Text(Round(_alto / _classif * 100, 0)) & "%") & "</span></td></tr>" &
+                                              "</table>"
+                                          ) &
+                                          If(
+                                              _total - _classif > 0,
+                                              "<div style='font-size:11px;color:#64748B;margin-top:8px;'>" & (_total - _classif) & " sem classificação de risco (registros legados ou incompletos)</div>",
+                                              ""
+                                          ) &
+                                          "</td>" &
+                                          "<td style='width:16px;'></td>" &
+                                          "<td class='ddp-card' style='" & _card & "'>" &
+                                          "<div style='font-size:13px;font-weight:700;color:#0F172A;'>Categoria da contraparte</div>" &
+                                          "<div style='font-size:11px;color:#64748B;margin:2px 0 12px;'>Quantidade de solicitações e % sobre o total do período</div>" &
+                                          If(
+                                              IsEmpty(_porCategoria),
+                                              "<div style='padding:12px 0;font-size:11px;color:#64748B;'>Nenhuma solicitação no período.</div>",
+                                              "<table role='presentation' style='width:100%;border-collapse:collapse;'>" &
+                                              Concat(
+                                                  _porCategoria As B,
+                                                  "<tr class='ddp-row'><td style='padding:5px 10px 5px 0;font-size:11px;color:#334155;width:44%;vertical-align:middle;'>" & B.rotulo & "</td>" &
+                                                  "<td style='padding:5px 0;white-space:nowrap;vertical-align:middle;'>" &
+                                                  "<span class='ddp-bar' style='display:inline-block;vertical-align:middle;height:10px;width:" & Text(Max(1, Round(B.qtd / _maxCat * 78, 0))) & "%;background:" & If(B.rotulo = "Não informado", "#94A3B8", "#00879A") & ";border-radius:0 4px 4px 0;'></span>" &
+                                                  "<span style='display:inline-block;vertical-align:middle;margin-left:6px;font-size:12px;font-weight:700;color:#0F172A;'>" & B.qtd & "</span>" &
+                                                  "<span style='display:inline-block;vertical-align:middle;margin-left:4px;font-size:10px;color:#64748B;'>" & If(Round(B.qtd / Max(_total, 1) * 100, 0) = 0, "<1%", Text(Round(B.qtd / Max(_total, 1) * 100, 0)) & "%") & "</span>" &
+                                                  "</td></tr>"
+                                              ) &
+                                              "</table>"
+                                          ) &
+                                          "</td>" &
+                                          "</tr></table>"
+                                      )
+                                  )
                               )
                           )
+                        LayoutMinWidth: =16
                         PaddingBottom: =0
                         PaddingLeft: =0
                         PaddingRight: =0
@@ -913,135 +1123,148 @@ Screens:
                         HtmlText: |-
                           =With(
                               {
-                                  _op: If(varDdPainelCarregando, "opacity:.45;", ""),
-                                  _card: "background:#FFFFFF;border:1px solid #E2E8F0;padding:16px 18px;vertical-align:top;",
-                                  _celula: "padding:9px 0;border-top:1px solid #F1F5F9;",
-                                  _total: CountRows(colDdPainel),
-                                  _tipos: Sort(
-                                      ForAll(
-                                          Distinct(colDdPainel, Coalesce(tipo_contrato, "Não informado")) As _d,
-                                          {rotulo: _d.Value, qtd: CountIf(colDdPainel, Coalesce(tipo_contrato, "Não informado") = _d.Value)}
-                                      ),
-                                      If(rotulo = "Não informado", -1, qtd),
-                                      SortOrder.Descending
-                                  ),
-                                  _resp: ForAll(
-                                      Filter(colDdPainel, !IsBlank(data_envio_terceiro) && !IsBlank(data_resposta_terceiro)) As _x,
-                                      {dias: DateDiff(_x.data_envio_terceiro, _x.data_resposta_terceiro, TimeUnit.Hours) / 24}
-                                  ),
-                                  _anal: ForAll(
-                                      Filter(colDdPainel, !IsBlank(data_resposta_terceiro) && !IsBlank(data_decisao_compliance)) As _x,
-                                      {dias: DateDiff(_x.data_resposta_terceiro, _x.data_decisao_compliance, TimeUnit.Hours) / 24}
-                                  ),
-                                  _ciclo: ForAll(
-                                      Filter(colDdPainel, fluxo_classificacao = "FLUXO III" && !IsBlank(data_decisao_compliance)) As _x,
-                                      {dias: DateDiff(_x.Created, _x.data_decisao_compliance, TimeUnit.Hours) / 24}
-                                  ),
-                                  _envio: ForAll(
-                                      Filter(colDdPainel, !IsBlank(data_envio_terceiro)) As _x,
-                                      {dias: DateDiff(_x.Created, _x.data_envio_terceiro, TimeUnit.Minutes) / 1440}
-                                  )
+                                  _aeroF: If(IsBlank(cmbDdPainelAeroporto.Selected.Value) || cmbDdPainelAeroporto.Selected.Value = "Todos os aeroportos", "", cmbDdPainelAeroporto.Selected.Value),
+                                  _blocoF: If(IsBlank(cmbDdPainelBloco.Selected.Value) || cmbDdPainelBloco.Selected.Value = "Todos os blocos", "", cmbDdPainelBloco.Selected.Value)
                               },
                               With(
                                   {
-                                      _topTipos: FirstN(_tipos, 8),
-                                      _nOutros: Max(CountRows(_tipos) - 8, 0),
-                                      _qOutros: If(CountRows(_tipos) <= 8, 0, Sum(LastN(_tipos, CountRows(_tipos) - 8), qtd)),
-                                      _maxTipo: If(IsEmpty(_tipos), 1, Max(_tipos, qtd)),
-                                      _nResp: CountRows(_resp),
-                                      _nAnal: CountRows(_anal),
-                                      _nCiclo: CountRows(_ciclo),
-                                      _nEnvio: CountRows(_envio),
-                                      _sResp: Sort(_resp, dias, SortOrder.Ascending),
-                                      _sAnal: Sort(_anal, dias, SortOrder.Ascending),
-                                      _sCiclo: Sort(_ciclo, dias, SortOrder.Ascending),
-                                      _sEnvio: Sort(_envio, dias, SortOrder.Ascending),
-                                      _okResp: CountIf(_resp, dias <= varDdPainelSlaTerceiro),
-                                      _okAnal: CountIf(_anal, dias <= varDdPainelSlaCompliance)
+                                      _base: Filter(colDdPainel, (_aeroF = "" || aeroporto = _aeroF) && (_blocoF = "" || bloco = _blocoF)),
+                                      _escopo: If(_aeroF <> "", _aeroF, _blocoF <> "", "Bloco " & _blocoF, "")
                                   },
                                   With(
                                       {
-                                          _medResp: If(_nResp = 0, Blank(), Mod(_nResp, 2) = 1, Index(_sResp, (_nResp + 1) / 2).dias, (Index(_sResp, _nResp / 2).dias + Index(_sResp, _nResp / 2 + 1).dias) / 2),
-                                          _medAnal: If(_nAnal = 0, Blank(), Mod(_nAnal, 2) = 1, Index(_sAnal, (_nAnal + 1) / 2).dias, (Index(_sAnal, _nAnal / 2).dias + Index(_sAnal, _nAnal / 2 + 1).dias) / 2),
-                                          _medCiclo: If(_nCiclo = 0, Blank(), Mod(_nCiclo, 2) = 1, Index(_sCiclo, (_nCiclo + 1) / 2).dias, (Index(_sCiclo, _nCiclo / 2).dias + Index(_sCiclo, _nCiclo / 2 + 1).dias) / 2),
-                                          _medEnvio: If(_nEnvio = 0, Blank(), Mod(_nEnvio, 2) = 1, Index(_sEnvio, (_nEnvio + 1) / 2).dias, (Index(_sEnvio, _nEnvio / 2).dias + Index(_sEnvio, _nEnvio / 2 + 1).dias) / 2),
-                                          _medioResp: If(_nResp = 0, Blank(), Sum(_resp, dias) / _nResp),
-                                          _medioAnal: If(_nAnal = 0, Blank(), Sum(_anal, dias) / _nAnal),
-                                          _medioCiclo: If(_nCiclo = 0, Blank(), Sum(_ciclo, dias) / _nCiclo),
-                                          _medioEnvio: If(_nEnvio = 0, Blank(), Sum(_envio, dias) / _nEnvio)
+                                          _op: If(varDdPainelCarregando, "opacity:.45;", ""),
+                                          _card: "background:#FFFFFF;border:1px solid #E2E8F0;padding:16px 18px;vertical-align:top;",
+                                          _celula: "padding:9px 0;border-top:1px solid #F1F5F9;",
+                                          _total: CountRows(_base),
+                                          _tipos: Sort(
+                                              ForAll(
+                                                  Distinct(_base, Coalesce(tipo_contrato, "Não informado")) As _d,
+                                                  {rotulo: _d.Value, qtd: CountIf(_base, Coalesce(tipo_contrato, "Não informado") = _d.Value)}
+                                              ),
+                                              If(rotulo = "Não informado", -1, qtd),
+                                              SortOrder.Descending
+                                          ),
+                                          _resp: ForAll(
+                                              Filter(_base, !IsBlank(data_envio_terceiro) && !IsBlank(data_resposta_terceiro)) As _x,
+                                              {dias: DateDiff(_x.data_envio_terceiro, _x.data_resposta_terceiro, TimeUnit.Hours) / 24}
+                                          ),
+                                          _anal: ForAll(
+                                              Filter(_base, !IsBlank(data_resposta_terceiro) && !IsBlank(data_decisao_compliance)) As _x,
+                                              {dias: DateDiff(_x.data_resposta_terceiro, _x.data_decisao_compliance, TimeUnit.Hours) / 24}
+                                          ),
+                                          _ciclo: ForAll(
+                                              Filter(_base, fluxo_classificacao = "FLUXO III" && !IsBlank(data_decisao_compliance)) As _x,
+                                              {dias: DateDiff(_x.Created, _x.data_decisao_compliance, TimeUnit.Hours) / 24}
+                                          ),
+                                          _envio: ForAll(
+                                              Filter(_base, !IsBlank(data_envio_terceiro)) As _x,
+                                              {dias: DateDiff(_x.Created, _x.data_envio_terceiro, TimeUnit.Minutes) / 1440}
+                                          )
                                       },
-                                      "<table role='presentation' style='width:100%;border-collapse:separate;border-spacing:0;table-layout:fixed;font-family:Segoe UI,Arial,sans-serif;" & _op & "'><tr>" &
-                                      "<td style='" & _card & "width:46%;'>" &
-                                      "<div style='font-size:13px;font-weight:700;color:#0F172A;'>Tipo de contrato</div>" &
-                                      "<div style='font-size:11px;color:#64748B;margin:2px 0 12px;'>Os oito mais frequentes no período; os demais somados em Outros</div>" &
-                                      If(
-                                          IsEmpty(_tipos),
-                                          "<div style='padding:12px 0;font-size:11px;color:#64748B;'>Nenhuma solicitação no período.</div>",
-                                          "<table role='presentation' style='width:100%;border-collapse:collapse;'>" &
-                                          Concat(
-                                              _topTipos As B,
-                                              "<tr><td style='padding:4px 10px 4px 0;font-size:11px;color:#334155;width:46%;vertical-align:middle;'>" & B.rotulo & "</td>" &
-                                              "<td style='padding:4px 0;white-space:nowrap;vertical-align:middle;'>" &
-                                              "<span style='display:inline-block;vertical-align:middle;height:10px;width:" & Text(Max(1, Round(B.qtd / _maxTipo * 78, 0))) & "%;background:" & If(B.rotulo = "Não informado", "#94A3B8", "#00879A") & ";border-radius:0 4px 4px 0;'></span>" &
-                                              "<span style='display:inline-block;vertical-align:middle;margin-left:6px;font-size:12px;font-weight:700;color:#0F172A;'>" & B.qtd & "</span>" &
-                                              "<span style='display:inline-block;vertical-align:middle;margin-left:4px;font-size:10px;color:#64748B;'>" & If(Round(B.qtd / Max(_total, 1) * 100, 0) = 0, "<1%", Text(Round(B.qtd / Max(_total, 1) * 100, 0)) & "%") & "</span>" &
-                                              "</td></tr>"
-                                          ) &
-                                          If(
-                                              _nOutros > 0,
-                                              "<tr><td style='padding:4px 10px 4px 0;font-size:11px;color:#64748B;width:46%;vertical-align:middle;'>Outros (" & _nOutros & " tipos)</td>" &
-                                              "<td style='padding:4px 0;white-space:nowrap;vertical-align:middle;'>" &
-                                              "<span style='display:inline-block;vertical-align:middle;height:10px;width:" & Text(Min(78, Max(1, Round(_qOutros / _maxTipo * 78, 0)))) & "%;background:#94A3B8;border-radius:0 4px 4px 0;'></span>" &
-                                              "<span style='display:inline-block;vertical-align:middle;margin-left:6px;font-size:12px;font-weight:700;color:#0F172A;'>" & _qOutros & "</span>" &
-                                              "<span style='display:inline-block;vertical-align:middle;margin-left:4px;font-size:10px;color:#64748B;'>" & If(Round(_qOutros / Max(_total, 1) * 100, 0) = 0, "<1%", Text(Round(_qOutros / Max(_total, 1) * 100, 0)) & "%") & "</span>" &
-                                              "</td></tr>",
-                                              ""
-                                          ) &
-                                          "</table>"
-                                      ) &
-                                      "</td>" &
-                                      "<td style='width:16px;'></td>" &
-                                      "<td style='" & _card & "'>" &
-                                      "<div style='font-size:13px;font-weight:700;color:#0F172A;'>Tempo de resposta e SLA</div>" &
-                                      "<div style='font-size:11px;color:#64748B;margin:2px 0 12px;'>Dias corridos, sobre as solicitações criadas no período</div>" &
-                                      "<table role='presentation' style='width:100%;border-collapse:collapse;font-size:12px;font-variant-numeric:tabular-nums;'>" &
-                                      "<tr style='font-size:10px;font-weight:700;letter-spacing:.3px;color:#64748B;'><td style='padding:0 0 8px;'>ETAPA</td><td style='padding:0 0 8px;text-align:right;width:15%;'>MÉDIA</td><td style='padding:0 0 8px;text-align:right;width:15%;'>MEDIANA</td><td style='padding:0 0 8px 16px;width:32%;'>DENTRO DO PRAZO</td></tr>" &
-                                      "<tr><td style='" & _celula & "'><div style='color:#0F172A;font-weight:600;'>Envio do questionário</div><div style='font-size:11px;color:#64748B;'>criação até o envio ao terceiro</div></td>" &
-                                      "<td style='" & _celula & "text-align:right;color:#0F172A;'>" & If(IsBlank(_medioEnvio), "—", Text(Round(_medioEnvio * 24, 1)) & " h") & "</td>" &
-                                      "<td style='" & _celula & "text-align:right;color:#0F172A;'>" & If(IsBlank(_medEnvio), "—", Text(Round(_medEnvio * 24, 1)) & " h") & "</td>" &
-                                      "<td style='" & _celula & "padding-left:16px;font-size:11px;color:#64748B;'>automático</td></tr>" &
-                                      "<tr><td style='" & _celula & "'><div style='color:#0F172A;font-weight:600;'>Resposta do terceiro</div><div style='font-size:11px;color:#64748B;'>prazo de " & varDdPainelSlaTerceiro & " dias</div></td>" &
-                                      "<td style='" & _celula & "text-align:right;color:#0F172A;'>" & If(IsBlank(_medioResp), "—", Text(Round(_medioResp, 1)) & " d") & "</td>" &
-                                      "<td style='" & _celula & "text-align:right;color:#0F172A;'>" & If(IsBlank(_medResp), "—", Text(Round(_medResp, 1)) & " d") & "</td>" &
-                                      "<td style='" & _celula & "padding-left:16px;'>" &
-                                      If(
-                                          _nResp = 0,
-                                          "<span style='font-size:11px;color:#64748B;'>sem respostas</span>",
-                                          "<div style='height:8px;background:#D5EEF1;'><div style='height:8px;width:" & Text(Round(_okResp / _nResp * 100, 0)) & "%;background:#00879A;border-radius:0 4px 4px 0;'></div></div>" &
-                                          "<div style='font-size:11px;color:#0F172A;margin-top:4px;'><strong>" & If(_okResp > 0 && Round(_okResp / _nResp * 100, 0) = 0, "<1%", Text(Round(_okResp / _nResp * 100, 0)) & "%") & "</strong><span style='color:#64748B;'> · " & _okResp & " de " & _nResp & "</span></div>"
-                                      ) &
-                                      "</td></tr>" &
-                                      "<tr><td style='" & _celula & "'><div style='color:#0F172A;font-weight:600;'>Análise do Compliance</div><div style='font-size:11px;color:#64748B;'>prazo de " & varDdPainelSlaCompliance & " dias após a resposta</div></td>" &
-                                      "<td style='" & _celula & "text-align:right;color:#0F172A;'>" & If(IsBlank(_medioAnal), "—", Text(Round(_medioAnal, 1)) & " d") & "</td>" &
-                                      "<td style='" & _celula & "text-align:right;color:#0F172A;'>" & If(IsBlank(_medAnal), "—", Text(Round(_medAnal, 1)) & " d") & "</td>" &
-                                      "<td style='" & _celula & "padding-left:16px;'>" &
-                                      If(
-                                          _nAnal = 0,
-                                          "<span style='font-size:11px;color:#64748B;'>sem pareceres</span>",
-                                          "<div style='height:8px;background:#D5EEF1;'><div style='height:8px;width:" & Text(Round(_okAnal / _nAnal * 100, 0)) & "%;background:#00879A;border-radius:0 4px 4px 0;'></div></div>" &
-                                          "<div style='font-size:11px;color:#0F172A;margin-top:4px;'><strong>" & If(_okAnal > 0 && Round(_okAnal / _nAnal * 100, 0) = 0, "<1%", Text(Round(_okAnal / _nAnal * 100, 0)) & "%") & "</strong><span style='color:#64748B;'> · " & _okAnal & " de " & _nAnal & "</span></div>"
-                                      ) &
-                                      "</td></tr>" &
-                                      "<tr><td style='" & _celula & "'><div style='color:#0F172A;font-weight:600;'>Ciclo completo</div><div style='font-size:11px;color:#64748B;'>criação até o parecer, no Fluxo III</div></td>" &
-                                      "<td style='" & _celula & "text-align:right;color:#0F172A;'>" & If(IsBlank(_medioCiclo), "—", Text(Round(_medioCiclo, 1)) & " d") & "</td>" &
-                                      "<td style='" & _celula & "text-align:right;color:#0F172A;'>" & If(IsBlank(_medCiclo), "—", Text(Round(_medCiclo, 1)) & " d") & "</td>" &
-                                      "<td style='" & _celula & "padding-left:16px;font-size:11px;color:#64748B;'>" & _nCiclo & " concluída(s)</td></tr>" &
-                                      "</table>" &
-                                      "</td>" &
-                                      "</tr></table>"
+                                      With(
+                                          {
+                                              _topTipos: FirstN(_tipos, 8),
+                                              _nOutros: Max(CountRows(_tipos) - 8, 0),
+                                              _qOutros: If(CountRows(_tipos) <= 8, 0, Sum(LastN(_tipos, CountRows(_tipos) - 8), qtd)),
+                                              _maxTipo: If(IsEmpty(_tipos), 1, Max(_tipos, qtd)),
+                                              _nResp: CountRows(_resp),
+                                              _nAnal: CountRows(_anal),
+                                              _nCiclo: CountRows(_ciclo),
+                                              _nEnvio: CountRows(_envio),
+                                              _sResp: Sort(_resp, dias, SortOrder.Ascending),
+                                              _sAnal: Sort(_anal, dias, SortOrder.Ascending),
+                                              _sCiclo: Sort(_ciclo, dias, SortOrder.Ascending),
+                                              _sEnvio: Sort(_envio, dias, SortOrder.Ascending),
+                                              _okResp: CountIf(_resp, dias <= varDdPainelSlaTerceiro),
+                                              _okAnal: CountIf(_anal, dias <= varDdPainelSlaCompliance)
+                                          },
+                                          With(
+                                              {
+                                                  _medResp: If(_nResp = 0, Blank(), Mod(_nResp, 2) = 1, Index(_sResp, (_nResp + 1) / 2).dias, (Index(_sResp, _nResp / 2).dias + Index(_sResp, _nResp / 2 + 1).dias) / 2),
+                                                  _medAnal: If(_nAnal = 0, Blank(), Mod(_nAnal, 2) = 1, Index(_sAnal, (_nAnal + 1) / 2).dias, (Index(_sAnal, _nAnal / 2).dias + Index(_sAnal, _nAnal / 2 + 1).dias) / 2),
+                                                  _medCiclo: If(_nCiclo = 0, Blank(), Mod(_nCiclo, 2) = 1, Index(_sCiclo, (_nCiclo + 1) / 2).dias, (Index(_sCiclo, _nCiclo / 2).dias + Index(_sCiclo, _nCiclo / 2 + 1).dias) / 2),
+                                                  _medEnvio: If(_nEnvio = 0, Blank(), Mod(_nEnvio, 2) = 1, Index(_sEnvio, (_nEnvio + 1) / 2).dias, (Index(_sEnvio, _nEnvio / 2).dias + Index(_sEnvio, _nEnvio / 2 + 1).dias) / 2),
+                                                  _medioResp: If(_nResp = 0, Blank(), Sum(_resp, dias) / _nResp),
+                                                  _medioAnal: If(_nAnal = 0, Blank(), Sum(_anal, dias) / _nAnal),
+                                                  _medioCiclo: If(_nCiclo = 0, Blank(), Sum(_ciclo, dias) / _nCiclo),
+                                                  _medioEnvio: If(_nEnvio = 0, Blank(), Sum(_envio, dias) / _nEnvio)
+                                              },
+                                              varDdPainelCss & "<table role='presentation' style='width:100%;border-collapse:separate;border-spacing:0;table-layout:fixed;font-family:Segoe UI,Arial,sans-serif;" & _op & "'><tr>" &
+                                              "<td class='ddp-card' style='" & _card & "width:46%;'>" &
+                                              "<div style='font-size:13px;font-weight:700;color:#0F172A;'>Tipo de contrato</div>" &
+                                              "<div style='font-size:11px;color:#64748B;margin:2px 0 12px;'>Os oito mais frequentes no período; os demais somados em Outros</div>" &
+                                              If(
+                                                  IsEmpty(_tipos),
+                                                  "<div style='padding:12px 0;font-size:11px;color:#64748B;'>Nenhuma solicitação no período.</div>",
+                                                  "<table role='presentation' style='width:100%;border-collapse:collapse;'>" &
+                                                  Concat(
+                                                      _topTipos As B,
+                                                      "<tr class='ddp-row'><td style='padding:4px 10px 4px 0;font-size:11px;color:#334155;width:46%;vertical-align:middle;'>" & B.rotulo & "</td>" &
+                                                      "<td style='padding:4px 0;white-space:nowrap;vertical-align:middle;'>" &
+                                                      "<span class='ddp-bar' style='display:inline-block;vertical-align:middle;height:10px;width:" & Text(Max(1, Round(B.qtd / _maxTipo * 78, 0))) & "%;background:" & If(B.rotulo = "Não informado", "#94A3B8", "#00879A") & ";border-radius:0 4px 4px 0;'></span>" &
+                                                      "<span style='display:inline-block;vertical-align:middle;margin-left:6px;font-size:12px;font-weight:700;color:#0F172A;'>" & B.qtd & "</span>" &
+                                                      "<span style='display:inline-block;vertical-align:middle;margin-left:4px;font-size:10px;color:#64748B;'>" & If(Round(B.qtd / Max(_total, 1) * 100, 0) = 0, "<1%", Text(Round(B.qtd / Max(_total, 1) * 100, 0)) & "%") & "</span>" &
+                                                      "</td></tr>"
+                                                  ) &
+                                                  If(
+                                                      _nOutros > 0,
+                                                      "<tr class='ddp-row'><td style='padding:4px 10px 4px 0;font-size:11px;color:#64748B;width:46%;vertical-align:middle;'>Outros (" & _nOutros & " tipos)</td>" &
+                                                      "<td style='padding:4px 0;white-space:nowrap;vertical-align:middle;'>" &
+                                                      "<span class='ddp-bar' style='display:inline-block;vertical-align:middle;height:10px;width:" & Text(Min(78, Max(1, Round(_qOutros / _maxTipo * 78, 0)))) & "%;background:#94A3B8;border-radius:0 4px 4px 0;'></span>" &
+                                                      "<span style='display:inline-block;vertical-align:middle;margin-left:6px;font-size:12px;font-weight:700;color:#0F172A;'>" & _qOutros & "</span>" &
+                                                      "<span style='display:inline-block;vertical-align:middle;margin-left:4px;font-size:10px;color:#64748B;'>" & If(Round(_qOutros / Max(_total, 1) * 100, 0) = 0, "<1%", Text(Round(_qOutros / Max(_total, 1) * 100, 0)) & "%") & "</span>" &
+                                                      "</td></tr>",
+                                                      ""
+                                                  ) &
+                                                  "</table>"
+                                              ) &
+                                              "</td>" &
+                                              "<td style='width:16px;'></td>" &
+                                              "<td class='ddp-card' style='" & _card & "'>" &
+                                              "<div style='font-size:13px;font-weight:700;color:#0F172A;'>Tempo de resposta e SLA</div>" &
+                                              "<div style='font-size:11px;color:#64748B;margin:2px 0 12px;'>Dias corridos, sobre as solicitações criadas no período</div>" &
+                                              "<table role='presentation' style='width:100%;border-collapse:collapse;font-size:12px;font-variant-numeric:tabular-nums;'>" &
+                                              "<tr style='font-size:10px;font-weight:700;letter-spacing:.3px;color:#64748B;'><td style='padding:0 0 8px;'>ETAPA</td><td style='padding:0 0 8px;text-align:right;width:15%;'>MÉDIA</td><td style='padding:0 0 8px;text-align:right;width:15%;'>MEDIANA</td><td style='padding:0 0 8px 16px;width:32%;'>DENTRO DO PRAZO</td></tr>" &
+                                              "<tr class='ddp-row'><td style='" & _celula & "'><div style='color:#0F172A;font-weight:600;'>Envio do questionário</div><div style='font-size:11px;color:#64748B;'>criação até o envio ao terceiro</div></td>" &
+                                              "<td style='" & _celula & "text-align:right;color:#0F172A;'>" & If(IsBlank(_medioEnvio), "—", Text(Round(_medioEnvio * 24, 1)) & " h") & "</td>" &
+                                              "<td style='" & _celula & "text-align:right;color:#0F172A;'>" & If(IsBlank(_medEnvio), "—", Text(Round(_medEnvio * 24, 1)) & " h") & "</td>" &
+                                              "<td style='" & _celula & "padding-left:16px;font-size:11px;color:#64748B;'>automático</td></tr>" &
+                                              "<tr class='ddp-row'><td style='" & _celula & "'><div style='color:#0F172A;font-weight:600;'>Resposta do terceiro</div><div style='font-size:11px;color:#64748B;'>prazo de " & varDdPainelSlaTerceiro & " dias</div></td>" &
+                                              "<td style='" & _celula & "text-align:right;color:#0F172A;'>" & If(IsBlank(_medioResp), "—", Text(Round(_medioResp, 1)) & " d") & "</td>" &
+                                              "<td style='" & _celula & "text-align:right;color:#0F172A;'>" & If(IsBlank(_medResp), "—", Text(Round(_medResp, 1)) & " d") & "</td>" &
+                                              "<td style='" & _celula & "padding-left:16px;'>" &
+                                              If(
+                                                  _nResp = 0,
+                                                  "<span style='font-size:11px;color:#64748B;'>sem respostas</span>",
+                                                  "<div style='height:8px;background:#D5EEF1;'><div class='ddp-bar' style='height:8px;width:" & Text(Round(_okResp / _nResp * 100, 0)) & "%;background:#00879A;border-radius:0 4px 4px 0;'></div></div>" &
+                                                  "<div style='font-size:11px;color:#0F172A;margin-top:4px;'><strong>" & If(_okResp > 0 && Round(_okResp / _nResp * 100, 0) = 0, "<1%", Text(Round(_okResp / _nResp * 100, 0)) & "%") & "</strong><span style='color:#64748B;'> · " & _okResp & " de " & _nResp & "</span></div>"
+                                              ) &
+                                              "</td></tr>" &
+                                              "<tr class='ddp-row'><td style='" & _celula & "'><div style='color:#0F172A;font-weight:600;'>Análise do Compliance</div><div style='font-size:11px;color:#64748B;'>prazo de " & varDdPainelSlaCompliance & " dias após a resposta</div></td>" &
+                                              "<td style='" & _celula & "text-align:right;color:#0F172A;'>" & If(IsBlank(_medioAnal), "—", Text(Round(_medioAnal, 1)) & " d") & "</td>" &
+                                              "<td style='" & _celula & "text-align:right;color:#0F172A;'>" & If(IsBlank(_medAnal), "—", Text(Round(_medAnal, 1)) & " d") & "</td>" &
+                                              "<td style='" & _celula & "padding-left:16px;'>" &
+                                              If(
+                                                  _nAnal = 0,
+                                                  "<span style='font-size:11px;color:#64748B;'>sem pareceres</span>",
+                                                  "<div style='height:8px;background:#D5EEF1;'><div class='ddp-bar' style='height:8px;width:" & Text(Round(_okAnal / _nAnal * 100, 0)) & "%;background:#00879A;border-radius:0 4px 4px 0;'></div></div>" &
+                                                  "<div style='font-size:11px;color:#0F172A;margin-top:4px;'><strong>" & If(_okAnal > 0 && Round(_okAnal / _nAnal * 100, 0) = 0, "<1%", Text(Round(_okAnal / _nAnal * 100, 0)) & "%") & "</strong><span style='color:#64748B;'> · " & _okAnal & " de " & _nAnal & "</span></div>"
+                                              ) &
+                                              "</td></tr>" &
+                                              "<tr class='ddp-row'><td style='" & _celula & "'><div style='color:#0F172A;font-weight:600;'>Ciclo completo</div><div style='font-size:11px;color:#64748B;'>criação até o parecer, no Fluxo III</div></td>" &
+                                              "<td style='" & _celula & "text-align:right;color:#0F172A;'>" & If(IsBlank(_medioCiclo), "—", Text(Round(_medioCiclo, 1)) & " d") & "</td>" &
+                                              "<td style='" & _celula & "text-align:right;color:#0F172A;'>" & If(IsBlank(_medCiclo), "—", Text(Round(_medCiclo, 1)) & " d") & "</td>" &
+                                              "<td style='" & _celula & "padding-left:16px;font-size:11px;color:#64748B;'>" & _nCiclo & " concluída(s)</td></tr>" &
+                                              "</table>" &
+                                              "</td>" &
+                                              "</tr></table>"
+                                          )
+                                      )
                                   )
                               )
                           )
+                        LayoutMinWidth: =16
                         PaddingBottom: =0
                         PaddingLeft: =0
                         PaddingRight: =0
@@ -1062,6 +1285,7 @@ Screens:
                           "Tempos em dias corridos. Prazos atuais: resposta do terceiro em " & varDdPainelSlaTerceiro & " dias e análise do Compliance em " & varDdPainelSlaCompliance & " dias, ajustáveis em tb_dueDiligenceParametros (config_sla_terceiro_dias e config_sla_compliance_dias). " &
                           If(IsBlank(varDdPainelAtualizadoEm), "", "Atualizado às " & Text(varDdPainelAtualizadoEm, "[$-pt-BR]HH:mm") & ".") &
                           "</div>"
+                        LayoutMinWidth: =16
                         PaddingBottom: =0
                         PaddingLeft: =0
                         PaddingRight: =0
@@ -1079,6 +1303,7 @@ Screens:
                     "<div style='font-size:12px;color:#475569;line-height:1.6;margin-top:8px;'>Os indicadores de due diligence aparecem só para quem está cadastrado na lista tb_dueDiligenceCompliance.</div>" &
                     "<div style='font-size:12px;color:#475569;line-height:1.6;margin-top:8px;'>Se você é do Compliance, peça a inclusão deste login: <strong style='color:#0F172A;'>" & Lower(User().Email) & "</strong></div>" &
                     "</div></div>"
+                  LayoutMinWidth: =16
                   PaddingBottom: =0
                   PaddingLeft: =0
                   PaddingRight: =0

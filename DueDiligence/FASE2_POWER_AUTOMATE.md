@@ -5,11 +5,15 @@
 - A fonte funcional é a planilha `Canal Confidencial.url` (arquivo XLSX com extensão incorreta).
 - O questionário v2 do terceiro é categórico; `pontuacao_terceiro` não participa da regra v2.
 - Sete perguntas podem produzir `Risco Alto`.
-- Qualquer gatilho crítico do solicitante ou do terceiro resulta em risco `Alto` e `FLUXO III`, mesmo havendo obrigação legal: o gatilho tem peso maior que a obrigação legal.
-- Sem gatilho crítico, a obrigação legal mantém a precedência e encerra no Fluxo I.
-- Toda resposta válida de uma solicitação do Fluxo III segue para `Pendente Compliance`, mesmo quando `terceiro_gatilho_risco = "Não"`.
+- Qualquer gatilho crítico do solicitante (subcontratação, procuração, pagamento em nome da Companhia, representação perante órgão público ou indicação por funcionário público) ou do terceiro resulta em risco `Alto` e `FLUXO III`, mesmo havendo obrigação legal: o gatilho tem peso maior que a obrigação legal.
+- Só o **risco baixo automático** dispensa o questionário ao terceiro (2026-09-15): obrigação legal sem gatilho crítico, contraparte classificada como `SEM RISCO` ou, desde 2026-09-17, tipo de contrato classificado como "Risco Baixo automático" na aba Config da planilha — Órgão público — Convênio, Órgão público — Termo de cooperação, Órgão público — Cessão de área e Cliente — Fornecimento de treinamento. O tipo de contrato só vale com a categoria do prefixo (o combo de tipo de contrato não é filtrado pela categoria) e perde para o gatilho crítico; vence a categoria, então órgão público com cessão de área é aprovado na hora, sem Forms. Os tipos marcados como "Risco Alto automático" na mesma coluna continuam sem efeito no cálculo.
+- Órgão público (2026-09-18): dos cinco tipos de contrato "Órgão público — …", só **Doação** e **Patrocínio** recebem o Forms (risco `Alto`). **Convênio**, **Termo de cooperação** e **Cessão de área** nunca recebem: sem gatilho crítico são risco baixo automático; com gatilho crítico o app grava `FLUXO III` já em `Pendente Compliance`, sem abrir intenção de envio (`forms_envio_id` fica vazio) — o DD01 não envia e o DD05 avisa o Compliance. O solicitante não edita depois de salvar, como em qualquer solicitação que já chegou ao Compliance. O resumo e o laudo mostram o questionário como "Não se aplica".
+- Todo o resto recebe o Forms (`FLUXO III`): contraparte `ALTO`, órgão público (antigo Fluxo II, agora com risco `Alto (órgão público)`) e `PONTUAR` em qualquer faixa de pontos. A faixa continua definindo o risco e a vigência.
+- O Compliance pode reclassificar o risco (Baixo, Médio ou Alto) a seu critério ao registrar a análise, depois da resposta do terceiro (`Pendente Compliance`). Antes dela a opção não aparece, porque o solicitante ainda pode editar e o recálculo sobrescreveria a escolha. A vigência passa a seguir a classificação escolhida e a mudança fica no histórico interno (`Reclassificação de risco`).
+- Resposta válida do terceiro (2026-09-16): se o risco calculado é `Baixo` ou `Médio`, não há gatilho crítico do solicitante e nenhuma resposta do terceiro é `Risco Alto`, o DD02 aprova automaticamente (`Aprovado`, com `data_conclusao` e vigência de 3 ou 2 anos). Qualquer outro caso segue para `Pendente Compliance`.
 - As decisões do parecer final são `Aprovado`, `Aprovado com Ressalvas`,
   `Reprovado Parcialmente` e `Reprovado` (grafia exata; ver o modelo abaixo).
+- Avisos por e-mail (2026-09-17): quem abriu a solicitação recebe e-mail a cada mudança de status, inclusive no registro; os analistas ativos da `tb_dueDiligenceCompliance` recebem quando a solicitação chega a `Pendente Compliance`. Fluxo DD05.
 
 ## Modelo de status (2026-09-10)
 
@@ -19,17 +23,156 @@ texto com `=`, que diferencia maiúsculas de minúsculas.
 | Status | Quem define | Quando |
 |---|---|---|
 | `Aguardando Terceiro` | App | Solicitação criada no Fluxo III; o questionário segue para o terceiro. |
-| `Pendente Compliance` | DD02 | Resposta válida do terceiro. Permanece durante toda a análise. |
-| `Aprovado` | App ou Compliance | Automático nos Fluxos I e II (e no v1 com encerramento por risco baixo) ou parecer do Compliance. |
+| `Pendente Compliance` | DD02 ou App | DD02: resposta válida do terceiro com risco alto (risco calculado `Alto`, gatilho crítico ou alguma resposta `Risco Alto`). App: órgão público com gatilho crítico em convênio, termo de cooperação ou cessão de área, que vai direto ao Compliance sem questionário. Permanece durante toda a análise. |
+| `Aprovado` | App, DD02 ou Compliance | App: automático no Fluxo I (e no v1 com encerramento por risco baixo). DD02: resposta do terceiro sem risco alto em solicitação de risco baixo ou médio. Compliance: parecer final. |
 | `Aprovado com Ressalvas` | Compliance | Parecer final; exige condicionantes e prazo de reavaliação. |
 | `Reprovado Parcialmente` | Compliance | Parecer final. |
 | `Reprovado` | Compliance | Parecer final. |
 | `Cancelado` | Compliance | A partir de `Aguardando Terceiro` ou `Pendente Compliance`. |
+
+As quatro decisões do parecer final também podem ser registradas a partir de
+`Aguardando Terceiro`, quando o terceiro não responde.
 | `Vencido` | DD03 | Fim da vigência: 1 ano (risco alto), 2 (médio) e 3 (baixo). |
 
-O Fluxo II continua identificado por `fluxo_classificacao = "FLUXO II"` e risco
-`Alto`; por isso vence em 1 ano. No resumo da solicitação, a aprovação
-automática aparece como "Aprovação automática (FLUXO I/II)", sem status próprio.
+Desde 2026-09-15 o app não gera mais `FLUXO II`: órgão público recebe o Forms
+como qualquer caso fora do risco baixo automático. Registros antigos com
+`fluxo_classificacao = "FLUXO II"` continuam aprovados e vencem em 1 ano (risco
+`Alto`). No resumo da solicitação, a aprovação automática aparece como
+"Aprovação automática (FLUXO I)", sem status próprio.
+
+### Edição até a resposta do terceiro
+
+Enquanto a solicitação está em `Aguardando Terceiro` e sem
+`data_resposta_terceiro`, qualquer usuário pode editá-la pela ação **Editar**.
+**Analisar** é outra ação, visível só ao Compliance: abre a solicitação somente
+leitura com o painel de desdobramentos. Com um item só, o rótulo virava
+"Analisar" para o Compliance e o Editar sumia. Ao salvar uma edição:
+
+- o motor recalcula fluxo e risco; se virar risco baixo automático, a
+  solicitação é aprovada na hora e uma resposta tardia do terceiro é rejeitada
+  pelo DD02 (status diferente de `Aguardando Terceiro`);
+- se o e-mail do terceiro mudou (ou o envio anterior falhou), o app gera um novo
+  `forms_envio_id`, limpa `data_envio_terceiro` e o DD01 reenvia o questionário
+  ao endereço novo;
+- antes de gravar, o app relê o registro. Se o status mudou, se o terceiro
+  respondeu ou se houve reenvio do Forms enquanto a tela estava aberta, o
+  salvamento é recusado e o usuário precisa reabrir a solicitação;
+- a data de envio gravada pelo DD01 nesse intervalo é preservada: o formulário
+  usa o valor relido, não o da abertura da tela.
+
+Depois da resposta, o formulário fica somente leitura para todos.
+
+O botão Salvar confere todos os campos do questionário v2 antes de gravar e
+lista na notificação os que faltam (inclusive tipo de fornecedor/cliente e tipo
+de obrigação legal quando aplicáveis, valor numérico e e-mail válido). Cada
+campo obrigatório tem `*` no rótulo (pelo `Required` do card). Depois de uma
+tentativa de salvar com pendência, o rótulo de erro do próprio card mostra
+"Campo obrigatório" (ou "Informe um e-mail válido" / "Informe um valor numérico
+válido") e a borda do campo fica vermelha até ele ser preenchido. A variável
+`varDdMostrarObrigatorios` liga esse destaque e é desligada ao abrir, criar,
+cancelar ou salvar.
+
+### Auditoria do resumo e da aprovação automática (2026-09-16)
+
+**Travamento corrigido.** Se a classificação da contraparte não fosse
+identificada, o motor devolvia fluxo `""`. O app gravava `Aguardando Terceiro`, o
+DD01 enviava o Forms (confere só status e IDs) e o DD02 **recusava** a resposta,
+porque exige `fluxo_classificacao = FLUXO III`. A solicitação ficava parada para
+sempre. Isso acontecia sempre que alguém editava o texto de uma categoria ou a
+classificação de um tipo em `tb_dueDiligenceParametros`. Agora:
+
+- a categoria é comparada pelo `codigo_opcao` (`categoria_contraparte_01` a
+  `_04`), e não pelo texto exibido;
+- a classificação do tipo passa por `Upper(Trim(...))`;
+- sem classificação, o fluxo é `FLUXO III` (vai para análise), nunca vazio.
+
+Registros gravados antes com fluxo vazio mostram no resumo "Atenção: fluxo não
+identificado". Para destravar, use Editar e salve (recalcula o fluxo) e depois
+Reenviar Forms. Para localizá-los na grade do SharePoint, filtre `status` =
+`Aguardando Terceiro` e confira `fluxo_classificacao` diferente de `FLUXO III`.
+
+**O que o resumo mostra.**
+
+| Situação | Respostas do terceiro | Gatilho · Terceiro | Situação da análise |
+|---|---|---|---|
+| Nova, sem categoria | — | — | Preencha a solicitação |
+| Nova, risco baixo automático | NÃO SE APLICA | NÃO SE APLICA | Será aprovada automaticamente ao salvar |
+| Nova, demais casos | A ENVIAR | A ENVIAR | Ao salvar, segue para o questionário do terceiro |
+| Aprovada ou vencida automaticamente (Fluxo I/II) | NÃO SE APLICA | NÃO SE APLICA | Aprovação automática (FLUXO I) |
+| Aguardando Terceiro | AGUARDANDO + situação do envio | AGUARDANDO | Aguardando a resposta do terceiro |
+| Encerrada sem resposta (ex.: cancelada) | SEM RESPOSTA | SEM RESPOSTA | Responsável pelo encerramento |
+| Com resposta | nº de respostas e de risco alto | SIM/NÃO | Responsável ou aguardando atribuição |
+| Aprovada automaticamente após a resposta (risco baixo/médio, sem risco alto) | nº de respostas | NÃO | Aprovação automática após a resposta do terceiro |
+
+Em Ver/Analisar, gatilho e classificação vêm do que está **gravado**
+(`gatilho_dd`, `classificacao_contraparte`). O recálculo pela tela vale só em
+Nova/Editar. Registros antigos perderam duas respostas de gatilho (nome interno
+com mais de 32 caracteres), e o recálculo mostraria "NÃO" onde o gravado é "Sim".
+
+No laudo, a aprovação automática aparece como "Aprovado automaticamente", com
+justificativa "Aprovação automática (FLUXO I), sem análise do Compliance",
+respostas "Não se aplica" e a data de conclusão como data da decisão.
+
+### CNPJ/CPF mascarado (2026-09-17)
+
+- O campo `tipo_pessoa` (antes só do questionário v1) voltou, obrigatório e
+  logo antes do documento: linha 1 da grade com **Tipo de pessoa** à esquerda e o
+  documento à direita; Aeroporto e Razão social dividem a linha 0. Opções:
+  `Pessoa Jurídica`, `Pessoa Física` e `Estrangeiro`.
+- O usuário digita só os números; ao sair do campo a máscara segue o tipo:
+  Pessoa Física formata com 11 dígitos (`000.000.000-00`) e Pessoa Jurídica com
+  14 (`00.000.000/0000-00`). Com a quantidade errada ficam só os dígitos e o
+  Salvar recusa ("Informe os 11 dígitos do CPF" / "os 14 dígitos do CNPJ").
+  Estrangeiro não tem máscara nem conferência de tamanho. O rótulo e o texto de
+  ajuda do campo mudam com o tipo, e trocar o tipo refaz a máscara.
+- Registros antigos sem tipo de pessoa continuam formatados pela contagem de
+  dígitos; ao editar, o tipo passa a ser exigido.
+- A lista guarda o texto mascarado, que é o que aparece na tela, no laudo e nos
+  e-mails. Por isso a busca de Registros mudou: número com até 6 dígitos
+  continua sendo busca por ID e, acima disso, o texto digitado é convertido nas
+  duas máscaras (CPF e CNPJ) e procurado no documento. Assim a busca funciona
+  com ou sem pontuação, e continua delegável (`StartsWith`).
+- Registros antigos gravados sem máscara passam a aparecer formatados quando
+  forem editados e salvos.
+
+### Valor do contrato e "Minhas solicitações" (2026-09-16)
+
+- **Valor total do contrato:** o usuário digita só os números; ao sair do campo
+  (`TriggerOutput` = `FocusOut`), o texto é reformatado para `250.000,00`. A
+  formatação é montada com os formatos `"0"`/`"00"`, que não dependem do idioma,
+  e toda leitura usa `Value(..., "pt-BR")`. Sem isso, um navegador em inglês
+  leria o ponto de milhar como decimal. `varDdValorEditado` volta a `false` ao
+  abrir, criar, cancelar ou salvar, e aí o campo mostra o valor do registro.
+- **Minhas solicitações:** chave na barra de filtros de Registros. Filtra por
+  `'Criado por'.Email = User().Email`, que é delegável no SharePoint. Seguindo a
+  lição de delegação, a condição entra como ramificação da consulta (12 `Filter`
+  completos), nunca como `IsBlank(...) ||` dentro do `Filter`. O botão de limpar
+  filtros desliga a chave.
+
+### Colunas com nome interno cortado (2026-09-16)
+
+O SharePoint guarda no máximo 32 caracteres de nome interno e corta o
+excedente sem avisar. Duas colunas da `tb_dueDiligence` passavam do limite:
+
+| Nome de exibição (usado nas fórmulas) | Nome interno gravado (usado no `DataField`) |
+|---|---|
+| `gatilho_representacao_orgao_publico` | `gatilho_representacao_orgao_publ` |
+| `gatilho_indicado_funcionario_publico` | `gatilho_indicado_funcionario_pub` |
+
+Como o formulário grava pelo `DataField`, essas duas respostas **nunca foram
+salvas** até esta correção: nas solicitações antigas elas estão vazias, embora
+o gatilho consolidado (`gatilho_dd`) e o risco tenham sido calculados com os
+valores da tela. Para conferir o nome interno: Configurações da lista → clicar
+na coluna → o endereço termina em `Field=<nome interno>`. O JSON da lista não
+muda: numa instalação nova o SharePoint repete o mesmo corte.
+
+### Bloco do aeroporto
+
+A coluna `bloco` (Texto, 20, indexada) é preenchida pelo app a partir do
+aeroporto: `CENTRAL` (Goiânia, TECA GYN, Imperatriz, Palmas, Pampulha,
+Petrolina, São Luís, Teresina) ou `SUL` (Bacacheri, Bagé, Curitiba, Foz do
+Iguaçu, Joinville, Londrina, Navegantes, Pelotas, Uruguaiana). A opção `SEDE`
+(sede corporativa) fica sem bloco. Serve para filtros futuros do painel.
 
 ### Vigência
 
@@ -54,9 +197,9 @@ O envio ao terceiro é controlado pelo par `forms_envio_id` /
 | Enviado | IDs iguais e `data_envio_terceiro` preenchida |
 
 A cada reenvio, o app gera um novo `forms_envio_id` e limpa
-`data_envio_terceiro`. Com falha no envio, o solicitante pode editar a
-solicitação (por exemplo, para corrigir o e-mail); ao salvar, um novo envio é
-solicitado automaticamente.
+`data_envio_terceiro`. Até a resposta do terceiro, o solicitante pode editar a
+solicitação (por exemplo, para corrigir o e-mail); ao salvar com e-mail novo ou
+depois de uma falha no envio, um novo envio é solicitado automaticamente.
 
 ### Migração dos status existentes
 
@@ -109,6 +252,9 @@ registra o que aconteceu.
 - `VencervigenciaDueDiligence_PRONTO.zip`: DD03, importar por último, como
   **Criar como novo**, e mapear a conexão SharePoint. Não existe rascunho para
   atualizar.
+- `NotificarstatusDueDiligence_PRONTO.zip`: DD05, importar como **Criar como
+  novo** e mapear as conexões SharePoint e Office 365 Outlook, depois de criar
+  a coluna `status_notificado` (ver "Fluxo DD05").
 
 Para DD01 e DD02, na importação legada, selecionar **Atualizar** e apontar para
 os dois fluxos rascunho existentes. Não criar cópias, pois isso deixaria
@@ -150,6 +296,14 @@ Para listas existentes, a migração deve ser aditiva e idempotente:
    `(versao_questionario, codigo_pergunta, codigo_opcao)`.
 11. Criar `data_vencimento` na `tb_dueDiligence` conforme o JSON completo
    (`DateTime`, `Format='DateOnly'`, indexada).
+12. Criar `bloco` na `tb_dueDiligence` conforme o JSON completo (`Text`,
+   `MaxLength='20'`, indexada) **antes** de colar a tela; sem ela a tela não
+   compila. Registros existentes podem ter o bloco preenchido pela visão em
+   grade, com o mapeamento da seção "Bloco do aeroporto".
+13. Criar `status_notificado` na `tb_dueDiligence` conforme o JSON completo
+   (`Text`, `MaxLength='60'`, opcional) **antes** de ativar o DD05 e copiar
+   `status` para ela em todos os registros existentes (visão em grade). O app
+   não usa essa coluna; não acrescente cartão para ela no formulário.
 
 Não usar `<Validation>` no `CreateFieldAsXml`.
 
@@ -333,9 +487,13 @@ Depois de persistir e reler todas as linhas da resposta:
    - `risco_final = 'Alto (gatilho do terceiro)'` quando `_terceiroAlto`;
    - `data_resposta_terceiro = utcNow()`;
    - `forms_ultima_resposta_id = Response Id`;
-   - `status = Pendente Compliance`.
+   - `status`: `Aprovado` quando `Avaliar_Aprovacao_Automatica` é verdadeiro
+     (não `varTerceiroAlto`, `gatilho_dd` diferente de "Sim" e
+     `classificacao_risco` baixo ou médio); senão `Pendente Compliance`;
+   - na aprovação automática, também `data_conclusao = utcNow()` e
+     `data_vencimento` = hoje + 3 anos (baixo) ou 2 (médio), gravada ao meio-dia UTC.
 4. Não preencher `pontuacao_terceiro` no v2.
-5. Criar desdobramento `Resposta do terceiro` com o total de respostas e a
+5. Criar desdobramento `Resposta do terceiro` (status novo igual ao gravado) com o total de respostas e a
    quantidade classificada como risco alto.
 
 O pai só pode ser atualizado depois de as dez/onze linhas terem sido confirmadas.
@@ -360,6 +518,56 @@ deve ser importado como fluxo novo.
 A data é gravada ao meio-dia UTC para não recuar um dia na coluna "somente
 data". As consultas usam `$top=5000`; acima do limite de exibição da lista,
 indexe `status` e `data_vencimento`.
+
+## Fluxo DD05 — notificar mudança de status
+
+Gatilho: "Quando um item é criado ou modificado" na `tb_dueDiligence` (a mesma
+lista do DD01), concorrência 1, com a condição `status` preenchido e diferente
+de `status_notificado`. A coluna guarda o último status avisado, no mesmo molde
+de `forms_envio_processado_id` do DD01: o aviso sai venha a mudança de onde
+vier (app, DD02, DD03, parecer do Compliance ou visão em grade), e a gravação do
+próprio marcador não reativa o fluxo, porque os dois campos ficam iguais. Não
+depende do histórico: se o registro do desdobramento falhar, o aviso sai mesmo
+assim.
+
+1. Relê o item com `Author` ("Criado por") e confere de novo
+   `status ≠ status_notificado`: com a fila do gatilho, uma execução anterior
+   pode já ter avisado o mesmo status.
+2. Solicitante (autor do item): um e-mail a cada mudança, inclusive no registro
+   da solicitação, com o status anterior, o novo status e uma orientação por
+   status (vigência, condicionantes e prazo de reavaliação quando houver). O
+   e-mail não leva risco, pontuação nem gatilhos, que no app são exclusivos do
+   Compliance.
+3. Compliance: quando o novo status é `Pendente Compliance`, um e-mail para
+   todos os `email` com `ativo = 1` da `tb_dueDiligenceCompliance`, com
+   terceiro, solicitante, classificação de risco, risco final, pontuação,
+   gatilho do solicitante e resposta de risco alto do terceiro.
+4. `status_notificado` recebe o status relido só se nenhum envio falhou. Com
+   falha, a execução termina como `DD05_ENVIO_FALHOU` e pode ser reenviada; a
+   próxima alteração do item também tenta de novo.
+5. Sem analista ativo, o solicitante é avisado, o marcador é gravado e a
+   execução termina como `DD05_SEM_COMPLIANCE_ATIVO`, para aparecer no
+   histórico de execuções.
+6. Item excluído antes da releitura encerra sem falha. Qualquer outro erro de
+   leitura (por exemplo, a coluna `status_notificado` ainda não criada) termina
+   como `DD05_LEITURA_FALHOU`, sem enviar nada.
+
+Não geram aviso, porque não mudam o status: `Aguardando esclarecimentos`,
+reclassificação de risco, envio e falha de envio do questionário e reenvio do
+Forms. Os e-mails saem pela conexão Office 365 Outlook mapeada na importação e
+chegam alguns minutos depois da mudança, conforme o intervalo do gatilho.
+
+Implantação, nesta ordem:
+
+1. Criar `status_notificado` (passo 13 da migração das listas).
+2. Copiar `status` para `status_notificado` nos registros existentes. Sem essa
+   cópia, cada solicitação antiga dispara um único aviso com o status atual na
+   próxima vez que for alterada.
+3. Importar `NotificarstatusDueDiligence_PRONTO.zip` como **Criar como novo**,
+   mapear SharePoint e Office 365 Outlook, salvar e ativar.
+4. Testar: criar uma solicitação (aviso "foi registrada" ao solicitante),
+   responder o Forms com uma resposta de risco alto (avisos ao Compliance e ao
+   solicitante) e registrar o parecer final (aviso ao solicitante).
 
 ## Decisão do Compliance
 
@@ -393,10 +601,14 @@ não vazia e falha fechada: qualquer erro na consulta resulta em "não é
 Compliance".
 
 Só esse perfil vê a ação `Analisar`, o painel de desdobramentos, as notas
-internas, o resumo da avaliação, as colunas de pontuação e risco da lista de
-registros e o painel de indicadores. O formulário principal continua somente
-leitura durante todo o ciclo interno; a única exceção é a falha no envio ao
-terceiro.
+internas, o resumo da avaliação, a reclassificação de risco, as colunas de
+pontuação e risco da lista de registros e o painel de indicadores.
+
+A ação `Excluir` (2026-09-21) apaga a solicitação e todo o histórico dela, e é
+do Compliance ou de quem abriu a solicitação. A tela confere isso em três
+camadas — item desabilitado na barra de ações, ramo `excluir` do `OnSelect` e
+botão de confirmação —, sempre por `'Criado por'.Email`, nunca pelo nome. O formulário
+principal é editável até a resposta do terceiro e somente leitura depois dela.
 
 Implantação da lista:
 
@@ -420,7 +632,12 @@ Fluxo da analista:
    muda o status e, por padrão, fica interno; a analista pode torná-lo visível
    ao solicitante.
 3. Para concluir, escolher `Parecer final`: o novo status só aceita as quatro
-   decisões. `Aprovado com Ressalvas` também exige prazo de reavaliação.
+   decisões. `Aprovado com Ressalvas` também exige prazo de reavaliação. Se
+   necessário, ajustar a `Classificação de risco` antes de registrar: ela vale
+   em `Pendente Compliance` e junto com o `Parecer final`, e define a vigência.
+   Desde 2026-09-17 o `Parecer final` também vale em `Aguardando Terceiro`,
+   para o terceiro que não responde (por exemplo, órgão público). O laudo
+   registra o questionário como "Sem resposta".
 4. Para encerrar sem parecer, escolher `Cancelamento` (status `Cancelado`),
    disponível também em `Aguardando Terceiro`.
 5. A conclusão grava os campos estruturados do Compliance e a vigência, mantém
@@ -429,8 +646,8 @@ Fluxo da analista:
 Tipos manuais de desdobramento: `Aguardando esclarecimentos`, `Parecer final`
 e `Cancelamento`. Os demais são gravados pelo sistema:
 `Criação`, `Atualização do solicitante`, `Solicitação de reenvio ao terceiro`,
-`Envio ao terceiro`, `Falha no envio ao terceiro`, `Resposta do terceiro` e
-`Vencimento da vigência`.
+`Envio ao terceiro`, `Falha no envio ao terceiro`, `Resposta do terceiro`,
+`Reclassificação de risco` (interno) e `Vencimento da vigência`.
 
 Se outra pessoa (ou o DD02) mudar o status enquanto a analista registra, o
 desdobramento é revertido e a tela pede para reabrir a solicitação.

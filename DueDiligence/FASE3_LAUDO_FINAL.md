@@ -3,13 +3,30 @@
 ## O que é
 
 O laudo é a entrega final do módulo: um documento único, com identidade
-visual própria, que consolida a solicitação inteira — identificação da
-contraparte, classificação de risco, parecer do Compliance, respostas do
-terceiro (quando houver) e a linha do tempo completa dos desdobramentos
-visíveis ao solicitante. Fica disponível para **download por qualquer
-usuário do app** (não só Compliance) assim que a solicitação recebe o
-parecer final — `Aprovado`, `Aprovado com Ressalvas`, `Reprovado
-Parcialmente` ou `Reprovado`.
+visual própria, que consolida a solicitação inteira. Fica disponível para
+**download por qualquer usuário do app** (não só Compliance) assim que a
+solicitação recebe o parecer final — `Aprovado`, `Aprovado com Ressalvas`,
+`Reprovado Parcialmente` ou `Reprovado`.
+
+### Conteúdo (2026-09-17)
+
+O laudo é lido pelo solicitante e pelo Compliance, então só traz o que faz
+sentido para os dois:
+
+| Seção | Conteúdo |
+|---|---|
+| Cabeçalho | Número, emissão, subtítulo conforme a base da decisão e selo com o resultado e a vigência. |
+| Identificação da contraparte | Razão social, CNPJ/CPF, categoria, tipo de contrato, área, aeroporto, solicitante, abertura e objeto. |
+| Resultado da avaliação | Classificação de risco; análise (`Automática` ou `Compliance`); gatilho crítico; questionário do terceiro (`Não se aplica`, `Sem resposta`, `Sem risco alto` ou `Com risco alto`). Não mostra o nome técnico do fluxo nem a pontuação. |
+| Aprovação automática | Só em `Aprovado` sem decisão do Compliance. Traz a data e o critério que dispensou a análise: obrigação legal, contraparte sem risco (com o tipo), resposta limpa do terceiro em risco baixo ou médio, ou a regra do Fluxo II anterior a 15/09/2026. Não tem campos de parecer. |
+| Parecer do Compliance | Decisão e data; justificativa; condicionantes (um bloco só quando o texto é o mesmo da justificativa); responsável; prazo de reavaliação só quando existe. |
+| Vigência | Só quando há data de vencimento. |
+| Questionário do terceiro | Omitido quando não houve questionário. Com questionário, tabela de pergunta, resposta e classificação, ou o aviso de que o terceiro não respondeu até a decisão. |
+| Histórico da solicitação | Marcos com `visivel_solicitante = 1`, em texto de negócio: registro, atualização que mudou o status, envio e resposta do questionário, esclarecimentos visíveis, parecer, cancelamento e vencimento. Ficam de fora a falha de envio, o pedido de reenvio e os identificadores técnicos. |
+
+Textos digitados (razão social, objeto, justificativa, condicionantes,
+respostas e esclarecimentos) são escapados para HTML antes de entrar no
+arquivo.
 
 ## Por que HTML, e não PDF gerado pelo fluxo
 
@@ -113,7 +130,9 @@ fluxo devolve (`saida_laudo_url`, `saida_erro`).
 - O laudo é gerado uma vez e fica fixo: se o parecer for corrigido depois
   (caso raro, já que a tela volta a ser somente leitura após a conclusão), é
   preciso apagar `laudo_url` do item para que o botão gere um arquivo novo.
-- A linha do tempo só mostra desdobramentos com `visivel_solicitante = 1` —
+- Laudos já gerados não mudam de layout: para gerar de novo no modelo atual,
+  apague `laudo_url` do item e use Baixar Laudo outra vez.
+- O histórico só mostra desdobramentos com `visivel_solicitante = 1` —
   a mesma regra de confidencialidade que já separa o histórico interno do
   Compliance do que aparece para os demais usuários no app. Notas internas
   não aparecem no laudo, mesmo para quem tem acesso a elas na tela.

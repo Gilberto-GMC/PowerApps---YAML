@@ -29,11 +29,20 @@ TIME_ZONE = "E. South America Standard Time"
 # compara com `=`, que diferencia maiúsculas de minúsculas.
 STATUS_AGUARDANDO_TERCEIRO = "Aguardando Terceiro"
 STATUS_PENDENTE_COMPLIANCE = "Pendente Compliance"
+STATUS_APROVADO = "Aprovado"
 STATUS_VENCIDO = "Vencido"
 # Decisões que abrem vigência: 1 ano (risco alto), 2 (médio) e 3 (baixo).
 STATUS_COM_VIGENCIA = ("Aprovado", "Aprovado com Ressalvas", "Reprovado Parcialmente")
 # As quatro decisões do parecer final: o laudo existe para todas, inclusive Reprovado.
 STATUS_DECISOES_FINAIS = ("Aprovado", "Aprovado com Ressalvas", "Reprovado Parcialmente", "Reprovado")
+# Os oito status do modelo; o DD05 tem uma mensagem ao solicitante para cada um.
+STATUS_TODOS = (
+    STATUS_AGUARDANDO_TERCEIRO,
+    STATUS_PENDENTE_COMPLIANCE,
+    *STATUS_DECISOES_FINAIS,
+    "Cancelado",
+    STATUS_VENCIDO,
+)
 
 FORM_ID = (
     "itUz0nOZp0OvaWdjYwVIoMoEbKAMYIZFqUAdth6B_EFURVRKSFdaVDE4Q1RIV0VTRkxFSjFZS0VEQS4u"
@@ -54,6 +63,9 @@ EXPIRY_NAME = "Vencer vigência Due Diligence"
 SOURCE_DIR = BASE / "PowerAutomate"
 LAUDO_READY = BASE / "GerarLaudoDueDiligence_PRONTO.zip"
 LAUDO_LIBRARY = "Laudos Due Diligence"
+NOTIFY_READY = BASE / "NotificarstatusDueDiligence_PRONTO.zip"
+NOTIFY_NAME = "Notificar status Due Diligence"
+COMPLIANCE_LIST = "tb_dueDiligenceCompliance"
 
 QUESTIONS = [
     {
@@ -529,7 +541,7 @@ def process_actions():
     }
     lookup_prefix = (
         f"_api/web/lists/getbytitle('{MAIN_LIST}')/items?"
-        "$select=ID,status,fluxo_classificacao,classificacao_risco,risco_final,"
+        "$select=ID,status,fluxo_classificacao,classificacao_risco,risco_final,gatilho_dd,"
         "forms_correlacao_id,forms_envio_id,forms_envio_processado_id,forms_ultima_resposta_id"
         "&$filter=forms_envio_id eq '"
     )
@@ -639,6 +651,24 @@ def build_valid_response_actions(first_parent: str, response_id: str):
     loop["runAfter"] = {previous: ["Succeeded"]}
     result["Para_Cada_Resposta"] = loop
 
+    # Aprovação automática depois da resposta (2026-09-16): risco calculado baixo ou
+    # médio, sem gatilho crítico do solicitante e nenhuma resposta de risco alto.
+    # Qualquer outro caso segue para a análise do Compliance.
+    automatic = "outputs('Avaliar_Aprovacao_Automatica')"
+    today_local = f"convertFromUtc(utcNow(), {wdl_literal(TIME_ZONE)}, 'yyyy-MM-dd')"
+    parent_risk = f"{first_parent}?['classificacao_risco']"
+    validity_end = f"addToTime({today_local}, {risk_years(parent_risk)}, 'Year')"
+    automatic_rule = (
+        "@and("
+        "not(variables('varTerceiroAlto')),"
+        f"not(equals(toLower(trim(string(coalesce({first_parent}?['gatilho_dd'], '')))), 'sim')),"
+        "contains(createArray('baixo', 'médio', 'medio'), "
+        f"toLower(trim(string(coalesce({first_parent}?['classificacao_risco'], '')))))"
+        ")"
+    )
+    status_after_response = (
+        f"@if({automatic}, {wdl_literal(STATUS_APROVADO)}, {wdl_literal(STATUS_PENDENTE_COMPLIANCE)})"
+    )
     parent_body = {
         "terceiro_gatilho_risco": "@if(variables('varTerceiroAlto'), 'Sim', 'Não')",
         "classificacao_risco": (
@@ -651,10 +681,18 @@ def build_valid_response_actions(first_parent: str, response_id: str):
         ),
         "data_resposta_terceiro": "@variables('varDataResposta')",
         "forms_ultima_resposta_id": f"@string({response_id[1:]})",
-        "status": STATUS_PENDENTE_COMPLIANCE,
+        "status": status_after_response,
+        "data_conclusao": f"@if({automatic}, utcNow(), null)",
+        # Meio-dia UTC: a coluna é só data e não pode recuar um dia no fuso local.
+        "data_vencimento": (
+            f"@if({automatic}, concat(formatDateTime({validity_end}, 'yyyy-MM-dd'), 'T12:00:00Z'), null)"
+        ),
     }
     consolidate_actions = {
-        "Montar_Atualizacao_Solicitacao": compose(parent_body),
+        "Avaliar_Aprovacao_Automatica": compose(automatic_rule),
+        "Montar_Atualizacao_Solicitacao": compose(
+            parent_body, {"Avaliar_Aprovacao_Automatica": ["Succeeded"]}
+        ),
     }
     parent_item_prefix = f"_api/web/lists/getbytitle('{MAIN_LIST}')/items("
     parent_uri = (
@@ -678,13 +716,18 @@ def build_valid_response_actions(first_parent: str, response_id: str):
             "solicitacao_id": f"@int({first_parent}?['ID'])",
             "tipo_desdobramento": "Resposta do terceiro",
             "status_anterior": f"@{first_parent}?['status']",
-            "status_novo": STATUS_PENDENTE_COMPLIANCE,
+            "status_novo": status_after_response,
             "descricao": (
                 "@concat('Resposta do terceiro processada. ', "
                 "string(length(variables('varRespostas'))), ' resposta(s); ', "
                 "string(variables('varQuantidadeRiscoAlto')), "
                 "' classificação(ões) de risco alto. Forms Response ID: ', "
-                "string(triggerOutputs()?['body/resourceData/responseId']), '.')"
+                "string(triggerOutputs()?['body/resourceData/responseId']), '.', "
+                f"if({automatic}, "
+                f"concat(' Aprovação automática: risco ', string({first_parent}?['classificacao_risco']), "
+                "', sem gatilho crítico e sem resposta de risco alto do terceiro. Vigência até ', "
+                f"formatDateTime({validity_end}, 'dd/MM/yyyy'), '.'), "
+                "' Encaminhada para a análise do Compliance.'))"
             ),
             "visivel_solicitante": 1,
             "ativo": 1,
@@ -1232,6 +1275,428 @@ def configure_laudo():
     write_package(package, LAUDO_READY, "DD04_GerarLaudo.definition.json")
 
 
+# --------------------------------------------------------------------------
+# DD05 — Notificar mudança de status (2026-09-17). O gatilho compara `status`
+# com `status_notificado`, o último status já avisado, no mesmo molde de
+# `forms_envio_processado_id` do DD01: pega a mudança venha de onde vier (app,
+# DD02, DD03, parecer do Compliance ou visão em grade) e a gravação do
+# marcador no fim não reativa o fluxo, porque os dois campos ficam iguais.
+# --------------------------------------------------------------------------
+
+# Risco, pontuação e gatilhos são do perfil Compliance no app: só o e-mail do
+# Compliance usa estas chaves de Montar_Campos (e as colunas de origem).
+NOTIFY_SENSITIVE = {
+    "classificacao_risco": "classificacao_risco",
+    "risco_final": "risco_final",
+    "pontuacao": "pontuacao_total",
+    "gatilho_dd": "gatilho_dd",
+    "terceiro_risco_alto": "terceiro_gatilho_risco",
+}
+
+
+def notify_pending(item: str) -> str:
+    """Status preenchido e diferente do último status avisado."""
+    status = f"trim(string(coalesce({item}?['status'], '')))"
+    marker = f"trim(string(coalesce({item}?['status_notificado'], '')))"
+    return f"@and(not(empty({status})), not(equals({status}, {marker})))"
+
+
+def html_text(value: str, empty: str = "-") -> str:
+    """Texto de coluna pronto para o corpo HTML: escapa &, < e >, troca quebra
+    de linha por <br> e usa `empty` quando vazio. Os dois ramos do if() aceitam
+    valor nulo, porque a expressão não pode depender de qual ramo é avaliado."""
+    text = f"trim(string(coalesce({value}, '')))"
+    escaped = f"replace(replace(replace({text}, '&', '&amp;'), '<', '&lt;'), '>', '&gt;')"
+    lines = (
+        f"replace(replace({escaped}, decodeUriComponent('%0D%0A'), '<br>'), "
+        "decodeUriComponent('%0A'), '<br>')"
+    )
+    return f"if(empty({text}), {wdl_literal(empty)}, {lines})"
+
+
+def local_date(value: str, fmt: str = "dd/MM/yyyy", prefix: str = "", empty: str = "-") -> str:
+    """Data no fuso de Brasília; com `prefix`, vira trecho de frase que some quando vazia."""
+    date = (
+        f"convertFromUtc(coalesce({value}, '2000-01-01T00:00:00Z'), "
+        f"{wdl_literal(TIME_ZONE)}, {wdl_literal(fmt)})"
+    )
+    filled = f"concat({wdl_literal(prefix)}, {date})" if prefix else date
+    return f"if(empty({value}), {wdl_literal(empty)}, {filled})"
+
+
+def notify_email_html(intro: str, rows: list[tuple[str, str, bool]], closing: str, note: str) -> str:
+    cells = "".join(
+        '<tr><td style="padding:6px 10px;border:1px solid #E2E8F0;background:#F8FAFC;'
+        f'width:38%;color:#475569">{label}</td>'
+        '<td style="padding:6px 10px;border:1px solid #E2E8F0">'
+        + (f'<strong style="color:#005864">{value}</strong>' if strong else value)
+        + "</td></tr>"
+        for label, value, strong in rows
+    )
+    return (
+        '<div style="font-family:Segoe UI,Arial,sans-serif;font-size:14px;line-height:1.5;'
+        'color:#0F172A;max-width:640px">'
+        '<div style="background:#005864;color:#FFFFFF;padding:14px 20px;font-size:16px;'
+        'font-weight:600">Due Diligence de Terceiros · ASUR Brasil</div>'
+        '<div style="border:1px solid #E2E8F0;border-top:0;padding:20px">'
+        f"{intro}"
+        '<table role="presentation" cellpadding="0" cellspacing="0" '
+        f'style="border-collapse:collapse;width:100%;font-size:13px">{cells}</table>'
+        f'<p style="margin:16px 0 0">{closing}</p>'
+        f'<p style="margin:20px 0 0;font-size:12px;color:#64748B">{note}</p>'
+        "</div></div>"
+    )
+
+
+def notify_messages(show) -> dict:
+    """Uma mensagem por status para o solicitante, sem risco nem pontuação."""
+    laudo = "O laudo pode ser baixado no app, em Registros › Ações › Baixar Laudo."
+    return {
+        STATUS_AGUARDANDO_TERCEIRO: (
+            f"O questionário de due diligence segue para o terceiro ({show('email_terceiro')}). "
+            "A análise continua depois da resposta. Enquanto o terceiro não responder, você pode "
+            "corrigir os dados da solicitação pelo botão Editar."
+        ),
+        # Neutro: órgão público com gatilho chega aqui sem questionário (2026-09-18).
+        STATUS_PENDENTE_COMPLIANCE: (
+            "A solicitação está com o Compliance para análise. Você receberá outro e-mail "
+            "quando houver parecer."
+        ),
+        "Aprovado": f"A solicitação foi aprovada{show('vigencia_frase')}. {laudo}",
+        "Aprovado com Ressalvas": (
+            f"A solicitação foi aprovada com ressalvas{show('vigencia_frase')}"
+            f"{show('reavaliacao_frase')}.<br><br><strong>Condicionantes:</strong>"
+            f"<br>{show('condicionantes')}<br><br>{laudo}"
+        ),
+        "Reprovado Parcialmente": (
+            f"A solicitação foi reprovada parcialmente{show('vigencia_frase')}. "
+            "Consulte o parecer no laudo, em Registros › Ações › Baixar Laudo."
+        ),
+        "Reprovado": (
+            "A solicitação foi reprovada. Consulte o parecer no laudo, em Registros › Ações › "
+            "Baixar Laudo."
+        ),
+        "Cancelado": (
+            "A solicitação foi cancelada pelo Compliance. O motivo está no histórico da "
+            "solicitação, no app."
+        ),
+        STATUS_VENCIDO: (
+            f"A vigência da aprovação terminou{show('vencimento_frase')}. Para manter o relacionamento "
+            "com o terceiro, abra uma nova solicitação de due diligence."
+        ),
+    }
+
+
+def without_retry_override(action: dict) -> dict:
+    """Leitura e marcador são idempotentes: ficam com a repetição padrão."""
+    action["inputs"].pop("retryPolicy", None)
+    return action
+
+
+def notify_actions():
+    item = "body('HTTP_Obter_Solicitacao')"
+    fields = "outputs('Montar_Campos')"
+
+    def field(name: str) -> str:
+        return f"{item}?['{name}']"
+
+    def show(key: str) -> str:
+        return "@{" + fields + "?['" + key + "']}"
+
+    status_raw = f"trim(string(coalesce({field('status')}, '')))"
+    author_name = f"{item}?['Author']?['Title']"
+    author_email = f"{item}?['Author']?['EMail']"
+    every_outcome = ["Succeeded", "Failed", "Skipped", "TimedOut"]
+
+    main_item_prefix = f"_api/web/lists/getbytitle('{MAIN_LIST}')/items("
+    select = (
+        ")?$select=ID,status,status_notificado,razao_social,cnpj_cpf,aeroporto,"
+        "area_solicitante,email_terceiro,classificacao_risco,risco_final,pontuacao_total,"
+        "pontuacao_solicitante,gatilho_dd,terceiro_gatilho_risco,data_resposta_terceiro,"
+        "data_vencimento,prazo_reavaliacao,condicionantes_compliance,Author/Title,Author/EMail"
+        "&$expand=Author"
+    )
+    get_uri = (
+        f"@concat({wdl_literal(main_item_prefix)}, string(triggerBody()?['ID']), "
+        f"{wdl_literal(select)})"
+    )
+
+    campos = {
+        "codigo": f"@concat('DD-', formatNumber(int({field('ID')}), '000000'))",
+        "saudacao": (
+            f"@if(empty(trim(string(coalesce({author_name}, '')))), 'Olá.', "
+            f"concat('Olá, ', {html_text(author_name)}, '.'))"
+        ),
+        "introducao": (
+            f"@if(empty(trim(string(coalesce({field('status_notificado')}, '')))), "
+            "'foi registrada', 'mudou de status')"
+        ),
+        "status_anterior": "@" + html_text(field("status_notificado"), "Novo registro"),
+        "status_novo": "@" + html_text(field("status")),
+        "razao_social": "@" + html_text(field("razao_social")),
+        "cnpj_cpf": "@" + html_text(field("cnpj_cpf")),
+        "aeroporto": "@" + html_text(field("aeroporto")),
+        "email_terceiro": "@" + html_text(field("email_terceiro")),
+        "vigencia_frase": "@" + local_date(
+            field("data_vencimento"), prefix=", com vigência até ", empty=""
+        ),
+        "vencimento_frase": "@" + local_date(field("data_vencimento"), prefix=" em ", empty=""),
+        "reavaliacao_frase": "@" + local_date(
+            field("prazo_reavaliacao"), prefix="; reavaliação em ", empty=""
+        ),
+        "condicionantes": "@" + html_text(
+            field("condicionantes_compliance"), "Consulte o laudo no app."
+        ),
+        "area_solicitante": "@" + html_text(field("area_solicitante")),
+        "solicitante": "@" + html_text(
+            f"concat(coalesce({author_name}, ''), ' (', coalesce({author_email}, ''), ')')"
+        ),
+        "classificacao_risco": "@" + html_text(field("classificacao_risco")),
+        "risco_final": "@" + html_text(field("risco_final")),
+        "pontuacao": "@" + html_text(
+            f"coalesce({field('pontuacao_total')}, {field('pontuacao_solicitante')})"
+        ),
+        "gatilho_dd": "@" + html_text(field("gatilho_dd")),
+        "terceiro_risco_alto": "@" + html_text(field("terceiro_gatilho_risco")),
+        "data_resposta": "@" + local_date(field("data_resposta_terceiro"), "dd/MM/yyyy HH:mm"),
+    }
+    assert set(NOTIFY_SENSITIVE) <= set(campos)
+
+    messages = notify_messages(show)
+    assert tuple(messages) == STATUS_TODOS
+
+    requester_body = notify_email_html(
+        (
+            f'<p style="margin:0 0 12px">{show("saudacao")}</p>'
+            f'<p style="margin:0 0 16px">A solicitação <strong>{show("codigo")}</strong> '
+            f'{show("introducao")}.</p>'
+        ),
+        [
+            ("Terceiro", show("razao_social"), False),
+            ("CNPJ/CPF", show("cnpj_cpf"), False),
+            ("Aeroporto", show("aeroporto"), False),
+            ("Status anterior", show("status_anterior"), False),
+            ("Novo status", show("status_novo"), True),
+        ],
+        "@{outputs('Montar_Mensagem_Solicitante')}",
+        "Acompanhe pelo app Due Diligence, na tela Registros (chave Minhas solicitações). "
+        "Mensagem automática; não é preciso responder.",
+    )
+    compliance_body = notify_email_html(
+        (
+            f'<p style="margin:0 0 16px">A solicitação <strong>{show("codigo")}</strong> está em '
+            "<strong>Pendente Compliance</strong> e aguarda a análise.</p>"
+        ),
+        [
+            ("Terceiro", show("razao_social"), False),
+            ("CNPJ/CPF", show("cnpj_cpf"), False),
+            ("Aeroporto", show("aeroporto"), False),
+            ("Área solicitante", show("area_solicitante"), False),
+            ("Solicitante", show("solicitante"), False),
+            ("Classificação de risco", show("classificacao_risco"), True),
+            ("Risco final", show("risco_final"), False),
+            ("Pontuação", show("pontuacao"), False),
+            ("Gatilho crítico do solicitante", show("gatilho_dd"), False),
+            ("Resposta de risco alto do terceiro", show("terceiro_risco_alto"), False),
+            ("Resposta do terceiro em", show("data_resposta"), False),
+        ],
+        "Para analisar, abra o app Due Diligence, localize a solicitação em Registros e use "
+        "Ações › Analisar.",
+        f"Mensagem automática para os analistas ativos da lista {COMPLIANCE_LIST}.",
+    )
+    subject_counterparty = "@{coalesce(" + field("razao_social") + ", '-')}"
+
+    requester_email = conn_action(
+        "shared_office365",
+        "shared_office365",
+        "SendEmailV2",
+        {
+            "emailMessage/To": f"@{author_email}",
+            "emailMessage/Subject": (
+                f"Due Diligence {show('codigo')} · {subject_counterparty} — "
+                "@{" + field("status") + "}"
+            ),
+            "emailMessage/Body": requester_body,
+            "emailMessage/Importance": "Normal",
+        },
+    )
+    compliance_email = conn_action(
+        "shared_office365",
+        "shared_office365",
+        "SendEmailV2",
+        {
+            "emailMessage/To": "@join(body('Selecionar_Emails_Compliance'), ';')",
+            "emailMessage/Subject": (
+                f"Due Diligence {show('codigo')} aguardando análise do Compliance · "
+                f"{subject_counterparty}"
+            ),
+            "emailMessage/Body": compliance_body,
+            "emailMessage/Importance": "Normal",
+        },
+    )
+
+    compliance_actions = {
+        "HTTP_Listar_Compliance": without_retry_override(
+            sp_http(
+                "GET",
+                f"_api/web/lists/getbytitle('{COMPLIANCE_LIST}')/items"
+                "?$select=email&$filter=ativo eq 1&$top=500",
+            )
+        ),
+        "Selecionar_Emails_Compliance": {
+            "runAfter": {"HTTP_Listar_Compliance": ["Succeeded"]},
+            "type": "Select",
+            "inputs": {
+                "from": "@body('HTTP_Listar_Compliance')?['value']",
+                "select": "@trim(string(item()?['email']))",
+            },
+        },
+        "Condicao_Tem_Compliance_Ativo": condition(
+            "@greater(length(body('Selecionar_Emails_Compliance')), 0)",
+            {"Enviar_Email_Compliance": compliance_email},
+            {
+                "Marcar_Sem_Compliance": {
+                    "runAfter": {},
+                    "type": "SetVariable",
+                    "inputs": {"name": "varSemCompliance", "value": True},
+                }
+            },
+            {"Selecionar_Emails_Compliance": ["Succeeded"]},
+        ),
+    }
+
+    # O marcador só é gravado se nenhum envio falhou: assim a execução com falha
+    # pode ser reenviada e a próxima alteração do item tenta de novo. Skipped
+    # também é falha, porque as duas condições sempre rodam no caminho normal.
+    def sent(action: str) -> str:
+        return (
+            "not(contains(createArray('Failed', 'TimedOut', 'Skipped'), "
+            f"actions('{action}')?['status']))"
+        )
+
+    marker_actions = {
+        "Montar_Marcador": compose({"status_notificado": f"@{field('status')}"}),
+        "HTTP_Gravar_Status_Notificado": without_retry_override(
+            sp_http(
+                "POST",
+                main_item_uri("triggerBody()"),
+                body="@string(outputs('Montar_Marcador'))",
+                headers={
+                    "Accept": "application/json;odata=nometadata",
+                    "Content-Type": "application/json;odata=nometadata",
+                    "X-HTTP-Method": "MERGE",
+                    "IF-MATCH": "*",
+                },
+                run_after={"Montar_Marcador": ["Succeeded"]},
+            )
+        ),
+        "Condicao_Sem_Compliance_Ativo": condition(
+            "@variables('varSemCompliance')",
+            {
+                "Encerrar_Sem_Compliance_Ativo": terminate(
+                    "Failed",
+                    "DD05_SEM_COMPLIANCE_ATIVO",
+                    "A solicitação chegou a Pendente Compliance, mas não há e-mail ativo em "
+                    f"{COMPLIANCE_LIST}.",
+                )
+            },
+            {"Notificacao_Concluida": compose("Avisos enviados e status marcado como avisado.")},
+            {"HTTP_Gravar_Status_Notificado": ["Succeeded"]},
+        ),
+    }
+
+    pending_actions = {
+        "Montar_Campos": compose(campos),
+        "Montar_Mensagens_Solicitante": compose(messages, {"Montar_Campos": ["Succeeded"]}),
+        "Montar_Mensagem_Solicitante": compose(
+            f"@coalesce(outputs('Montar_Mensagens_Solicitante')?[{status_raw}], "
+            "'Consulte os detalhes da solicitação no app.')",
+            {"Montar_Mensagens_Solicitante": ["Succeeded"]},
+        ),
+        "Condicao_Tem_Solicitante": condition(
+            f"@not(empty(trim(string(coalesce({author_email}, '')))))",
+            {"Enviar_Email_Solicitante": requester_email},
+            {
+                "Solicitante_Sem_Email": compose(
+                    "O autor da solicitação não tem e-mail; o aviso ao solicitante não foi enviado."
+                )
+            },
+            {"Montar_Mensagem_Solicitante": ["Succeeded"]},
+        ),
+        "Condicao_Notificar_Compliance": condition(
+            f"@equals({status_raw}, {wdl_literal(STATUS_PENDENTE_COMPLIANCE)})",
+            compliance_actions,
+            {},
+            {"Condicao_Tem_Solicitante": every_outcome},
+        ),
+        "Condicao_Envios_Concluidos": condition(
+            f"@and({sent('Condicao_Tem_Solicitante')}, {sent('Condicao_Notificar_Compliance')})",
+            marker_actions,
+            {
+                "Encerrar_Com_Falha_No_Envio": terminate(
+                    "Failed",
+                    "DD05_ENVIO_FALHOU",
+                    "Um aviso não foi enviado; o status continua pendente de aviso. "
+                    "Reenvie a execução depois de corrigir a causa.",
+                )
+            },
+            {"Condicao_Notificar_Compliance": every_outcome},
+        ),
+    }
+
+    return {
+        "Inicializar_Sem_Compliance": initialize_variable("varSemCompliance", "boolean", False),
+        # Relê o item: com a fila do gatilho, o status pode já ter sido avisado
+        # por uma execução anterior. Sem a coluna status_notificado a leitura
+        # falha e nenhum e-mail sai.
+        "HTTP_Obter_Solicitacao": without_retry_override(
+            sp_http("GET", get_uri, run_after={"Inicializar_Sem_Compliance": ["Succeeded"]})
+        ),
+        "Condicao_Status_Pendente_De_Aviso": condition(
+            notify_pending(item),
+            pending_actions,
+            {"Ignorar_Status_Ja_Avisado": compose("O status atual já foi avisado; nada a enviar.")},
+            {"HTTP_Obter_Solicitacao": ["Succeeded"]},
+        ),
+        # Item excluído logo depois da mudança não é falha. Qualquer outro erro
+        # (por exemplo, a coluna status_notificado ainda não criada) é.
+        "Condicao_Leitura_Falhou": condition(
+            "@equals(outputs('HTTP_Obter_Solicitacao')?['statusCode'], 404)",
+            {"Encerrar_Item_Excluido": terminate("Succeeded", "", "")},
+            {
+                "Encerrar_Falha_Na_Leitura": terminate(
+                    "Failed",
+                    "DD05_LEITURA_FALHOU",
+                    "Não foi possível reler a solicitação. Confira se a coluna status_notificado "
+                    "existe na tb_dueDiligence e se a conexão SharePoint está válida.",
+                )
+            },
+            {"HTTP_Obter_Solicitacao": ["Failed", "TimedOut"]},
+        ),
+    }
+
+
+def configure_notify():
+    # Molde do DD01: mesmo gatilho SharePoint da tb_dueDiligence; o Outlook é
+    # acrescentado como no DD01. Fluxo novo, importado com "Criar como novo".
+    draft = SEND_DRAFT if SEND_DRAFT.exists() else SEND_DRAFT_UTF8
+    package = read_package(draft, "DD05")
+    rekey_as_new_flow(package, "DD05", NOTIFY_NAME)
+    definition = package["definition"]["properties"]["definition"]
+    trigger = definition["triggers"]["When_an_item_is_created_or_modified"]
+    trigger["inputs"]["parameters"] = {"dataset": SITE_URL, "table": MAIN_LIST_ID}
+    trigger["conditions"] = [{"expression": notify_pending("triggerBody()")}]
+    trigger["runtimeConfiguration"] = {"concurrency": {"runs": 1}}
+    definition["actions"] = notify_actions()
+    add_connector(
+        package,
+        "shared_office365",
+        "Office 365 Outlook",
+        "https://static.powerapps.com/resource/connectorassets/office365/icon.png",
+    )
+    write_package(package, NOTIFY_READY, "DD05_NotificarStatus.definition.json")
+
+
 def add_connector(package: dict, logical: str, display: str, icon: str):
     manifest = package["manifest"]
     flow_resource_id = next(
@@ -1424,7 +1889,7 @@ def configure_expiry():
 
 
 def validate():
-    for path in (SEND_READY, PROCESS_READY, EXPIRY_READY, LAUDO_READY):
+    for path in (SEND_READY, PROCESS_READY, EXPIRY_READY, LAUDO_READY, NOTIFY_READY):
         with zipfile.ZipFile(path) as archive:
             assert archive.testzip() is None
             name = next(x for x in archive.namelist() if x.endswith("/definition.json"))
@@ -1432,7 +1897,11 @@ def validate():
             raw = json.dumps(data, ensure_ascii=False)
             assert "PREENCHER_" not in raw
             assert data["properties"]["definition"]["actions"]
-    for path, expected_trigger_types in ((EXPIRY_READY, ["Recurrence"]), (LAUDO_READY, ["Request"])):
+    for path, expected_trigger_types in (
+        (EXPIRY_READY, ["Recurrence"]),
+        (LAUDO_READY, ["Request"]),
+        (NOTIFY_READY, ["OpenApiConnection"]),
+    ):
         with zipfile.ZipFile(path) as archive:
             manifest = json.loads(archive.read("manifest.json"))
             flows = [r for r in manifest["resources"].values() if r["type"] == "Microsoft.Flow/flows"]
@@ -1465,17 +1934,41 @@ def validate():
     for status in STATUS_DECISOES_FINAIS:
         assert wdl_literal(status) in raw_laudo, f"DD04 não contempla a decisão {status!r}"
 
+    # DD05: aviso ao solicitante sem campos do perfil Compliance e marcador
+    # gravado só depois dos envios.
+    with zipfile.ZipFile(NOTIFY_READY) as archive:
+        name = next(x for x in archive.namelist() if x.endswith("/definition.json"))
+        notify_definition = json.loads(archive.read(name))
+    notify = notify_definition["properties"]["definition"]
+    pending = notify["actions"]["Condicao_Status_Pendente_De_Aviso"]["actions"]
+    requester = pending["Condicao_Tem_Solicitante"]["actions"]["Enviar_Email_Solicitante"]
+    requester_text = json.dumps(
+        [requester["inputs"]["parameters"], pending["Montar_Mensagens_Solicitante"]["inputs"]],
+        ensure_ascii=False,
+    )
+    for key, column in NOTIFY_SENSITIVE.items():
+        for token in (f"['{key}']", f"['{column}']"):
+            assert token not in requester_text, f"DD05: e-mail do solicitante expõe {token!r}"
+    assert tuple(pending["Montar_Mensagens_Solicitante"]["inputs"]) == STATUS_TODOS
+    marker = pending["Condicao_Envios_Concluidos"]["actions"]["Montar_Marcador"]["inputs"]
+    assert set(marker) == {"status_notificado"}
+    assert "status_notificado" in notify["triggers"]["When_an_item_is_created_or_modified"][
+        "conditions"
+    ][0]["expression"]
+
 
 def main():
     configure_send()
     configure_process()
     configure_expiry()
     configure_laudo()
+    configure_notify()
     validate()
     print(SEND_READY)
     print(PROCESS_READY)
     print(EXPIRY_READY)
     print(LAUDO_READY)
+    print(NOTIFY_READY)
 
 
 if __name__ == "__main__":

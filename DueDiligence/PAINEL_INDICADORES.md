@@ -7,6 +7,56 @@ somente leitura e restrito ao perfil Compliance (lista
 tela confere o acesso a cada carga. Quem não está cadastrado vê um aviso com o
 login a informar.
 
+## Largura da tela (2026-09-17)
+
+O painel saía mais largo que a janela: o card da direita e os filtros do topo
+ficavam cortados, enquanto a tela de Registros cabia. A diferença estrutural é o
+`LayoutMinWidth`: Registros o declara nos contêineres e controles esticados (14
+vezes); o painel só tinha 4. Sem ele, o Power Apps aplica um mínimo padrão e um
+controle esticado pode empurrar o contêiner além da tela. Agora a barra, o corpo,
+a linha do período e todos os visualizadores HTML têm `LayoutMinWidth: =16`, e o
+validador confere (grupo "Painel cabe na largura da tela"). A causa é a mais
+provável pela comparação das duas telas; confirmar no app depois da colagem.
+
+## Filtros
+
+| Filtro | Onde fica | O que recorta |
+|---|---|---|
+| Bloco (`cmbDdPainelBloco`) | Barra superior | O painel inteiro, inclusive a situação atual |
+| Aeroporto (`cmbDdPainelAeroporto`) | Barra superior | O painel inteiro; a lista mostra só os aeroportos do bloco escolhido |
+| Período (`cmbDdPainelPeriodo`) | Título "Solicitações no período" | Só essa seção |
+
+- Trocar o bloco volta o aeroporto para "Todos os aeroportos". SEDE não tem
+  bloco e aparece só como aeroporto.
+- Bloco e aeroporto recortam **em memória** o que a carga já trouxe: mudar
+  esses filtros não consulta o SharePoint de novo e não altera as 3 consultas
+  delegáveis. Mudar o período recarrega, como antes.
+- Registros antigos não têm `bloco` gravado. A carga completa o campo pela
+  tabela aeroporto → bloco (`colDdPainelAeroportos`), que precisa continuar
+  igual ao `bloco_DataCard` da `ScreenDueDiligence`. O validador compara as duas.
+- O recorte escolhido aparece no título das seções ("SITUAÇÃO ATUAL · BLOCO SUL").
+
+## Hover e animação
+
+Os blocos HTML ganharam CSS progressivo (`varDdPainelCss`): cartões sobem 2 px
+com sombra no hover, linhas de tabela ficam destacadas, barras crescem da
+esquerda e os números sobem suavemente quando o painel carrega ou o filtro
+muda. `prefers-reduced-motion` desliga tudo.
+
+O suporte a `<style>` no `HtmlViewer` do Power Apps **não estava comprovado**
+neste projeto quando isso foi feito (o único `<style>` existente era de um
+relatório oculto). Por isso:
+
+- o CSS fica dentro de `<div style='display:none'>`: se o sanitizador remover a
+  tag e deixar o texto, nada aparece na tela;
+- todo o visual continua em estilo inline; o CSS só acrescenta efeito. Sem ele,
+  o painel fica idêntico ao anterior;
+- o efeito só aparece com o app em execução (visualização ou publicado), não no
+  modo de edição do Studio.
+
+Teste depois de colar: passe o mouse sobre um cartão. Se ele subir, o CSS está
+ativo; registre o resultado em `LICOES_APRENDIDAS_POWERAPPS_YAML.md`.
+
 ## O que aparece
 
 A página tem duas seções. Os filtros ficam acima do que eles recortam.
@@ -81,6 +131,12 @@ Os tons foram validados com o verificador de paleta, contra fundo branco.
 3. Testar a delegação com o limite de linhas do app temporariamente em `1`:
    nenhum aviso de delegação deve aparecer nas consultas.
 4. Conferir os números contra a listagem com o filtro de status.
+5. Conferir a coluna `bloco` na `tb_dueDiligence` (a carga lê `_r.bloco`).
+6. Escolher um bloco e depois um aeroporto: os totais têm de bater com a
+   listagem filtrada pelo mesmo aeroporto. Trocar o bloco deve voltar o
+   aeroporto para "Todos os aeroportos".
+7. Em execução, passar o mouse sobre um cartão para verificar o CSS (ver
+   "Hover e animação").
 
 ## Limitações conhecidas
 

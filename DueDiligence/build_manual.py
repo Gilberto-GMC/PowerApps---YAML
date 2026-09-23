@@ -177,15 +177,23 @@ def status_table():
     rows = [
         ["Status", "Quem define", "Quando"],
         ["Aguardando Terceiro", "Sistema", "Solicitação criada no Fluxo III; questionário enviado ao terceiro."],
-        ["Pendente Compliance", "Sistema", "Resposta válida do terceiro recebida; aguardando análise."],
-        ["Aprovado", "Sistema ou Compliance", "Automático nos Fluxos I e II, ou parecer do Compliance."],
+        ["Pendente Compliance", "Sistema", "Resposta do terceiro com risco alto (calculado, gatilho crítico ou resposta), ou órgão público com gatilho crítico em convênio, termo de cooperação ou cessão de área (vai direto, sem questionário); aguardando análise."],
+        ["Aprovado", "Sistema ou Compliance", "Na hora (risco baixo automático), após a resposta do terceiro sem risco alto (risco baixo ou médio) ou pelo parecer do Compliance."],
         ["Aprovado com Ressalvas", "Compliance", "Parecer final, com condicionantes e prazo de reavaliação."],
         ["Reprovado Parcialmente", "Compliance", "Parecer final."],
         ["Reprovado", "Compliance", "Parecer final."],
         ["Cancelado", "Compliance", "Encerramento sem parecer."],
         ["Vencido", "Sistema", "Vigência da aprovação expirou."],
     ]
-    t = Table(rows, colWidths=[4.3 * cm, 3.4 * cm, 8.2 * cm], repeatRows=1)
+    # Células como Paragraph para o texto quebrar dentro da coluna (string pura
+    # não quebra e vaza para a coluna vizinha ou para fora da página).
+    head = ParagraphStyle("StatusHead", parent=STYLES["Body"], fontName="Helvetica-Bold",
+                          fontSize=8.7, leading=11, textColor=colors.white, spaceAfter=0)
+    cell = ParagraphStyle("StatusCell", parent=STYLES["Body"], fontSize=8.7, leading=11,
+                          spaceAfter=0)
+    rows = [[Paragraph(text, head if i == 0 else cell) for text in row]
+            for i, row in enumerate(rows)]
+    t = Table(rows, colWidths=[4.0 * cm, 3.1 * cm, 8.8 * cm], repeatRows=1)
     t.setStyle(TableStyle([
         ("BACKGROUND", (0, 0), (-1, 0), TEAL_DEEP),
         ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
@@ -371,14 +379,15 @@ def build_flowchart() -> Drawing:
             "Recebe o questionário por e-mail e responde",
             colors.HexColor("#0F766E"), font_size=8, border=colors.HexColor("#0B4F49"), number=3)
     mid_y = rB_y + rB_h / 2
-    _fc_arrow(d, bx(c1x) + bw, mid_y, bx(c2x), mid_y, RISK_ALTO)
+    # neutro, não vermelho: o questionário não é exclusivo do risco alto
+    _fc_arrow(d, bx(c1x) + bw, mid_y, bx(c2x), mid_y, TEAL_DEEP)
     _fc_chip(d, (bx(c1x) + bw + bx(c2x)) / 2, rA_y - 14,
-             "Risco alto ou gatilho crítico", max_chars=20, text_color=RISK_ALTO)
+             "Qualquer risco, exceto baixo automático", max_chars=24, text_color=TEAL_DEEP)
 
     # ---- Passo 4: Compliance recebe e analisa ----------------------------
     rD_y, rD_h = 378, 50
     _fc_box(d, bx(c3x), rD_y, bw, rD_h,
-            "Recebe as respostas já classificadas por risco e analisa",
+            "Analisa os casos de risco alto (calculado, gatilho ou resposta)",
             colors.HexColor("#334155"), font_size=8, border=colors.HexColor("#1E293B"), number=4)
     # entra pelo topo, deslocado do canto (o canto é ocupado pelo numero do passo)
     _fc_arrow(d, bx(c2x) + bw, rC_y, bx(c3x) + 24, rD_y + rD_h, TEXT_2)
@@ -419,10 +428,17 @@ def build_flowchart() -> Drawing:
             colors.HexColor("#0F172A"), font_size=8.2, number=7)
     _fc_arrow(d, c3_mid, rF_y, c3_mid, rG_y + rG_h, TEXT_2)
 
-    # atalho: risco baixo/medio sem gatilho vai direto para a decisao
+    # depois da resposta: risco baixo/medio sem gatilho e sem resposta de risco
+    # alto tambem vai direto para a decisao (desce pela raia do terceiro, que esta livre)
+    _fc_arrow(d, c2_mid, rC_y, c2_mid, rG_y + rG_h, RISK_BAIXO)
+    _fc_chip(d, c2_mid, (rC_y + rG_y + rG_h) / 2,
+             "Baixo ou médio, sem risco alto nas respostas: aprovação automática",
+             max_chars=22, text_color=RISK_BAIXO)
+
+    # atalho: so o risco baixo automatico sem gatilho vai direto para a decisao
     _fc_arrow(d, c1_mid, rB_y, c1_mid, rG_y + rG_h, RISK_BAIXO)
     _fc_chip(d, c1_mid, (rB_y + rG_y + rG_h) / 2,
-             "Risco baixo/médio sem gatilho: aprovação automática",
+             "Risco baixo automático sem gatilho: aprovação automática",
              max_chars=20, text_color=RISK_BAIXO)
 
     # ---- Passo 8: laudo final -----------------------------------------------
@@ -500,7 +516,7 @@ def draw_cover(canvas, doc):
     canvas.drawString(MARGIN, 3.6 * cm, "Módulo Integrity Hub — Power Apps, SharePoint e Power Automate")
     canvas.setFillColor(TEXT_3)
     canvas.setFont("Helvetica", 9)
-    canvas.drawString(MARGIN, 3.1 * cm, "Documento de uso interno. Versão 1.0 — setembro de 2026.")
+    canvas.drawString(MARGIN, 3.1 * cm, "Documento de uso interno. Versão 1.1 — setembro de 2026.")
     canvas.restoreState()
 
 
@@ -546,8 +562,17 @@ def build_story():
     ))
     story.append(Paragraph(
         "O sistema calcula automaticamente o risco de cada contraparte e decide sozinho o caminho da "
-        "solicitação: casos de baixo risco são encerrados sem intervenção manual, casos de risco médio "
-        "seguem um caminho simplificado, e só os casos que realmente precisam de atenção chegam à mesa do "
+        "solicitação: casos de risco baixo automático são aprovados sem intervenção manual, e todos os "
+        "demais passam pelo questionário do terceiro. Se o risco calculado for baixo ou médio, sem gatilho "
+        "crítico, e nenhuma resposta do terceiro indicar risco alto, a aprovação também é automática; os "
+        "demais casos vão para a análise do Compliance.",
+        S["Body"],
+    ))
+    story.append(Paragraph("Política de terceiros", S["H3"]))
+    story.append(Paragraph(
+        "O módulo aplica a <b>Norma de Avaliação de Riscos de Terceiros</b>, a política de terceiros da "
+        "ASUR Brasil. O sistema automatiza a avaliação prevista nessa norma; este manual explica como usar "
+        "o sistema e não substitui o texto da norma, cuja versão vigente deve ser consultada com a área de "
         "Compliance.",
         S["Body"],
     ))
@@ -592,21 +617,32 @@ def build_story():
         "<b>Solicitação</b> — o colaborador cadastra a contraparte e responde um questionário interno "
         "sobre o contrato.",
         "<b>Cálculo de risco</b> — o sistema classifica a solicitação automaticamente e decide o fluxo: "
-        "encerramento automático (risco baixo), monitoramento simplificado (risco médio) ou envio de "
-        "questionário ao terceiro (risco alto ou gatilho crítico identificado).",
-        "<b>Terceiro</b> — quando aplicável, a contraparte recebe por e-mail um questionário próprio, sem "
-        "precisar de acesso ao sistema.",
-        "<b>Compliance</b> — as respostas voltam classificadas por risco; o Compliance analisa, pode "
-        "registrar esclarecimentos e, ao final, lança o parecer.",
+        "aprovação automática (risco baixo automático) ou envio de questionário ao terceiro (todos os "
+        "demais casos, inclusive quando há gatilho crítico).",
+        "<b>Terceiro</b> — sempre que a solicitação não se encerra como risco baixo automático, seja qual "
+        "for o risco calculado, a contraparte recebe por e-mail um questionário próprio, sem precisar de "
+        "acesso ao sistema.",
+        "<b>Compliance</b> — as respostas voltam classificadas por risco. Com risco calculado baixo ou "
+        "médio, sem gatilho crítico e sem nenhuma resposta de risco alto, a solicitação é aprovada "
+        "automaticamente. Nos demais casos, o Compliance analisa, pode registrar esclarecimentos e, ao "
+        "final, lança o parecer.",
         "<b>Decisão</b> — aprovado, aprovado com ressalvas, reprovado (total ou parcialmente) ou "
         "cancelado. Aprovações abrem uma vigência de 1 a 3 anos, conforme o risco.",
     ]))
     story.append(Paragraph(
-        "Um gatilho crítico (por exemplo, o terceiro atuar em nome da companhia perante o poder público, "
-        "ou ter sido indicado por um agente público) sempre força a análise do Compliance — mesmo quando "
-        "existe uma obrigação legal de pagamento, que sozinha encerraria a solicitação automaticamente. "
-        "Entre os dois, o gatilho crítico tem prioridade.",
+        "O questionário do terceiro <b>não é exclusivo do risco alto</b>. Ele vai para toda solicitação que "
+        "não se encerra como risco baixo automático: risco baixo calculado por pontuação, risco médio, "
+        "risco alto, contraparte órgão público ou qualquer caso com gatilho crítico. Só dispensam o "
+        "questionário o pagamento por obrigação legal sem gatilho crítico e a contraparte classificada como "
+        "sem risco.",
         S["Body"],
+    ))
+    story.append(callout_box(
+        "<b>Gatilho crítico:</b> um gatilho crítico (por exemplo, o terceiro atuar em nome da companhia "
+        "perante o poder público, ou ter sido indicado por um agente público) sempre força a análise do "
+        "Compliance — mesmo quando existe uma obrigação legal de pagamento, que sozinha encerraria a "
+        "solicitação automaticamente. Entre os dois, o gatilho crítico tem prioridade. A equipe de "
+        "Compliance pode reclassificar o risco com discricionariedade (ver seção 10).",
     ))
     story.append(Spacer(1, 6))
     story.append(KeepTogether([
@@ -643,19 +679,31 @@ def build_story():
         S["Body"],
     ))
     story.append(bullets([
-        "<b>Aeroporto</b> e <b>área solicitante</b> — de onde parte a demanda.",
-        "<b>CNPJ/CPF e razão social</b> — identificação da contraparte.",
-        "<b>Categoria da contraparte</b> — fornecedor, cliente, órgão público, associação/sindicato, "
-        "entre outras. Essa escolha já direciona boa parte da classificação de risco.",
+        "<b>Aeroporto</b> e <b>área solicitante</b> — de onde parte a demanda. O bloco (Sul ou Central) "
+        "é preenchido automaticamente a partir do aeroporto; a opção <b>SEDE</b> atende demandas da sede "
+        "corporativa e não tem bloco.",
+        "<b>Tipo de pessoa, CNPJ/CPF e razão social</b> — identificação da contraparte. Escolha primeiro "
+        "o tipo (Pessoa Jurídica, Pessoa Física ou Estrangeiro) e digite só os números do documento: ao sair "
+        "do campo, o sistema coloca pontos, barra e traço conforme o tipo. Se faltar ou sobrar dígito, o "
+        "campo fica vermelho. Para contraparte estrangeira, informe a identificação do país de origem, sem "
+        "máscara.",
+        "<b>Categoria da contraparte</b> — fornecedor, cliente, órgão da administração pública ou "
+        "associação/sindicato/entidade de classe. Essa escolha já direciona boa parte da classificação de "
+        "risco.",
         "<b>Objeto da contratação</b> e <b>tipo de contrato</b> — o que está sendo contratado.",
-        "<b>Perguntas de gatilho</b> — subcontratação, procuração, pagamento em nome de terceiro, "
-        "representação perante o poder público, indicação por agente público, entre outras. Qualquer "
+        "<b>Valor total do contrato</b> — digite só os números (centavos depois da vírgula, se houver). Ao "
+        "sair do campo, o sistema coloca os pontos e a vírgula: 250000 vira 250.000,00.",
+        "<b>Perguntas de gatilho</b> — subcontratação, procuração ao terceiro, pagamentos em nome da "
+        "Companhia, representação perante órgão público e indicação por funcionário público. Qualquer "
         "resposta \"Sim\" aqui é o que caracteriza um gatilho crítico.",
     ]))
     story.append(callout_box(
-        "<b>Atenção:</b> depois de enviada, a solicitação fica somente leitura para o solicitante — a "
-        "única exceção é quando o envio do questionário ao terceiro falha (por exemplo, e-mail incorreto), "
-        "caso em que o solicitante pode corrigir os dados e reenviar.",
+        "<b>Atenção:</b> todos os campos são obrigatórios e estão marcados com *. Se faltar algum ao "
+        "salvar, o campo fica com a borda e uma mensagem em vermelho logo abaixo, e o aviso lista o que "
+        "falta. A "
+        "solicitação pode ser editada enquanto aguarda a resposta do terceiro (por exemplo, para corrigir o "
+        "e-mail, o que reenvia o questionário ao novo endereço). Depois que o terceiro responde, ela fica "
+        "somente leitura.",
     ))
     story.append(Paragraph(
         "Ao salvar, o sistema calcula o risco na hora e decide o caminho — sem que o solicitante precise "
@@ -666,21 +714,31 @@ def build_story():
     # ---- 6. O que acontece depois do envio -----------------------------
     story.append(Paragraph("6. O que acontece depois do envio", S["H1"]))
     story.append(Paragraph(
-        "Três caminhos são possíveis, dependendo do resultado do cálculo de risco:",
+        "Dois caminhos são possíveis, dependendo do resultado do cálculo de risco:",
         S["Body"],
     ))
     story.append(bullets([
-        "<b>Risco baixo, sem gatilho</b> — a solicitação é aprovada automaticamente e já sai com vigência "
-        "de 3 anos. Nenhuma ação humana é necessária.",
-        "<b>Risco médio, sem gatilho</b> — mesma lógica, com vigência de 2 anos.",
-        "<b>Risco alto ou gatilho identificado</b> — o sistema envia automaticamente, por e-mail, um "
-        "questionário específico para o e-mail de contato informado da contraparte, usando Microsoft "
-        "Forms. A contraparte responde sem precisar de acesso ao sistema; assim que envia, as respostas "
-        "voltam classificadas por risco e a solicitação passa para a análise do Compliance.",
+        "<b>Risco baixo automático, sem gatilho</b> — pagamento por obrigação legal; contraparte "
+        "classificada como sem risco (por exemplo, concessionária de serviço público, cartório, instituição "
+        "de ensino, companhia aérea); ou tipo de contrato de risco baixo automático (órgão público em "
+        "convênio, termo de cooperação ou cessão de área, e cliente em fornecimento de treinamento). A "
+        "solicitação é aprovada automaticamente, sem questionário ao terceiro, e já sai com vigência de 3 "
+        "anos. Nenhuma ação humana é necessária.",
+        "<b>Órgão público com gatilho crítico</b> — em convênio, termo de cooperação ou cessão de área, o órgão "
+        "não recebe questionário: a solicitação vai direto para a análise do Compliance (Pendente Compliance). "
+        "Em doação e patrocínio, o órgão público recebe o questionário, como os demais casos.",
+        "<b>Todos os demais casos</b> — risco alto, médio ou baixo por pontuação, órgão público e qualquer "
+        "gatilho crítico. O sistema envia automaticamente, por e-mail, um questionário específico para o "
+        "e-mail de contato informado da contraparte, usando Microsoft Forms. A contraparte responde sem "
+        "precisar de acesso ao sistema; assim que envia, as respostas voltam classificadas por risco. Se o "
+        "risco calculado for baixo ou médio, sem gatilho crítico, e nenhuma resposta indicar risco alto, a "
+        "solicitação é <b>aprovada automaticamente</b> (vigência de 3 anos no risco baixo e 2 no médio); "
+        "caso contrário, passa para a análise do Compliance.",
     ]))
     story.append(Paragraph(
         "Se o e-mail de envio falhar (endereço incorreto, por exemplo), a solicitação mostra \"Falha no "
-        "envio\" e o solicitante pode corrigir o e-mail e pedir um novo envio pelo próprio registro.",
+        "envio\". Enquanto o terceiro não responde, o solicitante pode editar a solicitação e corrigir o "
+        "e-mail; ao salvar, um novo envio é feito automaticamente.",
         S["Body"],
     ))
 
@@ -688,16 +746,19 @@ def build_story():
     story.append(Paragraph("7. Acompanhando solicitações — Registros", S["H1"]))
     story.append(Paragraph(
         "A aba <b>Registros</b> lista todas as solicitações visíveis para o usuário, com busca por ID, "
-        "razão social ou CNPJ/CPF, e filtro por status e por período de criação (data inicial e final). "
-        "Cada linha mostra o número da solicitação, a data, a razão social, o documento, a pontuação, a "
-        "classificação de risco (visível só para o Compliance) e o status atual, com um selo colorido.",
+        "razão social ou CNPJ/CPF (com ou sem pontuação), filtro por status e por período de criação (data inicial e final), e a "
+        "chave <b>Minhas solicitações</b>, que mostra só as solicitações abertas por você. "
+        "Cada linha mostra o número da solicitação, a data, a razão social, o documento, a classificação "
+        "de risco (visível só para o Compliance) e o status atual, com um selo colorido.",
         S["Body"],
     ))
     story.append(shot("tela_registros.png", "Figura 3 — Lista de registros, com filtros e status."))
     story.append(Paragraph(
         "A coluna <b>Ações</b>, à direita de cada linha, oferece — conforme o status e o perfil do usuário "
-        "— <b>Ver</b>, <b>Editar/Analisar</b>, <b>Reenviar Forms</b> (só quando aplicável), <b>Excluir</b> e "
-        "<b>Baixar Laudo</b> (só depois do parecer final — ver seção 14).",
+        "— <b>Ver</b>, <b>Editar</b> (para qualquer usuário, até o terceiro responder), <b>Analisar</b> "
+        "(só para o Compliance, em Aguardando Terceiro e Pendente Compliance), <b>Reenviar Forms</b> (só "
+        "quando aplicável), <b>Excluir</b> (só o Compliance ou quem abriu a solicitação; apaga também todo "
+        "o histórico dela) e <b>Baixar Laudo</b> (só depois do parecer final — ver seção 14).",
         S["Body"],
     ))
 
@@ -710,12 +771,23 @@ def build_story():
     ))
     story.append(status_table())
     story.append(Spacer(1, 8))
+    story.append(Paragraph(
+        "<b>Avisos por e-mail.</b> A cada mudança de status, quem abriu a solicitação recebe um e-mail "
+        "com o status anterior, o novo status e o próximo passo (vigência, condicionantes ou prazo de "
+        "reavaliação, quando houver). O primeiro aviso chega quando a solicitação é registrada. Quando a "
+        "solicitação chega a <b>Pendente Compliance</b>, os analistas do Compliance também recebem um "
+        "e-mail. Os avisos chegam alguns minutos depois da mudança; na tela Registros o status já aparece "
+        "atualizado na hora.",
+        S["Body"],
+    ))
 
     # ---- 9. Analisando -----------------------------------------------
     story.append(Paragraph("9. Para o Compliance — analisando uma solicitação", S["H1"]))
     story.append(Paragraph(
-        "Assim que uma solicitação chega a <b>Pendente Compliance</b>, qualquer analista pode clicar em "
-        "<b>Analisar</b>. O primeiro registro grava automaticamente o analista responsável. À direita, o "
+        "Assim que uma solicitação chega a <b>Pendente Compliance</b>, os analistas ativos recebem um "
+        "e-mail com o terceiro, o solicitante, a classificação de risco e a pontuação, e qualquer um deles "
+        "pode clicar em <b>Analisar</b>. O primeiro registro grava automaticamente o analista responsável. "
+        "À direita, o "
         "painel <b>Respostas do terceiro</b> mostra cada pergunta, a resposta recebida e a classificação de "
         "risco individual — as respostas de risco alto aparecem destacadas.",
         S["Body"],
@@ -724,7 +796,10 @@ def build_story():
                        "Figura 4 — Resumo da avaliação e respostas do terceiro."))
     story.append(Paragraph(
         "O resumo no topo da tela (Classificação da contraparte, Respostas do terceiro, Gatilho de due "
-        "diligence e Situação da análise) dá o panorama da solicitação sem precisar rolar a tela inteira.",
+        "diligence e Situação da análise) dá o panorama da solicitação sem precisar rolar a tela inteira. "
+        "Em aprovações automáticas, as respostas e o gatilho do terceiro aparecem como <b>Não se aplica</b>: "
+        "não houve questionário e nada fica pendente. \"Aguardando\" aparece só quando o questionário foi "
+        "enviado e o terceiro ainda não respondeu.",
         S["Body"],
     ))
 
@@ -747,6 +822,10 @@ def build_story():
         "visíveis.",
         "<b>Prazo para resposta</b> (opcional) — uma data de referência para cobrar o retorno.",
         "<b>Anexos</b> — para guardar o e-mail da troca ou qualquer documento de apoio.",
+        "<b>Classificação de risco</b> — aparece em Pendente Compliance e sempre que o tipo escolhido é "
+        "Parecer final; vem com o risco calculado pelo sistema, e o Compliance pode reclassificá-lo (Baixo, "
+        "Médio ou Alto) a seu critério. A vigência passa a seguir a classificação escolhida e a mudança "
+        "fica registrada no histórico interno.",
     ]))
     story.append(shot("tela_analise_compliance.png",
                        "Figura 5 — Formulário de análise do Compliance."))
@@ -768,6 +847,12 @@ def build_story():
         "As três primeiras decisões abrem vigência (1 a 3 anos, conforme o risco); Reprovado não abre "
         "vigência. Para encerrar sem análise de mérito — por exemplo, se a contratação foi cancelada — use "
         "o tipo <b>Cancelamento</b> em vez de um parecer.",
+        S["Body"],
+    ))
+    story.append(Paragraph(
+        "O parecer final também pode ser registrado com a solicitação ainda em <b>Aguardando Terceiro</b>, "
+        "quando o terceiro não responde — é o caso típico de órgão público. Nesse caso o laudo mostra o "
+        "questionário do terceiro como \"Sem resposta\".",
         S["Body"],
     ))
     story.append(callout_box(
@@ -799,6 +884,16 @@ def build_story():
         "combinando a situação do dia com uma janela de período configurável (padrão: últimos 12 meses).",
         S["Body"],
     ))
+    story.append(Paragraph("Filtros", S["H3"]))
+    story.append(Paragraph(
+        "Na barra superior, <b>Bloco</b> (Central ou Sul) e <b>Aeroporto</b> recortam o painel inteiro, "
+        "inclusive a situação atual. Ao escolher um bloco, a lista de aeroportos passa a mostrar só os "
+        "daquele bloco; trocar o bloco volta o aeroporto para \"Todos os aeroportos\". A sede corporativa "
+        "(SEDE) não pertence a bloco e aparece só como aeroporto. O <b>Período</b>, ao lado do título "
+        "\"Solicitações no período\", vale só para essa seção. O recorte escolhido aparece no título de "
+        "cada seção.",
+        S["Body"],
+    ))
     story.append(Paragraph("Situação atual", S["H3"]))
     story.append(Paragraph(
         "Mostra, independentemente do período escolhido: vigências vencidas ou a vencer nos próximos 90 "
@@ -828,9 +923,11 @@ def build_story():
     # ---- 14. Laudo -----------------------------------------------------
     story.append(Paragraph("14. Baixando o laudo final", S["H1"]))
     story.append(Paragraph(
-        "É a entrega final do processo: um documento único que consolida a identificação da contraparte, "
-        "a classificação de risco, o parecer do Compliance, as respostas do terceiro (quando houver) e a "
-        "linha do tempo completa — pronto para arquivar como evidência em auditorias e fiscalizações.",
+        "É a entrega final do processo: um documento único, escrito para ser lido tanto pelo solicitante "
+        "quanto pelo Compliance, pronto para arquivar como evidência em auditorias e fiscalizações. Ele traz a "
+        "identificação da contraparte, o resultado da avaliação (classificação de risco, forma de análise, "
+        "gatilho crítico e resultado do questionário do terceiro), a decisão com a vigência e o histórico da "
+        "solicitação.",
         S["Body"],
     ))
     story.append(Paragraph(
@@ -840,7 +937,17 @@ def build_story():
         "quantas vezes precisar.",
         S["Body"],
     ))
-    story.append(shot("laudo_final.png", "Figura 9 — Laudo final de Due Diligence."))
+    story.append(Paragraph(
+        "O conteúdo se adapta ao caso. Na <b>aprovação automática</b>, o laudo explica o critério que dispensou "
+        "a análise do Compliance, conforme a Norma de Avaliação de Riscos de Terceiros, sem campos de parecer "
+        "em branco. Com <b>parecer do Compliance</b>, mostra a decisão, a justificativa, as condicionantes e o "
+        "prazo de reavaliação, quando houver. A seção do questionário só aparece quando o terceiro recebeu o "
+        "questionário, e o histórico traz só os marcos da solicitação: registro, envio e resposta do "
+        "questionário, esclarecimentos visíveis ao solicitante e decisão. Notas internas do Compliance nunca "
+        "entram no laudo.",
+        S["Body"],
+    ))
+    story.append(shot("laudo_final.png", "Figura 9 — Laudo final de Due Diligence com parecer do Compliance."))
     story.append(Paragraph(
         "O arquivo é aberto no navegador; para guardar como PDF, use Ctrl+P e escolha \"Salvar como PDF\" "
         "no destino da impressão.",
@@ -851,13 +958,27 @@ def build_story():
     story.append(Paragraph("15. Perguntas frequentes", S["H1"]))
 
     faqs = [
+        ("Como acompanho só as solicitações que eu abri?",
+         "Na tela de Registros, ligue a chave Minhas solicitações. Ela combina com os demais filtros "
+         "(status, período e busca); o botão de limpar filtros desliga a chave."),
+        ("Recebo algum aviso quando o status da minha solicitação muda?",
+         "Sim. Quem abriu a solicitação recebe um e-mail a cada mudança de status, inclusive no registro. "
+         "O aviso chega alguns minutos depois da mudança; se não chegar, confira a caixa de lixo "
+         "eletrônico. O status atualizado sempre aparece na tela Registros. O e-mail não mostra a "
+         "classificação de risco, que é exclusiva do Compliance."),
         ("Enviei a solicitação e ela sumiu da minha lista, o que houve?",
          "Provavelmente não sumiu — confira o filtro de status e o período de data na tela de Registros. "
          "Solicitações aprovadas automaticamente continuam na lista, só que com status Aprovado."),
+        ("O risco da minha solicitação não é alto. Por que o terceiro recebeu o questionário?",
+         "Porque o questionário não é exclusivo do risco alto. Ele só é dispensado no risco baixo "
+         "automático: pagamento por obrigação legal sem gatilho crítico, ou contraparte classificada como "
+         "sem risco. Em todos os outros casos, inclusive risco baixo calculado por pontuação, o terceiro "
+         "responde. Se o risco for baixo ou médio e nenhuma resposta indicar risco alto, a aprovação sai "
+         "automaticamente, sem esperar o Compliance."),
         ("O terceiro perdeu o e-mail do questionário, como reenviar?",
          "Na lista de Registros, com a solicitação em Aguardando Terceiro, use a ação Reenviar Forms. Se o "
-         "problema for o e-mail cadastrado, edite a solicitação (opção disponível quando o envio anterior "
-         "falhou) e corrija o endereço antes de reenviar."),
+         "problema for o e-mail cadastrado, edite a solicitação (disponível até o terceiro responder) e "
+         "corrija o endereço: ao salvar, o questionário é reenviado ao novo e-mail."),
         ("Por que não vejo a classificação de risco nem o botão Analisar?",
          "Esses itens são exclusivos do perfil Compliance. Se você deveria ter esse acesso, peça à área de "
          "Compliance para confirmar seu cadastro na lista de analistas autorizados."),

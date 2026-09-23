@@ -1,0 +1,533 @@
+{
+  "name": "a5e6f059-c6f7-5fa2-87bc-352ea20a9308",
+  "id": "/providers/Microsoft.Flow/flows/a5e6f059-c6f7-5fa2-87bc-352ea20a9308",
+  "type": "Microsoft.Flow/flows",
+  "properties": {
+    "apiId": "/providers/Microsoft.PowerApps/apis/shared_logicflows",
+    "displayName": "Notificar status Due Diligence",
+    "definition": {
+      "metadata": {
+        "workflowEntityId": null,
+        "processAdvisorMetadata": null,
+        "flowChargedByPaygo": null,
+        "flowclientsuspensionreason": "None",
+        "flowclientsuspensiontime": null,
+        "flowclientsuspensionreasondetails": null,
+        "creator": {
+          "id": "a06c04ca-600c-4586-a940-1db61e81fc41",
+          "type": "User",
+          "tenantId": "d233d58a-9973-43a7-af69-6763630548a0"
+        },
+        "provisioningMethod": "FromDefinition",
+        "failureAlertSubscription": true,
+        "clientLastModifiedTime": "2026-09-08T15:57:05.3390018Z",
+        "lastModifiedBy": "a06c04ca-600c-4586-a940-1db61e81fc41",
+        "connectionKeySavedTimeKey": "2026-09-08T15:57:05.3390018Z",
+        "creationSource": "Portal",
+        "modifiedSources": "Portal"
+      },
+      "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+      "contentVersion": "1.0.0.0",
+      "parameters": {
+        "$authentication": {
+          "defaultValue": {},
+          "type": "SecureObject"
+        },
+        "$connections": {
+          "defaultValue": {},
+          "type": "Object"
+        }
+      },
+      "triggers": {
+        "When_an_item_is_created_or_modified": {
+          "recurrence": {
+            "frequency": "Minute",
+            "interval": 1
+          },
+          "evaluatedRecurrence": {
+            "frequency": "Minute",
+            "interval": 1
+          },
+          "splitOn": "@triggerOutputs()?['body/value']",
+          "type": "OpenApiConnection",
+          "inputs": {
+            "parameters": {
+              "dataset": "https://grupoccr.sharepoint.com/sites/ComplianceAeroportos",
+              "table": "ad57d68b-addf-466d-a86e-034035c412d6"
+            },
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+              "connectionName": "shared_sharepointonline",
+              "operationId": "GetOnUpdatedItems"
+            },
+            "authentication": "@parameters('$authentication')"
+          },
+          "conditions": [
+            {
+              "expression": "@and(not(empty(trim(string(coalesce(triggerBody()?['status'], ''))))), not(equals(trim(string(coalesce(triggerBody()?['status'], ''))), trim(string(coalesce(triggerBody()?['status_notificado'], ''))))))"
+            }
+          ],
+          "runtimeConfiguration": {
+            "concurrency": {
+              "runs": 1
+            }
+          }
+        }
+      },
+      "actions": {
+        "Inicializar_Sem_Compliance": {
+          "runAfter": {},
+          "type": "InitializeVariable",
+          "inputs": {
+            "variables": [
+              {
+                "name": "varSemCompliance",
+                "type": "boolean",
+                "value": false
+              }
+            ]
+          }
+        },
+        "HTTP_Obter_Solicitacao": {
+          "runAfter": {
+            "Inicializar_Sem_Compliance": [
+              "Succeeded"
+            ]
+          },
+          "type": "OpenApiConnection",
+          "inputs": {
+            "parameters": {
+              "dataset": "https://grupoccr.sharepoint.com/sites/ComplianceAeroportos",
+              "parameters/method": "GET",
+              "parameters/uri": "@concat('_api/web/lists/getbytitle(''tb_dueDiligence'')/items(', string(triggerBody()?['ID']), ')?$select=ID,status,status_notificado,razao_social,cnpj_cpf,aeroporto,area_solicitante,email_terceiro,classificacao_risco,risco_final,pontuacao_total,pontuacao_solicitante,gatilho_dd,terceiro_gatilho_risco,data_resposta_terceiro,data_vencimento,prazo_reavaliacao,condicionantes_compliance,Author/Title,Author/EMail&$expand=Author')",
+              "parameters/headers": {
+                "Accept": "application/json;odata=nometadata"
+              }
+            },
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+              "connectionName": "shared_sharepointonline",
+              "operationId": "HttpRequest"
+            },
+            "authentication": "@parameters('$authentication')"
+          }
+        },
+        "Condicao_Status_Pendente_De_Aviso": {
+          "runAfter": {
+            "HTTP_Obter_Solicitacao": [
+              "Succeeded"
+            ]
+          },
+          "type": "If",
+          "expression": {
+            "and": [
+              {
+                "equals": [
+                  "@and(not(empty(trim(string(coalesce(body('HTTP_Obter_Solicitacao')?['status'], ''))))), not(equals(trim(string(coalesce(body('HTTP_Obter_Solicitacao')?['status'], ''))), trim(string(coalesce(body('HTTP_Obter_Solicitacao')?['status_notificado'], ''))))))",
+                  true
+                ]
+              }
+            ]
+          },
+          "actions": {
+            "Montar_Campos": {
+              "runAfter": {},
+              "type": "Compose",
+              "inputs": {
+                "codigo": "@concat('DD-', formatNumber(int(body('HTTP_Obter_Solicitacao')?['ID']), '000000'))",
+                "saudacao": "@if(empty(trim(string(coalesce(body('HTTP_Obter_Solicitacao')?['Author']?['Title'], '')))), 'Olá.', concat('Olá, ', if(empty(trim(string(coalesce(body('HTTP_Obter_Solicitacao')?['Author']?['Title'], '')))), '-', replace(replace(replace(replace(replace(trim(string(coalesce(body('HTTP_Obter_Solicitacao')?['Author']?['Title'], ''))), '&', '&amp;'), '<', '&lt;'), '>', '&gt;'), decodeUriComponent('%0D%0A'), '<br>'), decodeUriComponent('%0A'), '<br>')), '.'))",
+                "introducao": "@if(empty(trim(string(coalesce(body('HTTP_Obter_Solicitacao')?['status_notificado'], '')))), 'foi registrada', 'mudou de status')",
+                "status_anterior": "@if(empty(trim(string(coalesce(body('HTTP_Obter_Solicitacao')?['status_notificado'], '')))), 'Novo registro', replace(replace(replace(replace(replace(trim(string(coalesce(body('HTTP_Obter_Solicitacao')?['status_notificado'], ''))), '&', '&amp;'), '<', '&lt;'), '>', '&gt;'), decodeUriComponent('%0D%0A'), '<br>'), decodeUriComponent('%0A'), '<br>'))",
+                "status_novo": "@if(empty(trim(string(coalesce(body('HTTP_Obter_Solicitacao')?['status'], '')))), '-', replace(replace(replace(replace(replace(trim(string(coalesce(body('HTTP_Obter_Solicitacao')?['status'], ''))), '&', '&amp;'), '<', '&lt;'), '>', '&gt;'), decodeUriComponent('%0D%0A'), '<br>'), decodeUriComponent('%0A'), '<br>'))",
+                "razao_social": "@if(empty(trim(string(coalesce(body('HTTP_Obter_Solicitacao')?['razao_social'], '')))), '-', replace(replace(replace(replace(replace(trim(string(coalesce(body('HTTP_Obter_Solicitacao')?['razao_social'], ''))), '&', '&amp;'), '<', '&lt;'), '>', '&gt;'), decodeUriComponent('%0D%0A'), '<br>'), decodeUriComponent('%0A'), '<br>'))",
+                "cnpj_cpf": "@if(empty(trim(string(coalesce(body('HTTP_Obter_Solicitacao')?['cnpj_cpf'], '')))), '-', replace(replace(replace(replace(replace(trim(string(coalesce(body('HTTP_Obter_Solicitacao')?['cnpj_cpf'], ''))), '&', '&amp;'), '<', '&lt;'), '>', '&gt;'), decodeUriComponent('%0D%0A'), '<br>'), decodeUriComponent('%0A'), '<br>'))",
+                "aeroporto": "@if(empty(trim(string(coalesce(body('HTTP_Obter_Solicitacao')?['aeroporto'], '')))), '-', replace(replace(replace(replace(replace(trim(string(coalesce(body('HTTP_Obter_Solicitacao')?['aeroporto'], ''))), '&', '&amp;'), '<', '&lt;'), '>', '&gt;'), decodeUriComponent('%0D%0A'), '<br>'), decodeUriComponent('%0A'), '<br>'))",
+                "email_terceiro": "@if(empty(trim(string(coalesce(body('HTTP_Obter_Solicitacao')?['email_terceiro'], '')))), '-', replace(replace(replace(replace(replace(trim(string(coalesce(body('HTTP_Obter_Solicitacao')?['email_terceiro'], ''))), '&', '&amp;'), '<', '&lt;'), '>', '&gt;'), decodeUriComponent('%0D%0A'), '<br>'), decodeUriComponent('%0A'), '<br>'))",
+                "vigencia_frase": "@if(empty(body('HTTP_Obter_Solicitacao')?['data_vencimento']), '', concat(', com vigência até ', convertFromUtc(coalesce(body('HTTP_Obter_Solicitacao')?['data_vencimento'], '2000-01-01T00:00:00Z'), 'E. South America Standard Time', 'dd/MM/yyyy')))",
+                "vencimento_frase": "@if(empty(body('HTTP_Obter_Solicitacao')?['data_vencimento']), '', concat(' em ', convertFromUtc(coalesce(body('HTTP_Obter_Solicitacao')?['data_vencimento'], '2000-01-01T00:00:00Z'), 'E. South America Standard Time', 'dd/MM/yyyy')))",
+                "reavaliacao_frase": "@if(empty(body('HTTP_Obter_Solicitacao')?['prazo_reavaliacao']), '', concat('; reavaliação em ', convertFromUtc(coalesce(body('HTTP_Obter_Solicitacao')?['prazo_reavaliacao'], '2000-01-01T00:00:00Z'), 'E. South America Standard Time', 'dd/MM/yyyy')))",
+                "condicionantes": "@if(empty(trim(string(coalesce(body('HTTP_Obter_Solicitacao')?['condicionantes_compliance'], '')))), 'Consulte o laudo no app.', replace(replace(replace(replace(replace(trim(string(coalesce(body('HTTP_Obter_Solicitacao')?['condicionantes_compliance'], ''))), '&', '&amp;'), '<', '&lt;'), '>', '&gt;'), decodeUriComponent('%0D%0A'), '<br>'), decodeUriComponent('%0A'), '<br>'))",
+                "area_solicitante": "@if(empty(trim(string(coalesce(body('HTTP_Obter_Solicitacao')?['area_solicitante'], '')))), '-', replace(replace(replace(replace(replace(trim(string(coalesce(body('HTTP_Obter_Solicitacao')?['area_solicitante'], ''))), '&', '&amp;'), '<', '&lt;'), '>', '&gt;'), decodeUriComponent('%0D%0A'), '<br>'), decodeUriComponent('%0A'), '<br>'))",
+                "solicitante": "@if(empty(trim(string(coalesce(concat(coalesce(body('HTTP_Obter_Solicitacao')?['Author']?['Title'], ''), ' (', coalesce(body('HTTP_Obter_Solicitacao')?['Author']?['EMail'], ''), ')'), '')))), '-', replace(replace(replace(replace(replace(trim(string(coalesce(concat(coalesce(body('HTTP_Obter_Solicitacao')?['Author']?['Title'], ''), ' (', coalesce(body('HTTP_Obter_Solicitacao')?['Author']?['EMail'], ''), ')'), ''))), '&', '&amp;'), '<', '&lt;'), '>', '&gt;'), decodeUriComponent('%0D%0A'), '<br>'), decodeUriComponent('%0A'), '<br>'))",
+                "classificacao_risco": "@if(empty(trim(string(coalesce(body('HTTP_Obter_Solicitacao')?['classificacao_risco'], '')))), '-', replace(replace(replace(replace(replace(trim(string(coalesce(body('HTTP_Obter_Solicitacao')?['classificacao_risco'], ''))), '&', '&amp;'), '<', '&lt;'), '>', '&gt;'), decodeUriComponent('%0D%0A'), '<br>'), decodeUriComponent('%0A'), '<br>'))",
+                "risco_final": "@if(empty(trim(string(coalesce(body('HTTP_Obter_Solicitacao')?['risco_final'], '')))), '-', replace(replace(replace(replace(replace(trim(string(coalesce(body('HTTP_Obter_Solicitacao')?['risco_final'], ''))), '&', '&amp;'), '<', '&lt;'), '>', '&gt;'), decodeUriComponent('%0D%0A'), '<br>'), decodeUriComponent('%0A'), '<br>'))",
+                "pontuacao": "@if(empty(trim(string(coalesce(coalesce(body('HTTP_Obter_Solicitacao')?['pontuacao_total'], body('HTTP_Obter_Solicitacao')?['pontuacao_solicitante']), '')))), '-', replace(replace(replace(replace(replace(trim(string(coalesce(coalesce(body('HTTP_Obter_Solicitacao')?['pontuacao_total'], body('HTTP_Obter_Solicitacao')?['pontuacao_solicitante']), ''))), '&', '&amp;'), '<', '&lt;'), '>', '&gt;'), decodeUriComponent('%0D%0A'), '<br>'), decodeUriComponent('%0A'), '<br>'))",
+                "gatilho_dd": "@if(empty(trim(string(coalesce(body('HTTP_Obter_Solicitacao')?['gatilho_dd'], '')))), '-', replace(replace(replace(replace(replace(trim(string(coalesce(body('HTTP_Obter_Solicitacao')?['gatilho_dd'], ''))), '&', '&amp;'), '<', '&lt;'), '>', '&gt;'), decodeUriComponent('%0D%0A'), '<br>'), decodeUriComponent('%0A'), '<br>'))",
+                "terceiro_risco_alto": "@if(empty(trim(string(coalesce(body('HTTP_Obter_Solicitacao')?['terceiro_gatilho_risco'], '')))), '-', replace(replace(replace(replace(replace(trim(string(coalesce(body('HTTP_Obter_Solicitacao')?['terceiro_gatilho_risco'], ''))), '&', '&amp;'), '<', '&lt;'), '>', '&gt;'), decodeUriComponent('%0D%0A'), '<br>'), decodeUriComponent('%0A'), '<br>'))",
+                "data_resposta": "@if(empty(body('HTTP_Obter_Solicitacao')?['data_resposta_terceiro']), '-', convertFromUtc(coalesce(body('HTTP_Obter_Solicitacao')?['data_resposta_terceiro'], '2000-01-01T00:00:00Z'), 'E. South America Standard Time', 'dd/MM/yyyy HH:mm'))"
+              }
+            },
+            "Montar_Mensagens_Solicitante": {
+              "runAfter": {
+                "Montar_Campos": [
+                  "Succeeded"
+                ]
+              },
+              "type": "Compose",
+              "inputs": {
+                "Aguardando Terceiro": "O questionário de due diligence segue para o terceiro (@{outputs('Montar_Campos')?['email_terceiro']}). A análise continua depois da resposta. Enquanto o terceiro não responder, você pode corrigir os dados da solicitação pelo botão Editar.",
+                "Pendente Compliance": "A solicitação está com o Compliance para análise. Você receberá outro e-mail quando houver parecer.",
+                "Aprovado": "A solicitação foi aprovada@{outputs('Montar_Campos')?['vigencia_frase']}. O laudo pode ser baixado no app, em Registros › Ações › Baixar Laudo.",
+                "Aprovado com Ressalvas": "A solicitação foi aprovada com ressalvas@{outputs('Montar_Campos')?['vigencia_frase']}@{outputs('Montar_Campos')?['reavaliacao_frase']}.<br><br><strong>Condicionantes:</strong><br>@{outputs('Montar_Campos')?['condicionantes']}<br><br>O laudo pode ser baixado no app, em Registros › Ações › Baixar Laudo.",
+                "Reprovado Parcialmente": "A solicitação foi reprovada parcialmente@{outputs('Montar_Campos')?['vigencia_frase']}. Consulte o parecer no laudo, em Registros › Ações › Baixar Laudo.",
+                "Reprovado": "A solicitação foi reprovada. Consulte o parecer no laudo, em Registros › Ações › Baixar Laudo.",
+                "Cancelado": "A solicitação foi cancelada pelo Compliance. O motivo está no histórico da solicitação, no app.",
+                "Vencido": "A vigência da aprovação terminou@{outputs('Montar_Campos')?['vencimento_frase']}. Para manter o relacionamento com o terceiro, abra uma nova solicitação de due diligence."
+              }
+            },
+            "Montar_Mensagem_Solicitante": {
+              "runAfter": {
+                "Montar_Mensagens_Solicitante": [
+                  "Succeeded"
+                ]
+              },
+              "type": "Compose",
+              "inputs": "@coalesce(outputs('Montar_Mensagens_Solicitante')?[trim(string(coalesce(body('HTTP_Obter_Solicitacao')?['status'], '')))], 'Consulte os detalhes da solicitação no app.')"
+            },
+            "Condicao_Tem_Solicitante": {
+              "runAfter": {
+                "Montar_Mensagem_Solicitante": [
+                  "Succeeded"
+                ]
+              },
+              "type": "If",
+              "expression": {
+                "and": [
+                  {
+                    "equals": [
+                      "@not(empty(trim(string(coalesce(body('HTTP_Obter_Solicitacao')?['Author']?['EMail'], '')))))",
+                      true
+                    ]
+                  }
+                ]
+              },
+              "actions": {
+                "Enviar_Email_Solicitante": {
+                  "runAfter": {},
+                  "type": "OpenApiConnection",
+                  "inputs": {
+                    "parameters": {
+                      "emailMessage/To": "@body('HTTP_Obter_Solicitacao')?['Author']?['EMail']",
+                      "emailMessage/Subject": "Due Diligence @{outputs('Montar_Campos')?['codigo']} · @{coalesce(body('HTTP_Obter_Solicitacao')?['razao_social'], '-')} — @{body('HTTP_Obter_Solicitacao')?['status']}",
+                      "emailMessage/Body": "<div style=\"font-family:Segoe UI,Arial,sans-serif;font-size:14px;line-height:1.5;color:#0F172A;max-width:640px\"><div style=\"background:#005864;color:#FFFFFF;padding:14px 20px;font-size:16px;font-weight:600\">Due Diligence de Terceiros · ASUR Brasil</div><div style=\"border:1px solid #E2E8F0;border-top:0;padding:20px\"><p style=\"margin:0 0 12px\">@{outputs('Montar_Campos')?['saudacao']}</p><p style=\"margin:0 0 16px\">A solicitação <strong>@{outputs('Montar_Campos')?['codigo']}</strong> @{outputs('Montar_Campos')?['introducao']}.</p><table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0\" style=\"border-collapse:collapse;width:100%;font-size:13px\"><tr><td style=\"padding:6px 10px;border:1px solid #E2E8F0;background:#F8FAFC;width:38%;color:#475569\">Terceiro</td><td style=\"padding:6px 10px;border:1px solid #E2E8F0\">@{outputs('Montar_Campos')?['razao_social']}</td></tr><tr><td style=\"padding:6px 10px;border:1px solid #E2E8F0;background:#F8FAFC;width:38%;color:#475569\">CNPJ/CPF</td><td style=\"padding:6px 10px;border:1px solid #E2E8F0\">@{outputs('Montar_Campos')?['cnpj_cpf']}</td></tr><tr><td style=\"padding:6px 10px;border:1px solid #E2E8F0;background:#F8FAFC;width:38%;color:#475569\">Aeroporto</td><td style=\"padding:6px 10px;border:1px solid #E2E8F0\">@{outputs('Montar_Campos')?['aeroporto']}</td></tr><tr><td style=\"padding:6px 10px;border:1px solid #E2E8F0;background:#F8FAFC;width:38%;color:#475569\">Status anterior</td><td style=\"padding:6px 10px;border:1px solid #E2E8F0\">@{outputs('Montar_Campos')?['status_anterior']}</td></tr><tr><td style=\"padding:6px 10px;border:1px solid #E2E8F0;background:#F8FAFC;width:38%;color:#475569\">Novo status</td><td style=\"padding:6px 10px;border:1px solid #E2E8F0\"><strong style=\"color:#005864\">@{outputs('Montar_Campos')?['status_novo']}</strong></td></tr></table><p style=\"margin:16px 0 0\">@{outputs('Montar_Mensagem_Solicitante')}</p><p style=\"margin:20px 0 0;font-size:12px;color:#64748B\">Acompanhe pelo app Due Diligence, na tela Registros (chave Minhas solicitações). Mensagem automática; não é preciso responder.</p></div></div>",
+                      "emailMessage/Importance": "Normal"
+                    },
+                    "host": {
+                      "apiId": "/providers/Microsoft.PowerApps/apis/shared_office365",
+                      "connectionName": "shared_office365",
+                      "operationId": "SendEmailV2"
+                    },
+                    "authentication": "@parameters('$authentication')"
+                  }
+                }
+              },
+              "else": {
+                "actions": {
+                  "Solicitante_Sem_Email": {
+                    "runAfter": {},
+                    "type": "Compose",
+                    "inputs": "O autor da solicitação não tem e-mail; o aviso ao solicitante não foi enviado."
+                  }
+                }
+              }
+            },
+            "Condicao_Notificar_Compliance": {
+              "runAfter": {
+                "Condicao_Tem_Solicitante": [
+                  "Succeeded",
+                  "Failed",
+                  "Skipped",
+                  "TimedOut"
+                ]
+              },
+              "type": "If",
+              "expression": {
+                "and": [
+                  {
+                    "equals": [
+                      "@equals(trim(string(coalesce(body('HTTP_Obter_Solicitacao')?['status'], ''))), 'Pendente Compliance')",
+                      true
+                    ]
+                  }
+                ]
+              },
+              "actions": {
+                "HTTP_Listar_Compliance": {
+                  "runAfter": {},
+                  "type": "OpenApiConnection",
+                  "inputs": {
+                    "parameters": {
+                      "dataset": "https://grupoccr.sharepoint.com/sites/ComplianceAeroportos",
+                      "parameters/method": "GET",
+                      "parameters/uri": "_api/web/lists/getbytitle('tb_dueDiligenceCompliance')/items?$select=email&$filter=ativo eq 1&$top=500",
+                      "parameters/headers": {
+                        "Accept": "application/json;odata=nometadata"
+                      }
+                    },
+                    "host": {
+                      "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+                      "connectionName": "shared_sharepointonline",
+                      "operationId": "HttpRequest"
+                    },
+                    "authentication": "@parameters('$authentication')"
+                  }
+                },
+                "Selecionar_Emails_Compliance": {
+                  "runAfter": {
+                    "HTTP_Listar_Compliance": [
+                      "Succeeded"
+                    ]
+                  },
+                  "type": "Select",
+                  "inputs": {
+                    "from": "@body('HTTP_Listar_Compliance')?['value']",
+                    "select": "@trim(string(item()?['email']))"
+                  }
+                },
+                "Condicao_Tem_Compliance_Ativo": {
+                  "runAfter": {
+                    "Selecionar_Emails_Compliance": [
+                      "Succeeded"
+                    ]
+                  },
+                  "type": "If",
+                  "expression": {
+                    "and": [
+                      {
+                        "equals": [
+                          "@greater(length(body('Selecionar_Emails_Compliance')), 0)",
+                          true
+                        ]
+                      }
+                    ]
+                  },
+                  "actions": {
+                    "Enviar_Email_Compliance": {
+                      "runAfter": {},
+                      "type": "OpenApiConnection",
+                      "inputs": {
+                        "parameters": {
+                          "emailMessage/To": "@join(body('Selecionar_Emails_Compliance'), ';')",
+                          "emailMessage/Subject": "Due Diligence @{outputs('Montar_Campos')?['codigo']} aguardando análise do Compliance · @{coalesce(body('HTTP_Obter_Solicitacao')?['razao_social'], '-')}",
+                          "emailMessage/Body": "<div style=\"font-family:Segoe UI,Arial,sans-serif;font-size:14px;line-height:1.5;color:#0F172A;max-width:640px\"><div style=\"background:#005864;color:#FFFFFF;padding:14px 20px;font-size:16px;font-weight:600\">Due Diligence de Terceiros · ASUR Brasil</div><div style=\"border:1px solid #E2E8F0;border-top:0;padding:20px\"><p style=\"margin:0 0 16px\">A solicitação <strong>@{outputs('Montar_Campos')?['codigo']}</strong> está em <strong>Pendente Compliance</strong> e aguarda a análise.</p><table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0\" style=\"border-collapse:collapse;width:100%;font-size:13px\"><tr><td style=\"padding:6px 10px;border:1px solid #E2E8F0;background:#F8FAFC;width:38%;color:#475569\">Terceiro</td><td style=\"padding:6px 10px;border:1px solid #E2E8F0\">@{outputs('Montar_Campos')?['razao_social']}</td></tr><tr><td style=\"padding:6px 10px;border:1px solid #E2E8F0;background:#F8FAFC;width:38%;color:#475569\">CNPJ/CPF</td><td style=\"padding:6px 10px;border:1px solid #E2E8F0\">@{outputs('Montar_Campos')?['cnpj_cpf']}</td></tr><tr><td style=\"padding:6px 10px;border:1px solid #E2E8F0;background:#F8FAFC;width:38%;color:#475569\">Aeroporto</td><td style=\"padding:6px 10px;border:1px solid #E2E8F0\">@{outputs('Montar_Campos')?['aeroporto']}</td></tr><tr><td style=\"padding:6px 10px;border:1px solid #E2E8F0;background:#F8FAFC;width:38%;color:#475569\">Área solicitante</td><td style=\"padding:6px 10px;border:1px solid #E2E8F0\">@{outputs('Montar_Campos')?['area_solicitante']}</td></tr><tr><td style=\"padding:6px 10px;border:1px solid #E2E8F0;background:#F8FAFC;width:38%;color:#475569\">Solicitante</td><td style=\"padding:6px 10px;border:1px solid #E2E8F0\">@{outputs('Montar_Campos')?['solicitante']}</td></tr><tr><td style=\"padding:6px 10px;border:1px solid #E2E8F0;background:#F8FAFC;width:38%;color:#475569\">Classificação de risco</td><td style=\"padding:6px 10px;border:1px solid #E2E8F0\"><strong style=\"color:#005864\">@{outputs('Montar_Campos')?['classificacao_risco']}</strong></td></tr><tr><td style=\"padding:6px 10px;border:1px solid #E2E8F0;background:#F8FAFC;width:38%;color:#475569\">Risco final</td><td style=\"padding:6px 10px;border:1px solid #E2E8F0\">@{outputs('Montar_Campos')?['risco_final']}</td></tr><tr><td style=\"padding:6px 10px;border:1px solid #E2E8F0;background:#F8FAFC;width:38%;color:#475569\">Pontuação</td><td style=\"padding:6px 10px;border:1px solid #E2E8F0\">@{outputs('Montar_Campos')?['pontuacao']}</td></tr><tr><td style=\"padding:6px 10px;border:1px solid #E2E8F0;background:#F8FAFC;width:38%;color:#475569\">Gatilho crítico do solicitante</td><td style=\"padding:6px 10px;border:1px solid #E2E8F0\">@{outputs('Montar_Campos')?['gatilho_dd']}</td></tr><tr><td style=\"padding:6px 10px;border:1px solid #E2E8F0;background:#F8FAFC;width:38%;color:#475569\">Resposta de risco alto do terceiro</td><td style=\"padding:6px 10px;border:1px solid #E2E8F0\">@{outputs('Montar_Campos')?['terceiro_risco_alto']}</td></tr><tr><td style=\"padding:6px 10px;border:1px solid #E2E8F0;background:#F8FAFC;width:38%;color:#475569\">Resposta do terceiro em</td><td style=\"padding:6px 10px;border:1px solid #E2E8F0\">@{outputs('Montar_Campos')?['data_resposta']}</td></tr></table><p style=\"margin:16px 0 0\">Para analisar, abra o app Due Diligence, localize a solicitação em Registros e use Ações › Analisar.</p><p style=\"margin:20px 0 0;font-size:12px;color:#64748B\">Mensagem automática para os analistas ativos da lista tb_dueDiligenceCompliance.</p></div></div>",
+                          "emailMessage/Importance": "Normal"
+                        },
+                        "host": {
+                          "apiId": "/providers/Microsoft.PowerApps/apis/shared_office365",
+                          "connectionName": "shared_office365",
+                          "operationId": "SendEmailV2"
+                        },
+                        "authentication": "@parameters('$authentication')"
+                      }
+                    }
+                  },
+                  "else": {
+                    "actions": {
+                      "Marcar_Sem_Compliance": {
+                        "runAfter": {},
+                        "type": "SetVariable",
+                        "inputs": {
+                          "name": "varSemCompliance",
+                          "value": true
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "else": {
+                "actions": {}
+              }
+            },
+            "Condicao_Envios_Concluidos": {
+              "runAfter": {
+                "Condicao_Notificar_Compliance": [
+                  "Succeeded",
+                  "Failed",
+                  "Skipped",
+                  "TimedOut"
+                ]
+              },
+              "type": "If",
+              "expression": {
+                "and": [
+                  {
+                    "equals": [
+                      "@and(not(contains(createArray('Failed', 'TimedOut', 'Skipped'), actions('Condicao_Tem_Solicitante')?['status'])), not(contains(createArray('Failed', 'TimedOut', 'Skipped'), actions('Condicao_Notificar_Compliance')?['status'])))",
+                      true
+                    ]
+                  }
+                ]
+              },
+              "actions": {
+                "Montar_Marcador": {
+                  "runAfter": {},
+                  "type": "Compose",
+                  "inputs": {
+                    "status_notificado": "@body('HTTP_Obter_Solicitacao')?['status']"
+                  }
+                },
+                "HTTP_Gravar_Status_Notificado": {
+                  "runAfter": {
+                    "Montar_Marcador": [
+                      "Succeeded"
+                    ]
+                  },
+                  "type": "OpenApiConnection",
+                  "inputs": {
+                    "parameters": {
+                      "dataset": "https://grupoccr.sharepoint.com/sites/ComplianceAeroportos",
+                      "parameters/method": "POST",
+                      "parameters/uri": "@concat('_api/web/lists/getbytitle(''tb_dueDiligence'')/items(', string(triggerBody()?['ID']), ')')",
+                      "parameters/headers": {
+                        "Accept": "application/json;odata=nometadata",
+                        "Content-Type": "application/json;odata=nometadata",
+                        "X-HTTP-Method": "MERGE",
+                        "IF-MATCH": "*"
+                      },
+                      "parameters/body": "@string(outputs('Montar_Marcador'))"
+                    },
+                    "host": {
+                      "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+                      "connectionName": "shared_sharepointonline",
+                      "operationId": "HttpRequest"
+                    },
+                    "authentication": "@parameters('$authentication')"
+                  }
+                },
+                "Condicao_Sem_Compliance_Ativo": {
+                  "runAfter": {
+                    "HTTP_Gravar_Status_Notificado": [
+                      "Succeeded"
+                    ]
+                  },
+                  "type": "If",
+                  "expression": {
+                    "and": [
+                      {
+                        "equals": [
+                          "@variables('varSemCompliance')",
+                          true
+                        ]
+                      }
+                    ]
+                  },
+                  "actions": {
+                    "Encerrar_Sem_Compliance_Ativo": {
+                      "runAfter": {},
+                      "type": "Terminate",
+                      "inputs": {
+                        "runStatus": "Failed",
+                        "runError": {
+                          "code": "DD05_SEM_COMPLIANCE_ATIVO",
+                          "message": "A solicitação chegou a Pendente Compliance, mas não há e-mail ativo em tb_dueDiligenceCompliance."
+                        }
+                      }
+                    }
+                  },
+                  "else": {
+                    "actions": {
+                      "Notificacao_Concluida": {
+                        "runAfter": {},
+                        "type": "Compose",
+                        "inputs": "Avisos enviados e status marcado como avisado."
+                      }
+                    }
+                  }
+                }
+              },
+              "else": {
+                "actions": {
+                  "Encerrar_Com_Falha_No_Envio": {
+                    "runAfter": {},
+                    "type": "Terminate",
+                    "inputs": {
+                      "runStatus": "Failed",
+                      "runError": {
+                        "code": "DD05_ENVIO_FALHOU",
+                        "message": "Um aviso não foi enviado; o status continua pendente de aviso. Reenvie a execução depois de corrigir a causa."
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "else": {
+            "actions": {
+              "Ignorar_Status_Ja_Avisado": {
+                "runAfter": {},
+                "type": "Compose",
+                "inputs": "O status atual já foi avisado; nada a enviar."
+              }
+            }
+          }
+        },
+        "Condicao_Leitura_Falhou": {
+          "runAfter": {
+            "HTTP_Obter_Solicitacao": [
+              "Failed",
+              "TimedOut"
+            ]
+          },
+          "type": "If",
+          "expression": {
+            "and": [
+              {
+                "equals": [
+                  "@equals(outputs('HTTP_Obter_Solicitacao')?['statusCode'], 404)",
+                  true
+                ]
+              }
+            ]
+          },
+          "actions": {
+            "Encerrar_Item_Excluido": {
+              "runAfter": {},
+              "type": "Terminate",
+              "inputs": {
+                "runStatus": "Succeeded"
+              }
+            }
+          },
+          "else": {
+            "actions": {
+              "Encerrar_Falha_Na_Leitura": {
+                "runAfter": {},
+                "type": "Terminate",
+                "inputs": {
+                  "runStatus": "Failed",
+                  "runError": {
+                    "code": "DD05_LEITURA_FALHOU",
+                    "message": "Não foi possível reler a solicitação. Confira se a coluna status_notificado existe na tb_dueDiligence e se a conexão SharePoint está válida."
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "outputs": {}
+    },
+    "connectionReferences": {
+      "shared_sharepointonline": {
+        "connectionName": "shared-sharepointonl-0cd12861-383f-4b6e-9359-db983fb70160",
+        "source": "Embedded",
+        "id": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+        "tier": "NotSpecified",
+        "apiName": "sharepointonline",
+        "isProcessSimpleApiReferenceConversionAlreadyDone": false
+      },
+      "shared_office365": {
+        "connectionName": "shared_office365-due-diligence",
+        "source": "Embedded",
+        "id": "/providers/Microsoft.PowerApps/apis/shared_office365",
+        "tier": "NotSpecified",
+        "apiName": "office365",
+        "isProcessSimpleApiReferenceConversionAlreadyDone": false
+      }
+    },
+    "flowFailureAlertSubscribed": false,
+    "isManaged": false
+  }
+}
