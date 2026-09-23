@@ -1,0 +1,178 @@
+Correção da regra da abertura de porta (2026-09-18). Colar na barra de fórmulas (pt-BR),
+uma propriedade por vez, substituindo o conteúdo inteiro. Não usar na exibição de código.
+
+===== DateValue15_1 (data da abertura de porta) → SelectedDate =====
+Coalesce(Parent.Default; DateValue16_1.SelectedDate)
+
+===== ErrorMessage108_2 (mensagem da abertura de porta) → Text =====
+With(
+    {
+        _atual: If(Parent.Visible And !IsBlank(DateValue15_1.SelectedDate) And !IsBlank(HourValue15_1.Selected.Value) And !IsBlank(MinuteValue15_1.Selected.Value); DateTime(Year(DateValue15_1.SelectedDate); Month(DateValue15_1.SelectedDate); Day(DateValue15_1.SelectedDate); Value(HourValue15_1.Selected.Value); Value(MinuteValue15_1.Selected.Value); 0));
+        _pVoo: If('HORÁRIO DE ACIONAMENTO EM VOO_DataCard1_1'.Visible And !IsBlank(DateValue16_1.SelectedDate) And !IsBlank(HourValue16_1.Selected.Value) And !IsBlank(MinuteValue16_1.Selected.Value); DateTime(Year(DateValue16_1.SelectedDate); Month(DateValue16_1.SelectedDate); Day(DateValue16_1.SelectedDate); Value(HourValue16_1.Selected.Value); Value(MinuteValue16_1.Selected.Value); 0))
+    };
+    With(
+        {
+            _ant1: _pVoo;
+            _nome1: "notificação em voo"
+        };
+        If(
+            !IsBlank(Parent.Error);
+            Parent.Error;
+            var_tentouSalvar And Parent.Required And IsBlank(_atual);
+            "Informe data, hora e minuto.";
+            !IsBlank(_atual) And _atual > Now();
+            "Horário no futuro. Confira a data e a hora.";
+            !IsBlank(_atual) And !IsBlank(_ant1) And _atual < _ant1;
+            "Está antes do horário de " & _nome1 & " (" & Text(_ant1; "dd/mm hh:mm") & ")." & If(DateDiff(_atual; _ant1; TimeUnit.Hours) >= 12; " Se passou da meia-noite, mude a data deste campo."; "");
+            ""
+        )
+    )
+)
+
+===== ErrorMessage8_2 (mensagem do início do atendimento) → Text =====
+With(
+    {
+        _atual: If(Parent.Visible And !IsBlank(DateValue1_2.SelectedDate) And !IsBlank(HourValue1_2.Selected.Value) And !IsBlank(MinuteValue1_2.Selected.Value); DateTime(Year(DateValue1_2.SelectedDate); Month(DateValue1_2.SelectedDate); Day(DateValue1_2.SelectedDate); Value(HourValue1_2.Selected.Value); Value(MinuteValue1_2.Selected.Value); 0));
+        _pPorta: If('HORÁRIO DE CALÇO_DataCard1_1'.Visible And !IsBlank(DateValue15_1.SelectedDate) And !IsBlank(HourValue15_1.Selected.Value) And !IsBlank(MinuteValue15_1.Selected.Value); DateTime(Year(DateValue15_1.SelectedDate); Month(DateValue15_1.SelectedDate); Day(DateValue15_1.SelectedDate); Value(HourValue15_1.Selected.Value); Value(MinuteValue15_1.Selected.Value); 0));
+        _pAcion: If('HORÁRIO DO ACIONAMENTO_DataCard1_1'.Visible And !IsBlank(DateValue12_1.SelectedDate) And !IsBlank(HourValue12_1.Selected.Value) And !IsBlank(MinuteValue12_1.Selected.Value); DateTime(Year(DateValue12_1.SelectedDate); Month(DateValue12_1.SelectedDate); Day(DateValue12_1.SelectedDate); Value(HourValue12_1.Selected.Value); Value(MinuteValue12_1.Selected.Value); 0))
+    };
+    With(
+        {
+            _ant1: _pPorta;
+            _nome1: "abertura de porta";
+            _ant2: _pAcion;
+            _nome2: "acionamento da equipe"
+        };
+        If(
+            !IsBlank(Parent.Error);
+            Parent.Error;
+            var_tentouSalvar And Parent.Required And IsBlank(_atual);
+            "Informe data, hora e minuto.";
+            !IsBlank(_atual) And _atual > Now();
+            "Horário no futuro. Confira a data e a hora.";
+            !IsBlank(_atual) And !IsBlank(_ant1) And _atual < _ant1;
+            "Está antes do horário de " & _nome1 & " (" & Text(_ant1; "dd/mm hh:mm") & ")." & If(DateDiff(_atual; _ant1; TimeUnit.Hours) >= 12; " Se passou da meia-noite, mude a data deste campo."; "");
+            !IsBlank(_atual) And !IsBlank(_ant2) And _atual < _ant2;
+            "Está antes do horário de " & _nome2 & " (" & Text(_ant2; "dd/mm hh:mm") & ")." & If(DateDiff(_atual; _ant2; TimeUnit.Hours) >= 12; " Se passou da meia-noite, mude a data deste campo."; "");
+            ""
+        )
+    )
+)
+
+===== SubmitButton1_1 (Salvar) → OnSelect =====
+If(
+    !IsBlank(var_salvandoDesde) And DateDiff(var_salvandoDesde; Now(); TimeUnit.Seconds) < 30;
+    Notify("Aguarde: o atendimento ainda está sendo salvo."; NotificationType.Warning; 3000);
+    UpdateContext({var_tentouSalvar: true; var_visibleAlerta: false});;
+    // limites dos alertas de horário (minutos): o alerta pede confirmação, não bloqueia
+    With(
+    {
+        _limPortaMin: 180;
+        _limEquipeMin: 30;
+        _limAmbulanciaMin: 60;
+        _minIdaVoltaMin: 10;
+        _limTotalMin: 720
+    };
+    With(
+        {
+            _tVoo: If('HORÁRIO DE ACIONAMENTO EM VOO_DataCard1_1'.Visible And !IsBlank(DateValue16_1.SelectedDate) And !IsBlank(HourValue16_1.Selected.Value) And !IsBlank(MinuteValue16_1.Selected.Value); DateTime(Year(DateValue16_1.SelectedDate); Month(DateValue16_1.SelectedDate); Day(DateValue16_1.SelectedDate); Value(HourValue16_1.Selected.Value); Value(MinuteValue16_1.Selected.Value); 0));
+            _tAcion: If('HORÁRIO DO ACIONAMENTO_DataCard1_1'.Visible And !IsBlank(DateValue12_1.SelectedDate) And !IsBlank(HourValue12_1.Selected.Value) And !IsBlank(MinuteValue12_1.Selected.Value); DateTime(Year(DateValue12_1.SelectedDate); Month(DateValue12_1.SelectedDate); Day(DateValue12_1.SelectedDate); Value(HourValue12_1.Selected.Value); Value(MinuteValue12_1.Selected.Value); 0));
+            _tPorta: If('HORÁRIO DE CALÇO_DataCard1_1'.Visible And !IsBlank(DateValue15_1.SelectedDate) And !IsBlank(HourValue15_1.Selected.Value) And !IsBlank(MinuteValue15_1.Selected.Value); DateTime(Year(DateValue15_1.SelectedDate); Month(DateValue15_1.SelectedDate); Day(DateValue15_1.SelectedDate); Value(HourValue15_1.Selected.Value); Value(MinuteValue15_1.Selected.Value); 0));
+            _tInicio: If('HÓRARIO DO ATENDIMENTO_DataCard1_2'.Visible And !IsBlank(DateValue1_2.SelectedDate) And !IsBlank(HourValue1_2.Selected.Value) And !IsBlank(MinuteValue1_2.Selected.Value); DateTime(Year(DateValue1_2.SelectedDate); Month(DateValue1_2.SelectedDate); Day(DateValue1_2.SelectedDate); Value(HourValue1_2.Selected.Value); Value(MinuteValue1_2.Selected.Value); 0));
+            _tAmbAcion: If('HORÁRIO DE ACIONAMENTO DA AMBULÂNCIA_DataCard1_1'.Visible And !IsBlank(DateValue14_1.SelectedDate) And !IsBlank(HourValue14_1.Selected.Value) And !IsBlank(MinuteValue14_1.Selected.Value); DateTime(Year(DateValue14_1.SelectedDate); Month(DateValue14_1.SelectedDate); Day(DateValue14_1.SelectedDate); Value(HourValue14_1.Selected.Value); Value(MinuteValue14_1.Selected.Value); 0));
+            _tAmbCheg: If('HORÁRIO DA CHEGADA DA AMBULÂNCIA_DataCard1_2'.Visible And !IsBlank(DateValue2_10.SelectedDate) And !IsBlank(HourValue2_10.Selected.Value) And !IsBlank(MinuteValue2_10.Selected.Value); DateTime(Year(DateValue2_10.SelectedDate); Month(DateValue2_10.SelectedDate); Day(DateValue2_10.SelectedDate); Value(HourValue2_10.Selected.Value); Value(MinuteValue2_10.Selected.Value); 0));
+            _tAmbSaida: If('HORÁRIO DA SAÍDA DA AMBULÂNCIA_DataCard1_2'.Visible And !IsBlank(DateValue3_6.SelectedDate) And !IsBlank(HourValue3_6.Selected.Value) And !IsBlank(MinuteValue3_6.Selected.Value); DateTime(Year(DateValue3_6.SelectedDate); Month(DateValue3_6.SelectedDate); Day(DateValue3_6.SelectedDate); Value(HourValue3_6.Selected.Value); Value(MinuteValue3_6.Selected.Value); 0));
+            _tAmbRet: If('HORÁRIO DO RETORNO DA AMBULÂNCIA_DataCard1'.Visible And !IsBlank(DateValue17.SelectedDate) And !IsBlank(HourValue17.Selected.Value) And !IsBlank(MinuteValue17.Selected.Value); DateTime(Year(DateValue17.SelectedDate); Month(DateValue17.SelectedDate); Day(DateValue17.SelectedDate); Value(HourValue17.Selected.Value); Value(MinuteValue17.Selected.Value); 0));
+            _tEnc: If('HORÁRIO DO ENCERRAMENTO DO ATENDIMENTO_DataCard1_2'.Visible And !IsBlank(DateValue4_2.SelectedDate) And !IsBlank(HourValue4_2.Selected.Value) And !IsBlank(MinuteValue4_2.Selected.Value); DateTime(Year(DateValue4_2.SelectedDate); Month(DateValue4_2.SelectedDate); Day(DateValue4_2.SelectedDate); Value(HourValue4_2.Selected.Value); Value(MinuteValue4_2.Selected.Value); 0))
+        };
+        // base do tempo de resposta da equipe: o que aconteceu por último entre o
+        // acionamento e, em voo, a abertura de porta (pode vir antes ou depois)
+        With(
+        {
+            _tBaseEquipe: If(!IsBlank(_tPorta) And _tPorta > _tAcion; _tPorta; _tAcion)
+        };
+        With(
+            {
+                _faltando: Concat(
+                    Filter(
+                        Table(
+                            {n: "notificação em voo"; f: 'HORÁRIO DE ACIONAMENTO EM VOO_DataCard1_1'.Required And IsBlank(_tVoo)};
+                            {n: "acionamento da equipe"; f: 'HORÁRIO DO ACIONAMENTO_DataCard1_1'.Required And IsBlank(_tAcion)};
+                            {n: "abertura de porta"; f: 'HORÁRIO DE CALÇO_DataCard1_1'.Required And IsBlank(_tPorta)};
+                            {n: "início do atendimento"; f: 'HÓRARIO DO ATENDIMENTO_DataCard1_2'.Required And IsBlank(_tInicio)};
+                            {n: "acionamento da ambulância"; f: 'HORÁRIO DE ACIONAMENTO DA AMBULÂNCIA_DataCard1_1'.Required And IsBlank(_tAmbAcion)};
+                            {n: "chegada da ambulância"; f: 'HORÁRIO DA CHEGADA DA AMBULÂNCIA_DataCard1_2'.Required And IsBlank(_tAmbCheg)};
+                            {n: "saída da ambulância"; f: 'HORÁRIO DA SAÍDA DA AMBULÂNCIA_DataCard1_2'.Required And IsBlank(_tAmbSaida)};
+                            {n: "retorno da ambulância"; f: 'HORÁRIO DO RETORNO DA AMBULÂNCIA_DataCard1'.Required And IsBlank(_tAmbRet)};
+                            {n: "encerramento"; f: 'HORÁRIO DO ENCERRAMENTO DO ATENDIMENTO_DataCard1_2'.Required And IsBlank(_tEnc)}
+                        );
+                        f
+                    );
+                    n;
+                    ", "
+                );
+                _futuro: Concat(
+                    Filter(
+                        Table(
+                            {n: "notificação em voo"; a: _tVoo};
+                            {n: "acionamento da equipe"; a: _tAcion};
+                            {n: "abertura de porta"; a: _tPorta};
+                            {n: "início do atendimento"; a: _tInicio};
+                            {n: "acionamento da ambulância"; a: _tAmbAcion};
+                            {n: "chegada da ambulância"; a: _tAmbCheg};
+                            {n: "saída da ambulância"; a: _tAmbSaida};
+                            {n: "retorno da ambulância"; a: _tAmbRet};
+                            {n: "encerramento"; a: _tEnc}
+                        );
+                        !IsBlank(a) And a > Now()
+                    );
+                    n;
+                    ", "
+                );
+                _foraDeOrdem: Concat(
+                    Filter(
+                        Table(
+                            {n: "acionamento da equipe"; f: (!IsBlank(_tAcion) And !IsBlank(_tVoo) And _tAcion < _tVoo)};
+                            {n: "abertura de porta"; f: (!IsBlank(_tPorta) And !IsBlank(_tVoo) And _tPorta < _tVoo)};
+                            {n: "início do atendimento"; f: (!IsBlank(_tInicio) And !IsBlank(_tPorta) And _tInicio < _tPorta) || (!IsBlank(_tInicio) And !IsBlank(_tAcion) And _tInicio < _tAcion)};
+                            {n: "acionamento da ambulância"; f: (!IsBlank(_tAmbAcion) And !IsBlank(Coalesce(_tVoo; _tInicio)) And _tAmbAcion < Coalesce(_tVoo; _tInicio))};
+                            {n: "chegada da ambulância"; f: (!IsBlank(_tAmbCheg) And !IsBlank(_tAmbAcion) And _tAmbCheg < _tAmbAcion)};
+                            {n: "saída da ambulância"; f: (!IsBlank(_tAmbSaida) And !IsBlank(_tAmbCheg) And _tAmbSaida < _tAmbCheg) || (!IsBlank(_tAmbSaida) And !IsBlank(_tInicio) And _tAmbSaida < _tInicio)};
+                            {n: "retorno da ambulância"; f: (!IsBlank(_tAmbRet) And !IsBlank(_tAmbSaida) And _tAmbRet < _tAmbSaida)};
+                            {n: "encerramento"; f: (!IsBlank(_tEnc) And !IsBlank(Coalesce(_tAmbSaida; _tInicio)) And _tEnc < Coalesce(_tAmbSaida; _tInicio))}
+                        );
+                        f
+                    );
+                    n;
+                    ", "
+                );
+                _alertas: Filter(
+                    Table(
+                        {m: If(!IsBlank(_tVoo) And !IsBlank(_tPorta) And DateDiff(_tVoo; _tPorta; TimeUnit.Minutes) > _limPortaMin; "Abertura de porta " & DateDiff(_tVoo; _tPorta; TimeUnit.Minutes) & " min depois da notificação em voo (alerta acima de " & _limPortaMin & " min).")};
+                        {m: If(!IsBlank(_tInicio) And !IsBlank(_tBaseEquipe) And DateDiff(_tBaseEquipe; _tInicio; TimeUnit.Minutes) > _limEquipeMin; "Início do atendimento " & DateDiff(_tBaseEquipe; _tInicio; TimeUnit.Minutes) & " min depois " & If(_tBaseEquipe = _tPorta; "da abertura de porta"; "do acionamento da equipe") & " (alerta acima de " & _limEquipeMin & " min).")};
+                        {m: If(!IsBlank(_tAmbAcion) And !IsBlank(_tAmbCheg) And DateDiff(_tAmbAcion; _tAmbCheg; TimeUnit.Minutes) > _limAmbulanciaMin; "Chegada da ambulância " & DateDiff(_tAmbAcion; _tAmbCheg; TimeUnit.Minutes) & " min depois do acionamento da ambulância (alerta acima de " & _limAmbulanciaMin & " min).")};
+                        {m: If(!IsBlank(_tAmbSaida) And !IsBlank(_tAmbRet) And DateDiff(_tAmbSaida; _tAmbRet; TimeUnit.Minutes) < _minIdaVoltaMin; "Retorno da ambulância " & DateDiff(_tAmbSaida; _tAmbRet; TimeUnit.Minutes) & " min depois da saída (ida e volta com menos de " & _minIdaVoltaMin & " min).")};
+                        {m: If(!IsBlank(_tAcion) And !IsBlank(_tEnc) And DateDiff(_tAcion; _tEnc; TimeUnit.Minutes) > _limTotalMin; "Encerramento " & RoundDown(DateDiff(_tAcion; _tEnc; TimeUnit.Minutes) / 60; 0) & " h depois do acionamento da equipe (alerta acima de " & RoundDown(_limTotalMin / 60; 0) & " h).")}
+                    );
+                    !IsBlank(m)
+                )
+            };
+            If(
+                newMode And IsBlank(DataCardValue4_3.Value);
+                Notify("Selecione o aeroporto no filtro à esquerda antes de registrar o atendimento."; NotificationType.Error; 8000);
+                !IsBlank(_faltando);
+                Notify("Preencha data, hora e minuto de: " & _faltando & "."; NotificationType.Error; 8000);
+                !IsBlank(_futuro);
+                Notify("Horário no futuro em: " & _futuro & ". Confira a data e a hora."; NotificationType.Error; 8000);
+                !IsBlank(_foraDeOrdem);
+                Notify("Horário fora de ordem em: " & _foraDeOrdem & ". A mensagem abaixo de cada campo explica o problema."; NotificationType.Error; 8000);
+                !IsEmpty(_alertas);
+                UpdateContext({var_alertasAPH: _alertas; var_visibleAlerta: true});
+                UpdateContext({var_salvandoDesde: Now()});;
+                SubmitForm(FormAphEdt)
+            )
+        )
+        )
+    )
+    )
+)

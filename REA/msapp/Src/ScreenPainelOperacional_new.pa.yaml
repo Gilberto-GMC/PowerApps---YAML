@@ -1,0 +1,2039 @@
+# ************************************************************************************************
+# Warning: YAML source code for Canvas Apps should only be used to review changes made within Power Apps Studio and for minor edits (Preview).
+# Use the maker portal to create and edit your Power Apps.
+# 
+# The schema file for Canvas Apps is available at https://go.microsoft.com/fwlink/?linkid=2304907
+# 
+# For more information, visit https://go.microsoft.com/fwlink/?linkid=2292623
+# ************************************************************************************************
+Screens:
+  ScreenPainelOperacional_new:
+    Properties:
+      BackgroundImage: ='fundo-mesh-4k-high-res'
+      ImagePosition: =ImagePosition.Stretch
+      OnVisible: |-
+        =// 1. Reset de variáveis de contexto
+        UpdateContext({
+            var_visibleDetalhes: false,
+            var_mapSelect: ""
+        });
+
+        // 2. Carrega CCI com veículo vinculado
+        //    → Filter antes do Sort: reduz o conjunto antes de ordenar
+        ClearCollect(
+            col_dadosCCI,
+            AddColumns(
+                SortByColumns(
+                    Filter(
+                        'tbl_CHECK-LIST-ALL-ITENS',
+                        (Modulo = "Check-list CCI" Or Modulo = "Check-list CRS") And Status.Value = "Em Atendimento"
+                    ),
+                    "ID",
+                    SortOrder.Descending
+                ),
+                VEICULO,
+                LookUp(
+                    'tbl_CHECK-LIST-VEICULO-CCI',
+                    ID_FORMS = ID_CheckList,
+                    'IDENTIFICAÇÃO DO VEÍCULO'
+                )
+            )
+        );
+
+        // 3. Pré-carrega ocorrências "Baixa do CCI" abertas UMA única vez
+        //    → Elimina N consultas à fonte dentro do loop original
+        ClearCollect(
+            col_baixaCCIAberta,
+            Filter(
+                tbl_ReaOcorrencias,
+                (Tipo_ocorrencia.Value = "Baixa do CCI" Or Tipo_ocorrencia.Value = "Baixa do CRS") And Status.Value = "Aberto"
+            )
+        );
+
+        // 4. Monta o painel já com o status calculado via AddColumns
+        //    → Substitui o ForAll + Patch (N operações) por uma única passagem em memória
+        ClearCollect(
+            col_painelOperacionalVeiculos,
+            AddColumns(
+                tbl_gestaoVeiculosRea,
+                statusPainel,
+                With(
+                    {
+                        _temCCI: CountRows(
+                            Filter(col_dadosCCI, VEICULO = identificacao)
+                        ) > 0,
+                        _temBaixaCCI: CountRows(
+                            Filter(col_baixaCCIAberta, Veiculo_identificacao = identificacao)
+                        ) > 0
+                    },
+                    If(
+                        _temBaixaCCI, "Crítico",
+                        _temCCI,     "Média",
+                                     "Operacional"
+                    )
+                )
+            )
+        )
+    Children:
+      - ScreenContainer2_2:
+          Control: GroupContainer@1.5.0
+          Variant: AutoLayout
+          Properties:
+            Fill: =RGBA(12, 59, 94, 0)
+            Height: =Parent.Height
+            LayoutAlignItems: =LayoutAlignItems.Stretch
+            LayoutDirection: =LayoutDirection.Vertical
+            Width: =Parent.Width
+          Children:
+            - Container16_2:
+                Control: GroupContainer@1.5.0
+                Variant: AutoLayout
+                Properties:
+                  BorderColor: =RGBA(255, 255, 255, 0.05)
+                  BorderThickness: =1
+                  DropShadow: =DropShadow.None
+                  FillPortions: =0
+                  Height: =90
+                  LayoutDirection: =LayoutDirection.Horizontal
+                  LayoutMaxHeight: =
+                  LayoutMaxWidth: =
+                  PaddingLeft: =10
+                  RadiusBottomLeft: =0
+                  RadiusBottomRight: =0
+                  RadiusTopLeft: =0
+                  RadiusTopRight: =0
+                Children:
+                  - Icon11_1:
+                      Control: Classic/Icon@2.5.0
+                      Properties:
+                        AlignInContainer: =AlignInContainer.Center
+                        Color: =RGBA(161, 76, 255, 0.5)
+                        Height: =40
+                        Icon: =Icon.BackArrow
+                        LayoutMaxHeight: =
+                        LayoutMaxWidth: =
+                        LayoutMinHeight: =0
+                        OnSelect: =Back()
+                        PaddingBottom: =7
+                        PaddingLeft: =7
+                        PaddingRight: =7
+                        PaddingTop: =7
+                        Width: =50
+                  - Label14_2:
+                      Control: Label@2.5.1
+                      Properties:
+                        AlignInContainer: =AlignInContainer.Center
+                        Color: =RGBA(255, 255, 255, 1)
+                        FillPortions: =1
+                        FontWeight: =FontWeight.Bold
+                        Height: =50
+                        LayoutMaxHeight: =
+                        LayoutMaxWidth: =
+                        PaddingBottom: =0
+                        PaddingTop: =0
+                        Size: =16
+                        Text: ="Painel Operacional | REA"
+                        Width: =400
+                  - TimerBlink_1:
+                      Control: Timer@2.1.0
+                      Properties:
+                        AutoPause: =false
+                        AutoStart: =true
+                        Color: =RGBA(255, 255, 255, 1)
+                        Duration: =1000
+                        HoverColor: =RGBA(255, 255, 255, 1)
+                        LayoutMaxHeight: =
+                        LayoutMaxWidth: =
+                        OnTimerEnd: |-
+                          =If(
+                              var_visibleBlink = false,
+                              UpdateContext({var_visibleBlink: true}),
+                              UpdateContext({var_visibleBlink: false})
+                          )
+                        Repeat: =true
+                        Visible: =false
+                  - TimerRefresh_1:
+                      Control: Timer@2.1.0
+                      Properties:
+                        AutoPause: =false
+                        AutoStart: =true
+                        Color: =RGBA(255, 255, 255, 1)
+                        Duration: =300000
+                        HoverColor: =RGBA(255, 255, 255, 1)
+                        LayoutMaxHeight: =
+                        LayoutMaxWidth: =
+                        OnTimerEnd: |-
+                          =// 1. Reset de variáveis
+                          UpdateContext(
+                              {
+                                  var_visibleDetalhes: false,
+                                  var_mapSelect: ""
+                              }
+                          );
+                          // 2. Carrega CCI com veículo vinculado
+                          ClearCollect(
+                              col_dadosCCI,
+                              AddColumns(
+                                  Filter(
+                                      'tbl_CHECK-LIST-ALL-ITENS',
+                                      Modulo = "Check-list CCI" And Status.Value = "Em Atendimento"
+                                  ),
+                                  VEICULO,
+                                  LookUp(
+                                      'tbl_CHECK-LIST-VEICULO-CCI',
+                                      ID_FORMS = ID_CheckList,
+                                      'IDENTIFICAÇÃO DO VEÍCULO'
+                                  )
+                              )
+                          );
+                          // 3. Pré-carrega ocorrências abertas UMA única vez
+                          //    → elimina N queries a tbl_ReaOcorrencias no loop abaixo
+                          ClearCollect(
+                              col_baixaCCIAberta,
+                              Filter(
+                                  tbl_ReaOcorrencias,
+                                  (Tipo_ocorrencia.Value = "Baixa do CCI" Or Tipo_ocorrencia.Value = "Baixa do CRS") And Status.Value = "Aberto"
+                              )
+                          );
+                          // 4. Patcha a collection em memória — zero queries ao Dataverse no loop
+                          ForAll(
+                              col_painelOperacionalVeiculos As _v,
+                              Patch(
+                                  col_painelOperacionalVeiculos,
+                                  _v,
+                                  {
+                                      statusPainel: With(
+                                          {
+                                              _temCCI: CountRows(
+                                                  Filter(
+                                                      col_dadosCCI,
+                                                      VEICULO = _v.identificacao
+                                                  )
+                                              ) > 0,
+                                              _temBaixaCCI: CountRows(
+                                                  Filter(
+                                                      col_baixaCCIAberta,
+                                                      Veiculo_identificacao = _v.identificacao
+                                                  )
+                                              ) > 0
+                                          },
+                                          If(
+                                              _temBaixaCCI,
+                                              "Crítico",
+                                              _temCCI,
+                                              "Média",
+                                              "Operacional"
+                                          )
+                                      )
+                                  }
+                              )
+                          )
+                        Repeat: =true
+                        Visible: =false
+                  - HtmlText10_3:
+                      Control: HtmlViewer@2.1.0
+                      Properties:
+                        AlignInContainer: =AlignInContainer.Center
+                        AutoHeight: =true
+                        HtmlText: |+
+                          ="<div style='
+                              display: inline-flex;
+                              align-items: center;
+                              background-color: rgba(255, 255, 255, 0.08);
+                              border-radius: 12px;
+                              padding: 8px 12px;
+                              font-family: Segoe UI, sans-serif;
+                              gap: 0;
+                          '>
+                              <div style='text-align: center; padding: 0 20px;'>
+                                  <div style='font-size: 11px; font-weight: 600; color: #9090b8; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px;'>Veículos</div>
+                                  <div style='font-size: 26px; font-weight: 700; color: #ffffff;'>" & CountRows(col_painelOperacionalVeiculos) & "</div>
+                              </div>
+
+                              <div style='width: 1px; height: 40px; background-color: rgba(255,255,255,0.15);'></div>
+
+                              <div style='text-align: center; padding: 0 20px;'>
+                                  <div style='font-size: 11px; font-weight: 600; color: #00d4ff; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px;'>CCI</div>
+                                  <div style='font-size: 26px; font-weight: 700; color: #ffffff;'>" & CountRows(Filter(col_painelOperacionalVeiculos, tipo.Value = "CCI")) & "</div>
+                              </div>
+
+                              <div style='width: 1px; height: 40px; background-color: rgba(255,255,255,0.15);'></div>
+
+                              <div style='text-align: center; padding: 0 20px;'>
+                                  <div style='font-size: 11px; font-weight: 600; color: #00e87a; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px;'>CRS</div>
+                                  <div style='font-size: 26px; font-weight: 700; color: #ffffff;'>" & CountRows(Filter(col_painelOperacionalVeiculos, tipo.Value = "CRS")) & "</div>
+                              </div>
+                          </div>"
+                        LayoutMinHeight: =16
+                        LayoutMinWidth: =16
+                        PaddingBottom: =0
+                        PaddingTop: =0
+                        Width: =300
+            - MainContainer2_1:
+                Control: GroupContainer@1.5.0
+                Variant: AutoLayout
+                Properties:
+                  DropShadow: =DropShadow.None
+                  LayoutDirection: =LayoutDirection.Horizontal
+                  LayoutGap: =20
+                  LayoutMaxHeight: =
+                  LayoutMaxWidth: =
+                  LayoutOverflowY: =LayoutOverflow.Scroll
+                  RadiusBottomLeft: =0
+                  RadiusBottomRight: =0
+                  RadiusTopLeft: =0
+                  RadiusTopRight: =0
+                Children:
+                  - Container18_1:
+                      Control: GroupContainer@1.5.0
+                      Variant: AutoLayout
+                      Properties:
+                        AlignInContainer: =AlignInContainer.Start
+                        BorderColor: =RGBA(255, 255, 255, 0.05)
+                        BorderThickness: =1
+                        DropShadow: =DropShadow.None
+                        Fill: =RGBA(255, 255, 255, 0.03)
+                        Height: =650
+                        LayoutDirection: =LayoutDirection.Vertical
+                        LayoutMaxHeight: =
+                        LayoutMaxWidth: =
+                        PaddingBottom: =20
+                        PaddingTop: =10
+                        RadiusBottomLeft: =0
+                        RadiusBottomRight: =0
+                        RadiusTopLeft: =0
+                        RadiusTopRight: =0
+                        Width: =600
+                      Children:
+                        - Container58:
+                            Control: GroupContainer@1.5.0
+                            Variant: ManualLayout
+                            Properties:
+                              AlignInContainer: =AlignInContainer.Center
+                              BorderColor: =RGBA(255, 255, 255, 0.1)
+                              BorderThickness: =1
+                              DropShadow: =DropShadow.None
+                              Fill: =RGBA(255, 255, 255, 0.05)
+                              FillPortions: =0
+                              Height: =40
+                              LayoutMinHeight: =16
+                              LayoutMinWidth: =16
+                              RadiusBottomLeft: =12
+                              RadiusBottomRight: =12
+                              RadiusTopLeft: =12
+                              RadiusTopRight: =12
+                              Width: =Parent.Width - 40
+                            Children:
+                              - Icon8:
+                                  Control: ModernIcon@1.1.1
+                                  Properties:
+                                    Height: =30
+                                    Icon: ="Search"
+                                    IconColor: =RGBA(255, 255, 255, 0.5)
+                                    PaddingBottom: =5
+                                    PaddingTop: =5
+                                    Width: =30
+                                    X: =10
+                                    Y: =5
+                              - TextInputBuscarPainel:
+                                  Control: Classic/TextInput@2.3.2
+                                  Properties:
+                                    BorderColor: =RGBA(0, 0, 0, 0)
+                                    BorderThickness: =1
+                                    Color: =RGBA(255, 255, 255, 0.7)
+                                    Default: =
+                                    DisabledBorderColor: =RGBA(0, 0, 0, 0)
+                                    DisabledColor: =RGBA(255, 255, 255, 1)
+                                    DisabledFill: =RGBA(0, 0, 0, 0)
+                                    Fill: =RGBA(0, 0, 0, 0)
+                                    Height: =Parent.Height-2
+                                    HintText: ="Buscar..."
+                                    HoverBorderColor: =RGBA(161, 76, 255, 0.3)
+                                    HoverColor: =RGBA(255, 255, 255, 1)
+                                    HoverFill: =
+                                    PaddingLeft: =50
+                                    PressedBorderColor: =RGBA(161, 76, 255, 0.5)
+                                    RadiusBottomLeft: =12
+                                    RadiusBottomRight: =12
+                                    RadiusTopLeft: =12
+                                    RadiusTopRight: =12
+                                    Size: =10
+                                    Width: =Parent.Width-2
+                                    X: =1
+                                    Y: =1
+                              - Button7:
+                                  Control: ModernButton@1.0.0
+                                  Properties:
+                                    Appearance: =ButtonAppearance.Transparent
+                                    Color: =RGBA(255, 255, 255, 0.7)
+                                    Height: =Parent.Height
+                                    Icon: ="Dismiss"
+                                    Layout: =ButtonLayout.IconOnly
+                                    OnSelect: |-
+                                      =Reset(TextInputBuscarPainel); UpdateContext({var_mapSelect: ""})
+                                    Text: =
+                                    Visible: =!IsBlank(TextInputBuscarPainel.Text) || !IsBlank(var_mapSelect)
+                                    Width: =40
+                                    X: =Parent.Width - 45
+                        - Gallery4_1:
+                            Control: Gallery@2.15.0
+                            Variant: Vertical
+                            Properties:
+                              BorderStyle: =BorderStyle.None
+                              DelayItemLoading: =false
+                              Items: |-
+                                =Sort(
+                                    Filter(
+                                        colAeros,
+                                        StartsWith(
+                                            IATA,
+                                            var_mapSelect
+                                        ),
+                                        !IsBlank(Aeroporto) And IATA <> "BGX" And IATA <> "URG"
+                                    ),
+                                    Aeroporto,
+                                    SortOrder.Ascending
+                                )
+                              LayoutMaxHeight: =
+                              LayoutMaxWidth: =
+                              LayoutMinHeight: =110
+                              TemplateSize: =60
+                            Children:
+                              - Rectangle5:
+                                  Control: Rectangle@2.3.0
+                                  Properties:
+                                    Fill: =RGBA(255, 255, 255, 0.05)
+                                    Height: =1
+                                    OnSelect: =Select(Parent)
+                                    Width: =Parent.Width
+                                    Y: =63
+                              - Container16_3:
+                                  Control: GroupContainer@1.5.0
+                                  Variant: AutoLayout
+                                  Properties:
+                                    BorderColor: =RGBA(15, 108, 189, 1)
+                                    BorderStyle: =BorderStyle.None
+                                    BorderThickness: =3
+                                    DropShadow: =DropShadow.None
+                                    Fill: =RGBA(255, 255, 255, 0)
+                                    Height: =60
+                                    LayoutDirection: =LayoutDirection.Horizontal
+                                    LayoutGap: =20
+                                    PaddingLeft: =6
+                                    PaddingTop: =1
+                                    Width: =Parent.Width - 20
+                                    X: =10
+                                  Children:
+                                    - Container19_1:
+                                        Control: GroupContainer@1.5.0
+                                        Variant: ManualLayout
+                                        Properties:
+                                          DropShadow: =DropShadow.None
+                                          FillPortions: =0
+                                          LayoutMaxHeight: =
+                                          LayoutMaxWidth: =
+                                          LayoutMinHeight: =0
+                                          LayoutMinWidth: =100
+                                          RadiusBottomLeft: =0
+                                          RadiusBottomRight: =0
+                                          RadiusTopLeft: =0
+                                          RadiusTopRight: =0
+                                          Width: =130
+                                        Children:
+                                          - Button4_3:
+                                              Control: Classic/Button@2.2.0
+                                              Properties:
+                                                BorderColor: =RGBA(255, 255, 255, 0.05)
+                                                BorderThickness: =1
+                                                Color: =RGBA(255, 255, 255, 1)
+                                                Fill: =RGBA(255, 255, 255, 0.03)
+                                                Height: =50
+                                                HoverColor: =RGBA(255, 255, 255, 1)
+                                                RadiusBottomLeft: =8
+                                                RadiusBottomRight: =8
+                                                RadiusTopLeft: =8
+                                                RadiusTopRight: =8
+                                                Size: =12
+                                                Text: =ThisItem.IATA
+                                                Width: =60
+                                                X: =2
+                                                Y: =5
+                                          - Button4_4:
+                                              Control: Classic/Button@2.2.0
+                                              Properties:
+                                                BorderColor: =RGBA(138, 185, 230, 0.5)
+                                                BorderThickness: =1
+                                                Color: =RGBA(255, 255, 255, 1)
+                                                Fill: =RGBA(46, 72, 176, 0.5)
+                                                Height: =20
+                                                HoverColor: =RGBA(255, 255, 255, 1)
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                                RadiusBottomLeft: =4
+                                                RadiusBottomRight: =4
+                                                RadiusTopLeft: =4
+                                                RadiusTopRight: =4
+                                                Size: =8
+                                                Text: ="CAT-"&ThisItem.Cat
+                                                Width: =50
+                                                X: =75
+                                                Y: =10
+                                          - Button4_5:
+                                              Control: Classic/Button@2.2.0
+                                              Properties:
+                                                Align: =Align.Left
+                                                BorderStyle: =BorderStyle.None
+                                                BorderThickness: =0
+                                                Color: =RGBA(255, 255, 255, 0.3)
+                                                DisplayMode: =DisplayMode.View
+                                                Fill: =RGBA(0, 0, 0, 0)
+                                                Height: =20
+                                                HoverColor: =RGBA(255, 255, 255, 1)
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                                RadiusBottomLeft: =4
+                                                RadiusBottomRight: =4
+                                                RadiusTopLeft: =4
+                                                RadiusTopRight: =4
+                                                Size: =8
+                                                Text: ="CLASSE-"&ThisItem.Classe
+                                                Width: =70
+                                                X: =75
+                                                Y: =35
+                                    - Gallery3_1:
+                                        Control: Gallery@2.15.0
+                                        Variant: Horizontal
+                                        Properties:
+                                          BorderStyle: =BorderStyle.None
+                                          DelayItemLoading: =false
+                                          Items: |-
+                                            =Search(
+                                                Sort(
+                                                    Filter(
+                                                        col_painelOperacionalVeiculos,
+                                                        aeroporto.Value = ThisItem.Aeroporto
+                                                    ),
+                                                    tipo.Value,
+                                                    SortOrder.Ascending
+                                                ),
+                                                TextInputBuscarPainel.Text,
+                                                modelo,
+                                                identificacao
+                                            )
+                                          LayoutMaxHeight: =
+                                          LayoutMaxWidth: =
+                                          LayoutMinHeight: =0
+                                          LayoutMinWidth: =0
+                                          LoadingSpinner: =LoadingSpinner.None
+                                          ShowNavigation: =true
+                                          ShowScrollbar: =false
+                                          TemplateSize: =135
+                                        Children:
+                                          - Container59:
+                                              Control: GroupContainer@1.5.0
+                                              Variant: ManualLayout
+                                              Properties:
+                                                BorderColor: =RGBA(255, 255, 255, 0.1)
+                                                BorderThickness: =1
+                                                DropShadow: =DropShadow.None
+                                                Fill: =RGBA(255, 255, 255, 0.05)
+                                                Height: =40
+                                                RadiusBottomLeft: =12
+                                                RadiusBottomRight: =12
+                                                RadiusTopLeft: =12
+                                                RadiusTopRight: =12
+                                                Width: =130
+                                                Y: =5
+                                              Children:
+                                                - HtmlText1_4:
+                                                    Control: HtmlViewer@2.1.0
+                                                    Properties:
+                                                      AutoHeight: =true
+                                                      DisabledBorderColor: =RGBA(56, 56, 56, 1)
+                                                      DisplayMode: =DisplayMode.View
+                                                      Fill: =RGBA(0, 0, 0, 0)
+                                                      Font: =Font.'Open Sans'
+                                                      Height: =20
+                                                      HtmlText: |-
+                                                        =With(
+                                                            {
+                                                                baseStyle: "display:inline-block; font-size:8px; font-weight:700; padding:1px 5px; border-radius:4px; letter-spacing:0.5px; white-space:nowrap;",
+                                                                tag: If(
+                                                                    ThisItem.tipo.Value = "CCI",
+                                                                    If(
+                                                                        First(
+                                                                            Sort(
+                                                                                Filter(
+                                                                                    'tbl_CHECK-LIST-VEICULO-CCI',
+                                                                                    'IDENTIFICAÇÃO DO VEÍCULO' = ThisItem.identificacao
+                                                                                ),
+                                                                                ID,
+                                                                                SortOrder.Descending
+                                                                            )
+                                                                        ).'OPERACIONALIDADE DO VEÍCULO' = "EM LINHA",
+                                                                        "LN",
+                                                                        "RT"
+                                                                    )
+                                                                ),
+                                                                corTag: If(
+                                                                    If(
+                                                                        ThisItem.tipo.Value = "CCI",
+                                                                        First(
+                                                                            Sort(
+                                                                                Filter(
+                                                                                    'tbl_CHECK-LIST-VEICULO-CCI',
+                                                                                    'IDENTIFICAÇÃO DO VEÍCULO' = ThisItem.identificacao
+                                                                                ),
+                                                                                ID,
+                                                                                SortOrder.Descending
+                                                                            )
+                                                                        ).'OPERACIONALIDADE DO VEÍCULO' = "EM LINHA"
+                                                                    ),
+                                                                    "#00d4ff",
+                                                                    "#a78bfa"
+                                                                )
+                                                            },
+                                                            "<div style='display:inline-flex; align-items:center; gap:6px; white-space:nowrap;'>
+                                                                <span style='" & baseStyle & " color:#348feb; background-color:rgba(0,0,0,0.30);'>" 
+                                                                & ThisItem.modelo & 
+                                                                "</span>"
+                                                                & If(
+                                                                    !IsBlank(tag),
+                                                                    "<span style='" & baseStyle & " color:" & corTag & "; background-color:rgba(255,255,255,0.08); " & corTag & ";'>" 
+                                                                    & tag & 
+                                                                    "</span>"
+                                                                ) &
+                                                            "</div>"
+                                                        )
+                                                      OnSelect: =
+                                                      PaddingBottom: =0
+                                                      PaddingTop: =0
+                                                      Size: =8
+                                                      Width: =90
+                                                      X: =40
+                                                      Y: =22
+                                                - Label14_3:
+                                                    Control: Label@2.5.1
+                                                    Properties:
+                                                      Color: =RGBA(255, 255, 255, 1)
+                                                      FontWeight: =FontWeight.Semibold
+                                                      Height: =15
+                                                      OnSelect: =
+                                                      PaddingRight: =0
+                                                      Size: =8
+                                                      Text: =First(Split(ThisItem.identificacao,"/")).Value
+                                                      Tooltip: =ThisItem.identificacao
+                                                      VerticalAlign: =VerticalAlign.Top
+                                                      Width: =100
+                                                      X: =40
+                                                      Y: =2
+                                                - Image12_2:
+                                                    Control: Image@2.2.3
+                                                    Properties:
+                                                      BorderColor: =RGBA(180, 214, 250, 1)
+                                                      BorderStyle: =BorderStyle.None
+                                                      BorderThickness: =3
+                                                      Height: =25
+                                                      Image: |-
+                                                        =Switch(
+                                                            true,
+                                                            ThisItem.tipo.Value = "CCI" And ThisItem.statusPainel = "Crítico",
+                                                            'CCI-inoperante',
+                                                            ThisItem.tipo.Value = "CCI" And ThisItem.statusPainel = "Média",
+                                                            'CCI-operacional-restricao',
+                                                            ThisItem.tipo.Value = "CCI" And ThisItem.statusPainel = "Operacional",
+                                                            'CCI-operacional',
+                                                            ThisItem.tipo.Value = "CRS" And ThisItem.statusPainel = "Crítico",
+                                                            'CRS-inoperante',
+                                                            ThisItem.tipo.Value = "CRS" And ThisItem.statusPainel = "Média",
+                                                            'CRS-operacional-restricao',
+                                                            ThisItem.tipo.Value = "CRS" And ThisItem.statusPainel = "Operacional",
+                                                            'CRS-operacional'
+                                                        )
+                                                      OnSelect: =
+                                                      RadiusBottomLeft: =10
+                                                      RadiusBottomRight: =10
+                                                      RadiusTopLeft: =10
+                                                      RadiusTopRight: =10
+                                                      Visible: |-
+                                                        =If(
+                                                            ThisItem.statusPainel = "Crítico",
+                                                            var_visibleBlink,
+                                                            true
+                                                        )
+                                                      Width: =30
+                                                      X: =8
+                                                      Y: =8
+                                                - Icon10_1:
+                                                    Control: Classic/Icon@2.5.0
+                                                    Properties:
+                                                      Color: =RGBA(0, 0, 0, 0)
+                                                      DisabledColor: =RGBA(0, 0, 0, 0)
+                                                      Height: =Parent.Height
+                                                      HoverColor: |
+                                                        =RGBA(0, 0, 0, 0)
+                                                      HoverFill: =RGBA(255, 255, 255, 0.1)
+                                                      Icon: =Icon.CalendarBlank
+                                                      OnSelect: "=UpdateContext(\n    {\n        var_visibleDetalhes: true,\n        var_itensDetalhes: Filter(\n            col_dadosCCI,\n            VEICULO = ThisItem.identificacao\n        ),\n        var_baixaCCI: First(\n            Sort(\n            Filter(\n                tbl_ReaOcorrencias,\n                \n               (Tipo_ocorrencia.Value = \"Baixa do CCI\" Or Tipo_ocorrencia.Value = \"Baixa do CRS\")  And Status.Value = \"Aberto\" And Veiculo_identificacao = ThisItem.identificacao\n            ), ID, SortOrder.Descending)\n        ),\n        var_cciDados: ThisItem\n    }\n)"
+                                                      Tooltip: =ThisItem.identificacao
+                                                      Width: =Parent.Width
+                                          - Image7:
+                                              Control: Image@2.2.3
+                                              Properties:
+                                                Height: =30
+                                                Image: |+
+                                                  =Switch(
+                                                      true,
+                                                      ThisItem.tipo.Value = "CCI" And ThisItem.statusPainel = "Crítico",
+                                                      'bolinha-vermelha',
+                                                      ThisItem.tipo.Value = "CCI" And ThisItem.statusPainel = "Média",
+                                                      'bolinha-amarela',
+                                                      ThisItem.tipo.Value = "CCI" And ThisItem.statusPainel = "Operacional",
+                                                      Blank(),
+                                                      ThisItem.tipo.Value = "CRS" And ThisItem.statusPainel = "Crítico",
+                                                      'bolinha-vermelha',
+                                                      ThisItem.tipo.Value = "CRS" And ThisItem.statusPainel = "Média",
+                                                      'bolinha-amarela',
+                                                      ThisItem.tipo.Value = "CRS" And ThisItem.statusPainel = "Operacional",
+                                                      Blank()
+                                                  )
+
+
+
+                                                OnSelect: =Select(Parent)
+                                                Width: =30
+                                                X: =113
+                                                Y: =-7
+                  - Container21_2:
+                      Control: GroupContainer@1.5.0
+                      Variant: AutoLayout
+                      Properties:
+                        AlignInContainer: =AlignInContainer.Start
+                        DropShadow: =DropShadow.None
+                        Fill: =RGBA(0, 115, 255, 0.05)
+                        FillPortions: =0
+                        Height: =650
+                        LayoutDirection: =LayoutDirection.Vertical
+                        LayoutMaxHeight: =
+                        LayoutMaxWidth: =
+                        RadiusBottomLeft: =0
+                        RadiusBottomRight: =0
+                        RadiusTopLeft: =0
+                        RadiusTopRight: =0
+                        Visible: =var_visibleDetalhes
+                        Width: =600
+                        X: =Parent.Width - Self.Width -50
+                        Y: =75
+                      Children:
+                        - Container23_1:
+                            Control: GroupContainer@1.5.0
+                            Variant: AutoLayout
+                            Properties:
+                              DropShadow: =DropShadow.None
+                              Fill: =RGBA(255, 255, 255, 0.05)
+                              FillPortions: =0
+                              Height: =60
+                              LayoutDirection: =LayoutDirection.Horizontal
+                              LayoutJustifyContent: =LayoutJustifyContent.End
+                              LayoutMaxHeight: =
+                              LayoutMaxWidth: =
+                              PaddingRight: =10
+                              RadiusBottomLeft: =0
+                              RadiusBottomRight: =0
+                              RadiusTopLeft: =0
+                              RadiusTopRight: =0
+                            Children:
+                              - Container59_4:
+                                  Control: GroupContainer@1.5.0
+                                  Variant: ManualLayout
+                                  Properties:
+                                    BorderColor: =RGBA(255, 255, 255, 0.1)
+                                    BorderStyle: =BorderStyle.None
+                                    BorderThickness: =1
+                                    DropShadow: =DropShadow.None
+                                    Height: =50
+                                    LayoutMinHeight: =0
+                                    RadiusBottomLeft: =0
+                                    RadiusBottomRight: =0
+                                    RadiusTopLeft: =0
+                                    RadiusTopRight: =0
+                                    Width: =130
+                                  Children:
+                                    - HtmlText1_8:
+                                        Control: HtmlViewer@2.1.0
+                                        Properties:
+                                          AutoHeight: =true
+                                          DisabledBorderColor: =RGBA(56, 56, 56, 1)
+                                          DisplayMode: =DisplayMode.View
+                                          Fill: =RGBA(0, 0, 0, 0)
+                                          Font: =Font.'Open Sans'
+                                          Height: =20
+                                          HtmlText: |-
+                                            =With(
+                                                {
+                                                    baseStyle: "display:inline-block; color:#348feb; font-size:8px; font-weight:700; padding:1px 5px; border-radius:6px; letter-spacing:0.5px; white-space:nowrap;",
+                                                    status: Switch(
+                                                        true,
+                                                        var_cciDados.tipo.Value = "CCI" And var_cciDados.statusPainel = "Crítico",    "Inoperante / Baixado",
+                                                        var_cciDados.tipo.Value = "CCI" And var_cciDados.statusPainel = "Média",      "Operacional com restrições",
+                                                        var_cciDados.tipo.Value = "CCI" And var_cciDados.statusPainel = "Operacional", "Operacional",
+                                                        var_cciDados.tipo.Value = "CRS" And var_cciDados.statusPainel = "Crítico",    "Inoperante / Baixado",
+                                                        var_cciDados.tipo.Value = "CRS" And var_cciDados.statusPainel = "Média",      "Operacional com restrições",
+                                                        var_cciDados.tipo.Value = "CRS" And var_cciDados.statusPainel = "Operacional", "Operacional"
+                                                    ),
+                                                    cor: Switch(
+                                                        true,
+                                                        var_cciDados.statusPainel = "Crítico",    "#ff4444",
+                                                        var_cciDados.statusPainel = "Média",      "#ffbb00",
+                                                        var_cciDados.statusPainel = "Operacional", "#00cc66",
+                                                        "#ffffff"
+                                                    )
+                                                },
+                                                "<div style='display:inline-flex; align-items:center; gap:6px; white-space:nowrap;'>
+                                                    <span style='" & baseStyle & " background-color:rgba(0,0,0,0.30);'>" 
+                                                    & var_cciDados.modelo & 
+                                                    "</span>
+                                                    <span style='display:inline-flex; align-items:center; gap:4px; font-size:8px; font-weight:600; color:" & cor & "; white-space:nowrap;'>
+                                                        <span style='display:inline-block; width:8px; height:8px; border-radius:50%; background-color:" & cor & ";'></span>"
+                                                    & status &
+                                                    "</span>
+                                                </div>"
+                                            )
+                                          OnSelect: =
+                                          PaddingBottom: =0
+                                          PaddingTop: =0
+                                          Size: =8
+                                          Width: =480
+                                          X: =60
+                                          Y: =35
+                                    - Label14_4:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          Color: =RGBA(255, 255, 255, 0.7)
+                                          FontWeight: =FontWeight.Semibold
+                                          Height: =15
+                                          OnSelect: =
+                                          PaddingRight: =0
+                                          Size: =10
+                                          Text: =var_cciDados.identificacao
+                                          Width: =480
+                                          X: =60
+                                          Y: =15
+                                    - Image12_3:
+                                        Control: Image@2.2.3
+                                        Properties:
+                                          BorderColor: =RGBA(180, 214, 250, 1)
+                                          BorderStyle: =BorderStyle.None
+                                          BorderThickness: =3
+                                          Height: =30
+                                          Image: |-
+                                            =Switch(
+                                                true,
+                                                var_cciDados.tipo.Value = "CCI" And var_cciDados.statusPainel = "Crítico",
+                                                'CCI-inoperante',
+                                                var_cciDados.tipo.Value = "CCI" And var_cciDados.statusPainel = "Média",
+                                                'CCI-operacional-restricao',
+                                                var_cciDados.tipo.Value = "CCI" And var_cciDados.statusPainel = "Operacional",
+                                                'CCI-operacional',
+                                                var_cciDados.tipo.Value = "CRS" And var_cciDados.statusPainel = "Crítico",
+                                                'CRS-inoperante',
+                                                var_cciDados.tipo.Value = "CRS" And var_cciDados.statusPainel = "Média",
+                                                'CRS-operacional-restricao',
+                                                var_cciDados.tipo.Value = "CRS" And var_cciDados.statusPainel = "Operacional",
+                                                'CRS-operacional'
+                                            )
+                                          OnSelect: =
+                                          RadiusBottomLeft: =10
+                                          RadiusBottomRight: =10
+                                          RadiusTopLeft: =10
+                                          RadiusTopRight: =10
+                                          Visible: |-
+                                            =If(
+                                                var_cciDados.statusPainel = "Crítico",
+                                                var_visibleBlink, 
+                                                true
+                                            )
+                                          Width: =30
+                                          X: =20
+                                          Y: =15
+                              - Icon9_1:
+                                  Control: Classic/Icon@2.5.0
+                                  Properties:
+                                    AlignInContainer: =AlignInContainer.Center
+                                    Color: =RGBA(255, 255, 255, 1)
+                                    Height: =30
+                                    Icon: =Icon.Cancel
+                                    LayoutMaxHeight: =
+                                    LayoutMaxWidth: =
+                                    OnSelect: |-
+                                      =UpdateContext({var_visibleDetalhes: false})
+                                    PaddingBottom: =7
+                                    PaddingLeft: =7
+                                    PaddingRight: =7
+                                    PaddingTop: =7
+                                    Width: =50
+                        - HtmlText14:
+                            Control: HtmlViewer@2.1.0
+                            Properties:
+                              AlignInContainer: =AlignInContainer.Stretch
+                              AutoHeight: =true
+                              Height: =50
+                              HtmlText: |-
+                                ="<div style='
+                                    display:flex;
+                                    align-items:center;
+                                    justify-content:space-between;
+                                    padding:10px 16px;
+                                    border-radius:0px;
+                                  /*background-color:rgba(255,255,255,0.07);
+                                    border:1px solid rgba(255,255,255,0.08);*/
+                                '>
+                                    <div style='display:flex; align-items:center; gap:10px;'>
+                                        <span style='font-size:16px; color:rgba(160,160,200,0.7);'>&#128295;</span>
+                                        <span style='
+                                            font-size:11px;
+                                            font-weight:700;
+                                            color:rgba(180,185,220,0.85);
+                                            letter-spacing:1.2px;
+                                            text-transform:uppercase;
+                                        '>Não Conformidades Abertas</span>
+                                    </div>
+
+                                    <span style='
+                                        font-size:11px;
+                                        font-weight:600;
+                                        color:#e8e8f0;
+                                        background-color:rgba(0,0,0,0.35);
+                                        border:1px solid rgba(255,255,255,0.10);
+                                        padding:3px 10px;
+                                        border-radius:6px;
+                                        white-space:nowrap;
+                                    '>"&Gallery5_1.AllItemsCount&" Registros</span>
+                                </div>"
+                              LayoutMinHeight: =16
+                              LayoutMinWidth: =16
+                              PaddingRight: =15
+                        - HtmlText2_2:
+                            Control: HtmlViewer@2.1.0
+                            Properties:
+                              AlignInContainer: =AlignInContainer.Stretch
+                              AutoHeight: =true
+                              HtmlText: |-
+                                ="<div style='
+                                    display:flex;
+                                    flex-direction:column;
+                                    border-radius:12px;
+                                    background-color:rgba(255,255,255,0.07);
+                                    border:1px solid rgba(255,255,255,0.10);
+                                    font-family:Segoe UI,sans-serif;
+                                    overflow:hidden;
+                                '>
+                                    <div style='
+                                        display:flex;
+                                        align-items:center;
+                                        justify-content:center;
+                                        gap:10px;
+                                        padding:14px 20px;
+                                        background-color:rgba(204,34,0,0.15);
+                                        border-bottom:1px solid rgba(255,80,50,0.25);
+                                    '>
+                                        <span style='font-size:18px; color:#ff4444;'>&#9888;</span>
+                                        <span style='font-size:13px; font-weight:700; color:#ff6b6b; letter-spacing:0.5px;'>BAIXA DO CCI/CRS</span>
+                                        <span style='
+                                            font-size:11px;
+                                            font-weight:700;
+                                            color:#ff4444;
+                                            background-color:rgba(255,68,68,0.15);
+                                            border:1px solid rgba(255,68,68,0.3);
+                                            padding:2px 10px;
+                                            border-radius:5px;
+                                        '>" & var_baixaCCI.Protocolo & "</span>
+                                    </div>
+
+                                    <div style='display:flex; flex-direction:column; gap:12px; padding:18px 20px;'>
+
+                                        <div style='display:flex; gap:8px; align-items:flex-start;'>
+                                            <span style='font-size:10px; font-weight:700; color:rgba(180,185,220,0.6); letter-spacing:0.8px; white-space:nowrap; padding-top:1px;'>AEROPORTO</span>
+                                            <span style='font-size:12px; color:#e8e8f0; font-weight:600;'>" & var_baixaCCI.IATA & " — " & var_baixaCCI.Aeroporto & "</span>
+                                        </div>
+
+                                        <div style='width:100%; height:1px; background-color:rgba(255,255,255,0.07);'></div>
+
+                                        <div style='display:flex; gap:8px; align-items:flex-start;'>
+                                            <span style='font-size:10px; font-weight:700; color:rgba(180,185,220,0.6); letter-spacing:0.8px; white-space:nowrap; padding-top:1px;'>DATA</span>
+                                            <span style='font-size:12px; color:#e8e8f0;'>" & var_baixaCCI.Data_inico & " &nbsp;&#183;&nbsp; " & var_baixaCCI.Hora_inicio & "</span>
+                                        </div>
+
+                                        <div style='width:100%; height:1px; background-color:rgba(255,255,255,0.07);'></div>
+
+                                        <div style='display:flex; gap:8px; align-items:flex-start;'>
+                                            <span style='font-size:10px; font-weight:700; color:rgba(180,185,220,0.6); letter-spacing:0.8px; white-space:nowrap; padding-top:1px;'>DESCRIÇÃO</span>
+                                            <span style='font-size:12px; color:#e8e8f0; line-height:1.6;'>" & var_baixaCCI.Descricao_ocorrencia & "</span>
+                                        </div>
+
+                                        <div style='width:100%; height:1px; background-color:rgba(255,255,255,0.07);'></div>
+
+                                        <div style='display:flex; gap:8px; align-items:flex-start;'>
+                                            <span style='font-size:10px; font-weight:700; color:rgba(180,185,220,0.6); letter-spacing:0.8px; white-space:nowrap; padding-top:1px;'>AÇÃO</span>
+                                            <span style='font-size:12px; color:#e8e8f0; line-height:1.6;'>" & If(IsBlank(var_baixaCCI.Acao_tomada), "<span style='color:rgba(180,185,220,0.4); font-style:italic;'>N/A</span>", var_baixaCCI.Acao_tomada) & "</span>
+                                        </div>
+
+                                        <div style='width:100%; height:1px; background-color:rgba(255,255,255,0.07);'></div>
+
+                                        <div style='display:flex; justify-content:space-between; align-items:center;'>
+                                            <div style='display:flex; gap:8px; align-items:center;'>
+                                                <span style='font-size:10px; font-weight:700; color:rgba(180,185,220,0.6); letter-spacing:0.8px;'>CRIADO POR</span>
+                                                <span style='font-size:12px; color:#e8e8f0;'>" & var_baixaCCI.'Criado por'.DisplayName & "</span>
+                                            </div>
+                                            <span style='
+                                                font-size:10px;
+                                                font-weight:700;
+                                                color:#e8e8f0;
+                                                background-color:rgba(255,255,255,0.08);
+                                                border:1px solid rgba(255,255,255,0.15);
+                                                padding:3px 10px;
+                                                border-radius:5px;
+                                                letter-spacing:0.5px;
+                                            '>" & var_baixaCCI.Status.Value & "</span>
+                                        </div>
+
+                                    </div>
+                                </div>"
+                              LayoutMaxHeight: =
+                              LayoutMaxWidth: =
+                              PaddingLeft: =10
+                              PaddingTop: =10
+                              Size: =12
+                              Visible: =!IsBlank(var_baixaCCI)
+                        - Gallery5_1:
+                            Control: Gallery@2.15.0
+                            Variant: VariableHeight
+                            Properties:
+                              Items: =var_itensDetalhes
+                              LayoutMinHeight: =0
+                              TemplatePadding: =10
+                              TemplateSize: =60
+                              Visible: =Self.AllItemsCount > 0
+                            Children:
+                              - Container20_18:
+                                  Control: GroupContainer@1.5.0
+                                  Variant: ManualLayout
+                                  Properties:
+                                    DropShadow: =DropShadow.None
+                                    Height: =HtmlTextItensNaoConformes_19.Height
+                                    RadiusBottomLeft: =0
+                                    RadiusBottomRight: =0
+                                    RadiusTopLeft: =0
+                                    RadiusTopRight: =0
+                                    Width: =Parent.Width - 30
+                                  Children:
+                                    - HtmlTextItensNaoConformes_19:
+                                        Control: HtmlViewer@2.1.0
+                                        Properties:
+                                          AutoHeight: =true
+                                          DisabledBorderColor: =RGBA(56, 56, 56, 1)
+                                          Fill: =RGBA(0, 0, 0, 0)
+                                          Font: =Font.'Open Sans'
+                                          Height: =140
+                                          HtmlText: |-
+                                            =With(
+                                                {
+                                                    corBadge: Switch(
+                                                        ThisItem.Criticidade.Value,
+                                                        "BAIXA",   "background-color:#1a7a3c; color:#fff;",
+                                                        "MÉDIA",   "background-color:#cc7700; color:#fff;",
+                                                        "CRÍTICO", "background-color:#cc2200; color:#fff;",
+                                                                   "background-color:#1a7a3c; color:#fff;"
+                                                    )
+                                                },
+                                                "<div style='
+                                                    display:flex;
+                                                    flex-direction:column;
+                                                    gap:4px;
+                                                    padding:8px 10px;
+                                                    border-radius:12px;
+                                                    background-color:rgba(255,255,255,0.07);
+                                                    border:1px solid rgba(255,255,255,0.10);
+                                                    font-family:Segoe UI,sans-serif;
+                                                '>
+                                                    <div style='display:flex; justify-content:space-between; align-items:center;'>
+                                                        <span style='font-size:11px; color:rgba(180,185,220,0.75);'>
+                                                            ITEM: <span style='color:#e8e8f0; font-weight:700;'>" & ThisItem.Item & "</span>
+                                                        </span>
+                                                        <span style='font-size:11px; color:rgba(180,185,220,0.6);'>" & Text(ThisItem.Criado, "dd/mm/yyyy hh:mm") & "</span>
+                                                    </div>
+
+                                                    <div style='font-size:10px; color:rgba(160,165,200,0.6); letter-spacing:0.3px;'>
+                                                        ID: " & ThisItem.ID_CheckList & " &bull; TICKET: " & ThisItem.'Número do chamado' & "
+                                                    </div>
+
+                                                    <div style='font-size:13px; font-weight:600; color:#e8e8f0; line-height:1.5;'>
+                                                        " & ThisItem.Descrição & "
+                                                    </div>
+
+                                                    <div style='display:flex; justify-content:space-between; align-items:center; margin-top:2px;'>
+                                                        <span style='font-size:11px; color:rgba(100,210,160,0.9);'>
+                                                            &#10549; Status: " & ThisItem.Status.Value & "
+                                                        </span>
+                                                        <span style='
+                                                            font-size:10px;
+                                                            font-weight:700;
+                                                            padding:2px 10px;
+                                                            border-radius:5px;
+                                                            letter-spacing:1px;
+                                                            " & corBadge & "
+                                                        '>" & Coalesce( ThisItem.Criticidade.Value, "BAIXA") & "</span>
+                                                    </div>
+                                                </div>"
+                                            )
+                                          PaddingBottom: =0
+                                          PaddingLeft: =10
+                                          PaddingRight: =10
+                                          PaddingTop: =0
+                                          Size: =10
+                                          Visible: =!IsBlank(ThisItem.Resposta)
+                                          Width: '=Parent.Width '
+                        - Text2:
+                            Control: ModernText@1.0.0
+                            Properties:
+                              AlignInContainer: =AlignInContainer.Stretch
+                              LayoutMinHeight: =16
+                              LayoutMinWidth: =16
+                              Text: =
+                              Visible: =Gallery5_1.Visible
+                        - HtmlText12:
+                            Control: HtmlViewer@2.1.0
+                            Properties:
+                              AlignInContainer: =AlignInContainer.Stretch
+                              AutoHeight: =true
+                              HtmlText: |-
+                                ="<div style='
+                                    display:flex;
+                                    flex-direction:column;
+                                    align-items:center;
+                                    justify-content:center;
+                                    padding:40px 30px;
+                                    border-radius:0px;
+                                    background-color:rgba(255,255,255,0.07);
+                                    border:1px solid rgba(255,255,255,0.10);
+                                    text-align:center;
+                                    gap:12px;
+                                '>
+                                    <div style='
+                                        width:56px;
+                                        height:56px;
+                                        border-radius:50%;
+                                        border:2px solid #2eb88a;
+                                        display:flex;
+                                        align-items:center;
+                                        justify-content:center;
+                                        margin-bottom:4px;
+                                    '>
+                                        <span style='
+                                            font-size:26px;
+                                            color:#2eb88a;
+                                            line-height:1;
+                                            margin-top:-2px;
+                                        '>&#10003;</span>
+                                    </div>
+
+                                    <div style='
+                                        font-size:15px;
+                                        font-weight:700;
+                                        color:#e8e8f0;
+                                        letter-spacing:0.2px;
+                                    '>Veículo Operacional</div>
+
+                                    <div style='
+                                        font-size:12px;
+                                        color:rgba(180,180,200,0.75);
+                                        line-height:1.6;
+                                        max-width:220px;
+                                    '>Não há registros de não conformidades ativos para este veículo.</div>
+                                </div>"
+                              LayoutMinHeight: =16
+                              LayoutMinWidth: =16
+                              PaddingLeft: =30
+                              PaddingRight: =30
+                              PaddingTop: =100
+                              Visible: =Gallery5_1.AllItemsCount = 0 And !HtmlText2_2.Visible
+                  - Container15_1:
+                      Control: GroupContainer@1.5.0
+                      Variant: ManualLayout
+                      Properties:
+                        AlignInContainer: =AlignInContainer.Start
+                        DropShadow: =DropShadow.None
+                        FillPortions: =0
+                        Height: =650
+                        LayoutMaxHeight: =
+                        LayoutMaxWidth: =
+                        RadiusBottomLeft: =0
+                        RadiusBottomRight: =0
+                        RadiusTopLeft: =0
+                        RadiusTopRight: =0
+                        Visible: =!Container21_2.Visible
+                        Width: =600
+                      Children:
+                        - Image6_1:
+                            Control: Image@2.2.3
+                            Properties:
+                              BorderColor: =RGBA(255, 0, 0, 1)
+                              BorderThickness: =5
+                              DisplayMode: =DisplayMode.View
+                              Height: =700
+                              Image: =Blue
+                              Width: =Parent.Width
+                        - Button4_6:
+                            Control: Classic/Button@2.2.0
+                            Properties:
+                              BorderColor: =RGBA(255, 255, 255, 0.5)
+                              BorderStyle: =BorderStyle.None
+                              BorderThickness: =1
+                              Color: =RGBA(255, 255, 255, 1)
+                              DisabledBorderColor: =RGBA(0, 0, 0, 0)
+                              DisabledFill: =RGBA(0, 0, 0, 0)
+                              Fill: |+
+                                =Switch(
+                                    true,
+                                    CountRows(
+                                        Filter(
+                                            col_painelOperacionalVeiculos,
+                                            aeroporto.Value = Self.Tooltip And statusPainel = "Crítico"
+                                        )
+                                    ) > 0,
+                                    RGBA(184, 0, 0, 0.7),
+                                    CountRows(
+                                        Filter(
+                                            col_painelOperacionalVeiculos,
+                                            aeroporto.Value = Self.Tooltip And statusPainel = "Média"
+                                        )
+                                    ) > 0,
+                                    RGBA(255, 191, 0, 0.7),
+                                    RGBA(45, 128, 40, 0.7)
+                                )
+
+                              FontWeight: =FontWeight.Bold
+                              Height: =16
+                              HoverBorderColor: =RGBA(255, 255, 255, 1)
+                              HoverColor: =RGBA(255, 255, 255, 1)
+                              HoverFill: =App.Theme.Colors.Primary
+                              OnSelect: |-
+                                =UpdateContext({var_mapSelect: Self.Text})
+                              PaddingBottom: =0
+                              PaddingLeft: =0
+                              PaddingRight: =0
+                              PaddingTop: =0
+                              PressedBorderColor: =
+                              PressedFill: =
+                              RadiusBottomLeft: =4
+                              RadiusBottomRight: =4
+                              RadiusTopLeft: =4
+                              RadiusTopRight: =4
+                              Size: =6
+                              Text: ="SLZ"
+                              Tooltip: =LookUp(colAeros, IATA = Self.Text).Aeroporto
+                              Width: =30
+                              X: =417
+                              Y: =156
+                        - Button4_7:
+                            Control: Classic/Button@2.2.0
+                            Properties:
+                              BorderColor: =RGBA(255, 255, 255, 0.5)
+                              BorderStyle: =BorderStyle.None
+                              BorderThickness: =1
+                              Color: =RGBA(255, 255, 255, 1)
+                              DisabledBorderColor: =RGBA(0, 0, 0, 0)
+                              DisabledFill: =RGBA(0, 0, 0, 0)
+                              Fill: |+
+                                =Switch(
+                                    true,
+                                    CountRows(
+                                        Filter(
+                                            col_painelOperacionalVeiculos,
+                                            aeroporto.Value = Self.Tooltip And statusPainel = "Crítico"
+                                        )
+                                    ) > 0,
+                                    RGBA(184, 0, 0, 0.7),
+                                    CountRows(
+                                        Filter(
+                                            col_painelOperacionalVeiculos,
+                                            aeroporto.Value = Self.Tooltip And statusPainel = "Média"
+                                        )
+                                    ) > 0,
+                                    RGBA(255, 191, 0, 0.7),
+                                    RGBA(45, 128, 40, 0.7)
+                                )
+
+                              FontWeight: =FontWeight.Bold
+                              Height: =16
+                              HoverBorderColor: =RGBA(255, 255, 255, 1)
+                              HoverColor: =RGBA(255, 255, 255, 1)
+                              HoverFill: =App.Theme.Colors.Primary
+                              OnSelect: |-
+                                =UpdateContext({var_mapSelect: Self.Text})
+                              PaddingBottom: =0
+                              PaddingLeft: =0
+                              PaddingRight: =0
+                              PaddingTop: =0
+                              PressedBorderColor: =
+                              PressedFill: =
+                              RadiusBottomLeft: =4
+                              RadiusBottomRight: =4
+                              RadiusTopLeft: =4
+                              RadiusTopRight: =4
+                              Size: =6
+                              Text: ="IMP"
+                              Tooltip: =LookUp(colAeros, IATA = Self.Text).Aeroporto
+                              Width: =30
+                              X: =392
+                              Y: =211
+                        - Button4_8:
+                            Control: Classic/Button@2.2.0
+                            Properties:
+                              BorderColor: =RGBA(255, 255, 255, 0.5)
+                              BorderStyle: =BorderStyle.None
+                              BorderThickness: =1
+                              Color: =RGBA(255, 255, 255, 1)
+                              DisabledBorderColor: =RGBA(0, 0, 0, 0)
+                              DisabledFill: =RGBA(0, 0, 0, 0)
+                              Fill: |+
+                                =Switch(
+                                    true,
+                                    CountRows(
+                                        Filter(
+                                            col_painelOperacionalVeiculos,
+                                            aeroporto.Value = Self.Tooltip And statusPainel = "Crítico"
+                                        )
+                                    ) > 0,
+                                    RGBA(184, 0, 0, 0.7),
+                                    CountRows(
+                                        Filter(
+                                            col_painelOperacionalVeiculos,
+                                            aeroporto.Value = Self.Tooltip And statusPainel = "Média"
+                                        )
+                                    ) > 0,
+                                    RGBA(255, 191, 0, 0.7),
+                                    RGBA(45, 128, 40, 0.7)
+                                )
+
+                              FontWeight: =FontWeight.Bold
+                              Height: =16
+                              HoverBorderColor: =RGBA(255, 255, 255, 1)
+                              HoverColor: =RGBA(255, 255, 255, 1)
+                              HoverFill: =App.Theme.Colors.Primary
+                              OnSelect: |-
+                                =UpdateContext({var_mapSelect: Self.Text})
+                              PaddingBottom: =0
+                              PaddingLeft: =0
+                              PaddingRight: =0
+                              PaddingTop: =0
+                              PressedBorderColor: =
+                              PressedFill: =
+                              RadiusBottomLeft: =4
+                              RadiusBottomRight: =4
+                              RadiusTopLeft: =4
+                              RadiusTopRight: =4
+                              Size: =6
+                              Text: ="THE"
+                              Tooltip: =LookUp(colAeros, IATA = Self.Text).Aeroporto
+                              Width: =30
+                              X: =461
+                              Y: =206
+                        - Button4_10:
+                            Control: Classic/Button@2.2.0
+                            Properties:
+                              BorderColor: =RGBA(255, 255, 255, 0.5)
+                              BorderStyle: =BorderStyle.None
+                              BorderThickness: =1
+                              Color: =RGBA(255, 255, 255, 1)
+                              DisabledBorderColor: =RGBA(0, 0, 0, 0)
+                              DisabledFill: =RGBA(0, 0, 0, 0)
+                              Fill: |+
+                                =Switch(
+                                    true,
+                                    CountRows(
+                                        Filter(
+                                            col_painelOperacionalVeiculos,
+                                            aeroporto.Value = Self.Tooltip And statusPainel = "Crítico"
+                                        )
+                                    ) > 0,
+                                    RGBA(184, 0, 0, 0.7),
+                                    CountRows(
+                                        Filter(
+                                            col_painelOperacionalVeiculos,
+                                            aeroporto.Value = Self.Tooltip And statusPainel = "Média"
+                                        )
+                                    ) > 0,
+                                    RGBA(255, 191, 0, 0.7),
+                                    RGBA(45, 128, 40, 0.7)
+                                )
+
+                              FontWeight: =FontWeight.Bold
+                              Height: =16
+                              HoverBorderColor: =RGBA(255, 255, 255, 1)
+                              HoverColor: =RGBA(255, 255, 255, 1)
+                              HoverFill: =App.Theme.Colors.Primary
+                              OnSelect: |-
+                                =UpdateContext({var_mapSelect: Self.Text})
+                              PaddingBottom: =0
+                              PaddingLeft: =0
+                              PaddingRight: =0
+                              PaddingTop: =0
+                              PressedBorderColor: =
+                              PressedFill: =
+                              RadiusBottomLeft: =4
+                              RadiusBottomRight: =4
+                              RadiusTopLeft: =4
+                              RadiusTopRight: =4
+                              Size: =6
+                              Text: ="PMW"
+                              Tooltip: =LookUp(colAeros, IATA = Self.Text).Aeroporto
+                              Width: =30
+                              X: =375
+                              Y: =282
+                        - Button4_11:
+                            Control: Classic/Button@2.2.0
+                            Properties:
+                              BorderColor: =RGBA(255, 255, 255, 0.5)
+                              BorderStyle: =BorderStyle.None
+                              BorderThickness: =1
+                              Color: =RGBA(255, 255, 255, 1)
+                              DisabledBorderColor: =RGBA(0, 0, 0, 0)
+                              DisabledFill: =RGBA(0, 0, 0, 0)
+                              Fill: |+
+                                =Switch(
+                                    true,
+                                    CountRows(
+                                        Filter(
+                                            col_painelOperacionalVeiculos,
+                                            aeroporto.Value = Self.Tooltip And statusPainel = "Crítico"
+                                        )
+                                    ) > 0,
+                                    RGBA(184, 0, 0, 0.7),
+                                    CountRows(
+                                        Filter(
+                                            col_painelOperacionalVeiculos,
+                                            aeroporto.Value = Self.Tooltip And statusPainel = "Média"
+                                        )
+                                    ) > 0,
+                                    RGBA(255, 191, 0, 0.7),
+                                    RGBA(45, 128, 40, 0.7)
+                                )
+
+                              FontWeight: =FontWeight.Bold
+                              Height: =16
+                              HoverBorderColor: =RGBA(255, 255, 255, 1)
+                              HoverColor: =RGBA(255, 255, 255, 1)
+                              HoverFill: =App.Theme.Colors.Primary
+                              OnSelect: |-
+                                =UpdateContext({var_mapSelect: Self.Text})
+                              PaddingBottom: =0
+                              PaddingLeft: =0
+                              PaddingRight: =0
+                              PaddingTop: =0
+                              PressedBorderColor: =
+                              PressedFill: =
+                              RadiusBottomLeft: =4
+                              RadiusBottomRight: =4
+                              RadiusTopLeft: =4
+                              RadiusTopRight: =4
+                              Size: =6
+                              Text: ="PNZ"
+                              Tooltip: =LookUp(colAeros, IATA = Self.Text).Aeroporto
+                              Width: =30
+                              X: =497
+                              Y: =264
+                        - Button4_12:
+                            Control: Classic/Button@2.2.0
+                            Properties:
+                              BorderColor: =RGBA(255, 255, 255, 0.5)
+                              BorderStyle: =BorderStyle.None
+                              BorderThickness: =1
+                              Color: =RGBA(255, 255, 255, 1)
+                              DisabledBorderColor: =RGBA(0, 0, 0, 0)
+                              DisabledFill: =RGBA(0, 0, 0, 0)
+                              Fill: |+
+                                =Switch(
+                                    true,
+                                    CountRows(
+                                        Filter(
+                                            col_painelOperacionalVeiculos,
+                                            aeroporto.Value = Self.Tooltip And statusPainel = "Crítico"
+                                        )
+                                    ) > 0,
+                                    RGBA(184, 0, 0, 0.7),
+                                    CountRows(
+                                        Filter(
+                                            col_painelOperacionalVeiculos,
+                                            aeroporto.Value = Self.Tooltip And statusPainel = "Média"
+                                        )
+                                    ) > 0,
+                                    RGBA(255, 191, 0, 0.7),
+                                    RGBA(45, 128, 40, 0.7)
+                                )
+
+                              FontWeight: =FontWeight.Bold
+                              Height: =16
+                              HoverBorderColor: =RGBA(255, 255, 255, 1)
+                              HoverColor: =RGBA(255, 255, 255, 1)
+                              HoverFill: =App.Theme.Colors.Primary
+                              OnSelect: |-
+                                =UpdateContext({var_mapSelect: Self.Text})
+                              PaddingBottom: =0
+                              PaddingLeft: =0
+                              PaddingRight: =0
+                              PaddingTop: =0
+                              PressedBorderColor: =
+                              PressedFill: =
+                              RadiusBottomLeft: =4
+                              RadiusBottomRight: =4
+                              RadiusTopLeft: =4
+                              RadiusTopRight: =4
+                              Size: =6
+                              Text: ="GYN"
+                              Tooltip: =LookUp(colAeros, IATA = Self.Text).Aeroporto
+                              Width: =30
+                              X: =358
+                              Y: =366
+                        - Button4_13:
+                            Control: Classic/Button@2.2.0
+                            Properties:
+                              BorderColor: =RGBA(255, 255, 255, 0.5)
+                              BorderStyle: =BorderStyle.None
+                              BorderThickness: =1
+                              Color: =RGBA(255, 255, 255, 1)
+                              DisabledBorderColor: =RGBA(0, 0, 0, 0)
+                              DisabledFill: =RGBA(0, 0, 0, 0)
+                              Fill: |+
+                                =Switch(
+                                    true,
+                                    CountRows(
+                                        Filter(
+                                            col_painelOperacionalVeiculos,
+                                            aeroporto.Value = Self.Tooltip And statusPainel = "Crítico"
+                                        )
+                                    ) > 0,
+                                    RGBA(184, 0, 0, 0.7),
+                                    CountRows(
+                                        Filter(
+                                            col_painelOperacionalVeiculos,
+                                            aeroporto.Value = Self.Tooltip And statusPainel = "Média"
+                                        )
+                                    ) > 0,
+                                    RGBA(255, 191, 0, 0.7),
+                                    RGBA(45, 128, 40, 0.7)
+                                )
+
+                              FontWeight: =FontWeight.Bold
+                              Height: =16
+                              HoverBorderColor: =RGBA(255, 255, 255, 1)
+                              HoverColor: =RGBA(255, 255, 255, 1)
+                              HoverFill: =App.Theme.Colors.Primary
+                              OnSelect: |-
+                                =UpdateContext({var_mapSelect: Self.Text})
+                              PaddingBottom: =0
+                              PaddingLeft: =0
+                              PaddingRight: =0
+                              PaddingTop: =0
+                              PressedBorderColor: =
+                              PressedFill: =
+                              RadiusBottomLeft: =4
+                              RadiusBottomRight: =4
+                              RadiusTopLeft: =4
+                              RadiusTopRight: =4
+                              Size: =6
+                              Text: ="BFH"
+                              Tooltip: =LookUp(colAeros, IATA = Self.Text).Aeroporto
+                              Width: =30
+                              X: =352
+                              Y: =495
+                        - Button4_14:
+                            Control: Classic/Button@2.2.0
+                            Properties:
+                              BorderColor: =RGBA(255, 255, 255, 0.5)
+                              BorderStyle: =BorderStyle.None
+                              BorderThickness: =1
+                              Color: =RGBA(255, 255, 255, 1)
+                              DisabledBorderColor: =RGBA(0, 0, 0, 0)
+                              DisabledFill: =RGBA(0, 0, 0, 0)
+                              Fill: |+
+                                =Switch(
+                                    true,
+                                    CountRows(
+                                        Filter(
+                                            col_painelOperacionalVeiculos,
+                                            aeroporto.Value = Self.Tooltip And statusPainel = "Crítico"
+                                        )
+                                    ) > 0,
+                                    RGBA(184, 0, 0, 0.7),
+                                    CountRows(
+                                        Filter(
+                                            col_painelOperacionalVeiculos,
+                                            aeroporto.Value = Self.Tooltip And statusPainel = "Média"
+                                        )
+                                    ) > 0,
+                                    RGBA(255, 191, 0, 0.7),
+                                    RGBA(45, 128, 40, 0.7)
+                                )
+
+                              FontWeight: =FontWeight.Bold
+                              Height: =16
+                              HoverBorderColor: =RGBA(255, 255, 255, 1)
+                              HoverColor: =RGBA(255, 255, 255, 1)
+                              HoverFill: =App.Theme.Colors.Primary
+                              OnSelect: |-
+                                =UpdateContext({var_mapSelect: Self.Text})
+                              PaddingBottom: =0
+                              PaddingLeft: =0
+                              PaddingRight: =0
+                              PaddingTop: =0
+                              PressedBorderColor: =
+                              PressedFill: =
+                              RadiusBottomLeft: =4
+                              RadiusBottomRight: =4
+                              RadiusTopLeft: =4
+                              RadiusTopRight: =4
+                              Size: =6
+                              Text: ="LDB"
+                              Tooltip: =LookUp(colAeros, IATA = Self.Text).Aeroporto
+                              Width: =30
+                              X: =317
+                              Y: =474
+                        - Button4_15:
+                            Control: Classic/Button@2.2.0
+                            Properties:
+                              BorderColor: =RGBA(255, 255, 255, 0.5)
+                              BorderStyle: =BorderStyle.None
+                              BorderThickness: =1
+                              Color: =RGBA(255, 255, 255, 1)
+                              DisabledBorderColor: =RGBA(0, 0, 0, 0)
+                              DisabledFill: =RGBA(0, 0, 0, 0)
+                              Fill: |+
+                                =Switch(
+                                    true,
+                                    CountRows(
+                                        Filter(
+                                            col_painelOperacionalVeiculos,
+                                            aeroporto.Value = Self.Tooltip And statusPainel = "Crítico"
+                                        )
+                                    ) > 0,
+                                    RGBA(184, 0, 0, 0.7),
+                                    CountRows(
+                                        Filter(
+                                            col_painelOperacionalVeiculos,
+                                            aeroporto.Value = Self.Tooltip And statusPainel = "Média"
+                                        )
+                                    ) > 0,
+                                    RGBA(255, 191, 0, 0.7),
+                                    RGBA(45, 128, 40, 0.7)
+                                )
+
+                              FontWeight: =FontWeight.Bold
+                              Height: =16
+                              HoverBorderColor: =RGBA(255, 255, 255, 1)
+                              HoverColor: =RGBA(255, 255, 255, 1)
+                              HoverFill: =App.Theme.Colors.Primary
+                              OnSelect: |-
+                                =UpdateContext({var_mapSelect: Self.Text})
+                              PaddingBottom: =0
+                              PaddingLeft: =0
+                              PaddingRight: =0
+                              PaddingTop: =0
+                              PressedBorderColor: =
+                              PressedFill: =
+                              RadiusBottomLeft: =4
+                              RadiusBottomRight: =4
+                              RadiusTopLeft: =4
+                              RadiusTopRight: =4
+                              Size: =6
+                              Text: ="PLU"
+                              Tooltip: =LookUp(colAeros, IATA = Self.Text).Aeroporto
+                              Width: =30
+                              X: =437
+                              Y: =430
+                        - Button4_16:
+                            Control: Classic/Button@2.2.0
+                            Properties:
+                              BorderColor: =RGBA(255, 255, 255, 0.5)
+                              BorderStyle: =BorderStyle.None
+                              BorderThickness: =1
+                              Color: =RGBA(255, 255, 255, 1)
+                              DisabledBorderColor: =RGBA(0, 0, 0, 0)
+                              DisabledFill: =RGBA(0, 0, 0, 0)
+                              Fill: |+
+                                =Switch(
+                                    true,
+                                    CountRows(
+                                        Filter(
+                                            col_painelOperacionalVeiculos,
+                                            aeroporto.Value = Self.Tooltip And statusPainel = "Crítico"
+                                        )
+                                    ) > 0,
+                                    RGBA(184, 0, 0, 0.7),
+                                    CountRows(
+                                        Filter(
+                                            col_painelOperacionalVeiculos,
+                                            aeroporto.Value = Self.Tooltip And statusPainel = "Média"
+                                        )
+                                    ) > 0,
+                                    RGBA(255, 191, 0, 0.7),
+                                    RGBA(45, 128, 40, 0.7)
+                                )
+
+                              FontWeight: =FontWeight.Bold
+                              Height: =16
+                              HoverBorderColor: =RGBA(255, 255, 255, 1)
+                              HoverColor: =RGBA(255, 255, 255, 1)
+                              HoverFill: =App.Theme.Colors.Primary
+                              OnSelect: |-
+                                =UpdateContext({var_mapSelect: Self.Text})
+                              PaddingBottom: =0
+                              PaddingLeft: =0
+                              PaddingRight: =0
+                              PaddingTop: =0
+                              PressedBorderColor: =
+                              PressedFill: =
+                              RadiusBottomLeft: =4
+                              RadiusBottomRight: =4
+                              RadiusTopLeft: =4
+                              RadiusTopRight: =4
+                              Size: =6
+                              Text: ="CWB"
+                              Tooltip: =LookUp(colAeros, IATA = Self.Text).Aeroporto
+                              Width: =30
+                              X: =350
+                              Y: =514
+                        - Button4_17:
+                            Control: Classic/Button@2.2.0
+                            Properties:
+                              BorderColor: =RGBA(255, 255, 255, 0.5)
+                              BorderStyle: =BorderStyle.None
+                              BorderThickness: =1
+                              Color: =RGBA(255, 255, 255, 1)
+                              DisabledBorderColor: =RGBA(0, 0, 0, 0)
+                              DisabledFill: =RGBA(0, 0, 0, 0)
+                              Fill: |+
+                                =Switch(
+                                    true,
+                                    CountRows(
+                                        Filter(
+                                            col_painelOperacionalVeiculos,
+                                            aeroporto.Value = Self.Tooltip And statusPainel = "Crítico"
+                                        )
+                                    ) > 0,
+                                    RGBA(184, 0, 0, 0.7),
+                                    CountRows(
+                                        Filter(
+                                            col_painelOperacionalVeiculos,
+                                            aeroporto.Value = Self.Tooltip And statusPainel = "Média"
+                                        )
+                                    ) > 0,
+                                    RGBA(255, 191, 0, 0.7),
+                                    RGBA(45, 128, 40, 0.7)
+                                )
+
+                              FontWeight: =FontWeight.Bold
+                              Height: =16
+                              HoverBorderColor: =RGBA(255, 255, 255, 1)
+                              HoverColor: =RGBA(255, 255, 255, 1)
+                              HoverFill: =App.Theme.Colors.Primary
+                              OnSelect: |-
+                                =UpdateContext({var_mapSelect: Self.Text})
+                              PaddingBottom: =0
+                              PaddingLeft: =0
+                              PaddingRight: =0
+                              PaddingTop: =0
+                              PressedBorderColor: =
+                              PressedFill: =
+                              RadiusBottomLeft: =4
+                              RadiusBottomRight: =4
+                              RadiusTopLeft: =4
+                              RadiusTopRight: =4
+                              Size: =6
+                              Text: ="JOI"
+                              Tooltip: =LookUp(colAeros, IATA = Self.Text).Aeroporto
+                              Width: =30
+                              X: =356
+                              Y: =534
+                        - Button4_18:
+                            Control: Classic/Button@2.2.0
+                            Properties:
+                              BorderColor: =RGBA(255, 255, 255, 0.5)
+                              BorderStyle: =BorderStyle.None
+                              BorderThickness: =1
+                              Color: =RGBA(255, 255, 255, 1)
+                              DisabledBorderColor: =RGBA(0, 0, 0, 0)
+                              DisabledFill: =RGBA(0, 0, 0, 0)
+                              Fill: |+
+                                =Switch(
+                                    true,
+                                    CountRows(
+                                        Filter(
+                                            col_painelOperacionalVeiculos,
+                                            aeroporto.Value = Self.Tooltip And statusPainel = "Crítico"
+                                        )
+                                    ) > 0,
+                                    RGBA(184, 0, 0, 0.7),
+                                    CountRows(
+                                        Filter(
+                                            col_painelOperacionalVeiculos,
+                                            aeroporto.Value = Self.Tooltip And statusPainel = "Média"
+                                        )
+                                    ) > 0,
+                                    RGBA(255, 191, 0, 0.7),
+                                    RGBA(45, 128, 40, 0.7)
+                                )
+
+                              FontWeight: =FontWeight.Bold
+                              Height: =16
+                              HoverBorderColor: =RGBA(255, 255, 255, 1)
+                              HoverColor: =RGBA(255, 255, 255, 1)
+                              HoverFill: =App.Theme.Colors.Primary
+                              OnSelect: |-
+                                =UpdateContext({var_mapSelect: Self.Text})
+                              PaddingBottom: =0
+                              PaddingLeft: =0
+                              PaddingRight: =0
+                              PaddingTop: =0
+                              PressedBorderColor: =
+                              PressedFill: =
+                              RadiusBottomLeft: =4
+                              RadiusBottomRight: =4
+                              RadiusTopLeft: =4
+                              RadiusTopRight: =4
+                              Size: =6
+                              Text: ="NVT"
+                              Tooltip: =LookUp(colAeros, IATA = Self.Text).Aeroporto
+                              Width: =30
+                              X: =360
+                              Y: =553
+                        - Button4_19:
+                            Control: Classic/Button@2.2.0
+                            Properties:
+                              BorderColor: =RGBA(255, 255, 255, 0.5)
+                              BorderStyle: =BorderStyle.None
+                              BorderThickness: =1
+                              Color: =RGBA(255, 255, 255, 1)
+                              DisabledBorderColor: =RGBA(0, 0, 0, 0)
+                              DisabledFill: =RGBA(0, 0, 0, 0)
+                              Fill: |+
+                                =Switch(
+                                    true,
+                                    CountRows(
+                                        Filter(
+                                            col_painelOperacionalVeiculos,
+                                            aeroporto.Value = Self.Tooltip And statusPainel = "Crítico"
+                                        )
+                                    ) > 0,
+                                    RGBA(184, 0, 0, 0.7),
+                                    CountRows(
+                                        Filter(
+                                            col_painelOperacionalVeiculos,
+                                            aeroporto.Value = Self.Tooltip And statusPainel = "Média"
+                                        )
+                                    ) > 0,
+                                    RGBA(255, 191, 0, 0.7),
+                                    RGBA(45, 128, 40, 0.7)
+                                )
+
+                              FontWeight: =FontWeight.Bold
+                              Height: =16
+                              HoverBorderColor: =RGBA(255, 255, 255, 1)
+                              HoverColor: =RGBA(255, 255, 255, 1)
+                              HoverFill: =App.Theme.Colors.Primary
+                              OnSelect: |-
+                                =UpdateContext({var_mapSelect: Self.Text})
+                              PaddingBottom: =0
+                              PaddingLeft: =0
+                              PaddingRight: =0
+                              PaddingTop: =0
+                              PressedBorderColor: =
+                              PressedFill: =
+                              RadiusBottomLeft: =4
+                              RadiusBottomRight: =4
+                              RadiusTopLeft: =4
+                              RadiusTopRight: =4
+                              Size: =6
+                              Text: ="IGU"
+                              Tooltip: =LookUp(colAeros, IATA = Self.Text).Aeroporto
+                              Width: =30
+                              X: =289
+                              Y: =518
+                        - Button4_20:
+                            Control: Classic/Button@2.2.0
+                            Properties:
+                              BorderColor: =RGBA(255, 255, 255, 0.5)
+                              BorderStyle: =BorderStyle.None
+                              BorderThickness: =1
+                              Color: =RGBA(255, 255, 255, 1)
+                              DisabledBorderColor: =RGBA(0, 0, 0, 0)
+                              DisabledFill: =RGBA(0, 0, 0, 0)
+                              Fill: |+
+                                =Switch(
+                                    true,
+                                    CountRows(
+                                        Filter(
+                                            col_painelOperacionalVeiculos,
+                                            aeroporto.Value = Self.Tooltip And statusPainel = "Crítico"
+                                        )
+                                    ) > 0,
+                                    RGBA(184, 0, 0, 0.7),
+                                    CountRows(
+                                        Filter(
+                                            col_painelOperacionalVeiculos,
+                                            aeroporto.Value = Self.Tooltip And statusPainel = "Média"
+                                        )
+                                    ) > 0,
+                                    RGBA(255, 191, 0, 0.7),
+                                    RGBA(45, 128, 40, 0.7)
+                                )
+
+                              FontWeight: =FontWeight.Bold
+                              Height: =16
+                              HoverBorderColor: =RGBA(255, 255, 255, 1)
+                              HoverColor: =RGBA(255, 255, 255, 1)
+                              HoverFill: =App.Theme.Colors.Primary
+                              OnSelect: |-
+                                =UpdateContext({var_mapSelect: Self.Text})
+                              PaddingBottom: =0
+                              PaddingLeft: =0
+                              PaddingRight: =0
+                              PaddingTop: =0
+                              PressedBorderColor: =
+                              PressedFill: =
+                              RadiusBottomLeft: =4
+                              RadiusBottomRight: =4
+                              RadiusTopLeft: =4
+                              RadiusTopRight: =4
+                              Size: =6
+                              Text: ="PET"
+                              Tooltip: =LookUp(colAeros, IATA = Self.Text).Aeroporto
+                              Width: =30
+                              X: =316
+                              Y: =607
+                        - Button4_21:
+                            Control: Classic/Button@2.2.0
+                            Properties:
+                              BorderColor: =RGBA(255, 255, 255, 0.5)
+                              BorderStyle: =BorderStyle.None
+                              BorderThickness: =1
+                              Color: =RGBA(255, 255, 255, 1)
+                              DisabledBorderColor: =RGBA(0, 0, 0, 0)
+                              DisabledFill: =RGBA(0, 0, 0, 0)
+                              Fill: =RGBA(139, 154, 159, 0.7)
+                              FontWeight: =FontWeight.Bold
+                              Height: =16
+                              HoverBorderColor: =RGBA(255, 255, 255, 1)
+                              HoverColor: =RGBA(255, 255, 255, 1)
+                              HoverFill: =App.Theme.Colors.Primary
+                              OnSelect: |-
+                                =UpdateContext({var_mapSelect: Self.Text})
+                              PaddingBottom: =0
+                              PaddingLeft: =0
+                              PaddingRight: =0
+                              PaddingTop: =0
+                              PressedBorderColor: =
+                              PressedFill: =
+                              RadiusBottomLeft: =4
+                              RadiusBottomRight: =4
+                              RadiusTopLeft: =4
+                              RadiusTopRight: =4
+                              Size: =6
+                              Text: ="URG"
+                              Tooltip: =LookUp(colAeros, IATA = Self.Text).Aeroporto
+                              Width: =30
+                              X: =255
+                              Y: =570
+                        - Button4_22:
+                            Control: Classic/Button@2.2.0
+                            Properties:
+                              BorderColor: =RGBA(255, 255, 255, 0.5)
+                              BorderStyle: =BorderStyle.None
+                              BorderThickness: =1
+                              Color: =RGBA(255, 255, 255, 1)
+                              DisabledBorderColor: =RGBA(0, 0, 0, 0)
+                              DisabledFill: =RGBA(0, 0, 0, 0)
+                              Fill: =RGBA(139, 154, 159, 0.7)
+                              FontWeight: =FontWeight.Bold
+                              Height: =16
+                              HoverBorderColor: =RGBA(255, 255, 255, 1)
+                              HoverColor: =RGBA(255, 255, 255, 1)
+                              HoverFill: =App.Theme.Colors.Primary
+                              OnSelect: |-
+                                =UpdateContext({var_mapSelect: Self.Text})
+                              PaddingBottom: =0
+                              PaddingLeft: =0
+                              PaddingRight: =0
+                              PaddingTop: =0
+                              PressedBorderColor: =
+                              PressedFill: =
+                              RadiusBottomLeft: =4
+                              RadiusBottomRight: =4
+                              RadiusTopLeft: =4
+                              RadiusTopRight: =4
+                              Size: =6
+                              Text: ="BGX"
+                              Tooltip: =LookUp(colAeros, IATA = Self.Text).Aeroporto
+                              Width: =30
+                              X: =282
+                              Y: =600
+            - HtmlText15:
+                Control: HtmlViewer@2.1.0
+                Properties:
+                  AutoHeight: =true
+                  BorderColor: =RGBA(255, 255, 255, 0.05)
+                  BorderStyle: =BorderStyle.Solid
+                  BorderThickness: =1
+                  HtmlText: |-
+                    ="<div style='
+                        display:flex;
+                        align-items:center;
+                        gap:20px;
+                        padding:8px 16px;
+                        border-radius:8px;
+                        /*background-color:rgba(255,255,255,0.05);*/
+                        font-family:Segoe UI,sans-serif;
+                        white-space:nowrap;
+                    '>
+                        <span style='font-size:10px; font-weight:700; color:rgba(180,185,220,0.6); letter-spacing:1.2px;'>STATUS</span>
+
+                        <div style='display:flex; align-items:center; gap:14px;'>
+                            <div style='display:flex; align-items:center; gap:5px;'>
+                                <span style='width:8px; height:8px; border-radius:50%; background-color:#00cc66; display:inline-block;'></span>
+                                <span style='font-size:11px; color:rgba(200,205,230,0.85);'>Operacional</span>
+                            </div>
+                            <div style='display:flex; align-items:center; gap:5px;'>
+                                <span style='width:8px; height:8px; border-radius:50%; background-color:#ffaa00; display:inline-block;'></span>
+                                <span style='font-size:11px; color:rgba(200,205,230,0.85);'>Operacional c/ Restrições</span>
+                            </div>
+                            <div style='display:flex; align-items:center; gap:5px;'>
+                                <span style='width:8px; height:8px; border-radius:50%; background-color:#ff4444; display:inline-block;'></span>
+                                <span style='font-size:11px; color:rgba(200,205,230,0.85);'>Inoperante / Baixado</span>
+                            </div>
+                        </div>
+
+                        <div style='width:1px; height:20px; background-color:rgba(255,255,255,0.15);'></div>
+
+                        <span style='font-size:10px; font-weight:700; color:rgba(180,185,220,0.6); letter-spacing:1.2px;'>TAGS</span>
+
+                        <div style='display:flex; align-items:center; gap:14px;'>
+                            <div style='display:flex; align-items:center; gap:5px;'>
+                                <span style='width:8px; height:8px; border-radius:50%; border:1.5px solid #00d4ff; display:inline-block;'></span>
+                                <span style='font-size:11px; color:rgba(200,205,230,0.85);'>
+                                    <span style='color:#00d4ff; font-weight:700;'>LN</span> - Em Linha
+                                </span>
+                            </div>
+                            <div style='display:flex; align-items:center; gap:5px;'>
+                                <span style='width:8px; height:8px; border-radius:50%; border:1.5px solid #a78bfa; display:inline-block;'></span>
+                                <span style='font-size:11px; color:rgba(200,205,230,0.85);'>
+                                    <span style='color:#a78bfa; font-weight:700;'>RT</span> - Reserva Técnica
+                                </span>
+                            </div>
+                        </div>
+                    </div>"
+                  LayoutMinHeight: =16
+                  LayoutMinWidth: =16
+                  PaddingBottom: =0
+                  PaddingLeft: =0
+                  PaddingRight: =0
+                  PaddingTop: =0

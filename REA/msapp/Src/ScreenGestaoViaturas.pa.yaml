@@ -1,0 +1,1169 @@
+# ************************************************************************************************
+# Warning: YAML source code for Canvas Apps should only be used to review changes made within Power Apps Studio and for minor edits (Preview).
+# Use the maker portal to create and edit your Power Apps.
+# 
+# The schema file for Canvas Apps is available at https://go.microsoft.com/fwlink/?linkid=2304907
+# 
+# For more information, visit https://go.microsoft.com/fwlink/?linkid=2292623
+# ************************************************************************************************
+Screens:
+  ScreenGestaoViaturas:
+    Children:
+      - ScreenContainer1:
+          Control: GroupContainer@1.5.0
+          Variant: AutoLayout
+          Properties:
+            DropShadow: =DropShadow.None
+            Fill: =RGBA(245, 245, 245, 1)
+            Height: =Parent.Height
+            LayoutAlignItems: =LayoutAlignItems.Stretch
+            LayoutDirection: =LayoutDirection.Vertical
+            LayoutGap: =10
+            PaddingBottom: =16
+            RadiusBottomLeft: =0
+            RadiusBottomRight: =0
+            RadiusTopLeft: =0
+            RadiusTopRight: =0
+            Width: =Parent.Width
+          Children:
+            - HeaderContainer1:
+                Control: GroupContainer@1.5.0
+                Variant: AutoLayout
+                Properties:
+                  BorderStyle: =BorderStyle.None
+                  DropShadow: =DropShadow.Regular
+                  Fill: =RGBA(255, 255, 255, 1)
+                  FillPortions: =0
+                  Height: =50
+                  LayoutAlignItems: =LayoutAlignItems.Center
+                  LayoutDirection: =LayoutDirection.Horizontal
+                  LayoutGap: =5
+                  LayoutMaxHeight: =
+                  LayoutMaxWidth: =
+                  RadiusBottomLeft: =0
+                  RadiusBottomRight: =0
+                  RadiusTopLeft: =0
+                  RadiusTopRight: =0
+                Children:
+                  - HeaderTitle_8:
+                      Control: CanvasComponent
+                      ComponentName: HeaderTitle
+                      Properties:
+                        AlignInContainer: =AlignInContainer.Center
+                        FillPortions: =1
+                        Height: =50
+                        IconVisible: =true
+                        LayoutMaxHeight: =
+                        LayoutMaxWidth: =
+                        ScreenNavigator: =
+                        Width: =Max(App.Width, App.MinScreenWidth)
+                        var_subtitulo1: =
+                        var_subtitulo2: =
+                        var_tituloModulo: =var_tituloModulo
+            - BodyContainer1:
+                Control: GroupContainer@1.5.0
+                Variant: AutoLayout
+                Properties:
+                  DropShadow: =DropShadow.None
+                  LayoutDirection: =LayoutDirection.Horizontal
+                  LayoutGap: =16
+                  LayoutMaxHeight: =
+                  LayoutMaxWidth: =
+                  PaddingBottom: =2
+                  PaddingLeft: =10
+                  PaddingRight: =10
+                  PaddingTop: =4
+                  RadiusBottomLeft: =0
+                  RadiusBottomRight: =0
+                  RadiusTopLeft: =0
+                  RadiusTopRight: =0
+                Children:
+                  - SidebarContainer1:
+                      Control: GroupContainer@1.5.0
+                      Variant: AutoLayout
+                      Properties:
+                        Fill: =RGBA(255, 255, 255, 1)
+                        FillPortions: =If(And(ScreenGestaoViaturas.Size = ScreenSize.Small, Or(newMode, isItemSelected)), 0, 3)
+                        LayoutDirection: =LayoutDirection.Vertical
+                        LayoutGap: =10
+                        LayoutMaxHeight: =
+                        LayoutMaxWidth: =
+                        PaddingBottom: =10
+                        PaddingLeft: =10
+                        PaddingRight: =10
+                        PaddingTop: =10
+                        Visible: =If(And(ScreenGestaoViaturas.Size = ScreenSize.Small, Or(newMode, isItemSelected)), false, true)
+                      Children:
+                        - SearchContainer1:
+                            Control: GroupContainer@1.5.0
+                            Variant: AutoLayout
+                            Properties:
+                              DropShadow: =DropShadow.None
+                              Fill: =RGBA(245, 245, 245, 1)
+                              FillPortions: =0
+                              Height: =44
+                              LayoutDirection: =LayoutDirection.Horizontal
+                              LayoutMaxHeight: =
+                              LayoutMaxWidth: =
+                              LayoutMinWidth: =0
+                              PaddingRight: =5
+                            Children:
+                              - SearchInput1:
+                                  Control: TextInput@0.0.54
+                                  Properties:
+                                    FillPortions: =1
+                                    Height: =44
+                                    LayoutMaxHeight: =
+                                    LayoutMaxWidth: =
+                                    LayoutMinWidth: =0
+                                    Placeholder: ="Pesquisar"
+                                    TriggerOutput: ='TextInputCanvas.TriggerOutput'.Keypress
+                        - AddNewContainer1:
+                            Control: GroupContainer@1.5.0
+                            Variant: AutoLayout
+                            Properties:
+                              DropShadow: =DropShadow.None
+                              FillPortions: =0
+                              Height: =44
+                              LayoutDirection: =LayoutDirection.Horizontal
+                              LayoutMaxHeight: =
+                              LayoutMaxWidth: =
+                              RadiusBottomLeft: =0
+                              RadiusBottomRight: =0
+                              RadiusTopLeft: =0
+                              RadiusTopRight: =0
+                              Visible: =If(ScreenGestaoViaturas.Size = ScreenSize.Small,true,false)
+                            Children:
+                              - AddNewButton1:
+                                  Control: Button@0.0.45
+                                  Properties:
+                                    Align: =Align.Left
+                                    AlignInContainer: =AlignInContainer.Stretch
+                                    Appearance: ='ButtonCanvas.Appearance'.Transparent
+                                    FillPortions: =1
+                                    FontSize: =14
+                                    Height: =44
+                                    Icon: ="Add"
+                                    LayoutMaxHeight: =
+                                    LayoutMaxWidth: =
+                                    LayoutMinWidth: =60
+                                    OnSelect: |-
+                                      =NewForm(Form1); UpdateContext({ newMode: true })
+                                    Text: ="New"
+                                    VerticalAlign: =VerticalAlign.Middle
+                                    Width: =80
+                        - Table1:
+                            Control: Gallery@2.15.0
+                            Variant: BrowseLayout_Vertical_TwoTextOneImageVariant_ver5.0
+                            Properties:
+                              Items: |-
+                                =Search(
+                                    Sort(
+                                        tbl_gestaoVeiculosRea,
+                                        aeroporto.Value,
+                                        SortOrder.Ascending
+                                    ),
+                                    SearchInput1.Value,
+                                    identificacao,
+                                    modelo
+                                )
+                              LayoutMaxHeight: =
+                              LayoutMaxWidth: =
+                              LayoutMinWidth: =0
+                              ShowScrollbar: =false
+                              TemplateSize: =90
+                              Transition: =Transition.Pop
+                            Children:
+                              - Separator17:
+                                  Control: Rectangle@2.3.0
+                                  Properties:
+                                    Fill: =RGBA(245, 245, 245, 1)
+                                    Height: =1
+                                    OnSelect: =Select(Parent)
+                                    Width: =Parent.TemplateWidth
+                                    Y: =Parent.TemplateHeight - Self.Height
+                              - Image1:
+                                  Control: Image@2.2.3
+                                  Properties:
+                                    Height: =50
+                                    Image: |-
+                                      =Switch(
+                                          true,
+                                          ThisItem.tipo.Value = "CCI" And status.Text = "Operacional",
+                                          'CCI-operacional',
+                                          ThisItem.tipo.Value = "CRS" And status.Text = "Operacional",
+                                          'CRS-operacional',
+                                          ThisItem.tipo.Value = "CCI" And status.Text = "Baixado",
+                                          'CCI-inoperante',
+                                          ThisItem.tipo.Value = "CRS" And status.Text = "Baixado",
+                                          'CRS-inoperante'
+                                      )
+                                    OnSelect: =Select(Parent)
+                                    RadiusBottomLeft: =8
+                                    RadiusBottomRight: =8
+                                    RadiusTopLeft: =8
+                                    RadiusTopRight: =8
+                                    Width: =50
+                                    X: =10
+                                    Y: =10
+                              - status:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    Align: =Align.Center
+                                    BorderColor: =RGBA(0, 0, 0, 1)
+                                    Color: =RGBA(50, 49, 48, 1)
+                                    FontWeight: =If(ThisItem.IsSelected, FontWeight.Semibold, FontWeight.Normal)
+                                    Height: =Self.Size * 1.8
+                                    OnSelect: =Select(Parent)
+                                    PaddingBottom: =0
+                                    PaddingLeft: =0
+                                    PaddingRight: =0
+                                    PaddingTop: =0
+                                    Size: =8
+                                    Text: |-
+                                      =If(
+                                          IsBlank(
+                                              First(
+                                                  Filter(
+                                                      tbl_ReaOcorrencias,
+                                                      Tipo_ocorrencia.Value = "Baixa do CCI" And Status.Value = "Aberto" And Veiculo_identificacao = ThisItem.identificacao
+                                                  )
+                                              ).Veiculo_identificacao
+                                          ),
+                                          "Operacional",
+                                          "Baixado"
+                                      )
+                                    VerticalAlign: =VerticalAlign.Top
+                                    Width: =65
+                                    X: =2
+                                    Y: =64
+                              - Subtitle1_1:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    AutoHeight: =true
+                                    BorderColor: =RGBA(0, 0, 0, 1)
+                                    FontWeight: =If(ThisItem.IsSelected, FontWeight.Semibold, FontWeight.Normal)
+                                    Height: =Self.Size * 1.8
+                                    OnSelect: =Select(Parent)
+                                    PaddingBottom: =0
+                                    PaddingLeft: =0
+                                    PaddingRight: =0
+                                    PaddingTop: =0
+                                    Size: =10
+                                    Text: =ThisItem.identificacao
+                                    VerticalAlign: =VerticalAlign.Top
+                                    Width: =Parent.Width - 50
+                                    X: =76
+                                    Y: =45
+                              - Subtitle1:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    BorderColor: =RGBA(0, 0, 0, 1)
+                                    FontWeight: =If(ThisItem.IsSelected, FontWeight.Semibold, FontWeight.Normal)
+                                    Height: =Self.Size * 1.8
+                                    OnSelect: =Select(Parent)
+                                    PaddingBottom: =0
+                                    PaddingLeft: =0
+                                    PaddingRight: =0
+                                    PaddingTop: =0
+                                    Size: =12
+                                    Text: =ThisItem.modelo
+                                    VerticalAlign: =VerticalAlign.Top
+                                    Width: =status.Width
+                                    X: =76
+                                    Y: =17
+                              - ButtonCanvas8:
+                                  Control: Button@0.0.45
+                                  Properties:
+                                    Appearance: ='ButtonCanvas.Appearance'.Secondary
+                                    FontColor: =RGBA(39, 113, 194, 1)
+                                    Height: =20
+                                    OnSelect: =Select(Parent)
+                                    Text: |-
+                                      =LookUp(
+                                          colAeros,
+                                          Aeroporto = ThisItem.aeroporto.Value
+                                      ).IATA
+                                    Width: =60
+                                    X: =Parent.Width - 70
+                                    Y: =10
+                              - NextArrow1:
+                                  Control: Classic/Icon@2.5.0
+                                  Properties:
+                                    AccessibleLabel: =Self.Tooltip
+                                    BorderColor: =RGBA(0, 0, 0, 1)
+                                    Color: =RGBA(0, 0, 0, 0)
+                                    DisabledBorderColor: =RGBA(56, 56, 56, 1)
+                                    DisabledColor: =RGBA(119, 119, 119, 1)
+                                    Height: =80
+                                    Icon: =Icon.ChevronRight
+                                    OnSelect: |-
+                                      =UpdateContext({CurrentItem: ThisItem})
+                                    PaddingBottom: =20
+                                    PaddingLeft: =Parent.Width - 40
+                                    PaddingRight: =20
+                                    PaddingTop: =20
+                                    Tooltip: ="Exibir detalhes do item"
+                                    Width: =Parent.Width
+                        - Label29:
+                            Control: Label@2.5.1
+                            Properties:
+                              Align: =Align.Right
+                              AlignInContainer: =AlignInContainer.Stretch
+                              FontWeight: =FontWeight.Semibold
+                              LayoutMaxHeight: =
+                              LayoutMaxWidth: =
+                              PaddingRight: =10
+                              Size: =12
+                              Text: =Table1.AllItemsCount&" veículos"
+                  - DeleteConfirmDialogContainer1:
+                      Control: GroupContainer@1.5.0
+                      Variant: AutoLayout
+                      Properties:
+                        FillPortions: =7
+                        LayoutDirection: =LayoutDirection.Vertical
+                        LayoutMaxHeight: =
+                        LayoutMaxWidth: =
+                        Visible: =If(deleteMode, true, false)
+                        Width: =0
+                      Children:
+                        - ConfirmDeleteLabelContainer1:
+                            Control: GroupContainer@1.5.0
+                            Variant: AutoLayout
+                            Properties:
+                              DropShadow: =DropShadow.None
+                              LayoutAlignItems: =LayoutAlignItems.End
+                              LayoutDirection: =LayoutDirection.Horizontal
+                              LayoutMaxHeight: =
+                              LayoutMaxWidth: =
+                              PaddingBottom: =20
+                              RadiusBottomLeft: =0
+                              RadiusBottomRight: =0
+                              RadiusTopLeft: =0
+                              RadiusTopRight: =0
+                            Children:
+                              - TextCanvas16:
+                                  Control: Text@0.0.51
+                                  Properties:
+                                    Align: ='TextCanvas.Align'.Center
+                                    FillPortions: =1
+                                    LayoutMaxHeight: =
+                                    LayoutMaxWidth: =
+                                    Size: =16
+                                    Text: ="Você tem certeza de que deseja excluir este registro?"
+                        - ConfirmDeleteButtonBarContainer1:
+                            Control: GroupContainer@1.5.0
+                            Variant: AutoLayout
+                            Properties:
+                              DropShadow: =DropShadow.None
+                              LayoutDirection: =LayoutDirection.Horizontal
+                              LayoutGap: =15
+                              LayoutJustifyContent: =LayoutJustifyContent.Center
+                              LayoutMaxHeight: =
+                              LayoutMaxWidth: =
+                              LayoutWrap: =true
+                              RadiusBottomLeft: =0
+                              RadiusBottomRight: =0
+                              RadiusTopLeft: =0
+                              RadiusTopRight: =0
+                            Children:
+                              - ConfirmDeleteButton1:
+                                  Control: Button@0.0.45
+                                  Properties:
+                                    AccessibleLabel: ="Delete"
+                                    Icon: ="Delete"
+                                    LayoutMaxHeight: =
+                                    LayoutMaxWidth: =
+                                    OnSelect: |-
+                                      =// Garante que há um item selecionado
+                                      If(
+                                          IsBlank(CurrentItem),
+                                          Notify(
+                                              "Nenhum item selecionado.",
+                                              NotificationType.Warning
+                                          ),
+                                          With(
+                                              {_item: CurrentItem},
+                                              // 1) REGISTRA NO HISTÓRICO
+                                              Set(
+                                                  _histResult,
+                                                  Patch(
+                                                      tbl_gestaoVeiculosReaHistorico,
+                                                      Defaults(tbl_gestaoVeiculosReaHistorico),
+                                                      {
+                                                          ID_FK: _item.ID,
+                                                          Aeroporto: _item.aeroporto.Value,
+                                                          Identificacao: _item.identificacao,
+                                                          Status: _item.status,
+                                                          Ativo: _item.ativo
+                                                      }
+                                                  )
+                                              );
+                                              // Verifica se houve erro no Patch do histórico
+                                              If(
+                                                  !IsEmpty(
+                                                      Errors(
+                                                          tbl_gestaoVeiculosReaHistorico,
+                                                          _histResult
+                                                      )
+                                                  ),
+                                                  Notify(
+                                                      "Falha ao registrar no histórico: " & First(
+                                                          Errors(
+                                                              tbl_gestaoVeiculosReaHistorico,
+                                                              _histResult
+                                                          )
+                                                      ).Message,
+                                                      NotificationType.Error
+                                                  ),
+                                                  // 2) EXCLUI O REGISTRO NA TABELA PRINCIPAL (garantido por ID)
+                                      // Usamos RemoveIf por ID para não depender da referência do registro em memória
+                                                  RemoveIf(
+                                                      tbl_gestaoVeiculosRea,
+                                                      ID = _item.ID
+                                                  );
+                                                  // 3) Valida a exclusão
+                                                  If(
+                                                      IsEmpty(Errors(tbl_gestaoVeiculosRea)),
+                                                      // SUCESSO: atualiza a tela/estado e avisa
+                                                      Concurrent(
+                                                          Refresh(tbl_gestaoVeiculosRea),
+                                                          UpdateContext(
+                                                              {
+                                                                  CurrentItem: Blank(),
+                                                                  isItemSelected: false,
+                                                                  newMode: false,
+                                                                  deleteMode: false
+                                                              }
+                                                          )
+                                                      ),
+                                                      Notify(
+                                                          "Registro movido para o histórico e excluído com sucesso.",
+                                                          NotificationType.Success
+                                                      ),
+                                                      // FALHA NA EXCLUSÃO
+                                                      Notify(
+                                                          "Falha ao excluir o registro: " & First(Errors(tbl_gestaoVeiculosRea)).Message,
+                                                          NotificationType.Error
+                                                      )
+                                                  )
+                                              )
+                                          )
+                                      )/*Patch(
+                                          tbl_gestaoVeiculosReaHistorico;
+                                          Defaults(tbl_gestaoVeiculosReaHistorico);
+                                          {
+                                              ID_FK: CurrentItem.ID;
+                                              Aeroporto: CurrentItem.aeroporto.Value;
+                                              Identificacao: CurrentItem.identificacao;
+                                              Status: CurrentItem.status;
+                                              Ativo: CurrentItem.ativo
+                                          }
+                                      );;
+                                      Remove(
+                                          tbl_gestaoVeiculosRea;
+                                          CurrentItem
+                                      );;
+                                      If(
+                                          IsEmpty(
+                                              Errors(
+                                                  tbl_gestaoVeiculosRea;
+                                                  CurrentItem
+                                              )
+                                          );
+                                          UpdateContext(
+                                              {
+                                                  CurrentItem: First(tbl_gestaoVeiculosRea);
+                                                  isItemSelected: false;
+                                                  newMode: false;
+                                                  deleteMode: false
+                                              }
+                                          )
+                                      );;*/
+                                    Text: ="Excluir"
+                              - CancelDeleteButton1:
+                                  Control: Button@0.0.45
+                                  Properties:
+                                    AccessibleLabel: ="Cancel"
+                                    Appearance: ='ButtonCanvas.Appearance'.Secondary
+                                    Icon: ="DismissCircle"
+                                    LayoutMaxHeight: =
+                                    LayoutMaxWidth: =
+                                    OnSelect: |-
+                                      =UpdateContext({ deleteMode: false })
+                                    Text: ="Cancelar"
+                  - RightContainer1:
+                      Control: GroupContainer@1.5.0
+                      Variant: AutoLayout
+                      Properties:
+                        DropShadow: =DropShadow.None
+                        FillPortions: =7
+                        LayoutAlignItems: =LayoutAlignItems.Stretch
+                        LayoutDirection: =LayoutDirection.Vertical
+                        LayoutGap: =16
+                        LayoutMaxHeight: =
+                        LayoutMaxWidth: =
+                        PaddingBottom: =2
+                        PaddingLeft: =2
+                        PaddingRight: =2
+                        RadiusBottomLeft: =0
+                        RadiusBottomRight: =0
+                        RadiusTopLeft: =0
+                        RadiusTopRight: =0
+                        Visible: =If(Or(deleteMode, And(ScreenGestaoViaturas.Size = ScreenSize.Small, !newMode, !isItemSelected)), false, true)
+                        Width: =0
+                      Children:
+                        - Container3:
+                            Control: GroupContainer@1.5.0
+                            Variant: AutoLayout
+                            Properties:
+                              Fill: =RGBA(255, 255, 255, 1)
+                              FillPortions: =0
+                              Height: =60
+                              LayoutDirection: =LayoutDirection.Horizontal
+                              LayoutMaxHeight: =
+                              LayoutMaxWidth: =
+                              LayoutMinHeight: =40
+                            Children:
+                              - Container210:
+                                  Control: GroupContainer@1.5.0
+                                  Variant: AutoLayout
+                                  Properties:
+                                    DropShadow: =DropShadow.None
+                                    LayoutDirection: =LayoutDirection.Horizontal
+                                    LayoutMaxHeight: =
+                                    LayoutMaxWidth: =
+                                    LayoutMinHeight: =60
+                                    PaddingLeft: =If(ScreenGestaoViaturas.Size = ScreenSize.Small,8,12)
+                                    RadiusBottomLeft: =0
+                                    RadiusBottomRight: =0
+                                    RadiusTopLeft: =0
+                                    RadiusTopRight: =0
+                                  Children:
+                                    - BackIcon1:
+                                        Control: Button@0.0.45
+                                        Properties:
+                                          AlignInContainer: =AlignInContainer.Center
+                                          Appearance: ='ButtonCanvas.Appearance'.Transparent
+                                          Icon: ="ArrowLeft"
+                                          Layout: ='ButtonCanvas.Layout'.IconBefore
+                                          LayoutMaxHeight: =
+                                          LayoutMaxWidth: =
+                                          OnSelect: |
+                                            =ResetForm(Form1);
+                                            UpdateContext(
+                                                {
+                                                    newMode: false,
+                                                    editMode: false,
+                                                    isItemSelected: false
+                                                }
+                                            );
+                                          Text: ="Back"
+                                          Visible: =If(And(ScreenGestaoViaturas.Size = ScreenSize.Small, !deleteMode), true, false)
+                                          Width: =If(ScreenGestaoViaturas.Size = ScreenSize.Small, 75, 96)
+                                    - NewRecordButton1:
+                                        Control: Button@0.0.45
+                                        Properties:
+                                          AlignInContainer: =AlignInContainer.Center
+                                          Appearance: ='ButtonCanvas.Appearance'.Primary
+                                          Icon: ="Add"
+                                          LayoutMaxHeight: =
+                                          LayoutMaxWidth: =
+                                          OnSelect: |-
+                                            =NewForm(Form1); UpdateContext({ newMode: true })
+                                          Text: ="Novo"
+                                          Visible: =IsBlank(CurrentItem)
+                                          Width: =If(ScreenGestaoViaturas.Size = ScreenSize.Small, 75, 96)
+                                    - EditButton1:
+                                        Control: Button@0.0.45
+                                        Properties:
+                                          AlignInContainer: =AlignInContainer.Center
+                                          Appearance: ='ButtonCanvas.Appearance'.Transparent
+                                          Icon: ="Edit"
+                                          LayoutMaxHeight: =
+                                          LayoutMaxWidth: =
+                                          OnSelect: |-
+                                            =UpdateContext({ editMode: true, selectedRecord: Table1.Selected })
+                                          Text: ="Editar"
+                                          Visible: =And(!newMode, !deleteMode)
+                                          Width: =If(ScreenGestaoViaturas.Size = ScreenSize.Small, 75, 90)
+                                    - DeleteButton1:
+                                        Control: Button@0.0.45
+                                        Properties:
+                                          AlignInContainer: =AlignInContainer.Center
+                                          Appearance: ='ButtonCanvas.Appearance'.Transparent
+                                          Icon: ="Delete"
+                                          LayoutMaxHeight: =
+                                          LayoutMaxWidth: =
+                                          OnSelect: |-
+                                            =UpdateContext({ deleteMode: true, selectedRecord: Table1.Selected })
+                                          Text: ="Excluir"
+                                          Visible: =And(!newMode, !deleteMode)
+                                          Width: =If(ScreenGestaoViaturas.Size = ScreenSize.Small, 75, 70)
+                        - MainContainer1:
+                            Control: GroupContainer@1.5.0
+                            Variant: AutoLayout
+                            Properties:
+                              Fill: =RGBA(255, 255, 255, 1)
+                              LayoutDirection: =LayoutDirection.Vertical
+                              LayoutMaxHeight: =
+                              LayoutMaxWidth: =
+                              LayoutMinHeight: =150
+                              LayoutMinWidth: =300
+                              LayoutOverflowY: =LayoutOverflow.Scroll
+                              PaddingTop: =8
+                            Children:
+                              - Form1:
+                                  Control: Form@2.4.4
+                                  Layout: Vertical
+                                  Properties:
+                                    BorderStyle: =BorderStyle.None
+                                    DataSource: =tbl_gestaoVeiculosRea
+                                    DefaultMode: =If(newMode, FormMode.New, editMode, FormMode.Edit, FormMode.View)
+                                    FillPortions: =0
+                                    Height: =160
+                                    Item: =CurrentItem
+                                    LayoutMaxHeight: =
+                                    LayoutMaxWidth: =
+                                    LayoutMinHeight: =100
+                                    LayoutMinWidth: =200
+                                    OnFailure: =Notify("Cannot save. Please check if there are errors in the form.", NotificationType.Error)
+                                    OnSuccess: |
+                                      =UpdateContext(
+                                          {
+                                              CurrentItem: Self.LastSubmit,
+                                              isItemSelected: false
+                                          }
+                                      );
+                                      Patch(
+                                          tbl_gestaoVeiculosReaHistorico,
+                                          Defaults(tbl_gestaoVeiculosReaHistorico),
+                                          {
+                                              ID_FK: Self.LastSubmit.ID,
+                                              Aeroporto: Self.LastSubmit.aeroporto.Value,
+                                              Modelo: Self.LastSubmit.modelo,
+                                              Identificacao: Self.LastSubmit.identificacao,
+                                              Status: Self.LastSubmit.status,
+                                              Ativo: Self.LastSubmit.ativo
+                                          }
+                                      );
+                                      Notify(
+                                          "Success",
+                                          NotificationType.Success
+                                      );
+                                      ResetForm(Form1);
+                                      UpdateContext(
+                                          {
+                                              newMode: false,
+                                              editMode: false,
+                                              CurrentItem: Blank(),
+                                              isItemSelected: false
+                                          }
+                                      );
+                                    Width: =Parent.Width
+                                  Children:
+                                    - aeroporto_DataCard1:
+                                        Control: TypedDataCard@1.0.7
+                                        Variant: ComboBoxEdit
+                                        Properties:
+                                          DataField: ="aeroporto"
+                                          Default: =ThisItem.aeroporto
+                                          DisplayName: =DataSourceInfo([@tbl_gestaoVeiculosRea],DataSourceInfo.DisplayName,aeroporto)
+                                          Required: =false
+                                          Update: =DataCardValue133.Selected
+                                          Width: =305
+                                          X: =0
+                                          Y: =0
+                                        Children:
+                                          - DataCardKey151:
+                                              Control: Text@0.0.51
+                                              MetadataKey: FieldName
+                                              Properties:
+                                                Height: =22
+                                                Text: ="Aeroporto"
+                                                Weight: ='TextCanvas.Weight'.Semibold
+                                                Width: =Parent.Width - 48
+                                                Wrap: =false
+                                                X: =24
+                                                Y: =10
+                                          - DataCardValue133:
+                                              Control: ComboBox@0.0.51
+                                              MetadataKey: FieldValue
+                                              Properties:
+                                                AccessibleLabel: =Parent.DisplayName
+                                                DefaultSelectedItems: =[Parent.Default]
+                                                DisplayMode: =Parent.DisplayMode
+                                                Items: =Choices([@tbl_gestaoVeiculosRea].aeroporto)
+                                                Required: =Parent.Required
+                                                ValidationState: =If(IsBlank(Parent.Error), "None", "Error")
+                                                Width: =Parent.Width - 48
+                                                X: =24
+                                                Y: =DataCardKey151.Y + DataCardKey151.Height + 4
+                                          - ErrorMessage147:
+                                              Control: Text@0.0.51
+                                              MetadataKey: ErrorMessage
+                                              Properties:
+                                                Height: =30
+                                                Text: =Parent.Error
+                                                Visible: =And(!IsBlank(Parent.Error), Parent.DisplayMode=DisplayMode.Edit)
+                                                Width: =Parent.Width - 48
+                                                X: =24
+                                                Y: =DataCardValue133.Y + DataCardValue133.Height
+                                          - StarVisible147:
+                                              Control: Text@0.0.51
+                                              MetadataKey: FieldRequired
+                                              Properties:
+                                                Align: ='TextCanvas.Align'.Center
+                                                Height: =20
+                                                Text: ="*"
+                                                Visible: =And(Parent.Required, Parent.DisplayMode=DisplayMode.Edit)
+                                                Width: =30
+                                                Y: =DataCardKey151.Y
+                                    - tipo_DataCard1:
+                                        Control: TypedDataCard@1.0.7
+                                        Variant: ComboBoxEdit
+                                        Properties:
+                                          DataField: ="tipo"
+                                          Default: =ThisItem.tipo
+                                          DisplayName: =DataSourceInfo([@tbl_gestaoVeiculosRea],DataSourceInfo.DisplayName,tipo)
+                                          Required: =false
+                                          Update: =DataCardValue113.Selected
+                                          Width: =305
+                                          X: =1
+                                          Y: =0
+                                        Children:
+                                          - DataCardKey150:
+                                              Control: Text@0.0.51
+                                              MetadataKey: FieldName
+                                              Properties:
+                                                Height: =22
+                                                Text: ="Tipo"
+                                                Weight: ='TextCanvas.Weight'.Semibold
+                                                Width: =Parent.Width - 48
+                                                Wrap: =false
+                                                X: =24
+                                                Y: =10
+                                          - DataCardValue113:
+                                              Control: ComboBox@0.0.51
+                                              MetadataKey: FieldValue
+                                              Properties:
+                                                AccessibleLabel: =Parent.DisplayName
+                                                DefaultSelectedItems: =[Parent.Default]
+                                                DisplayMode: =Parent.DisplayMode
+                                                Items: =Choices([@tbl_gestaoVeiculosRea].tipo)
+                                                Required: =Parent.Required
+                                                ValidationState: =If(IsBlank(Parent.Error), "None", "Error")
+                                                Width: =Parent.Width - 48
+                                                X: =24
+                                                Y: =DataCardKey150.Y + DataCardKey150.Height + 4
+                                          - ErrorMessage146:
+                                              Control: Text@0.0.51
+                                              MetadataKey: ErrorMessage
+                                              Properties:
+                                                Height: =30
+                                                Text: =Parent.Error
+                                                Visible: =And(!IsBlank(Parent.Error), Parent.DisplayMode=DisplayMode.Edit)
+                                                Width: =Parent.Width - 48
+                                                X: =24
+                                                Y: =DataCardValue113.Y + DataCardValue113.Height
+                                          - StarVisible146:
+                                              Control: Text@0.0.51
+                                              MetadataKey: FieldRequired
+                                              Properties:
+                                                Align: ='TextCanvas.Align'.Center
+                                                Height: =20
+                                                Text: ="*"
+                                                Visible: =And(Parent.Required, Parent.DisplayMode=DisplayMode.Edit)
+                                                Width: =30
+                                                Y: =DataCardKey150.Y
+                                    - modelo_DataCard1:
+                                        Control: TypedDataCard@1.0.7
+                                        Variant: TextualEdit
+                                        Properties:
+                                          DataField: ="modelo"
+                                          Default: =ThisItem.modelo
+                                          DisplayName: =DataSourceInfo([@tbl_gestaoVeiculosRea],DataSourceInfo.DisplayName,modelo)
+                                          MaxLength: =DataSourceInfo([@tbl_gestaoVeiculosRea], DataSourceInfo.MaxLength, modelo)
+                                          Required: =false
+                                          Update: =DataCardValue136.Value
+                                          Width: =305
+                                          X: =2
+                                          Y: =0
+                                        Children:
+                                          - DataCardKey153:
+                                              Control: Text@0.0.51
+                                              MetadataKey: FieldName
+                                              Properties:
+                                                Height: =22
+                                                Text: ="Modelo"
+                                                Weight: ='TextCanvas.Weight'.Semibold
+                                                Width: =Parent.Width - 48
+                                                Wrap: =false
+                                                X: =24
+                                                Y: =10
+                                          - DataCardValue136:
+                                              Control: TextInput@0.0.54
+                                              MetadataKey: FieldValue
+                                              Properties:
+                                                AccessibleLabel: =Parent.DisplayName
+                                                DisplayMode: =Parent.DisplayMode
+                                                Mode: ="'TextInputCanvas.Mode'.TextInputModeSingleLine"
+                                                Required: =Parent.Required
+                                                ValidationState: =If(IsBlank(Parent.Error), "None", "Error")
+                                                Value: =Parent.Default
+                                                Width: =Parent.Width - 48
+                                                X: =24
+                                                Y: =DataCardKey153.Y + DataCardKey153.Height + 4
+                                          - ErrorMessage149:
+                                              Control: Text@0.0.51
+                                              MetadataKey: ErrorMessage
+                                              Properties:
+                                                Height: =30
+                                                Text: =Parent.Error
+                                                Visible: =And(!IsBlank(Parent.Error), Parent.DisplayMode=DisplayMode.Edit)
+                                                Width: =Parent.Width - 48
+                                                X: =24
+                                                Y: =DataCardValue136.Y + DataCardValue136.Height
+                                          - StarVisible149:
+                                              Control: Text@0.0.51
+                                              MetadataKey: FieldRequired
+                                              Properties:
+                                                Align: ='TextCanvas.Align'.Center
+                                                Height: =30
+                                                Text: ="*"
+                                                Visible: =And(Parent.Required, Parent.DisplayMode=DisplayMode.Edit)
+                                                Width: =30
+                                                Y: =DataCardKey153.Y
+                                    - identificacao_DataCard1:
+                                        Control: TypedDataCard@1.0.7
+                                        Variant: TextualEdit
+                                        Properties:
+                                          DataField: ="identificacao"
+                                          Default: =ThisItem.identificacao
+                                          DisplayName: =DataSourceInfo([@tbl_gestaoVeiculosRea],DataSourceInfo.DisplayName,identificacao)
+                                          MaxLength: =DataSourceInfo([@tbl_gestaoVeiculosRea], DataSourceInfo.MaxLength, identificacao)
+                                          Required: =false
+                                          Update: =DataCardValue135.Value
+                                          Width: =305
+                                          X: =0
+                                          Y: =1
+                                        Children:
+                                          - DataCardKey152:
+                                              Control: Text@0.0.51
+                                              MetadataKey: FieldName
+                                              Properties:
+                                                Height: =22
+                                                Text: ="Identificação"
+                                                Weight: ='TextCanvas.Weight'.Semibold
+                                                Width: =Parent.Width - 48
+                                                Wrap: =false
+                                                X: =24
+                                                Y: =10
+                                          - DataCardValue135:
+                                              Control: TextInput@0.0.54
+                                              MetadataKey: FieldValue
+                                              Properties:
+                                                AccessibleLabel: =Parent.DisplayName
+                                                DisplayMode: =Parent.DisplayMode
+                                                Mode: ="'TextInputCanvas.Mode'.TextInputModeSingleLine"
+                                                Required: =Parent.Required
+                                                ValidationState: =If(IsBlank(Parent.Error), "None", "Error")
+                                                Value: =Parent.Default
+                                                Width: =Parent.Width - 48
+                                                X: =24
+                                                Y: =DataCardKey152.Y + DataCardKey152.Height + 4
+                                          - ErrorMessage148:
+                                              Control: Text@0.0.51
+                                              MetadataKey: ErrorMessage
+                                              Properties:
+                                                Height: =30
+                                                Text: =Parent.Error
+                                                Visible: =And(!IsBlank(Parent.Error), Parent.DisplayMode=DisplayMode.Edit)
+                                                Width: =Parent.Width - 48
+                                                X: =24
+                                                Y: =DataCardValue135.Y + DataCardValue135.Height
+                                          - StarVisible148:
+                                              Control: Text@0.0.51
+                                              MetadataKey: FieldRequired
+                                              Properties:
+                                                Align: ='TextCanvas.Align'.Center
+                                                Height: =30
+                                                Text: ="*"
+                                                Visible: =And(Parent.Required, Parent.DisplayMode=DisplayMode.Edit)
+                                                Width: =30
+                                                Y: =DataCardKey152.Y
+                                    - ativo_DataCard1:
+                                        Control: TypedDataCard@1.0.7
+                                        Variant: ToggleEdit
+                                        Properties:
+                                          DataField: ="ativo"
+                                          Default: =Coalesce(ThisItem.ativo,true)
+                                          DisplayName: =DataSourceInfo([@tbl_gestaoVeiculosRea],DataSourceInfo.DisplayName,ativo)
+                                          Required: =false
+                                          Update: =DataCardValue138.Checked
+                                          Width: =305
+                                          X: =1
+                                          Y: =1
+                                        Children:
+                                          - DataCardKey155:
+                                              Control: Text@0.0.51
+                                              MetadataKey: FieldName
+                                              Properties:
+                                                Height: =22
+                                                Text: =Parent.DisplayName
+                                                Weight: ='TextCanvas.Weight'.Semibold
+                                                Width: =Parent.Width - 48
+                                                Wrap: =false
+                                                X: =24
+                                                Y: =10
+                                          - DataCardValue138:
+                                              Control: Toggle@1.1.5
+                                              MetadataKey: FieldValue
+                                              Properties:
+                                                AccessibleLabel: =If(Parent.Required, Substitute("{0}. Obrigatório.", "{0}", Parent.DisplayName), Parent.DisplayName)
+                                                Checked: =Parent.Default
+                                                DisplayMode: =Parent.DisplayMode
+                                                Height: =32
+                                                Label: =""
+                                                Width: =100
+                                                X: =24
+                                                Y: =DataCardKey155.Y + DataCardKey155.Height + 4
+                                          - ErrorMessage151:
+                                              Control: Text@0.0.51
+                                              MetadataKey: ErrorMessage
+                                              Properties:
+                                                Height: =30
+                                                Text: =Parent.Error
+                                                Visible: =And(!IsBlank(Parent.Error), Parent.DisplayMode=DisplayMode.Edit)
+                                                Width: =Parent.Width - 48
+                                                X: =24
+                                                Y: =DataCardValue138.Y + DataCardValue138.Height
+                                          - StarVisible151:
+                                              Control: Text@0.0.51
+                                              MetadataKey: FieldRequired
+                                              Properties:
+                                                Align: ='TextCanvas.Align'.Center
+                                                Height: =30
+                                                Text: ="*"
+                                                Visible: =And(Parent.Required, Parent.DisplayMode=DisplayMode.Edit)
+                                                Width: =30
+                                                Y: =DataCardKey155.Y
+                              - Label26:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    AlignInContainer: =AlignInContainer.Stretch
+                                    Color: =RGBA(39, 113, 194, 1)
+                                    FontWeight: =FontWeight.Semibold
+                                    Height: =60
+                                    LayoutMaxHeight: =
+                                    LayoutMaxWidth: =
+                                    PaddingBottom: =10
+                                    PaddingLeft: =20
+                                    Size: =14
+                                    Text: ="Histórico de versões"
+                                    VerticalAlign: =VerticalAlign.Bottom
+                              - Container31_1:
+                                  Control: GroupContainer@1.5.0
+                                  Variant: AutoLayout
+                                  Properties:
+                                    DropShadow: =DropShadow.Regular
+                                    FillPortions: =0
+                                    Height: =40
+                                    LayoutDirection: =LayoutDirection.Horizontal
+                                    LayoutMaxHeight: =
+                                    LayoutMaxWidth: =
+                                    PaddingLeft: =20
+                                    PaddingRight: =20
+                                    RadiusBottomLeft: =0
+                                    RadiusBottomRight: =0
+                                    RadiusTopLeft: =0
+                                    RadiusTopRight: =0
+                                    Width: =Parent.Width - 10
+                                  Children:
+                                    - Label25_5:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          FontWeight: =FontWeight.Semibold
+                                          LayoutMaxHeight: =
+                                          LayoutMaxWidth: =
+                                          OnSelect: =
+                                          Size: =10
+                                          Text: ="Data"
+                                          Width: =115
+                                    - Label25_6:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          FontWeight: =FontWeight.Semibold
+                                          LayoutMaxHeight: =
+                                          LayoutMaxWidth: =
+                                          OnSelect: =
+                                          Size: =10
+                                          Text: ="Criador"
+                                          Width: =250
+                                    - Label25_9:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          FontWeight: =FontWeight.Semibold
+                                          LayoutMaxHeight: =
+                                          LayoutMaxWidth: =
+                                          OnSelect: =
+                                          Size: =10
+                                          Text: ="Identificação"
+                                          Width: =250
+                                    - Label25_7:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          FontWeight: =FontWeight.Semibold
+                                          LayoutMaxHeight: =
+                                          LayoutMaxWidth: =
+                                          OnSelect: =
+                                          Size: =10
+                                          Text: ="Status"
+                                          Width: =250
+                              - Gallery2:
+                                  Control: Gallery@2.15.0
+                                  Variant: Vertical
+                                  Properties:
+                                    Items: |-
+                                      =Sort(
+                                          Filter(
+                                              tbl_gestaoVeiculosReaHistorico,
+                                              ID_FK = CurrentItem.ID 
+                                          ),
+                                          Criado,
+                                          SortOrder.Descending
+                                      )
+                                    LayoutMaxHeight: =
+                                    LayoutMaxWidth: =
+                                    LayoutMinHeight: =0
+                                    TemplateSize: =40
+                                  Children:
+                                    - Container31:
+                                        Control: GroupContainer@1.5.0
+                                        Variant: AutoLayout
+                                        Properties:
+                                          DropShadow: =DropShadow.None
+                                          Height: =40
+                                          LayoutDirection: =LayoutDirection.Horizontal
+                                          PaddingLeft: =10
+                                          PaddingRight: =10
+                                          RadiusBottomLeft: =0
+                                          RadiusBottomRight: =0
+                                          RadiusTopLeft: =0
+                                          RadiusTopRight: =0
+                                          Width: =Parent.Width - 10
+                                        Children:
+                                          - Label25:
+                                              Control: Label@2.5.1
+                                              Properties:
+                                                LayoutMaxHeight: =
+                                                LayoutMaxWidth: =
+                                                OnSelect: =
+                                                Size: =10
+                                                Text: =ThisItem.Criado
+                                                Width: =120
+                                          - Label25_1:
+                                              Control: Label@2.5.1
+                                              Properties:
+                                                LayoutMaxHeight: =
+                                                LayoutMaxWidth: =
+                                                OnSelect: =
+                                                Size: =10
+                                                Text: =ThisItem.'Criado por'.DisplayName
+                                                Width: =250
+                                          - Label25_4:
+                                              Control: Label@2.5.1
+                                              Properties:
+                                                LayoutMaxHeight: =
+                                                LayoutMaxWidth: =
+                                                OnSelect: =
+                                                Size: =10
+                                                Text: =ThisItem.Identificacao
+                                                Width: =250
+                                          - Label25_2:
+                                              Control: Label@2.5.1
+                                              Properties:
+                                                LayoutMaxHeight: =
+                                                LayoutMaxWidth: =
+                                                OnSelect: =
+                                                Size: =10
+                                                Text: |-
+                                                  =If(
+                                                      ThisItem.Ativo,
+                                                      If(
+                                                          IsBlank(
+                                                              First(
+                                                                  Filter(
+                                                                      tbl_ReaOcorrencias,
+                                                                      Tipo_ocorrencia.Value = "Baixa do CCI" And Status.Value = "Aberto" And Veiculo_identificacao = ThisItem.Identificacao
+                                                                  )
+                                                              ).Veiculo_identificacao
+                                                          ),
+                                                          "Operacional",
+                                                          "Baixado"
+                                                      ),
+                                                      "Desativado"
+                                                  )
+                                                Width: =250
+                              - ButtonContainer1:
+                                  Control: GroupContainer@1.5.0
+                                  Variant: AutoLayout
+                                  Properties:
+                                    DropShadow: =DropShadow.None
+                                    FillPortions: =0.15
+                                    Height: =Parent.Height
+                                    LayoutAlignItems: =LayoutAlignItems.Center
+                                    LayoutDirection: =LayoutDirection.Horizontal
+                                    LayoutGap: =10
+                                    LayoutJustifyContent: =LayoutJustifyContent.End
+                                    LayoutMaxHeight: =
+                                    LayoutMaxWidth: =
+                                    LayoutMinHeight: =50
+                                    LayoutOverflowY: =LayoutOverflow.Scroll
+                                    PaddingRight: =24
+                                    RadiusBottomLeft: =0
+                                    RadiusBottomRight: =0
+                                    RadiusTopLeft: =0
+                                    RadiusTopRight: =0
+                                  Children:
+                                    - CancelButton1:
+                                        Control: Button@0.0.45
+                                        Properties:
+                                          Appearance: ='ButtonCanvas.Appearance'.Secondary
+                                          Icon: ="DismissCircle"
+                                          LayoutMaxHeight: =
+                                          LayoutMaxWidth: =
+                                          OnSelect: |
+                                            =ResetForm(Form1);
+                                            UpdateContext(
+                                                {
+                                                    newMode: false,
+                                                    editMode: false,
+                                                    CurrentItem: Blank(),
+                                                    isItemSelected: false
+                                                }
+                                            );
+                                          Text: ="Cancelar"
+                                    - SubmitButton1:
+                                        Control: Button@0.0.45
+                                        Properties:
+                                          Appearance: ='ButtonCanvas.Appearance'.Primary
+                                          Icon: ="Save"
+                                          LayoutMaxHeight: =
+                                          LayoutMaxWidth: =
+                                          OnSelect: |-
+                                            =SubmitForm(Form1)
+                                            /*If(
+                                                IsBlank(
+                                                    LookUp(
+                                                        tbl_gestaoVeiculosRea;
+                                                        identificacao = DataCardValue135.Value
+                                                    )
+                                                );
+                                                SubmitForm(Form1);
+                                                Notify(
+                                                    "Esta identificação de veículo já existe no sistema!";
+                                                    NotificationType.Error
+                                                )
+                                            )*/
+                                          Text: ="Salvar"
