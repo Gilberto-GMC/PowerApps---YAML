@@ -1,0 +1,98 @@
+// ══════════════════════════════════════════════════════════════════════════════
+// AirportNow — Inspeção de Pista  ·  App.OnStart
+// ══════════════════════════════════════════════════════════════════════════════
+// LOCALE pt-BR — este arquivo é para a BARRA DE FÓRMULAS.
+//   ";"  separa argumentos          (invariante usa ",")
+//   ";;" encadeia/termina instrução (invariante usa ";")
+//   ","  é o separador decimal      (invariante usa ".")
+//
+// COLAR EM: Studio > árvore de controles > App > propriedade "OnStart".
+//
+// NÃO cole este conteúdo na exibição de código (.pa.yaml). Lá o Studio lê e
+// grava sempre no formato INVARIANTE — a versão invariante correspondente está
+// em 01_App.pa.yaml e as duas dizem a mesma coisa. Use um OU o outro.
+//
+// ══════════════════════════════════════════════════════════════════════════════
+
+// 🔄 Inicializa carregamentos
+Set(var_load; true);;
+Set(varControleIndex; true);;
+/*
+// 🆕 Carrega última versão do sistema
+Set(
+    var_ultimaVersao;
+    Value(Max(tbl_controle_versoes; Numero_versao))
+);;*/
+
+// 🗺️ (Descomente se quiser capturar localização)
+// Set(var_latitude; Location.Latitude);;
+// Set(var_longitude; Location.Longitude);;
+
+// ✈️ Carrega lista de aeroportos fixos
+ClearCollect(
+    colAeros;
+    {IATA: ""; ICAO: ""; Bloco: "CENTRAL"; Aeroporto: ""; Cluster: ""};
+    {IATA: "GYN"; ICAO: "SBGO"; Bloco: "CENTRAL"; Aeroporto: "GOIÂNIA"; Cluster: "GOIÂNIA"};
+    {IATA: "IMP"; ICAO: "SBIZ"; Bloco: "CENTRAL"; Aeroporto: "IMPERATRIZ"; Cluster: "GOIÂNIA"};
+    {IATA: "PMW"; ICAO: "SBPJ"; Bloco: "CENTRAL"; Aeroporto: "PALMAS"; Cluster: "GOIÂNIA"};
+    {IATA: "PLU"; ICAO: "SBBH"; Bloco: "CENTRAL"; Aeroporto: "PAMPULHA"; Cluster: "GOIÂNIA"};
+    {IATA: "PNZ"; ICAO: "SBPL"; Bloco: "CENTRAL"; Aeroporto: "PETROLINA"; Cluster: "SÃO LUÍS"};
+    {IATA: "SLZ"; ICAO: "SBSL"; Bloco: "CENTRAL"; Aeroporto: "SÃO LUIS"; Cluster: "SÃO LUÍS"};
+    {IATA: "THE"; ICAO: "SBTE"; Bloco: "CENTRAL"; Aeroporto: "TERESINA"; Cluster: "SÃO LUÍS"};
+    {IATA: ""; ICAO: ""; Bloco: "SUL"; Aeroporto: ""; Cluster: ""};
+    {IATA: "BFH"; ICAO: "SBBI"; Bloco: "SUL"; Aeroporto: "BACACHERI"; Cluster: "CURITIBA"};
+    {IATA: "CWB"; ICAO: "SBCT"; Bloco: "SUL"; Aeroporto: "CURITIBA"; Cluster: "CURITIBA"};
+    {IATA: "JOI"; ICAO: "SBJV"; Bloco: "SUL"; Aeroporto: "JOINVILLE"; Cluster: "CURITIBA"};
+    {IATA: "NVT"; ICAO: "SBNF"; Bloco: "SUL"; Aeroporto: "NAVEGANTES"; Cluster: "CURITIBA"};
+    {IATA: "BGX"; ICAO: "SBBG"; Bloco: "SUL"; Aeroporto: "BAGÉ"; Cluster: "FOZ DO IGUAÇU"};
+    {IATA: "IGU"; ICAO: "SBFI"; Bloco: "SUL"; Aeroporto: "FOZ DO IGUAÇU"; Cluster: "FOZ DO IGUAÇU"};
+    {IATA: "LDB"; ICAO: "SBLO"; Bloco: "SUL"; Aeroporto: "LONDRINA"; Cluster: "FOZ DO IGUAÇU"};
+    {IATA: "PET"; ICAO: "SBPK"; Bloco: "SUL"; Aeroporto: "PELOTAS"; Cluster: "FOZ DO IGUAÇU"};
+    {IATA: "URG"; ICAO: "SBUG"; Bloco: "SUL"; Aeroporto: "URUGUAIANA"; Cluster: "FOZ DO IGUAÇU"}
+);;
+
+// 👤 Carrega informações do usuário com base no parâmetro
+Set(varIdUser; Coalesce( Value(Param("USUARIO")); LookUp(User; usrNome = User().FullName).ID ));;
+// Agrupa todas as variáveis relacionadas ao usuário em um só `With`
+With(
+    {
+        usuario: LookUp(User; ID = varIdUser);
+        iataUsuario: LookUp(colAeros; Aeroporto = LookUp(User; ID = varIdUser).Aeroporto).IATA
+    };
+    
+    Set(varNomeUser; usuario.usrNome);;
+    Set(varEmailUser; usuario.Email);;
+    Set(varFuncaoUser; usuario.Funcao);;
+    Set(varBlocoUser; usuario.Bloco);;
+    Set(varAeroUser; usuario.Aeroporto);;
+    Set(varPerfilUser; usuario.Perfil);;
+    Set(varAutUser; usuario.Autorizacao);;
+    Set(varIATAUser; iataUsuario)
+);;
+
+// ✅ Finaliza carregamento
+Set(var_load; false);;
+// 🚨 Carrega itens não conformes (hoje) por local
+Concurrent(
+        ClearCollect(
+            col_itensPouso;
+            Filter(
+                '7.4.1-tbl_InspPistaItens';
+                Aeroporto = varAeroUser && Local = "Pista de Pouso" && Status = "Não conforme" && Criado >= Date(Year(Today()); 1; 1)
+            )
+        );
+        ClearCollect(
+            col_itensTaxi;
+            Filter(
+                '7.4.1-tbl_InspPistaItens';
+                Aeroporto = varAeroUser && Local = "Pista de taxi" && Status = "Não conforme" && Criado >= Date(Year(Today()); 1; 1)
+            )
+        );
+        ClearCollect(
+            col_itensAids;
+            Filter(
+                '7.4.1-tbl_InspPistaItens';
+                Aeroporto = varAeroUser && Local = "NAV AIDS" && Status = "Não conforme" && Criado >= Date(Year(Today()); 1; 1)
+            )
+        )
+    );;
