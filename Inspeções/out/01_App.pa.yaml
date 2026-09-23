@@ -1,0 +1,50 @@
+# ************************************************************************************************
+# Warning: YAML source code for Canvas Apps should only be used to review changes made within Power Apps Studio and for minor edits (Preview).
+# Use the maker portal to create and edit your Power Apps.
+# 
+# The schema file for Canvas Apps is available at https://go.microsoft.com/fwlink/?linkid=2304907
+# 
+# For more information, visit https://go.microsoft.com/fwlink/?linkid=2292623
+# ************************************************************************************************
+#
+# ENTREGA Inspeções — App: NÃO colar este arquivo. Ele é a referência invariante do OnStart;
+# cole 01_App_OnStart_ptBR.txt em App > OnStart e 02_App_Formulas_ptBR.txt em App > Formulas.
+# LOCALE: este arquivo está em formato INVARIANTE ("," separa argumentos, ";" encadeia,
+#         "." decimal). É assim que a exibição de código lê e grava. NÃO converter para pt-BR.
+# Cirurgias aplicadas nesta tela: C1, C2
+#
+App:
+  Properties:
+    OnStart: |-
+      =// 🔄 Inicializa carregamentos
+      Set(var_load, true);
+      Set(varControleIndex, true);
+      // ✈️ Aeroportos fixos: a tabela mora em App.Formulas (nfAeros); a coleção mantém o
+      // nome porque 30+ fórmulas das telas a leem.
+      ClearCollect(colAeros, nfAeros);
+      // 👤 Usuário: parâmetro do hub, senão o nome completo (como antes)
+      Set(
+          varIdUser,
+          Coalesce(
+              Value(Param("USUARIO")),
+              LookUp(User, usrNome = User().FullName).ID
+          )
+      );
+      // Um único LookUp em User alimenta todas as variáveis de perfil
+      With(
+          {usuario: LookUp(User, ID = varIdUser)},
+          Set(varNomeUser, usuario.usrNome);
+          Set(varBlocoUser, usuario.Bloco);
+          Set(varAeroUser, usuario.Aeroporto);
+          Set(varPerfilUser, usuario.Perfil);
+          Set(varAutUser, usuario.Autorizacao);
+          Set(varIATAUser, LookUp(nfAeros, Aeroporto = usuario.Aeroporto).IATA)
+      );
+      // Derivados do perfil, calculados uma vez (antes: a mesma fórmula em 42 controles)
+      Set(varModoFiltroAero, If(varPerfilUser = "Base", DisplayMode.Disabled, DisplayMode.Edit));
+      Set(varModoFiltroBloco, If(varPerfilUser = "Base" Or varPerfilUser = "Bloco", DisplayMode.Disabled, DisplayMode.Edit));
+      Set(varBlocoPadrao, If(varPerfilUser = "Base", varBlocoUser, varPerfilUser = "Bloco", varBlocoUser, Blank()));
+      // ── GANCHO OFFLINE: o motor de sincronização insere aqui (LoadData / fila / flags). Não mover a linha abaixo.
+      // ✅ Finaliza carregamento
+      Set(var_load, false)
+    Theme: =MOTIVA

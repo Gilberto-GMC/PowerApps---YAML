@@ -1,0 +1,48 @@
+// ══════════════════════════════════════════════════════════════════════════════
+// AirportNow — Inspeções  ·  App.OnStart
+// ══════════════════════════════════════════════════════════════════════════════
+// LOCALE pt-BR — este arquivo é para a BARRA DE FÓRMULAS.
+//   ";"  separa argumentos          (invariante usa ",")
+//   ";;" encadeia/termina instrução (invariante usa ";")
+//   ","  é o separador decimal      (invariante usa ".")
+//
+// COLAR EM: Studio > árvore de controles > App > propriedade "OnStart".
+//
+// NÃO cole este conteúdo na exibição de código (.pa.yaml). Lá o Studio lê e
+// grava sempre no formato INVARIANTE — a versão invariante correspondente está
+// em 01_App.pa.yaml e as duas dizem a mesma coisa. Use um OU o outro.
+//
+// PRÉ-REQUISITO: colar antes o App.Formulas (02_App_Formulas_ptBR.txt).
+// ══════════════════════════════════════════════════════════════════════════════
+
+// 🔄 Inicializa carregamentos
+Set(var_load; true);;
+Set(varControleIndex; true);;
+// ✈️ Aeroportos fixos: a tabela mora em App.Formulas (nfAeros); a coleção mantém o
+// nome porque 30+ fórmulas das telas a leem.
+ClearCollect(colAeros; nfAeros);;
+// 👤 Usuário: parâmetro do hub, senão o nome completo (como antes)
+Set(
+    varIdUser;
+    Coalesce(
+        Value(Param("USUARIO"));
+        LookUp(User; usrNome = User().FullName).ID
+    )
+);;
+// Um único LookUp em User alimenta todas as variáveis de perfil
+With(
+    {usuario: LookUp(User; ID = varIdUser)};
+    Set(varNomeUser; usuario.usrNome);;
+    Set(varBlocoUser; usuario.Bloco);;
+    Set(varAeroUser; usuario.Aeroporto);;
+    Set(varPerfilUser; usuario.Perfil);;
+    Set(varAutUser; usuario.Autorizacao);;
+    Set(varIATAUser; LookUp(nfAeros; Aeroporto = usuario.Aeroporto).IATA)
+);;
+// Derivados do perfil, calculados uma vez (antes: a mesma fórmula em 42 controles)
+Set(varModoFiltroAero; If(varPerfilUser = "Base"; DisplayMode.Disabled; DisplayMode.Edit));;
+Set(varModoFiltroBloco; If(varPerfilUser = "Base" Or varPerfilUser = "Bloco"; DisplayMode.Disabled; DisplayMode.Edit));;
+Set(varBlocoPadrao; If(varPerfilUser = "Base"; varBlocoUser; varPerfilUser = "Bloco"; varBlocoUser; Blank()));;
+// ── GANCHO OFFLINE: o motor de sincronização insere aqui (LoadData / fila / flags). Não mover a linha abaixo.
+// ✅ Finaliza carregamento
+Set(var_load; false)
