@@ -175,7 +175,7 @@ Screens:
                 Variant: AutoLayout
                 Properties:
                   DropShadow: =DropShadow.None
-                  Fill: =RGBA(245, 245, 245, 1)
+                  Fill: =nfCorFundoFraco
                   FillPortions: =0
                   Height: =80
                   LayoutAlignItems: =LayoutAlignItems.Center
@@ -210,6 +210,14 @@ Screens:
                                var_vista,
                                "form"
                            );
+                          Set(
+                              var_editandoColVei,
+                              false
+                          );
+                          Set(
+                              var_registroColVei,
+                              Blank()
+                          );
                           Clear(col_colVeiEnvolvidos);
                           Clear(col_colVeiGalleryImg)
                         Text: ="Cadastrar"
@@ -219,7 +227,7 @@ Screens:
                 Control: Label@2.5.1
                 Properties:
                   AlignInContainer: =AlignInContainer.Stretch
-                  Fill: =RGBA(245, 245, 245, 1)
+                  Fill: =nfCorFundoFraco
                   Height: =10
                   LayoutMaxHeight: =
                   LayoutMaxWidth: =
@@ -230,7 +238,7 @@ Screens:
                 Variant: AutoLayout
                 Properties:
                   DropShadow: =DropShadow.None
-                  Fill: =RGBA(245, 245, 245, 1)
+                  Fill: =nfCorFundoFraco
                   FillPortions: =0
                   Height: =20
                   LayoutDirection: =LayoutDirection.Horizontal
@@ -307,7 +315,7 @@ Screens:
                 Variant: AutoLayout
                 Properties:
                   DropShadow: =DropShadow.None
-                  Fill: =RGBA(245, 245, 245, 1)
+                  Fill: =nfCorFundoFraco
                   FillPortions: =0
                   Height: =60
                   LayoutDirection: =LayoutDirection.Horizontal
@@ -328,12 +336,12 @@ Screens:
                   - cmbHomeBloco_1:
                       Control: Classic/DropDown@2.3.1
                       Properties:
-                        BorderColor: =RGBA(0, 0, 0, 1)
+                        BorderColor: =nfCorBorda
                         BorderThickness: =1
                         ChevronBackground: =RGBA(0, 0, 0, 0)
                         ChevronFill: =RGBA(0, 0, 0, 1)
                         ChevronHoverBackground: =RGBA(0, 0, 0, 0)
-                        ChevronHoverFill: =RGBA(0, 0, 0, 1)
+                        ChevronHoverFill: =nfCorPrimaria
                         Default: |-
                           =If(
                               varPerfilUser = "Base" || varPerfilUser = "Bloco",
@@ -342,7 +350,7 @@ Screens:
                           )
                         DisplayMode: |-
                           =If(
-                              varPerfilUser = "Base" || varPerfilUser = "Bloco",
+                              (varPerfilUser = "Base" || varPerfilUser = "Bloco") && !varPerfilSafety,
                               DisplayMode.View,
                               DisplayMode.Edit
                           )
@@ -364,12 +372,12 @@ Screens:
                   - cmbHomeAeroporto_1:
                       Control: Classic/DropDown@2.3.1
                       Properties:
-                        BorderColor: =RGBA(0, 0, 0, 1)
+                        BorderColor: =nfCorBorda
                         BorderThickness: =1
                         ChevronBackground: =RGBA(0, 0, 0, 0)
                         ChevronFill: =RGBA(0, 0, 0, 1)
                         ChevronHoverBackground: =RGBA(0, 0, 0, 0)
-                        ChevronHoverFill: =RGBA(0, 0, 0, 1)
+                        ChevronHoverFill: =nfCorPrimaria
                         Default: |-
                           =If(
                               varPerfilUser = "Base",
@@ -378,7 +386,7 @@ Screens:
                           )
                         DisplayMode: |-
                           =If(
-                              varPerfilUser = "Base",
+                              varPerfilUser = "Base" && !varPerfilSafety,
                               DisplayMode.View,
                               DisplayMode.Edit
                           )
@@ -408,7 +416,7 @@ Screens:
                   - dtpHomeDtfInicio_1:
                       Control: Classic/DatePicker@2.6.0
                       Properties:
-                        BorderColor: =RGBA(0, 0, 0, 1)
+                        BorderColor: =nfCorBorda
                         BorderThickness: =1
                         DefaultDate: |-
                           =If(
@@ -435,7 +443,7 @@ Screens:
                   - dtpHomeDtfTermino_1:
                       Control: Classic/DatePicker@2.6.0
                       Properties:
-                        BorderColor: =RGBA(0, 0, 0, 1)
+                        BorderColor: =nfCorBorda
                         BorderThickness: =1
                         DefaultDate: =Today() + 1
                         Fill: =RGBA(250, 250, 250, 1)
@@ -456,12 +464,12 @@ Screens:
                   - cmbHomeStatus_1:
                       Control: Classic/DropDown@2.3.1
                       Properties:
-                        BorderColor: =RGBA(0, 0, 0, 1)
+                        BorderColor: =nfCorBorda
                         BorderThickness: =1
                         ChevronBackground: =RGBA(0, 0, 0, 0)
                         ChevronFill: =RGBA(0, 0, 0, 1)
                         ChevronHoverBackground: =RGBA(0, 0, 0, 0)
-                        ChevronHoverFill: =RGBA(0, 0, 0, 1)
+                        ChevronHoverFill: =nfCorPrimaria
                         Default: =""
                         Fill: =RGBA(250, 250, 250, 1)
                         Height: =30
@@ -486,7 +494,7 @@ Screens:
                   - txtBuscar1_1:
                       Control: Classic/TextInput@2.3.2
                       Properties:
-                        BorderColor: =RGBA(0, 0, 0, 1)
+                        BorderColor: =nfCorBorda
                         BorderThickness: =1
                         Default: =
                         Height: =30
@@ -873,14 +881,66 @@ Screens:
                               Appearance: ='ButtonCanvas.Appearance'.Secondary
                               BorderRadius: =0
                               BorderStyle: =BorderStyle.None
-                              DisplayMode: =DisplayMode.Disabled
+                              DisplayMode: =DisplayMode.Edit
                               Height: =30
                               Icon: ="Edit"
                               IconStyle: ='ButtonCanvas.IconStyle'.Filled
                               Layout: ='ButtonCanvas.Layout'.IconBefore
                               LayoutMaxHeight: =
                               LayoutMaxWidth: =
-                              OnSelect: =
+                              OnSelect: |-
+                                =Set(
+                                     var_vista,
+                                     "form"
+                                 );
+                                 UpdateContext(
+                                     {
+                                     var_editandoColVei: true,
+                                     var_registroColVei: ThisItem
+                                     }
+                                 );
+                                ClearCollect(
+                                    col_colVeiEnvolvidos,
+                                    ForAll(
+                                        Filter(
+                                            '14.4-tbl_ColVeiculosEnvolvidos',
+                                            colVeiEnv_idOcorrencia = ThisItem.colVei_id
+                                        ),
+                                        {
+                                            dbId: ID,
+                                            id: ID,
+                                            nome: colVeiEnv_nome,
+                                            colete: colVeiEnv_colete,
+                                            empresa: colVeiEnv_empresa,
+                                            codVeiculo: colVeiEnv_codVeiculo,
+                                            empresaProp: colVeiEnv_empresaProp,
+                                            cnhCompativel: colVeiEnv_cnhComp,
+                                            boaCondicao: colVeiEnv_boaCondicoes
+                                        }
+                                    )
+                                );
+                                ClearCollect(
+                                    col_colVeiEnvolvidos_orig,
+                                    col_colVeiEnvolvidos
+                                );
+                                ClearCollect(
+                                    col_colVeiGalleryImg,
+                                    ForAll(
+                                        Filter(
+                                            '14.4-tbl_ColVeiculosImg',
+                                            colVeiImg_idOcorrencia = ThisItem.colVei_id
+                                        ),
+                                        {
+                                            dbId: ID,
+                                            id: ID,
+                                            img: colVeiImg_imagem
+                                        }
+                                    )
+                                );
+                                ClearCollect(
+                                    col_colVeiGalleryImg_orig,
+                                    col_colVeiGalleryImg
+                                )
                               PaddingBottom: =5
                               PaddingLeft: =5
                               PaddingRight: =5
@@ -963,7 +1023,7 @@ Screens:
                               Appearance: ='ButtonCanvas.Appearance'.Secondary
                               BorderRadius: =0
                               BorderStyle: =BorderStyle.None
-                              FontColor: =RGBA(255, 0, 0, 1)
+                              FontColor: =nfCorErro
                               Height: =30
                               Icon: ="Delete"
                               IconStyle: ='ButtonCanvas.IconStyle'.Filled
@@ -976,7 +1036,8 @@ Screens:
                                     ScreenTransition.Fade,
                                     {
                                         var_modulo: var_tituloModulo,
-                                        var_item: ThisItem,
+                                        var_item_id: ThisItem.ID,
+                                        var_item_chave: ThisItem.colVei_id,
                                         var_protocolo: Label_protocolo.Text
                                     }
                                 )
@@ -1023,7 +1084,7 @@ Screens:
                 Properties:
                   BorderColor: =ColorFade(Self.Fill, -15%)
                   Color: =RGBA(255, 255, 255, 1)
-                  DisabledBorderColor: =RGBA(166, 166, 166, 1)
+                  DisabledBorderColor: =nfCorTextoFraco
                   Fill: =RGBA(0, 0, 0, 1)
                   Font: =Font.'Open Sans'
                   HoverBorderColor: =ColorFade(Self.BorderColor, 20%)
@@ -1188,7 +1249,7 @@ Screens:
                 Properties:
                   BorderColor: =ColorFade(Self.Fill, -15%)
                   Color: =RGBA(255, 255, 255, 1)
-                  DisabledBorderColor: =RGBA(166, 166, 166, 1)
+                  DisabledBorderColor: =nfCorTextoFraco
                   Fill: =RGBA(0, 0, 0, 1)
                   Font: =Font.Arial
                   HoverBorderColor: =ColorFade(Self.BorderColor, 20%)
@@ -1337,8 +1398,9 @@ Screens:
                         - dtpColVeiDataCadastro:
                             Control: Classic/DatePicker@2.6.0
                             Properties:
-                              BorderColor: =RGBA(0, 0, 0, 1)
+                              BorderColor: =nfCorBorda
                               BorderThickness: =1
+                              DefaultDate: =If(var_editandoColVei, var_registroColVei.colVei_data, "")
                               DisplayMode: =
                               FocusedBorderThickness: =2
                               Height: =30
@@ -1353,7 +1415,7 @@ Screens:
                             Properties:
                               BorderColor: =Color.Black
                               BorderThickness: =1
-                              Default: =""
+                              Default: =If(var_editandoColVei, Left(var_registroColVei.colVei_hora, Find(":", var_registroColVei.colVei_hora) - 1), "hor")
                               DisplayMode: =
                               FocusedBorderThickness: =2
                               Height: =30
@@ -1402,7 +1464,7 @@ Screens:
                             Properties:
                               BorderColor: =Color.Black
                               BorderThickness: =1
-                              Default: =""
+                              Default: =If(var_editandoColVei, Mid(var_registroColVei.colVei_hora, Find(":", var_registroColVei.colVei_hora) + 1, 2), "min")
                               DisplayMode: =
                               FocusedBorderThickness: =2
                               Height: =30
@@ -1504,11 +1566,11 @@ Screens:
                               varBordaDefault
                           )
                         BorderThickness: =1
-                        Default: =""
-                        DisabledBorderColor: =RGBA(0, 0, 0, 1)
+                        Default: =If(var_editandoColVei, var_registroColVei.colVei_local, "")
+                        DisabledBorderColor: =nfCorBorda
                         Height: =30
                         HintText: ="Descreva..."
-                        HoverBorderColor: =RGBA(0, 0, 0, 1)
+                        HoverBorderColor: =nfCorPrimaria
                         LayoutMaxHeight: =
                         LayoutMaxWidth: =
                         PaddingRight: =6.33
@@ -1560,7 +1622,7 @@ Screens:
                               AlignInContainer: =AlignInContainer.Center
                               BorderColor: =If(IsBlank(Self.Selected.Value),varBordaDefault)
                               BorderThickness: =1
-                              ChevronBackground: =RGBA(0, 0, 0, 1)
+                              ChevronBackground: =nfCorPrimaria
                               DisplayFields: =["Value"]
                               Height: =30
                               InputTextPlaceholder: =
@@ -1587,7 +1649,7 @@ Screens:
                               AlignInContainer: =AlignInContainer.Center
                               BorderColor: =If(IsBlank(Self.Selected.Value),varBordaDefault)
                               BorderThickness: =1
-                              ChevronBackground: =RGBA(0, 0, 0, 1)
+                              ChevronBackground: =nfCorPrimaria
                               DisplayFields: =["Value"]
                               Height: =30
                               InputTextPlaceholder: =
@@ -1623,9 +1685,9 @@ Screens:
                         AlignInContainer: =AlignInContainer.Start
                         BorderColor: =If(IsBlank(Self.Selected.Value),varBordaDefault)
                         BorderThickness: =1
-                        ChevronBackground: =RGBA(0, 0, 0, 1)
-                        Default: =""
-                        DisabledBorderColor: =RGBA(0, 0, 0, 1)
+                        ChevronBackground: =nfCorPrimaria
+                        Default: =If(var_editandoColVei, var_registroColVei.colVei_tipoColisao, "")
+                        DisabledBorderColor: =nfCorBorda
                         Height: =30
                         Items: |-
                           =[
@@ -1649,7 +1711,7 @@ Screens:
                       Control: Label@2.5.1
                       Properties:
                         AlignInContainer: =AlignInContainer.Start
-                        BorderColor: =RGBA(0, 0, 0, 1)
+                        BorderColor: =nfCorBorda
                         Color: =RGBA(40, 134, 222, 1)
                         Font: =Font.'Segoe UI'
                         FontWeight: =FontWeight.Bold
@@ -1689,7 +1751,7 @@ Screens:
                             Control: Label@2.5.1
                             Properties:
                               AlignInContainer: =AlignInContainer.Stretch
-                              BorderColor: =RGBA(0, 0, 0, 1)
+                              BorderColor: =nfCorBorda
                               Font: =Font.'Segoe UI'
                               FontWeight: =FontWeight.Semibold
                               Height: =20
@@ -1704,14 +1766,14 @@ Screens:
                             Control: Classic/TextInput@2.3.2
                             Properties:
                               AlignInContainer: =AlignInContainer.Stretch
-                              BorderColor: =RGBA(0, 0, 0, 1)
+                              BorderColor: =nfCorBorda
                               BorderThickness: =1
                               Default: =""
-                              DisabledBorderColor: =RGBA(0, 0, 0, 1)
+                              DisabledBorderColor: =nfCorBorda
                               Font: =Font.'Open Sans'
                               Height: =30
-                              HoverBorderColor: =RGBA(0, 0, 0, 1)
-                              HoverFill: =RGBA(186, 202, 226, 1)
+                              HoverBorderColor: =nfCorPrimaria
+                              HoverFill: =nfCorFundoFraco
                               LayoutMaxHeight: =
                               LayoutMaxWidth: =
                               RadiusBottomLeft: =0
@@ -1726,7 +1788,7 @@ Screens:
                             Control: Label@2.5.1
                             Properties:
                               AlignInContainer: =AlignInContainer.Stretch
-                              BorderColor: =RGBA(0, 0, 0, 1)
+                              BorderColor: =nfCorBorda
                               Font: =Font.'Segoe UI'
                               FontWeight: =FontWeight.Semibold
                               Height: =20
@@ -1741,15 +1803,15 @@ Screens:
                             Control: Classic/TextInput@2.3.2
                             Properties:
                               AlignInContainer: =AlignInContainer.Stretch
-                              BorderColor: =RGBA(0, 0, 0, 1)
+                              BorderColor: =nfCorBorda
                               BorderThickness: =1
                               Default: =""
-                              DisabledBorderColor: =RGBA(0, 0, 0, 1)
+                              DisabledBorderColor: =nfCorBorda
                               DisplayMode: =
                               Font: =Font.'Open Sans'
                               Height: =30
-                              HoverBorderColor: =RGBA(0, 0, 0, 1)
-                              HoverFill: =RGBA(186, 202, 226, 1)
+                              HoverBorderColor: =nfCorPrimaria
+                              HoverFill: =nfCorFundoFraco
                               LayoutMaxHeight: =
                               LayoutMaxWidth: =
                               RadiusBottomLeft: =0
@@ -1764,7 +1826,7 @@ Screens:
                             Control: Label@2.5.1
                             Properties:
                               AlignInContainer: =AlignInContainer.Stretch
-                              BorderColor: =RGBA(0, 0, 0, 1)
+                              BorderColor: =nfCorBorda
                               Font: =Font.'Segoe UI'
                               FontWeight: =FontWeight.Semibold
                               Height: =20
@@ -1779,14 +1841,14 @@ Screens:
                             Control: Classic/TextInput@2.3.2
                             Properties:
                               AlignInContainer: =AlignInContainer.Stretch
-                              BorderColor: =RGBA(0, 0, 0, 1)
+                              BorderColor: =nfCorBorda
                               BorderThickness: =1
                               Default: =""
-                              DisabledBorderColor: =RGBA(0, 0, 0, 1)
+                              DisabledBorderColor: =nfCorBorda
                               Font: =Font.'Open Sans'
                               Height: =30
-                              HoverBorderColor: =RGBA(0, 0, 0, 1)
-                              HoverFill: =RGBA(186, 202, 226, 1)
+                              HoverBorderColor: =nfCorPrimaria
+                              HoverFill: =nfCorFundoFraco
                               LayoutMaxHeight: =
                               LayoutMaxWidth: =
                               RadiusBottomLeft: =0
@@ -1801,7 +1863,7 @@ Screens:
                             Control: Label@2.5.1
                             Properties:
                               AlignInContainer: =AlignInContainer.Stretch
-                              BorderColor: =RGBA(0, 0, 0, 1)
+                              BorderColor: =nfCorBorda
                               Font: =Font.'Segoe UI'
                               FontWeight: =FontWeight.Semibold
                               Height: =20
@@ -1816,15 +1878,15 @@ Screens:
                             Control: Classic/TextInput@2.3.2
                             Properties:
                               AlignInContainer: =AlignInContainer.Stretch
-                              BorderColor: =RGBA(0, 0, 0, 1)
+                              BorderColor: =nfCorBorda
                               BorderThickness: =1
                               Default: =""
-                              DisabledBorderColor: =RGBA(0, 0, 0, 1)
+                              DisabledBorderColor: =nfCorBorda
                               DisplayMode: =
                               Font: =Font.'Open Sans'
                               Height: =30
-                              HoverBorderColor: =RGBA(0, 0, 0, 1)
-                              HoverFill: =RGBA(186, 202, 226, 1)
+                              HoverBorderColor: =nfCorPrimaria
+                              HoverFill: =nfCorFundoFraco
                               LayoutMaxHeight: =
                               LayoutMaxWidth: =
                               RadiusBottomLeft: =0
@@ -1839,7 +1901,7 @@ Screens:
                             Control: Label@2.5.1
                             Properties:
                               AlignInContainer: =AlignInContainer.Stretch
-                              BorderColor: =RGBA(0, 0, 0, 1)
+                              BorderColor: =nfCorBorda
                               Font: =Font.'Segoe UI'
                               FontWeight: =FontWeight.Semibold
                               Height: =20
@@ -1854,15 +1916,15 @@ Screens:
                             Control: Classic/TextInput@2.3.2
                             Properties:
                               AlignInContainer: =AlignInContainer.Stretch
-                              BorderColor: =RGBA(0, 0, 0, 1)
+                              BorderColor: =nfCorBorda
                               BorderThickness: =1
                               Default: =""
-                              DisabledBorderColor: =RGBA(0, 0, 0, 1)
+                              DisabledBorderColor: =nfCorBorda
                               DisplayMode: =
                               Font: =Font.'Open Sans'
                               Height: =30
-                              HoverBorderColor: =RGBA(0, 0, 0, 1)
-                              HoverFill: =RGBA(186, 202, 226, 1)
+                              HoverBorderColor: =nfCorPrimaria
+                              HoverFill: =nfCorFundoFraco
                               LayoutMaxHeight: =
                               LayoutMaxWidth: =
                               RadiusBottomLeft: =0
@@ -1877,7 +1939,7 @@ Screens:
                             Control: Label@2.5.1
                             Properties:
                               AlignInContainer: =AlignInContainer.Stretch
-                              BorderColor: =RGBA(0, 0, 0, 1)
+                              BorderColor: =nfCorBorda
                               Font: =Font.'Segoe UI'
                               FontWeight: =FontWeight.Semibold
                               Height: =20
@@ -1892,26 +1954,26 @@ Screens:
                             Control: Classic/DropDown@2.3.1
                             Properties:
                               AlignInContainer: =AlignInContainer.Stretch
-                              BorderColor: =RGBA(0, 0, 0, 1)
+                              BorderColor: =nfCorBorda
                               BorderThickness: =1
-                              ChevronBackground: =RGBA(0, 0, 0, 1)
+                              ChevronBackground: =nfCorPrimaria
                               ChevronFill: =RGBA(255, 255, 255, 1)
                               ChevronHoverBackground: =ColorFade(RGBA(0, 0, 0, 1), -20%)
                               ChevronHoverFill: =RGBA(255, 255, 255, 1)
                               Default: =""
-                              DisabledBorderColor: =RGBA(0, 0, 0, 1)
+                              DisabledBorderColor: =nfCorBorda
                               Font: =Font.'Open Sans'
                               Height: =30
-                              HoverFill: =RGBA(186, 202, 226, 1)
+                              HoverFill: =nfCorFundoFraco
                               Items: =["","Sim","Não"]
                               Items.Value: =Value
                               LayoutMaxHeight: =
                               LayoutMaxWidth: =
                               OnChange: =
                               PressedColor: =RGBA(255, 255, 255, 1)
-                              PressedFill: =RGBA(0, 0, 0, 1)
+                              PressedFill: =nfCorPrimariaEsc
                               SelectionColor: =RGBA(255, 255, 255, 1)
-                              SelectionFill: =RGBA(0, 0, 0, 1)
+                              SelectionFill: =nfCorPrimaria
                               Size: =10
                               Width: =350
                               X: =288
@@ -1920,7 +1982,7 @@ Screens:
                             Control: Label@2.5.1
                             Properties:
                               AlignInContainer: =AlignInContainer.Stretch
-                              BorderColor: =RGBA(0, 0, 0, 1)
+                              BorderColor: =nfCorBorda
                               Font: =Font.'Segoe UI'
                               FontWeight: =FontWeight.Semibold
                               Height: =20
@@ -1935,26 +1997,26 @@ Screens:
                             Control: Classic/DropDown@2.3.1
                             Properties:
                               AlignInContainer: =AlignInContainer.Stretch
-                              BorderColor: =RGBA(0, 0, 0, 1)
+                              BorderColor: =nfCorBorda
                               BorderThickness: =1
-                              ChevronBackground: =RGBA(0, 0, 0, 1)
+                              ChevronBackground: =nfCorPrimaria
                               ChevronFill: =RGBA(255, 255, 255, 1)
                               ChevronHoverBackground: =ColorFade(RGBA(0, 0, 0, 1), -20%)
                               ChevronHoverFill: =RGBA(255, 255, 255, 1)
                               Default: =""
-                              DisabledBorderColor: =RGBA(0, 0, 0, 1)
+                              DisabledBorderColor: =nfCorBorda
                               Font: =Font.'Open Sans'
                               Height: =30
-                              HoverFill: =RGBA(186, 202, 226, 1)
+                              HoverFill: =nfCorFundoFraco
                               Items: =["","Sim","Não"]
                               Items.Value: =Value
                               LayoutMaxHeight: =
                               LayoutMaxWidth: =
                               OnChange: =
                               PressedColor: =RGBA(255, 255, 255, 1)
-                              PressedFill: =RGBA(0, 0, 0, 1)
+                              PressedFill: =nfCorPrimariaEsc
                               SelectionColor: =RGBA(255, 255, 255, 1)
-                              SelectionFill: =RGBA(0, 0, 0, 1)
+                              SelectionFill: =nfCorPrimaria
                               Size: =10
                               Width: =350
                               X: =4
@@ -1973,7 +2035,7 @@ Screens:
                               AlignInContainer: =AlignInContainer.Stretch
                               BorderColor: =ColorFade(Self.Fill, -15%)
                               Color: =RGBA(255, 255, 255, 1)
-                              DisabledBorderColor: =RGBA(166, 166, 166, 1)
+                              DisabledBorderColor: =nfCorTextoFraco
                               Fill: =RGBA(0, 0, 0, 1)
                               Font: =Font.'Open Sans'
                               Height: =30
@@ -1992,6 +2054,7 @@ Screens:
                                     Collect(
                                         col_colVeiEnvolvidos,
                                         {
+                                            dbId: Blank(),
                                             id: Value(
                                                 First(
                                                     SortByColumns(
@@ -2039,7 +2102,7 @@ Screens:
                             Control: Gallery@2.15.0
                             Variant: Vertical
                             Properties:
-                              BorderColor: =RGBA(0, 0, 0, 1)
+                              BorderColor: =nfCorBorda
                               BorderStyle: =BorderStyle.None
                               FillPortions: =0
                               Height: =Self.AllItemsCount * 35
@@ -2058,7 +2121,7 @@ Screens:
                               - Label65_5:
                                   Control: Label@2.5.1
                                   Properties:
-                                    BorderColor: =RGBA(0, 0, 0, 1)
+                                    BorderColor: =nfCorBorda
                                     Font: =Font.'Open Sans'
                                     Height: =20
                                     OnSelect: =Select(Parent)
@@ -2074,17 +2137,17 @@ Screens:
                                     BorderStyle: =BorderStyle.None
                                     Color: =RGBA(255, 255, 255, 1)
                                     DisabledBorderColor: =RGBA(0, 0, 0, 0)
-                                    DisabledFill: =RGBA(255, 0, 0, 1)
-                                    Fill: =RGBA(255, 56, 56, 1)
+                                    DisabledFill: =nfCorErro
+                                    Fill: =nfCorErro
                                     Font: =Font.'Open Sans'
                                     Height: =25
                                     HoverBorderColor: =
                                     HoverColor: =RGBA(255, 255, 255, 1)
-                                    HoverFill: =RGBA(255, 0, 0, 1)
+                                    HoverFill: =nfCorErro
                                     OnSelect: =Remove(col_colVeiEnvolvidos,ThisItem)
                                     PressedBorderColor: =
                                     PressedColor: =Self.Fill
-                                    PressedFill: =RGBA(255, 0, 0, 1)
+                                    PressedFill: =nfCorErro
                                     RadiusBottomLeft: =4
                                     RadiusBottomRight: =4
                                     RadiusTopLeft: =4
@@ -2117,7 +2180,7 @@ Screens:
                                 )
                               BorderStyle: =BorderStyle.None
                               BorderThickness: =1
-                              Color: =RGBA(166, 166, 166, 1)
+                              Color: =nfCorTextoFraco
                               Font: =Font.'Open Sans'
                               Height: =20
                               LayoutMaxHeight: =
@@ -2133,7 +2196,7 @@ Screens:
                       Control: Label@2.5.1
                       Properties:
                         AlignInContainer: =AlignInContainer.Start
-                        BorderColor: =RGBA(0, 0, 0, 1)
+                        BorderColor: =nfCorBorda
                         Fill: =RGBA(255, 255, 255, 1)
                         Font: =Font.'Segoe UI'
                         FontWeight: =FontWeight.Semibold
@@ -2151,12 +2214,12 @@ Screens:
                         AlignInContainer: =AlignInContainer.Start
                         BorderColor: =If(IsBlank(Self.Text),varBordaDefault)
                         BorderThickness: =1
-                        Default: =""
-                        DisabledBorderColor: =RGBA(0, 0, 0, 1)
+                        Default: =If(var_editandoColVei, var_registroColVei.colVei_danos, "")
+                        DisabledBorderColor: =nfCorBorda
                         Font: =Font.'Open Sans'
                         Height: =30
-                        HoverBorderColor: =RGBA(0, 0, 0, 1)
-                        HoverFill: =RGBA(186, 202, 226, 1)
+                        HoverBorderColor: =nfCorPrimaria
+                        HoverFill: =nfCorFundoFraco
                         LayoutMaxHeight: =
                         LayoutMaxWidth: =
                         Mode: =TextMode.MultiLine
@@ -2173,7 +2236,7 @@ Screens:
                       Control: Label@2.5.1
                       Properties:
                         AlignInContainer: =AlignInContainer.Start
-                        BorderColor: =RGBA(0, 0, 0, 1)
+                        BorderColor: =nfCorBorda
                         Fill: =RGBA(255, 255, 255, 1)
                         Font: =Font.'Segoe UI'
                         FontWeight: =FontWeight.Semibold
@@ -2191,12 +2254,12 @@ Screens:
                         AlignInContainer: =AlignInContainer.Start
                         BorderColor: =If(IsBlank(Self.Text),varBordaDefault)
                         BorderThickness: =1
-                        Default: =""
-                        DisabledBorderColor: =RGBA(0, 0, 0, 1)
+                        Default: =If(var_editandoColVei, var_registroColVei.colVei_descOcorrencia, "")
+                        DisabledBorderColor: =nfCorBorda
                         Font: =Font.'Open Sans'
                         Height: =100
-                        HoverBorderColor: =RGBA(0, 0, 0, 1)
-                        HoverFill: =RGBA(186, 202, 226, 1)
+                        HoverBorderColor: =nfCorPrimaria
+                        HoverFill: =nfCorFundoFraco
                         LayoutMaxHeight: =
                         LayoutMaxWidth: =
                         Mode: =TextMode.MultiLine
@@ -2259,7 +2322,7 @@ Screens:
                             Properties:
                               BorderColor: =ColorFade(Self.Fill, -15%)
                               Color: =RGBA(255, 255, 255, 1)
-                              DisabledBorderColor: =RGBA(166, 166, 166, 1)
+                              DisabledBorderColor: =nfCorTextoFraco
                               Fill: =RGBA(0, 0, 0, 1)
                               Font: =Font.'Open Sans'
                               Height: =30
@@ -2272,6 +2335,7 @@ Screens:
                                     Collect(
                                         col_colVeiGalleryImg,
                                         {
+                                            dbId: Blank(),
                                             id: Value(
                                                 First(
                                                     SortByColumns(
@@ -2319,7 +2383,7 @@ Screens:
                             Control: Gallery@2.15.0
                             Variant: Horizontal
                             Properties:
-                              BorderColor: =RGBA(0, 0, 0, 1)
+                              BorderColor: =nfCorBorda
                               BorderThickness: =1
                               Height: =186
                               Items: =SortByColumns(col_colVeiGalleryImg,"id",SortOrder.Descending)
@@ -2347,17 +2411,17 @@ Screens:
                                     BorderColor: =ColorFade(Self.Fill, -15%)
                                     Color: =RGBA(255, 255, 255, 1)
                                     DisabledBorderColor: =RGBA(0, 0, 0, 0)
-                                    DisabledFill: =RGBA(255, 0, 0, 1)
-                                    Fill: =RGBA(255, 56, 56, 1)
+                                    DisabledFill: =nfCorErro
+                                    Fill: =nfCorErro
                                     Font: =Font.'Open Sans'
                                     Height: =25
                                     HoverBorderColor: =
                                     HoverColor: =RGBA(255, 255, 255, 1)
-                                    HoverFill: =RGBA(255, 0, 0, 1)
+                                    HoverFill: =nfCorErro
                                     OnSelect: =Remove(col_colVeiGalleryImg,ThisItem)
                                     PressedBorderColor: =
                                     PressedColor: =Self.Fill
-                                    PressedFill: =RGBA(255, 0, 0, 1)
+                                    PressedFill: =nfCorErro
                                     RadiusBottomLeft: =4
                                     RadiusBottomRight: =4
                                     RadiusTopLeft: =4
@@ -2373,7 +2437,7 @@ Screens:
                               Align: =Align.Center
                               BorderColor: =If(CountRows(col_colVeiGalleryImg) = 0,varBordaDefault)
                               BorderThickness: =1
-                              Color: =RGBA(166, 166, 166, 1)
+                              Color: =nfCorTextoFraco
                               Fill: =RGBA(255, 255, 255, 1)
                               Font: =Font.'Open Sans'
                               Height: =186
@@ -2386,7 +2450,7 @@ Screens:
                         - Label20_395:
                             Control: Label@2.5.1
                             Properties:
-                              BorderColor: =RGBA(0, 0, 0, 1)
+                              BorderColor: =nfCorBorda
                               Font: =Font.'Open Sans'
                               FontWeight: =FontWeight.Semibold
                               Height: =20
@@ -2577,7 +2641,11 @@ Screens:
                                       {
                                           var_regNovoColVei: Patch(
                                               '14.4-tbl_ColVeiculos',
-                                              Defaults('14.4-tbl_ColVeiculos'),
+                                              If(
+                                                  var_editandoColVei,
+                                                  var_registroColVei,
+                                                  Defaults('14.4-tbl_ColVeiculos')
+                                              ),
                                               {
                                                   colVei_data: dtpColVeiDataCadastro.SelectedDate,
                                                   colVei_hora: cmbColVeiHoraCadastro.Selected.Value & ":" & cmbColVeiMinuCadastro.Selected.Value,
@@ -2628,7 +2696,14 @@ Screens:
                                           col_colVeiEnvolvidos,
                                           Patch(
                                               '14.4-tbl_ColVeiculosEnvolvidos',
-                                              Defaults('14.4-tbl_ColVeiculosEnvolvidos'),
+                                              If(
+                                                  IsBlank(dbId),
+                                                  Defaults('14.4-tbl_ColVeiculosEnvolvidos'),
+                                                  LookUp(
+                                                      '14.4-tbl_ColVeiculosEnvolvidos',
+                                                      ID = dbId
+                                                  )
+                                              ),
                                               {
                                                   colVeiEnv_idOcorrencia: var_colVeiId,
                                                   colVeiEnv_nome: nome,
@@ -2642,6 +2717,22 @@ Screens:
                                           )
                                       )
                               );
+                              If(
+                                  var_editandoColVei,
+                                  ForAll(
+                                      Filter(
+                                          col_colVeiEnvolvidos_orig,
+                                          !(dbId in col_colVeiEnvolvidos.dbId)
+                                      ),
+                                      Remove(
+                                          '14.4-tbl_ColVeiculosEnvolvidos',
+                                          LookUp(
+                                              '14.4-tbl_ColVeiculosEnvolvidos',
+                                              ID = dbId
+                                          )
+                                      )
+                                  )
+                              );
                                   //insert das imagens
                               If(
                                   var_colVeiId > 0,
@@ -2649,13 +2740,36 @@ Screens:
                                           col_colVeiGalleryImg,
                                           Patch(
                                               '14.4-tbl_ColVeiculosImg',
-                                              Defaults('14.4-tbl_ColVeiculosImg'),
+                                              If(
+                                                  IsBlank(dbId),
+                                                  Defaults('14.4-tbl_ColVeiculosImg'),
+                                                  LookUp(
+                                                      '14.4-tbl_ColVeiculosImg',
+                                                      ID = dbId
+                                                  )
+                                              ),
                                               {
                                                   colVeiImg_idOcorrencia: var_colVeiId,
                                                   colVeiImg_imagem: img
                                               }
                                           )
                                       )
+                              );
+                              If(
+                                  var_editandoColVei,
+                                  ForAll(
+                                      Filter(
+                                          col_colVeiGalleryImg_orig,
+                                          !(dbId in col_colVeiGalleryImg.dbId)
+                                      ),
+                                      Remove(
+                                          '14.4-tbl_ColVeiculosImg',
+                                          LookUp(
+                                              '14.4-tbl_ColVeiculosImg',
+                                              ID = dbId
+                                          )
+                                      )
+                                  )
                               );
 
                               If(
@@ -2830,6 +2944,7 @@ Screens:
                               RadiusBottomRight: =0
                               RadiusTopLeft: =0
                               RadiusTopRight: =0
+                              Width: =Parent.Width
                             Children:
                               - Container35_11:
                                   Control: GroupContainer@1.5.0
@@ -2854,7 +2969,7 @@ Screens:
                                         Control: Label@2.5.1
                                         Properties:
                                           AutoHeight: =true
-                                          BorderColor: =RGBA(0, 0, 0, 1)
+                                          BorderColor: =nfCorBorda
                                           Font: =Font.'Open Sans'
                                           FontWeight: =FontWeight.Bold
                                           Height: =20
@@ -2869,7 +2984,7 @@ Screens:
                                         Control: Label@2.5.1
                                         Properties:
                                           AutoHeight: =true
-                                          BorderColor: =RGBA(0, 0, 0, 1)
+                                          BorderColor: =nfCorBorda
                                           Font: =Font.'Open Sans'
                                           Height: =20
                                           LayoutMaxHeight: =
@@ -2883,7 +2998,7 @@ Screens:
                                         Control: Label@2.5.1
                                         Properties:
                                           AutoHeight: =true
-                                          BorderColor: =RGBA(0, 0, 0, 1)
+                                          BorderColor: =nfCorBorda
                                           Font: =Font.'Open Sans'
                                           FontWeight: =FontWeight.Bold
                                           Height: =20
@@ -2898,7 +3013,7 @@ Screens:
                                         Control: Label@2.5.1
                                         Properties:
                                           AutoHeight: =true
-                                          BorderColor: =RGBA(0, 0, 0, 1)
+                                          BorderColor: =nfCorBorda
                                           Font: =Font.'Open Sans'
                                           Height: =20
                                           LayoutMaxHeight: =
@@ -2912,7 +3027,7 @@ Screens:
                                         Control: Label@2.5.1
                                         Properties:
                                           AutoHeight: =true
-                                          BorderColor: =RGBA(0, 0, 0, 1)
+                                          BorderColor: =nfCorBorda
                                           Font: =Font.'Open Sans'
                                           FontWeight: =FontWeight.Bold
                                           Height: =20
@@ -2928,7 +3043,7 @@ Screens:
                                         Control: Label@2.5.1
                                         Properties:
                                           AutoHeight: =true
-                                          BorderColor: =RGBA(0, 0, 0, 1)
+                                          BorderColor: =nfCorBorda
                                           Font: =Font.'Open Sans'
                                           Height: =20
                                           LayoutMaxHeight: =
@@ -2942,7 +3057,7 @@ Screens:
                                         Control: Label@2.5.1
                                         Properties:
                                           AutoHeight: =true
-                                          BorderColor: =RGBA(0, 0, 0, 1)
+                                          BorderColor: =nfCorBorda
                                           Font: =Font.'Open Sans'
                                           FontWeight: =FontWeight.Bold
                                           Height: =20
@@ -2958,7 +3073,7 @@ Screens:
                                         Control: Label@2.5.1
                                         Properties:
                                           AutoHeight: =true
-                                          BorderColor: =RGBA(0, 0, 0, 1)
+                                          BorderColor: =nfCorBorda
                                           Font: =Font.'Open Sans'
                                           Height: =20
                                           LayoutMaxHeight: =
@@ -2972,7 +3087,7 @@ Screens:
                                         Control: Label@2.5.1
                                         Properties:
                                           AutoHeight: =true
-                                          BorderColor: =RGBA(0, 0, 0, 1)
+                                          BorderColor: =nfCorBorda
                                           Font: =Font.'Open Sans'
                                           FontWeight: =FontWeight.Bold
                                           Height: =20
@@ -2988,7 +3103,7 @@ Screens:
                                         Control: Label@2.5.1
                                         Properties:
                                           AutoHeight: =true
-                                          BorderColor: =RGBA(0, 0, 0, 1)
+                                          BorderColor: =nfCorBorda
                                           Font: =Font.'Open Sans'
                                           Height: =20
                                           LayoutMaxHeight: =
@@ -3002,7 +3117,7 @@ Screens:
                                         Control: Label@2.5.1
                                         Properties:
                                           AutoHeight: =true
-                                          BorderColor: =RGBA(0, 0, 0, 1)
+                                          BorderColor: =nfCorBorda
                                           Font: =Font.'Open Sans'
                                           FontWeight: =FontWeight.Bold
                                           Height: =20
@@ -3018,7 +3133,7 @@ Screens:
                                         Control: Label@2.5.1
                                         Properties:
                                           AutoHeight: =true
-                                          BorderColor: =RGBA(0, 0, 0, 1)
+                                          BorderColor: =nfCorBorda
                                           Font: =Font.'Open Sans'
                                           Height: =20
                                           LayoutMaxHeight: =
@@ -3032,7 +3147,7 @@ Screens:
                                         Control: Label@2.5.1
                                         Properties:
                                           AutoHeight: =true
-                                          BorderColor: =RGBA(0, 0, 0, 1)
+                                          BorderColor: =nfCorBorda
                                           Font: =Font.'Open Sans'
                                           FontWeight: =FontWeight.Bold
                                           Height: =20
@@ -3048,7 +3163,7 @@ Screens:
                                         Control: Label@2.5.1
                                         Properties:
                                           AutoHeight: =true
-                                          BorderColor: =RGBA(0, 0, 0, 1)
+                                          BorderColor: =nfCorBorda
                                           Font: =Font.'Open Sans'
                                           Height: =20
                                           LayoutMaxHeight: =
@@ -3062,7 +3177,7 @@ Screens:
                                         Control: Label@2.5.1
                                         Properties:
                                           AutoHeight: =true
-                                          BorderColor: =RGBA(0, 0, 0, 1)
+                                          BorderColor: =nfCorBorda
                                           Font: =Font.'Open Sans'
                                           FontWeight: =FontWeight.Bold
                                           Height: =20
@@ -3078,7 +3193,7 @@ Screens:
                                         Control: Label@2.5.1
                                         Properties:
                                           AutoHeight: =true
-                                          BorderColor: =RGBA(0, 0, 0, 1)
+                                          BorderColor: =nfCorBorda
                                           Font: =Font.'Open Sans'
                                           Height: =20
                                           LayoutMaxHeight: =
@@ -3134,7 +3249,7 @@ Screens:
                               - Label16_263:
                                   Control: Label@2.5.1
                                   Properties:
-                                    BorderColor: =RGBA(0, 0, 0, 1)
+                                    BorderColor: =nfCorBorda
                                     Font: =Font.'Open Sans'
                                     FontWeight: =FontWeight.Bold
                                     Height: =20
@@ -3146,7 +3261,7 @@ Screens:
                               - Label16_262:
                                   Control: Label@2.5.1
                                   Properties:
-                                    BorderColor: =RGBA(0, 0, 0, 1)
+                                    BorderColor: =nfCorBorda
                                     Fill: =RGBA(255, 255, 255, 1)
                                     Font: =Font.'Open Sans'
                                     FontWeight: =FontWeight.Bold
@@ -3160,7 +3275,7 @@ Screens:
                                   Control: Gallery@2.15.0
                                   Variant: BrowseLayout_Vertical_TwoTextOneImageVariant_ver5.0
                                   Properties:
-                                    BorderColor: =RGBA(0, 0, 0, 1)
+                                    BorderColor: =nfCorBorda
                                     BorderStyle: =BorderStyle.None
                                     Fill: =RGBA(247, 247, 247, 1)
                                     Height: =Parent.Height - 200
@@ -3173,7 +3288,7 @@ Screens:
                                     - Image23_8:
                                         Control: Image@2.2.3
                                         Properties:
-                                          BorderColor: =RGBA(0, 0, 0, 1)
+                                          BorderColor: =nfCorBorda
                                           BorderStyle: =BorderStyle.None
                                           BorderThickness: =5
                                           CalculateOriginalDimensions: =true
@@ -3186,7 +3301,7 @@ Screens:
                                     - Icon31_4:
                                         Control: Classic/Icon@2.5.0
                                         Properties:
-                                          BorderColor: =RGBA(0, 0, 0, 1)
+                                          BorderColor: =nfCorBorda
                                           Color: =RGBA(0, 0, 0, 1)
                                           Height: =110
                                           HoverFill: =RGBA(0, 0, 0, 0.1)
@@ -3202,7 +3317,7 @@ Screens:
                               - Label16_261:
                                   Control: Label@2.5.1
                                   Properties:
-                                    BorderColor: =RGBA(0, 0, 0, 1)
+                                    BorderColor: =nfCorBorda
                                     Fill: =RGBA(247, 247, 247, 1)
                                     Font: =Font.'Open Sans'
                                     FontWeight: =FontWeight.Bold
@@ -3248,7 +3363,7 @@ Screens:
                                     - Label16_282:
                                         Control: Label@2.5.1
                                         Properties:
-                                          BorderColor: =RGBA(0, 0, 0, 1)
+                                          BorderColor: =nfCorBorda
                                           Color: =RGBA(77, 77, 77, 1)
                                           Font: =Font.'Open Sans'
                                           Height: =20
@@ -3259,7 +3374,7 @@ Screens:
                                     - Label16_279:
                                         Control: Label@2.5.1
                                         Properties:
-                                          BorderColor: =RGBA(0, 0, 0, 1)
+                                          BorderColor: =nfCorBorda
                                           Font: =Font.'Open Sans'
                                           FontWeight: =FontWeight.Bold
                                           Height: =20
@@ -3269,7 +3384,7 @@ Screens:
                                     - Label16_281:
                                         Control: Label@2.5.1
                                         Properties:
-                                          BorderColor: =RGBA(0, 0, 0, 1)
+                                          BorderColor: =nfCorBorda
                                           Font: =Font.'Open Sans'
                                           FontWeight: =FontWeight.Bold
                                           Height: =20
@@ -3280,7 +3395,7 @@ Screens:
                                     - Label16_280:
                                         Control: Label@2.5.1
                                         Properties:
-                                          BorderColor: =RGBA(0, 0, 0, 1)
+                                          BorderColor: =nfCorBorda
                                           Color: =RGBA(77, 77, 77, 1)
                                           Font: =Font.'Open Sans'
                                           Size: =10
@@ -3305,7 +3420,7 @@ Screens:
                         - Image26_4:
                             Control: Image@2.2.3
                             Properties:
-                              BorderColor: =RGBA(0, 0, 0, 1)
+                              BorderColor: =nfCorBorda
                               BorderThickness: =5
                               CalculateOriginalDimensions: =true
                               DisabledBorderColor: =RGBA(0, 0, 0, 0)
@@ -3336,7 +3451,7 @@ Screens:
                               - Label65_17:
                                   Control: Label@2.5.1
                                   Properties:
-                                    BorderColor: =RGBA(0, 0, 0, 1)
+                                    BorderColor: =nfCorBorda
                                     Color: =RGBA(255, 255, 255, 1)
                                     Font: =Font.'Open Sans'
                                     Size: =14
@@ -3347,7 +3462,7 @@ Screens:
                               - Icon38_13:
                                   Control: Classic/Icon@2.5.0
                                   Properties:
-                                    BorderColor: =RGBA(0, 0, 0, 1)
+                                    BorderColor: =nfCorBorda
                                     Color: =RGBA(255, 255, 255, 1)
                                     Height: =40
                                     Icon: =Icon.LevelsLayersItems
@@ -3380,7 +3495,7 @@ Screens:
                               - Label65_15:
                                   Control: Label@2.5.1
                                   Properties:
-                                    BorderColor: =RGBA(0, 0, 0, 1)
+                                    BorderColor: =nfCorBorda
                                     Color: =RGBA(255, 255, 255, 1)
                                     Font: =Font.'Open Sans'
                                     Size: =14
@@ -3391,7 +3506,7 @@ Screens:
                               - Icon38_12:
                                   Control: Classic/Icon@2.5.0
                                   Properties:
-                                    BorderColor: =RGBA(0, 0, 0, 1)
+                                    BorderColor: =nfCorBorda
                                     Color: =RGBA(255, 255, 255, 1)
                                     Height: =40
                                     Icon: =Icon.Copy

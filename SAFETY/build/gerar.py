@@ -136,7 +136,7 @@ def ajustar_filtros(lines, m):
     Blank()
 )""", lines, i))
         set_prop(lines, i, 'DisplayMode', '|-\n' + _pad("""=If(
-    varPerfilUser = "Base" || varPerfilUser = "Bloco",
+    (varPerfilUser = "Base" || varPerfilUser = "Bloco") && !varPerfilSafety,
     DisplayMode.View,
     DisplayMode.Edit
 )""", lines, i))
@@ -150,7 +150,7 @@ def ajustar_filtros(lines, m):
     Blank()
 )""", lines, j))
         set_prop(lines, j, 'DisplayMode', '|-\n' + _pad("""=If(
-    varPerfilUser = "Base",
+    varPerfilUser = "Base" && !varPerfilSafety,
     DisplayMode.View,
     DisplayMode.Edit
 )""", lines, j))
@@ -461,11 +461,16 @@ def cirurgia_gravacao(texto, m):
         texto)
 
     # 5b. o Patch do pai passa a devolver o registro gravado
+    #     'Defaults(' em qualquer lugar do 2º argumento, não só no início: o
+    #     habilitar_edicao (gerar_editar.py) pode ter envolvido em
+    #     If(var_editando<k>, var_registro<k>, Defaults(tab)) antes deste passo
+    #     rodar — o resto da função só reempacota o texto capturado, então
+    #     aceitar os dois formatos aqui é suficiente.
     r = find_call(texto, 'Patch')
     while r:
         a, b, c = r
         args = split_args(texto[b:c - 1])
-        if len(args) >= 2 and args[0].strip() == tab and args[1].strip().startswith('Defaults('):
+        if len(args) >= 2 and args[0].strip() == tab and 'Defaults(' in args[1]:
             break
         r = find_call(texto, 'Patch', c)
     if not r:

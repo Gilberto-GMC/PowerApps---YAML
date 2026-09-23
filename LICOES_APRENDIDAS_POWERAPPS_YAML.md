@@ -1905,3 +1905,19 @@ formato `"0%"`, `"0.0%"` ou `"#%"` nas telas do módulo.
 Impacto global: `Frotas/scrFrotaPainel` usa `Text(locDisponivel / locTotal, "0%")`
 no KPI de disponíveis — mesmo padrão, conferir. Regra: prévia montada fora do
 Power Apps não prova formatação; o número tem que ser conferido na tela real.
+
+## Coleção ou variável de contexto povoada por pontos com formatos diferentes: o Studio unifica o tipo e reprova tudo (2026-09-22)
+
+- Projeto/tela: SAFETY / `ScreenModColisaoVeiculos` e os outros 6 módulos (botões Cadastrar e Editar), `ScreenExcluir` (30 erros), `ScreenFauna` (21) e `ScreenAcessIndFaunaForms` (2). Achado no Verificador de aplicativo do Studio, 410 erros de fórmula.
+- Mensagens: "Nenhum tipo encontrado para ...", "Tipo de argumento inválido", "O primeiro argumento de 'Clear' ...", "A função 'ClearCollect' tem alguns argumentos inválidos", "O nome não é válido".
+
+Causas confirmadas (quatro, todas invisíveis para os validadores locais, porque o YAML e as propriedades estavam corretos):
+
+1. **Coleção com dois formatos.** `ClearCollect(col, ForAll(..., {dbId: ID, ...}))` (botão Editar) e `Collect(col, {id: <contador>, ...})` (botão Adicionar, já existente) povoavam a mesma coleção com colunas diferentes. O Studio unifica o tipo de `col_xxx` no app todo e reprova `Clear`/`ClearCollect` em cascata, em toda tela que a usa. Correção: os dois pontos escrevem as duas colunas (`dbId` e `id`).
+2. **Variável de contexto recebendo registros de tabelas diferentes.** `Navigate(ScreenExcluir, ..., {var_item: ThisItem})` chamado de 9 origens, cada uma com `ThisItem` de uma lista do SharePoint diferente. Mesmo problema do item 1, agora numa variável de contexto: `var_item.colVei_id`, `var_item.derFlu_id` etc. viram "tipo não encontrado". Correção: mandar só valores escalares homogêneos (`var_item_id`, `var_item_chave`) e trocar os `Remove(tabela, var_item)` por `Remove(tabela, LookUp(tabela, ID = var_item_id))`.
+3. **Tela existente só no export, nunca entregue.** `ScreenFaunaForms` (5.452 linhas) ficou em `msapp/Src` e nenhum script a levava para `out/`. Os 8 `Navigate(ScreenFaunaForms, ...)` de `ScreenFauna` e os `ResetForm`/`NewForm` sobre controles dela davam "O nome não é válido". O `checar_refs.py` não pegou: ele trata como existente toda tela de `msapp/Src` que não foi consolidada, entregue ou não.
+4. **Nome de coleção copiado de outro módulo.** `BorderColor: =If(CountRows(col_incPistaImg) = 0, ...)` em `ScreenAcessIndFaunaForms`, onde a coleção da tela é `col_aceIndFauGalleryImg`.
+
+Validação preventiva: **não automatizada ainda.** Ficou pendente um verificador que, para cada coleção, compare as chaves dos registros de todo `Collect`/`ClearCollect`/`Patch` que a povoa, e outro que confira que toda tela citada em `Navigate` tem arquivo em `out/`. O Verificador do Studio é hoje o único que pega o defeito; ele pode só reavaliar a checagem de tipo entre telas depois de salvar (não confirmado: com o código corrigido colado e sem salvar, os erros continuaram).
+
+**Regra:** uma coleção ou variável de contexto tem um formato só, em todos os pontos que a escrevem. Para passar dados entre telas, mande escalares ou uma tabela de formato fixo, nunca `ThisItem` de fontes diferentes na mesma variável. Antes de dizer que uma entrega está completa, conferir que toda tela referenciada existe em `out/`.

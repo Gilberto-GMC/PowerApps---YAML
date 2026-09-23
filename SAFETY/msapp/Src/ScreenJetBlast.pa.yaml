@@ -160,7 +160,7 @@ Screens:
                 Variant: AutoLayout
                 Properties:
                   DropShadow: =DropShadow.None
-                  Fill: =RGBA(245, 245, 245, 1)
+                  Fill: =nfCorFundoFraco
                   FillPortions: =0
                   Height: =80
                   LayoutAlignItems: =LayoutAlignItems.Center
@@ -194,6 +194,14 @@ Screens:
                           =Navigate(
                               ScreenJetBlastForms,
                               ScreenTransition.Fade
+                          );
+                          Set(
+                              var_editandoJetBlast,
+                              false
+                          );
+                          Set(
+                              var_registroJetBlast,
+                              Blank()
                           )
                         Text: ="Cadastrar"
                         Width: =113.92
@@ -202,7 +210,7 @@ Screens:
                 Control: Label@2.5.1
                 Properties:
                   AlignInContainer: =AlignInContainer.Stretch
-                  Fill: =RGBA(245, 245, 245, 1)
+                  Fill: =nfCorFundoFraco
                   Height: =10
                   LayoutMaxHeight: =
                   LayoutMaxWidth: =
@@ -213,7 +221,7 @@ Screens:
                 Variant: AutoLayout
                 Properties:
                   DropShadow: =DropShadow.None
-                  Fill: =RGBA(245, 245, 245, 1)
+                  Fill: =nfCorFundoFraco
                   FillPortions: =0
                   Height: =20
                   LayoutDirection: =LayoutDirection.Horizontal
@@ -290,7 +298,7 @@ Screens:
                 Variant: AutoLayout
                 Properties:
                   DropShadow: =DropShadow.None
-                  Fill: =RGBA(245, 245, 245, 1)
+                  Fill: =nfCorFundoFraco
                   FillPortions: =0
                   Height: =60
                   LayoutDirection: =LayoutDirection.Horizontal
@@ -311,12 +319,12 @@ Screens:
                   - cmbJetBlastBloco:
                       Control: Classic/DropDown@2.3.1
                       Properties:
-                        BorderColor: =RGBA(0, 0, 0, 1)
+                        BorderColor: =nfCorBorda
                         BorderThickness: =1
                         ChevronBackground: =RGBA(0, 0, 0, 0)
                         ChevronFill: =RGBA(0, 0, 0, 1)
                         ChevronHoverBackground: =RGBA(0, 0, 0, 0)
-                        ChevronHoverFill: =RGBA(0, 0, 0, 1)
+                        ChevronHoverFill: =nfCorPrimaria
                         Default: |-
                           =If(
                               varPerfilUser = "Base",
@@ -344,12 +352,12 @@ Screens:
                   - cmbJetBlastAeroporto:
                       Control: Classic/DropDown@2.3.1
                       Properties:
-                        BorderColor: =RGBA(0, 0, 0, 1)
+                        BorderColor: =nfCorBorda
                         BorderThickness: =1
                         ChevronBackground: =RGBA(0, 0, 0, 0)
                         ChevronFill: =RGBA(0, 0, 0, 1)
                         ChevronHoverBackground: =RGBA(0, 0, 0, 0)
-                        ChevronHoverFill: =RGBA(0, 0, 0, 1)
+                        ChevronHoverFill: =nfCorPrimaria
                         Default: |-
                           =If(
                               varPerfilUser = "Base",
@@ -379,7 +387,7 @@ Screens:
                   - dtpJetBlastDtfInicio:
                       Control: Classic/DatePicker@2.6.0
                       Properties:
-                        BorderColor: =RGBA(0, 0, 0, 1)
+                        BorderColor: =nfCorBorda
                         BorderThickness: =1
                         DefaultDate: |-
                           =If(
@@ -406,7 +414,7 @@ Screens:
                   - dtpJetBlastDtfTermino:
                       Control: Classic/DatePicker@2.6.0
                       Properties:
-                        BorderColor: =RGBA(0, 0, 0, 1)
+                        BorderColor: =nfCorBorda
                         BorderThickness: =1
                         DefaultDate: =Today() + 1
                         Fill: =RGBA(250, 250, 250, 1)
@@ -427,12 +435,12 @@ Screens:
                   - cmbStatus_8:
                       Control: Classic/DropDown@2.3.1
                       Properties:
-                        BorderColor: =RGBA(0, 0, 0, 1)
+                        BorderColor: =nfCorBorda
                         BorderThickness: =1
                         ChevronBackground: =RGBA(0, 0, 0, 0)
                         ChevronFill: =RGBA(0, 0, 0, 1)
                         ChevronHoverBackground: =RGBA(0, 0, 0, 0)
-                        ChevronHoverFill: =RGBA(0, 0, 0, 1)
+                        ChevronHoverFill: =nfCorPrimaria
                         Default: =""
                         Fill: =RGBA(250, 250, 250, 1)
                         Height: =30
@@ -457,7 +465,7 @@ Screens:
                   - txtJetBlastBuscar:
                       Control: Classic/TextInput@2.3.2
                       Properties:
-                        BorderColor: =RGBA(0, 0, 0, 1)
+                        BorderColor: =nfCorBorda
                         BorderThickness: =1
                         Default: =
                         Height: =30
@@ -775,14 +783,59 @@ Screens:
                               Appearance: ='ButtonCanvas.Appearance'.Secondary
                               BorderRadius: =0
                               BorderStyle: =BorderStyle.None
-                              DisplayMode: =DisplayMode.Disabled
+                              DisplayMode: =DisplayMode.Edit
                               Height: =30
                               Icon: ="Edit"
                               IconStyle: ='ButtonCanvas.IconStyle'.Filled
                               Layout: ='ButtonCanvas.Layout'.IconBefore
                               LayoutMaxHeight: =
                               LayoutMaxWidth: =
-                              OnSelect: =
+                              OnSelect: |-
+                                =Navigate(
+                                    ScreenJetBlastForms,
+                                    ScreenTransition.Fade,
+                                    {
+                                        var_editandoJetBlast: true,
+                                        var_registroJetBlast: ThisItem
+                                    }
+                                );
+                                ClearCollect(
+                                    col_jetBlastImg,
+                                    ForAll(
+                                        Filter(
+                                            '14.8-tbl_JetBlastImg',
+                                            jetBlastImg_idOcorrencia = ThisItem.jetBlast_id
+                                        ),
+                                        {
+                                            dbId: ID,
+                                            id: ID,
+                                            img: jetBlastImg_imagem
+                                        }
+                                    )
+                                );
+                                ClearCollect(
+                                    col_jetBlastImg_orig,
+                                    col_jetBlastImg
+                                );
+                                ClearCollect(
+                                    col_jetBlastItemAtingido,
+                                    ForAll(
+                                        Filter(
+                                            '14.8-tbl_JetBlastItemAtingido',
+                                            jetBlastIA_idOcorrencia = ThisItem.jetBlast_id
+                                        ),
+                                        {
+                                            dbId: ID,
+                                            id: ID,
+                                            item: jetBlastIA_item,
+                                            info: jetBlastIA_info
+                                        }
+                                    )
+                                );
+                                ClearCollect(
+                                    col_jetBlastItemAtingido_orig,
+                                    col_jetBlastItemAtingido
+                                )
                               PaddingBottom: =5
                               PaddingLeft: =5
                               PaddingRight: =5
@@ -865,7 +918,7 @@ Screens:
                               Appearance: ='ButtonCanvas.Appearance'.Secondary
                               BorderRadius: =0
                               BorderStyle: =BorderStyle.None
-                              FontColor: =RGBA(255, 0, 0, 1)
+                              FontColor: =nfCorErro
                               Height: =30
                               Icon: ="Delete"
                               IconStyle: ='ButtonCanvas.IconStyle'.Filled
@@ -878,7 +931,8 @@ Screens:
                                     ScreenTransition.Fade,
                                     {
                                         var_modulo: var_tituloModulo,
-                                        var_item: ThisItem,
+                                        var_item_id: ThisItem.ID,
+                                        var_item_chave: ThisItem.jetBlast_id,
                                         var_protocolo: Label_protocolo_14.Text
                                     }
                                 )

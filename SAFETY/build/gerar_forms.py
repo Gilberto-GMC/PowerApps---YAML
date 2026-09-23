@@ -44,7 +44,8 @@ AVISOS = {
 #
 """,
 "ScreenCSO": """#
-# ⚠️ DIVERGÊNCIA DE ESQUEMA — VERIFICAR NO SHAREPOINT
+# ℹ️ DIVERGÊNCIA DE ESQUEMA CONHECIDA — mantida sem alteração (decisão do
+#    usuário em 2026-09-22)
 #
 #   As fórmulas desta tela usam  Aeroporto  e  'Data/Hora'  na lista '1 - CSO',
 #   mas o esquema gravado neste export não tem nenhuma das duas: a coluna de
@@ -52,11 +53,8 @@ AVISOS = {
 #
 #   Duas leituras possíveis: (a) o esquema em cache do .msapp está velho e as
 #   colunas foram criadas depois; (b) as fórmulas estão realmente erradas e o
-#   filtro de aeroporto/período desta tela nunca funcionou.
-#
-#   Abra a lista '1 - CSO' no SharePoint e confirme. Se o esquema do export
-#   estiver certo, o filtro precisa passar a usar Data — e o escopo de
-#   segurança por aeroporto só é possível depois de criar a coluna.
+#   filtro de aeroporto/período desta tela nunca funcionou. Não foi verificado
+#   no SharePoint a pedido do usuário — o código desta tela fica como está.
 #
 """,
 }

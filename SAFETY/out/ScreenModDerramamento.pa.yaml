@@ -187,7 +187,7 @@ Screens:
                 Variant: AutoLayout
                 Properties:
                   DropShadow: =DropShadow.None
-                  Fill: =RGBA(245, 245, 245, 1)
+                  Fill: =nfCorFundoFraco
                   FillPortions: =0
                   Height: =80
                   LayoutAlignItems: =LayoutAlignItems.Center
@@ -234,6 +234,14 @@ Screens:
                                    varBordaDefault: nfCorBorda
                                }
                            );
+                          Set(
+                              var_editandoDerFlu,
+                              false
+                          );
+                          Set(
+                              var_registroDerFlu,
+                              Blank()
+                          );
                           Clear(col_derFluImg)
                         Text: ="Cadastrar"
                         Width: =113.92
@@ -242,7 +250,7 @@ Screens:
                 Control: Label@2.5.1
                 Properties:
                   AlignInContainer: =AlignInContainer.Stretch
-                  Fill: =RGBA(245, 245, 245, 1)
+                  Fill: =nfCorFundoFraco
                   Height: =10
                   LayoutMaxHeight: =
                   LayoutMaxWidth: =
@@ -253,7 +261,7 @@ Screens:
                 Variant: AutoLayout
                 Properties:
                   DropShadow: =DropShadow.None
-                  Fill: =RGBA(245, 245, 245, 1)
+                  Fill: =nfCorFundoFraco
                   FillPortions: =0
                   Height: =20
                   LayoutDirection: =LayoutDirection.Horizontal
@@ -330,7 +338,7 @@ Screens:
                 Variant: AutoLayout
                 Properties:
                   DropShadow: =DropShadow.None
-                  Fill: =RGBA(245, 245, 245, 1)
+                  Fill: =nfCorFundoFraco
                   FillPortions: =0
                   Height: =60
                   LayoutDirection: =LayoutDirection.Horizontal
@@ -351,12 +359,12 @@ Screens:
                   - cmbDerFluBloco:
                       Control: Classic/DropDown@2.3.1
                       Properties:
-                        BorderColor: =RGBA(0, 0, 0, 1)
+                        BorderColor: =nfCorBorda
                         BorderThickness: =1
                         ChevronBackground: =RGBA(0, 0, 0, 0)
                         ChevronFill: =RGBA(0, 0, 0, 1)
                         ChevronHoverBackground: =RGBA(0, 0, 0, 0)
-                        ChevronHoverFill: =RGBA(0, 0, 0, 1)
+                        ChevronHoverFill: =nfCorPrimaria
                         Default: |-
                           =If(
                               varPerfilUser = "Base" || varPerfilUser = "Bloco",
@@ -365,7 +373,7 @@ Screens:
                           )
                         DisplayMode: |-
                           =If(
-                              varPerfilUser = "Base" || varPerfilUser = "Bloco",
+                              (varPerfilUser = "Base" || varPerfilUser = "Bloco") && !varPerfilSafety,
                               DisplayMode.View,
                               DisplayMode.Edit
                           )
@@ -387,12 +395,12 @@ Screens:
                   - cmbDerFluAeroporto:
                       Control: Classic/DropDown@2.3.1
                       Properties:
-                        BorderColor: =RGBA(0, 0, 0, 1)
+                        BorderColor: =nfCorBorda
                         BorderThickness: =1
                         ChevronBackground: =RGBA(0, 0, 0, 0)
                         ChevronFill: =RGBA(0, 0, 0, 1)
                         ChevronHoverBackground: =RGBA(0, 0, 0, 0)
-                        ChevronHoverFill: =RGBA(0, 0, 0, 1)
+                        ChevronHoverFill: =nfCorPrimaria
                         Default: |-
                           =If(
                               varPerfilUser = "Base",
@@ -401,7 +409,7 @@ Screens:
                           )
                         DisplayMode: |-
                           =If(
-                              varPerfilUser = "Base",
+                              varPerfilUser = "Base" && !varPerfilSafety,
                               DisplayMode.View,
                               DisplayMode.Edit
                           )
@@ -431,7 +439,7 @@ Screens:
                   - dtpDerFluDtfInicio:
                       Control: Classic/DatePicker@2.6.0
                       Properties:
-                        BorderColor: =RGBA(0, 0, 0, 1)
+                        BorderColor: =nfCorBorda
                         BorderThickness: =1
                         DefaultDate: |-
                           =If(
@@ -458,7 +466,7 @@ Screens:
                   - dtpDerFluDtfTermino:
                       Control: Classic/DatePicker@2.6.0
                       Properties:
-                        BorderColor: =RGBA(0, 0, 0, 1)
+                        BorderColor: =nfCorBorda
                         BorderThickness: =1
                         DefaultDate: =Today() + 1
                         Fill: =RGBA(250, 250, 250, 1)
@@ -479,12 +487,12 @@ Screens:
                   - cmbStatus_2:
                       Control: Classic/DropDown@2.3.1
                       Properties:
-                        BorderColor: =RGBA(0, 0, 0, 1)
+                        BorderColor: =nfCorBorda
                         BorderThickness: =1
                         ChevronBackground: =RGBA(0, 0, 0, 0)
                         ChevronFill: =RGBA(0, 0, 0, 1)
                         ChevronHoverBackground: =RGBA(0, 0, 0, 0)
-                        ChevronHoverFill: =RGBA(0, 0, 0, 1)
+                        ChevronHoverFill: =nfCorPrimaria
                         Default: =""
                         Fill: =RGBA(250, 250, 250, 1)
                         Height: =30
@@ -509,7 +517,7 @@ Screens:
                   - txtDerFluBuscar:
                       Control: Classic/TextInput@2.3.2
                       Properties:
-                        BorderColor: =RGBA(0, 0, 0, 1)
+                        BorderColor: =nfCorBorda
                         BorderThickness: =1
                         Default: =
                         Height: =30
@@ -896,14 +904,54 @@ Screens:
                               Appearance: ='ButtonCanvas.Appearance'.Secondary
                               BorderRadius: =0
                               BorderStyle: =BorderStyle.None
-                              DisplayMode: =DisplayMode.Disabled
+                              DisplayMode: =DisplayMode.Edit
                               Height: =30
                               Icon: ="Edit"
                               IconStyle: ='ButtonCanvas.IconStyle'.Filled
                               Layout: ='ButtonCanvas.Layout'.IconBefore
                               LayoutMaxHeight: =
                               LayoutMaxWidth: =
-                              OnSelect: =
+                              OnSelect: |-
+                                =Set(
+                                     var_vista,
+                                     "form"
+                                 );
+                                 UpdateContext(
+                                     {
+                                     var_editandoDerFlu: true,
+                                     var_registroDerFlu: ThisItem
+                                     }
+                                 );
+                                 // ── INIT DA VISÃO "form" ────────────────────────────────────
+                                 // Era o OnVisible da tela de origem desta visão. Set(var_vista, ...)
+                                 // não dispara OnVisible, então a inicialização anda junto com a
+                                 // troca de visão — senão a visão abre sem coleção e sem estado.
+                                 UpdateContext(
+                                     {
+                                         varVisibleContainerDerFluAero: true,
+                                         varVisibleContainerDerFluOutros: false,
+                                         //Default color border
+                                         varBordaDefault: nfCorBorda
+                                     }
+                                 );
+                                ClearCollect(
+                                    col_derFluImg,
+                                    ForAll(
+                                        Filter(
+                                            '14.2-tbl_DerFluidosImg',
+                                            derFluFK_id = ThisItem.derFlu_id
+                                        ),
+                                        {
+                                            dbId: ID,
+                                            id: ID,
+                                            img: derFluImg_imagem
+                                        }
+                                    )
+                                );
+                                ClearCollect(
+                                    col_derFluImg_orig,
+                                    col_derFluImg
+                                )
                               PaddingBottom: =5
                               PaddingLeft: =5
                               PaddingRight: =5
@@ -986,7 +1034,7 @@ Screens:
                               Appearance: ='ButtonCanvas.Appearance'.Secondary
                               BorderRadius: =0
                               BorderStyle: =BorderStyle.None
-                              FontColor: =RGBA(255, 0, 0, 1)
+                              FontColor: =nfCorErro
                               Height: =30
                               Icon: ="Delete"
                               IconStyle: ='ButtonCanvas.IconStyle'.Filled
@@ -999,7 +1047,8 @@ Screens:
                                     ScreenTransition.Fade,
                                     {
                                         var_modulo: var_tituloModulo,
-                                        var_item: ThisItem,
+                                        var_item_id: ThisItem.ID,
+                                        var_item_chave: ThisItem.derFlu_id,
                                         var_protocolo: Label_protocolo_1.Text
                                     }
                                 )
@@ -1258,7 +1307,7 @@ Screens:
                 Properties:
                   BorderColor: =ColorFade(Self.Fill, -15%)
                   Color: =RGBA(255, 255, 255, 1)
-                  DisabledBorderColor: =RGBA(166, 166, 166, 1)
+                  DisabledBorderColor: =nfCorTextoFraco
                   Fill: =RGBA(0, 0, 0, 1)
                   Font: =Font.'Open Sans'
                   HoverBorderColor: =ColorFade(Self.BorderColor, 20%)
@@ -1358,7 +1407,7 @@ Screens:
                                   Control: Rectangle@2.3.0
                                   Group: Group93
                                   Properties:
-                                    BorderColor: =RGBA(0, 0, 0, 1)
+                                    BorderColor: =nfCorBorda
                                     BorderThickness: =1
                                     Fill: =RGBA(0, 0, 0, 0)
                                     Height: =45
@@ -1369,7 +1418,7 @@ Screens:
                                   Control: Rectangle@2.3.0
                                   Group: Group16.2.8_2
                                   Properties:
-                                    BorderColor: =RGBA(0, 0, 0, 1)
+                                    BorderColor: =nfCorBorda
                                     BorderThickness: =1
                                     Fill: =RGBA(0, 0, 0, 0)
                                     Height: =45
@@ -1379,7 +1428,7 @@ Screens:
                                   Control: Label@2.5.1
                                   Group: Group16.2.8_2
                                   Properties:
-                                    BorderColor: =RGBA(0, 0, 0, 1)
+                                    BorderColor: =nfCorBorda
                                     Fill: =RGBA(255, 255, 255, 1)
                                     Font: =Font.'Open Sans'
                                     Height: =25
@@ -1394,15 +1443,15 @@ Screens:
                                   Group: Group16.2.8_2
                                   Properties:
                                     BorderColor: =If(IsBlank(Self.Selected.Value),varBordaDefault)
-                                    ChevronBackground: =RGBA(0, 0, 0, 1)
+                                    ChevronBackground: =nfCorPrimaria
                                     ChevronFill: =RGBA(255, 255, 255, 1)
                                     ChevronHoverBackground: =ColorFade(RGBA(0, 0, 0, 1), -20%)
                                     ChevronHoverFill: =RGBA(255, 255, 255, 1)
                                     Default: =""
-                                    DisabledBorderColor: =RGBA(0, 0, 0, 1)
+                                    DisabledBorderColor: =nfCorBorda
                                     Font: =Font.'Open Sans'
                                     Height: =30
-                                    HoverFill: =RGBA(186, 202, 226, 1)
+                                    HoverFill: =nfCorFundoFraco
                                     Items: |-
                                       =[
                                           "",
@@ -1462,15 +1511,19 @@ Screens:
                                     Items.Value: =Value
                                     OnChange: |-
                                       =If(
+
                                           cmbDerFluAreaManchaAero.Selected.Value = "Sim",
+
                                           UpdateContext({varDisplayAmeaca: DisplayMode.Edit}),
+
                                           UpdateContext({varDisplayAmeaca: DisplayMode.Disabled})
+
 
                                       )
                                     PressedColor: =RGBA(255, 255, 255, 1)
-                                    PressedFill: =RGBA(0, 0, 0, 1)
+                                    PressedFill: =nfCorPrimariaEsc
                                     SelectionColor: =RGBA(255, 255, 255, 1)
-                                    SelectionFill: =RGBA(0, 0, 0, 1)
+                                    SelectionFill: =nfCorPrimaria
                                     Size: =12
                                     Width: =130
                                     X: =487
@@ -1479,7 +1532,7 @@ Screens:
                                   Control: Rectangle@2.3.0
                                   Group: Group91
                                   Properties:
-                                    BorderColor: =RGBA(0, 0, 0, 1)
+                                    BorderColor: =nfCorBorda
                                     BorderThickness: =1
                                     Fill: =RGBA(0, 0, 0, 0)
                                     Height: =45
@@ -1490,7 +1543,7 @@ Screens:
                                   Control: Label@2.5.1
                                   Group: Group91
                                   Properties:
-                                    BorderColor: =RGBA(0, 0, 0, 1)
+                                    BorderColor: =nfCorBorda
                                     Fill: =RGBA(255, 255, 255, 1)
                                     Font: =Font.'Open Sans'
                                     Height: =25
@@ -1505,14 +1558,14 @@ Screens:
                                   Group: Group91
                                   Properties:
                                     BorderColor: =If(IsBlank(Self.Selected.Value),varBordaDefault)
-                                    ChevronBackground: =RGBA(0, 0, 0, 1)
+                                    ChevronBackground: =nfCorPrimaria
                                     ChevronFill: =RGBA(255, 255, 255, 1)
                                     ChevronHoverBackground: =ColorFade(RGBA(0, 0, 0, 1), -20%)
                                     ChevronHoverFill: =RGBA(255, 255, 255, 1)
                                     DisplayFields: =["Value"]
                                     Font: =Font.'Open Sans'
                                     Height: =30
-                                    HoverFill: =RGBA(186, 202, 226, 1)
+                                    HoverFill: =nfCorFundoFraco
                                     IsSearchable: =false
                                     Items: |-
                                       =[
@@ -1531,11 +1584,11 @@ Screens:
                                           UpdateContext({varDisplayDerFluPosicao: DisplayMode.Disabled})
                                       )
                                     PressedColor: =RGBA(255, 255, 255, 1)
-                                    PressedFill: =RGBA(0, 0, 0, 1)
+                                    PressedFill: =nfCorPrimariaEsc
                                     SearchFields: =["Value"]
                                     SelectMultiple: =false
                                     SelectionColor: =RGBA(255, 255, 255, 1)
-                                    SelectionFill: =RGBA(0, 0, 0, 1)
+                                    SelectionFill: =nfCorPrimaria
                                     Size: =12
                                     Width: =300
                                     X: =41
@@ -1544,7 +1597,7 @@ Screens:
                                   Control: Rectangle@2.3.0
                                   Group: Group90
                                   Properties:
-                                    BorderColor: =RGBA(0, 0, 0, 1)
+                                    BorderColor: =nfCorBorda
                                     BorderThickness: =1
                                     Fill: =RGBA(0, 0, 0, 0)
                                     Height: =45
@@ -1555,7 +1608,7 @@ Screens:
                                   Control: Label@2.5.1
                                   Group: Group90
                                   Properties:
-                                    BorderColor: =RGBA(0, 0, 0, 1)
+                                    BorderColor: =nfCorBorda
                                     Fill: =RGBA(255, 255, 255, 1)
                                     Font: =Font.'Open Sans'
                                     Height: =22
@@ -1570,14 +1623,14 @@ Screens:
                                   Group: Group90
                                   Properties:
                                     BorderColor: =If(IsBlank(Self.Text),varBordaDefault)
-                                    Default: =""
-                                    DisabledBorderColor: =RGBA(0, 0, 0, 1)
+                                    Default: =If(var_editandoDerFlu, var_registroDerFlu.derFlu_matricula, "")
+                                    DisabledBorderColor: =nfCorBorda
                                     DisplayMode: =
                                     Font: =Font.'Open Sans'
                                     Height: =30
                                     HintText: ="Matrícula"
-                                    HoverBorderColor: =RGBA(0, 0, 0, 1)
-                                    HoverFill: =RGBA(186, 202, 226, 1)
+                                    HoverBorderColor: =nfCorPrimaria
+                                    HoverFill: =nfCorFundoFraco
                                     MaxLength: =5
                                     RadiusBottomLeft: =0
                                     RadiusBottomRight: =0
@@ -1591,7 +1644,7 @@ Screens:
                                   Control: Rectangle@2.3.0
                                   Group: Group92
                                   Properties:
-                                    BorderColor: =RGBA(0, 0, 0, 1)
+                                    BorderColor: =nfCorBorda
                                     BorderThickness: =1
                                     Fill: =RGBA(0, 0, 0, 0)
                                     Height: =45
@@ -1602,7 +1655,7 @@ Screens:
                                   Control: Label@2.5.1
                                   Group: Group92
                                   Properties:
-                                    BorderColor: =RGBA(0, 0, 0, 1)
+                                    BorderColor: =nfCorBorda
                                     Fill: =RGBA(255, 255, 255, 1)
                                     Font: =Font.'Open Sans'
                                     Height: =22
@@ -1617,14 +1670,14 @@ Screens:
                                   Group: Group92
                                   Properties:
                                     BorderColor: =If(IsBlank(Self.Selected.Value),varBordaDefault)
-                                    ChevronBackground: =RGBA(0, 0, 0, 1)
+                                    ChevronBackground: =nfCorPrimaria
                                     ChevronFill: =RGBA(255, 255, 255, 1)
                                     ChevronHoverBackground: =ColorFade(RGBA(0, 0, 0, 1), -20%)
                                     ChevronHoverFill: =RGBA(255, 255, 255, 1)
                                     DisplayFields: =["Value"]
                                     Font: =Font.'Open Sans'
                                     Height: =30
-                                    HoverFill: =RGBA(186, 202, 226, 1)
+                                    HoverFill: =nfCorFundoFraco
                                     IsSearchable: =false
                                     Items: |-
                                       =[
@@ -1675,11 +1728,11 @@ Screens:
                                           )
                                       )
                                     PressedColor: =RGBA(255, 255, 255, 1)
-                                    PressedFill: =RGBA(0, 0, 0, 1)
+                                    PressedFill: =nfCorPrimariaEsc
                                     SearchFields: =["Value"]
                                     SelectMultiple: =false
                                     SelectionColor: =RGBA(255, 255, 255, 1)
-                                    SelectionFill: =RGBA(0, 0, 0, 1)
+                                    SelectionFill: =nfCorPrimaria
                                     Size: =11
                                     Width: =178
                                     X: =374
@@ -1689,14 +1742,14 @@ Screens:
                                   Group: Group92
                                   Properties:
                                     BorderColor: =If(IsBlank(Self.Text),varBordaDefault)
-                                    Default: =""
-                                    DisabledBorderColor: =RGBA(0, 0, 0, 1)
+                                    Default: =If(var_editandoDerFlu, var_registroDerFlu.derFlu_prefixoNome, "")
+                                    DisabledBorderColor: =nfCorBorda
                                     DisplayMode: =varDisplayCompAerea
                                     Font: =Font.'Open Sans'
                                     Height: =30
                                     HintText: =varResultCompAerea
-                                    HoverBorderColor: =RGBA(0, 0, 0, 1)
-                                    HoverFill: =RGBA(186, 202, 226, 1)
+                                    HoverBorderColor: =nfCorPrimaria
+                                    HoverFill: =nfCorFundoFraco
                                     RadiusBottomLeft: =0
                                     RadiusBottomRight: =0
                                     RadiusTopLeft: =0
@@ -1710,14 +1763,14 @@ Screens:
                                   Group: Group90
                                   Properties:
                                     BorderColor: =If(IsBlank(Self.Text),varBordaDefault)
-                                    Default: =""
-                                    DisabledBorderColor: =RGBA(0, 0, 0, 1)
+                                    Default: =If(var_editandoDerFlu, var_registroDerFlu.derFlu_modelo, "")
+                                    DisabledBorderColor: =nfCorBorda
                                     DisplayMode: =
                                     Font: =Font.'Open Sans'
                                     Height: =30
                                     HintText: ="Modelo"
-                                    HoverBorderColor: =RGBA(0, 0, 0, 1)
-                                    HoverFill: =RGBA(186, 202, 226, 1)
+                                    HoverBorderColor: =nfCorPrimaria
+                                    HoverFill: =nfCorFundoFraco
                                     RadiusBottomLeft: =0
                                     RadiusBottomRight: =0
                                     RadiusTopLeft: =0
@@ -1731,13 +1784,13 @@ Screens:
                                   Group: Group93
                                   Properties:
                                     BorderColor: =If(IsBlank(Self.Text),varBordaDefault)
-                                    Default: =""
-                                    DisabledBorderColor: =RGBA(0, 0, 0, 1)
+                                    Default: =If(var_editandoDerFlu, var_registroDerFlu.derFlu_origemVoo, "")
+                                    DisabledBorderColor: =nfCorBorda
                                     Font: =Font.'Open Sans'
                                     Height: =30
                                     HintText: ="Cód. ICAO - aeródromo"
-                                    HoverBorderColor: =RGBA(0, 0, 0, 1)
-                                    HoverFill: =RGBA(186, 202, 226, 1)
+                                    HoverBorderColor: =nfCorPrimaria
+                                    HoverFill: =nfCorFundoFraco
                                     MaxLength: =4
                                     RadiusBottomLeft: =0
                                     RadiusBottomRight: =0
@@ -1752,13 +1805,13 @@ Screens:
                                   Group: Group93
                                   Properties:
                                     BorderColor: =If(IsBlank(Self.Text),varBordaDefault)
-                                    Default: =""
-                                    DisabledBorderColor: =RGBA(0, 0, 0, 1)
+                                    Default: =If(var_editandoDerFlu, var_registroDerFlu.derFlu_numVooOrigem, "")
+                                    DisabledBorderColor: =nfCorBorda
                                     Font: =Font.'Open Sans'
                                     Height: =30
                                     HintText: ="Núm voo"
-                                    HoverBorderColor: =RGBA(0, 0, 0, 1)
-                                    HoverFill: =RGBA(186, 202, 226, 1)
+                                    HoverBorderColor: =nfCorPrimaria
+                                    HoverFill: =nfCorFundoFraco
                                     MaxLength: =4
                                     RadiusBottomLeft: =0
                                     RadiusBottomRight: =0
@@ -1772,7 +1825,7 @@ Screens:
                                   Control: Label@2.5.1
                                   Group: Group93
                                   Properties:
-                                    BorderColor: =RGBA(0, 0, 0, 1)
+                                    BorderColor: =nfCorBorda
                                     Fill: =RGBA(255, 255, 255, 1)
                                     Font: =Font.'Open Sans'
                                     Height: =22
@@ -1786,7 +1839,7 @@ Screens:
                                   Control: Rectangle@2.3.0
                                   Group: Group93_1
                                   Properties:
-                                    BorderColor: =RGBA(0, 0, 0, 1)
+                                    BorderColor: =nfCorBorda
                                     BorderThickness: =1
                                     Fill: =RGBA(0, 0, 0, 0)
                                     Height: =45
@@ -1798,13 +1851,13 @@ Screens:
                                   Group: Group93_1
                                   Properties:
                                     BorderColor: =If(IsBlank(Self.Text),varBordaDefault)
-                                    Default: =""
-                                    DisabledBorderColor: =RGBA(0, 0, 0, 1)
+                                    Default: =If(var_editandoDerFlu, var_registroDerFlu.derFlu_destinoVoo, "")
+                                    DisabledBorderColor: =nfCorBorda
                                     Font: =Font.'Open Sans'
                                     Height: =30
                                     HintText: ="Cód. ICAO - aeródromo"
-                                    HoverBorderColor: =RGBA(0, 0, 0, 1)
-                                    HoverFill: =RGBA(186, 202, 226, 1)
+                                    HoverBorderColor: =nfCorPrimaria
+                                    HoverFill: =nfCorFundoFraco
                                     MaxLength: =4
                                     RadiusBottomLeft: =0
                                     RadiusBottomRight: =0
@@ -1819,13 +1872,13 @@ Screens:
                                   Group: Group93_1
                                   Properties:
                                     BorderColor: =If(IsBlank(Self.Text),varBordaDefault)
-                                    Default: =""
-                                    DisabledBorderColor: =RGBA(0, 0, 0, 1)
+                                    Default: =If(var_editandoDerFlu, var_registroDerFlu.derFlu_numVooDestino, "")
+                                    DisabledBorderColor: =nfCorBorda
                                     Font: =Font.'Open Sans'
                                     Height: =30
                                     HintText: ="núm. voo"
-                                    HoverBorderColor: =RGBA(0, 0, 0, 1)
-                                    HoverFill: =RGBA(186, 202, 226, 1)
+                                    HoverBorderColor: =nfCorPrimaria
+                                    HoverFill: =nfCorFundoFraco
                                     MaxLength: =4
                                     RadiusBottomLeft: =0
                                     RadiusBottomRight: =0
@@ -1839,7 +1892,7 @@ Screens:
                                   Control: Label@2.5.1
                                   Group: Group93_1
                                   Properties:
-                                    BorderColor: =RGBA(0, 0, 0, 1)
+                                    BorderColor: =nfCorBorda
                                     Fill: =RGBA(255, 255, 255, 1)
                                     Font: =Font.'Open Sans'
                                     Height: =22
@@ -1855,13 +1908,13 @@ Screens:
                                   Properties:
                                     BorderColor: =If(IsBlank(Self.Text),varBordaDefault)
                                     Default: =""
-                                    DisabledBorderColor: =RGBA(0, 0, 0, 1)
+                                    DisabledBorderColor: =nfCorBorda
                                     DisplayMode: =varDisplayDerFluPosicao
                                     Font: =Font.'Open Sans'
                                     Height: =30
                                     HintText: ="Posição"
-                                    HoverBorderColor: =RGBA(0, 0, 0, 1)
-                                    HoverFill: =RGBA(186, 202, 226, 1)
+                                    HoverBorderColor: =nfCorPrimaria
+                                    HoverFill: =nfCorFundoFraco
                                     MaxLength: =30
                                     RadiusBottomLeft: =0
                                     RadiusBottomRight: =0
@@ -1875,7 +1928,7 @@ Screens:
                                   Control: Rectangle@2.3.0
                                   Group: Group96
                                   Properties:
-                                    BorderColor: =RGBA(0, 0, 0, 1)
+                                    BorderColor: =nfCorBorda
                                     BorderThickness: =1
                                     Fill: =RGBA(0, 0, 0, 0)
                                     Height: =45
@@ -1886,7 +1939,7 @@ Screens:
                                   Control: Label@2.5.1
                                   Group: Group96
                                   Properties:
-                                    BorderColor: =RGBA(0, 0, 0, 1)
+                                    BorderColor: =nfCorBorda
                                     Fill: =RGBA(255, 255, 255, 1)
                                     Font: =Font.'Open Sans'
                                     Height: =25
@@ -1902,12 +1955,12 @@ Screens:
                                   Properties:
                                     BorderColor: =If(IsBlank(Self.Text),varBordaDefault)
                                     Default: =""
-                                    DisabledBorderColor: =RGBA(0, 0, 0, 1)
+                                    DisabledBorderColor: =nfCorBorda
                                     Font: =Font.'Open Sans'
                                     Format: =TextFormat.Number
                                     Height: =30
-                                    HoverBorderColor: =RGBA(0, 0, 0, 1)
-                                    HoverFill: =RGBA(186, 202, 226, 1)
+                                    HoverBorderColor: =nfCorPrimaria
+                                    HoverFill: =nfCorFundoFraco
                                     MaxLength: =6
                                     RadiusBottomLeft: =0
                                     RadiusBottomRight: =0
@@ -1935,7 +1988,7 @@ Screens:
                                   Control: Rectangle@2.3.0
                                   Group: Group100
                                   Properties:
-                                    BorderColor: =RGBA(0, 0, 0, 1)
+                                    BorderColor: =nfCorBorda
                                     BorderThickness: =1
                                     Fill: =RGBA(0, 0, 0, 0)
                                     Height: =45
@@ -1946,7 +1999,7 @@ Screens:
                                   Control: Rectangle@2.3.0
                                   Group: Group16.2.8_4
                                   Properties:
-                                    BorderColor: =RGBA(0, 0, 0, 1)
+                                    BorderColor: =nfCorBorda
                                     BorderThickness: =1
                                     Fill: =RGBA(0, 0, 0, 0)
                                     Height: =45
@@ -1957,7 +2010,7 @@ Screens:
                                   Control: Label@2.5.1
                                   Group: Group16.2.8_4
                                   Properties:
-                                    BorderColor: =RGBA(0, 0, 0, 1)
+                                    BorderColor: =nfCorBorda
                                     Fill: =RGBA(255, 255, 255, 1)
                                     Font: =Font.'Open Sans'
                                     Height: =22
@@ -1972,15 +2025,15 @@ Screens:
                                   Group: Group16.2.8_4
                                   Properties:
                                     BorderColor: =If(IsBlank(Self.Selected.Value),varBordaDefault)
-                                    ChevronBackground: =RGBA(0, 0, 0, 1)
+                                    ChevronBackground: =nfCorPrimaria
                                     ChevronFill: =RGBA(255, 255, 255, 1)
                                     ChevronHoverBackground: =ColorFade(RGBA(0, 0, 0, 1), -20%)
                                     ChevronHoverFill: =RGBA(255, 255, 255, 1)
                                     Default: =""
-                                    DisabledBorderColor: =RGBA(0, 0, 0, 1)
+                                    DisabledBorderColor: =nfCorBorda
                                     Font: =Font.'Open Sans'
                                     Height: =30
-                                    HoverFill: =RGBA(186, 202, 226, 1)
+                                    HoverFill: =nfCorFundoFraco
                                     Items: |-
                                       =[
                                           "",
@@ -2040,15 +2093,19 @@ Screens:
                                     Items.Value: =Value
                                     OnChange: |-
                                       =If(
+
                                           cmbDerFluAreaManchaOutros.Selected.Value = "Sim",
+
                                           UpdateContext({varDisplayAmeaca: DisplayMode.Edit}),
+
                                           UpdateContext({varDisplayAmeaca: DisplayMode.Disabled})
+
 
                                       )
                                     PressedColor: =RGBA(255, 255, 255, 1)
-                                    PressedFill: =RGBA(0, 0, 0, 1)
+                                    PressedFill: =nfCorPrimariaEsc
                                     SelectionColor: =RGBA(255, 255, 255, 1)
-                                    SelectionFill: =RGBA(0, 0, 0, 1)
+                                    SelectionFill: =nfCorPrimaria
                                     Size: =12
                                     Width: =120
                                     X: =487
@@ -2057,7 +2114,7 @@ Screens:
                                   Control: Rectangle@2.3.0
                                   Group: Group91_1
                                   Properties:
-                                    BorderColor: =RGBA(0, 0, 0, 1)
+                                    BorderColor: =nfCorBorda
                                     BorderThickness: =1
                                     Fill: =RGBA(0, 0, 0, 0)
                                     Height: =45
@@ -2068,7 +2125,7 @@ Screens:
                                   Control: Label@2.5.1
                                   Group: Group91_1
                                   Properties:
-                                    BorderColor: =RGBA(0, 0, 0, 1)
+                                    BorderColor: =nfCorBorda
                                     Fill: =RGBA(255, 255, 255, 1)
                                     Font: =Font.'Open Sans'
                                     Height: =22
@@ -2083,14 +2140,14 @@ Screens:
                                   Group: Group91_1
                                   Properties:
                                     BorderColor: =If(IsBlank(Self.Selected.Value),varBordaDefault)
-                                    ChevronBackground: =RGBA(0, 0, 0, 1)
+                                    ChevronBackground: =nfCorPrimaria
                                     ChevronFill: =RGBA(255, 255, 255, 1)
                                     ChevronHoverBackground: =ColorFade(RGBA(0, 0, 0, 1), -20%)
                                     ChevronHoverFill: =RGBA(255, 255, 255, 1)
                                     DisplayFields: =["Value"]
                                     Font: =Font.'Open Sans'
                                     Height: =30
-                                    HoverFill: =RGBA(186, 202, 226, 1)
+                                    HoverFill: =nfCorFundoFraco
                                     IsSearchable: =false
                                     Items: |-
                                       =[
@@ -2109,11 +2166,11 @@ Screens:
                                           UpdateContext({varDisplayDerFluPosicao: DisplayMode.Disabled})
                                       )
                                     PressedColor: =RGBA(255, 255, 255, 1)
-                                    PressedFill: =RGBA(0, 0, 0, 1)
+                                    PressedFill: =nfCorPrimariaEsc
                                     SearchFields: =["Value"]
                                     SelectMultiple: =false
                                     SelectionColor: =RGBA(255, 255, 255, 1)
-                                    SelectionFill: =RGBA(0, 0, 0, 1)
+                                    SelectionFill: =nfCorPrimaria
                                     Size: =12
                                     Width: =300
                                     X: =41
@@ -2122,7 +2179,7 @@ Screens:
                                   Control: Rectangle@2.3.0
                                   Group: Group90_1
                                   Properties:
-                                    BorderColor: =RGBA(0, 0, 0, 1)
+                                    BorderColor: =nfCorBorda
                                     BorderThickness: =1
                                     Fill: =RGBA(0, 0, 0, 0)
                                     Height: =45
@@ -2133,7 +2190,7 @@ Screens:
                                   Control: Label@2.5.1
                                   Group: Group90_1
                                   Properties:
-                                    BorderColor: =RGBA(0, 0, 0, 1)
+                                    BorderColor: =nfCorBorda
                                     Fill: =RGBA(255, 255, 255, 1)
                                     Font: =Font.'Open Sans'
                                     Height: =22
@@ -2149,13 +2206,13 @@ Screens:
                                   Properties:
                                     BorderColor: =If(IsBlank(Self.Text),varBordaDefault)
                                     Default: =""
-                                    DisabledBorderColor: =RGBA(0, 0, 0, 1)
+                                    DisabledBorderColor: =nfCorBorda
                                     DisplayMode: =
                                     Font: =Font.'Open Sans'
                                     Height: =30
                                     HintText: ="Código"
-                                    HoverBorderColor: =RGBA(0, 0, 0, 1)
-                                    HoverFill: =RGBA(186, 202, 226, 1)
+                                    HoverBorderColor: =nfCorPrimaria
+                                    HoverFill: =nfCorFundoFraco
                                     MaxLength: =7
                                     RadiusBottomLeft: =0
                                     RadiusBottomRight: =0
@@ -2169,7 +2226,7 @@ Screens:
                                   Control: Rectangle@2.3.0
                                   Group: Group92_1
                                   Properties:
-                                    BorderColor: =RGBA(0, 0, 0, 1)
+                                    BorderColor: =nfCorBorda
                                     BorderThickness: =1
                                     Fill: =RGBA(0, 0, 0, 0)
                                     Height: =45
@@ -2180,7 +2237,7 @@ Screens:
                                   Control: Label@2.5.1
                                   Group: Group92_1
                                   Properties:
-                                    BorderColor: =RGBA(0, 0, 0, 1)
+                                    BorderColor: =nfCorBorda
                                     Fill: =RGBA(255, 255, 255, 1)
                                     Font: =Font.'Open Sans'
                                     Height: =22
@@ -2195,14 +2252,14 @@ Screens:
                                   Group: Group90_1
                                   Properties:
                                     BorderColor: =If(IsBlank(Self.Text),varBordaDefault)
-                                    Default: =""
-                                    DisabledBorderColor: =RGBA(0, 0, 0, 1)
+                                    Default: =If(var_editandoDerFlu, var_registroDerFlu.derFlu_equipa, "")
+                                    DisabledBorderColor: =nfCorBorda
                                     DisplayMode: =
                                     Font: =Font.'Open Sans'
                                     Height: =30
                                     HintText: ="Tipo de equipamento "
-                                    HoverBorderColor: =RGBA(0, 0, 0, 1)
-                                    HoverFill: =RGBA(186, 202, 226, 1)
+                                    HoverBorderColor: =nfCorPrimaria
+                                    HoverFill: =nfCorFundoFraco
                                     RadiusBottomLeft: =0
                                     RadiusBottomRight: =0
                                     RadiusTopLeft: =0
@@ -2215,7 +2272,7 @@ Screens:
                                   Control: Label@2.5.1
                                   Group: Group100
                                   Properties:
-                                    BorderColor: =RGBA(0, 0, 0, 1)
+                                    BorderColor: =nfCorBorda
                                     Fill: =RGBA(255, 255, 255, 1)
                                     Font: =Font.'Open Sans'
                                     Height: =22
@@ -2229,7 +2286,7 @@ Screens:
                                   Control: Rectangle@2.3.0
                                   Group: Group93_3
                                   Properties:
-                                    BorderColor: =RGBA(0, 0, 0, 1)
+                                    BorderColor: =nfCorBorda
                                     BorderThickness: =1
                                     Fill: =RGBA(0, 0, 0, 0)
                                     Height: =45
@@ -2241,13 +2298,13 @@ Screens:
                                   Group: Group93_3
                                   Properties:
                                     BorderColor: =If(IsBlank(Self.Text),varBordaDefault)
-                                    Default: =""
-                                    DisabledBorderColor: =RGBA(0, 0, 0, 1)
+                                    Default: =If(var_editandoDerFlu, var_registroDerFlu.derFlu_condutor, "")
+                                    DisabledBorderColor: =nfCorBorda
                                     Font: =Font.'Open Sans'
                                     Height: =30
                                     HintText: ="Nome"
-                                    HoverBorderColor: =RGBA(0, 0, 0, 1)
-                                    HoverFill: =RGBA(186, 202, 226, 1)
+                                    HoverBorderColor: =nfCorPrimaria
+                                    HoverFill: =nfCorFundoFraco
                                     MaxLength: =50
                                     RadiusBottomLeft: =0
                                     RadiusBottomRight: =0
@@ -2262,13 +2319,13 @@ Screens:
                                   Group: Group93_3
                                   Properties:
                                     BorderColor: =If(IsBlank(Self.Text),varBordaDefault)
-                                    Default: =""
-                                    DisabledBorderColor: =RGBA(0, 0, 0, 1)
+                                    Default: =If(var_editandoDerFlu, var_registroDerFlu.derFlu_matCondutor, "")
+                                    DisabledBorderColor: =nfCorBorda
                                     Font: =Font.'Open Sans'
                                     Height: =30
                                     HintText: ="Matrícula"
-                                    HoverBorderColor: =RGBA(0, 0, 0, 1)
-                                    HoverFill: =RGBA(186, 202, 226, 1)
+                                    HoverBorderColor: =nfCorPrimaria
+                                    HoverFill: =nfCorFundoFraco
                                     MaxLength: =10
                                     RadiusBottomLeft: =0
                                     RadiusBottomRight: =0
@@ -2282,7 +2339,7 @@ Screens:
                                   Control: Label@2.5.1
                                   Group: Group93_3
                                   Properties:
-                                    BorderColor: =RGBA(0, 0, 0, 1)
+                                    BorderColor: =nfCorBorda
                                     Fill: =RGBA(255, 255, 255, 1)
                                     Font: =Font.'Open Sans'
                                     Height: =22
@@ -2298,13 +2355,13 @@ Screens:
                                   Properties:
                                     BorderColor: =If(IsBlank(Self.Text),varBordaDefault)
                                     Default: =""
-                                    DisabledBorderColor: =RGBA(0, 0, 0, 1)
+                                    DisabledBorderColor: =nfCorBorda
                                     DisplayMode: =varDisplayDerFluPosicao
                                     Font: =Font.'Open Sans'
                                     Height: =30
                                     HintText: ="Posição"
-                                    HoverBorderColor: =RGBA(0, 0, 0, 1)
-                                    HoverFill: =RGBA(186, 202, 226, 1)
+                                    HoverBorderColor: =nfCorPrimaria
+                                    HoverFill: =nfCorFundoFraco
                                     MaxLength: =30
                                     RadiusBottomLeft: =0
                                     RadiusBottomRight: =0
@@ -2318,7 +2375,7 @@ Screens:
                                   Control: Rectangle@2.3.0
                                   Group: Group1
                                   Properties:
-                                    BorderColor: =RGBA(0, 0, 0, 1)
+                                    BorderColor: =nfCorBorda
                                     BorderThickness: =1
                                     Fill: =RGBA(0, 0, 0, 0)
                                     Height: =45
@@ -2329,7 +2386,7 @@ Screens:
                                   Control: Label@2.5.1
                                   Group: Group1
                                   Properties:
-                                    BorderColor: =RGBA(0, 0, 0, 1)
+                                    BorderColor: =nfCorBorda
                                     Fill: =RGBA(255, 255, 255, 1)
                                     Font: =Font.'Open Sans'
                                     Height: =22
@@ -2344,28 +2401,32 @@ Screens:
                                   Group: Group100
                                   Properties:
                                     BorderColor: =If(IsBlank(Self.Selected.Value),varBordaDefault)
-                                    ChevronBackground: =RGBA(0, 0, 0, 1)
+                                    ChevronBackground: =nfCorPrimaria
                                     ChevronFill: =RGBA(255, 255, 255, 1)
                                     ChevronHoverBackground: =ColorFade(RGBA(0, 0, 0, 1), -20%)
                                     ChevronHoverFill: =RGBA(255, 255, 255, 1)
-                                    Default: =""
-                                    DisabledBorderColor: =RGBA(0, 0, 0, 1)
+                                    Default: =If(var_editandoDerFlu, var_registroDerFlu.derFlu_atendVoo, "")
+                                    DisabledBorderColor: =nfCorBorda
                                     Font: =Font.'Open Sans'
                                     Height: =30
-                                    HoverFill: =RGBA(186, 202, 226, 1)
+                                    HoverFill: =nfCorFundoFraco
                                     Items: =["","Sim","Não"]
                                     Items.Value: =Value
                                     OnChange: |-
                                       =If(
+
                                           cmbDerFluAtendVoo.Selected.Value = "Sim",
+
                                           UpdateContext({varDisplayAmeaca: DisplayMode.Edit}),
+
                                           UpdateContext({varDisplayAmeaca: DisplayMode.Disabled})
+
 
                                       )
                                     PressedColor: =RGBA(255, 255, 255, 1)
-                                    PressedFill: =RGBA(0, 0, 0, 1)
+                                    PressedFill: =nfCorPrimariaEsc
                                     SelectionColor: =RGBA(255, 255, 255, 1)
-                                    SelectionFill: =RGBA(0, 0, 0, 1)
+                                    SelectionFill: =nfCorPrimaria
                                     Size: =12
                                     Width: =178
                                     X: =40
@@ -2376,12 +2437,12 @@ Screens:
                                   Properties:
                                     BorderColor: =If(IsBlank(Self.Text),varBordaDefault)
                                     Default: =""
-                                    DisabledBorderColor: =RGBA(0, 0, 0, 1)
+                                    DisabledBorderColor: =nfCorBorda
                                     Font: =Font.'Open Sans'
                                     Format: =TextFormat.Number
                                     Height: =30
-                                    HoverBorderColor: =RGBA(0, 0, 0, 1)
-                                    HoverFill: =RGBA(186, 202, 226, 1)
+                                    HoverBorderColor: =nfCorPrimaria
+                                    HoverFill: =nfCorFundoFraco
                                     MaxLength: =6
                                     RadiusBottomLeft: =0
                                     RadiusBottomRight: =0
@@ -2395,12 +2456,12 @@ Screens:
                                   Control: Classic/TextInput@2.3.2
                                   Properties:
                                     BorderColor: =If(IsBlank(Self.Text),varBordaDefault)
-                                    Default: =""
-                                    DisabledBorderColor: =RGBA(0, 0, 0, 1)
+                                    Default: =If(var_editandoDerFlu, var_registroDerFlu.derFlu_empresa, "")
+                                    DisabledBorderColor: =nfCorBorda
                                     Font: =Font.'Open Sans'
                                     Height: =30
-                                    HoverBorderColor: =RGBA(0, 0, 0, 1)
-                                    HoverFill: =RGBA(186, 202, 226, 1)
+                                    HoverBorderColor: =nfCorPrimaria
+                                    HoverFill: =nfCorFundoFraco
                                     RadiusBottomLeft: =0
                                     RadiusBottomRight: =0
                                     RadiusTopLeft: =0
@@ -2424,7 +2485,7 @@ Screens:
                                   Control: Rectangle@2.3.0
                                   Group: Group94
                                   Properties:
-                                    BorderColor: =RGBA(0, 0, 0, 1)
+                                    BorderColor: =nfCorBorda
                                     BorderThickness: =1
                                     Fill: =RGBA(0, 0, 0, 0)
                                     Height: =84
@@ -2435,7 +2496,7 @@ Screens:
                                   Control: Label@2.5.1
                                   Group: Group94
                                   Properties:
-                                    BorderColor: =RGBA(0, 0, 0, 1)
+                                    BorderColor: =nfCorBorda
                                     Fill: =RGBA(255, 255, 255, 1)
                                     Font: =Font.'Open Sans'
                                     Height: =25
@@ -2453,13 +2514,13 @@ Screens:
                                           IsBlank(Self.Text),
                                           varBordaDefault
                                       )
-                                    Default: =""
-                                    DisabledBorderColor: =RGBA(0, 0, 0, 1)
+                                    Default: =If(var_editandoDerFlu, var_registroDerFlu.derFlu_relato, "")
+                                    DisabledBorderColor: =nfCorBorda
                                     Font: =Font.'Open Sans'
                                     Height: =60
                                     HintText: ="Descreva..."
-                                    HoverBorderColor: =RGBA(0, 0, 0, 1)
-                                    HoverFill: =RGBA(186, 202, 226, 1)
+                                    HoverBorderColor: =nfCorPrimaria
+                                    HoverFill: =nfCorFundoFraco
                                     Mode: =TextMode.MultiLine
                                     RadiusBottomLeft: =0
                                     RadiusBottomRight: =0
@@ -2473,7 +2534,7 @@ Screens:
                                   Control: Rectangle@2.3.0
                                   Group: Group94_2
                                   Properties:
-                                    BorderColor: =RGBA(0, 0, 0, 1)
+                                    BorderColor: =nfCorBorda
                                     BorderThickness: =1
                                     Fill: =RGBA(0, 0, 0, 0)
                                     Height: =84
@@ -2484,7 +2545,7 @@ Screens:
                                   Control: Label@2.5.1
                                   Group: Group94_2
                                   Properties:
-                                    BorderColor: =RGBA(0, 0, 0, 1)
+                                    BorderColor: =nfCorBorda
                                     Fill: =RGBA(255, 255, 255, 1)
                                     Font: =Font.'Open Sans'
                                     Height: =25
@@ -2499,13 +2560,13 @@ Screens:
                                   Group: Group94_2
                                   Properties:
                                     BorderColor: =If(IsBlank(Self.Text),varBordaDefault)
-                                    Default: =""
-                                    DisabledBorderColor: =RGBA(0, 0, 0, 1)
+                                    Default: =If(var_editandoDerFlu, var_registroDerFlu.derFlu_medIsolamento, "")
+                                    DisabledBorderColor: =nfCorBorda
                                     Font: =Font.'Open Sans'
                                     Height: =60
                                     HintText: ="Descreva..."
-                                    HoverBorderColor: =RGBA(0, 0, 0, 1)
-                                    HoverFill: =RGBA(186, 202, 226, 1)
+                                    HoverBorderColor: =nfCorPrimaria
+                                    HoverFill: =nfCorFundoFraco
                                     Mode: =TextMode.MultiLine
                                     RadiusBottomLeft: =0
                                     RadiusBottomRight: =0
@@ -2519,7 +2580,7 @@ Screens:
                                   Control: Rectangle@2.3.0
                                   Group: Group94_1
                                   Properties:
-                                    BorderColor: =RGBA(0, 0, 0, 1)
+                                    BorderColor: =nfCorBorda
                                     BorderThickness: =1
                                     Fill: =RGBA(0, 0, 0, 0)
                                     Height: =84
@@ -2530,7 +2591,7 @@ Screens:
                                   Control: Label@2.5.1
                                   Group: Group94_1
                                   Properties:
-                                    BorderColor: =RGBA(0, 0, 0, 1)
+                                    BorderColor: =nfCorBorda
                                     Fill: =RGBA(255, 255, 255, 1)
                                     Font: =Font.'Open Sans'
                                     Height: =25
@@ -2545,13 +2606,13 @@ Screens:
                                   Group: Group94_1
                                   Properties:
                                     BorderColor: =If(IsBlank(Self.Text),varBordaDefault)
-                                    Default: =""
-                                    DisabledBorderColor: =RGBA(0, 0, 0, 1)
+                                    Default: =If(var_editandoDerFlu, var_registroDerFlu.derFlu_causaDanos, "")
+                                    DisabledBorderColor: =nfCorBorda
                                     Font: =Font.'Open Sans'
                                     Height: =60
                                     HintText: ="Descreva..."
-                                    HoverBorderColor: =RGBA(0, 0, 0, 1)
-                                    HoverFill: =RGBA(186, 202, 226, 1)
+                                    HoverBorderColor: =nfCorPrimaria
+                                    HoverFill: =nfCorFundoFraco
                                     Mode: =TextMode.MultiLine
                                     RadiusBottomLeft: =0
                                     RadiusBottomRight: =0
@@ -2565,7 +2626,7 @@ Screens:
                                   Control: Rectangle@2.3.0
                                   Group: Group94_3
                                   Properties:
-                                    BorderColor: =RGBA(0, 0, 0, 1)
+                                    BorderColor: =nfCorBorda
                                     BorderThickness: =1
                                     Fill: =RGBA(0, 0, 0, 0)
                                     Height: =84
@@ -2576,7 +2637,7 @@ Screens:
                                   Control: Label@2.5.1
                                   Group: Group94_3
                                   Properties:
-                                    BorderColor: =RGBA(0, 0, 0, 1)
+                                    BorderColor: =nfCorBorda
                                     Fill: =RGBA(255, 255, 255, 1)
                                     Font: =Font.'Open Sans'
                                     Height: =25
@@ -2591,14 +2652,14 @@ Screens:
                                   Group: Group94_3
                                   Properties:
                                     BorderColor: =If(IsBlank(Self.Text),varBordaDefault)
-                                    Default: =""
-                                    DisabledBorderColor: =RGBA(0, 0, 0, 1)
+                                    Default: =If(var_editandoDerFlu, var_registroDerFlu.derFlu_relCondutor, "")
+                                    DisabledBorderColor: =nfCorBorda
                                     DisplayMode: =varDisplayRelatoCondutor
                                     Font: =Font.'Open Sans'
                                     Height: =60
                                     HintText: ="Descreva..."
-                                    HoverBorderColor: =RGBA(0, 0, 0, 1)
-                                    HoverFill: =RGBA(186, 202, 226, 1)
+                                    HoverBorderColor: =nfCorPrimaria
+                                    HoverFill: =nfCorFundoFraco
                                     Mode: =TextMode.MultiLine
                                     RadiusBottomLeft: =0
                                     RadiusBottomRight: =0
@@ -2649,16 +2710,16 @@ Screens:
                                           BorderColor: =ColorFade(Self.Fill, -15%)
                                           Color: =RGBA(255, 255, 255, 1)
                                           DisabledBorderColor: =RGBA(0, 0, 0, 0)
-                                          DisabledFill: =RGBA(255, 0, 0, 1)
-                                          Fill: =RGBA(255, 56, 56, 1)
+                                          DisabledFill: =nfCorErro
+                                          Fill: =nfCorErro
                                           Font: =Font.'Open Sans'
                                           HoverBorderColor: =
                                           HoverColor: =RGBA(255, 255, 255, 1)
-                                          HoverFill: =RGBA(255, 0, 0, 1)
+                                          HoverFill: =nfCorErro
                                           OnSelect: =Reset(AddMediaButtonDerFlu)
                                           PressedBorderColor: =
                                           PressedColor: =Self.Fill
-                                          PressedFill: =RGBA(255, 0, 0, 1)
+                                          PressedFill: =nfCorErro
                                           RadiusBottomLeft: =4
                                           RadiusBottomRight: =4
                                           RadiusTopLeft: =4
@@ -2674,7 +2735,7 @@ Screens:
                                         Properties:
                                           BorderColor: =ColorFade(Self.Fill, -15%)
                                           Color: =RGBA(255, 255, 255, 1)
-                                          DisabledBorderColor: =RGBA(166, 166, 166, 1)
+                                          DisabledBorderColor: =nfCorTextoFraco
                                           Fill: =RGBA(0, 0, 0, 1)
                                           Font: =Font.'Open Sans'
                                           Height: =32
@@ -2687,6 +2748,7 @@ Screens:
                                                 Collect(
                                                     col_derFluImg,
                                                     {
+                                                        dbId: Blank(),
                                                         id: Value(
                                                             First(
                                                                 SortByColumns(
@@ -2760,17 +2822,17 @@ Screens:
                                                 BorderColor: =ColorFade(Self.Fill, -15%)
                                                 Color: =RGBA(255, 255, 255, 1)
                                                 DisabledBorderColor: =RGBA(0, 0, 0, 0)
-                                                DisabledFill: =RGBA(255, 0, 0, 1)
-                                                Fill: =RGBA(255, 56, 56, 1)
+                                                DisabledFill: =nfCorErro
+                                                Fill: =nfCorErro
                                                 Font: =Font.'Open Sans'
                                                 Height: =25
                                                 HoverBorderColor: =
                                                 HoverColor: =RGBA(255, 255, 255, 1)
-                                                HoverFill: =RGBA(255, 0, 0, 1)
+                                                HoverFill: =nfCorErro
                                                 OnSelect: =Remove(col_derFluImg,ThisItem)
                                                 PressedBorderColor: =
                                                 PressedColor: =Self.Fill
-                                                PressedFill: =RGBA(255, 0, 0, 1)
+                                                PressedFill: =nfCorErro
                                                 RadiusBottomLeft: =4
                                                 RadiusBottomRight: =4
                                                 RadiusTopLeft: =4
@@ -2782,7 +2844,7 @@ Screens:
                                     - Label20_393:
                                         Control: Label@2.5.1
                                         Properties:
-                                          BorderColor: =RGBA(0, 0, 0, 1)
+                                          BorderColor: =nfCorBorda
                                           Fill: =RGBA(255, 255, 255, 1)
                                           Font: =Font.'Open Sans'
                                           Height: =20
@@ -2797,7 +2859,7 @@ Screens:
                                         Properties:
                                           Align: =Align.Center
                                           BorderColor: =RGBA(255, 255, 255, 1)
-                                          Color: =RGBA(166, 166, 166, 1)
+                                          Color: =nfCorTextoFraco
                                           Font: =Font.'Open Sans'
                                           Size: =16
                                           Text: ="Sem fotos para visualizar."
@@ -2809,7 +2871,7 @@ Screens:
                       Control: Rectangle@2.3.0
                       Group: Group16.2.3_1
                       Properties:
-                        BorderColor: =RGBA(0, 0, 0, 1)
+                        BorderColor: =nfCorBorda
                         BorderThickness: =1
                         Fill: =RGBA(0, 0, 0, 0)
                         Height: =45
@@ -2820,7 +2882,7 @@ Screens:
                       Control: Label@2.5.1
                       Group: Group16.2.3_1
                       Properties:
-                        BorderColor: =RGBA(0, 0, 0, 1)
+                        BorderColor: =nfCorBorda
                         Fill: =RGBA(255, 255, 255, 1)
                         Font: =Font.'Open Sans'
                         Height: =25
@@ -2834,14 +2896,14 @@ Screens:
                       Group: Group16.2.3_1
                       Properties:
                         BorderColor: =If(IsBlank(Self.Selected.Value),varBordaDefault)
-                        ChevronBackground: =RGBA(0, 0, 0, 1)
+                        ChevronBackground: =nfCorPrimaria
                         ChevronFill: =RGBA(255, 255, 255, 1)
                         ChevronHoverBackground: =ColorFade(RGBA(0, 0, 0, 1), -20%)
                         ChevronHoverFill: =RGBA(255, 255, 255, 1)
                         DisplayFields: =["Value"]
                         Font: =Font.'Open Sans'
                         Height: =30
-                        HoverFill: =RGBA(186, 202, 226, 1)
+                        HoverFill: =nfCorFundoFraco
                         IsSearchable: =false
                         Items: |-
                           =[
@@ -2870,11 +2932,11 @@ Screens:
                               )
                           )
                         PressedColor: =RGBA(255, 255, 255, 1)
-                        PressedFill: =RGBA(0, 0, 0, 1)
+                        PressedFill: =nfCorPrimariaEsc
                         SearchFields: =["Value"]
                         SelectMultiple: =false
                         SelectionColor: =RGBA(255, 255, 255, 1)
-                        SelectionFill: =RGBA(0, 0, 0, 1)
+                        SelectionFill: =nfCorPrimaria
                         Size: =11
                         Width: =310
                         X: =655
@@ -2883,7 +2945,7 @@ Screens:
                       Control: Rectangle@2.3.0
                       Group: Group16.2.2_4
                       Properties:
-                        BorderColor: =RGBA(0, 0, 0, 1)
+                        BorderColor: =nfCorBorda
                         BorderThickness: =1
                         Fill: =RGBA(0, 0, 0, 0)
                         Height: =45
@@ -2894,7 +2956,7 @@ Screens:
                       Control: Label@2.5.1
                       Group: Group16.2.2_4
                       Properties:
-                        BorderColor: =RGBA(0, 0, 0, 1)
+                        BorderColor: =nfCorBorda
                         Fill: =RGBA(255, 255, 255, 1)
                         Font: =Font.'Open Sans'
                         Height: =25
@@ -2908,14 +2970,14 @@ Screens:
                       Group: Group16.2.2_4
                       Properties:
                         BorderColor: =If(IsBlank(Self.Selected.Value),varBordaDefault)
-                        ChevronBackground: =RGBA(0, 0, 0, 1)
+                        ChevronBackground: =nfCorPrimaria
                         ChevronFill: =RGBA(255, 255, 255, 1)
                         ChevronHoverBackground: =ColorFade(RGBA(0, 0, 0, 1), -20%)
                         ChevronHoverFill: =RGBA(255, 255, 255, 1)
                         DisplayFields: =["Value"]
                         Font: =Font.'Open Sans'
                         Height: =30
-                        HoverFill: =RGBA(186, 202, 226, 1)
+                        HoverFill: =nfCorFundoFraco
                         IsSearchable: =false
                         Items: |-
                           =[
@@ -2955,11 +3017,11 @@ Screens:
                               )
                           )
                         PressedColor: =RGBA(255, 255, 255, 1)
-                        PressedFill: =RGBA(0, 0, 0, 1)
+                        PressedFill: =nfCorPrimariaEsc
                         SearchFields: =["Value"]
                         SelectMultiple: =false
                         SelectionColor: =RGBA(255, 255, 255, 1)
-                        SelectionFill: =RGBA(0, 0, 0, 1)
+                        SelectionFill: =nfCorPrimaria
                         Size: =11
                         Width: =200
                         X: =416
@@ -2968,7 +3030,7 @@ Screens:
                       Control: Rectangle@2.3.0
                       Group: Group16.2.1_2
                       Properties:
-                        BorderColor: =RGBA(0, 0, 0, 1)
+                        BorderColor: =nfCorBorda
                         BorderThickness: =1
                         Fill: =RGBA(0, 0, 0, 0)
                         Height: =45
@@ -2979,7 +3041,7 @@ Screens:
                       Control: Label@2.5.1
                       Group: Group16.2.1_2
                       Properties:
-                        BorderColor: =RGBA(0, 0, 0, 1)
+                        BorderColor: =nfCorBorda
                         Fill: =RGBA(255, 255, 255, 1)
                         Font: =Font.'Open Sans'
                         Height: =25
@@ -2992,7 +3054,8 @@ Screens:
                       Control: Classic/DatePicker@2.6.0
                       Group: Group16.2.1_2
                       Properties:
-                        BorderColor: =RGBA(0, 0, 0, 1)
+                        BorderColor: =nfCorBorda
+                        DefaultDate: =If(var_editandoDerFlu, var_registroDerFlu.derFlu_data, "")
                         DisplayMode: =
                         FocusedBorderThickness: =2
                         Font: =Font.'Open Sans'
@@ -3014,16 +3077,16 @@ Screens:
                               Self.Selected.Value = "hor",
                               varBordaDefault
                           )
-                        ChevronBackground: =RGBA(0, 0, 0, 1)
+                        ChevronBackground: =nfCorPrimaria
                         ChevronFill: =RGBA(255, 255, 255, 1)
                         ChevronHoverBackground: =ColorFade(RGBA(0, 0, 0, 1), -20%)
                         ChevronHoverFill: =RGBA(255, 255, 255, 1)
-                        Default: =""
+                        Default: =If(var_editandoDerFlu, Left(var_registroDerFlu.derFlu_hora, Find(":", var_registroDerFlu.derFlu_hora) - 1), "hor")
                         DisplayMode: =
                         FocusedBorderThickness: =2
                         Font: =Font.'Open Sans'
                         Height: =30
-                        HoverFill: =RGBA(186, 202, 226, 1)
+                        HoverFill: =nfCorFundoFraco
                         Items: |-
                           =[
                               "hor",
@@ -3058,9 +3121,9 @@ Screens:
                               );*/
                         Items.Value: =Value
                         PressedColor: =RGBA(255, 255, 255, 1)
-                        PressedFill: =RGBA(0, 0, 0, 1)
+                        PressedFill: =nfCorPrimariaEsc
                         SelectionColor: =RGBA(255, 255, 255, 1)
-                        SelectionFill: =RGBA(0, 0, 0, 1)
+                        SelectionFill: =nfCorPrimaria
                         Size: =11
                         Width: =77
                         X: =206
@@ -3074,16 +3137,16 @@ Screens:
                               Self.Selected.Value = "min",
                               varBordaDefault
                           )
-                        ChevronBackground: =RGBA(0, 0, 0, 1)
+                        ChevronBackground: =nfCorPrimaria
                         ChevronFill: =RGBA(255, 255, 255, 1)
                         ChevronHoverBackground: =ColorFade(RGBA(0, 0, 0, 1), -20%)
                         ChevronHoverFill: =RGBA(255, 255, 255, 1)
-                        Default: =""
+                        Default: =If(var_editandoDerFlu, Mid(var_registroDerFlu.derFlu_hora, Find(":", var_registroDerFlu.derFlu_hora) + 1, 2), "min")
                         DisplayMode: =
                         FocusedBorderThickness: =2
                         Font: =Font.'Open Sans'
                         Height: =30
-                        HoverFill: =RGBA(186, 202, 226, 1)
+                        HoverFill: =nfCorFundoFraco
                         Items: |-
                           =["min",
                               "00",
@@ -3153,9 +3216,9 @@ Screens:
                               );*/
                         Items.Value: =Value
                         PressedColor: =RGBA(255, 255, 255, 1)
-                        PressedFill: =RGBA(0, 0, 0, 1)
+                        PressedFill: =nfCorPrimariaEsc
                         SelectionColor: =RGBA(255, 255, 255, 1)
-                        SelectionFill: =RGBA(0, 0, 0, 1)
+                        SelectionFill: =nfCorPrimaria
                         Size: =11
                         Width: =77
                         X: =296
@@ -3166,7 +3229,7 @@ Screens:
                       Properties:
                         Align: =Align.Center
                         AutoHeight: =true
-                        BorderColor: =RGBA(0, 0, 0, 1)
+                        BorderColor: =nfCorBorda
                         Font: =Font.'Open Sans'
                         FontWeight: =FontWeight.Bold
                         Height: =50
@@ -3515,7 +3578,11 @@ Screens:
                                       {
                                           var_regNovoDerFlu: Patch(
                                               '14.2-tbl_DerramamentoDeFluidos',
-                                              Defaults('14.2-tbl_DerramamentoDeFluidos'),
+                                              If(
+                                                  var_editandoDerFlu,
+                                                  var_registroDerFlu,
+                                                  Defaults('14.2-tbl_DerramamentoDeFluidos')
+                                              ),
                                               {
                                                   derFlu_data: dtpDerFluDataCadastro.SelectedDate,
                                                   derFlu_hora: cmbDerFluHoraCadastro.Selected.Value & ":" & cmbDerFluMinuCadastro.Selected.Value,
@@ -3586,13 +3653,36 @@ Screens:
                                           col_derFluImg,
                                           Patch(
                                               '14.2-tbl_DerFluidosImg',
-                                              Defaults('14.2-tbl_DerFluidosImg'),
+                                              If(
+                                                  IsBlank(dbId),
+                                                  Defaults('14.2-tbl_DerFluidosImg'),
+                                                  LookUp(
+                                                      '14.2-tbl_DerFluidosImg',
+                                                      ID = dbId
+                                                  )
+                                              ),
                                               {
                                                   derFluFK_id: varDerFluId,
                                                   derFluImg_imagem: img
                                               }
                                           )
                                       )
+                              );
+                              If(
+                                  var_editandoDerFlu,
+                                  ForAll(
+                                      Filter(
+                                          col_derFluImg_orig,
+                                          !(dbId in col_derFluImg.dbId)
+                                      ),
+                                      Remove(
+                                          '14.2-tbl_DerFluidosImg',
+                                          LookUp(
+                                              '14.2-tbl_DerFluidosImg',
+                                              ID = dbId
+                                          )
+                                      )
+                                  )
                               );
                                   ForAll(
                                       Filter(
@@ -3792,7 +3882,7 @@ Screens:
                         - Image26_5:
                             Control: Image@2.2.3
                             Properties:
-                              BorderColor: =RGBA(0, 0, 0, 1)
+                              BorderColor: =nfCorBorda
                               BorderThickness: =5
                               CalculateOriginalDimensions: =true
                               DisabledBorderColor: =RGBA(0, 0, 0, 0)
@@ -3841,7 +3931,7 @@ Screens:
                               - Label16_116:
                                   Control: Label@2.5.1
                                   Properties:
-                                    BorderColor: =RGBA(0, 0, 0, 1)
+                                    BorderColor: =nfCorBorda
                                     Font: =Font.'Open Sans'
                                     FontWeight: =FontWeight.Bold
                                     Height: =20
@@ -3855,7 +3945,7 @@ Screens:
                               - Label16_117:
                                   Control: Label@2.5.1
                                   Properties:
-                                    BorderColor: =RGBA(0, 0, 0, 1)
+                                    BorderColor: =nfCorBorda
                                     Font: =Font.'Open Sans'
                                     Height: =20
                                     LayoutMaxHeight: =
@@ -3868,7 +3958,7 @@ Screens:
                               - Label16_122:
                                   Control: Label@2.5.1
                                   Properties:
-                                    BorderColor: =RGBA(0, 0, 0, 1)
+                                    BorderColor: =nfCorBorda
                                     Font: =Font.'Open Sans'
                                     FontWeight: =FontWeight.Bold
                                     Height: =20
@@ -3883,7 +3973,7 @@ Screens:
                               - Label16_141:
                                   Control: Label@2.5.1
                                   Properties:
-                                    BorderColor: =RGBA(0, 0, 0, 1)
+                                    BorderColor: =nfCorBorda
                                     Font: =Font.'Open Sans'
                                     Height: =20
                                     LayoutMaxHeight: =
@@ -3896,7 +3986,7 @@ Screens:
                               - Label16_144:
                                   Control: Label@2.5.1
                                   Properties:
-                                    BorderColor: =RGBA(0, 0, 0, 1)
+                                    BorderColor: =nfCorBorda
                                     Font: =Font.'Open Sans'
                                     FontWeight: =FontWeight.Bold
                                     Height: =20
@@ -3911,7 +4001,7 @@ Screens:
                               - Label16_146:
                                   Control: Label@2.5.1
                                   Properties:
-                                    BorderColor: =RGBA(0, 0, 0, 1)
+                                    BorderColor: =nfCorBorda
                                     Font: =Font.'Open Sans'
                                     Height: =20
                                     LayoutMaxHeight: =
@@ -3924,7 +4014,7 @@ Screens:
                               - Label16_152:
                                   Control: Label@2.5.1
                                   Properties:
-                                    BorderColor: =RGBA(0, 0, 0, 1)
+                                    BorderColor: =nfCorBorda
                                     Font: =Font.'Open Sans'
                                     FontWeight: =FontWeight.Bold
                                     Height: =20
@@ -3940,7 +4030,7 @@ Screens:
                               - Label16_153:
                                   Control: Label@2.5.1
                                   Properties:
-                                    BorderColor: =RGBA(0, 0, 0, 1)
+                                    BorderColor: =nfCorBorda
                                     Font: =Font.'Open Sans'
                                     Height: =20
                                     LayoutMaxHeight: =
@@ -3954,7 +4044,7 @@ Screens:
                               - Label16_154:
                                   Control: Label@2.5.1
                                   Properties:
-                                    BorderColor: =RGBA(0, 0, 0, 1)
+                                    BorderColor: =nfCorBorda
                                     Font: =Font.'Open Sans'
                                     FontWeight: =FontWeight.Bold
                                     Height: =20
@@ -3969,7 +4059,7 @@ Screens:
                               - Label16_169:
                                   Control: Label@2.5.1
                                   Properties:
-                                    BorderColor: =RGBA(0, 0, 0, 1)
+                                    BorderColor: =nfCorBorda
                                     Font: =Font.'Open Sans'
                                     Height: =20
                                     LayoutMaxHeight: =
@@ -3983,7 +4073,7 @@ Screens:
                               - Label16_170:
                                   Control: Label@2.5.1
                                   Properties:
-                                    BorderColor: =RGBA(0, 0, 0, 1)
+                                    BorderColor: =nfCorBorda
                                     Font: =Font.'Open Sans'
                                     FontWeight: =FontWeight.Bold
                                     Height: =20
@@ -3999,7 +4089,7 @@ Screens:
                               - Label16_171:
                                   Control: Label@2.5.1
                                   Properties:
-                                    BorderColor: =RGBA(0, 0, 0, 1)
+                                    BorderColor: =nfCorBorda
                                     Font: =Font.'Open Sans'
                                     Height: =20
                                     LayoutMaxHeight: =
@@ -4013,7 +4103,7 @@ Screens:
                               - Label16_172:
                                   Control: Label@2.5.1
                                   Properties:
-                                    BorderColor: =RGBA(0, 0, 0, 1)
+                                    BorderColor: =nfCorBorda
                                     Font: =Font.'Open Sans'
                                     FontWeight: =FontWeight.Bold
                                     Height: =20
@@ -4028,7 +4118,7 @@ Screens:
                               - Label16_173:
                                   Control: Label@2.5.1
                                   Properties:
-                                    BorderColor: =RGBA(0, 0, 0, 1)
+                                    BorderColor: =nfCorBorda
                                     Font: =Font.'Open Sans'
                                     Height: =20
                                     LayoutMaxHeight: =
@@ -4042,7 +4132,7 @@ Screens:
                               - Label16_174:
                                   Control: Label@2.5.1
                                   Properties:
-                                    BorderColor: =RGBA(0, 0, 0, 1)
+                                    BorderColor: =nfCorBorda
                                     Font: =Font.'Open Sans'
                                     FontWeight: =FontWeight.Bold
                                     Height: =20
@@ -4057,7 +4147,7 @@ Screens:
                               - Label16_175:
                                   Control: Label@2.5.1
                                   Properties:
-                                    BorderColor: =RGBA(0, 0, 0, 1)
+                                    BorderColor: =nfCorBorda
                                     Font: =Font.'Open Sans'
                                     Height: =20
                                     LayoutMaxHeight: =
@@ -4071,7 +4161,7 @@ Screens:
                               - Label16_176:
                                   Control: Label@2.5.1
                                   Properties:
-                                    BorderColor: =RGBA(0, 0, 0, 1)
+                                    BorderColor: =nfCorBorda
                                     Font: =Font.'Open Sans'
                                     FontWeight: =FontWeight.Bold
                                     Height: =20
@@ -4086,7 +4176,7 @@ Screens:
                               - Label16_177:
                                   Control: Label@2.5.1
                                   Properties:
-                                    BorderColor: =RGBA(0, 0, 0, 1)
+                                    BorderColor: =nfCorBorda
                                     Font: =Font.'Open Sans'
                                     FontWeight: =FontWeight.Lighter
                                     Height: =20
@@ -4119,7 +4209,7 @@ Screens:
                               - Label16_178:
                                   Control: Label@2.5.1
                                   Properties:
-                                    BorderColor: =RGBA(0, 0, 0, 1)
+                                    BorderColor: =nfCorBorda
                                     Font: =Font.'Open Sans'
                                     FontWeight: =FontWeight.Bold
                                     Height: =20
@@ -4134,7 +4224,7 @@ Screens:
                               - Label16_179:
                                   Control: Label@2.5.1
                                   Properties:
-                                    BorderColor: =RGBA(0, 0, 0, 1)
+                                    BorderColor: =nfCorBorda
                                     Font: =Font.'Open Sans'
                                     Height: =20
                                     LayoutMaxHeight: =
@@ -4149,7 +4239,7 @@ Screens:
                               - Label16_181:
                                   Control: Label@2.5.1
                                   Properties:
-                                    BorderColor: =RGBA(0, 0, 0, 1)
+                                    BorderColor: =nfCorBorda
                                     Font: =Font.'Open Sans'
                                     FontWeight: =FontWeight.Bold
                                     Height: =20
@@ -4164,7 +4254,7 @@ Screens:
                               - Label16_182:
                                   Control: Label@2.5.1
                                   Properties:
-                                    BorderColor: =RGBA(0, 0, 0, 1)
+                                    BorderColor: =nfCorBorda
                                     Font: =Font.'Open Sans'
                                     Height: =20
                                     LayoutMaxHeight: =
@@ -4178,7 +4268,7 @@ Screens:
                               - Label16_183:
                                   Control: Label@2.5.1
                                   Properties:
-                                    BorderColor: =RGBA(0, 0, 0, 1)
+                                    BorderColor: =nfCorBorda
                                     Font: =Font.'Open Sans'
                                     FontWeight: =FontWeight.Bold
                                     Height: =20
@@ -4193,7 +4283,7 @@ Screens:
                               - Label16_184:
                                   Control: Label@2.5.1
                                   Properties:
-                                    BorderColor: =RGBA(0, 0, 0, 1)
+                                    BorderColor: =nfCorBorda
                                     Font: =Font.'Open Sans'
                                     Height: =20
                                     LayoutMaxHeight: =
@@ -4207,7 +4297,7 @@ Screens:
                               - Label16_185:
                                   Control: Label@2.5.1
                                   Properties:
-                                    BorderColor: =RGBA(0, 0, 0, 1)
+                                    BorderColor: =nfCorBorda
                                     Font: =Font.'Open Sans'
                                     FontWeight: =FontWeight.Bold
                                     Height: =20
@@ -4222,7 +4312,7 @@ Screens:
                               - Label16_186:
                                   Control: Label@2.5.1
                                   Properties:
-                                    BorderColor: =RGBA(0, 0, 0, 1)
+                                    BorderColor: =nfCorBorda
                                     Font: =Font.'Open Sans'
                                     Height: =20
                                     LayoutMaxHeight: =
@@ -4236,7 +4326,7 @@ Screens:
                               - Label16_188:
                                   Control: Label@2.5.1
                                   Properties:
-                                    BorderColor: =RGBA(0, 0, 0, 1)
+                                    BorderColor: =nfCorBorda
                                     Font: =Font.'Open Sans'
                                     FontWeight: =FontWeight.Bold
                                     Height: =20
@@ -4250,7 +4340,7 @@ Screens:
                               - Label16_189:
                                   Control: Label@2.5.1
                                   Properties:
-                                    BorderColor: =RGBA(0, 0, 0, 1)
+                                    BorderColor: =nfCorBorda
                                     Font: =Font.'Open Sans'
                                     Height: =20
                                     LayoutMaxHeight: =
@@ -4263,7 +4353,7 @@ Screens:
                               - Label16_191:
                                   Control: Label@2.5.1
                                   Properties:
-                                    BorderColor: =RGBA(0, 0, 0, 1)
+                                    BorderColor: =nfCorBorda
                                     Font: =Font.'Open Sans'
                                     FontWeight: =FontWeight.Bold
                                     Height: =20
@@ -4277,7 +4367,7 @@ Screens:
                               - Label16_192:
                                   Control: Label@2.5.1
                                   Properties:
-                                    BorderColor: =RGBA(0, 0, 0, 1)
+                                    BorderColor: =nfCorBorda
                                     Font: =Font.'Open Sans'
                                     Height: =20
                                     LayoutMaxHeight: =
@@ -4290,7 +4380,7 @@ Screens:
                               - Label16_50:
                                   Control: Label@2.5.1
                                   Properties:
-                                    BorderColor: =RGBA(0, 0, 0, 1)
+                                    BorderColor: =nfCorBorda
                                     Font: =Font.'Open Sans'
                                     FontWeight: =FontWeight.Bold
                                     Height: =20
@@ -4321,7 +4411,7 @@ Screens:
                                   Control: Label@2.5.1
                                   Properties:
                                     AutoHeight: =true
-                                    BorderColor: =RGBA(0, 0, 0, 1)
+                                    BorderColor: =nfCorBorda
                                     Font: =Font.'Open Sans'
                                     FontWeight: =FontWeight.Bold
                                     Height: =20
@@ -4337,7 +4427,7 @@ Screens:
                                   Control: Label@2.5.1
                                   Properties:
                                     AutoHeight: =true
-                                    BorderColor: =RGBA(0, 0, 0, 1)
+                                    BorderColor: =nfCorBorda
                                     Font: =Font.'Open Sans'
                                     Height: =20
                                     LayoutMaxHeight: =
@@ -4351,7 +4441,7 @@ Screens:
                                   Control: Label@2.5.1
                                   Properties:
                                     AutoHeight: =true
-                                    BorderColor: =RGBA(0, 0, 0, 1)
+                                    BorderColor: =nfCorBorda
                                     Font: =Font.'Open Sans'
                                     FontWeight: =FontWeight.Bold
                                     Height: =20
@@ -4367,7 +4457,7 @@ Screens:
                                   Control: Label@2.5.1
                                   Properties:
                                     AutoHeight: =true
-                                    BorderColor: =RGBA(0, 0, 0, 1)
+                                    BorderColor: =nfCorBorda
                                     Font: =Font.'Open Sans'
                                     Height: =20
                                     LayoutMaxHeight: =
@@ -4380,7 +4470,7 @@ Screens:
                         - Label16_202:
                             Control: Label@2.5.1
                             Properties:
-                              BorderColor: =RGBA(0, 0, 0, 1)
+                              BorderColor: =nfCorBorda
                               Fill: =RGBA(255, 255, 255, 1)
                               Font: =Font.'Open Sans'
                               FontWeight: =FontWeight.Bold
@@ -4393,7 +4483,7 @@ Screens:
                         - Rectangle22_1:
                             Control: Rectangle@2.3.0
                             Properties:
-                              BorderColor: =RGBA(0, 0, 0, 1)
+                              BorderColor: =nfCorBorda
                               Fill: =RGBA(0, 0, 0, 1)
                               Height: =1
                               Visible: =false
@@ -4419,7 +4509,7 @@ Screens:
                         - Label16_204:
                             Control: Label@2.5.1
                             Properties:
-                              BorderColor: =RGBA(0, 0, 0, 1)
+                              BorderColor: =nfCorBorda
                               Fill: =RGBA(255, 255, 255, 1)
                               Font: =Font.'Open Sans'
                               FontWeight: =FontWeight.Bold
@@ -4449,7 +4539,7 @@ Screens:
                         - Label16_205:
                             Control: Label@2.5.1
                             Properties:
-                              BorderColor: =RGBA(0, 0, 0, 1)
+                              BorderColor: =nfCorBorda
                               Fill: =RGBA(255, 255, 255, 1)
                               Font: =Font.'Open Sans'
                               FontWeight: =FontWeight.Bold
@@ -4479,7 +4569,7 @@ Screens:
                         - Label16_207:
                             Control: Label@2.5.1
                             Properties:
-                              BorderColor: =RGBA(0, 0, 0, 1)
+                              BorderColor: =nfCorBorda
                               Fill: =RGBA(255, 255, 255, 1)
                               Font: =Font.'Open Sans'
                               FontWeight: =FontWeight.Bold
@@ -4529,7 +4619,7 @@ Screens:
                                   Control: Label@2.5.1
                                   Properties:
                                     AutoHeight: =true
-                                    BorderColor: =RGBA(0, 0, 0, 1)
+                                    BorderColor: =nfCorBorda
                                     Font: =Font.'Open Sans'
                                     Height: =30
                                     PaddingLeft: =10
@@ -4540,7 +4630,7 @@ Screens:
                               - Label16_159:
                                   Control: Label@2.5.1
                                   Properties:
-                                    BorderColor: =RGBA(0, 0, 0, 1)
+                                    BorderColor: =nfCorBorda
                                     Font: =Font.'Open Sans'
                                     FontWeight: =FontWeight.Bold
                                     Height: =30
@@ -4551,7 +4641,7 @@ Screens:
                               - Label16_199:
                                   Control: Label@2.5.1
                                   Properties:
-                                    BorderColor: =RGBA(0, 0, 0, 1)
+                                    BorderColor: =nfCorBorda
                                     Font: =Font.'Open Sans'
                                     FontWeight: =FontWeight.Bold
                                     Height: =30
@@ -4564,7 +4654,7 @@ Screens:
                                   Control: Label@2.5.1
                                   Properties:
                                     AutoHeight: =true
-                                    BorderColor: =RGBA(0, 0, 0, 1)
+                                    BorderColor: =nfCorBorda
                                     Font: =Font.'Open Sans'
                                     Height: =30
                                     PaddingLeft: =10
@@ -4592,7 +4682,7 @@ Screens:
                               - Image23_4:
                                   Control: Image@2.2.3
                                   Properties:
-                                    BorderColor: =RGBA(0, 0, 0, 1)
+                                    BorderColor: =nfCorBorda
                                     BorderStyle: =BorderStyle.None
                                     BorderThickness: =5
                                     CalculateOriginalDimensions: =true
@@ -4605,7 +4695,7 @@ Screens:
                               - Icon31_2:
                                   Control: Classic/Icon@2.5.0
                                   Properties:
-                                    BorderColor: =RGBA(0, 0, 0, 1)
+                                    BorderColor: =nfCorBorda
                                     Color: =RGBA(0, 0, 0, 1)
                                     Height: =110
                                     HoverFill: =RGBA(0, 0, 0, 0.1)
@@ -4621,7 +4711,7 @@ Screens:
                         - Label16_201:
                             Control: Label@2.5.1
                             Properties:
-                              BorderColor: =RGBA(0, 0, 0, 1)
+                              BorderColor: =nfCorBorda
                               Fill: =RGBA(255, 255, 255, 1)
                               Font: =Font.'Open Sans'
                               FontWeight: =FontWeight.Bold

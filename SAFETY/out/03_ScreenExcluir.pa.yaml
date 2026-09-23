@@ -35,6 +35,22 @@
 #    nos registros NOVOS. Os registros antigos mantêm o valor sequencial antigo
 #    — e é justamente por isso que a exclusão tem de comparar por <modulo>_id:
 #    é a única chave que vale para os dois conjuntos.
+#
+# 4. TIPO AMBÍGUO DE "var_item" (achado no Verificador de aplicativo, 2026-09-22)
+#    var_item vinha de {var_item: ThisItem} — só que cada um dos módulos que
+#    navega pra cá manda o ThisItem de uma tabela do SharePoint diferente, e os
+#    dois botões extras (Fauna, Desdobramentos) mandam mais duas. O Studio via
+#    ISSO como uma variável só, de tipo "união" das ~9 tabelas — e reprovava
+#    Clear/leitura de campo específico de módulo em cascata (30 erros).
+#    var_item só era lido de duas formas (var_item.ID e var_item.<modulo>_id,
+#    nunca o registro inteiro), então em vez do registro passou-se a mandar só
+#    os dois números já prontos, mesmo tipo (numérico) nos 9 pontos de origem:
+#        var_item_id:    ThisItem.ID            (era var_item.ID)
+#        var_item_chave: ThisItem.<modulo>_id   (era var_item.<modulo>_id, só
+#                                                 nos 7 módulos com filhos)
+#    Esta função (corrigir_excluir) já escreve esses dois nomes; quem manda os
+#    valores são os próprios botões "Excluir" (7 módulos + Fauna + Desdobra-
+#    mentos, em msapp/Src) — corrigidos junto, fora deste script.
 # ************************************************************************************************
 Screens:
   ScreenExcluir:
@@ -161,7 +177,7 @@ Screens:
                             Control: Button@0.0.45
                             Properties:
                               Appearance: ='ButtonCanvas.Appearance'.Subtle
-                              FontColor: =RGBA(255, 0, 0, 1)
+                              FontColor: =nfCorErro
                               IconStyle: ='ButtonCanvas.IconStyle'.Filled
                               LayoutMaxHeight: =
                               LayoutMaxWidth: =
@@ -172,25 +188,28 @@ Screens:
                                     "Colisão de veículos",////////////////////////////////////////////////////////////////////////////////
                                     Remove(
                                         '14.4-tbl_ColVeiculos',
-                                        var_item
+                                        LookUp(
+                                            '14.4-tbl_ColVeiculos',
+                                            ID = var_item_id
+                                        )
                                     );
                                     RemoveIf(
                                         '14.4-tbl_ColVeiculosEnvolvidos',
-                                        colVeiEnv_idOcorrencia = var_item.colVei_id
+                                        colVeiEnv_idOcorrencia = var_item_chave
                                     );
                                     RemoveIf(
                                         '14.4-tbl_ColVeiculosImg',
-                                        colVeiImg_idOcorrencia = var_item.colVei_id
+                                        colVeiImg_idOcorrencia = var_item_chave
                                     );
                                     RemoveIf(
                                         tbl_desdobramentos,
-                                        Modulo = var_modulo And ID_ocorrencia = var_item.colVei_id
+                                        Modulo = var_modulo And ID_ocorrencia = var_item_chave
                                     );
                                     If(
                                         IsBlank(
                                             LookUp(
                                                 '14.4-tbl_ColVeiculos',
-                                                ID = var_item.ID
+                                                ID = var_item_id
                                             )
                                         ),
                                         Navigate(
@@ -207,21 +226,24 @@ Screens:
                                     "Derramamento de fluídos",///////////////////////////////////////////////////////////////////////////
                                     Remove(
                                         '14.2-tbl_DerramamentoDeFluidos',
-                                        var_item
+                                        LookUp(
+                                            '14.2-tbl_DerramamentoDeFluidos',
+                                            ID = var_item_id
+                                        )
                                     );
                                     RemoveIf(
                                         '14.2-tbl_DerFluidosImg',
-                                        derFluFK_id = var_item.derFlu_id
+                                        derFluFK_id = var_item_chave
                                     );
                                     RemoveIf(
                                         tbl_desdobramentos,
-                                        Modulo = var_modulo And ID_ocorrencia = var_item.derFlu_id
+                                        Modulo = var_modulo And ID_ocorrencia = var_item_chave
                                     );
                                     If(
                                         IsBlank(
                                             LookUp(
                                                 '14.2-tbl_DerramamentoDeFluidos',
-                                                ID = var_item.ID
+                                                ID = var_item_id
                                             )
                                         ),
                                         Navigate(
@@ -238,21 +260,24 @@ Screens:
                                     "Excursão de pista",/////////////////////////////////////////////////////////////////////////////////
                                     Remove(
                                         '14.6-tbl_ExcPista',
-                                        var_item
+                                        LookUp(
+                                            '14.6-tbl_ExcPista',
+                                            ID = var_item_id
+                                        )
                                     );
                                     RemoveIf(
                                         '14.6-tbl_ExcPistaImg',
-                                        excPistaImg_idOcorrencia = var_item.excPista_id
+                                        excPistaImg_idOcorrencia = var_item_chave
                                     );
                                     RemoveIf(
                                         tbl_desdobramentos,
-                                        Modulo = var_modulo And ID_ocorrencia = var_item.excPista_id
+                                        Modulo = var_modulo And ID_ocorrencia = var_item_chave
                                     );
                                     If(
                                         IsBlank(
                                             LookUp(
                                                 '14.6-tbl_ExcPista',
-                                                ID = var_item.ID
+                                                ID = var_item_id
                                             )
                                         ),
                                         Navigate(
@@ -269,25 +294,28 @@ Screens:
                                     "Incursão em pista",/////////////////////////////////////////////////////////////////////////////////
                                     Remove(
                                         '14.3-tbl_IncPista',
-                                        var_item
+                                        LookUp(
+                                            '14.3-tbl_IncPista',
+                                            ID = var_item_id
+                                        )
                                     );
                                     RemoveIf(
                                         '14.3-tbl_IncPistaImg',
-                                        incPistaImg_idOcorrencia = var_item.incPista_id
+                                        incPistaImg_idOcorrencia = var_item_chave
                                     );
                                     RemoveIf(
                                         '14.3-tbl_IncPistaEnvolvidos',
-                                        incPistaEnv_idOcorrencia = var_item.incPista_id
+                                        incPistaEnv_idOcorrencia = var_item_chave
                                     );
                                     RemoveIf(
                                         tbl_desdobramentos,
-                                        Modulo = var_modulo And ID_ocorrencia = var_item.incPista_id
+                                        Modulo = var_modulo And ID_ocorrencia = var_item_chave
                                     );
                                     If(
                                         IsBlank(
                                             LookUp(
                                                 '14.3-tbl_IncPista',
-                                                ID = var_item.ID
+                                                ID = var_item_id
                                             )
                                         ),
                                         Navigate(
@@ -304,21 +332,24 @@ Screens:
                                     "Interferência externa",/////////////////////////////////////////////////////////////////////////////////
                                     Remove(
                                         '14.5-tbl_IntExterna',
-                                        var_item
+                                        LookUp(
+                                            '14.5-tbl_IntExterna',
+                                            ID = var_item_id
+                                        )
                                     );
                                     RemoveIf(
                                         '14.5-tbl_IntExternaImg',
-                                        intExtImg_idOcorrencia = var_item.intExt_id
+                                        intExtImg_idOcorrencia = var_item_chave
                                     );
                                     RemoveIf(
                                         tbl_desdobramentos,
-                                        Modulo = var_modulo And ID_ocorrencia = var_item.intExt_id
+                                        Modulo = var_modulo And ID_ocorrencia = var_item_chave
                                     );
                                     If(
                                         IsBlank(
                                             LookUp(
                                                 '14.5-tbl_IntExterna',
-                                                ID = var_item.ID
+                                                ID = var_item_id
                                             )
                                         ),
                                         Navigate(
@@ -335,25 +366,28 @@ Screens:
                                     "Jet blast",/////////////////////////////////////////////////////////////////////////////////
                                     Remove(
                                         '14.8-tbl_JetBlast',
-                                        var_item
+                                        LookUp(
+                                            '14.8-tbl_JetBlast',
+                                            ID = var_item_id
+                                        )
                                     );
                                     RemoveIf(
                                         '14.8-tbl_JetBlastImg',
-                                        jetBlastImg_idOcorrencia = var_item.jetBlast_id
+                                        jetBlastImg_idOcorrencia = var_item_chave
                                     );
                                     RemoveIf(
                                         '14.8-tbl_JetBlastItemAtingido',
-                                        jetBlastIA_idOcorrencia = var_item.jetBlast_id
+                                        jetBlastIA_idOcorrencia = var_item_chave
                                     );
                                     RemoveIf(
                                         tbl_desdobramentos,
-                                        Modulo = var_modulo And ID_ocorrencia = var_item.jetBlast_id
+                                        Modulo = var_modulo And ID_ocorrencia = var_item_chave
                                     );
                                     If(
                                         IsBlank(
                                             LookUp(
                                                 '14.8-tbl_JetBlast',
-                                                ID = var_item.ID
+                                                ID = var_item_id
                                             )
                                         ),
                                         Navigate(
@@ -370,21 +404,24 @@ Screens:
                                     "Ocorrência de solo",/////////////////////////////////////////////////////////////////////////////////////
                                     Remove(
                                         '16.1-tbl_OcoSolo',
-                                        var_item
+                                        LookUp(
+                                            '16.1-tbl_OcoSolo',
+                                            ID = var_item_id
+                                        )
                                     );
                                     RemoveIf(
                                         '16.1-tbl_OcoSoloImagens',
-                                        ocoSoloFK_id = var_item.ocoSolo_id
+                                        ocoSoloFK_id = var_item_chave
                                     );
                                     RemoveIf(
                                         tbl_desdobramentos,
-                                        Modulo = var_modulo And ID_ocorrencia = var_item.ocoSolo_id
+                                        Modulo = var_modulo And ID_ocorrencia = var_item_chave
                                     );
                                     If(
                                         IsBlank(
                                             LookUp(
                                                 '16.1-tbl_OcoSolo',
-                                                ID = var_item.ID
+                                                ID = var_item_id
                                             )
                                         ),
                                         Navigate(
@@ -404,17 +441,17 @@ Screens:
                                         "Colisão",
                                         RemoveIf(
                                             'AIRPORTNOW - FAUNA RELACIONAMENTO',
-                                            ID_tblPrincipal = var_item.ID And 'Tipo de Registro' = "Colisão com dano" || ID_tblPrincipal = var_item.ID And 'Tipo de Registro' = "Colisão sem dano" || ID_tblPrincipal = var_item.ID And 'Tipo de Registro' = "Quase colisão" || ID_tblPrincipal = var_item.ID And 'Tipo de Registro' = "Avistamento"
+                                            ID_tblPrincipal = var_item_id And 'Tipo de Registro' = "Colisão com dano" || ID_tblPrincipal = var_item_id And 'Tipo de Registro' = "Colisão sem dano" || ID_tblPrincipal = var_item_id And 'Tipo de Registro' = "Quase colisão" || ID_tblPrincipal = var_item_id And 'Tipo de Registro' = "Avistamento"
                                         );
                                         RemoveIf(
                                             'AIRPORTNOW - Colisões/Quase-Colisão/Avistamento',
-                                            ID = var_item.ID
+                                            ID = var_item_id
                                         );
                                         If(
                                             IsBlank(
                                                 LookUp(
                                                     'AIRPORTNOW - Colisões/Quase-Colisão/Avistamento',
-                                                    ID = var_item.ID
+                                                    ID = var_item_id
                                                 )
                                             ),
                                             Navigate(
@@ -431,17 +468,17 @@ Screens:
                                         "Presença",
                                         RemoveIf(
                                             'AIRPORTNOW - FAUNA RELACIONAMENTO',
-                                            ID_tblPrincipal = var_item.ID And 'Tipo de Registro' = "Presença de fauna"
+                                            ID_tblPrincipal = var_item_id And 'Tipo de Registro' = "Presença de fauna"
                                         );
                                         RemoveIf(
                                             'Presença de Fauna',
-                                            ID = var_item.ID
+                                            ID = var_item_id
                                         );
                                         If(
                                             IsBlank(
                                                 LookUp(
                                                     'Presença de Fauna',
-                                                    ID = var_item.ID
+                                                    ID = var_item_id
                                                 )
                                             ),
                                             Navigate(
@@ -458,13 +495,13 @@ Screens:
                                         "Foco",
                                         RemoveIf(
                                             'Formulário de Focos (Atrativos e Vulnerabilidade)',
-                                            ID = var_item.ID
+                                            ID = var_item_id
                                         );
                                         If(
                                             IsBlank(
                                                 LookUp(
                                                     'Formulário de Focos (Atrativos e Vulnerabilidade)',
-                                                    ID = var_item.ID
+                                                    ID = var_item_id
                                                 )
                                             ),
                                             Navigate(
@@ -482,13 +519,16 @@ Screens:
                                     "Desdobramentos",/////////////////////////////////////////////////////////////////////////////////////
                                     Remove(
                                         tbl_desdobramentos,
-                                        var_item
+                                        LookUp(
+                                            tbl_desdobramentos,
+                                            ID = var_item_id
+                                        )
                                     );
                                     If(
                                         IsBlank(
                                             LookUp(
                                                 tbl_desdobramentos,
-                                                ID = var_item.ID
+                                                ID = var_item_id
                                             )
                                         ),
                                         Navigate(

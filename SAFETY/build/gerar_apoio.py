@@ -54,6 +54,22 @@ CAB_EXCLUIR = '''# *************************************************************
 #    nos registros NOVOS. Os registros antigos mantêm o valor sequencial antigo
 #    — e é justamente por isso que a exclusão tem de comparar por <modulo>_id:
 #    é a única chave que vale para os dois conjuntos.
+#
+# 4. TIPO AMBÍGUO DE "var_item" (achado no Verificador de aplicativo, 2026-09-22)
+#    var_item vinha de {var_item: ThisItem} — só que cada um dos módulos que
+#    navega pra cá manda o ThisItem de uma tabela do SharePoint diferente, e os
+#    dois botões extras (Fauna, Desdobramentos) mandam mais duas. O Studio via
+#    ISSO como uma variável só, de tipo "união" das ~9 tabelas — e reprovava
+#    Clear/leitura de campo específico de módulo em cascata (30 erros).
+#    var_item só era lido de duas formas (var_item.ID e var_item.<modulo>_id,
+#    nunca o registro inteiro), então em vez do registro passou-se a mandar só
+#    os dois números já prontos, mesmo tipo (numérico) nos 9 pontos de origem:
+#        var_item_id:    ThisItem.ID            (era var_item.ID)
+#        var_item_chave: ThisItem.<modulo>_id   (era var_item.<modulo>_id, só
+#                                                 nos 7 módulos com filhos)
+#    Esta função (corrigir_excluir) já escreve esses dois nomes; quem manda os
+#    valores são os próprios botões "Excluir" (7 módulos + Fauna + Desdobra-
+#    mentos, em msapp/Src) — corrigidos junto, fora deste script.
 # ************************************************************************************************
 '''
 
@@ -66,9 +82,12 @@ def corrigir_excluir():
     else:
         corpo = txt[txt.index('Screens:'):]
 
-    # 1. bug de cópia
+    # 1. bug de cópia — já sai direto no nome final (var_item_chave), não em
+    #    "var_item.colVei_id": o botão Excluir de cada módulo agora manda
+    #    var_item_chave pronto (ThisItem.<modulo>_id), então não tem mais
+    #    sentido reescrever pra um campo de registro que não existe mais.
     n1 = corpo.count('var_item.derFlu_id')
-    corpo = corpo.replace('var_item.derFlu_id', 'var_item.colVei_id')
+    corpo = corpo.replace('var_item.derFlu_id', 'var_item_chave')
 
     # 2. chave dos filhos, ramo a ramo
     # "Fauna" entra como marca-limite: aquele ramo usa as listas do site de
@@ -89,16 +108,28 @@ def corrigir_excluir():
             saida.append(trecho)
             fim_ant = prox
             continue
-        # só nas RemoveIf de filhos; a verificação final por ID fica intacta
+        # só nas RemoveIf de filhos; a verificação final por ID vira var_item_id
+        # embaixo (passo 2.5), igual nos ramos que não entram aqui.
         def troca(m):
             nonlocal n2
             n2 += 1
-            return m.group(1) + f'var_item.{pfx}_id'
+            return m.group(1) + 'var_item_chave'
         trecho = re.sub(r'(RemoveIf\((?:[^()]|\([^()]*\))*?=\s*)var_item\.ID', troca, trecho)
         saida.append(trecho)
         fim_ant = prox
     saida.append(corpo[fim_ant:])
     corpo = ''.join(saida)
+
+    # 2.5 tipo homogêneo (item 4 do cabeçalho) — o resto de "var_item.ID" (a
+    #     verificação final por ID em todo ramo, e os ramos Fauna/Desdobramentos
+    #     inteiros, cuja chave já É o ID do SharePoint) vira var_item_id. Depois
+    #     desta troca não pode sobrar nenhum "var_item." no arquivo — os únicos
+    #     dois nomes usados são var_item_id e var_item_chave.
+    n_id = corpo.count('var_item.ID')
+    corpo = corpo.replace('var_item.ID', 'var_item_id')
+    sobrou = re.findall(r'var_item\.\w+', corpo)
+    if sobrou:
+        raise SystemExit(f"ScreenExcluir: sobrou referencia var_item.* nao mapeada: {set(sobrou)}")
 
     # 3. navegação para as telas consolidadas
     n3 = 0
@@ -110,8 +141,9 @@ def corrigir_excluir():
 
     open(f"{OUT}/03_ScreenExcluir.pa.yaml", 'w', encoding='utf-8', newline='\n').write(CAB_EXCLUIR + corpo)
     print(f"ScreenExcluir  -> out/03_ScreenExcluir.pa.yaml")
-    print(f"   {n1} refs 'derFlu_id' corrigidas no ramo de Colisão")
-    print(f"   {n2} RemoveIf de filhos passaram a usar <modulo>_id")
+    print(f"   {n1} refs 'derFlu_id' corrigidas no ramo de Colisão (-> var_item_chave)")
+    print(f"   {n2} RemoveIf de filhos passaram a usar var_item_chave")
+    print(f"   {n_id} demais 'var_item.ID' viraram var_item_id (tipo homogêneo, ver item 4 do cabeçalho)")
     print(f"   {n3} navegações apontadas para as telas consolidadas")
 
 

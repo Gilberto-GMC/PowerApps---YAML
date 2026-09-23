@@ -109,7 +109,7 @@ Screens:
                 Properties:
                   BorderColor: =ColorFade(Self.Fill, -15%)
                   Color: =RGBA(255, 255, 255, 1)
-                  DisabledBorderColor: =RGBA(166, 166, 166, 1)
+                  DisabledBorderColor: =nfCorTextoFraco
                   Fill: =RGBA(0, 0, 0, 1)
                   Font: =Font.'Open Sans'
                   HoverBorderColor: =ColorFade(Self.BorderColor, 20%)
@@ -234,7 +234,7 @@ Screens:
                                         Properties:
                                           BorderColor: =ColorFade(Self.Fill, -15%)
                                           Color: =RGBA(255, 255, 255, 1)
-                                          DisabledBorderColor: =RGBA(166, 166, 166, 1)
+                                          DisabledBorderColor: =nfCorTextoFraco
                                           Fill: =RGBA(0, 0, 0, 1)
                                           Font: =Font.'Open Sans'
                                           Height: =30
@@ -247,6 +247,7 @@ Screens:
                                                 Collect(
                                                     col_excPistaImg,
                                                     {
+                                                        dbId: Blank(),
                                                         id: Value(
                                                             First(
                                                                 SortByColumns(
@@ -321,17 +322,17 @@ Screens:
                                                 BorderColor: =ColorFade(Self.Fill, -15%)
                                                 Color: =RGBA(255, 255, 255, 1)
                                                 DisabledBorderColor: =RGBA(0, 0, 0, 0)
-                                                DisabledFill: =RGBA(255, 0, 0, 1)
-                                                Fill: =RGBA(255, 56, 56, 1)
+                                                DisabledFill: =nfCorErro
+                                                Fill: =nfCorErro
                                                 Font: =Font.'Open Sans'
                                                 Height: =25
                                                 HoverBorderColor: =
                                                 HoverColor: =RGBA(255, 255, 255, 1)
-                                                HoverFill: =RGBA(255, 0, 0, 1)
+                                                HoverFill: =nfCorErro
                                                 OnSelect: =Remove(col_excPistaImg,ThisItem)
                                                 PressedBorderColor: =
                                                 PressedColor: =Self.Fill
-                                                PressedFill: =RGBA(255, 0, 0, 1)
+                                                PressedFill: =nfCorErro
                                                 RadiusBottomLeft: =4
                                                 RadiusBottomRight: =4
                                                 RadiusTopLeft: =4
@@ -343,7 +344,7 @@ Screens:
                                     - Label20_544:
                                         Control: Label@2.5.1
                                         Properties:
-                                          BorderColor: =RGBA(0, 0, 0, 1)
+                                          BorderColor: =nfCorBorda
                                           Fill: =RGBA(255, 255, 255, 1)
                                           Font: =Font.'Open Sans'
                                           Height: =20
@@ -358,7 +359,7 @@ Screens:
                                         Properties:
                                           Align: =Align.Center
                                           BorderColor: =RGBA(255, 255, 255, 1)
-                                          Color: =RGBA(166, 166, 166, 1)
+                                          Color: =nfCorTextoFraco
                                           Font: =Font.'Open Sans'
                                           Size: =16
                                           Text: ="Sem fotos para visualizar."
@@ -370,7 +371,7 @@ Screens:
                                   Control: Rectangle@2.3.0
                                   Group: Group120
                                   Properties:
-                                    BorderColor: =RGBA(0, 0, 0, 1)
+                                    BorderColor: =nfCorBorda
                                     BorderThickness: =1
                                     Fill: =RGBA(255, 255, 255, 1)
                                     Height: =553
@@ -381,7 +382,7 @@ Screens:
                                   Control: Label@2.5.1
                                   Group: Group120
                                   Properties:
-                                    BorderColor: =RGBA(0, 0, 0, 1)
+                                    BorderColor: =nfCorBorda
                                     Fill: =RGBA(255, 255, 255, 1)
                                     Font: =Font.'Open Sans'
                                     FontWeight: =FontWeight.Semibold
@@ -397,13 +398,13 @@ Screens:
                                   Group: Group120
                                   Properties:
                                     BorderColor: =If(IsBlank(Self.Text),varBordaDefault)
-                                    Default: =""
-                                    DisabledBorderColor: =RGBA(0, 0, 0, 1)
+                                    Default: =If(var_editandoExcPista, var_registroExcPista.excPista_matricula, "")
+                                    DisabledBorderColor: =nfCorBorda
                                     DisplayMode: =
                                     Font: =Font.'Open Sans'
                                     Height: =30
-                                    HoverBorderColor: =RGBA(0, 0, 0, 1)
-                                    HoverFill: =RGBA(186, 202, 226, 1)
+                                    HoverBorderColor: =nfCorPrimaria
+                                    HoverFill: =nfCorFundoFraco
                                     MaxLength: =10
                                     RadiusBottomLeft: =0
                                     RadiusBottomRight: =0
@@ -418,15 +419,15 @@ Screens:
                                   Group: Group120
                                   Properties:
                                     BorderColor: =If(IsBlank(Self.Selected.Value),varBordaDefault)
-                                    ChevronBackground: =RGBA(0, 0, 0, 1)
+                                    ChevronBackground: =nfCorPrimaria
                                     ChevronFill: =RGBA(255, 255, 255, 1)
                                     ChevronHoverBackground: =ColorFade(RGBA(0, 0, 0, 1), -20%)
                                     ChevronHoverFill: =RGBA(255, 255, 255, 1)
-                                    Default: =""
-                                    DisabledBorderColor: =RGBA(0, 0, 0, 1)
+                                    Default: =If(var_editandoExcPista, var_registroExcPista.excPista_tipOperacao, "")
+                                    DisabledBorderColor: =nfCorBorda
                                     Font: =Font.'Open Sans'
                                     Height: =30
-                                    HoverFill: =RGBA(186, 202, 226, 1)
+                                    HoverFill: =nfCorFundoFraco
                                     Items: |-
                                       =[
                                           "",
@@ -436,11 +437,21 @@ Screens:
                                           "Taxi"
                                       ]
                                     Items.Value: =Value
-                                    OnChange: "=If(\r\n    Self.Selected.Value = \"Sim\",\r\n    UpdateContext({varDisplayAcaoEvasiva: DisplayMode.Edit}),\r\n    UpdateContext({varDisplayAcaoEvasiva: DisplayMode.Disabled})\r\n    \r\n)"
+                                    OnChange: |-
+                                      =If(
+
+                                          Self.Selected.Value = "Sim",
+
+                                          UpdateContext({varDisplayAcaoEvasiva: DisplayMode.Edit}),
+
+                                          UpdateContext({varDisplayAcaoEvasiva: DisplayMode.Disabled})
+
+
+                                      )
                                     PressedColor: =RGBA(255, 255, 255, 1)
-                                    PressedFill: =RGBA(0, 0, 0, 1)
+                                    PressedFill: =nfCorPrimariaEsc
                                     SelectionColor: =RGBA(255, 255, 255, 1)
-                                    SelectionFill: =RGBA(0, 0, 0, 1)
+                                    SelectionFill: =nfCorPrimaria
                                     Size: =12
                                     Width: =555
                                     X: =25
@@ -450,13 +461,13 @@ Screens:
                                   Group: Group120
                                   Properties:
                                     BorderColor: =If(IsBlank(Self.Text),varBordaDefault)
-                                    Default: =""
-                                    DisabledBorderColor: =RGBA(0, 0, 0, 1)
+                                    Default: =If(var_editandoExcPista, var_registroExcPista.excPista_pontoSaida, "")
+                                    DisabledBorderColor: =nfCorBorda
                                     Font: =Font.'Open Sans'
                                     Height: =30
                                     HintText: ="Descreva..."
-                                    HoverBorderColor: =RGBA(0, 0, 0, 1)
-                                    HoverFill: =RGBA(186, 202, 226, 1)
+                                    HoverBorderColor: =nfCorPrimaria
+                                    HoverFill: =nfCorFundoFraco
                                     Mode: =TextMode.MultiLine
                                     RadiusBottomLeft: =0
                                     RadiusBottomRight: =0
@@ -470,7 +481,7 @@ Screens:
                                   Control: Label@2.5.1
                                   Group: Group120
                                   Properties:
-                                    BorderColor: =RGBA(0, 0, 0, 1)
+                                    BorderColor: =nfCorBorda
                                     Font: =Font.'Open Sans'
                                     Height: =20
                                     Italic: =true
@@ -483,7 +494,7 @@ Screens:
                                   Control: Label@2.5.1
                                   Group: Group120
                                   Properties:
-                                    BorderColor: =RGBA(0, 0, 0, 1)
+                                    BorderColor: =nfCorBorda
                                     Font: =Font.'Open Sans'
                                     Height: =20
                                     Italic: =true
@@ -496,7 +507,7 @@ Screens:
                                   Control: Label@2.5.1
                                   Group: Group120
                                   Properties:
-                                    BorderColor: =RGBA(0, 0, 0, 1)
+                                    BorderColor: =nfCorBorda
                                     Font: =Font.'Open Sans'
                                     Height: =20
                                     Italic: =true
@@ -510,13 +521,13 @@ Screens:
                                   Group: Group120
                                   Properties:
                                     BorderColor: =If(IsBlank(Self.Text),varBordaDefault)
-                                    Default: =""
-                                    DisabledBorderColor: =RGBA(0, 0, 0, 1)
+                                    Default: =If(var_editandoExcPista, var_registroExcPista.excPista_distPercorrida, "")
+                                    DisabledBorderColor: =nfCorBorda
                                     Font: =Font.'Open Sans'
                                     Height: =30
                                     HintText: ="Descreva..."
-                                    HoverBorderColor: =RGBA(0, 0, 0, 1)
-                                    HoverFill: =RGBA(186, 202, 226, 1)
+                                    HoverBorderColor: =nfCorPrimaria
+                                    HoverFill: =nfCorFundoFraco
                                     Mode: =TextMode.MultiLine
                                     RadiusBottomLeft: =0
                                     RadiusBottomRight: =0
@@ -530,7 +541,7 @@ Screens:
                                   Control: Label@2.5.1
                                   Group: Group120
                                   Properties:
-                                    BorderColor: =RGBA(0, 0, 0, 1)
+                                    BorderColor: =nfCorBorda
                                     Font: =Font.'Open Sans'
                                     Height: =20
                                     Italic: =true
@@ -543,15 +554,15 @@ Screens:
                                   Group: Group120
                                   Properties:
                                     BorderColor: =If(IsBlank(Self.Selected.Value),varBordaDefault)
-                                    ChevronBackground: =RGBA(0, 0, 0, 1)
+                                    ChevronBackground: =nfCorPrimaria
                                     ChevronFill: =RGBA(255, 255, 255, 1)
                                     ChevronHoverBackground: =ColorFade(RGBA(0, 0, 0, 1), -20%)
                                     ChevronHoverFill: =RGBA(255, 255, 255, 1)
-                                    Default: =""
-                                    DisabledBorderColor: =RGBA(0, 0, 0, 1)
+                                    Default: =If(var_editandoExcPista, var_registroExcPista.excPista_evacEmergencia, "")
+                                    DisabledBorderColor: =nfCorBorda
                                     Font: =Font.'Open Sans'
                                     Height: =30
-                                    HoverFill: =RGBA(186, 202, 226, 1)
+                                    HoverFill: =nfCorFundoFraco
                                     Items: |-
                                       =[
                                           "",
@@ -559,11 +570,21 @@ Screens:
                                           "Não"
                                       ]
                                     Items.Value: =Value
-                                    OnChange: "=If(\r\n    Self.Selected.Value = \"Sim\",\r\n    UpdateContext({varDisplayAcaoEvasiva: DisplayMode.Edit}),\r\n    UpdateContext({varDisplayAcaoEvasiva: DisplayMode.Disabled})\r\n    \r\n)"
+                                    OnChange: |-
+                                      =If(
+
+                                          Self.Selected.Value = "Sim",
+
+                                          UpdateContext({varDisplayAcaoEvasiva: DisplayMode.Edit}),
+
+                                          UpdateContext({varDisplayAcaoEvasiva: DisplayMode.Disabled})
+
+
+                                      )
                                     PressedColor: =RGBA(255, 255, 255, 1)
-                                    PressedFill: =RGBA(0, 0, 0, 1)
+                                    PressedFill: =nfCorPrimariaEsc
                                     SelectionColor: =RGBA(255, 255, 255, 1)
-                                    SelectionFill: =RGBA(0, 0, 0, 1)
+                                    SelectionFill: =nfCorPrimaria
                                     Size: =12
                                     Width: =270
                                     X: =311
@@ -572,7 +593,7 @@ Screens:
                                   Control: Label@2.5.1
                                   Group: Group120
                                   Properties:
-                                    BorderColor: =RGBA(0, 0, 0, 1)
+                                    BorderColor: =nfCorBorda
                                     Font: =Font.'Open Sans'
                                     Height: =20
                                     Italic: =true
@@ -587,13 +608,13 @@ Screens:
                                   Group: Group120
                                   Properties:
                                     BorderColor: =If(IsBlank(Self.Text),varBordaDefault)
-                                    Default: =""
-                                    DisabledBorderColor: =RGBA(0, 0, 0, 1)
+                                    Default: =If(var_editandoExcPista, var_registroExcPista.excPista_posFinalAero, "")
+                                    DisabledBorderColor: =nfCorBorda
                                     Font: =Font.'Open Sans'
                                     Height: =30
                                     HintText: ="Descreva..."
-                                    HoverBorderColor: =RGBA(0, 0, 0, 1)
-                                    HoverFill: =RGBA(186, 202, 226, 1)
+                                    HoverBorderColor: =nfCorPrimaria
+                                    HoverFill: =nfCorFundoFraco
                                     Mode: =TextMode.MultiLine
                                     RadiusBottomLeft: =0
                                     RadiusBottomRight: =0
@@ -607,7 +628,7 @@ Screens:
                                   Control: Label@2.5.1
                                   Group: Group120
                                   Properties:
-                                    BorderColor: =RGBA(0, 0, 0, 1)
+                                    BorderColor: =nfCorBorda
                                     Font: =Font.'Open Sans'
                                     Height: =20
                                     Italic: =true
@@ -621,13 +642,13 @@ Screens:
                                   Group: Group120
                                   Properties:
                                     BorderColor: =If(IsBlank(Self.Text),varBordaDefault)
-                                    Default: =""
-                                    DisabledBorderColor: =RGBA(0, 0, 0, 1)
+                                    Default: =If(var_editandoExcPista, var_registroExcPista.excPista_danosAero, "")
+                                    DisabledBorderColor: =nfCorBorda
                                     Font: =Font.'Open Sans'
                                     Height: =30
                                     HintText: ="Descreva..."
-                                    HoverBorderColor: =RGBA(0, 0, 0, 1)
-                                    HoverFill: =RGBA(186, 202, 226, 1)
+                                    HoverBorderColor: =nfCorPrimaria
+                                    HoverFill: =nfCorFundoFraco
                                     Mode: =TextMode.MultiLine
                                     RadiusBottomLeft: =0
                                     RadiusBottomRight: =0
@@ -641,7 +662,7 @@ Screens:
                                   Control: Label@2.5.1
                                   Group: Group120
                                   Properties:
-                                    BorderColor: =RGBA(0, 0, 0, 1)
+                                    BorderColor: =nfCorBorda
                                     Font: =Font.'Open Sans'
                                     Height: =20
                                     Italic: =true
@@ -655,15 +676,15 @@ Screens:
                                   Group: Group120
                                   Properties:
                                     BorderColor: =If(IsBlank(Self.Selected.Value),varBordaDefault)
-                                    ChevronBackground: =RGBA(0, 0, 0, 1)
+                                    ChevronBackground: =nfCorPrimaria
                                     ChevronFill: =RGBA(255, 255, 255, 1)
                                     ChevronHoverBackground: =ColorFade(RGBA(0, 0, 0, 1), -20%)
                                     ChevronHoverFill: =RGBA(255, 255, 255, 1)
-                                    Default: =""
-                                    DisabledBorderColor: =RGBA(0, 0, 0, 1)
+                                    Default: =If(var_editandoExcPista, var_registroExcPista.excPista_aeroImpraticavel, "")
+                                    DisabledBorderColor: =nfCorBorda
                                     Font: =Font.'Open Sans'
                                     Height: =30
-                                    HoverFill: =RGBA(186, 202, 226, 1)
+                                    HoverFill: =nfCorFundoFraco
                                     Items: |-
                                       =[
                                           "",
@@ -671,11 +692,21 @@ Screens:
                                           "Não"
                                       ]
                                     Items.Value: =Value
-                                    OnChange: "=If(\r\n    Self.Selected.Value = \"Sim\",\r\n    UpdateContext({varDisplayAcaoEvasiva: DisplayMode.Edit}),\r\n    UpdateContext({varDisplayAcaoEvasiva: DisplayMode.Disabled})\r\n    \r\n)"
+                                    OnChange: |-
+                                      =If(
+
+                                          Self.Selected.Value = "Sim",
+
+                                          UpdateContext({varDisplayAcaoEvasiva: DisplayMode.Edit}),
+
+                                          UpdateContext({varDisplayAcaoEvasiva: DisplayMode.Disabled})
+
+
+                                      )
                                     PressedColor: =RGBA(255, 255, 255, 1)
-                                    PressedFill: =RGBA(0, 0, 0, 1)
+                                    PressedFill: =nfCorPrimariaEsc
                                     SelectionColor: =RGBA(255, 255, 255, 1)
-                                    SelectionFill: =RGBA(0, 0, 0, 1)
+                                    SelectionFill: =nfCorPrimaria
                                     Size: =12
                                     Width: =270
                                     X: =311
@@ -684,7 +715,7 @@ Screens:
                                   Control: Label@2.5.1
                                   Group: Group120
                                   Properties:
-                                    BorderColor: =RGBA(0, 0, 0, 1)
+                                    BorderColor: =nfCorBorda
                                     Font: =Font.'Open Sans'
                                     Height: =20
                                     Italic: =true
@@ -698,7 +729,7 @@ Screens:
                                   Control: Label@2.5.1
                                   Group: Group120
                                   Properties:
-                                    BorderColor: =RGBA(0, 0, 0, 1)
+                                    BorderColor: =nfCorBorda
                                     Font: =Font.'Open Sans'
                                     Height: =20
                                     Italic: =true
@@ -712,12 +743,12 @@ Screens:
                                   Group: Group120
                                   Properties:
                                     BorderColor: =If(IsBlank(Self.Text),varBordaDefault)
-                                    Default: =""
-                                    DisabledBorderColor: =RGBA(0, 0, 0, 1)
+                                    Default: =If(var_editandoExcPista, var_registroExcPista.excPista_descOcorrencia, "")
+                                    DisabledBorderColor: =nfCorBorda
                                     Font: =Font.'Open Sans'
                                     Height: =160
-                                    HoverBorderColor: =RGBA(0, 0, 0, 1)
-                                    HoverFill: =RGBA(186, 202, 226, 1)
+                                    HoverBorderColor: =nfCorPrimaria
+                                    HoverFill: =nfCorFundoFraco
                                     Mode: =TextMode.MultiLine
                                     RadiusBottomLeft: =0
                                     RadiusBottomRight: =0
@@ -732,7 +763,7 @@ Screens:
                       Control: Rectangle@2.3.0
                       Group: Group16.2.1_6
                       Properties:
-                        BorderColor: =RGBA(0, 0, 0, 1)
+                        BorderColor: =nfCorBorda
                         BorderThickness: =1
                         Fill: =RGBA(0, 0, 0, 0)
                         Height: =45
@@ -743,7 +774,7 @@ Screens:
                       Control: Label@2.5.1
                       Group: Group16.2.1_6
                       Properties:
-                        BorderColor: =RGBA(0, 0, 0, 1)
+                        BorderColor: =nfCorBorda
                         Fill: =RGBA(255, 255, 255, 1)
                         Font: =Font.'Open Sans'
                         Height: =25
@@ -758,16 +789,16 @@ Screens:
                       Group: Group16.2.1_6
                       Properties:
                         BorderColor: =If(IsBlank(Self.Selected.Value),varBordaDefault)
-                        ChevronBackground: =RGBA(0, 0, 0, 1)
+                        ChevronBackground: =nfCorPrimaria
                         ChevronFill: =RGBA(255, 255, 255, 1)
                         ChevronHoverBackground: =ColorFade(RGBA(0, 0, 0, 1), -20%)
                         ChevronHoverFill: =RGBA(255, 255, 255, 1)
-                        Default: =""
+                        Default: =If(var_editandoExcPista, Mid(var_registroExcPista.excPista_hora, Find(":", var_registroExcPista.excPista_hora) + 1, 2), "min")
                         DisplayMode: =
                         FocusedBorderThickness: =2
                         Font: =Font.'Open Sans'
                         Height: =30
-                        HoverFill: =RGBA(186, 202, 226, 1)
+                        HoverFill: =nfCorFundoFraco
                         Items: |-
                           =["",
                               "00",
@@ -837,9 +868,9 @@ Screens:
                               );*/
                         Items.Value: =Value
                         PressedColor: =RGBA(255, 255, 255, 1)
-                        PressedFill: =RGBA(0, 0, 0, 1)
+                        PressedFill: =nfCorPrimariaEsc
                         SelectionColor: =RGBA(255, 255, 255, 1)
-                        SelectionFill: =RGBA(0, 0, 0, 1)
+                        SelectionFill: =nfCorPrimaria
                         Size: =11
                         Width: =77
                         X: =257
@@ -850,7 +881,7 @@ Screens:
                       Properties:
                         Align: =Align.Center
                         AutoHeight: =true
-                        BorderColor: =RGBA(0, 0, 0, 1)
+                        BorderColor: =nfCorBorda
                         Font: =Font.'Open Sans'
                         FontWeight: =FontWeight.Bold
                         Height: =50
@@ -866,16 +897,16 @@ Screens:
                         BorderColor: |-
                           =//RGBA(0; 0; 0; 1)
                           If(IsBlank(Self.Selected.Value),varBordaDefault)
-                        ChevronBackground: =RGBA(0, 0, 0, 1)
+                        ChevronBackground: =nfCorPrimaria
                         ChevronFill: =RGBA(255, 255, 255, 1)
                         ChevronHoverBackground: =ColorFade(RGBA(0, 0, 0, 1), -20%)
                         ChevronHoverFill: =RGBA(255, 255, 255, 1)
-                        Default: =""
+                        Default: =If(var_editandoExcPista, Left(var_registroExcPista.excPista_hora, Find(":", var_registroExcPista.excPista_hora) - 1), "hor")
                         DisplayMode: =
                         FocusedBorderThickness: =2
                         Font: =Font.'Open Sans'
                         Height: =30
-                        HoverFill: =RGBA(186, 202, 226, 1)
+                        HoverFill: =nfCorFundoFraco
                         Items: |-
                           =[
                               "",
@@ -910,9 +941,9 @@ Screens:
                               );*/
                         Items.Value: =Value
                         PressedColor: =RGBA(255, 255, 255, 1)
-                        PressedFill: =RGBA(0, 0, 0, 1)
+                        PressedFill: =nfCorPrimariaEsc
                         SelectionColor: =RGBA(255, 255, 255, 1)
-                        SelectionFill: =RGBA(0, 0, 0, 1)
+                        SelectionFill: =nfCorPrimaria
                         Size: =11
                         Width: =77
                         X: =167
@@ -921,7 +952,8 @@ Screens:
                       Control: Classic/DatePicker@2.6.0
                       Group: Group16.2.1_6
                       Properties:
-                        BorderColor: =RGBA(0, 0, 0, 1)
+                        BorderColor: =nfCorBorda
+                        DefaultDate: =If(var_editandoExcPista, var_registroExcPista.excPista_data, "")
                         DisplayMode: =
                         FocusedBorderThickness: =2
                         Font: =Font.'Open Sans'
@@ -936,7 +968,7 @@ Screens:
                       Control: Rectangle@2.3.0
                       Group: Group104_17
                       Properties:
-                        BorderColor: =RGBA(0, 0, 0, 1)
+                        BorderColor: =nfCorBorda
                         BorderThickness: =1
                         Fill: =RGBA(0, 0, 0, 0)
                         Height: =45
@@ -947,7 +979,7 @@ Screens:
                       Control: Label@2.5.1
                       Group: Group104_17
                       Properties:
-                        BorderColor: =RGBA(0, 0, 0, 1)
+                        BorderColor: =nfCorBorda
                         Fill: =RGBA(255, 255, 255, 1)
                         Font: =Font.'Open Sans'
                         Height: =22
@@ -962,13 +994,13 @@ Screens:
                       Group: Group104_17
                       Properties:
                         BorderColor: =If(IsBlank(Self.Text),varBordaDefault)
-                        Default: =""
-                        DisabledBorderColor: =RGBA(0, 0, 0, 1)
+                        Default: =If(var_editandoExcPista, var_registroExcPista.excPista_local, "")
+                        DisabledBorderColor: =nfCorBorda
                         Font: =Font.'Open Sans'
                         Height: =30
                         HintText: ="Descreva..."
-                        HoverBorderColor: =RGBA(0, 0, 0, 1)
-                        HoverFill: =RGBA(186, 202, 226, 1)
+                        HoverBorderColor: =nfCorPrimaria
+                        HoverFill: =nfCorFundoFraco
                         RadiusBottomLeft: =0
                         RadiusBottomRight: =0
                         RadiusTopLeft: =0
@@ -981,7 +1013,7 @@ Screens:
                       Control: Rectangle@2.3.0
                       Group: Group100_4
                       Properties:
-                        BorderColor: =RGBA(0, 0, 0, 1)
+                        BorderColor: =nfCorBorda
                         BorderThickness: =1
                         Fill: =RGBA(0, 0, 0, 0)
                         Height: =45
@@ -992,7 +1024,7 @@ Screens:
                       Control: Label@2.5.1
                       Group: Group100_4
                       Properties:
-                        BorderColor: =RGBA(0, 0, 0, 1)
+                        BorderColor: =nfCorBorda
                         Fill: =RGBA(255, 255, 255, 1)
                         Font: =Font.'Open Sans'
                         Height: =22
@@ -1009,22 +1041,22 @@ Screens:
                       Group: Group100_4
                       Properties:
                         BorderColor: =If(IsBlank(Self.Selected.Value),varBordaDefault)
-                        ChevronBackground: =RGBA(0, 0, 0, 1)
+                        ChevronBackground: =nfCorPrimaria
                         ChevronFill: =RGBA(255, 255, 255, 1)
                         ChevronHoverBackground: =ColorFade(RGBA(0, 0, 0, 1), -20%)
                         ChevronHoverFill: =RGBA(255, 255, 255, 1)
-                        Default: =""
-                        DisabledBorderColor: =RGBA(0, 0, 0, 1)
+                        Default: =If(var_editandoExcPista, var_registroExcPista.excPista_condPista, "")
+                        DisabledBorderColor: =nfCorBorda
                         Font: =Font.'Open Sans'
                         Height: =30
-                        HoverFill: =RGBA(186, 202, 226, 1)
+                        HoverFill: =nfCorFundoFraco
                         Items: =["","Molhada","Seca"]
                         Items.Value: =Value
                         OnChange: =
                         PressedColor: =RGBA(255, 255, 255, 1)
-                        PressedFill: =RGBA(0, 0, 0, 1)
+                        PressedFill: =nfCorPrimariaEsc
                         SelectionColor: =RGBA(255, 255, 255, 1)
-                        SelectionFill: =RGBA(0, 0, 0, 1)
+                        SelectionFill: =nfCorPrimaria
                         Size: =11
                         Width: =110
                         X: =572
@@ -1033,7 +1065,7 @@ Screens:
                       Control: Rectangle@2.3.0
                       Group: Group106_3
                       Properties:
-                        BorderColor: =RGBA(0, 0, 0, 1)
+                        BorderColor: =nfCorBorda
                         BorderThickness: =1
                         Fill: =RGBA(0, 0, 0, 0)
                         Height: =45
@@ -1044,7 +1076,7 @@ Screens:
                       Control: Label@2.5.1
                       Group: Group106_3
                       Properties:
-                        BorderColor: =RGBA(0, 0, 0, 1)
+                        BorderColor: =nfCorBorda
                         Fill: =RGBA(255, 255, 255, 1)
                         Font: =Font.'Open Sans'
                         Height: =22
@@ -1059,13 +1091,13 @@ Screens:
                       Group: Group106_3
                       Properties:
                         BorderColor: =If(IsBlank(Self.Text),varBordaDefault)
-                        Default: =""
-                        DisabledBorderColor: =RGBA(0, 0, 0, 1)
+                        Default: =If(var_editandoExcPista, var_registroExcPista.excPista_teto, "")
+                        DisabledBorderColor: =nfCorBorda
                         Font: =Font.'Open Sans'
                         Height: =30
                         HintText: ="Teto (pés):"
-                        HoverBorderColor: =RGBA(0, 0, 0, 1)
-                        HoverFill: =RGBA(186, 202, 226, 1)
+                        HoverBorderColor: =nfCorPrimaria
+                        HoverFill: =nfCorFundoFraco
                         MaxLength: =5
                         RadiusBottomLeft: =0
                         RadiusBottomRight: =0
@@ -1080,22 +1112,22 @@ Screens:
                       Group: Group106_3
                       Properties:
                         BorderColor: =If(IsBlank(Self.Selected.Value),varBordaDefault)
-                        ChevronBackground: =RGBA(0, 0, 0, 1)
+                        ChevronBackground: =nfCorPrimaria
                         ChevronFill: =RGBA(255, 255, 255, 1)
                         ChevronHoverBackground: =ColorFade(RGBA(0, 0, 0, 1), -20%)
                         ChevronHoverFill: =RGBA(255, 255, 255, 1)
-                        Default: =""
-                        DisabledBorderColor: =RGBA(0, 0, 0, 1)
+                        Default: =If(var_editandoExcPista, var_registroExcPista.excPista_condMeteo, "")
+                        DisabledBorderColor: =nfCorBorda
                         Font: =Font.'Open Sans'
                         Height: =30
-                        HoverFill: =RGBA(186, 202, 226, 1)
+                        HoverFill: =nfCorFundoFraco
                         Items: =["","IMC","VMC"]
                         Items.Value: =Value
                         OnChange: =
                         PressedColor: =RGBA(255, 255, 255, 1)
-                        PressedFill: =RGBA(0, 0, 0, 1)
+                        PressedFill: =nfCorPrimariaEsc
                         SelectionColor: =RGBA(255, 255, 255, 1)
-                        SelectionFill: =RGBA(0, 0, 0, 1)
+                        SelectionFill: =nfCorPrimaria
                         Size: =11
                         Width: =90
                         X: =712
@@ -1105,13 +1137,13 @@ Screens:
                       Group: Group106_3
                       Properties:
                         BorderColor: =If(IsBlank(Self.Text),varBordaDefault)
-                        Default: =""
-                        DisabledBorderColor: =RGBA(0, 0, 0, 1)
+                        Default: =If(var_editandoExcPista, var_registroExcPista.excPista_visibilidade, "")
+                        DisabledBorderColor: =nfCorBorda
                         Font: =Font.'Open Sans'
                         Height: =30
                         HintText: ="Visibilidade (m):"
-                        HoverBorderColor: =RGBA(0, 0, 0, 1)
-                        HoverFill: =RGBA(186, 202, 226, 1)
+                        HoverBorderColor: =nfCorPrimaria
+                        HoverFill: =nfCorFundoFraco
                         MaxLength: =5
                         RadiusBottomLeft: =0
                         RadiusBottomRight: =0
@@ -1337,7 +1369,11 @@ Screens:
                               //Insert de dados no database------------------------------------------------------------------------------
                               Patch(
                                   '14.6-tbl_ExcPista',
-                                  Defaults('14.6-tbl_ExcPista'),
+                                  If(
+                                      var_editandoExcPista,
+                                      var_registroExcPista,
+                                      Defaults('14.6-tbl_ExcPista')
+                                  ),
                                   {
                                       excPista_id: var_excPistaId,
                                       excPista_data: dtpExcPistaDataCadastro.SelectedDate,
@@ -1365,13 +1401,36 @@ Screens:
                                   col_excPistaImg,
                                   Patch(
                                       '14.6-tbl_ExcPistaImg',
-                                      Defaults('14.6-tbl_ExcPistaImg'),
+                                      If(
+                                          IsBlank(dbId),
+                                          Defaults('14.6-tbl_ExcPistaImg'),
+                                          LookUp(
+                                              '14.6-tbl_ExcPistaImg',
+                                              ID = dbId
+                                          )
+                                      ),
                                       {
                                           excPistaImg_idOcorrencia: var_excPistaId,
                                           excPistaImg_imagem: img
                                       }
                                   )
                               );
+                          If(
+                              var_editandoExcPista,
+                              ForAll(
+                                  Filter(
+                                      col_excPistaImg_orig,
+                                      !(dbId in col_excPistaImg.dbId)
+                                  ),
+                                  Remove(
+                                      '14.6-tbl_ExcPistaImg',
+                                      LookUp(
+                                          '14.6-tbl_ExcPistaImg',
+                                          ID = dbId
+                                      )
+                                  )
+                              )
+                          );
                               Select(ButtonResetFormExcPista);
                               Navigate(
                                   ScreenSucesso,

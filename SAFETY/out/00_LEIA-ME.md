@@ -41,6 +41,11 @@ de `ScreenSucesso`, `ScreenErro`, `ScreenExcluir`, `ScreenDesdobramentos`,
 
 ### Passo 4 — Telas de apoio e corrigidas
 
+Antes de colar `08_ScreenFauna.pa.yaml`: crie uma tela nova em branco chamada
+**`ScreenFaunaForms`** (ela não existe no app hoje — ver item 19) e cole
+`10_ScreenFaunaForms.pa.yaml` nela. Só depois disso cole `08_ScreenFauna.pa.yaml`,
+porque os botões de `ScreenFauna` navegam pra lá.
+
 Agora que as 7 existem, cole (qualquer ordem):
 
 | Arquivo | Tela |
@@ -50,6 +55,7 @@ Agora que as 7 existem, cole (qualquer ordem):
 | `05_ScreenFOD.pa.yaml` | `ScreenFOD` |
 | `06_ScreenCSO.pa.yaml` | `ScreenCSO` |
 | `07_ScreenVistoriaSafetyFauna.pa.yaml` | `ScreenVistoriaSafetyFauna` |
+| `10_ScreenFaunaForms.pa.yaml` | `ScreenFaunaForms` **(colar antes de `08_ScreenFauna`, ver item 19)** |
 | `08_ScreenFauna.pa.yaml` | `ScreenFauna` |
 | `09_ScreenAcessIndFaunaForms.pa.yaml` | `ScreenAcessIndFaunaForms` |
 
@@ -326,6 +332,347 @@ reto e Segoe UI preservados.
 dos blocos. Os controles continuam exatamente onde estavam; o que mudou é como os
 blocos se distribuem no espaço da tela.
 
+### 10 · `View_safety = 1` destrava o seletor de aeroporto (2026-09-22)
+
+A permissão `View_safety` (lida em `App.OnStart` como `varPerfilSafety`) já existia
+e já controlava duas coisas: mostrar os itens **CSO** e **Vistoria Safety Fauna** no
+menu, e um painel dentro do formulário do FOD. Mas o **seletor de aeroporto** — o
+combo de filtro em cada galeria, mais o combo de Bloco ao lado — continuava travado
+só pelo `Perfil` (`Base`/`Bloco`/`Sede`), sem olhar essa permissão. Um usuário com
+`Perfil = "Base"` e `View_safety = 1` via o combo travado no próprio aeroporto,
+como se não tivesse a permissão.
+
+Corrigido nas **11 telas** que têm esse seletor (os 7 módulos de ocorrência, FOD,
+CSO, Vistoria Safety Fauna e Fauna), em dois pontos:
+
+- **O combo** — `DisplayMode` passou a considerar `varPerfilSafety`: com
+  `View_safety = 1`, o combo fica editável mesmo com `Perfil = "Base"` ou `"Bloco"`.
+- **Os dados** — `varEscopoAero` e `varEscopoBloco` (definidas uma vez em
+  `App.OnStart`, usadas por todas as galerias) passaram a ficar `Blank()` quando
+  `varPerfilSafety` é verdadeiro. Sem isso o combo destravado seria cosmético: a
+  consulta continuaria presa ao aeroporto do usuário. Agora quem tem a permissão
+  enxerga qualquer aeroporto, igual ao perfil `Sede`.
+
+**O que não mudou**: o combo de aeroporto/bloco do **formulário de cadastro**
+(`cmbFrm<Mod>Aeroporto`, onde se escolhe em nome de qual aeroporto uma nova
+ocorrência é registrada) continua travado só pelo `Perfil`. `View_safety` é uma
+permissão de leitura — não dá a quem a tem o direito de lançar ocorrências como se
+fosse de outro aeroporto.
+
+### 11 · Paleta trocada para o tema Asur (2026-09-22)
+
+O roxo `#5E22F3` ("Cores Motiva", com comentário dizendo ter sido extraído de um
+tema de PPT/Word) saiu de `App.Formulas`. Entrou o teal `#00879A` + cinzas slate
+que o **Due Diligence** já usa em produção (`ScreenDueDiligence.yaml`,
+`ScreenDueDiligencePainel.yaml`) — pedido do usuário, que apontou o Due Diligence
+como referência do sistema de design da Asur. `nfCorErro`/`nfCorOk`/`nfCorAlerta`
+passaram a usar as cores documentadas em `PAINEL_INDICADORES.md` como "as mesmas
+cores do app" (`#D93025` / `#118D5C` / `#C47F00`).
+
+> Aviso: o comentário antigo dizia que o roxo veio do tema oficial
+> (`Base PPT ASUR Temp.pptx` / `Timbrado ASUR_temp.docx`). Se essa extração
+> estiver certa, pode haver duas paletas Asur válidas para contextos diferentes
+> (documento vs. aplicativo) — vale confirmar antes de considerar o roxo
+> definitivamente descartado.
+
+Só os **tokens** (`nfCorPrimaria`, `nfCorPrimariaEsc`, `nfCorTexto`,
+`nfCorTextoFraco`, `nfCorFundoFraco`, `nfCorBorda`, `nfCorErro`, `nfCorOk`,
+`nfCorAlerta`) mudaram de valor — isso já recolore sozinho tudo que os referencia
+(cabeçalhos, faixa de aeroporto no cadastro, faixa divisória sob os filtros).
+
+**2026-09-22, segunda rodada — recolorido em todas as 25 telas-fonte** (os 7
+módulos × lista/forms/detalhes, mais FOD, CSO, Vistoria Safety Fauna e Fauna):
+todo campo que usava cor fixa (principalmente `RGBA(0,0,0,1)` preto, e em
+FOD/CSO/Vistoria o cinza-azulado `RGBA(215,223,240,…)`/`RGBA(245,245,245,1)`,
+e em Fauna o azul-marinho `RGBA(0,18,107,1)`) passou a usar token: borda,
+fundo em foco/hover, seta do combo, seleção e estados de erro. 1.514 trocas de
+propriedade ao todo. **Nada de posição, tamanho, ordem, texto ou quantidade de
+componentes mudou** — só cor, em cima da estrutura original de cada tela.
+
+O primeiro teste desse recolorido no Derramamento (piloto) revelou um problema
+de sobreposição de campos que **já existia antes desta mudança** (ver aviso
+abaixo) — cores fortes deixaram um bug antigo visível. Uma primeira tentativa
+de correção (remover 21 retângulos decorativos + deslocar campos) foi revertida
+a pedido do usuário: "não gostei, volte a versão original, só mude as cores em
+todas as telas". É o que este item descreve — estrutura 100% original, só cor.
+
+> ⚠️ **Bug de sobreposição conhecido, não corrigido nesta entrega** — no
+> formulário de Derramamento, e **muito provavelmente nos outros 6 módulos
+> também**: conferido que em todos eles o corpo rolável do formulário começa
+> em `Y` absoluto entre 13 e 56 — menor ou perto da altura da faixa
+> `cntFaixaAero<Mod>` (52px), que foi inserida por cima sem deslocar nada para
+> baixo. Com a cor antiga (preto fino) isso passava despercebido; com cor mais
+> forte fica visível. Ver o print enviado pelo usuário em 2026-09-22. Correção
+> disponível (a mesma que foi revertida no Derramamento: deslocar `Y` em
+> +52px nos campos afetados) — avisar antes de reaplicar em qualquer módulo.
+
+### 13 · Cabeçalho preto em FOD/CSO/Vistoria/Fauna/frmHome (2026-09-22)
+
+O segundo teste ("não veio com a cor") mostrou o cabeçalho de FOD ainda preto.
+Causa: os **21 cabeçalhos dos 7 módulos** já viravam `nfCorPrimaria`
+automaticamente porque `build/gerar.py` reescreve `Fill` de todo controle
+`ContainerHeader*` (função `passe_layout`, "identidade visual Motiva" da
+entrega anterior). Mas **FOD, CSO, Vistoria Safety Fauna, Fauna e `frmHome`
+nunca passam por `gerar.py`** — FOD/CSO/Vistoria vão por `gerar_forms.py`
+(que só mexe em filtro de segurança, não em cor), Fauna também, e `frmHome`
+não passa por nenhum gerador. O cabeçalho dessas 5 telas sempre foi preto
+fixo e nunca esteve amarrado ao token, em nenhuma entrega anterior.
+
+Corrigido diretamente nos 5 arquivos-fonte: `Fill` do container de cabeçalho
+(`HeaderContainer1` / `HeaderContainer1_1` / `HeaderContainer1_2` em
+FOD/CSO/Vistoria, `ContainerHeader_11` em Fauna, `ContainerHeader_8` em
+`frmHome`) passou de `RGBA(0,0,0,1)` para `nfCorPrimaria`. Fauna também tinha
+a faixa divisória de 10px (`Rectangle6_3`) na mesma situação — corrigida
+junto, mesmo tratamento que os 7 módulos já tinham.
+
+### 14 · `frmHome` recriada (2026-09-22)
+
+`frmHome` nunca fez parte desta entrega — nunca foi alterada, por isso nunca
+teve versão em `out/`. O usuário apagou a tela por engano no Studio em
+2026-09-22. [00_frmHome.pa.yaml](00_frmHome.pa.yaml) é o conteúdo original do
+export (2026-08-31) com três correções:
+
+1. Recolorido do item 13 (só o `Fill` do cabeçalho, `ContainerHeader_8`).
+2. **Bug de laço de redirect, achado ao incluir `frmHome` na varredura pela
+   primeira vez**: o logo Motiva do próprio cabeçalho fazia
+   `Navigate(frmHome, ...)` sem `Set(var_redirectAN, Blank())` antes — o mesmo
+   bug que o item 8 da entrega original já tinha corrigido em **todas as
+   outras telas**, mas `frmHome` nunca passou por aquela correção porque
+   nunca esteve em `out/`. Corrigido com o mesmo padrão das demais.
+3. Nenhum outro campo, posição ou fórmula foi tocado.
+
+**Colar por último**: os botões do menu navegam para os módulos pelo nome
+(`ScreenModColisaoVeiculos` etc.), que precisam existir antes — já existem no
+app do usuário, então a ordem só importa se o app estiver sendo remontado do
+zero.
+
+> `build/auditar_nav.py` acusa 2 falsos positivos em `frmHome` (linhas 435 e
+> 565, `Navigate(LookUp(col_NavTelas, ...))`): é navegação dinâmica, a tela é
+> escolhida em tempo de execução pelo `Id` do módulo, então o script não
+> consegue resolver o nome estaticamente. Comportamento correto, não é bug.
+
+### 15 · `Container38_3` sem `Width` em `ScreenColisaoVeiculosDetalhes` (2026-09-22)
+
+O print da tela de Detalhes de Colisão de Veículos mostrou os três blocos
+(`Ocorrido em:` / `Descrição` / `Cadastrado por:`) sobrepostos — as três
+colunas usam `X` absoluto (17 / 345 / 875) dentro de um container
+`ManualLayout` (`Container38_3`) que **não tinha `Width` definido**, ao
+contrário de todo container irmão nesta e nas outras telas. Sem largura, o
+container não tinha onde acomodar colunas que vão até X=1075.
+
+**Pré-existente, não relacionado a cor** — nunca toquei posição ou tamanho
+nesta tela antes disso. Corrigido com `Width: =Parent.Width`, a mesma
+convenção já usada pelo container pai. Não removi nem reposicionei nada.
+
+Testei as outras 6 telas de Detalhes e as 7 de Lista/Forms atrás do mesmo
+padrão (container `ManualLayout` com filho a `X > 400` sem `Width` próprio) —
+nenhuma outra ocorrência encontrada. Não é o mesmo bug do item 12 (aquele é a
+faixa de aeroporto sem espaço reservado); isso aqui parece ter sido um erro
+pontual desta tela específica, não sistêmico.
+
+### 16 · `ScreenExcluir`, `ScreenAnaliseSafety` e `ScreenDesdobramentos` recoloridas (2026-09-22)
+
+As três eram telas de apoio nunca tocadas por esta entrega, então tinham
+ficado de fora do lote de cor do item 11 (que só cobriu os 7 módulos + FOD/
+CSO/Vistoria/Fauna). Mesmo tratamento das demais: cor via token, cabeçalho
+preto (`ContainerHeader_4` em AnaliseSafety, `ContainerHeader_3` em
+Desdobramentos — ScreenExcluir não tem cabeçalho desse padrão) e verificação
+do bug de sobreposição — nenhuma ocorrência nas três.
+
+`ScreenDesdobramentos` também tinha o **mesmo bug de laço de redirect** da
+`frmHome` (item 14): o logo do cabeçalho navegava para `frmHome` sem limpar
+`var_redirectAN`. Corrigido com o mesmo padrão. É a tela de anotação/anexo
+aberta pelo botão "Desdobramentos" na lista de cada módulo — nunca tinha
+estado em `out/`, por isso nunca tinha passado por essa checagem.
+[00_ScreenDesdobramentos.pa.yaml](00_ScreenDesdobramentos.pa.yaml) é a
+entrega, mesma lógica da `frmHome`: conteúdo original + essas correções, mais
+nada tocado.
+
+### 17 · Botão "Editar" habilitado nos 7 módulos (2026-09-22)
+
+**O que havia antes**: em FOD, CSO e Vistoria Safety Fauna o "Editar" já
+funcionava de verdade (Form nativo, `EditForm`/`SubmitForm`). Nos **7 módulos
+de ocorrência**, o botão existia visualmente mas estava **sempre travado e sem
+nenhuma ação** (`DisplayMode.Disabled`, `OnSelect` vazio) — não era uma
+condição bloqueando, era um recurso nunca implementado. Esses módulos não
+usam Form nativo: gravam campo a campo com `Patch()` direto, então "editar"
+precisou ser construído do zero: carregar o registro escolhido, pré-preencher
+os campos, e no Salvar decidir entre atualizar o registro existente ou criar
+um novo.
+
+**Decisões do usuário (2026-09-22)**: habilitar nos 7 módulos de uma vez;
+incluir os registros filhos (envolvidos/fotos/itens atingidos) na edição,
+não só os campos do pai; mesma regra de permissão de quem já pode ver o
+registro (sem trava nova).
+
+**O que cada módulo libera** — só campos "simples" (um controle, uma coluna),
+nunca campos compostos por dois controles, condicionados a outro campo,
+checkbox virando texto, ou sub-registro codificado como string:
+
+| Módulo | Campos editáveis | Filhos reconciliáveis |
+|---|---|---|
+| Colisão de Veículos | 7 (todos) | Envolvidos + Fotos |
+| Excursão de Pista | 16 (todos) | Fotos |
+| Incursão de Pista | 11 (todos os do pai) | Fotos — **Envolvidos só leitura** |
+| Jet Blast | 13 (todos) | Fotos + Itens atingidos |
+| Derramamento | 21 de ~27 | Fotos |
+| Interferência Externa | 15 de ~45 ("Dados gerais" só) | Fotos |
+| Ocorrência de Solo | 26 de ~30 | Fotos |
+
+**Por que Derramamento/Interferência Externa/Ocorrência de Solo ficaram
+parciais**: têm campos que juntam dois controles (`local` = Aero **ou**
+Outros, um dos dois sempre vazio), blocos inteiros condicionados por uma
+variável em vez de um controle (Balão/Laser da Interferência Externa), ou
+dado codificado como texto solto (`ocoSolo_danIdentific` é até 23 checkboxes
+concatenadas numa string só; `ocoSolo_opEnvolv01`–`04` guardam um "envolvido"
+inteiro como `"Nome: X;-;Matrícula: Y;-;..."` dentro da própria coluna, sem
+ser registro filho de verdade). Decifrar essas strings de volta pra
+pré-preencher um campo é o mesmo tipo de risco de silenciosamente corromper
+o formato — ficaram como estão, só visíveis, não editáveis.
+
+**Por que a "Envolvidos" da Incursão de Pista ficou só leitura**: ao gravar,
+funde três sub-blocos (aeronave/veículo/pessoa) na mesma coluna — ex.:
+`incPistaEnv_acaoEvasiva: aer_acaoEvasiva & vei_acaoEvasiva & pes_acaoEvasiva`,
+só um dos três nunca é vazio. Mesma classe de risco dos campos compostos do
+pai. A coleção é explicitamente esvaziada ao abrir a edição (`Clear(...)`),
+pra garantir que não sobre nenhum resíduo de uma sessão anterior que viraria
+filho novo desta ocorrência ao salvar.
+
+**Limitação encontrada ao validar o build**: `Classic/DatePicker` usa
+`DefaultDate`, não `Default` (corrigido — o campo `data` de todo módulo usa a
+propriedade certa). Mas `Classic/ComboBox` (controles com prefixo `drop`
+nesta base — diferente de `Classic/DropDown`, prefixo `cmb`) **não aceita
+pré-preenchimento simples** — precisaria de `DefaultSelectedItems` com uma
+tabela no formato exato de `Items`/`DisplayFields`, e sem conseguir testar no
+Studio, montar essa tabela errada é risco sem necessidade. Esses campos
+**continuam sendo gravados normalmente ao salvar** — só não vêm com o valor
+atual preenchido ao abrir a edição; é preciso reselecionar. Afetados:
+
+| Módulo | Campo(s) ComboBox sem pré-preenchimento |
+|---|---|
+| Colisão de Veículos | Mapa de grade (as duas letras) |
+| Derramamento | Fluído, Origem do vazamento, Companhia aérea |
+| Jet Blast | Operador aéreo |
+| Ocorrência de Solo | Companhia aérea, Impacto na operação, Natureza da atividade, Tipo de equipe |
+
+**Mecanismo de conciliação dos filhos** (evita duplicar ou perder registro):
+cada linha da coleção carrega um `dbId` — vazio se foi adicionada nesta
+edição, ou o ID real do SharePoint se já existia antes. Ao salvar: `dbId`
+vazio grava novo; `dbId` preenchido atualiza o existente. Uma cópia da
+coleção como estava ao abrir a edição (`<coleção>_orig`) permite achar o que
+foi removido durante a edição e apagar do SharePoint.
+
+**Onde mexeu**: `build/gerar_editar.py` (novo arquivo, todo o mecanismo) +
+uma linha em `build/gerar.py` (a checagem que localiza o `Patch()` do pai em
+`cirurgia_gravacao` foi afrouxada para aceitar `Defaults(` em qualquer parte
+do argumento, não só no início — necessário porque `gerar_editar.py` já
+embrulha esse argumento antes do `cirurgia_gravacao` rodar).
+
+> ⚠️ **Não testado no Studio.** Validado o que dá pra validar sem abrir o
+> Studio: YAML válido, propriedades conferidas contra o dicionário de 42
+> exports, navegação, init das visões, build idempotente. O que **não** dá
+> pra confirmar sem testar de verdade: se o pré-preenchimento mostra o valor
+> certo em cada campo, se salvar uma edição atualiza o registro certo (e não
+> cria um duplicado), se remover uma foto/envolvido durante a edição
+> realmente apaga do SharePoint e não só da tela. **Teste com um registro que
+> não seja de produção, ou que você possa conferir/desfazer, antes de
+> confiar nisso com dado real.**
+
+**Achado testando no Studio (2026-09-22)**: exatamente o tipo de erro que o
+aviso acima previa. A conciliação dos filhos usava `ThisRecord.dbId` — válido
+em Power Fx em geral, mas **não reconhecido nesta versão/app** ("'ThisRecord'
+não é reconhecido"). Corrigido para referenciar o campo direto (`dbId`, sem
+prefixo), o mesmo padrão que o resto desta base inteira já usa dentro de
+`ForAll` (ex.: `colVeiEnv_nome: nome`). Reconstruído e revalidado nos 7
+módulos. Reforça o aviso acima: ainda não é hora de assumir que o resto está
+certo sem testar campo a campo.
+
+### 18 · `ScreenAcessIndFaunaForms` recolorida (2026-09-22)
+
+Última tela que faltava — ficou de fora de todas as rodadas de cor porque não
+é gerada por nenhum script (`out/09_*`, manual, mesma situação do
+`01_App.pa.yaml`). Diferente das outras: já tinha uma paleta azul própria
+(`#3860B2`/`#00126B` e variações), aplicada antes desta sessão — não preto
+puro. Mapeei essas cores específicas para os mesmos tokens (61 propriedades),
+mais o cabeçalho (`ContainerHeader_32.Fill`). Nenhum campo, posição ou
+fórmula tocado.
+
+### 19 · Erros achados pelo Verificador de aplicativo do Studio (2026-09-22)
+
+Depois do item 17 (botão Editar), usei o **Verificador de aplicativo** do
+próprio Studio (ícone de estetoscópio, painel direito — acesso direto ao app
+ligado, só para *análise*; toda correção foi feita aqui nos arquivos-fonte,
+não editando dentro do Studio) para achar erros de fórmula reais, não só o que
+os meus próprios checadores locais cobrem. Achou **410 erros** em 12 telas.
+Catalogados um a um, caem em 4 causas — as 3 primeiras eram bugs meus, desta
+mesma sessão (item 17); a 4ª e a 5ª (CSO/Vistoria) já eram conhecidas.
+
+**a) Coleção com dois formatos incompatíveis (321 erros — 48/48/48/48/41/45/43
+nos 7 módulos)**
+O botão "Editar" (item 17) carrega cada filho com `ClearCollect(col, ForAll(...,
+{dbId: ID, ...}))`. O botão "Adicionar", que já existia antes desta sessão,
+grava com `Collect(col, {id: <contador local>, ...})`. Duas formas de povoar a
+**mesma** coleção com colunas diferentes (`dbId` só numa, `id` só na outra) — o
+Studio unifica o tipo de `col_xxx` no app inteiro e reprova `Clear`/
+`ClearCollect` em cascata, em toda tela que usa essa coleção. Corrigido nos 9
+filhos reconciliáveis: as duas formas agora escrevem `dbId` **e** `id`
+(`build/gerar_editar.py`, função `onselect_editar` e nova `aplicar_dbid_blank`;
+aplicado aos arquivos já gerados por `build/corrigir_shape_colecoes.py`, script
+de uso único, não faz parte do pipeline de regeneração).
+
+**b) Indentação do reset do "Cadastrar" (cosmético, sem erro funcional)**
+O texto que zera `var_editando<mod>`/`var_registro<mod>` ao clicar em
+"Cadastrar" saía com 1 espaço a mais de recuo (contava o `=` do início da
+fórmula como se fosse recuo). YAML de bloco `|-` tolera — não quebrava nada —
+mas ficava um espaço perdido no início de 6 linhas por módulo. Corrigido na
+origem (`aplicar_lista`) e nos arquivos já gerados.
+
+**c) `var_item` com tipo ambíguo em `ScreenExcluir` (30 erros) + `Remove` quebrado (8 pontos)**
+Os botões "Excluir" de 9 origens diferentes (7 módulos + Fauna + Desdobramentos)
+navegam pra `ScreenExcluir` passando `{var_item: ThisItem, ...}` — `ThisItem` é
+um registro de uma tabela do SharePoint diferente em cada origem. Mesmo
+problema do item (a), só que numa variável de contexto em vez de coleção:
+`var_item.colVei_id`, `var_item.derFlu_id` etc. viravam "tipo não encontrado".
+`var_item` só era lido de duas formas (`.ID` e `.<mod>_id`, nunca o registro
+inteiro) — exceto em **8 pontos** que eu só achei ao ler o arquivo depois da
+1ª correção: `Remove(tabela, var_item)`, passando o registro inteiro direto
+pro `Remove`. Como parte da correção troquei `var_item` por dois números
+homogêneos:
+- `var_item_id: ThisItem.ID` (substitui `var_item.ID`)
+- `var_item_chave: ThisItem.<mod>_id` (substitui `var_item.<mod>_id`, só nos
+  7 módulos com filhos)
+
+e os 8 `Remove(tabela, var_item)` viraram
+`Remove(tabela, LookUp(tabela, ID = var_item_id))`. Mudado em `build/gerar_apoio.py`
+(função `corrigir_excluir`, que já fazia a reescrita por ramo — só troquei o
+que ela escreve) e nos 9 botões de origem, em `msapp/Src`. Script de uso único:
+`build/corrigir_var_item.py`.
+
+**d) `ScreenFauna` (21 erros) — a tela de cadastro nunca foi colada**
+Todos os 21 eram "o nome não é válido" para `ScreenFaunaForms` e pra controles
+dela (ex.: `FormInspPistaItensDetalhesPRESENCA`) — porque essa tela **nunca
+esteve em `out/`**: existe em `msapp/Src/ScreenFaunaForms.pa.yaml` (5.452
+linhas) mas nenhum script a levava pra `out/`, e ninguém colou ela no Studio.
+Sem ela colada, o botão "Cadastrar"/"Afugentar" de Fauna literalmente não abre
+nada — não era só o Verificador reclamando, era funcionalidade quebrada.
+Entreguei como `10_ScreenFaunaForms.pa.yaml` (ver Passo 4), com o mesmo bug de
+laço de redirect do logo (item 8) corrigido. **Pendência:** ainda está com a
+paleta azul original, não a teal da Asur — ver aviso no cabeçalho do arquivo.
+
+Junto, achei um bug de cópia separado (não fazia parte dos 410, achei lendo o
+código ao lado): em `ScreenAcessIndFaunaForms`, uma `BorderColor` comparava
+`CountRows(col_incPistaImg)` — coleção de **Incursão de Pista**, que não
+existe nesta tela — em vez de `col_aceIndFauGalleryImg`, a coleção certa (as
+outras 3 referências na mesma tela já usavam a certa). Corrigido em
+`msapp/Src` e em `09_ScreenAcessIndFaunaForms.pa.yaml`.
+
+**Não mexidos — já documentados, aguardando sua decisão (ver "Pendências" abaixo):**
+- `ScreenCSO` (16 erros do Verificador): mesma causa do item 2 de
+  "Pendências" — `Aeroporto`/`'Data/Hora'` não existem no esquema exportado de
+  `'1 - CSO'`. Você já confirmou manter como está.
+- `ScreenVistoriaSafetyFauna` (20 erros do Verificador): mesma causa do item 1
+  de "Pendências" — lista de `'1 - CSO'`, grava em `tbl_vistoriaSafetyFauna`.
+
 ---
 
 ## Bugs de cópia encontrados no export
@@ -350,9 +697,10 @@ Todos corrigidos nos arquivos entregues.
    formulário grava em `tbl_vistoriaSafetyFauna`. A tela lista reunião de CSO e
    salva vistoria; o que é gravado nunca aparece. Detalhes no cabeçalho de
    `07_ScreenVistoriaSafetyFauna.pa.yaml`.
-2. **`ScreenCSO`** — as fórmulas usam `Aeroporto` e `'Data/Hora'` em `'1 - CSO'`,
-   mas o esquema exportado só tem `Data` e nenhuma coluna de aeroporto. Confirmar
-   no SharePoint se o cache do `.msapp` está velho ou se o filtro nunca funcionou.
+2. ~~**`ScreenCSO`**~~ — **decidido em 2026-09-22: manter como está.** As fórmulas
+   usam `Aeroporto` e `'Data/Hora'` em `'1 - CSO'`, mas o esquema exportado só tem
+   `Data` e nenhuma coluna de aeroporto — o usuário confirmou que não é para mexer,
+   sem verificar no SharePoint. Nenhum código desta tela foi alterado.
 3. **Dados legados** — `<mod>_id` passa a ser igual ao `ID` do SharePoint só nos
    registros **novos**. Os antigos mantêm o valor sequencial. Por isso a exclusão
    compara por `<mod>_id`: é a única chave válida para os dois conjuntos. Se quiser
