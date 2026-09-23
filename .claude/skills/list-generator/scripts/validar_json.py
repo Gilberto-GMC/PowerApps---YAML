@@ -70,6 +70,11 @@ def validar(doc):
         rot = f"coluna '{interno or i}'"
         if not INTERNAL.match(str(interno)):
             e(f"{rot}: internalName fora do padrao minusculo snake_case")
+        if len(str(interno)) > 32:
+            e(
+                f"{rot}: internalName com {len(str(interno))} caracteres; o SharePoint corta o nome "
+                "interno em 32 e o DataField do Power Apps deixa de gravar a coluna"
+            )
         if str(interno).lower() in nativas:
             e(f"{rot}: duplica coluna nativa do SharePoint")
         if interno in nomes:

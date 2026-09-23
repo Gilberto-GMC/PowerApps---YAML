@@ -59,6 +59,10 @@ Cada item de `colunas` tem **apenas** `internalName` e `schemaXml`. Não existe 
 - `nomeLista`: começa com `tb_` e segue em camelCase — sem espaço, acento, hífen ou caractere
   especial. Ex.: `tb_controleSobrecarga`, `tb_avsecOcorrencias`.
 - `internalName`: minúsculas, `snake_case`, sem acento, espaço, hífen ou caractere especial.
+  **No máximo 32 caracteres**: o SharePoint corta o nome interno nesse limite sem avisar, e o
+  formulário do Power Apps (que grava pelo `DataField` = nome interno) deixa de salvar a coluna.
+  Encurte o nome, não o significado: `gatilho_indicacao_agente_publico`, não
+  `gatilho_indicado_funcionario_publico`.
 - Em cada coluna, `internalName`, `DisplayName`, `Name` e `StaticName` são **literalmente
   idênticos**. Nunca gere rótulo amigável.
   - Certo: `DisplayName='id_fk_ocorrencia' Name='id_fk_ocorrencia' StaticName='id_fk_ocorrencia'`
