@@ -1906,6 +1906,301 @@ Impacto global: `Frotas/scrFrotaPainel` usa `Text(locDisponivel / locTotal, "0%"
 no KPI de disponíveis — mesmo padrão, conferir. Regra: prévia montada fora do
 Power Apps não prova formatação; o número tem que ser conferido na tela real.
 
+## `" #"` em propriedade de linha única vira comentário YAML e corta a fórmula (2026-09-15)
+
+- Projeto/tela: DueDiligence / `ScreenDueDiligence`, `htmlDdHistoricoVazio.HtmlText`.
+- Sintoma: depois de colar a tela, o Studio acusa "Caracteres inesperados" e
+  "Valor Text esperado". A fórmula aparece cortada em
+  `...background:#f9fafb;border:1px dashed`, sem o resto do HTML e sem a aspa final.
+
+Causa confirmada: a propriedade estava em linha única
+(`HtmlText: ="<div style='...;border:1px dashed #d1d5db;...'>...</div>"`). Em
+escalar YAML sem aspas, espaço seguido de `#` abre comentário: tudo a partir de
+` #d1d5db` foi descartado na colagem. O `background:#f9fafb` passou porque o `#`
+vem colado aos dois-pontos, sem espaço antes.
+
+É a regra irmã do `": "` (seção de 2026-09-03), com uma diferença que a torna
+pior: comentário é YAML válido, então o `yaml.safe_load` **não reclama** — só
+entrega o valor truncado. O defeito ficou no repositório desde a primeira
+versão, e o export do Studio devolveu o texto já cortado, que parecia edição do
+usuário.
+
+Correção: promover a propriedade a bloco `|-`, onde `#` é texto literal.
+
+Validação preventiva (`DueDiligence/validar_due_diligence.py`):
+1. em toda linha `Chave: =...` fora de bloco `|-`, reprovar espaço ou tab
+   seguido de `#`;
+2. depois do parse, reprovar fórmula com string ou identificador citado ainda
+   aberto no fim — pega qualquer truncamento, venha de onde vier.
+
+Impacto global: HTML e cores `#RRGGBB` escritos em linha única, em qualquer
+tela gerada. Cor dentro de `RGBA(...)` não tem o problema; `"... #fff"` com
+espaço antes tem.
+
+## `IfError(Patch(...), Notify(...))` só aceita tipos diferentes fora de ramo de `If` (2026-09-15)
+
+- Projeto/tela: DueDiligence / `ScreenDueDiligence`, `frmDdDesdobramento.OnSuccess`
+  (histórico da reclassificação de risco).
+- Sintoma: "Tipo de argumento inválido (Boolean). Esperando um valor Record, em
+  vez disso", apontando o `Notify` do fallback.
+
+Causa confirmada pela comparação com a mesma tela: `IfError(Patch(...),
+Notify(...))` mistura Record (`Patch`) e Boolean (`Notify`). O Studio aceita
+quando o `IfError` é elo de uma cadeia `;` (ex.: primeiro comando do corpo de um
+`With`), e o `frmDdSolicitante.OnSuccess` usa exatamente isso há semanas. Dentro
+de um ramo `If(condição, IfError(...))`, o resultado precisa de tipo único e o
+Studio recusa.
+
+Correção: `If(condição, If(IsError(Patch(...)), Notify(...)))`. `IsError`
+devolve Boolean em qualquer posição e já estava comprovado em
+`Mapa de Alocação/scrMapaPatio`.
+
+Validação preventiva (`DueDiligence/validar_due_diligence.py`, grupo "IfError
+aninhado com tipos compatíveis"): reprovar `IfError(Patch|Remove|Collect(...))`
+quando ele é argumento direto de `If`/`Switch`. Os 14 usos comprovados, em cadeia
+ou corpo de `With`, continuam passando.
+
+Impacto global: qualquer `IfError` de gravação escrito como ramo de `If`. Na
+dúvida, `If(IsError(...), ...)`.
+
+## Motor com resultado vazio e fluxo que exige valor: solicitação trava sem erro (2026-09-16)
+
+- Projeto/tela: DueDiligence / `ScreenDueDiligence` + fluxos DD01/DD02.
+- Achado de auditoria, ainda sem ocorrência relatada.
+
+O motor de fluxo terminava em `""` quando a classificação da contraparte não
+batia com nenhum ramo, e a categoria era identificada pelo **texto** exibido
+("Fornecedor", "Órgão da administração pública"). Uma edição de texto na lista
+de parâmetros deixava o fluxo vazio. O app gravava `Aguardando Terceiro`; o DD01,
+que só confere status e IDs, enviava o Forms; o DD02, que exige `FLUXO III`,
+recusava a resposta. Resultado: solicitação parada, sem erro visível para
+ninguém.
+
+Regras que ficam:
+1. **Motor de decisão não termina em vazio.** O ramo "não identificado" escolhe
+   o caminho seguro (aqui, análise do Compliance) e fica visível.
+2. **Pré-condição de um fluxo tem de ser garantida por quem grava.** Se o DD02
+   exige `FLUXO III` para `Aguardando Terceiro`, o app não pode gravar esse
+   status com outro fluxo, e a tela deve apontar registros que já estão assim.
+3. **Comparar parâmetro pelo código estável, nunca pelo rótulo.** O rótulo é
+   editável na lista; o código é contrato.
+
+Mesma auditoria, lado da interface: um resumo com três estados ("aguardando",
+número, sim/não) mostrava "AGUARDANDO" em aprovação automática, que nunca terá
+resposta. Cartão de status precisa de um estado explícito "não se aplica" e
+precisa ler o valor **gravado** quando a tela está em visualização.
+
+## Nome interno com mais de 32 caracteres: o formulário não grava e não avisa (2026-09-16)
+
+- Projeto/lista: DueDiligence / `tb_dueDiligence`, colunas
+  `gatilho_representacao_orgao_publico` (35) e
+  `gatilho_indicado_funcionario_publico` (36).
+- Sintoma relatado: registro criado com as respostas preenchidas; ao abrir em
+  Ver ou Editar, as duas perguntas voltavam vazias. Nenhum erro no Studio nem na
+  gravação.
+
+Causa: o SharePoint limita o nome interno a 32 caracteres e corta o excedente,
+mesmo com `AddFieldInternalNameHint` no `CreateFieldAsXml`. O nome de exibição
+continua inteiro. As fórmulas (`ThisItem.coluna`, `DataSourceInfo`) resolvem
+pelo nome de exibição e funcionam; o `DataField` do card é o nome interno. Com o
+nome inteiro, o card não corresponde a nenhuma coluna e o `SubmitForm`
+simplesmente não grava o valor. A prova veio do próprio print: o campo vizinho,
+de 25 caracteres, gravou "Sim"; só os dois acima de 32 ficaram vazios.
+
+Correção: `DataField` com o nome cortado (`gatilho_indicado_funcionario_pub`),
+mantendo as fórmulas com o nome de exibição.
+
+Validação preventiva:
+- `.claude/skills/list-generator` (regra e `scripts/validar_json.py`): reprovar
+  `internalName` com mais de 32 caracteres;
+- `DueDiligence/validar_due_diligence.py`: reprovar `DataField` acima de 32 e
+  comparar os `DataField` com o nome interno efetivamente gravado.
+
+Impacto global: toda lista gerada antes da regra. A varredura de 2026-09-16 só
+achou essas duas colunas no repositório.
+
+## Cirurgia por regex sobre texto mascarado: o literal some da busca e do resultado (2026-09-17)
+
+Projeto Inspeções, `build/gerar_leve.py`. Para não tocar em código comentado nem em
+strings, o gerador localiza os padrões numa cópia **mascarada** do YAML (strings e
+comentários viram espaços, posições preservadas) e aplica a troca no texto original.
+Três armadilhas pagas nesse dia:
+
+1. **O padrão não pode citar o conteúdo de uma string.** `'7.4-tbl_InspPista'` e
+   `"ID"` viram `'                '` e `"  "` na busca: casam zero vezes. O padrão
+   escreve `'[^']*'` / `"[^"]*"` e o literal de verdade é conferido à parte, num
+   regex `verificar` aplicado ao trecho **original** de cada match — match que não
+   confirma o literal é pulado, não substituído (o mesmo padrão casava o rótulo
+   certo `"-INSP-TPS-ITEM-"` e o errado `"-INSP-PAT-ITEM-"`).
+2. **Grupo capturado tem de vir do texto original**, nunca do mascarado — senão a
+   substituição injeta os espaços da máscara no lugar do literal.
+3. **Grupo de indentação é `[ \t]*`, não `\s*`.** `(\n(\s*))ForAll\(` engoliu a
+   linha de comentário acima do `ForAll` (mascarada, ela é só espaços), e o
+   comentário reapareceu três vezes no resultado.
+
+Regra irmã: identificador entre aspas simples (`'ID_item (ID_item0)'`) também é
+mascarado — pelo mesmo motivo (o parêntese dentro dele quebraria o balanceamento).
+
+## Contexto passado por `Navigate` é escrita na tela de DESTINO (2026-09-17)
+
+`Navigate(frmX, transição, {var_a: 1})` escreve `var_a` no escopo de **frmX**, não da
+tela que chama. Um checador de "variável escrita e nunca lida" que atribui essa
+escrita à origem acusa falso positivo (a origem nunca lê mesmo) e deixa passar o
+caso real (frmX não lê). O App Checker lista corretamente
+`frmRelatorioVistoVeic.var_detalhaItens` como não usada embora a única escrita
+esteja em `frmCheckListGenericoEQP`. Ao remover a variável morta, a chave sai do
+registro do `Navigate` na tela de origem. Corolário: `UpdateContext` numa tela para
+"preparar" outra (`Var_IDinspTPS` em frmHomeZPA antes de ir para frmHomeTPS) não faz
+nada — variável de contexto não atravessa telas; só o terceiro argumento do
+`Navigate` atravessa.
+
+## `IsBlank(x) || StartsWith(col, x)` é só `StartsWith(col, Text(x))` (2026-09-17)
+
+`StartsWith(col, "")` é verdadeiro para toda linha (lição 2026-08-31), então o guarda
+`IsBlank(x) ||` não muda o resultado — só derruba a delegação. Trocar por
+`StartsWith(col, Text(x))` (o `Text()` garante `""` quando o combo está vazio) é uma
+reescrita **semanticamente idêntica** e delegável; não precisa do `Switch` de
+`Filter`s, que só é necessário quando a condição não tem um "elemento neutro"
+(ex.: `ID = Value(txt)`). Para datas o neutro é um piso/teto fixo:
+`col >= Coalesce(dtp.SelectedDate, Date(2000, 1, 1))`.
+
+## Preparar formulário de outra tela antes do `Navigate` não é confiável (2026-09-17)
+
+`ResetForm(FormZpa); NewForm(FormZpa)` em frmHomeZPA, com `FormZpa` em frmFormZPA:
+com `delayloadscreens` a tela de destino pode nem estar carregada, e a referência
+força o carregamento dela inteira (App Checker `CrossScreenEventDependencies`). O
+lugar da preparação é o `OnVisible` da tela de destino, guiado por um valor passado
+no contexto do `Navigate` (`{var_zpa_modo: "novo"}`) e zerado no fim do próprio
+`OnVisible`. Cópia entre telas deixa lixo do tipo `Reset(AddMediaButtonD3)` (controle
+de outra tela) em telas que não têm nada a ver — remover.
+
+## Entrega por lotes: allowlist com validade por lote (2026-09-17)
+
+Quando a mesma origem gera entregas cumulativas (`entregar.sh A|AB|ABC|ABCD`), o que
+é aceitável no lote B (referências entre telas que o lote D corrige) tem de reprovar
+no lote D. Cada entrada de allowlist leva `"ate": "B"` ou `"desde": "C"`, e o
+checador filtra pelo lote em curso (`LOTE` no ambiente). Entrada declarada que não
+ocorre continua reprovando — inclusive quando "some" por ter mudado de lote.
+
+## Cartão oculto na mesma linha do formulário empurra o campo visível (2026-09-18)
+
+- **Projeto/tela:** DueDiligence, `ScreenDueDiligence` (`frmDdSolicitante`,
+  `Form@2.4.4` com `SnapToColumns = false`).
+- **Sintoma:** Aeroporto (`X=0`, `Y=0`) e Razão social (`X=1`, `Y=0`), cada um
+  com meia largura, apareceram um embaixo do outro, os dois na coluna esquerda.
+  A linha seguinte, com as mesmas larguras, saiu lado a lado.
+- **Causa confirmada pelo print:** os 17 cartões ocultos (`Visible = false`) do
+  formulário também estavam em `X=0`, `Y=0`, com `Width = Parent.Width`. Dentro
+  da linha, os cartões seguem a ordem de `X` e depois a do YAML, e o formulário
+  quebra a linha pela largura mesmo dos cartões ocultos: o primeiro oculto de
+  largura total depois do Aeroporto quebrou a linha, e a Razão social (`X=1`, a
+  última da fila) começou uma linha nova à esquerda.
+- **Correção:** cartões ocultos numa linha só deles (`Y = 200`), longe da grade
+  visível. Não muda nada na tela nem na gravação.
+- **Validação preventiva:** grupo "Linhas do formulário sem cartão oculto" no
+  `validar_due_diligence.py`: nenhum cartão com `Visible = false` pode ter o
+  mesmo `Y` de um cartão visível.
+
+## Anexo com `Items.Value = Id` abre endereço inexistente (2026-09-17)
+
+- **Projeto/tela:** DueDiligence, `ScreenDueDiligence` (galeria do histórico,
+  controle `Attachments@2.3.0`).
+- **Sintoma:** clicar no anexo abre
+  `https://pafeblobprod….blob.core.windows.net/…/web/%252fLists%252f…` e o
+  navegador mostra `BlobNotFound`. Nenhum erro no app nem no Verificador.
+- **Causa confirmada:** o controle abre o que estiver em `Items.Value`. Com
+  `=Id`, o valor é o caminho interno do arquivo no SharePoint, que o Power Apps
+  procura no armazenamento temporário dele — onde o arquivo não existe. O
+  mapeamento foi feito pelo painel de propriedades do Studio, não por fórmula.
+- **Correção:** `Items.Value: =AbsoluteUri`, o endereço completo do arquivo no
+  SharePoint. `=Value` também abre, mas passa pelo cache do Power Apps, que
+  expira; `AbsoluteUri` é permanente.
+- **Validação preventiva:** grupo "Anexos abrem pelo link do SharePoint" no
+  `validar_due_diligence.py`: todo controle `Attachments@*` das telas precisa ter
+  `Items.Value` vazio (padrão) ou `=AbsoluteUri`.
+
+## Converter escalar entre aspas em bloco `|-` pode mudar a fórmula sem nenhum checador ver (2026-09-17)
+
+O Studio grava como `"=...\n..."` (escalar entre aspas) toda fórmula que tem uma linha
+só de espaços ou que termina em quebra de linha — o emissor YAML dele nunca escreve
+esses casos como bloco. Para cirurgia, o gerador converte em bloco `|-`, e dois
+detalhes mudam o valor:
+
+- linha só de espaços escrita como linha vazia perde os espaços (`'    '` vira `''`);
+- `|-` corta a quebra final; valor que termina em uma quebra precisa de `|`.
+
+Escrever a linha só de espaços com a indentação do bloco + os espaços é YAML válido e
+relê o valor exato; leitores e escritores de bloco usam uma regra só: ao ler,
+`linha[base:]`; ao escrever, indentar toda linha não vazia. A conversão se prova
+relendo o bloco com um parser YAML (documento terminado em `\n`, como no arquivo
+real) e, se não bater, deixa a propriedade entre aspas como o Studio gravou.
+
+Pior que o espaço perdido: o leitor de propriedade de linha única devolvia o escalar
+entre aspas **cru**, com `\n` e `\"` literais. O corpo de um relatório HTML foi movido
+assim para o `OnSelect` e passou pelo checador de sintaxe; só apareceu porque uma
+entrada de allowlist parou de ocorrer. Leitor tem de decodificar o escalar (ou
+abortar), e troca de texto num escalar entre aspas tem de abortar.
+
+Checadores que olham texto não veem nada disso. Comparar **por valor** (os dois lados
+lidos como YAML, propriedade a propriedade) pega: (1) propriedade que muda só em
+espaço em branco é sempre efeito colateral do ferramental; (2) numa propriedade com
+mudança real, trecho de linhas em branco que ganhou ou perdeu espaços também; (3) o
+conjunto de propriedades alteradas/novas/removidas é gravado numa lista revisada por
+lote e qualquer diferença reprova (`build/checar_valores.py`).
+
+## Hora e minuto em dropdown: branco vira 00:00 em três lugares, e filtrar a lista não valida ordem (2026-09-18)
+
+- Projeto/tela: REA (Resposta à Emergência) / `ScreenAPH`, 9 horários do formulário de APH, cada um com data + dropdown de hora + dropdown de minuto.
+- Sintoma relatado: os operadores "erram muito" a sequência de horas. Nenhum erro do Studio. Uma remoção com chegada 14:31, saída 14:32 e retorno 14:33 foi aceita, e a galeria tinha registro às 00:00.
+
+Causa confirmada pela leitura do export. São três defeitos independentes que produzem 00:00 sem ninguém escolher:
+
+1. **`Update` com `Value(Hora.Selected.Value)`.** Com a hora em branco, `Value(Blank())` é 0, e o card grava a data às 00:00. O `Required` do card não pega, porque o `Update` nunca fica em branco quando a data está preenchida (e a data nasce preenchida).
+2. **`DefaultSelectedItems: [Text(Hour(Parent.Default), "00")]` em modo edição.** Num registro antigo sem aquele horário, `Hour(Blank())` é 0, e o dropdown **mostra "00"**. A validação do botão (`IsBlank(Hora.Selected.Value)`) passa e o Salvar grava um horário que ninguém digitou.
+3. **Default de registro novo `[0]` (número) contra itens de texto (`"00"`).** O resultado depende de como o controle trata o valor que não casa. Não é contrato.
+
+E a ordem era "garantida" filtrando as opções de cada lista pelo campo anterior (`Value(Value) >= hora_anterior - 1`). Isso não valida nada:
+
+- a folga de −1 h e o filtro de minuto só com hora igual aceitam 13:55 depois de 14:50;
+- depois da meia-noite o "00" some, porque a data do campo seguinte nasce igual à do primeiro;
+- corrigir um campo de cima tira da lista a hora já escolhida embaixo;
+- no bloco "em voo" o filtro estava invertido em relação à ordem da tela.
+
+Correção aplicada (`REA/build/gerar_aph.py`):
+
+- `Update` só monta a data/hora quando data, hora e minuto estão preenchidos e o card está visível; senão devolve branco e o `Required` passa a funcionar;
+- `DefaultSelectedItems: If(newMode Or IsBlank(ThisItem.<coluna>), Blank(), [Text(Hour(ThisItem.<coluna>), "00")])`;
+- listas completas, sem filtro;
+- a ordem é validada no Salvar, par a par, e **cada campo mostra a própria mensagem** ("Está antes do horário de acionamento da ambulância (18/09 14:15)"), com dica de meia-noite quando a diferença passa de 12 h;
+- a data de cada campo nasce igual à do campo **anterior**, não à do primeiro;
+- a borda vermelha, que era fixa, passou a ser só do campo com problema.
+
+Validação preventiva: `REA/build/verificar_aph.sh` reprova `Hour(Parent.Default)`, `Minute(Parent.Default)` e `Value(HourValueN.Selected.Value), Second(`. No export original a regra acusa 26 ocorrências; na entrega, zero.
+
+**Regra geral:** filtro de opções é conforto, nunca validação. Ordem entre campos se valida no envio, com a mensagem no campo que está errado. E todo `Value()`, `Hour()` ou `Minute()` sobre algo que pode estar em branco precisa de guarda **antes** (lição "`Blank() = 0`", 2026-08-27).
+
+Impacto global: o mesmo trio data/hora/minuto existe em `ScreenCheckListREA`, `ScreenCheckListVeiculoCCI`, `ScreenCheckListERSCI`, `ScreenCheckListEpiEpr`, `ScreenCheckListSme`, `ScreenAcionamentosPlemPrai`, `ScreenOcorrenciasNaoAeronauticas` e `ScreenTesteContatos` (REA). Conferir os três pontos em cada uma.
+
+## Excel Online aceita uma condição por consulta: a segunda derruba o `Filter` em tempo de execução (2026-09-18)
+
+- Projeto/tela: REA / `ScreenAPH`, `OnVisible` e `cmbAeroporto.OnChange`. A fonte é `Cessionarios`, uma tabela do Excel Online (Business).
+- Mensagem (Studio, logo depois de colar a tela):
+  `Erro ao tentar recuperar dados da rede: [Cessionarios] A operação solicitada é inválida. Resposta do Servidor: [Cessionarios] Cláusula de filtro inválida: operação sem suporte. No momento, há suporte apenas para 'eq', 'ne', 'contém', 'startswith' ou 'endswith' únicos.`
+
+Causa confirmada: a entrega acrescentou uma segunda condição a um `Filter` que tinha uma só:
+
+```powerfx
+Filter(Cessionarios, AeroportoDeConcessao = cmbAeroporto.Selected.IATA, SituacaoDaConcessao = "Ativa")
+```
+
+O conector do Excel delega o `Filter` ao servidor, mas só com **uma** comparação simples (`eq`, `ne`, `contains`, `startswith`, `endswith`). Com duas, o servidor recusa a consulta inteira. Não é o aviso amarelo de delegação: é erro de rede, e a coleção fica vazia. A sintaxe estava certa e todos os verificadores locais passaram; o defeito é do conector, não da fórmula.
+
+Correção: voltar a consulta para uma condição só (a do export original). O filtro `SituacaoDaConcessao = "Ativa"` continua valendo em memória, no `Items` do combo, sobre a coleção já carregada.
+
+Validação preventiva: `REA/build/checar_excel.py` lê as fontes Excel de `msapp/References/DataSources.json` (ApiId `shared_excelonlinebusiness`). Ele reprova todo `Filter`/`LookUp`/`CountIf`/`RemoveIf` sobre elas com mais de uma condição ou com `And`/`Or`/`&&`/`||` na condição. Foi provado nos dois sentidos: acusa as 2 fórmulas da entrega com defeito e passa o export original e a correção. Está no `REA/build/verificar_aph.sh`.
+
+**Regra:** antes de acrescentar condição a uma consulta, confirme o conector da fonte em `DataSources.json`. SharePoint combina condições; Excel Online, não. Para Excel, a consulta ao servidor leva uma condição e o resto do filtro roda sobre a coleção.
+
 ## Coleção ou variável de contexto povoada por pontos com formatos diferentes: o Studio unifica o tipo e reprova tudo (2026-09-22)
 
 - Projeto/tela: SAFETY / `ScreenModColisaoVeiculos` e os outros 6 módulos (botões Cadastrar e Editar), `ScreenExcluir` (30 erros), `ScreenFauna` (21) e `ScreenAcessIndFaunaForms` (2). Achado no Verificador de aplicativo do Studio, 410 erros de fórmula.
