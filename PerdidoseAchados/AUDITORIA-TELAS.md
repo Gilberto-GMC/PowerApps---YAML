@@ -329,26 +329,27 @@ sobre fundo escuro, e aplicar petroleo os tornaria invisiveis.
 
 Depois desta passada, nenhum `Button@0.0.45` do app depende mais do tema.
 
-### PENDENTE — duas alturas na ScreenConsultListar a decidir
+### RESOLVIDO — duas alturas na ScreenConsultListar (24/09/2026)
 
-Estado atual mantido por decisao do Douglas (24/09/2026): "deixe como enviei,
-depois analisamos com mais calma". Nada foi alterado. Registrado aqui porque o
-efeito nao e visivel na tela vazia e some facil entre colagens.
+Ficou aberto por um dia: a `Table2_5.Height` estava presa em `=40` (mostrava so o
+primeiro objeto do registro) e a `HtmlTextRastreio.Height` em `=0` (a rastreabilidade
+pedida pelo gerente Silvio nunca desenhava, apesar do `Visible` correto).
 
-| Controle | Hoje | Antes | Efeito de hoje |
-|---|---|---|---|
-| `Table2_5.Height` | `=40` | `=Self.AllItemsCount * 52` | com `TemplateSize: =50` e `ShowScrollbar: =false`, um registro com varios objetos mostra so o primeiro; os demais ficam inalcancaveis |
-| `HtmlTextRastreio.Height` | `=0` | `=If(ThisItem.IsSelected, 46, 0)` | o bloco de rastreabilidade nunca renderiza, mesmo selecionado — `Visible` continua correto, mas altura zero nao desenha nada |
+Nao foram restauradas as formulas antigas — as duas dependiam de `Y` e de
+`Self.AllItemsCount`, e nenhuma das duas sobrevive a uma colagem. A galeria foi
+reconstruida em AutoLayout, e hoje as alturas saem da contagem no DADO:
 
-Se restaurar, `HtmlTextRastreio.Y` volta junto para
-`=Table2_5.Y + Table2_5.Height`: o `=40` de hoje so faz sentido enquanto a
-`Table2_5` for fixa em 40.
+| Controle | Hoje |
+|---|---|
+| `Table2_5.Height` | `=CountRows(Filter(col_itensPAconsulta, ID_fk = ThisItem.ID)) * 52` |
+| `HtmlTextRastreio.Height` | `=If(<tem rastreio>, 56, 0)` |
 
-O item 2 desliga na pratica a rastreabilidade pedida pelo gerente Silvio
-(e-mail Mercia 15/09/26). Conferir antes de apresentar a funcionalidade a area.
+`<tem rastreio>` = `ThisItem.IsSelected And (!IsBlank(declarante) Or !IsBlank(empresa_declarante)
+Or !IsBlank(tipo_origem) Or !IsBlank(encontrado_em))` — registro legado, sem nenhum dos quatro
+campos, nao abre o bloco em vez de mostrar quatro travessoes.
 
-Hipotese provavel da origem: o Studio troca formula por literal quando o
-controle e redimensionado com o mouse.
+A causa provavel do `=40` e do `=0` continua valendo como licao: **o Studio troca formula
+por literal quando o controle e redimensionado com o mouse.**
 
 ### Troca de marca: MOTIVA sai, ASUR entra (24/09/2026)
 
