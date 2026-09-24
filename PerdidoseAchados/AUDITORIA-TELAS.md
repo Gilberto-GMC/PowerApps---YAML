@@ -445,3 +445,25 @@ Dentro do container: `Parent.TemplateWidth` vira `Parent.Width`, e
 Telas que ainda usam posicionamento absoluto e teriam o mesmo problema numa
 recolagem: `ScreenEntregaListar`, `ScreenInventario`, `ScreenInventarioSeparar`.
 Hoje funcionam porque os valores foram digitados no Studio.
+
+#### Acabamento visual da receita (validado em tela)
+
+Tres ajustes que separam "funciona" de "da para ler", conferidos com o Douglas
+contra o layout antigo:
+
+| O que | Como |
+|---|---|
+| bloco de itens recuado sob o pai | `Table2_5`: `AlignInContainer: End` + `Width: =Parent.Width - 30` |
+| um registro separado do seguinte | `DropShadow: =DropShadow.Regular` no `RowContainer` |
+| sem ruido em registro legado | rastreio so com `declarante`, `empresa_declarante`, `tipo_origem` ou `encontrado_em` preenchido |
+
+Em AutoLayout **vertical**, `AlignInContainer` controla o eixo **horizontal** —
+e um filho com `End` e largura menor produz recuo a esquerda sem container
+extra. Contraintuitivo, e e a forma mais barata de indentar.
+
+A condicao do rastreio entra **tambem** na altura do `RowContainer`, senao a
+linha reserva espaco para um bloco que nao aparece.
+
+> Limite conhecido: o protocolo e o Recibo precisam continuar sendo controles,
+> nao HTML — `HtmlViewer` nao dispara evento por elemento, e perderiamos o
+> `Navigate` para o recibo e a selecao da linha.
