@@ -2242,3 +2242,16 @@ Então a divisão de trabalho ficou explícita:
 
 Reverter o refinamento foi a parte certa da decisão. Uma verificação que grita 84 vezes não é mais
 rigorosa que uma que grita 5 — é uma que ninguém lê.
+
+## Propriedade fora do bloco Properties (PA1001)
+
+**24/09/2026 — Mapa de Alocação, scrMapaPatio.** O Studio recusou com
+`Property Visible not found on type ...ControlInstance`: um `Visible:` foi parar no recuo do
+`Control:`, irmão dele, em vez de entrar em `Properties:`. A YAML continua válida para um parser
+comum — quem recusa é o deserializador do Power Apps, e o erro aponta a linha da propriedade.
+
+**Como evitar:** ao inserir propriedade por script, ancore no bloco `Properties:` do controle, nunca
+no fim do bloco do controle (depois de `Children:` o recuo engana).
+
+**Verificação automática:** `fx_check.js` acusa chave no nível do controle que não seja
+Control/Variant/Properties/Children. Também acusa chave solta depois de lista no mesmo recuo (17/09/2026).

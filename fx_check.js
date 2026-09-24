@@ -120,6 +120,23 @@ function analisa(arquivo, mortos) {
       }
     }
 
+    // Propriedade solta no nível do controle, irmã de 'Control:' em vez de filha de 'Properties:'.
+    // O Studio recusa com PA1001 "Property 'X' not found on type ControlInstance" (24/09/2026).
+    const chaveSolta = l.match(/^\s*([A-Za-z_][A-Za-z0-9_]*):/);
+    if (chaveSolta && !/^\s*- /.test(l) && !["Control", "Variant", "Properties", "Children", "Screens", "ComponentDefinitions"].includes(chaveSolta[1])) {
+      // acha o cabeçalho do bloco: primeira linha acima com o mesmo recuo
+      let j = i - 1;
+      while (j >= 0 && (!linhas[j].trim() || recuoDe(linhas[j]) > r)) j--;
+      let irmaControl = false;
+      for (let k = j; k >= 0 && recuoDe(linhas[k]) >= r; k--) {
+        if (!linhas[k].trim()) continue;
+        if (recuoDe(linhas[k]) === r && /^\s*Control: \S/.test(linhas[k])) { irmaControl = true; break; }
+      }
+      if (irmaControl) {
+        erros.push(`${i + 1}: '${chaveSolta[1]}' está no nível do controle, não dentro de 'Properties:' — o Studio recusa com PA1001`);
+      }
+    }
+
     // Itens de uma mesma lista têm que compartilhar o recuo.
     if (/^\s*- \S/.test(l)) {
       let j = i + 1;
