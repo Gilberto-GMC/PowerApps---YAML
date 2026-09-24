@@ -349,3 +349,35 @@ O item 2 desliga na pratica a rastreabilidade pedida pelo gerente Silvio
 
 Hipotese provavel da origem: o Studio troca formula por literal quando o
 controle e redimensionado com o mouse.
+
+### Troca de marca: MOTIVA sai, ASUR entra (24/09/2026)
+
+Decisao do Douglas: "agora somos ASUR, nao ira mostrar MOTIVA". Zero
+referencias a MOTIVA restantes nas telas.
+
+| Recurso antigo | Novo | Usos |
+|---|---|---:|
+| `MOTIVA_RGB_Simbolo_VersaoNegativa_Branca` | `ASUR_Logo_Branco` | 7 (cabecalhos) |
+| `MOTIVA_RGB_Logo_VersaoPositiva_Anil` | `ASUR_Logo_Petroleo` | 1 (recibo) |
+
+Os PNG foram gerados a partir do logo enviado (225x225, branco sobre petroleo
+chapado), separando marca de fundo por projecao linear entre as duas cores —
+o antialias vira canal alfa. Recortados para 190x67.
+
+- `ASUR_Logo_Branco.png` — marca branca, fundo transparente (cabecalho escuro)
+- `ASUR_Logo_Petroleo.png` — marca `#108A99`, fundo transparente (recibo)
+- `ASUR_Logo_PetroleoFundoBranco.png` — mesma marca sobre branco solido
+
+**Confirmacao da paleta:** o petroleo do logo e `#108A99`, mesma matiz (187°)
+de `#007382` e `#0A5A66` extraidos do Mapa. A paleta aplicada no app e mesmo
+derivada da marca ASUR, em degraus mais escuros para interface.
+
+> **Limitacao do asset:** a origem e um PNG de 225x225, provavelmente
+> miniatura de web. Serve para tela (o logo renderiza com ~114px de largura no
+> cabecalho), mas o recibo e documento impresso/PDF assinado. Para producao,
+> pedir o arquivo vetorial (SVG/EPS) ou PNG em alta ao setor de marca.
+
+Geometria nao foi alterada: `Image@2.2.3` usa `ImagePosition.Fit` por padrao,
+entao a proporcao e preservada. O simbolo MOTIVA era quadrado e o logo ASUR e
+2,8:1 — no recibo (`Image18`, caixa 117x64) a marca renderiza com ~117x41 e
+sobra espaco vertical. Conferir no Studio se o enquadramento agrada.
