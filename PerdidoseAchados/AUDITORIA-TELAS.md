@@ -280,3 +280,25 @@ A troca custou **uma edicao de bloco** no `App.Formulas`: nenhuma das 13 telas
 precisou ser alterada, porque nenhuma declara cor literal. Unica excecao, os
 hex dentro do HTML dos `HtmlViewer` (19 ocorrencias), que sao literais por
 decisao registrada acima.
+
+### Botoes primarios herdavam o roxo do tema do Studio
+
+`Button@0.0.45` com `Appearance: ='ButtonCanvas.Appearance'.Primary` e sem
+`BasePaletteColor` nao busca cor no YAML: usa a paleta do tema do app no
+Studio. Por isso 10 botoes continuaram roxos depois da troca de paleta — nao
+havia literal nenhum para o script substituir.
+
+Corrigido com `BasePaletteColor: =thmAcao` (`#007382`, o mesmo teal do botao
+primario do Mapa de Alocacao) em: `ButtonCanvas1_1` (Index), `SubmitButton2` e
+`NewRecordButton2` (Cadastrar), `EntregarButton_2` (ConsultListar),
+`EntregarButton_1` (EntregaListar), `ButtonCanvas6_2` (EntregaRecibo),
+`SubmitButton2_5`, `EntregarButton_4`, `EntregarButton_5` (Inventario) e
+`ButtonCanvas13_2` (InventarioDoacao).
+
+Preservados os que ja tinham cor semantica: `thmVerde` em Adicionar/Confirmar,
+`thmVermelho` em acao destrutiva.
+
+> Regra: trocar paleta num app Canvas nao termina em substituir literais de
+> cor. Todo controle cuja cor vem do tema (`Appearance.Primary`, `Accent`,
+> `App.Theme.Colors.*`) precisa de fixacao explicita, senao fica preso a
+> aparencia padrao do Studio.
