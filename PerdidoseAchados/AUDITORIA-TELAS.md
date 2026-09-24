@@ -328,3 +328,24 @@ explicito — a cor nao vem do tema. Verificado antes de decidir: varios estao
 sobre fundo escuro, e aplicar petroleo os tornaria invisiveis.
 
 Depois desta passada, nenhum `Button@0.0.45` do app depende mais do tema.
+
+### PENDENTE — duas alturas na ScreenConsultListar a decidir
+
+Estado atual mantido por decisao do Douglas (24/09/2026): "deixe como enviei,
+depois analisamos com mais calma". Nada foi alterado. Registrado aqui porque o
+efeito nao e visivel na tela vazia e some facil entre colagens.
+
+| Controle | Hoje | Antes | Efeito de hoje |
+|---|---|---|---|
+| `Table2_5.Height` | `=40` | `=Self.AllItemsCount * 52` | com `TemplateSize: =50` e `ShowScrollbar: =false`, um registro com varios objetos mostra so o primeiro; os demais ficam inalcancaveis |
+| `HtmlTextRastreio.Height` | `=0` | `=If(ThisItem.IsSelected, 46, 0)` | o bloco de rastreabilidade nunca renderiza, mesmo selecionado — `Visible` continua correto, mas altura zero nao desenha nada |
+
+Se restaurar, `HtmlTextRastreio.Y` volta junto para
+`=Table2_5.Y + Table2_5.Height`: o `=40` de hoje so faz sentido enquanto a
+`Table2_5` for fixa em 40.
+
+O item 2 desliga na pratica a rastreabilidade pedida pelo gerente Silvio
+(e-mail Mercia 15/09/26). Conferir antes de apresentar a funcionalidade a area.
+
+Hipotese provavel da origem: o Studio troca formula por literal quando o
+controle e redimensionado com o mouse.
