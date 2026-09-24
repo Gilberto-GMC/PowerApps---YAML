@@ -362,3 +362,35 @@ Prevencao, em duas frentes:
 
 Lição geral: contador agregado e a pior metrica para validar substituicao em
 lote. 236 "sucessos" mascararam 9 falhas porque ninguem contou por regra.
+
+## `Button@0.0.45`: sem `Appearance` o padrao e Primary, e a cor vem do tema
+
+Projeto: Perdidos e Achados, 13 telas (24/09/2026).
+
+Sintoma: depois de trocar a paleta, 34 botoes continuaram na cor antiga. Nao
+havia literal de cor neles para substituir, e o YAML nao dava nenhum sinal.
+
+Causa: `Button@0.0.45` resolve a cor por `BasePaletteColor`. Sem essa
+propriedade, cai na paleta do **tema do app no Studio** — que nao e editavel
+pelo YAML da tela. Tres situacoes distintas, e so a primeira e obvia:
+
+1. `Appearance: ='ButtonCanvas.Appearance'.Primary` declarado — botao solido.
+2. **`Appearance` ausente** — o padrao do controle ja e Primary. Este e o que
+   escapa, porque nao ha linha nenhuma para o padrao de busca encontrar.
+3. `Appearance.Secondary` — parece "sem cor" por ser vazado, mas a borda e o
+   texto saem do tema igual.
+
+`Appearance.Transparent` normalmente tem `FontColor` proprio; conferir antes de
+incluir, porque pintar um icone que esta sobre fundo escuro o faz sumir.
+
+Correcao: fixar `BasePaletteColor` em todos, por aparencia — solido na cor de
+acao, vazado na cor institucional.
+
+Validação preventiva: para cada `Button@0.0.45`, reprovar quando nao houver
+`BasePaletteColor` e a aparencia for ausente, `Primary` ou `Secondary`.
+
+Lição geral, que vale para qualquer troca de identidade visual em Canvas App:
+**substituir literais de cor nao termina o trabalho.** Todo controle cuja cor
+vem do tema — `BasePaletteColor` ausente, `App.Theme.Colors.*`, `Accent` —
+continua com a aparencia antiga e nao aparece em busca por `RGBA(`. Levantar
+esses controles por tipo, nao por cor.

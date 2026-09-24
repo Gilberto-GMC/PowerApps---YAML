@@ -302,3 +302,29 @@ Preservados os que ja tinham cor semantica: `thmVerde` em Adicionar/Confirmar,
 > cor. Todo controle cuja cor vem do tema (`Appearance.Primary`, `Accent`,
 > `App.Theme.Colors.*`) precisa de fixacao explicita, senao fica preso a
 > aparencia padrao do Studio.
+
+### Correcao: a regra dos botoes era mais ampla
+
+A primeira passada so pegou `Button@0.0.45` que declaravam
+`Appearance: ='ButtonCanvas.Appearance'.Primary`. Faltaram duas categorias,
+igualmente presas ao tema do Studio:
+
+- **Sem linha `Appearance`** (10): o padrao do controle e Primary, entao o
+  botao renderiza solido na cor do tema. Casos visiveis: os dois "Assinar" e o
+  "Salvar" do recibo.
+- **`Appearance.Secondary` sem `BasePaletteColor`** (24): em Secondary a borda
+  e o texto tambem vem do tema. Casos: "Voltar", "Cancelar", "Aceitar".
+
+Regra final aplicada:
+
+| Aparencia | Cor | n |
+|---|---|---:|
+| ausente ou `.Primary` | `thmAcao` (`#007382`) | 10 |
+| `.Secondary` | `thmPrimaria` (`#0A5A66`) | 24 |
+| `.Transparent` | nao tocado | 19 |
+
+Os 19 `Transparent` ficaram de fora porque **todos** ja declaram `FontColor`
+explicito — a cor nao vem do tema. Verificado antes de decidir: varios estao
+sobre fundo escuro, e aplicar petroleo os tornaria invisiveis.
+
+Depois desta passada, nenhum `Button@0.0.45` do app depende mais do tema.
