@@ -277,6 +277,19 @@ for (const P of process.argv.slice(2)) {
     "sem 'Color' em Text@0.0.51 (PA2108 - usar FontColor)" +
     (cor.length ? ' -> ' + cor.slice(0, 6).join(', ') : ''));
 
+  // 18. propriedade de cor deixada VAZIA cai no tema do Studio (que e roxo).
+  // A passada de paleta cobriu Appearance e BasePaletteColor, mas nao os estados
+  // Hover/Pressed — e foi por ai que o roxo voltou a aparecer na ScreenCadastrar.
+  const vazias = [];
+  for (let i = 0; i < lines.length; i++) {
+    const m = lines[i].match(/^s*([A-Za-z]*(?:Color|Fill)): =s*$/);
+    if (!m) continue;
+    vazias.push("L" + (i + 1) + " " + m[1]);
+  }
+  check(vazias.length === 0,
+    "nenhuma propriedade de cor vazia (cai no tema do Studio)" +
+    (vazias.length ? " -> " + vazias.slice(0, 8).join(", ") : ""));
+
   check(risco.length === 0,
     'sem Parent.Width/Height em galeria SEM Width proprio (' + galerias.length + ' galerias)' +
     (risco.length ? ' -> ' + risco.slice(0, 8).join(', ') : ''));
