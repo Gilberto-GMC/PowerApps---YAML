@@ -664,3 +664,31 @@ passaram" na proxima execucao.
 
 Regra: depois de acrescentar um check, rodar contra uma copia com o defeito
 reintroduzido. Ver o check ACUSAR e a unica prova de que ele existe.
+
+### Em AutoLayout, `Height` so manda com `FillPortions: =0`
+
+Sintoma: convertido o template para AutoLayout Vertical, a linha-cabecalho
+ficou perfeita, mas a galeria aninhada e o acordeao nao renderizavam — a linha
+inteira colapsava para a altura do cabecalho.
+
+Causa: num `GroupContainer` AutoLayout, o eixo principal e distribuido por
+`FillPortions`. Enquanto `FillPortions` nao for `0`, a `Height` explicita do
+filho e ignorada e ele recebe a fatia que o fluxo decidir. Com o container
+dimensionado pelo conteudo, essa fatia acaba sendo zero.
+
+Correcao: `FillPortions: =0` em todo filho cuja altura deve valer.
+
+```
+RowContainer        AutoLayout Vertical
+  HeaderRow         FillPortions 0   Height 40
+  Table2_5          FillPortions 0   Height CountRows(...) * 52
+  HtmlTextRastreio  FillPortions 0   Height If(ThisItem.IsSelected, 46, 0)
+```
+
+No eixo transversal quem manda e `AlignInContainer`: `Stretch` para ocupar a
+largura toda, `Center` para centralizar.
+
+Inverso util: `FillPortions: =1` num filho o transforma no **espacador
+flexivel** que empurra os seguintes para o fim — foi assim que o botao
+transparente de selecao virou o vao entre o status e o botao de acao, sem
+precisar de `X`.
