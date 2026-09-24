@@ -215,6 +215,27 @@ for (const P of process.argv.slice(2)) {
     'nenhuma propriedade dentro de bloco escalar' +
     (dentro.length ? ' -> ' + dentro.slice(0, 6).join(', ') : ''));
 
+  // 13. Select(Parent) sob GroupContainer. GroupContainer nao tem OnSelect,
+  //     entao Select(Parent) ali e erro do Studio. Acontece ao mover controles
+  //     para dentro de um container: o Parent deixa de ser a galeria.
+  const selPai = [];
+  for (let j = 0; j < lines.length; j++) {
+    if (!/Select\(\s*Parent\s*\)/.test(lines[j])) continue;
+    let cont = null;
+    for (const c of containers)
+      if (j > c.propsFim && j < c.fim && (!cont || c.ini > cont.ini)) cont = c;
+    if (!cont) continue;
+    // so acusa se o container for mais interno que qualquer galeria que envolva a linha
+    let gal = null;
+    for (const g of galerias)
+      if (j > g.propsFim && j < g.fim && (!gal || g.ini > gal.ini)) gal = g;
+    if (gal && gal.ini > cont.ini) continue;
+    selPai.push('L' + (j + 1) + ' em ' + cont.nome);
+  }
+  check(selPai.length === 0,
+    'sem Select(Parent) sob GroupContainer (use o nome da galeria)' +
+    (selPai.length ? ' -> ' + selPai.slice(0, 6).join(', ') : ''));
+
   // 10. PA2108: Text@0.0.51 nao tem propriedade 'Color' (usar FontColor)
   const cor = [];
   for (let i = 0; i < lines.length; i++) {

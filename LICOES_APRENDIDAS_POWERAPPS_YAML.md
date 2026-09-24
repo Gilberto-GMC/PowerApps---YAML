@@ -522,3 +522,24 @@ colagem. Nao funciona para botao.
 Validacao preventiva: o check de `Parent.Width` em galeria precisa reconhecer
 `GroupContainer` intermediario, senao acusa falso positivo justamente na
 estrutura correta.
+
+### Contrapartida obrigatoria do `RowContainer`: `Select(Parent)` quebra
+
+Mensagem do Studio: `Select um controle que nao tem uma propriedade OnSelect`.
+
+Ao mover controles para dentro do `GroupContainer`, o `Parent` deles deixa de
+ser a galeria e passa a ser o container — que **nao tem `OnSelect`**. Todo
+`OnSelect: =Select(Parent)` dos controles movidos vira erro.
+
+Correcao: trocar por `Select(<NomeDaGaleria>)`. O objetivo continua sendo o
+mesmo, propagar o clique do rotulo para a selecao da linha.
+
+Checklist ao converter uma linha de galeria para `GroupContainer` — sao tres
+coisas que mudam de significado junto, e esquecer qualquer uma quebra a tela:
+
+1. `X` passa a ser preservado (esse e o ganho).
+2. `Parent.TemplateWidth` -> `Parent.Width` (container tem largura propria).
+3. `Select(Parent)` -> `Select(<Galeria>)` (container nao tem `OnSelect`).
+
+Validacao preventiva (check 13): rejeitar `Select(Parent)` quando o ancestral
+mais proximo for um `GroupContainer` e nao uma galeria.
