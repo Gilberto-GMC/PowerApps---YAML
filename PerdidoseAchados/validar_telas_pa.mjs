@@ -144,8 +144,25 @@ for (const P of process.argv.slice(2)) {
 
   // Uma linha dentro das PROPRIAS propriedades de uma galeria (antes do
   // Children:) tem como Parent a galeria de FORA, nao ela mesma.
-  for (const g of galerias) g.propsFim = g_fimProps(lines, g.ini, 
+  for (const g of galerias) g.propsFim = g_fimProps(lines, g.ini,
     lines[g.ini].length - lines[g.ini].replace(/^ +/, '').length);
+
+  // Um GroupContainer entre a linha e a galeria troca o Parent: passa a ser o
+  // container, que tem Width propria. Ali Parent.Width esta correto.
+  const containers = [];
+  for (let i = 0; i < lines.length; i++) {
+    const m = lines[i].match(/^(\s*)- (\S+):\s*$/);
+    if (!m || !/Control: GroupContainer@/.test(lines[i + 1] || '')) continue;
+    const ind = m[1].length;
+    let fim = i + 1;
+    while (fim < lines.length) {
+      const mm = lines[fim].match(/^(\s*)- \S+:\s*$/);
+      if (mm && mm[1].length <= ind) break;
+      fim++;
+    }
+    containers.push({ nome: m[2], ini: i, fim, propsFim: g_fimProps(lines, i, ind) });
+  }
+
   const risco = [], ok = [];
   for (let j = 0; j < lines.length; j++) {
     if (!/\bParent\.(Width|Height)\b/.test(lines[j])) continue;
@@ -153,6 +170,11 @@ for (const P of process.argv.slice(2)) {
     for (const g of galerias)
       if (j > g.propsFim && j < g.fim && (!dono || g.ini > dono.ini)) dono = g;
     if (!dono) continue;
+    // ha container mais interno que a galeria dona? entao o Parent e ele
+    let cont = null;
+    for (const c of containers)
+      if (j > c.propsFim && j < c.fim && c.ini > dono.ini && (!cont || c.ini > cont.ini)) cont = c;
+    if (cont) continue;
     (dono.temWidth ? ok : risco).push('L' + (j + 1) + ' em ' + dono.nome);
   }
   // 11. cor por palavra-chave CSS dentro do HTML (green, red...) escapa de

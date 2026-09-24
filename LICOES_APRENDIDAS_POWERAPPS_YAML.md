@@ -473,3 +473,52 @@ Validacao preventiva (check 12): rejeitar `X`, `Y`, `Width`, `Height`, `Fill`,
 `Visible`, `BasePaletteColor` ou `Appearance` seguidos de `: =` quando estiverem
 dentro de um bloco escalar. Em CSS dentro de `HtmlText` aparece `width:` sem o
 `=`, entao nao ha falso positivo.
+
+## A solucao definitiva para o `X` zerado: `GroupContainer` dentro do template
+
+Projeto/tela: Perdidos e Achados, `ScreenConsultListar` / `Gallery2_1`
+(24/09/2026).
+
+Historico: o `X` dos filhos diretos do template de galeria
+`BrowseLayout`/`VariableHeight` e descartado na colagem. Documentado antes com
+o fluxo "colar, conferir, redigitar no Studio, gravar de volta no YAML". **Esse
+fluxo nao se sustenta:** a cada nova colagem da tela tudo zera outra vez. Nesta
+tela aconteceu tres vezes, e na terceira os controles sumiram — caidos todos em
+`X=0`, ficaram cobertos pela galeria aninhada, que tem `Fill` branco e
+renderiza depois deles.
+
+Confirmado pelo usuario no Studio: `X = 0`, `Visible` intacto.
+
+Correcao estrutural: envolver os controles posicionados num
+`GroupContainer@1.5.0` variante `ManualLayout` **dentro do template**. Eles
+deixam de ser filhos diretos da galeria e o `X` passa a ser preservado.
+
+```
+Gallery2_1
+  RowContainer          <- GroupContainer ManualLayout, Height fixa
+    ButtonCanvas3_6       X preservado
+    Subtitle1_13
+    Subtitle1_14
+    Button2_6
+    EntregarButton_2
+  Table2_5              <- empilhado por Y, X irrelevante
+  HtmlTextRastreio
+```
+
+Ganhos, alem do `X`: o container tem `Height` explicita, entao a linha para de
+colapsar e o que vem abaixo deixa de ser cortado; e a sobreposicao some, porque
+a ordem de renderizacao passa a ser resolvida dentro do container.
+
+**Armadilha na conversao:** dentro do container o `Parent` deixa de ser a
+galeria. `Parent.TemplateWidth` **nao existe** ali e precisa virar
+`Parent.Width` — o container tem largura propria. Só o `Width` do proprio
+container continua usando `Parent.TemplateWidth`, porque o Parent dele e a
+galeria.
+
+Controle de texto dentro de galeria tem uma saida mais barata, quando serve:
+posicionar por `PaddingLeft` em vez de `X`. Padding nao e descartado na
+colagem. Nao funciona para botao.
+
+Validacao preventiva: o check de `Parent.Width` em galeria precisa reconhecer
+`GroupContainer` intermediario, senao acusa falso positivo justamente na
+estrutura correta.
