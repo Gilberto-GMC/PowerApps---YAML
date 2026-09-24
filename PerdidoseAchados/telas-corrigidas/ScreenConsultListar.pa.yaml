@@ -555,7 +555,7 @@ Screens:
                                   Properties:
                                     DropShadow: =DropShadow.None
                                     Fill: =RGBA(0, 0, 0, 0)
-                                    Height: =40
+                                    Height: =40 + Table2_5.Height + HtmlTextRastreio.Height
                                     LayoutMaxHeight: =
                                     LayoutMaxWidth: =
                                     LayoutMinHeight: =0
@@ -699,91 +699,91 @@ Screens:
                                         Width: =100
                                         X: =510
                                         Y: =5
-                              - Table2_5:
-                                  Control: Gallery@2.15.0
-                                  Variant: BrowseLayout_Vertical_TwoTextOneImageVariant_ver5.0
-                                  Properties:
-                                    Fill: =RGBA(255, 255, 255, 1)
-                                    Height: =Self.AllItemsCount * 52
-                                    Items: |-
-                                      =SortByColumns(
-                                          Filter(
-                                              col_itensPAconsulta,
-                                              ID_fk = ThisItem.ID
-                                          ),
-                                          "ID",
-                                          SortOrder.Descending
-                                      ) As TBL_ITENS
-                                    LoadingSpinner: =LoadingSpinner.None
-                                    ShowScrollbar: =false
-                                    TemplateSize: =50
-                                    Width: =Parent.TemplateWidth - 10
-                                    Y: =40
-                                  Children:
-                                    - HtmlText2_2:
-                                        Control: HtmlViewer@2.1.0
-                                        Properties:
-                                          HtmlText: |-
-                                            ="<div>🔹 " & TBL_ITENS.categoria & " - " & TBL_ITENS.subCategoria & " | " & TBL_ITENS.descricao & " | " & If(
-                                                TBL_ITENS.status = "Entregue",
-                                                "<font color='#007382'>" & TBL_ITENS.status & "</font>",
-                                                "<font color='#B45309'>" & TBL_ITENS.status & "</font>"
-                                            ) & "</div>"
-                                          OnSelect: =Select(Parent)
-                                          PaddingBottom: =0
-                                          PaddingLeft: =60
-                                          PaddingTop: =0
-                                          Size: =11
-                                          Tooltip: =TBL_ITENS.descricao
-                                          Width: =Parent.Width - 250
-                                          X: =0
-                                          Y: =5
-                                    - Image2_2:
-                                        Control: Image@2.2.3
-                                        Properties:
-                                          Fill: =RGBA(0, 0, 0, 1)
-                                          Height: =40
-                                          Image: |-
-                                            =If(
-                                                IsBlank(TBL_ITENS.foto),
-                                                'sem-foto',
-                                                TBL_ITENS.foto.Small
-                                            )
-                                          OnSelect: |-
-                                            =If(
-                                                !IsBlank(TBL_ITENS.foto),
-                                                UpdateContext(
-                                                    {
-                                                        var_item: TBL_ITENS,
-                                                        varColVeiDetVisibleImagem: true
-                                                    }
+                                  - Table2_5:
+                                      Control: Gallery@2.15.0
+                                      Variant: BrowseLayout_Vertical_TwoTextOneImageVariant_ver5.0
+                                      Properties:
+                                        Fill: =RGBA(255, 255, 255, 1)
+                                        Height: =Self.AllItemsCount * 52
+                                        Items: |-
+                                          =SortByColumns(
+                                              Filter(
+                                                  col_itensPAconsulta,
+                                                  ID_fk = ThisItem.ID
+                                              ),
+                                              "ID",
+                                              SortOrder.Descending
+                                          ) As TBL_ITENS
+                                        LoadingSpinner: =LoadingSpinner.None
+                                        ShowScrollbar: =false
+                                        TemplateSize: =50
+                                        Width: =Parent.Width - 10
+                                        Y: =40
+                                      Children:
+                                        - HtmlText2_2:
+                                            Control: HtmlViewer@2.1.0
+                                            Properties:
+                                              HtmlText: |-
+                                                ="<div>🔹 " & TBL_ITENS.categoria & " - " & TBL_ITENS.subCategoria & " | " & TBL_ITENS.descricao & " | " & If(
+                                                    TBL_ITENS.status = "Entregue",
+                                                    "<font color='#007382'>" & TBL_ITENS.status & "</font>",
+                                                    "<font color='#B45309'>" & TBL_ITENS.status & "</font>"
+                                                ) & "</div>"
+                                              OnSelect: =Select(Parent)
+                                              PaddingBottom: =0
+                                              PaddingLeft: =60
+                                              PaddingTop: =0
+                                              Size: =11
+                                              Tooltip: =TBL_ITENS.descricao
+                                              Width: =Parent.Width - 250
+                                              X: =0
+                                              Y: =5
+                                        - Image2_2:
+                                            Control: Image@2.2.3
+                                            Properties:
+                                              Fill: =RGBA(0, 0, 0, 1)
+                                              Height: =40
+                                              Image: |-
+                                                =If(
+                                                    IsBlank(TBL_ITENS.foto),
+                                                    'sem-foto',
+                                                    TBL_ITENS.foto.Small
                                                 )
-                                            )
-                                          RadiusBottomLeft: =4
-                                          RadiusBottomRight: =4
-                                          RadiusTopLeft: =4
-                                          RadiusTopRight: =4
-                                          Width: =40
-                                          X: =0
-                                          Y: =5
-                              - HtmlTextRastreio:
-                                  Control: HtmlViewer@2.1.0
-                                  Properties:
-                                    Height: =If(ThisItem.IsSelected, 46, 0)
-                                    HtmlText: |-
-                                      ="<div style='font-family:Open Sans,Segoe UI,sans-serif;font-size:11px;color:#1E293B;line-height:1.6;border-top:1px solid #E2E8F0;padding-top:3px'>" &
-                                          "<b>Achado:</b> " & If(IsBlank(ThisItem.declarante), "—", ThisItem.declarante) & " &nbsp;|&nbsp; " & If(IsBlank(ThisItem.empresa_declarante), "—", ThisItem.empresa_declarante) & " &nbsp;|&nbsp; " & If(IsBlank(ThisItem.tipo_origem), "—", ThisItem.tipo_origem) &
-                                          " &nbsp;|&nbsp; " & If(IsBlank(ThisItem.local), "—", ThisItem.local) & " &nbsp;|&nbsp; " & If(IsBlank(ThisItem.encontrado_em), "—", Text(ThisItem.encontrado_em, DateTimeFormat.ShortDateTime)) &
-                                          "<br><b>Entrega à ASUR:</b> " & If(IsBlank(ThisItem.data), "—", Text(ThisItem.data, DateTimeFormat.ShortDateTime)) & " &nbsp;|&nbsp; por " & If(IsBlank(ThisItem.entregue_por), "—", ThisItem.entregue_por) &
-                                          " &nbsp;|&nbsp; recebido por " & If(IsBlank(ThisItem.usuario), "—", ThisItem.usuario) &
-                                      "</div>"
-                                    OnSelect: =Select(Parent)
-                                    PaddingLeft: =12
-                                    PaddingRight: =12
-                                    Size: =11
-                                    Visible: =ThisItem.IsSelected
-                                    Width: =Parent.TemplateWidth - 10
-                                    Y: =Table2_5.Y + Table2_5.Height
+                                              OnSelect: |-
+                                                =If(
+                                                    !IsBlank(TBL_ITENS.foto),
+                                                    UpdateContext(
+                                                        {
+                                                            var_item: TBL_ITENS,
+                                                            varColVeiDetVisibleImagem: true
+                                                        }
+                                                    )
+                                                )
+                                              RadiusBottomLeft: =4
+                                              RadiusBottomRight: =4
+                                              RadiusTopLeft: =4
+                                              RadiusTopRight: =4
+                                              Width: =40
+                                              X: =0
+                                              Y: =5
+                                  - HtmlTextRastreio:
+                                      Control: HtmlViewer@2.1.0
+                                      Properties:
+                                        Height: =If(ThisItem.IsSelected, 46, 0)
+                                        HtmlText: |-
+                                          ="<div style='font-family:Open Sans,Segoe UI,sans-serif;font-size:11px;color:#1E293B;line-height:1.6;border-top:1px solid #E2E8F0;padding-top:3px'>" &
+                                              "<b>Achado:</b> " & If(IsBlank(ThisItem.declarante), "—", ThisItem.declarante) & " &nbsp;|&nbsp; " & If(IsBlank(ThisItem.empresa_declarante), "—", ThisItem.empresa_declarante) & " &nbsp;|&nbsp; " & If(IsBlank(ThisItem.tipo_origem), "—", ThisItem.tipo_origem) &
+                                              " &nbsp;|&nbsp; " & If(IsBlank(ThisItem.local), "—", ThisItem.local) & " &nbsp;|&nbsp; " & If(IsBlank(ThisItem.encontrado_em), "—", Text(ThisItem.encontrado_em, DateTimeFormat.ShortDateTime)) &
+                                              "<br><b>Entrega à ASUR:</b> " & If(IsBlank(ThisItem.data), "—", Text(ThisItem.data, DateTimeFormat.ShortDateTime)) & " &nbsp;|&nbsp; por " & If(IsBlank(ThisItem.entregue_por), "—", ThisItem.entregue_por) &
+                                              " &nbsp;|&nbsp; recebido por " & If(IsBlank(ThisItem.usuario), "—", ThisItem.usuario) &
+                                          "</div>"
+                                        OnSelect: =Select(Gallery2_1)
+                                        PaddingLeft: =12
+                                        PaddingRight: =12
+                                        Size: =11
+                                        Visible: =ThisItem.IsSelected
+                                        Width: =Parent.Width - 10
+                                        Y: =Table2_5.Y + Table2_5.Height
       - ContainerVisibleImagem_2:
           Control: GroupContainer@1.5.0
           Variant: ManualLayout

@@ -543,3 +543,39 @@ coisas que mudam de significado junto, e esquecer qualquer uma quebra a tela:
 
 Validacao preventiva (check 13): rejeitar `Select(Parent)` quando o ancestral
 mais proximo for um `GroupContainer` e nao uma galeria.
+
+### Correcao da correcao: `Y` tambem e descartado, e mover metade nao resolve
+
+Primeira tentativa: mover so os controles posicionados para o `GroupContainer`,
+deixando a galeria aninhada e o acordeao como filhos diretos. **Nao mudou
+nada.**
+
+Causa: o `Y` sofre o mesmo descarte que o `X`. A galeria aninhada tinha
+`Y: =40` e `Fill: =RGBA(255, 255, 255, 1)` — branco opaco. Caindo em `Y=0`, ela
+cobria o container inteiro, que esta em `Y=0` com fundo transparente. Os cinco
+controles continuavam invisiveis, agora por outro motivo.
+
+Diagnostico que teria poupado a rodada: quando um controle some por inteiro em
+vez de aparecer fora do lugar, procure **quem tem `Fill` opaco e renderiza
+depois dele**, nao so o proprio controle.
+
+Regra corrigida: **ou todos os filhos do template vao para o container, ou
+nenhum.** Deixar um irmao de fora mantem o problema, e um irmao com `Fill`
+opaco o piora.
+
+Estrutura final que funciona:
+
+```
+Gallery2_1
+  RowContainer                Height = 40 + Table2_5.Height + HtmlTextRastreio.Height
+    ButtonCanvas3_6           X=11   Y=5
+    Subtitle1_13              X=141  Y=5
+    Subtitle1_14              X=292  Y=5
+    Button2_6                 X=0
+    EntregarButton_2          X=510  Y=5
+    Table2_5                  Y=40
+    HtmlTextRastreio          Y = Table2_5.Y + Table2_5.Height
+```
+
+A `Height` do container soma as tres faixas, entao a linha cresce com o
+conteudo em vez de cortar o acordeao.
