@@ -236,6 +236,34 @@ for (const P of process.argv.slice(2)) {
     'sem Select(Parent) sob GroupContainer (use o nome da galeria)' +
     (selPai.length ? ' -> ' + selPai.slice(0, 6).join(', ') : ''));
 
+  // 14. corpo de bloco escalar orfao. Remover a CHAVE de uma propriedade
+  //     escrita como "|-" sem remover o corpo deixa as linhas penduradas na
+  //     propriedade anterior, que passa a ter um valor multi-linha invalido.
+  //     O YAML continua valido; so o Studio reclama ("Valor Color esperado").
+  const orfasEscalar = [];
+  {
+    let ultima = -1;
+    for (let i = 0; i < lines.length; i++) {
+      const l = lines[i];
+      if (l.trim() === '') continue;
+      const n = l.length - l.replace(/^ +/, '').length;
+      if (ultima >= 0) {
+        const k = lines[ultima];
+        const kn = k.length - k.replace(/^ +/, '').length;
+        const abre = /:\s*[|>][-+]?\s*$/.test(k);
+        const temValor = /:\s*=/.test(k);
+        if (n > kn && !abre && temValor) {
+          orfasEscalar.push('L' + (i + 1) + ' sob ' + k.trim().split(':')[0]);
+          continue;
+        }
+      }
+      if (/^ *(- )?[A-Za-z_'"][^:]*:/.test(l)) ultima = i;
+    }
+  }
+  check(orfasEscalar.length === 0,
+    'nenhum corpo de bloco escalar orfao' +
+    (orfasEscalar.length ? ' -> ' + orfasEscalar.slice(0, 4).join(', ') : ''));
+
   // 10. PA2108: Text@0.0.51 nao tem propriedade 'Color' (usar FontColor)
   const cor = [];
   for (let i = 0; i < lines.length; i++) {

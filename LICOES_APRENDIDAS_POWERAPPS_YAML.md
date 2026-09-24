@@ -634,3 +634,33 @@ fazendo o conteudo sumir. Contar nos dados:
 `CountRows(Filter(colecao, chave = ThisItem.ID)) * 52`. O mesmo vale para
 `Visible: =Galeria.AllItemsCount > 0`, que deve virar
 `!IsEmpty(Filter(colecao, chave = ThisItem.ID))`.
+
+## Remover uma propriedade `|-` sem remover o corpo
+
+Projeto: Perdidos e Achados, `ScreenConsultListar` / `Button2_6` (24/09/2026).
+
+Mensagem do Studio: `Valor Color esperado. ... a formula usa escopo que nao tem
+suporte para avaliacao no momento.` — na propriedade **errada**, `DisabledFill`.
+
+Causa: um script removeu a chave `Fill: |-` de um controle mas manteve as 15
+linhas do corpo. Elas passaram a pender de `DisabledFill: =RGBA(247,247,247,1)`,
+que virou um valor multi-linha invalido. O YAML continua valido; so o Studio
+reclama, e reclama apontando para a propriedade vizinha, nao para a removida.
+
+Correcao no script: ao remover uma propriedade que abre bloco escalar, consumir
+tambem todas as linhas mais indentadas que ela.
+
+Validacao preventiva (check 14): linha com indentacao maior que a chave
+anterior, sendo que a chave anterior tem valor proprio (`: =`) e nao abre
+escalar (`|`, `|-`, `|+`, `>`), e corpo orfao.
+
+### O autoteste pagou sozinho
+
+Ao testar o check 14 contra uma copia quebrada de proposito, ele nao acusou.
+Motivo: `const orfas` colidia com uma variavel ja declarada no check 8, e o
+arquivo inteiro quebrava com `SyntaxError` — **o validador nao rodava nenhuma
+verificacao**. Sem o autoteste isso teria passado como "todas as verificacoes
+passaram" na proxima execucao.
+
+Regra: depois de acrescentar um check, rodar contra uma copia com o defeito
+reintroduzido. Ver o check ACUSAR e a unica prova de que ele existe.
