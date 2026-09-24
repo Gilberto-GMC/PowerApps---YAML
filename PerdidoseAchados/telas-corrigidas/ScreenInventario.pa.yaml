@@ -604,6 +604,7 @@ Screens:
                             Control: Gallery@2.15.0
                             Variant: VariableHeight
                             Properties:
+                              TemplateSize: =RowContainerDestinar.Height
                               Items: |-
                                 =SortByColumns(
                                     col_perdidosFiltrados,
@@ -614,97 +615,129 @@ Screens:
                               TemplatePadding: =4
                               Visible: =If(IsBlank( TabListDestinar.Selected.Value), true, TabListDestinar.Selected.Value  = "DESTINAR")
                             Children:
-                              - Gallery4:
-                                  Control: Gallery@2.15.0
-                                  Variant: Vertical
+                              - RowContainerDestinar:
+                                  Control: GroupContainer@1.5.0
+                                  Variant: AutoLayout
                                   Properties:
-                                    Height: =Self.AllItemsCount * 50
-                                    Items: |-
-                                      =SortByColumns(
-                                          Filter(
-                                              col_itensDoacao,
-                                              ID_fk = ThisItem.ID
-                                          ),
-                                          "recebido",
-                                          SortOrder.Descending
-                                      ) As TBL_ITENS
-                                    LoadingSpinner: =LoadingSpinner.None
-                                    Width: =Parent.TemplateWidth - 10
+                                    DropShadow: =DropShadow.Regular
+                                    Fill: =If(ThisItem.IsSelected, RGBA(0, 0, 0, 0.20), RGBA(0, 0, 0, 0.05))
+                                    Height: =CountRows(Filter(col_itensDoacao, ID_fk = ThisItem.ID)) * 50 + 11
+                                    LayoutAlignItems: =LayoutAlignItems.Stretch
+                                    LayoutDirection: =LayoutDirection.Vertical
+                                    LayoutGap: =0
+                                    LayoutMaxHeight: =
+                                    LayoutMaxWidth: =
+                                    LayoutMinHeight: =0
+                                    PaddingBottom: =10
+                                    Width: =Parent.TemplateWidth
                                   Children:
-                                    - HtmlText2_4:
-                                        Control: HtmlViewer@2.1.0
+                                    - Gallery4:
+                                        Control: Gallery@2.15.0
+                                        Variant: Vertical
                                         Properties:
-                                          AutoHeight: =true
-                                          HtmlText: |-
-                                            ="<div>🔹" & TBL_ITENS.categoria & " - " & TBL_ITENS.subCategoria & " | " & TBL_ITENS.descricao & " | " & If(
-                                                TBL_ITENS.status <> "Recebido",
-                                                "<font color='#B45309'>" & TBL_ITENS.status & "</font>",
-                                                TBL_ITENS.status & " em " & DateValue(TBL_ITENS.recebido) & " | ID do vínculo: " & TBL_ITENS.ID_fk
-                                            ) & "</div>"
-                                          OnSelect: =Select(Parent)
-                                          PaddingBottom: =0
-                                          PaddingTop: =0
-                                          Size: =10
-                                          Tooltip: =
-                                          Width: =Parent.Width - 200
-                                          X: =60
-                                          Y: =10
-                                    - Image2_4:
-                                        Control: Image@2.2.3
+                                          Items: |-
+                                            =SortByColumns(
+                                                Filter(
+                                                    col_itensDoacao,
+                                                    ID_fk = ThisItem.ID
+                                                ),
+                                                "recebido",
+                                                SortOrder.Descending
+                                            ) As TBL_ITENS
+                                          LoadingSpinner: =LoadingSpinner.None
+                                          AlignInContainer: =AlignInContainer.End
+                                          FillPortions: =0
+                                          Width: =Parent.Width - 30
+                                          Height: =CountRows(Filter(col_itensDoacao, ID_fk = ThisItem.ID)) * 50
+                                        Children:
+                                          - ItemRowDestinar:
+                                              Control: GroupContainer@1.5.0
+                                              Variant: AutoLayout
+                                              Properties:
+                                                DropShadow: =DropShadow.None
+                                                Fill: =RGBA(0, 0, 0, 0)
+                                                Height: =Parent.TemplateHeight
+                                                LayoutAlignItems: =LayoutAlignItems.Center
+                                                LayoutDirection: =LayoutDirection.Horizontal
+                                                LayoutGap: =10
+                                                LayoutMaxHeight: =
+                                                LayoutMaxWidth: =
+                                                LayoutMinHeight: =0
+                                                PaddingLeft: =10
+                                                PaddingRight: =10
+                                                Width: =Parent.TemplateWidth
+                                              Children:
+                                                - Image2_4:
+                                                    Control: Image@2.2.3
+                                                    Properties:
+                                                      Fill: =RGBA(0, 0, 0, 1)
+                                                      Height: =40
+                                                      Image: |-
+                                                        =If(
+                                                            IsBlank(TBL_ITENS.foto),
+                                                            'sem-foto',
+                                                            TBL_ITENS.foto
+                                                        )
+                                                      OnSelect: |-
+                                                        =If(
+                                                            !IsBlank(TBL_ITENS.foto),
+                                                            UpdateContext(
+                                                                {
+                                                                    var_item: TBL_ITENS,
+                                                                    varColVeiDetVisibleImagem: true
+                                                                }
+                                                            )
+                                                        )
+                                                      RadiusBottomLeft: =4
+                                                      RadiusBottomRight: =4
+                                                      RadiusTopLeft: =4
+                                                      RadiusTopRight: =4
+                                                      AlignInContainer: =AlignInContainer.Center
+                                                      Width: =60
+                                                - HtmlText2_4:
+                                                    Control: HtmlViewer@2.1.0
+                                                    Properties:
+                                                      AutoHeight: =true
+                                                      HtmlText: |-
+                                                        ="<div>🔹" & TBL_ITENS.categoria & " - " & TBL_ITENS.subCategoria & " | " & TBL_ITENS.descricao & " | " & If(
+                                                            TBL_ITENS.status <> "Recebido",
+                                                            "<font color='#B45309'>" & TBL_ITENS.status & "</font>",
+                                                            TBL_ITENS.status & " em " & DateValue(TBL_ITENS.recebido) & " | ID do vínculo: " & TBL_ITENS.ID_fk
+                                                        ) & "</div>"
+                                                      OnSelect: =Select(Gallery4)
+                                                      PaddingBottom: =0
+                                                      PaddingTop: =0
+                                                      Size: =10
+                                                      Tooltip: =
+                                                      AlignInContainer: =AlignInContainer.Center
+                                                      FillPortions: =1
+                                                - EntregarButton_4:
+                                                    Control: Button@0.0.45
+                                                    Properties:
+                                                      Appearance: ='ButtonCanvas.Appearance'.Primary
+                                                      BasePaletteColor: =thmAcao
+                                                      Icon: ="People"
+                                                      OnSelect: |-
+                                                        =Set(varUltimaAtividade, Now());
+                                                        UpdateContext(
+                                                            {
+                                                                var_visibleFormDoar: true,
+                                                                VAR_DADOS_ENTREGA: TBL_ITENS,
+                                                                VAR_NEW_RECIBO: true,
+                                                                var_status: "Doado"
+                                                            }
+                                                        );
+                                                        EditForm(FormItensDoar)
+                                                      Text: ="Doar"
+                                                      AlignInContainer: =AlignInContainer.Center
+                                                      Width: =100
+                                    - Rectangle1:
+                                        Control: Rectangle@2.3.0
                                         Properties:
-                                          Fill: =RGBA(0, 0, 0, 1)
-                                          Height: =40
-                                          Image: |-
-                                            =If(
-                                                IsBlank(TBL_ITENS.foto),
-                                                'sem-foto',
-                                                TBL_ITENS.foto
-                                            )
-                                          OnSelect: |-
-                                            =If(
-                                                !IsBlank(TBL_ITENS.foto),
-                                                UpdateContext(
-                                                    {
-                                                        var_item: TBL_ITENS,
-                                                        varColVeiDetVisibleImagem: true
-                                                    }
-                                                )
-                                            )
-                                          RadiusBottomLeft: =4
-                                          RadiusBottomRight: =4
-                                          RadiusTopLeft: =4
-                                          RadiusTopRight: =4
-                                          Width: =40
-                                          X: =10
-                                          Y: =5
-                                    - EntregarButton_4:
-                                        Control: Button@0.0.45
-                                        Properties:
-                                          Appearance: ='ButtonCanvas.Appearance'.Primary
-                                          BasePaletteColor: =thmAcao
-                                          Icon: ="People"
-                                          OnSelect: |-
-                                            =Set(varUltimaAtividade, Now());
-                                            UpdateContext(
-                                                {
-                                                    var_visibleFormDoar: true,
-                                                    VAR_DADOS_ENTREGA: TBL_ITENS,
-                                                    VAR_NEW_RECIBO: true,
-                                                    var_status: "Doado"
-                                                }
-                                            );
-                                            EditForm(FormItensDoar)
-                                          Text: ="Doar"
-                                          Width: =100
-                                          X: =Parent.Width - 130
-                                          Y: =5
-                              - Rectangle1:
-                                  Control: Rectangle@2.3.0
-                                  Properties:
-                                    Height: =1
-                                    OnSelect: =Select(Parent)
-                                    Width: =1860
-                                    Y: =Gallery4.Height + Gallery4.Y + 10
+                                          OnSelect: =Select(TableItensDestinar)
+                                          AlignInContainer: =AlignInContainer.Stretch
+                                          FillPortions: =0
+                                          Height: =1
                         - TextCanvas4_2:
                             Control: Text@0.0.51
                             Properties:
@@ -733,6 +766,7 @@ Screens:
                             Control: Gallery@2.15.0
                             Variant: VariableHeight
                             Properties:
+                              TemplateSize: =RowContainerDestinado.Height
                               Items: |-
                                 =SortByColumns(
                                     col_perdidosDestinados,
@@ -743,97 +777,129 @@ Screens:
                               TemplatePadding: =4
                               Visible: =TabListDestinar.Selected.Value  <> "DESTINAR"
                             Children:
-                              - Gallery4_1:
-                                  Control: Gallery@2.15.0
-                                  Variant: Vertical
+                              - RowContainerDestinado:
+                                  Control: GroupContainer@1.5.0
+                                  Variant: AutoLayout
                                   Properties:
-                                    Height: =Self.AllItemsCount * 50
-                                    Items: |-
-                                      =SortByColumns(
-                                          Filter(
-                                              col_itensDestinados,
-                                              ID_fk = ThisItem.ID
-                                          ),
-                                          "recebido",
-                                          SortOrder.Descending
-                                      ) As TBL_ITENS
-                                    LoadingSpinner: =LoadingSpinner.None
-                                    Width: =Parent.TemplateWidth - 10
+                                    DropShadow: =DropShadow.Regular
+                                    Fill: =If(ThisItem.IsSelected, RGBA(0, 0, 0, 0.20), RGBA(0, 0, 0, 0.05))
+                                    Height: =CountRows(Filter(col_itensDestinados, ID_fk = ThisItem.ID)) * 50 + 11
+                                    LayoutAlignItems: =LayoutAlignItems.Stretch
+                                    LayoutDirection: =LayoutDirection.Vertical
+                                    LayoutGap: =0
+                                    LayoutMaxHeight: =
+                                    LayoutMaxWidth: =
+                                    LayoutMinHeight: =0
+                                    PaddingBottom: =10
+                                    Width: =Parent.TemplateWidth
                                   Children:
-                                    - HtmlText2_5:
-                                        Control: HtmlViewer@2.1.0
+                                    - Gallery4_1:
+                                        Control: Gallery@2.15.0
+                                        Variant: Vertical
                                         Properties:
-                                          AutoHeight: =true
-                                          HtmlText: |-
-                                            ="<div>🔹" & TBL_ITENS.categoria & " - " & TBL_ITENS.subCategoria & " | " & TBL_ITENS.descricao & " | " & If(
-                                                TBL_ITENS.status <> "Recebido",
-                                                "<font color='#B45309'>" & TBL_ITENS.status & "</font>",
-                                                TBL_ITENS.status & " em " & DateValue(TBL_ITENS.recebido) & " | ID do vínculo: " & TBL_ITENS.ID_fk
-                                            ) & "</div>"
-                                          OnSelect: =Select(Parent)
-                                          PaddingBottom: =0
-                                          PaddingTop: =0
-                                          Size: =10
-                                          Tooltip: =
-                                          Width: =Parent.Width - 200
-                                          X: =60
-                                          Y: =10
-                                    - Image2_5:
-                                        Control: Image@2.2.3
+                                          Items: |-
+                                            =SortByColumns(
+                                                Filter(
+                                                    col_itensDestinados,
+                                                    ID_fk = ThisItem.ID
+                                                ),
+                                                "recebido",
+                                                SortOrder.Descending
+                                            ) As TBL_ITENS
+                                          LoadingSpinner: =LoadingSpinner.None
+                                          AlignInContainer: =AlignInContainer.End
+                                          FillPortions: =0
+                                          Width: =Parent.Width - 30
+                                          Height: =CountRows(Filter(col_itensDestinados, ID_fk = ThisItem.ID)) * 50
+                                        Children:
+                                          - ItemRowDestinado:
+                                              Control: GroupContainer@1.5.0
+                                              Variant: AutoLayout
+                                              Properties:
+                                                DropShadow: =DropShadow.None
+                                                Fill: =RGBA(0, 0, 0, 0)
+                                                Height: =Parent.TemplateHeight
+                                                LayoutAlignItems: =LayoutAlignItems.Center
+                                                LayoutDirection: =LayoutDirection.Horizontal
+                                                LayoutGap: =10
+                                                LayoutMaxHeight: =
+                                                LayoutMaxWidth: =
+                                                LayoutMinHeight: =0
+                                                PaddingLeft: =10
+                                                PaddingRight: =10
+                                                Width: =Parent.TemplateWidth
+                                              Children:
+                                                - Image2_5:
+                                                    Control: Image@2.2.3
+                                                    Properties:
+                                                      Fill: =RGBA(0, 0, 0, 1)
+                                                      Height: =40
+                                                      Image: |-
+                                                        =If(
+                                                            IsBlank(TBL_ITENS.foto),
+                                                            'sem-foto',
+                                                            TBL_ITENS.foto
+                                                        )
+                                                      OnSelect: |-
+                                                        =If(
+                                                            !IsBlank(TBL_ITENS.foto),
+                                                            UpdateContext(
+                                                                {
+                                                                    var_item: TBL_ITENS,
+                                                                    varColVeiDetVisibleImagem: true
+                                                                }
+                                                            )
+                                                        )
+                                                      RadiusBottomLeft: =4
+                                                      RadiusBottomRight: =4
+                                                      RadiusTopLeft: =4
+                                                      RadiusTopRight: =4
+                                                      AlignInContainer: =AlignInContainer.Center
+                                                      Width: =60
+                                                - HtmlText2_5:
+                                                    Control: HtmlViewer@2.1.0
+                                                    Properties:
+                                                      AutoHeight: =true
+                                                      HtmlText: |-
+                                                        ="<div>🔹" & TBL_ITENS.categoria & " - " & TBL_ITENS.subCategoria & " | " & TBL_ITENS.descricao & " | " & If(
+                                                            TBL_ITENS.status <> "Recebido",
+                                                            "<font color='#B45309'>" & TBL_ITENS.status & "</font>",
+                                                            TBL_ITENS.status & " em " & DateValue(TBL_ITENS.recebido) & " | ID do vínculo: " & TBL_ITENS.ID_fk
+                                                        ) & "</div>"
+                                                      OnSelect: =Select(Gallery4_1)
+                                                      PaddingBottom: =0
+                                                      PaddingTop: =0
+                                                      Size: =10
+                                                      Tooltip: =
+                                                      AlignInContainer: =AlignInContainer.Center
+                                                      FillPortions: =1
+                                                - EntregarButton_5:
+                                                    Control: Button@0.0.45
+                                                    Properties:
+                                                      Appearance: ='ButtonCanvas.Appearance'.Primary
+                                                      BasePaletteColor: =thmAcao
+                                                      Icon: ="People"
+                                                      OnSelect: |-
+                                                        =Set(varUltimaAtividade, Now());
+                                                        UpdateContext(
+                                                            {
+                                                                var_visibleFormDoar: true,
+                                                                VAR_DADOS_ENTREGA: TBL_ITENS,
+                                                                VAR_NEW_RECIBO: true,
+                                                                var_status: "Doado"
+                                                            }
+                                                        );
+                                                        EditForm(FormItensDoar)
+                                                      Text: ="Doar"
+                                                      AlignInContainer: =AlignInContainer.Center
+                                                      Width: =100
+                                    - Rectangle1_1:
+                                        Control: Rectangle@2.3.0
                                         Properties:
-                                          Fill: =RGBA(0, 0, 0, 1)
-                                          Height: =40
-                                          Image: |-
-                                            =If(
-                                                IsBlank(TBL_ITENS.foto),
-                                                'sem-foto',
-                                                TBL_ITENS.foto
-                                            )
-                                          OnSelect: |-
-                                            =If(
-                                                !IsBlank(TBL_ITENS.foto),
-                                                UpdateContext(
-                                                    {
-                                                        var_item: TBL_ITENS,
-                                                        varColVeiDetVisibleImagem: true
-                                                    }
-                                                )
-                                            )
-                                          RadiusBottomLeft: =4
-                                          RadiusBottomRight: =4
-                                          RadiusTopLeft: =4
-                                          RadiusTopRight: =4
-                                          Width: =40
-                                          X: =10
-                                          Y: =5
-                                    - EntregarButton_5:
-                                        Control: Button@0.0.45
-                                        Properties:
-                                          Appearance: ='ButtonCanvas.Appearance'.Primary
-                                          BasePaletteColor: =thmAcao
-                                          Icon: ="People"
-                                          OnSelect: |-
-                                            =Set(varUltimaAtividade, Now());
-                                            UpdateContext(
-                                                {
-                                                    var_visibleFormDoar: true,
-                                                    VAR_DADOS_ENTREGA: TBL_ITENS,
-                                                    VAR_NEW_RECIBO: true,
-                                                    var_status: "Doado"
-                                                }
-                                            );
-                                            EditForm(FormItensDoar)
-                                          Text: ="Doar"
-                                          Width: =100
-                                          X: =Parent.Width - 130
-                                          Y: =5
-                              - Rectangle1_1:
-                                  Control: Rectangle@2.3.0
-                                  Properties:
-                                    Height: =1
-                                    OnSelect: =Select(Parent)
-                                    Width: =1860
-                                    Y: =Gallery4_1.Height + Gallery4_1.Y + 10
+                                          OnSelect: =Select(TableItensDestinado)
+                                          AlignInContainer: =AlignInContainer.Stretch
+                                          FillPortions: =0
+                                          Height: =1
                         - TextCanvas4_3:
                             Control: Text@0.0.51
                             Properties:
