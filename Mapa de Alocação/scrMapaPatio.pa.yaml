@@ -1205,7 +1205,10 @@ Screens:
                                                   SortOrder.Ascending
                                               ) As _r,
                                               {
+                                                  id: _r.ID,
                                                   id_posicao: _r.id_posicao,
+                                                  aviso_ent: _r.aviso_chegada,
+                                                  aviso_sai: _r.aviso_saida,
                                                   patio: _r.patio_txt,
                                                   posicao: _r.posicao_txt,
                                                   data_ini: _r.data_operacao,
@@ -4076,6 +4079,9 @@ Screens:
                                         Upper(Text(_r.data_ini, "mmm/yy")),
                                         ""
                                     ),
+                                    id: _r.id,
+                                    aviso_ent: _r.aviso_ent,
+                                    aviso_sai: _r.aviso_sai,
                                     data_ini: _r.data_ini,
                                     data_f: _r.data_f,
                                     h_ini: _r.h_ini,
@@ -4164,6 +4170,31 @@ Screens:
                                 If(IsBlank(ThisItem.resp), "", "   " & ThisItem.resp) &
                                 "   " & Coalesce(LookUp(colCondicoes As _cl, _cl.cond = ThisItem.cond).rotulo, "Previsto")
 
+                        - btnResAvisoMap:
+                            Control: Button@0.0.45
+                            Properties:
+                              Appearance: ='ButtonCanvas.Appearance'.Secondary
+                              BasePaletteColor: =thmOperacional
+                              BorderRadius: =0
+                              FillPortions: =0
+                              FontColor: =thmOperacional
+                              FontSize: =11
+                              FontWeight: =FontWeight.Semibold
+                              Height: =44
+                              LayoutMinWidth: =0
+                              OnSelect: |-
+                                =Set(varAlocSel, ThisItem);
+                                UpdateContext({ locIntSentido: If(IsBlank(ThisItem.aviso_ent), "ENTRADA", "SAIDA") });
+                                Set(varResAberto, false);
+                                Set(varIntAberto, true)
+                              PaddingLeft: =8
+                              PaddingRight: =8
+                              Text: |-
+                                ="AVISO" &
+                                If(!IsBlank(ThisItem.aviso_ent), " ✓E", "") &
+                                If(!IsBlank(ThisItem.aviso_sai), " ✓S", "")
+                              Visible: =ThisItem.mes = ""
+                              Width: =108
                         - btnResIrDiaMap:
                             Control: Button@0.0.45
                             Properties:
@@ -4251,6 +4282,46 @@ Screens:
                         Size: =16
                         Text: |-
                           =If(locIntSentido = "ENTRADA", "AVISO DE CHEGADA INTERNACIONAL", "AVISO DE SAÍDA INTERNACIONAL")
+                  - btnIntModoEntMap:
+                      Control: Button@0.0.45
+                      Properties:
+                        Appearance: |-
+                          =If(
+                              locIntSentido = "ENTRADA",
+                              'ButtonCanvas.Appearance'.Primary,
+                              'ButtonCanvas.Appearance'.Secondary
+                          )
+                        BasePaletteColor: =thmOperacional
+                        BorderRadius: =0
+                        FontColor: =If(locIntSentido = "ENTRADA", thmTextoBarra, thmOperacional)
+                        FontSize: =11
+                        FontWeight: =FontWeight.Semibold
+                        Height: =40
+                        LayoutMinWidth: =0
+                        OnSelect: |-
+                          =UpdateContext({ locIntSentido: "ENTRADA" })
+                        Text: ="CHEGADA"
+                        Width: =116
+                  - btnIntModoSaiMap:
+                      Control: Button@0.0.45
+                      Properties:
+                        Appearance: |-
+                          =If(
+                              locIntSentido = "SAIDA",
+                              'ButtonCanvas.Appearance'.Primary,
+                              'ButtonCanvas.Appearance'.Secondary
+                          )
+                        BasePaletteColor: =thmOperacional
+                        BorderRadius: =0
+                        FontColor: =If(locIntSentido = "SAIDA", thmTextoBarra, thmOperacional)
+                        FontSize: =11
+                        FontWeight: =FontWeight.Semibold
+                        Height: =40
+                        LayoutMinWidth: =0
+                        OnSelect: |-
+                          =UpdateContext({ locIntSentido: "SAIDA" })
+                        Text: ="SAÍDA"
+                        Width: =106
                   - btnIntFecharMap:
                       Control: Button@0.0.45
                       Properties:
@@ -4488,17 +4559,17 @@ Screens:
                         IconStyle: ='ButtonCanvas.IconStyle'.Filled
                         LayoutMinWidth: =0
                         OnSelect: |-
-                          =Patch(
-                              tb_alocacoesMapa,
-                              LookUp(tb_alocacoesMapa, ID = varAlocSel.id),
-                              If(
-                                  locIntSentido = "ENTRADA",
-                                  { aviso_chegada: Now() },
-                                  { aviso_saida: Now() }
-                              )
+                          =If(
+                              locIntSentido = "ENTRADA",
+                              Patch(tb_alocacoesMapa, LookUp(tb_alocacoesMapa, ID = varAlocSel.id), { aviso_chegada: Now() });
+                              UpdateIf(colDia, id = varAlocSel.id, { aviso_ent: Now() });
+                              UpdateIf(colReservas, id = varAlocSel.id, { aviso_ent: Now() });
+                              Set(varAlocSel, Patch(varAlocSel, { aviso_ent: Now() })),
+                              Patch(tb_alocacoesMapa, LookUp(tb_alocacoesMapa, ID = varAlocSel.id), { aviso_saida: Now() });
+                              UpdateIf(colDia, id = varAlocSel.id, { aviso_sai: Now() });
+                              UpdateIf(colReservas, id = varAlocSel.id, { aviso_sai: Now() });
+                              Set(varAlocSel, Patch(varAlocSel, { aviso_sai: Now() }))
                           );
-                          Select(btnAtualizarMap);
-                          Set(varAlocSel, LookUp(colDia As _d, _d.id = varAlocSel.id));
                           Set(varIntAberto, false);
                           Notify("Aviso marcado como enviado.", NotificationType.Success, 3000)
                         Text: ="JÁ ENVIEI O AVISO"
@@ -4516,17 +4587,17 @@ Screens:
                         Height: =44
                         LayoutMinWidth: =0
                         OnSelect: |-
-                          =Patch(
-                              tb_alocacoesMapa,
-                              LookUp(tb_alocacoesMapa, ID = varAlocSel.id),
-                              If(
-                                  locIntSentido = "ENTRADA",
-                                  { aviso_chegada: Blank() },
-                                  { aviso_saida: Blank() }
-                              )
+                          =If(
+                              locIntSentido = "ENTRADA",
+                              Patch(tb_alocacoesMapa, LookUp(tb_alocacoesMapa, ID = varAlocSel.id), { aviso_chegada: Blank() });
+                              UpdateIf(colDia, id = varAlocSel.id, { aviso_ent: Blank() });
+                              UpdateIf(colReservas, id = varAlocSel.id, { aviso_ent: Blank() });
+                              Set(varAlocSel, Patch(varAlocSel, { aviso_ent: Blank() })),
+                              Patch(tb_alocacoesMapa, LookUp(tb_alocacoesMapa, ID = varAlocSel.id), { aviso_saida: Blank() });
+                              UpdateIf(colDia, id = varAlocSel.id, { aviso_sai: Blank() });
+                              UpdateIf(colReservas, id = varAlocSel.id, { aviso_sai: Blank() });
+                              Set(varAlocSel, Patch(varAlocSel, { aviso_sai: Blank() }))
                           );
-                          Select(btnAtualizarMap);
-                          Set(varAlocSel, LookUp(colDia As _d, _d.id = varAlocSel.id));
                           Notify("Marca de enviado desfeita.", NotificationType.Information, 3000)
                         Text: ="DESFAZER MARCA"
                         Visible: |-
