@@ -331,3 +331,34 @@ contém, e só então avaliar se essa galeria tem `Width` própria.
 Lição geral: verificação de escopo em estrutura aninhada tem que resolver o
 dono mais próximo, nunca todos os ancestrais. Um falso positivo recorrente
 treina o operador a ignorar o validador — custa mais caro que não ter.
+
+## Falha silenciosa: `\b` em heredoc vira backspace
+
+Projeto: Perdidos e Achados, script de troca de cores (24/09/2026).
+
+Sintoma: o script reportou "236 substituicoes" e gravou os arquivos, mas as
+9 trocas de hex dentro do HTML dos `HtmlViewer` nao aconteceram. Nenhum erro.
+Descoberto so quando o usuario apontou que a cor nao mudou.
+
+Causa: o script foi escrito em disco por heredoc e a sequencia `'\b'` chegou
+ao arquivo como `'\b'`. Em JavaScript `"\b"` **nao** e a borda de palavra do
+regex — e o caractere backspace (U+0008). O padrao virou `#FFA500<BS>`, que
+nunca casa. Como o codigo era `if (c) { ...substitui... }`, zero ocorrencias
+significava simplesmente nao fazer nada.
+
+Correcao: `split(literal).join(novo)` em vez de `new RegExp(literal + '\b')`.
+Para trocar texto literal, regex nao acrescenta nada e introduz uma camada de
+escape a mais.
+
+Prevencao, em duas frentes:
+
+1. Nao escrever escape de regex atraves de heredoc. Se precisar de regex no
+   script, montar com `String.raw` ou gravar o arquivo com a ferramenta de
+   escrita, nunca por `cat <<EOF`.
+2. **Todo script de substituicao em massa deve falhar alto quando uma regra nao
+   casa nada.** Uma regra que nao encontra ocorrencia e quase sempre bug de
+   padrao, nao ausencia legitima. Contar por regra e imprimir as que ficaram em
+   zero — a contagem total agregada esconde exatamente esse caso.
+
+Lição geral: contador agregado e a pior metrica para validar substituicao em
+lote. 236 "sucessos" mascararam 9 falhas porque ninguem contou por regra.

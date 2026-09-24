@@ -250,3 +250,33 @@ diretos da `Gallery2`, que nao tem `Width` propria. Mesmo caso ja confirmado em
 `ScreenCadastrar`/`Button2`. `Button2_5` e o botao transparente que seleciona a
 linha: com a largura errada, clicar na parte direita da linha nao selecionava.
 Corrigido para `Parent.TemplateWidth - 10`.
+
+### Correcao da paleta — ASUR e verde-petroleo, nao roxo Motiva (24/09/2026)
+
+A primeira aplicacao usou a paleta do `AppFormulas_Mapa.fx.md`, que se declara
+"roxo institucional Motiva" (`#391694`). Errado: a identidade pedida era a da
+ASUR Brasil, verde-petroleo.
+
+Os hex corretos foram extraidos por amostragem de pixel de um print do Mapa de
+Alocacao publicado:
+
+| Hex | Papel | Presenca no print |
+|---|---|---|
+| `#0A5A66` | verde-petroleo institucional (barra, fundo) | 80,3% |
+| `#007382` | teal de acao (botao primario, item ativo) | 1,2% |
+| `#D6DDE0` | texto sobre fundo escuro | 0,4% |
+| `#64748B` | texto fraco | 0,1% |
+
+Derivados para fundo claro: `#06424B` (escura), `#E3F1F3` (clara),
+`#B9D6DB` (borda), `#F5F8F9` (fundo).
+
+> **Divergencia a resolver:** o Mapa de Alocacao publicado esta verde, mas
+> `AppFormulas_Mapa.fx.md` e `App_Formulas_Mapa.txt` no repositorio continuam
+> com o roxo Motiva. O app foi pintado direto no Studio e a mudanca nunca
+> voltou para o repositorio. Os arquivos do Mapa nao foram tocados por esta
+> alteracao.
+
+A troca custou **uma edicao de bloco** no `App.Formulas`: nenhuma das 13 telas
+precisou ser alterada, porque nenhuma declara cor literal. Unica excecao, os
+hex dentro do HTML dos `HtmlViewer` (19 ocorrencias), que sao literais por
+decisao registrada acima.

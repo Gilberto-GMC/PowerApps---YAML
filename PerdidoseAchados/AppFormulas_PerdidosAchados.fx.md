@@ -132,22 +132,23 @@ Value(
         Sort(tbl_controle_versoes; ID; SortOrder.Descending)
     ).Numero_versao
 );;
-// ===== Design System Motiva/ASUR — tokens =====
+// ===== Design System ASUR Brasil — tokens =====
 // Mesma fonte do projeto "Mapa de Alocacao" (AppFormulas_Mapa.fx.md, secao 7).
 // Nenhuma tela deve declarar cor literal: trocar a marca = editar so este bloco.
 
 // Hex — usados dentro do HTML dos HtmlViewer
-hxPrimaria        = "#391694";;   // roxo institucional Motiva
-hxPrimariaEscura  = "#2A106E";;
-hxPrimariaClara   = "#EDE9FB";;
-hxAcao            = "#DD511A";;
-hxFundo           = "#F8FAFC";;
-hxBorda           = "#C9C5E6";;
+hxPrimaria        = "#0A5A66";;   // verde-petroleo institucional ASUR
+hxPrimariaEscura  = "#06424B";;
+hxPrimariaClara   = "#E3F1F3";;
+hxAcao            = "#007382";;   // teal de acao (botao primario do Mapa)
+hxFundo           = "#F5F8F9";;
+hxBorda           = "#B9D6DB";;
 hxTexto           = "#1E293B";;
 hxTextoFraco      = "#64748B";;
 hxVerde           = "#15803D";;
 hxAmbar           = "#B45309";;
 hxVermelho        = "#B91C1C";;
+hxTextoBarra      = "#D6DDE0";;   // texto sobre fundo escuro — nunca branco puro
 
 // Cores dos controles nativos — derivadas dos hex acima, nunca redigitadas
 thmPrimaria       = ColorValue(hxPrimaria);;
@@ -161,6 +162,7 @@ thmTextoFraco     = ColorValue(hxTextoFraco);;
 thmVerde          = ColorValue(hxVerde);;
 thmAmbar          = ColorValue(hxAmbar);;
 thmVermelho       = ColorValue(hxVermelho);;
+thmTextoBarra     = ColorValue(hxTextoBarra);;
 
 ```
 
