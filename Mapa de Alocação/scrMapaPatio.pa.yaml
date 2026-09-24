@@ -15,6 +15,7 @@ Screens:
             {
                 locPatio: "TODOS",
                 locNonce: 0, locNonceEq: 0, locEquipSug: "",
+                locIntSentido: "",
                 locResExpandido: false,
                 locConfirmaConting: 0,
                 locConfirmaPortao: "", locConfirmaEnv: 0, locConfirmaAlt: "",
@@ -976,6 +977,8 @@ Screens:
                                                 intl: _r.internacional,
                                                 alt: Coalesce(_r.alternativa, 0),
                                                 cond: Coalesce(_r.condicao, "PREVISTO"),
+                                                aviso_ent: _r.aviso_chegada,
+                                                aviso_sai: _r.aviso_saida,
                                                 resp: _r.responsavel,
                                                 contato: _r.contato,
                                                 equip: _r.equipamento,
@@ -3146,6 +3149,89 @@ Screens:
                         Mode: ='TextInputCanvas.Mode'.Multiline
                         Placeholder: ="Missão presidencial, obra, retorno ao hangar…"
                         Value: =Coalesce(varForm.obs, "")
+                  - cntIntBotoesMap:
+                      Control: GroupContainer@1.5.0
+                      Variant: AutoLayout
+                      Properties:
+                        DropShadow: =DropShadow.None
+                        Fill: =thmSuperficie
+                        FillPortions: =0
+                        Height: =78
+                        LayoutAlignItems: =LayoutAlignItems.Stretch
+                        LayoutDirection: =LayoutDirection.Vertical
+                        LayoutGap: =4
+                        LayoutMinHeight: =0
+                        LayoutMinWidth: =0
+                        PaddingTop: =6
+                        RadiusBottomLeft: =0
+                        RadiusBottomRight: =0
+                        RadiusTopLeft: =0
+                        RadiusTopRight: =0
+                        Visible: =Coalesce(varAlocSel.id, 0) > 0 And drpTipoMap.Selected.Value <> "Interdição"
+                      Children:
+                        - lblIntTituloMap:
+                            Control: Label@2.5.1
+                            Properties:
+                              Color: =thmTextoFraco
+                              Font: =thmFonte
+                              FontWeight: =FontWeight.Bold
+                              Height: =18
+                              Size: =10
+                              Text: ="AVISO AOS ÓRGÃOS FEDERAIS (ADUANA)"
+                        - cntIntLinhaMap:
+                            Control: GroupContainer@1.5.0
+                            Variant: AutoLayout
+                            Properties:
+                              DropShadow: =DropShadow.None
+                              Fill: =thmSuperficie
+                              LayoutAlignItems: =LayoutAlignItems.Stretch
+                              LayoutDirection: =LayoutDirection.Horizontal
+                              LayoutGap: =8
+                              LayoutMinHeight: =0
+                              LayoutMinWidth: =0
+                              RadiusBottomLeft: =0
+                              RadiusBottomRight: =0
+                              RadiusTopLeft: =0
+                              RadiusTopRight: =0
+                            Children:
+                              - btnIntEntradaMap:
+                                  Control: Button@0.0.45
+                                  Properties:
+                                    Appearance: ='ButtonCanvas.Appearance'.Secondary
+                                    BasePaletteColor: =thmOperacional
+                                    BorderRadius: =0
+                                    FillPortions: =1
+                                    FontColor: =thmOperacional
+                                    FontSize: =11
+                                    FontWeight: =FontWeight.Semibold
+                                    Height: =40
+                                    Icon: ="Airplane"
+                                    IconStyle: ='ButtonCanvas.IconStyle'.Filled
+                                    LayoutMinWidth: =0
+                                    OnSelect: |-
+                                      =UpdateContext({ locIntSentido: "ENTRADA" });
+                                      Set(varIntAberto, true)
+                                    Text: |-
+                                      =If(IsBlank(varAlocSel.aviso_ent), "GERAR TEXTO ENTRADA", "ENTRADA ✓ " & Text(varAlocSel.aviso_ent, "dd/mm hh:mm"))
+                              - btnIntSaidaMap:
+                                  Control: Button@0.0.45
+                                  Properties:
+                                    Appearance: ='ButtonCanvas.Appearance'.Secondary
+                                    BasePaletteColor: =thmOperacional
+                                    BorderRadius: =0
+                                    FillPortions: =1
+                                    FontColor: =thmOperacional
+                                    FontSize: =11
+                                    FontWeight: =FontWeight.Semibold
+                                    Height: =40
+                                    Icon: ="ArrowExit"
+                                    IconStyle: ='ButtonCanvas.IconStyle'.Filled
+                                    LayoutMinWidth: =0
+                                    OnSelect: |-
+                                      =UpdateContext({ locIntSentido: "SAIDA" });
+                                      Set(varIntAberto, true)
+                                    Text: |-
+                                      =If(IsBlank(varAlocSel.aviso_sai), "GERAR TEXTO SAÍDA", "SAÍDA ✓ " & Text(varAlocSel.aviso_sai, "dd/mm hh:mm"))
             - cntAcoesMap:
                 Control: GroupContainer@1.5.0
                 Variant: AutoLayout
@@ -4100,6 +4186,352 @@ Screens:
                               PaddingRight: =8
                               Text: ="IR AO DIA"
                               Width: =120
+      - recVeuIntMap:
+          Control: Rectangle@2.3.0
+          Properties:
+            BorderStyle: =BorderStyle.None
+            Fill: =thmVeu
+            Height: =Parent.Height
+            OnSelect: =Set(varIntAberto, false)
+            Visible: =varIntAberto
+            Width: =Parent.Width
+      - cntIntPainelMap:
+          Control: GroupContainer@1.5.0
+          Variant: AutoLayout
+          Properties:
+            BorderColor: =thmBorda
+            BorderThickness: =1
+            DropShadow: =DropShadow.None
+            Fill: =thmFundo
+            Height: =Parent.Height
+            LayoutAlignItems: =LayoutAlignItems.Stretch
+            LayoutDirection: =LayoutDirection.Vertical
+            LayoutGap: =8
+            LayoutMinHeight: =0
+            LayoutMinWidth: =0
+            LayoutOverflowY: =LayoutOverflow.Scroll
+            PaddingBottom: =12
+            PaddingLeft: =16
+            PaddingRight: =16
+            PaddingTop: =12
+            RadiusBottomLeft: =0
+            RadiusBottomRight: =0
+            RadiusTopLeft: =0
+            RadiusTopRight: =0
+            Visible: =varIntAberto
+            Width: =Min(720, Parent.Width)
+            X: =Parent.Width - Self.Width
+          Children:
+            - cntIntTopoMap:
+                Control: GroupContainer@1.5.0
+                Variant: AutoLayout
+                Properties:
+                  DropShadow: =DropShadow.None
+                  Fill: =thmFundo
+                  FillPortions: =0
+                  Height: =40
+                  LayoutAlignItems: =LayoutAlignItems.Stretch
+                  LayoutDirection: =LayoutDirection.Horizontal
+                  LayoutGap: =8
+                  LayoutMinHeight: =0
+                  LayoutMinWidth: =0
+                  RadiusBottomLeft: =0
+                  RadiusBottomRight: =0
+                  RadiusTopLeft: =0
+                  RadiusTopRight: =0
+                Children:
+                  - lblIntPainelTituloMap:
+                      Control: Label@2.5.1
+                      Properties:
+                        Color: =thmPrimaria
+                        FillPortions: =1
+                        Font: =thmFonte
+                        FontWeight: =FontWeight.Bold
+                        LayoutMinWidth: =0
+                        Size: =16
+                        Text: |-
+                          =If(locIntSentido = "ENTRADA", "AVISO DE CHEGADA INTERNACIONAL", "AVISO DE SAÍDA INTERNACIONAL")
+                  - btnIntFecharMap:
+                      Control: Button@0.0.45
+                      Properties:
+                        Appearance: ='ButtonCanvas.Appearance'.Secondary
+                        BasePaletteColor: =thmTextoFraco
+                        BorderRadius: =0
+                        FontColor: =thmTextoFraco
+                        FontSize: =12
+                        FontWeight: =FontWeight.Semibold
+                        Height: =40
+                        Icon: ="Dismiss"
+                        IconStyle: ='ButtonCanvas.IconStyle'.Filled
+                        LayoutMinWidth: =0
+                        OnSelect: =Set(varIntAberto, false)
+                        Text: ="FECHAR"
+                        Width: =110
+            - cntIntCamposMap:
+                Control: GroupContainer@1.5.0
+                Variant: AutoLayout
+                Properties:
+                  DropShadow: =DropShadow.None
+                  Fill: =thmFundo
+                  FillPortions: =0
+                  Height: =62
+                  LayoutAlignItems: =LayoutAlignItems.Stretch
+                  LayoutDirection: =LayoutDirection.Horizontal
+                  LayoutGap: =8
+                  LayoutMinHeight: =0
+                  LayoutMinWidth: =0
+                  RadiusBottomLeft: =0
+                  RadiusBottomRight: =0
+                  RadiusTopLeft: =0
+                  RadiusTopRight: =0
+                Children:
+                        - cntIntTripMap:
+                            Control: GroupContainer@1.5.0
+                            Variant: AutoLayout
+                            Properties:
+                              DropShadow: =DropShadow.None
+                              Fill: =thmFundo
+                              FillPortions: =0
+                              LayoutAlignItems: =LayoutAlignItems.Stretch
+                              LayoutDirection: =LayoutDirection.Vertical
+                              LayoutGap: =4
+                              LayoutMinHeight: =0
+                              LayoutMinWidth: =0
+                              RadiusBottomLeft: =0
+                              RadiusBottomRight: =0
+                              RadiusTopLeft: =0
+                              RadiusTopRight: =0
+                              Width: =140
+                            Children:
+                              - lblIntTripMap:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    Color: =thmTextoFraco
+                                    Font: =thmFonte
+                                    FontWeight: =FontWeight.Bold
+                                    Height: =18
+                                    Size: =10
+                                    Text: ="TRIPULANTES"
+                              - txtIntTripMap:
+                                  Control: Classic/TextInput@2.3.2
+                                  Properties:
+                                    AccessibleLabel: ="TRIPULANTES"
+                                    BorderColor: =thmBorda
+                                    BorderThickness: =1
+                                    Default: =""
+                                    DelayOutput: =false
+                                    Fill: =thmSuperficie
+                                    Height: =36
+                                    HintText: ="ex. 2"
+                                    PaddingLeft: =8
+                                    Size: =11
+                        - cntIntPaxMap:
+                            Control: GroupContainer@1.5.0
+                            Variant: AutoLayout
+                            Properties:
+                              DropShadow: =DropShadow.None
+                              Fill: =thmFundo
+                              FillPortions: =0
+                              LayoutAlignItems: =LayoutAlignItems.Stretch
+                              LayoutDirection: =LayoutDirection.Vertical
+                              LayoutGap: =4
+                              LayoutMinHeight: =0
+                              LayoutMinWidth: =0
+                              RadiusBottomLeft: =0
+                              RadiusBottomRight: =0
+                              RadiusTopLeft: =0
+                              RadiusTopRight: =0
+                              Width: =140
+                            Children:
+                              - lblIntPaxMap:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    Color: =thmTextoFraco
+                                    Font: =thmFonte
+                                    FontWeight: =FontWeight.Bold
+                                    Height: =18
+                                    Size: =10
+                                    Text: ="PASSAGEIROS"
+                              - txtIntPaxMap:
+                                  Control: Classic/TextInput@2.3.2
+                                  Properties:
+                                    AccessibleLabel: ="PASSAGEIROS"
+                                    BorderColor: =thmBorda
+                                    BorderThickness: =1
+                                    Default: =""
+                                    DelayOutput: =false
+                                    Fill: =thmSuperficie
+                                    Height: =36
+                                    HintText: ="ex. 5"
+                                    PaddingLeft: =8
+                                    Size: =11
+                        - cntIntLocalMap:
+                            Control: GroupContainer@1.5.0
+                            Variant: AutoLayout
+                            Properties:
+                              DropShadow: =DropShadow.None
+                              Fill: =thmFundo
+                              FillPortions: =0
+                              LayoutAlignItems: =LayoutAlignItems.Stretch
+                              LayoutDirection: =LayoutDirection.Vertical
+                              LayoutGap: =4
+                              LayoutMinHeight: =0
+                              LayoutMinWidth: =0
+                              RadiusBottomLeft: =0
+                              RadiusBottomRight: =0
+                              RadiusTopLeft: =0
+                              RadiusTopRight: =0
+                            Children:
+                              - lblIntLocalMap:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    Color: =thmTextoFraco
+                                    Font: =thmFonte
+                                    FontWeight: =FontWeight.Bold
+                                    Height: =18
+                                    Size: =10
+                                    Text: ="CIDADE / ICAO / PAÍS"
+                              - txtIntLocalMap:
+                                  Control: Classic/TextInput@2.3.2
+                                  Properties:
+                                    AccessibleLabel: ="CIDADE / ICAO / PAÍS"
+                                    BorderColor: =thmBorda
+                                    BorderThickness: =1
+                                    Default: =""
+                                    DelayOutput: =false
+                                    Fill: =thmSuperficie
+                                    Height: =36
+                                    HintText: ="ex. ASUNCION / SGAS / PARAGUAI"
+                                    PaddingLeft: =8
+                                    Size: =11
+            - lblIntAjudaMap:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =thmTextoFraco
+                  Font: =thmFonte
+                  FillPortions: =0
+                  Height: =18
+                  Size: =9
+                  Text: ="O texto muda conforme você digita. Selecione tudo, copie e envie por e-mail e WhatsApp."
+            - txtIntTextoMap:
+                Control: TextInput@0.0.54
+                Properties:
+                  AccessibleLabel: ="Texto do aviso aos órgãos federais"
+                  FillPortions: =1
+                  Height: =340
+                  Mode: ='TextInputCanvas.Mode'.Multiline
+                  Value: |-
+                    =With(
+                        {
+                            _ent: locIntSentido = "ENTRADA",
+                            _data: If(locIntSentido = "ENTRADA", varAlocSel.data_ini, varAlocSel.data_f),
+                            _hora: If(locIntSentido = "ENTRADA", varAlocSel.h_ini, varAlocSel.h_fim)
+                        },
+                        "Prezados," & Char(10) & Char(10) &
+                        "Solicitamos agendamento com os órgãos federais para a " &
+                        If(_ent, "CHEGADA INTERNACIONAL", "SAÍDA INTERNACIONAL") &
+                        " da aeronave, conforme programação abaixo:" & Char(10) & Char(10) &
+                        "AERONAVE: " &
+                        Upper(Coalesce(LookUp(colEquip As _e, _e.equip = varAlocSel.equip).nome_equip, varAlocSel.equip, "—")) & Char(10) &
+                        "MATRÍCULA: " & Upper(Coalesce(varAlocSel.prefixo, "—")) & Char(10) &
+                        "PROPRIETÁRIO: " & Upper(Coalesce(varAlocSel.resp, "—")) & Char(10) & Char(10) &
+                        If(_ent, "DATA DE CHEGADA: ", "DATA DE SAÍDA: ") &
+                        Text(_data, "dd/mm/yyyy") & " (" & Proper(Text(_data, "dddd")) & ")" & Char(10) &
+                        If(_ent, "PROCEDÊNCIA: ", "DESTINO: ") &
+                        Upper(Coalesce(Trim(txtIntLocalMap.Text), "")) & Char(10) &
+                        "HORÁRIO DE IMIGRAÇÃO: " &
+                        Text(Int(_hora / 60), "00") & ":" & Text(Mod(_hora, 60), "00") & " LOCAL" & Char(10) &
+                        If(_ent, "DESEMBARQUE: ", "EMBARQUE: ") &
+                        Coalesce(Trim(txtIntTripMap.Text), "") & " TRIP + " &
+                        Coalesce(Trim(txtIntPaxMap.Text), "") & " PASSAGEIROS" & Char(10) &
+                        If(
+                            IsBlank(varAlocSel.obs),
+                            "",
+                            Char(10) & "OBSERVAÇÕES: " & varAlocSel.obs & Char(10)
+                        ) &
+                        Char(10) & "Atenciosamente," & Char(10) &
+                        User().FullName & Char(10) &
+                        "Operações — " & varAeroNome
+                    )
+            - cntIntAcoesMap:
+                Control: GroupContainer@1.5.0
+                Variant: AutoLayout
+                Properties:
+                  DropShadow: =DropShadow.None
+                  Fill: =thmFundo
+                  FillPortions: =0
+                  Height: =56
+                  LayoutAlignItems: =LayoutAlignItems.Stretch
+                  LayoutDirection: =LayoutDirection.Horizontal
+                  LayoutGap: =8
+                  LayoutMinHeight: =0
+                  LayoutMinWidth: =0
+                  PaddingTop: =8
+                  RadiusBottomLeft: =0
+                  RadiusBottomRight: =0
+                  RadiusTopLeft: =0
+                  RadiusTopRight: =0
+                Children:
+                  - btnIntEnviadoMap:
+                      Control: Button@0.0.45
+                      Properties:
+                        Appearance: ='ButtonCanvas.Appearance'.Primary
+                        BasePaletteColor: =thmAcao
+                        BorderRadius: =0
+                        DisplayMode: =If(varPodeEditar, DisplayMode.Edit, DisplayMode.Disabled)
+                        FillPortions: =1
+                        FontColor: =thmTextoBarra
+                        FontSize: =12
+                        FontWeight: =FontWeight.Semibold
+                        Height: =44
+                        Icon: ="Save"
+                        IconStyle: ='ButtonCanvas.IconStyle'.Filled
+                        LayoutMinWidth: =0
+                        OnSelect: |-
+                          =Patch(
+                              tb_alocacoesMapa,
+                              LookUp(tb_alocacoesMapa, ID = varAlocSel.id),
+                              If(
+                                  locIntSentido = "ENTRADA",
+                                  { aviso_chegada: Now() },
+                                  { aviso_saida: Now() }
+                              )
+                          );
+                          Select(btnAtualizarMap);
+                          Set(varAlocSel, LookUp(colDia As _d, _d.id = varAlocSel.id));
+                          Set(varIntAberto, false);
+                          Notify("Aviso marcado como enviado.", NotificationType.Success, 3000)
+                        Text: ="JÁ ENVIEI O AVISO"
+                  - btnIntDesmarcarMap:
+                      Control: Button@0.0.45
+                      Properties:
+                        Appearance: ='ButtonCanvas.Appearance'.Secondary
+                        BasePaletteColor: =thmTextoFraco
+                        BorderRadius: =0
+                        DisplayMode: =If(varPodeEditar, DisplayMode.Edit, DisplayMode.Disabled)
+                        FillPortions: =0
+                        FontColor: =thmTextoFraco
+                        FontSize: =12
+                        FontWeight: =FontWeight.Semibold
+                        Height: =44
+                        LayoutMinWidth: =0
+                        OnSelect: |-
+                          =Patch(
+                              tb_alocacoesMapa,
+                              LookUp(tb_alocacoesMapa, ID = varAlocSel.id),
+                              If(
+                                  locIntSentido = "ENTRADA",
+                                  { aviso_chegada: Blank() },
+                                  { aviso_saida: Blank() }
+                              )
+                          );
+                          Select(btnAtualizarMap);
+                          Set(varAlocSel, LookUp(colDia As _d, _d.id = varAlocSel.id));
+                          Notify("Marca de enviado desfeita.", NotificationType.Information, 3000)
+                        Text: ="DESFAZER MARCA"
+                        Visible: |-
+                          =If(locIntSentido = "ENTRADA", !IsBlank(varAlocSel.aviso_ent), !IsBlank(varAlocSel.aviso_sai))
+                        Width: =170
       - recVeuHangarMap:
           Control: Rectangle@2.3.0
           Properties:
