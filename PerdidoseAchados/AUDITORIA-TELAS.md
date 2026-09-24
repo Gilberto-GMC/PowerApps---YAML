@@ -381,3 +381,27 @@ Geometria nao foi alterada: `Image@2.2.3` usa `ImagePosition.Fit` por padrao,
 entao a proporcao e preservada. O simbolo MOTIVA era quadrado e o logo ASUR e
 2,8:1 — no recibo (`Image18`, caixa 117x64) a marca renderiza com ~117x41 e
 sobra espaco vertical. Conferir no Studio se o enquadramento agrada.
+
+### Ultimas amarras ao tema do Studio removidas (24/09/2026)
+
+`App.Theme.Colors.Darker30` sobrevivia em 5 controles, porque a primeira passada
+so tratou `.Primary`. Duas semanticas no mesmo valor, resolvidas por regra:
+
+| Papel | Detectado por | Token |
+|---|---|---|
+| marcador de linha selecionada | `Visible: =ThisItem.IsSelected` | `thmPrimaria` |
+| separador entre linhas | `Height: =1` | `thmBorda` |
+
+`Rectangle2` (Screen1), `Rectangle3_1` e `Separator9_1` (InventarioDoacao),
+`Separator9` e `Rectangle3` (InventarioSeparar).
+
+**O app nao depende mais do tema do Studio para cor nenhuma.** Busca por
+`App.Theme` nas 13 telas retorna zero.
+
+### Logo no cabecalho: `Width: =60`
+
+Nenhuma das 7 telas de cabecalho declarava `Width` no `Image@2.2.3` do logo —
+herdado de quando o recurso era o simbolo MOTIVA, quadrado. Com o logo ASUR em
+2,84:1 o padrao do controle nao serve. Fixado em 60, valor definido pelo Douglas
+no Studio. `ScreenEntregaRecibo` usa `ASUR_Logo_Petroleo` em caixa propria
+(95x39) e fica de fora.
