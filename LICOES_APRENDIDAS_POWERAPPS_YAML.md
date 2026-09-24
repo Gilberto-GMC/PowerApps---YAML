@@ -437,3 +437,39 @@ galeria de FORA. Corrigido restringindo a atribuicao a linhas depois do
 > O validador agora vive em `PerdidoseAchados/validar_telas_pa.mjs`, versionado.
 > Antes existia so no scratchpad da sessao — por isso quebrava sem deixar
 > rastro e ninguem percebia entre uma sessao e outra.
+
+## Inserir propriedade por ordem alfabetica sem pular bloco escalar
+
+Projeto: Perdidos e Achados, `ScreenConsultListar` / `Image2_2` (24/09/2026).
+
+Mensagem do Studio: `Caracteres inesperados. Caracteres sao usados na formula de
+forma inesperada.`
+
+Causa: um script inseriu `X: =45` na posicao alfabetica dentro das propriedades
+do controle, varrendo linha a linha por `^ *([A-Za-z]+):`. As linhas do corpo de
+um `OnSelect: |-` tem essa mesma forma (`var_item: TBL_ITENS,`), entao a
+insercao caiu **dentro da formula**, no meio de um `UpdateContext`.
+
+O YAML continua valido — a linha vira texto do escalar — e so o Power Fx
+reclama, ao abrir a tela. Nenhum validador de sintaxe YAML pega isso.
+
+Correcao: ao varrer propriedades de um controle, manter estado de bloco escalar.
+Uma linha que termina em `|`, `|-` ou `|+` abre o bloco; tudo mais indentado que
+ela e corpo, nao chave.
+
+Dois erros irmaos no mesmo dia, que valem como um so aprendizado:
+
+1. Procurar `Y: =` no bloco inteiro de um controle achou o `Y` de um **filho**,
+   porque a busca nao parou no `Children:`. Escreveu no controle errado.
+2. Inserir por ordem alfabetica sem pular o escalar escreveu **dentro da
+   formula**.
+
+Regra geral: **os limites de um controle sao do `- Nome:` ate o `Children:`
+dele, e dentro disso so contam as chaves no nivel exato de indentacao das
+propriedades, fora de bloco escalar.** Qualquer script que edite YAML de tela
+precisa dos tres cortes: nivel, `Children:` e escalar.
+
+Validacao preventiva (check 12): rejeitar `X`, `Y`, `Width`, `Height`, `Fill`,
+`Visible`, `BasePaletteColor` ou `Appearance` seguidos de `: =` quando estiverem
+dentro de um bloco escalar. Em CSS dentro de `HtmlText` aparece `width:` sem o
+`=`, entao nao ha falso positivo.

@@ -168,6 +168,31 @@ for (const P of process.argv.slice(2)) {
     'sem cor por palavra-chave CSS no HTML (usar hex da paleta)' +
     (kws.length ? ' -> ' + kws.slice(0, 6).join(', ') : ''));
 
+  // 12. propriedade dentro de bloco escalar. Inserir uma propriedade por ordem
+  //     alfabetica sem pular o corpo de um "|-" a enfia no meio da formula.
+  //     YAML continua valido (vira texto do escalar) e so o Studio reclama.
+  const dentro = [];
+  {
+    let bloco = -1;
+    for (let i = 0; i < lines.length; i++) {
+      const l = lines[i];
+      if (l.trim() === '') continue;
+      const n = l.length - l.replace(/^ +/, '').length;
+      if (bloco >= 0) {
+        if (n > bloco) {
+          if (/^\s*(X|Y|Width|Height|Fill|Visible|BasePaletteColor|Appearance)\s*:\s*=/.test(l))
+            dentro.push('L' + (i + 1) + ' (' + l.trim().split(':')[0] + ')');
+          continue;
+        }
+        bloco = -1;
+      }
+      if (/:\s*\|[-+]?\s*$/.test(l)) bloco = n;
+    }
+  }
+  check(dentro.length === 0,
+    'nenhuma propriedade dentro de bloco escalar' +
+    (dentro.length ? ' -> ' + dentro.slice(0, 6).join(', ') : ''));
+
   // 10. PA2108: Text@0.0.51 nao tem propriedade 'Color' (usar FontColor)
   const cor = [];
   for (let i = 0; i < lines.length; i++) {
