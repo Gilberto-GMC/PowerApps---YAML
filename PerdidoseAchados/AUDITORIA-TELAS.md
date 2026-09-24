@@ -405,3 +405,43 @@ herdado de quando o recurso era o simbolo MOTIVA, quadrado. Com o logo ASUR em
 2,84:1 o padrao do controle nao serve. Fixado em 60, valor definido pelo Douglas
 no Studio. `ScreenEntregaRecibo` usa `ASUR_Logo_Petroleo` em caixa propria
 (95x39) e fica de fora.
+
+### Receita que funcionou para galeria com linha composta (24/09/2026)
+
+Validada em tela na `ScreenConsultListar`. O problema original: o Studio
+descarta `X` e `Y` de **todo descendente** do template de galeria, entao
+posicionamento absoluto nao sobrevive a colagem. Depois de varias tentativas
+frustradas, o que funciona:
+
+```
+Gallery2_1            VariableHeight
+  TemplateSize = RowContainer.Height      <- elo indispensavel
+  RowContainer        AutoLayout Vertical
+    Height = 40 + CountRows(Filter(col, chave = ThisItem.ID)) * 52
+                 + If(ThisItem.IsSelected, 46, 0)
+    Fill   = If(ThisItem.IsSelected, ...)  <- realce da linha vive aqui
+    Width  = Parent.TemplateWidth
+    HeaderRow         AutoLayout Horizontal, FillPortions 0, Height 40
+      <coluna>        Width fixa
+      <espacador>     FillPortions 1        <- empurra o resto para a direita
+      <acao>          Width fixa
+    Table2_5          FillPortions 0, Height CountRows(...) * 52
+    HtmlTextRastreio  FillPortions 0, Height If(IsSelected, 46, 0)
+```
+
+Cinco regras, e faltar qualquer uma quebra:
+
+1. **Nenhum `X`.** AutoLayout posiciona por ordem, largura e `LayoutGap`.
+2. **`FillPortions: =0`** em todo filho cuja `Height` deve valer; `=1` no que
+   deve virar espacador flexivel.
+3. **`TemplateSize` da galeria = `Height` do container.** Sem isso a linha nao
+   cresce, por mais correta que esteja a altura interna.
+4. **Altura nunca de `Self.AllItemsCount`** — circular. Contar nos dados.
+5. **Nenhum irmao com `Fill` opaco fora do container**, senao cobre tudo.
+
+Dentro do container: `Parent.TemplateWidth` vira `Parent.Width`, e
+`Select(Parent)` vira `Select(<Galeria>)`.
+
+Telas que ainda usam posicionamento absoluto e teriam o mesmo problema numa
+recolagem: `ScreenEntregaListar`, `ScreenInventario`, `ScreenInventarioSeparar`.
+Hoje funcionam porque os valores foram digitados no Studio.
