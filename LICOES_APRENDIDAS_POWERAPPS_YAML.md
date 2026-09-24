@@ -579,3 +579,58 @@ Gallery2_1
 
 A `Height` do container soma as tres faixas, entao a linha cresce com o
 conteudo em vez de cortar o acordeao.
+
+### Conclusao: `X` e insalvavel em template de galeria — use AutoLayout
+
+Confirmado no Studio pelo usuario: `EntregarButton_2` e `Subtitle1_13` vieram
+ambos com `X = 0` **mesmo dentro de um `GroupContainer` ManualLayout**. O
+Studio zera `X` de **todos os descendentes** do template, em qualquer
+profundidade. O container nao protege.
+
+Isso invalida as duas estrategias anteriores registradas aqui:
+
+- "colar, conferir, redigitar no Studio" — nao sobrevive a proxima colagem;
+- "envolver num `GroupContainer` ManualLayout" — o `X` zera igual.
+
+O que o container resolveu de fato foi outro problema: impedir que um irmao com
+`Fill` opaco cobrisse os controles. Util, mas nao era o problema do `X`.
+
+**A unica solucao que se sustenta e nao usar `X`:**
+
+| Controle | Como posicionar |
+|---|---|
+| texto (`HtmlViewer`, `Label`) | `PaddingLeft` — nao e descartado |
+| qualquer controle, em linha | `GroupContainer` **AutoLayout** Horizontal |
+| empilhamento vertical | `GroupContainer` **AutoLayout** Vertical |
+
+Em AutoLayout nao existe `X` para ser zerado: a posicao vem da ordem dos
+filhos, da `Width` de cada um, do `LayoutGap` e do `FillPortions`. Um controle
+com `FillPortions: =1` vira o espacador flexivel que empurra o resto para a
+direita — foi assim que o botao de selecao da linha, que antes cobria tudo por
+`X`, virou o vao entre o status e o botao de acao.
+
+Estrutura final que funciona em `ScreenConsultListar`:
+
+```
+Gallery2_1
+  RowContainer          AutoLayout Vertical, Width = Parent.TemplateWidth
+    HeaderRow           AutoLayout Horizontal, Height 40, LayoutGap 10
+      ButtonCanvas3_6   Width 110
+      Subtitle1_13      Width 130
+      Subtitle1_14      Width 200
+      Button2_6         FillPortions 1      <- espacador + Tooltip
+      EntregarButton_2  Width 100
+    Table2_5            AlignInContainer Stretch
+    HtmlTextRastreio    AlignInContainer Stretch
+```
+
+O realce da linha selecionada subiu para o `Fill` do `RowContainer`, ja que o
+botao transparente deixou de cobrir a linha inteira.
+
+**Altura nunca pode depender do render.** `Height: =Self.AllItemsCount * 52`
+numa galeria aninhada cria circularidade — `AllItemsCount` depende da altura
+disponivel, que depende de `AllItemsCount` — e o Power Apps resolve como zero,
+fazendo o conteudo sumir. Contar nos dados:
+`CountRows(Filter(colecao, chave = ThisItem.ID)) * 52`. O mesmo vale para
+`Visible: =Galeria.AllItemsCount > 0`, que deve virar
+`!IsEmpty(Filter(colecao, chave = ThisItem.ID))`.
