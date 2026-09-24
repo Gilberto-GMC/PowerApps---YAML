@@ -4496,33 +4496,39 @@ Screens:
                         {
                             _ent: locIntSentido = "ENTRADA",
                             _data: If(locIntSentido = "ENTRADA", varAlocSel.data_ini, varAlocSel.data_f),
-                            _hora: If(locIntSentido = "ENTRADA", varAlocSel.h_ini, varAlocSel.h_fim)
+                            _hora: If(locIntSentido = "ENTRADA", varAlocSel.h_ini, varAlocSel.h_fim),
+                            _pre: Upper(Trim(Coalesce(varAlocSel.prefixo, ""))),
+                            _icao: Coalesce(LookUp(colAerosRede, Aeroporto = Upper(Trim(varAeroNome))).ICAO, "")
                         },
-                        "Prezados," & Char(10) & Char(10) &
-                        "Solicitamos agendamento com os órgãos federais para a " &
-                        If(_ent, "CHEGADA INTERNACIONAL", "SAÍDA INTERNACIONAL") &
-                        " da aeronave, conforme programação abaixo:" & Char(10) & Char(10) &
-                        "AERONAVE: " &
-                        Upper(Coalesce(LookUp(colEquip As _e, _e.equip = varAlocSel.equip).nome_equip, varAlocSel.equip, "—")) & Char(10) &
-                        "MATRÍCULA: " & Upper(Coalesce(varAlocSel.prefixo, "—")) & Char(10) &
-                        "PROPRIETÁRIO: " & Upper(Coalesce(varAlocSel.resp, "—")) & Char(10) & Char(10) &
-                        If(_ent, "DATA DE CHEGADA: ", "DATA DE SAÍDA: ") &
-                        Text(_data, "dd/mm/yyyy") & " (" & Proper(Text(_data, "dddd")) & ")" & Char(10) &
-                        If(_ent, "PROCEDÊNCIA: ", "DESTINO: ") &
-                        Upper(Coalesce(Trim(txtIntLocalMap.Text), "")) & Char(10) &
-                        "HORÁRIO DE IMIGRAÇÃO: " &
-                        Text(Int(_hora / 60), "00") & ":" & Text(Mod(_hora, 60), "00") & " LOCAL" & Char(10) &
-                        If(_ent, "DESEMBARQUE: ", "EMBARQUE: ") &
-                        Coalesce(Trim(txtIntTripMap.Text), "") & " TRIP + " &
-                        Coalesce(Trim(txtIntPaxMap.Text), "") & " PASSAGEIROS" & Char(10) &
+                        "SOLICITAÇÃO DE AGENDAMENTO COM OS ÓRGÃOS FEDERAIS" & Char(10) &
+                        If(_ent, "CHEGADA INTERNACIONAL", "SAÍDA INTERNACIONAL") & " · " &
+                        Proper(varAeroNome) & If(IsBlank(_icao), "", " (" & _icao & ")") & Char(10) & Char(10) &
+                        "AERONAVE" & Char(10) &
+                        Coalesce(LookUp(colEquip As _e, _e.equip = varAlocSel.equip).nome_equip, varAlocSel.equip, "não informada") &
+                        If(
+                            IsBlank(_pre),
+                            "",
+                            " — matrícula " & If(Len(_pre) = 5, Left(_pre, 2) & "-" & Mid(_pre, 3), _pre)
+                        ) & Char(10) &
+                        "Proprietário/operador: " & Coalesce(varAlocSel.resp, "não informado") & Char(10) & Char(10) &
+                        If(_ent, "CHEGADA", "SAÍDA") & Char(10) &
+                        Proper(Text(_data, "dddd")) & ", " & Text(_data, "dd/mm/yyyy") & Char(10) &
+                        "Imigração às " & Text(Int(_hora / 60), "00") & ":" & Text(Mod(_hora, 60), "00") & " (hora local)" & Char(10) &
+                        If(_ent, "Procedência: ", "Destino: ") &
+                        If(IsBlank(Trim(txtIntLocalMap.Text)), "a informar", Trim(txtIntLocalMap.Text)) & Char(10) & Char(10) &
+                        If(_ent, "DESEMBARQUE", "EMBARQUE") & Char(10) &
+                        If(IsBlank(Trim(txtIntTripMap.Text)), "—", Trim(txtIntTripMap.Text)) & " tripulante(s) e " &
+                        If(IsBlank(Trim(txtIntPaxMap.Text)), "—", Trim(txtIntPaxMap.Text)) & " passageiro(s)" & Char(10) &
                         If(
                             IsBlank(varAlocSel.obs),
                             "",
-                            Char(10) & "OBSERVAÇÕES: " & varAlocSel.obs & Char(10)
+                            Char(10) & "OBSERVAÇÕES" & Char(10) & Trim(varAlocSel.obs) & Char(10)
                         ) &
-                        Char(10) & "Atenciosamente," & Char(10) &
+                        Char(10) & "Solicitamos o agendamento dos órgãos federais para a operação acima." & Char(10) &
+                        "Permanecemos à disposição." & Char(10) & Char(10) &
+                        "Atenciosamente," & Char(10) &
                         User().FullName & Char(10) &
-                        "Operações — " & varAeroNome
+                        "Operações · " & Proper(varAeroNome)
                     )
             - cntIntAcoesMap:
                 Control: GroupContainer@1.5.0
