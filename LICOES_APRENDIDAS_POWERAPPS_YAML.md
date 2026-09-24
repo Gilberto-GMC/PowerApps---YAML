@@ -394,3 +394,46 @@ Lição geral, que vale para qualquer troca de identidade visual em Canvas App:
 vem do tema — `BasePaletteColor` ausente, `App.Theme.Colors.*`, `Accent` —
 continua com a aparencia antiga e nao aparece em busca por `RGBA(`. Levantar
 esses controles por tipo, nao por cor.
+
+## Verificacao que nunca falha nao e verificacao — autoteste e obrigatorio
+
+Projeto: Perdidos e Achados, validador das telas (24/09/2026).
+
+Sintoma: o validador reportou "TODAS AS VERIFICACOES PASSARAM" varias vezes
+seguidas enquanto **dois** de seus checks estavam mortos. Descoberto so ao
+testar de proposito uma copia quebrada.
+
+Causa, a mesma duas vezes: escape de regex escrito atraves do shell (heredoc e
+`node -e`). O `\b` chegou ao arquivo como o **caractere backspace** (0x08) e o
+`\s` perdeu a barra. O padrao `/\bParent\.(Width|Height)\b/` virou
+`/<BS>Parent.(Width|Height)<BS>/`, que nao casa nada. `cat -A` mostra o `^H`;
+um editor comum e o proprio `Read` nao mostram.
+
+Agravante: a lição sobre esse mesmo bug ja estava escrita neste arquivo e eu a
+repeti pelo outro caminho. Escrever a licao nao basta — o conserto tem que
+ser estrutural.
+
+Correcao estrutural, em tres frentes:
+
+1. **Nunca escrever escape de regex atraves do shell.** Usar a ferramenta de
+   escrita de arquivo, e `String.raw` no codigo.
+2. **Autoteste obrigatorio.** Para cada check novo, quebrar uma copia da tela
+   de proposito e confirmar que o check ACUSA. Um check que so foi visto
+   passando nunca foi testado.
+3. **Varredura de caractere de controle** no proprio script:
+   `/[\x00-\x08\x0b\x0c\x0e-\x1f]/` em cada linha, apos qualquer edicao
+   automatizada.
+
+Bonus da correcao: com o check vivo, ele encontrou 7 ocorrencias reais de
+`Parent.Width` em galeria sem `Width` propria, em 3 telas — inclusive um
+`Button2_6.Width` que e o botao transparente de selecao de linha, o mesmo bug
+funcional ja confirmado duas vezes em outras telas.
+
+Segundo furo do mesmo check, achado junto: a propria propriedade `Width` de uma
+galeria aninhada estava sendo avaliada contra ela mesma. Ali o `Parent` e a
+galeria de FORA. Corrigido restringindo a atribuicao a linhas depois do
+`Children:` da galeria dona.
+
+> O validador agora vive em `PerdidoseAchados/validar_telas_pa.mjs`, versionado.
+> Antes existia so no scratchpad da sessao — por isso quebrava sem deixar
+> rastro e ninguem percebia entre uma sessao e outra.
