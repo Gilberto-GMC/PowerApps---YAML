@@ -468,3 +468,46 @@ linha reserva espaco para um bloco que nao aparece.
 > Limite conhecido: o protocolo e o Recibo precisam continuar sendo controles,
 > nao HTML — `HtmlViewer` nao dispara evento por elemento, e perderiamos o
 > `Navigate` para o recibo e a selecao da linha.
+
+### Fim da dependencia de `X` nas galerias (24/09/2026)
+
+Seis galerias foram reconstruidas em AutoLayout ao longo do dia. As duas ultimas —
+`Gallery3` da `Screen1` e `Table2` da `ScreenCadastrar` — funcionavam **so porque os
+valores de `X` tinham sido digitados no Studio**, e teriam zerado na proxima colagem.
+
+Varredura final: nenhum `X` sob template de galeria sem um `GroupContainer` AutoLayout
+entre ele e a galeria. Os `X` que restam nos arquivos estao todos dentro de containers
+AutoLayout, onde sao peso morto e nao afetam o desenho.
+
+| Tela | Galeria | Estrutura nova |
+|---|---|---|
+| `ScreenConsultListar` | `Gallery2_1` | `RowContainer > HeaderRow + Table2_5 + HtmlTextRastreio` |
+| `ScreenEntregaListar` | `Gallery2` | `RowContainer > HeaderRow + Table2_4` |
+| `ScreenInventario` | `TableItensDestinar` / `TableItensDestinado` | `RowContainer* > Gallery4* + Rectangle1*` |
+| `ScreenInventarioSeparar` | `galItens` | `RowContainerSeparar > Container17 + Separator9` |
+| `Screen1` | `Gallery3` | `RowContainerDoc > LinhaDoc + Separator6` |
+| `ScreenCadastrar` | `Table2` | `RowContainerCad > CardCad > TextosCad + ButtonCanvas3`, mais `Separator1` |
+
+**Dois casos que exigiram decisao, e nao apenas conversao mecanica:**
+
+1. **`Screen1`** — as posicoes eram absolutas e os vaos, irregulares (781, 1036, 1183).
+   Viraram larguras fixas mais tres retangulos transparentes (`EspacoDoc1/2/3`). Reproduz
+   o desenho atual; `LayoutGap` nao serviria porque os vaos nao sao iguais.
+
+2. **`ScreenCadastrar`** — o `Button2` era o **ultimo filho do template, portanto o mais
+   alto na pilha**, e cobria o cartao inteiro. Consequencia que so apareceu ao converter:
+   o `OnSelect: =Select(Parent)` dos rotulos e do `ButtonCanvas3` **nunca disparava** —
+   todo clique caia no `Button2`. Em AutoLayout nada se sobrepoe, entao:
+   - borda, espessura e raio passaram do `Button2` para o `CardCad`;
+   - o `Button2` manteve a formula inteira e virou o preenchimento flexivel da coluna de
+     texto, para que a area vazia continue clicavel;
+   - `Title1`, `Subtitle1`, `Subtitle1_1` e `ButtonCanvas3` passaram a `Select(Button2)` —
+     uma copia so da logica, em vez de cinco.
+
+   **Perda conhecida:** `HoverFill`/`PressedFill` agora valem so na area do `Button2`,
+   nao no cartao inteiro. `GroupContainer` nao tem estado de hover.
+
+**Licao de ordem de filhos:** em `.pa.yaml` o **ultimo filho listado e o que fica por
+cima**. Antes de converter uma galeria, conferir qual controle esta no topo — e provavel
+que ele esteja engolindo o clique dos que estao embaixo, e que o comportamento real da
+tela nao seja o que as formulas dos outros controles sugerem.
