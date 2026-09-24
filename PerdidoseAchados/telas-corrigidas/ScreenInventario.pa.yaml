@@ -9,7 +9,7 @@
 Screens:
   ScreenInventario:
     Properties:
-      Fill: =RGBA(245, 245, 245, 1)
+      Fill: =thmFundo
       OnVisible: |-
         =Select(FUNCTION_DOAR);
         Set(varUltimaAtividade, Now())
@@ -33,7 +33,7 @@ Screens:
                 Control: GroupContainer@1.5.0
                 Variant: AutoLayout
                 Properties:
-                  Fill: =App.Theme.Colors.Primary
+                  Fill: =thmPrimaria
                   FillPortions: =0
                   Height: =60
                   LayoutAlignItems: =LayoutAlignItems.Center
@@ -51,7 +51,7 @@ Screens:
                       Variant: AutoLayout
                       Properties:
                         DropShadow: =DropShadow.Regular
-                        Fill: =App.Theme.Colors.Primary
+                        Fill: =thmPrimaria
                         Height: =40
                         LayoutAlignItems: =LayoutAlignItems.Center
                         LayoutDirection: =LayoutDirection.Horizontal
@@ -156,7 +156,7 @@ Screens:
                             Variant: AutoLayout
                             Properties:
                               DropShadow: =DropShadow.None
-                              Fill: =RGBA(245, 245, 245, 1)
+                              Fill: =thmFundo
                               FillPortions: =0
                               Height: =44
                               LayoutDirection: =LayoutDirection.Horizontal
@@ -236,29 +236,24 @@ Screens:
                                         Properties:
                                           AlignInContainer: =AlignInContainer.Stretch
                                           AllowEmptySelection: =true
-                                          BorderColor: =RGBA(215, 223, 240, 1)
+                                          BorderColor: =thmPrimariaClara
                                           BorderStyle: =BorderStyle.None
                                           ChevronBackground: =RGBA(0, 0, 0, 0)
-                                          ChevronFill: =RGBA(214, 221, 224, 1)
+                                          ChevronFill: =thmBorda
                                           ChevronHoverBackground: =
-                                          ChevronHoverFill: =RGBA(38, 36, 123, 1)
-                                          Default: |-
-                                            =If(
-                                                varPerfilUser = "Sede",
-                                                Blank(),
-                                                varBlocoUser
-                                            )
+                                          ChevronHoverFill: =thmPrimaria
+                                          Default: =varBlocoUser
                                           DisplayMode: |-
                                             =If(
                                                 varPerfilUser = "Sede",
                                                 DisplayMode.Edit,
                                                 DisplayMode.View
                                             )
-                                          Fill: =RGBA(245, 245, 245, 1)
+                                          Fill: =thmFundo
                                           FillPortions: =1
                                           Font: =Font.'Open Sans'
                                           Height: =30
-                                          HoverFill: =RGBA(186, 202, 226, 1)
+                                          HoverFill: =thmPrimariaClara
                                           Items: =Distinct(colAeros,Bloco)
                                           Items.Value: =Value
                                           LayoutMaxHeight: =
@@ -266,9 +261,9 @@ Screens:
                                           LayoutMinHeight: =30
                                           LayoutMinWidth: =100
                                           PressedColor: =RGBA(255, 255, 255, 1)
-                                          PressedFill: =RGBA(0, 18, 107, 1)
+                                          PressedFill: =thmPrimariaEscura
                                           SelectionColor: =RGBA(255, 255, 255, 1)
-                                          SelectionFill: =RGBA(38, 36, 123, 1)
+                                          SelectionFill: =thmPrimaria
                                           Size: =10
                                           Width: =0
                                           Y: =241
@@ -297,25 +292,20 @@ Screens:
                                           BorderColor: =ComboboxCanvasBloco_5.BorderColor
                                           BorderStyle: =BorderStyle.None
                                           ChevronBackground: =RGBA(0, 0, 0, 0)
-                                          ChevronFill: =RGBA(214, 221, 224, 1)
+                                          ChevronFill: =thmBorda
                                           ChevronHoverBackground: =
-                                          ChevronHoverFill: =RGBA(38, 36, 123, 1)
-                                          Default: |-
-                                            =If(
-                                                varPerfilUser = "Base",
-                                                varAeroUser,
-                                                Blank()
-                                            )
+                                          ChevronHoverFill: =thmPrimaria
+                                          Default: =varAeroUser
                                           DisplayMode: |-
                                             =If(
                                                 varPerfilUser = "Base",
                                                 DisplayMode.View,
                                                 DisplayMode.Edit
                                             )
-                                          Fill: =RGBA(245, 245, 245, 1)
+                                          Fill: =thmFundo
                                           Font: =Font.'Open Sans'
                                           Height: =30
-                                          HoverFill: =RGBA(186, 202, 226, 1)
+                                          HoverFill: =thmPrimariaClara
                                           Items: |-
                                             =Distinct(
                                                 Filter(
@@ -330,9 +320,9 @@ Screens:
                                           LayoutMinHeight: =30
                                           LayoutMinWidth: =100
                                           PressedColor: =RGBA(255, 255, 255, 1)
-                                          PressedFill: =RGBA(0, 18, 107, 1)
+                                          PressedFill: =thmPrimariaEscura
                                           SelectionColor: =RGBA(255, 255, 255, 1)
-                                          SelectionFill: =RGBA(38, 36, 123, 1)
+                                          SelectionFill: =thmPrimaria
                                           Size: =10
                                           Width: =150
                                           Y: =241
@@ -350,6 +340,7 @@ Screens:
                                     OnChange: =Select(FUNCTION_DOAR)
                                     PaddingLeft: =3
                                     PaddingRight: =3
+                                    Placeholder: ="Data inicial"
                                     SelectedDate: =Blank()
                                     Width: =130
                               - dtpFilterTermino_5:
@@ -365,6 +356,7 @@ Screens:
                                     OnChange: =Select(FUNCTION_DOAR)
                                     PaddingLeft: =3
                                     PaddingRight: =3
+                                    Placeholder: ="Data final"
                                     SelectedDate: =Blank()
                                     Width: =130
                               - SearchInput2_5:
@@ -658,30 +650,26 @@ Screens:
                                         Properties:
                                           Fill: =RGBA(0, 0, 0, 1)
                                           Height: =40
-                                          Image: =TBL_ITENS.foto
+                                          Image: |-
+                                            =If(
+                                                IsBlank(TBL_ITENS.foto),
+                                                'sem-foto',
+                                                TBL_ITENS.foto
+                                            )
                                           OnSelect: |-
-                                            =UpdateContext(
-                                                {
-                                                    var_item: TBL_ITENS,
-                                                    varColVeiDetVisibleImagem: true
-                                                }
+                                            =If(
+                                                !IsBlank(TBL_ITENS.foto),
+                                                UpdateContext(
+                                                    {
+                                                        var_item: TBL_ITENS,
+                                                        varColVeiDetVisibleImagem: true
+                                                    }
+                                                )
                                             )
                                           RadiusBottomLeft: =4
                                           RadiusBottomRight: =4
                                           RadiusTopLeft: =4
                                           RadiusTopRight: =4
-                                          Visible: =!IsBlank(TBL_ITENS.foto)
-                                          Width: =40
-                                          X: =10
-                                          Y: =5
-                                    - Icon5_3:
-                                        Control: Icon@0.0.7
-                                        Properties:
-                                          Height: =40
-                                          Icon: ="DismissCircle"
-                                          IconColor: =RGBA(214, 221, 224, 1)
-                                          IconStyle: ='Icon.IconStyle'.Outline
-                                          Visible: =IsBlank(TBL_ITENS.foto)
                                           Width: =40
                                           X: =10
                                           Y: =5
@@ -790,30 +778,26 @@ Screens:
                                         Properties:
                                           Fill: =RGBA(0, 0, 0, 1)
                                           Height: =40
-                                          Image: =TBL_ITENS.foto
+                                          Image: |-
+                                            =If(
+                                                IsBlank(TBL_ITENS.foto),
+                                                'sem-foto',
+                                                TBL_ITENS.foto
+                                            )
                                           OnSelect: |-
-                                            =UpdateContext(
-                                                {
-                                                    var_item: TBL_ITENS,
-                                                    varColVeiDetVisibleImagem: true
-                                                }
+                                            =If(
+                                                !IsBlank(TBL_ITENS.foto),
+                                                UpdateContext(
+                                                    {
+                                                        var_item: TBL_ITENS,
+                                                        varColVeiDetVisibleImagem: true
+                                                    }
+                                                )
                                             )
                                           RadiusBottomLeft: =4
                                           RadiusBottomRight: =4
                                           RadiusTopLeft: =4
                                           RadiusTopRight: =4
-                                          Visible: =!IsBlank(TBL_ITENS.foto)
-                                          Width: =40
-                                          X: =10
-                                          Y: =5
-                                    - Icon5_4:
-                                        Control: Icon@0.0.7
-                                        Properties:
-                                          Height: =40
-                                          Icon: ="DismissCircle"
-                                          IconColor: =RGBA(214, 221, 224, 1)
-                                          IconStyle: ='Icon.IconStyle'.Outline
-                                          Visible: =IsBlank(TBL_ITENS.foto)
                                           Width: =40
                                           X: =10
                                           Y: =5
@@ -895,7 +879,7 @@ Screens:
                         BorderColor: =
                         BorderStyle: =BorderStyle.None
                         Color: =RGBA(255, 255, 255, 1)
-                        Fill: =App.Theme.Colors.Primary
+                        Fill: =thmPrimaria
                         FontWeight: =FontWeight.Semibold
                         Text: ="Doar Item"
                         Width: =Parent.Width
@@ -2083,7 +2067,7 @@ Screens:
                   - DataCardKey20_5:
                       Control: Text@0.0.51
                       Properties:
-                        FontColor: =RGBA(255, 0, 0, 1)
+                        FontColor: =thmVermelho
                         Height: =22
                         Size: =15
                         Text: ="*  Campos obrigatórios."
@@ -2111,7 +2095,7 @@ Screens:
                 Control: GroupContainer@1.5.0
                 Variant: AutoLayout
                 Properties:
-                  Fill: =App.Theme.Colors.Primary
+                  Fill: =thmPrimaria
                   Height: =60
                   LayoutAlignItems: =LayoutAlignItems.Center
                   LayoutDirection: =LayoutDirection.Horizontal
@@ -2128,7 +2112,7 @@ Screens:
                       Variant: AutoLayout
                       Properties:
                         DropShadow: =DropShadow.Regular
-                        Fill: =App.Theme.Colors.Primary
+                        Fill: =thmPrimaria
                         Height: =40
                         LayoutAlignItems: =LayoutAlignItems.Center
                         LayoutDirection: =LayoutDirection.Horizontal
