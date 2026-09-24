@@ -552,12 +552,17 @@ Screens:
                                     Y: =145
                         - HeaderTabelaEntrega:
                             Control: GroupContainer@1.5.0
-                            Variant: ManualLayout
+                            Variant: AutoLayout
                             Properties:
                               DropShadow: =DropShadow.None
                               Fill: =thmFundo
                               FillPortions: =0
                               Height: =30
+                              LayoutAlignItems: =LayoutAlignItems.Center
+                              LayoutDirection: =LayoutDirection.Horizontal
+                              LayoutGap: =10
+                              PaddingLeft: =10
+                              PaddingRight: =10
                               LayoutMaxHeight: =
                               LayoutMaxWidth: =
                               LayoutMinHeight: =0
@@ -575,10 +580,9 @@ Screens:
                                     Size: =11
                                     Text: ="Item"
                                     Weight: ='TextCanvas.Weight'.Semibold
-                                    Width: =Parent.Width - 550
                                     Wrap: =false
-                                    X: =50
-                                    Y: =6
+                                    AlignInContainer: =AlignInContainer.Center
+                                    FillPortions: =1
                               - LabelCabStatus:
                                   Control: Text@0.0.51
                                   Properties:
@@ -591,10 +595,9 @@ Screens:
                                     Size: =11
                                     Text: ="Status"
                                     Weight: ='TextCanvas.Weight'.Semibold
-                                    Width: =100
                                     Wrap: =false
-                                    X: =Parent.Width - 490
-                                    Y: =6
+                                    AlignInContainer: =AlignInContainer.Center
+                                    Width: =100
                               - LabelCabData:
                                   Control: Text@0.0.51
                                   Properties:
@@ -607,10 +610,9 @@ Screens:
                                     Size: =11
                                     Text: ="Data"
                                     Weight: ='TextCanvas.Weight'.Semibold
-                                    Width: =125
                                     Wrap: =false
-                                    X: =Parent.Width - 380
-                                    Y: =6
+                                    AlignInContainer: =AlignInContainer.Center
+                                    Width: =125
                               - LabelCabProtocolo:
                                   Control: Text@0.0.51
                                   Properties:
@@ -623,10 +625,9 @@ Screens:
                                     Size: =11
                                     Text: ="Protocolo"
                                     Weight: ='TextCanvas.Weight'.Semibold
-                                    Width: =115
                                     Wrap: =false
-                                    X: =Parent.Width - 245
-                                    Y: =6
+                                    AlignInContainer: =AlignInContainer.Center
+                                    Width: =115
                               - LabelCabAcao:
                                   Control: Text@0.0.51
                                   Properties:
@@ -639,10 +640,9 @@ Screens:
                                     Size: =11
                                     Text: ="Ação"
                                     Weight: ='TextCanvas.Weight'.Semibold
-                                    Width: =110
                                     Wrap: =false
-                                    X: =Parent.Width - 120
-                                    Y: =6
+                                    AlignInContainer: =AlignInContainer.Center
+                                    Width: =110
                         - Gallery2:
                             Control: Gallery@2.15.0
                             Variant: VariableHeight
@@ -659,209 +659,220 @@ Screens:
                               LayoutMaxWidth: =
                               LayoutMinHeight: =0
                               LoadingSpinner: =LoadingSpinner.None
-                              TemplateSize: =40
+                              TemplateSize: =RowContainer.Height
                             Children:
-                              - Table2_4:
-                                  Control: Gallery@2.15.0
-                                  Variant: BrowseLayout_Vertical_TwoTextOneImageVariant_ver5.0
+                              - RowContainer:
+                                  Control: GroupContainer@1.5.0
+                                  Variant: AutoLayout
                                   Properties:
-                                    Fill: =RGBA(255, 255, 255, 1)
-                                    Height: =Self.AllItemsCount * 50
-                                    Items: |-
-                                      =SortByColumns(
-                                          Filter(
-                                              col_itensPAconsulta,
-                                              ID_fk = ThisItem.ID
-                                          ),
-                                          "ID",
-                                          SortOrder.Descending
-                                      ) As TBL_ITENS
-
-                                    LoadingSpinner: =LoadingSpinner.None
-                                    ShowScrollbar: =false
-                                    TemplateSize: =50
-                                    Visible: =Table2_4.AllItemsCount > 0
-                                    Width: =Parent.TemplateWidth - 10
-                                    Y: =Button2_5.Height
+                                    DropShadow: =DropShadow.Regular
+                                    Fill: =If(ThisItem.IsSelected, RGBA(0, 0, 0, 0.20), RGBA(0, 0, 0, 0.05))
+                                    Height: =40 + CountRows(Filter(col_itensPAconsulta, ID_fk = ThisItem.ID)) * 52
+                                    LayoutAlignItems: =LayoutAlignItems.Stretch
+                                    LayoutDirection: =LayoutDirection.Vertical
+                                    LayoutGap: =0
+                                    LayoutMaxHeight: =
+                                    LayoutMaxWidth: =
+                                    LayoutMinHeight: =0
+                                    Width: =Parent.TemplateWidth
                                   Children:
-                                    - HtmlText2:
-                                        Control: HtmlViewer@2.1.0
+                                    - HeaderRow:
+                                        Control: GroupContainer@1.5.0
+                                        Variant: AutoLayout
                                         Properties:
-                                          HtmlText: |-
-                                            ="<div>🔹" & TBL_ITENS.categoria & " - " & TBL_ITENS.subCategoria & " | " & TBL_ITENS.descricao & " | " & If(
-                                                TBL_ITENS.status <> "Recebido",
-                                                "<font color='#B45309'>" & TBL_ITENS.status & "</font>",
-                                                TBL_ITENS.status
-                                            ) & "</div>"
-                                          OnSelect: =Select(Parent)
-                                          PaddingBottom: =0
-                                          PaddingTop: =0
-                                          Size: =11
-                                          Tooltip: =TBL_ITENS.descricao
-                                          Width: =Parent.Width - 640
-                                          X: =90
-                                          Y: =5
-                                    - Image2:
-                                        Control: Image@2.2.3
-                                        Properties:
-                                          Fill: =RGBA(0, 0, 0, 1)
+                                          DropShadow: =DropShadow.None
+                                          FillPortions: =0
                                           Height: =40
-                                          Image: |-
-                                            =If(
-                                                IsBlank(TBL_ITENS.foto),
-                                                'sem-foto',
-                                                TBL_ITENS.foto.Small
-                                            )
-                                          OnSelect: |-
-                                            =If(
-                                                !IsBlank(TBL_ITENS.foto),
-                                                UpdateContext(
-                                                    {
-                                                        var_item: TBL_ITENS,
-                                                        varColVeiDetVisibleImagem: true
-                                                    }
-                                                )
-                                            )
-                                          RadiusBottomLeft: =4
-                                          RadiusBottomRight: =4
-                                          RadiusTopLeft: =4
-                                          RadiusTopRight: =4
-                                          Width: =40
-                                          X: =45
-                                          Y: =5
-                              - Subtitle1_11:
-                                  Control: Label@2.5.1
-                                  Properties:
-                                    BorderColor: =RGBA(0, 0, 0, 1)
-                                    Color: =thmPrimaria
-                                    FontWeight: =If(ThisItem.IsSelected, FontWeight.Normal, FontWeight.Lighter)
-                                    Height: =30
-                                    OnSelect: =Select(Parent)
-                                    PaddingBottom: =0
-                                    PaddingLeft: =0
-                                    PaddingRight: =0
-                                    PaddingTop: =0
-                                    Size: =11
-                                    Text: =ThisItem.status
-                                    Visible: =Table2_4.AllItemsCount > 0
-                                    Width: =100
-                                    X: =Parent.TemplateWidth - 490
-                                    Y: =5
-                              - Subtitle1_12:
-                                  Control: Label@2.5.1
-                                  Properties:
-                                    BorderColor: =RGBA(0, 0, 0, 1)
-                                    FontWeight: =If(ThisItem.IsSelected, FontWeight.Semibold, FontWeight.Normal)
-                                    Height: =30
-                                    OnSelect: =Select(Parent)
-                                    PaddingBottom: =0
-                                    PaddingLeft: =0
-                                    PaddingRight: =0
-                                    PaddingTop: =0
-                                    Size: =11
-                                    Text: =ThisItem.data //LookUp(tbl_perdidosAchados; ID = ThisItem.ID_fk).data
-                                    Visible: =Table2_4.AllItemsCount > 0
-                                    Width: =125
-                                    X: =Parent.TemplateWidth - 380
-                                    Y: =5
-                              - ButtonCanvas3_5:
-                                  Control: Button@0.0.45
-                                  Properties:
-                                    Appearance: ='ButtonCanvas.Appearance'.Secondary
-                                    BasePaletteColor: =thmPrimaria
-                                    BorderColor: =thmPrimaria
-                                    BorderRadius: =4
-                                    BorderStyle: =BorderStyle.Solid
-                                    BorderThickness: =1
-                                    FontColor: =thmPrimaria
-                                    FontSize: =11
-                                    Height: =30
-                                    OnSelect: =Select(Parent)
-                                    Text: =ThisItem.iata & "-ANPA-" & ThisItem.ID
-                                    Visible: =Table2_4.AllItemsCount > 0
-                                    Width: =115
-                                    X: =Parent.TemplateWidth - 245
-                                    Y: =5
-                              - Button2_5:
-                                  Control: Classic/Button@2.2.0
-                                  Properties:
-                                    BorderColor: |-
-                                      =If(
-                                          ThisItem.IsSelected,
-                                         RGBA(
-                                              0,
-                                              0,
-                                              0,
-                                              0.20
-                                          ),
-                                          RGBA(
-                                              0,
-                                              0,
-                                              0,
-                                              0.05
-                                          )
-                                      )
-                                    BorderStyle: =BorderStyle.None
-                                    BorderThickness: =1
-                                    DisabledFill: =RGBA(247, 247, 247, 1)
-                                    Fill: |-
-                                      =If(
-                                          ThisItem.IsSelected,
-                                         RGBA(
-                                              0,
-                                              0,
-                                              0,
-                                              0.20
-                                          ),
-                                          RGBA(
-                                              0,
-                                              0,
-                                              0,
-                                              0.05
-                                          )
-                                      )
-                                    HoverBorderColor: =
-                                    HoverFill: =ColorFade(Self.Fill, 0.3)
-                                    OnSelect: =Set(varUltimaAtividade, Now());
-                                    PressedBorderColor: =
-                                    PressedFill: =RGBA(0, 0, 0, 0.03)
-                                    RadiusBottomLeft: =0
-                                    RadiusBottomRight: =0
-                                    RadiusTopLeft: =0
-                                    RadiusTopRight: =0
-                                    Text: =
-                                    Tooltip: |-
-                                      =Concat(
-                                          Filter(
-                                              col_itensPAconsulta,
-                                              ID_fk = ThisItem.ID
-                                          ),
-                                          subCategoria,
-                                          " | "
-                                      )
-                                    Visible: =Table2_4.AllItemsCount > 0
-                                    Width: =Parent.TemplateWidth - 10
-                              - EntregarButton_1:
-                                  Control: Button@0.0.45
-                                  Properties:
-                                    Appearance: ='ButtonCanvas.Appearance'.Primary
-                                    BasePaletteColor: =thmAcao
-                                    Icon: ="PeopleAdd"
-                                    OnSelect: |-
-                                      =Set(varUltimaAtividade, Now());
-                                      Navigate(
-                                          ScreenEntregaRecibo,
-                                          ScreenTransition.Fade,
-                                          {
-                                              VAR_DADOS_ENTREGA_ID: ThisItem.ID,
-                                              VAR_NEW_RECIBO: true
-                                          }
-                                      )
-                                    Text: ="Entregar"
-                                    Visible: =Table2_4.AllItemsCount > 0
-                                    Width: =110
-                                    X: =Parent.TemplateWidth - 120
-                                    Y: =5
+                                          LayoutAlignItems: =LayoutAlignItems.Center
+                                          LayoutDirection: =LayoutDirection.Horizontal
+                                          LayoutGap: =10
+                                          LayoutMaxHeight: =
+                                          LayoutMaxWidth: =
+                                          LayoutMinHeight: =0
+                                          PaddingLeft: =10
+                                          PaddingRight: =10
+                                        Children:
+                                          - Button2_5:
+                                              Control: Classic/Button@2.2.0
+                                              Properties:
+                                                BorderColor: |-
+                                                  =If(
+                                                      ThisItem.IsSelected,
+                                                     RGBA(
+                                                          0,
+                                                          0,
+                                                          0,
+                                                          0.20
+                                                      ),
+                                                      RGBA(
+                                                          0,
+                                                          0,
+                                                          0,
+                                                          0.05
+                                                      )
+                                                  )
+                                                BorderStyle: =BorderStyle.None
+                                                BorderThickness: =1
+                                                DisabledFill: =RGBA(247, 247, 247, 1)
+                                                HoverBorderColor: =
+                                                HoverFill: =ColorFade(Self.Fill, 0.3)
+                                                OnSelect: =Set(varUltimaAtividade, Now());
+                                                PressedBorderColor: =
+                                                PressedFill: =RGBA(0, 0, 0, 0.03)
+                                                RadiusBottomLeft: =0
+                                                RadiusBottomRight: =0
+                                                RadiusTopLeft: =0
+                                                RadiusTopRight: =0
+                                                Text: =
+                                                Tooltip: |-
+                                                  =Concat(
+                                                      Filter(
+                                                          col_itensPAconsulta,
+                                                          ID_fk = ThisItem.ID
+                                                      ),
+                                                      subCategoria,
+                                                      " | "
+                                                  )
+                                                AlignInContainer: =AlignInContainer.Center
+                                                Visible: =!IsEmpty(Filter(col_itensPAconsulta, ID_fk = ThisItem.ID))
+                                                FillPortions: =1
+                                                Fill: =RGBA(0, 0, 0, 0)
+                                          - Subtitle1_11:
+                                              Control: Label@2.5.1
+                                              Properties:
+                                                BorderColor: =RGBA(0, 0, 0, 1)
+                                                Color: =thmPrimaria
+                                                FontWeight: =If(ThisItem.IsSelected, FontWeight.Normal, FontWeight.Lighter)
+                                                Height: =30
+                                                OnSelect: =Select(Gallery2)
+                                                PaddingBottom: =0
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                                PaddingTop: =0
+                                                Size: =11
+                                                Text: =ThisItem.status
+                                                AlignInContainer: =AlignInContainer.Center
+                                                Visible: =!IsEmpty(Filter(col_itensPAconsulta, ID_fk = ThisItem.ID))
+                                                Width: =100
+                                          - Subtitle1_12:
+                                              Control: Label@2.5.1
+                                              Properties:
+                                                BorderColor: =RGBA(0, 0, 0, 1)
+                                                FontWeight: =If(ThisItem.IsSelected, FontWeight.Semibold, FontWeight.Normal)
+                                                Height: =30
+                                                OnSelect: =Select(Gallery2)
+                                                PaddingBottom: =0
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                                PaddingTop: =0
+                                                Size: =11
+                                                Text: =ThisItem.data //LookUp(tbl_perdidosAchados; ID = ThisItem.ID_fk).data
+                                                AlignInContainer: =AlignInContainer.Center
+                                                Visible: =!IsEmpty(Filter(col_itensPAconsulta, ID_fk = ThisItem.ID))
+                                                Width: =125
+                                          - ButtonCanvas3_5:
+                                              Control: Button@0.0.45
+                                              Properties:
+                                                Appearance: ='ButtonCanvas.Appearance'.Secondary
+                                                BasePaletteColor: =thmPrimaria
+                                                BorderColor: =thmPrimaria
+                                                BorderRadius: =4
+                                                BorderStyle: =BorderStyle.Solid
+                                                BorderThickness: =1
+                                                FontColor: =thmPrimaria
+                                                FontSize: =11
+                                                Height: =30
+                                                OnSelect: =Select(Gallery2)
+                                                Text: =ThisItem.iata & "-ANPA-" & ThisItem.ID
+                                                AlignInContainer: =AlignInContainer.Center
+                                                Visible: =!IsEmpty(Filter(col_itensPAconsulta, ID_fk = ThisItem.ID))
+                                                Width: =115
+                                          - EntregarButton_1:
+                                              Control: Button@0.0.45
+                                              Properties:
+                                                Appearance: ='ButtonCanvas.Appearance'.Primary
+                                                BasePaletteColor: =thmAcao
+                                                Icon: ="PeopleAdd"
+                                                OnSelect: |-
+                                                  =Set(varUltimaAtividade, Now());
+                                                  Navigate(
+                                                      ScreenEntregaRecibo,
+                                                      ScreenTransition.Fade,
+                                                      {
+                                                          VAR_DADOS_ENTREGA_ID: ThisItem.ID,
+                                                          VAR_NEW_RECIBO: true
+                                                      }
+                                                  )
+                                                Text: ="Entregar"
+                                                AlignInContainer: =AlignInContainer.Center
+                                                Visible: =!IsEmpty(Filter(col_itensPAconsulta, ID_fk = ThisItem.ID))
+                                                Width: =110
+                                    - Table2_4:
+                                        Control: Gallery@2.15.0
+                                        Variant: BrowseLayout_Vertical_TwoTextOneImageVariant_ver5.0
+                                        Properties:
+                                          Fill: =RGBA(255, 255, 255, 1)
+                                          Items: |-
+                                            =SortByColumns(
+                                                Filter(
+                                                    col_itensPAconsulta,
+                                                    ID_fk = ThisItem.ID
+                                                ),
+                                                "ID",
+                                                SortOrder.Descending
+                                            ) As TBL_ITENS
+
+                                          LoadingSpinner: =LoadingSpinner.None
+                                          ShowScrollbar: =false
+                                          TemplateSize: =50
+                                          AlignInContainer: =AlignInContainer.End
+                                          FillPortions: =0
+                                          Width: =Parent.Width - 30
+                                          Height: =CountRows(Filter(col_itensPAconsulta, ID_fk = ThisItem.ID)) * 52
+                                        Children:
+                                          - HtmlText2:
+                                              Control: HtmlViewer@2.1.0
+                                              Properties:
+                                                HtmlText: |-
+                                                  ="<div>🔹" & TBL_ITENS.categoria & " - " & TBL_ITENS.subCategoria & " | " & TBL_ITENS.descricao & " | " & If(
+                                                      TBL_ITENS.status <> "Recebido",
+                                                      "<font color='#B45309'>" & TBL_ITENS.status & "</font>",
+                                                      TBL_ITENS.status
+                                                  ) & "</div>"
+                                                OnSelect: =Select(Parent)
+                                                PaddingBottom: =0
+                                                PaddingTop: =0
+                                                Size: =11
+                                                Tooltip: =TBL_ITENS.descricao
+                                                Width: =Parent.TemplateWidth - 300
+                                                Y: =5
+                                          - Image2:
+                                              Control: Image@2.2.3
+                                              Properties:
+                                                Fill: =RGBA(0, 0, 0, 1)
+                                                Height: =40
+                                                Image: |-
+                                                  =If(
+                                                      IsBlank(TBL_ITENS.foto),
+                                                      'sem-foto',
+                                                      TBL_ITENS.foto.Small
+                                                  )
+                                                OnSelect: |-
+                                                  =If(
+                                                      !IsBlank(TBL_ITENS.foto),
+                                                      UpdateContext(
+                                                          {
+                                                              var_item: TBL_ITENS,
+                                                              varColVeiDetVisibleImagem: true
+                                                          }
+                                                      )
+                                                  )
+                                                RadiusBottomLeft: =4
+                                                RadiusBottomRight: =4
+                                                RadiusTopLeft: =4
+                                                RadiusTopRight: =4
+                                                Width: =40
+                                                Y: =5
                         - TextCanvas4:
                             Control: Text@0.0.51
                             Properties:
