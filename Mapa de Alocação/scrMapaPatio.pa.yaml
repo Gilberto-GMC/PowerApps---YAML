@@ -4474,6 +4474,81 @@ Screens:
                               HintText: ="ex. ASUNCION / SGAS / PARAGUAI"
                               PaddingLeft: =8
                               Size: =11
+            - htmIntCartaoMap:
+                Control: HtmlViewer@2.1.0
+                Properties:
+                  AutoHeight: =true
+                  Color: =thmTexto
+                  Fill: =thmFundo
+                  FillPortions: =0
+                  Font: =thmFonte
+                  HtmlText: |-
+                    =With(
+                        {
+                            _ent: locIntSentido = "ENTRADA",
+                            _data: If(locIntSentido = "ENTRADA", varAlocSel.data_ini, varAlocSel.data_f),
+                            _hora: If(locIntSentido = "ENTRADA", varAlocSel.h_ini, varAlocSel.h_fim),
+                            _pre: Upper(Trim(Coalesce(varAlocSel.prefixo, ""))),
+                            _icao: Coalesce(LookUp(colAerosRede, Aeroporto = Upper(Trim(varAeroNome))).ICAO, "")
+                        },
+                        "<div style='" & htmlFonte & "background:" & hxSuperficie & ";border:1px solid " & hxBorda & ";padding:18px 20px;'>" &
+                        "<div style='font-size:10px;font-weight:700;letter-spacing:.16em;color:" & hxAmbar & ";'>&#9679; " &
+                        If(_ent, "CHEGADA INTERNACIONAL", "SAÍDA INTERNACIONAL") & "</div>" &
+                        "<div style='font-size:26px;font-weight:800;color:" & hxPrimaria & ";line-height:1.15;margin-top:2px;'>" &
+                        Upper(Coalesce(LookUp(colEquip As _e, _e.equip = varAlocSel.equip).nome_equip, varAlocSel.equip, "AERONAVE")) & "</div>" &
+                        "<div style='font-size:12px;color:" & hxTexto & ";margin-top:2px;'>" &
+                        "<b style='color:" & hxAmbar & ";'>" &
+                        If(Len(_pre) = 5, Left(_pre, 2) & "-" & Mid(_pre, 3), Coalesce(_pre, "—")) & "</b>" &
+                        "&nbsp;&nbsp;&middot;&nbsp;&nbsp;Proprietário/operador: <b>" & Coalesce(varAlocSel.resp, "não informado") & "</b>" &
+                        "</div>" &
+                        "<table style='width:100%;border-collapse:separate;border-spacing:8px 8px;margin:12px -8px 0 -8px;table-layout:fixed;'><tr>" &
+                        "<td style='background:" & hxFundo & ";border:1px solid " & hxBorda & ";padding:10px 12px;vertical-align:top;'>" &
+                        "<div style='font-size:9px;font-weight:700;letter-spacing:.12em;color:" & hxAmbar & ";'>&#9679; " &
+                        If(_ent, "DATA DE CHEGADA", "DATA DE SAÍDA") & "</div>" &
+                        "<div style='font-size:15px;font-weight:700;color:" & hxPrimaria & ";margin-top:4px;'>" & Text(_data, "dd/mm/yyyy") & "</div>" &
+                        "<div style='font-size:12px;color:" & hxTextoFraco & ";'>" & Proper(Text(_data, "dddd")) & "</div></td>" &
+                        "<td style='background:" & hxFundo & ";border:1px solid " & hxBorda & ";padding:10px 12px;vertical-align:top;'>" &
+                        "<div style='font-size:9px;font-weight:700;letter-spacing:.12em;color:" & hxAmbar & ";'>&#9679; HORÁRIO DE IMIGRAÇÃO</div>" &
+                        "<div style='font-size:15px;font-weight:700;color:" & hxPrimaria & ";margin-top:4px;'>" &
+                        Text(Int(_hora / 60), "00") & ":" & Text(Mod(_hora, 60), "00") & "</div>" &
+                        "<div style='font-size:12px;color:" & hxTextoFraco & ";'>hora local</div></td>" &
+                        "<td style='background:" & hxFundo & ";border:1px solid " & hxBorda & ";padding:10px 12px;vertical-align:top;'>" &
+                        "<div style='font-size:9px;font-weight:700;letter-spacing:.12em;color:" & hxAmbar & ";'>&#9679; " &
+                        If(_ent, "DESEMBARQUE", "EMBARQUE") & "</div>" &
+                        "<div style='font-size:15px;font-weight:700;color:" & hxPrimaria & ";margin-top:4px;'>" &
+                        If(IsBlank(Trim(txtIntTripMap.Text)), "—", Trim(txtIntTripMap.Text)) & " TRIP + " &
+                        If(IsBlank(Trim(txtIntPaxMap.Text)), "—", Trim(txtIntPaxMap.Text)) & " PAX</div>" &
+                        "<div style='font-size:12px;color:" & hxTextoFraco & ";'>tripulantes e passageiros</div></td>" &
+                        "</tr></table>" &
+                        "<div style='background:" & hxFundo & ";border:1px solid " & hxBorda & ";padding:10px 12px;margin-top:4px;'>" &
+                        "<div style='font-size:9px;font-weight:700;letter-spacing:.12em;color:" & hxAmbar & ";'>&#9679; " &
+                        If(_ent, "PROCEDÊNCIA", "DESTINO") & "</div>" &
+                        "<div style='font-size:15px;font-weight:700;color:" & hxPrimaria & ";margin-top:4px;'>" &
+                        If(IsBlank(Trim(txtIntLocalMap.Text)), "a informar", Trim(txtIntLocalMap.Text)) & "</div></div>" &
+                        If(
+                            IsBlank(varAlocSel.obs),
+                            "",
+                            "<div style='font-size:11px;color:" & hxTextoFraco & ";margin-top:10px;'><b>Observações:</b> " &
+                            Substitute(Substitute(Trim(varAlocSel.obs), "&", "&amp;"), "<", "&lt;") & "</div>"
+                        ) &
+                        "<div style='font-size:11px;color:" & hxTexto & ";margin-top:14px;border-top:1px solid " & hxBorda & ";padding-top:10px;'>" &
+                        "Solicitamos o agendamento dos órgãos federais para a operação acima. Permanecemos à disposição.<br><br>" &
+                        "Atenciosamente,<br><b>" & User().FullName & "</b><br>" &
+                        "Operações &middot; " & Proper(varAeroNome) & If(IsBlank(_icao), "", " (" & _icao & ")") &
+                        "</div>" &
+                        "</div>"
+                    )
+                  Size: =11
+            - lblIntTextoTituloMap:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =thmTextoFraco
+                  FillPortions: =0
+                  Font: =thmFonte
+                  FontWeight: =FontWeight.Bold
+                  Height: =18
+                  Size: =10
+                  Text: ="TEXTO PARA COPIAR (E-MAIL E WHATSAPP)"
             - lblIntAjudaMap:
                 Control: Label@2.5.1
                 Properties:
@@ -4482,13 +4557,13 @@ Screens:
                   FillPortions: =0
                   Height: =18
                   Size: =9
-                  Text: ="O texto muda conforme você digita. Selecione tudo, copie e envie por e-mail e WhatsApp."
+                  Text: ="O cartão acima é a mesma informação em forma de aviso. O texto abaixo é o que se copia."
             - txtIntTextoMap:
                 Control: TextInput@0.0.54
                 Properties:
                   AccessibleLabel: ="Texto do aviso aos órgãos federais"
                   FillPortions: =1
-                  Height: =340
+                  Height: =300
                   Mode: ='TextInputCanvas.Mode'.Multiline
                   Value: |-
                     =With(
