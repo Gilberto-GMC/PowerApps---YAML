@@ -4498,52 +4498,61 @@ Screens:
                             _data: If(locIntSentido = "ENTRADA", varAlocSel.data_ini, varAlocSel.data_f),
                             _hora: If(locIntSentido = "ENTRADA", varAlocSel.h_ini, varAlocSel.h_fim),
                             _pre: Upper(Trim(Coalesce(varAlocSel.prefixo, ""))),
-                            _icao: Coalesce(LookUp(colAerosRede, Aeroporto = Upper(Trim(varAeroNome))).ICAO, "")
+                            _icao: Coalesce(LookUp(colAerosRede, Aeroporto = Upper(Trim(varAeroNome))).ICAO, ""),
+                            _rot: "font-size:9px;font-weight:700;letter-spacing:.14em;color:" & hxTextoFraco & ";text-transform:uppercase;",
+                            _val: "font-size:19px;font-weight:800;color:" & hxPrimariaEscura & ";line-height:1.2;margin-top:3px;",
+                            _cxa: "background:" & hxSuperficie & ";border:1px solid " & hxBorda & ";border-top:3px solid " & hxPrimaria & ";padding:10px 14px;vertical-align:top;"
                         },
-                        "<div style='" & htmlFonte & "background:" & hxSuperficie & ";border:1px solid " & hxBorda & ";padding:18px 20px;'>" &
-                        "<div style='font-size:10px;font-weight:700;letter-spacing:.16em;color:" & hxAmbar & ";'>&#9679; " &
+                        "<div style='" & htmlFonte & "background:" & hxFundo & ";border:1px solid " & hxBorda & ";'>" &
+                        "<div style='background:" & hxPrimaria & ";padding:14px 18px;'>" &
+                        "<div style='font-size:10px;font-weight:700;letter-spacing:.18em;color:" & hxPrimariaClara & ";'>" &
                         If(_ent, "CHEGADA INTERNACIONAL", "SAÍDA INTERNACIONAL") & "</div>" &
-                        "<div style='font-size:26px;font-weight:800;color:" & hxPrimaria & ";line-height:1.15;margin-top:2px;'>" &
+                        "<div style='font-size:27px;font-weight:800;color:#FFFFFF;line-height:1.15;margin-top:3px;'>" &
                         Upper(Coalesce(LookUp(colEquip As _e, _e.equip = varAlocSel.equip).nome_equip, varAlocSel.equip, "AERONAVE")) & "</div>" &
-                        "<div style='font-size:12px;color:" & hxTexto & ";margin-top:2px;'>" &
-                        "<b style='color:" & hxAmbar & ";'>" &
-                        If(Len(_pre) = 5, Left(_pre, 2) & "-" & Mid(_pre, 3), Coalesce(_pre, "—")) & "</b>" &
-                        "&nbsp;&nbsp;&middot;&nbsp;&nbsp;Proprietário/operador: <b>" & Coalesce(varAlocSel.resp, "não informado") & "</b>" &
                         "</div>" &
-                        "<table style='width:100%;border-collapse:separate;border-spacing:8px 8px;margin:12px -8px 0 -8px;table-layout:fixed;'><tr>" &
-                        "<td style='background:" & hxFundo & ";border:1px solid " & hxBorda & ";padding:10px 12px;vertical-align:top;'>" &
-                        "<div style='font-size:9px;font-weight:700;letter-spacing:.12em;color:" & hxAmbar & ";'>&#9679; " &
-                        If(_ent, "DATA DE CHEGADA", "DATA DE SAÍDA") & "</div>" &
-                        "<div style='font-size:15px;font-weight:700;color:" & hxPrimaria & ";margin-top:4px;'>" & Text(_data, "dd/mm/yyyy") & "</div>" &
-                        "<div style='font-size:12px;color:" & hxTextoFraco & ";'>" & Proper(Text(_data, "dddd")) & "</div></td>" &
-                        "<td style='background:" & hxFundo & ";border:1px solid " & hxBorda & ";padding:10px 12px;vertical-align:top;'>" &
-                        "<div style='font-size:9px;font-weight:700;letter-spacing:.12em;color:" & hxAmbar & ";'>&#9679; HORÁRIO DE IMIGRAÇÃO</div>" &
-                        "<div style='font-size:15px;font-weight:700;color:" & hxPrimaria & ";margin-top:4px;'>" &
-                        Text(Int(_hora / 60), "00") & ":" & Text(Mod(_hora, 60), "00") & "</div>" &
-                        "<div style='font-size:12px;color:" & hxTextoFraco & ";'>hora local</div></td>" &
-                        "<td style='background:" & hxFundo & ";border:1px solid " & hxBorda & ";padding:10px 12px;vertical-align:top;'>" &
-                        "<div style='font-size:9px;font-weight:700;letter-spacing:.12em;color:" & hxAmbar & ";'>&#9679; " &
-                        If(_ent, "DESEMBARQUE", "EMBARQUE") & "</div>" &
-                        "<div style='font-size:15px;font-weight:700;color:" & hxPrimaria & ";margin-top:4px;'>" &
-                        If(IsBlank(Trim(txtIntTripMap.Text)), "—", Trim(txtIntTripMap.Text)) & " TRIP + " &
-                        If(IsBlank(Trim(txtIntPaxMap.Text)), "—", Trim(txtIntPaxMap.Text)) & " PAX</div>" &
-                        "<div style='font-size:12px;color:" & hxTextoFraco & ";'>tripulantes e passageiros</div></td>" &
+                        "<div style='padding:14px 18px 4px 18px;'>" &
+                        "<table style='width:100%;border-collapse:separate;border-spacing:0 0;'><tr>" &
+                        "<td style='width:50%;vertical-align:middle;'>" &
+                        "<div style='" & _rot & "'>Matrícula</div>" &
+                        "<div style='display:inline-block;background:" & hxAcao & ";color:#FFFFFF;font-size:20px;font-weight:800;letter-spacing:.04em;padding:3px 12px;margin-top:4px;'>" &
+                        If(Len(_pre) = 5, Left(_pre, 2) & "-" & Mid(_pre, 3), Coalesce(_pre, "—")) & "</div></td>" &
+                        "<td style='width:50%;vertical-align:middle;'>" &
+                        "<div style='" & _rot & "'>Proprietário / operador</div>" &
+                        "<div style='" & _val & "'>" & Upper(Coalesce(varAlocSel.resp, "não informado")) & "</div></td>" &
+                        "</tr></table></div>" &
+                        "<table style='width:100%;table-layout:fixed;border-collapse:separate;border-spacing:10px 10px;margin:4px 8px 0 8px;width:calc(100% - 16px);'><tr>" &
+                        "<td style='" & _cxa & "'>" &
+                        "<div style='" & _rot & "'>" & If(_ent, "Data de chegada", "Data de saída") & "</div>" &
+                        "<div style='" & _val & "'>" & Text(_data, "dd/mm/yyyy") & "</div>" &
+                        "<div style='font-size:11px;color:" & hxTextoFraco & ";'>" & Proper(Text(_data, "dddd")) & "</div></td>" &
+                        "<td style='" & _cxa & "'>" &
+                        "<div style='" & _rot & "'>Horário de imigração</div>" &
+                        "<div style='" & _val & "'>" & Text(Int(_hora / 60), "00") & ":" & Text(Mod(_hora, 60), "00") & "</div>" &
+                        "<div style='font-size:11px;color:" & hxTextoFraco & ";'>hora local</div></td>" &
+                        "<td style='" & _cxa & "'>" &
+                        "<div style='" & _rot & "'>" & If(_ent, "Desembarque", "Embarque") & "</div>" &
+                        "<div style='" & _val & "'>" &
+                        If(IsBlank(Trim(txtIntTripMap.Text)), "—", Trim(txtIntTripMap.Text)) & " + " &
+                        If(IsBlank(Trim(txtIntPaxMap.Text)), "—", Trim(txtIntPaxMap.Text)) & "</div>" &
+                        "<div style='font-size:11px;color:" & hxTextoFraco & ";'>tripulantes + passageiros</div></td>" &
                         "</tr></table>" &
-                        "<div style='background:" & hxFundo & ";border:1px solid " & hxBorda & ";padding:10px 12px;margin-top:4px;'>" &
-                        "<div style='font-size:9px;font-weight:700;letter-spacing:.12em;color:" & hxAmbar & ";'>&#9679; " &
-                        If(_ent, "PROCEDÊNCIA", "DESTINO") & "</div>" &
-                        "<div style='font-size:15px;font-weight:700;color:" & hxPrimaria & ";margin-top:4px;'>" &
-                        If(IsBlank(Trim(txtIntLocalMap.Text)), "a informar", Trim(txtIntLocalMap.Text)) & "</div></div>" &
+                        "<div style='margin:4px 18px 0 18px;" & _cxa & "'>" &
+                        "<div style='" & _rot & "'>" & If(_ent, "Procedência", "Destino") & "</div>" &
+                        "<div style='" & _val & "'>" &
+                        Upper(If(IsBlank(Trim(txtIntLocalMap.Text)), "a informar", Trim(txtIntLocalMap.Text))) & "</div></div>" &
                         If(
                             IsBlank(varAlocSel.obs),
                             "",
-                            "<div style='font-size:11px;color:" & hxTextoFraco & ";margin-top:10px;'><b>Observações:</b> " &
-                            Substitute(Substitute(Trim(varAlocSel.obs), "&", "&amp;"), "<", "&lt;") & "</div>"
+                            "<div style='margin:10px 18px 0 18px;'><span style='" & _rot & "'>Observações</span>" &
+                            "<div style='font-size:13px;font-weight:600;color:" & hxTexto & ";margin-top:2px;'>" &
+                            Substitute(Substitute(Trim(varAlocSel.obs), "&", "&amp;"), "<", "&lt;") & "</div></div>"
                         ) &
-                        "<div style='font-size:11px;color:" & hxTexto & ";margin-top:14px;border-top:1px solid " & hxBorda & ";padding-top:10px;'>" &
+                        "<div style='margin:14px 18px 0 18px;border-top:2px solid " & hxPrimariaClara & ";padding:12px 0 16px 0;font-size:12px;color:" & hxTexto & ";'>" &
                         "Solicitamos o agendamento dos órgãos federais para a operação acima. Permanecemos à disposição.<br><br>" &
-                        "Atenciosamente,<br><b>" & User().FullName & "</b><br>" &
-                        "Operações &middot; " & Proper(varAeroNome) & If(IsBlank(_icao), "", " (" & _icao & ")") &
+                        "Atenciosamente,<br>" &
+                        "<b style='color:" & hxPrimariaEscura & ";font-size:13px;'>" & User().FullName & "</b><br>" &
+                        "<span style='color:" & hxTextoFraco & ";'>Operações &middot; " & Proper(varAeroNome) &
+                        If(IsBlank(_icao), "", " (" & _icao & ")") & "</span>" &
                         "</div>" &
                         "</div>"
                     )
