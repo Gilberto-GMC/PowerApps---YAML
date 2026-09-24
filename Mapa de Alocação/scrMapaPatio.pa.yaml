@@ -15,7 +15,7 @@ Screens:
             {
                 locPatio: "TODOS",
                 locNonce: 0, locNonceEq: 0, locEquipSug: "",
-                locIntSentido: "",
+                locIntSentido: "", locIntPrint: false, locIntTexto: false,
                 locResExpandido: false,
                 locConfirmaConting: 0,
                 locConfirmaPortao: "", locConfirmaEnv: 0, locConfirmaAlt: "",
@@ -4249,7 +4249,7 @@ Screens:
             RadiusTopLeft: =0
             RadiusTopRight: =0
             Visible: =varIntAberto
-            Width: =Min(720, Parent.Width)
+            Width: =If(locIntPrint, Parent.Width, Min(720, Parent.Width))
             X: =Parent.Width - Self.Width
           Children:
             - cntIntTopoMap:
@@ -4269,6 +4269,7 @@ Screens:
                   RadiusBottomRight: =0
                   RadiusTopLeft: =0
                   RadiusTopRight: =0
+                  Visible: =!locIntPrint
                 Children:
                   - lblIntPainelTituloMap:
                       Control: Label@2.5.1
@@ -4334,7 +4335,9 @@ Screens:
                         Icon: ="Dismiss"
                         IconStyle: ='ButtonCanvas.IconStyle'.Filled
                         LayoutMinWidth: =0
-                        OnSelect: =Set(varIntAberto, false)
+                        OnSelect: |-
+                          =UpdateContext({ locIntPrint: false, locIntTexto: false });
+                          Set(varIntAberto, false)
                         Text: ="FECHAR"
                         Width: =110
             - cntIntCamposMap:
@@ -4354,6 +4357,7 @@ Screens:
                   RadiusBottomRight: =0
                   RadiusTopLeft: =0
                   RadiusTopRight: =0
+                  Visible: =!locIntPrint
                 Children:
                   - cntIntTripMap:
                       Control: GroupContainer@1.5.0
@@ -4549,6 +4553,128 @@ Screens:
                   Height: =18
                   Size: =10
                   Text: ="TEXTO PARA COPIAR (E-MAIL E WHATSAPP)"
+                  Visible: =locIntTexto And !locIntPrint
+            - cntIntCartaoBtnMap:
+                Control: GroupContainer@1.5.0
+                Variant: AutoLayout
+                Properties:
+                  DropShadow: =DropShadow.None
+                  Fill: =thmFundo
+                  FillPortions: =0
+                  Height: =56
+                  LayoutAlignItems: =LayoutAlignItems.Stretch
+                  LayoutDirection: =LayoutDirection.Horizontal
+                  LayoutGap: =8
+                  LayoutMinHeight: =0
+                  LayoutMinWidth: =0
+                  PaddingTop: =8
+                  RadiusBottomLeft: =0
+                  RadiusBottomRight: =0
+                  RadiusTopLeft: =0
+                  RadiusTopRight: =0
+                Children:
+                  - btnIntPrintMap:
+                      Control: Button@0.0.45
+                      Properties:
+                        Appearance: ='ButtonCanvas.Appearance'.Secondary
+                        BasePaletteColor: =thmPrimaria
+                        BorderRadius: =0
+                        FillPortions: =1
+                        FontColor: =If(locIntPrint, thmTextoBarra, thmPrimaria)
+                        FontSize: =12
+                        FontWeight: =FontWeight.Semibold
+                        Height: =44
+                        LayoutMinWidth: =0
+                        OnSelect: |-
+                          =UpdateContext({ locIntPrint: true, locIntTexto: false })
+                        Text: ="TIRAR PRINT"
+                  - btnIntCopiarMap:
+                      Control: Button@0.0.45
+                      Properties:
+                        Appearance: |-
+                          =If(
+                              locIntTexto,
+                              'ButtonCanvas.Appearance'.Primary,
+                              'ButtonCanvas.Appearance'.Secondary
+                          )
+                        BasePaletteColor: =thmOperacional
+                        BorderRadius: =0
+                        FillPortions: =1
+                        FontColor: =If(locIntTexto, thmTextoBarra, thmOperacional)
+                        FontSize: =12
+                        FontWeight: =FontWeight.Semibold
+                        Height: =44
+                        Icon: ="DocumentBulletList"
+                        IconStyle: ='ButtonCanvas.IconStyle'.Filled
+                        LayoutMinWidth: =0
+                        OnSelect: |-
+                          =UpdateContext({ locIntTexto: !locIntTexto })
+                        Text: |-
+                          =If(locIntTexto, "ESCONDER O TEXTO", "COPIAR SOMENTE O TEXTO")
+                Visible: =!locIntPrint
+            - cntIntPrintBarraMap:
+                Control: GroupContainer@1.5.0
+                Variant: AutoLayout
+                Properties:
+                  DropShadow: =DropShadow.None
+                  Fill: =thmFundo
+                  FillPortions: =0
+                  Height: =56
+                  LayoutAlignItems: =LayoutAlignItems.Stretch
+                  LayoutDirection: =LayoutDirection.Horizontal
+                  LayoutGap: =8
+                  LayoutMinHeight: =0
+                  LayoutMinWidth: =0
+                  PaddingTop: =8
+                  RadiusBottomLeft: =0
+                  RadiusBottomRight: =0
+                  RadiusTopLeft: =0
+                  RadiusTopRight: =0
+                  Visible: =locIntPrint
+                Children:
+                  - lblIntPrintDicaMap:
+                      Control: Label@2.5.1
+                      Properties:
+                        Color: =thmTextoFraco
+                        FillPortions: =1
+                        Font: =thmFonte
+                        LayoutMinWidth: =0
+                        Size: =10
+                        Text: |-
+                          ="Recorte a tela com a tecla Windows + Shift + S para mandar a imagem no WhatsApp, ou use IMPRIMIR para salvar em PDF."
+                  - btnIntImprimirMap:
+                      Control: Button@0.0.45
+                      Properties:
+                        Appearance: ='ButtonCanvas.Appearance'.Secondary
+                        BasePaletteColor: =thmPrimaria
+                        BorderRadius: =0
+                        FillPortions: =0
+                        FontColor: =thmPrimaria
+                        FontSize: =12
+                        FontWeight: =FontWeight.Semibold
+                        Height: =44
+                        LayoutMinWidth: =0
+                        OnSelect: =Print()
+                        Text: ="IMPRIMIR / PDF"
+                        Width: =176
+                  - btnIntVoltarPrintMap:
+                      Control: Button@0.0.45
+                      Properties:
+                        Appearance: ='ButtonCanvas.Appearance'.Primary
+                        BasePaletteColor: =thmPrimaria
+                        BorderRadius: =0
+                        FillPortions: =0
+                        FontColor: =thmTextoBarra
+                        FontSize: =12
+                        FontWeight: =FontWeight.Semibold
+                        Height: =44
+                        Icon: ="ChevronLeft"
+                        IconStyle: ='ButtonCanvas.IconStyle'.Filled
+                        LayoutMinWidth: =0
+                        OnSelect: |-
+                          =UpdateContext({ locIntPrint: false })
+                        Text: ="VOLTAR"
+                        Width: =140
             - lblIntAjudaMap:
                 Control: Label@2.5.1
                 Properties:
@@ -4557,7 +4683,8 @@ Screens:
                   FillPortions: =0
                   Height: =18
                   Size: =9
-                  Text: ="O cartão acima é a mesma informação em forma de aviso. O texto abaixo é o que se copia."
+                  Text: ="Selecione tudo no quadro abaixo (Ctrl+A) e copie (Ctrl+C)."
+                  Visible: =locIntTexto And !locIntPrint
             - txtIntTextoMap:
                 Control: TextInput@0.0.54
                 Properties:
@@ -4565,6 +4692,7 @@ Screens:
                   FillPortions: =1
                   Height: =300
                   Mode: ='TextInputCanvas.Mode'.Multiline
+                  Visible: =locIntTexto And !locIntPrint
                   Value: |-
                     =With(
                         {
@@ -4622,6 +4750,7 @@ Screens:
                   RadiusBottomRight: =0
                   RadiusTopLeft: =0
                   RadiusTopRight: =0
+                  Visible: =!locIntPrint
                 Children:
                   - btnIntEnviadoMap:
                       Control: Button@0.0.45
