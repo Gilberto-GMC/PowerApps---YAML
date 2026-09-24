@@ -660,7 +660,7 @@ Screens:
                                           " | "
                                       )
                                     Visible: =Table2_5.AllItemsCount > 0
-                                    Width: =Parent.Width - 10
+                                    Width: =Parent.TemplateWidth - 10
                               - EntregarButton_2:
                                   Control: Button@0.0.45
                                   Properties:
@@ -678,14 +678,14 @@ Screens:
                                     Text: ="Recibo"
                                     Visible: =Table2_5.AllItemsCount > 0
                                     Width: =100
-                                    X: =Parent.Width - Self.Width - 40
+                                    X: =510
                                     Y: =5
                               - Table2_5:
                                   Control: Gallery@2.15.0
                                   Variant: BrowseLayout_Vertical_TwoTextOneImageVariant_ver5.0
                                   Properties:
                                     Fill: =RGBA(255, 255, 255, 1)
-                                    Height: =40
+                                    Height: =Self.AllItemsCount * 52
                                     Items: |-
                                       =SortByColumns(
                                           Filter(
@@ -698,7 +698,7 @@ Screens:
                                     LoadingSpinner: =LoadingSpinner.None
                                     ShowScrollbar: =false
                                     TemplateSize: =50
-                                    Width: =Parent.Width - 10
+                                    Width: =Parent.TemplateWidth - 10
                                   Children:
                                     - HtmlText2_2:
                                         Control: HtmlViewer@2.1.0
@@ -717,7 +717,7 @@ Screens:
                                           Tooltip: =TBL_ITENS.descricao
                                           Width: =Parent.Width - 250
                                           X: =25
-                                          Y: =5
+                                          Y: =40
                                     - Image2_2:
                                         Control: Image@2.2.3
                                         Properties:
@@ -748,7 +748,7 @@ Screens:
                               - HtmlTextRastreio:
                                   Control: HtmlViewer@2.1.0
                                   Properties:
-                                    Height: =0
+                                    Height: =If(ThisItem.IsSelected, 46, 0)
                                     HtmlText: |-
                                       ="<div style='font-family:Open Sans,Segoe UI,sans-serif;font-size:11px;color:#1E293B;line-height:1.6;border-top:1px solid #E2E8F0;padding-top:3px'>" &
                                           "<b>Achado:</b> " & If(IsBlank(ThisItem.declarante), "—", ThisItem.declarante) & " &nbsp;|&nbsp; " & If(IsBlank(ThisItem.empresa_declarante), "—", ThisItem.empresa_declarante) & " &nbsp;|&nbsp; " & If(IsBlank(ThisItem.tipo_origem), "—", ThisItem.tipo_origem) &
@@ -761,8 +761,8 @@ Screens:
                                     PaddingRight: =12
                                     Size: =11
                                     Visible: =ThisItem.IsSelected
-                                    Width: =Parent.Width - 10
-                                    Y: =40
+                                    Width: =Parent.TemplateWidth - 10
+                                    Y: =Table2_5.Y + Table2_5.Height
       - ContainerVisibleImagem_2:
           Control: GroupContainer@1.5.0
           Variant: ManualLayout
