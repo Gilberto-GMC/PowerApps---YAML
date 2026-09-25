@@ -4483,6 +4483,100 @@ Screens:
                               HintText: ="ex. ASUNCION / SGAS / PARAGUAI"
                               PaddingLeft: =8
                               Size: =11
+            - cntIntDataMap:
+                Control: GroupContainer@1.5.0
+                Variant: AutoLayout
+                Properties:
+                  DropShadow: =DropShadow.None
+                  Fill: =thmFundo
+                  FillPortions: =0
+                  Height: =62
+                  LayoutAlignItems: =LayoutAlignItems.Stretch
+                  LayoutDirection: =LayoutDirection.Horizontal
+                  LayoutGap: =8
+                  LayoutMinHeight: =0
+                  LayoutMinWidth: =0
+                  RadiusBottomLeft: =0
+                  RadiusBottomRight: =0
+                  RadiusTopLeft: =0
+                  RadiusTopRight: =0
+                  Visible: |-
+                    =!locIntPrint And locIntSentido <> "ENTRADA" And varAlocSel.data_f >= mapSaidaEmAberto
+                Children:
+                  - cntIntDataCxaMap:
+                      Control: GroupContainer@1.5.0
+                      Variant: AutoLayout
+                      Properties:
+                        DropShadow: =DropShadow.None
+                        Fill: =thmFundo
+                        FillPortions: =0
+                        LayoutAlignItems: =LayoutAlignItems.Stretch
+                        LayoutDirection: =LayoutDirection.Vertical
+                        LayoutGap: =4
+                        LayoutMinHeight: =0
+                        LayoutMinWidth: =0
+                        RadiusBottomLeft: =0
+                        RadiusBottomRight: =0
+                        RadiusTopLeft: =0
+                        RadiusTopRight: =0
+                        Width: =200
+                      Children:
+                        - lblIntDataMap:
+                            Control: Label@2.5.1
+                            Properties:
+                              Color: =thmTextoFraco
+                              Font: =thmFonte
+                              FontWeight: =FontWeight.Bold
+                              Height: =18
+                              Size: =10
+                              Text: ="DATA DA SAÍDA"
+                        - dtpIntDataMap:
+                            Control: DatePicker@0.0.46
+                            Properties:
+                              AccessibleLabel: ="Data da saída"
+                              Format: =DateTimeFormat.ShortDate
+                              Height: =36
+                              SelectedDate: =varData
+                  - cntIntHoraCxaMap:
+                      Control: GroupContainer@1.5.0
+                      Variant: AutoLayout
+                      Properties:
+                        DropShadow: =DropShadow.None
+                        Fill: =thmFundo
+                        FillPortions: =0
+                        LayoutAlignItems: =LayoutAlignItems.Stretch
+                        LayoutDirection: =LayoutDirection.Vertical
+                        LayoutGap: =4
+                        LayoutMinHeight: =0
+                        LayoutMinWidth: =0
+                        RadiusBottomLeft: =0
+                        RadiusBottomRight: =0
+                        RadiusTopLeft: =0
+                        RadiusTopRight: =0
+                        Width: =140
+                      Children:
+                        - lblIntHoraMap:
+                            Control: Label@2.5.1
+                            Properties:
+                              Color: =thmTextoFraco
+                              Font: =thmFonte
+                              FontWeight: =FontWeight.Bold
+                              Height: =18
+                              Size: =10
+                              Text: ="HORA DA SAÍDA"
+                        - txtIntHoraMap:
+                            Control: Classic/TextInput@2.3.2
+                            Properties:
+                              AccessibleLabel: ="Hora da saída"
+                              BorderColor: =thmBorda
+                              BorderThickness: =1
+                              Default: =""
+                              DelayOutput: =false
+                              Fill: =thmSuperficie
+                              Height: =36
+                              HintText: ="ex. 14:30"
+                              PaddingLeft: =8
+                              Size: =11
             - htmIntCartaoMap:
                 Control: HtmlViewer@2.1.0
                 Properties:
@@ -4495,8 +4589,24 @@ Screens:
                     =With(
                         {
                             _ent: locIntSentido = "ENTRADA",
-                            _data: If(locIntSentido = "ENTRADA", varAlocSel.data_ini, varAlocSel.data_f),
-                            _hora: If(locIntSentido = "ENTRADA", varAlocSel.h_ini, varAlocSel.h_fim),
+                            _data: If(
+                                locIntSentido = "ENTRADA",
+                                varAlocSel.data_ini,
+                                varAlocSel.data_f >= mapSaidaEmAberto,
+                                dtpIntDataMap.SelectedDate,
+                                varAlocSel.data_f
+                            ),
+                            _hora: If(
+                                locIntSentido = "ENTRADA",
+                                varAlocSel.h_ini,
+                                varAlocSel.data_f >= mapSaidaEmAberto,
+                                If(
+                                    IsMatch(txtIntHoraMap.Text, "^([01][0-9]|2[0-3]):[0-5][0-9]$"),
+                                    Value(Left(txtIntHoraMap.Text, 2)) * 60 + Value(Right(txtIntHoraMap.Text, 2)),
+                                    -1
+                                ),
+                                varAlocSel.h_fim
+                            ),
                             _pre: Upper(Trim(Coalesce(varAlocSel.prefixo, ""))),
                             _icao: Coalesce(LookUp(colAerosRede, Aeroporto = Upper(Trim(varAeroNome))).ICAO, ""),
                             _rot: "font-size:9px;font-weight:700;letter-spacing:.14em;color:" & hxTextoFraco & ";text-transform:uppercase;",
@@ -4527,7 +4637,8 @@ Screens:
                         "<div style='font-size:11px;color:" & hxTextoFraco & ";'>" & Proper(Text(_data, "dddd")) & "</div></td>" &
                         "<td style='" & _cxa & "'>" &
                         "<div style='" & _rot & "'>Horário de imigração</div>" &
-                        "<div style='" & _val & "'>" & Text(Int(_hora / 60), "00") & ":" & Text(Mod(_hora, 60), "00") & "</div>" &
+                        "<div style='" & _val & "'>" &
+                        If(_hora < 0, "a informar", Text(Int(_hora / 60), "00") & ":" & Text(Mod(_hora, 60), "00")) & "</div>" &
                         "<div style='font-size:11px;color:" & hxTextoFraco & ";'>hora local</div></td>" &
                         "<td style='" & _cxa & "'>" &
                         "<div style='" & _rot & "'>" & If(_ent, "Desembarque", "Embarque") & "</div>" &
@@ -4696,8 +4807,24 @@ Screens:
                     =With(
                         {
                             _ent: locIntSentido = "ENTRADA",
-                            _data: If(locIntSentido = "ENTRADA", varAlocSel.data_ini, varAlocSel.data_f),
-                            _hora: If(locIntSentido = "ENTRADA", varAlocSel.h_ini, varAlocSel.h_fim),
+                            _data: If(
+                                locIntSentido = "ENTRADA",
+                                varAlocSel.data_ini,
+                                varAlocSel.data_f >= mapSaidaEmAberto,
+                                dtpIntDataMap.SelectedDate,
+                                varAlocSel.data_f
+                            ),
+                            _hora: If(
+                                locIntSentido = "ENTRADA",
+                                varAlocSel.h_ini,
+                                varAlocSel.data_f >= mapSaidaEmAberto,
+                                If(
+                                    IsMatch(txtIntHoraMap.Text, "^([01][0-9]|2[0-3]):[0-5][0-9]$"),
+                                    Value(Left(txtIntHoraMap.Text, 2)) * 60 + Value(Right(txtIntHoraMap.Text, 2)),
+                                    -1
+                                ),
+                                varAlocSel.h_fim
+                            ),
                             _pre: Upper(Trim(Coalesce(varAlocSel.prefixo, ""))),
                             _icao: Coalesce(LookUp(colAerosRede, Aeroporto = Upper(Trim(varAeroNome))).ICAO, "")
                         },
@@ -4714,7 +4841,11 @@ Screens:
                         "Proprietário/operador: " & Coalesce(varAlocSel.resp, "não informado") & Char(10) & Char(10) &
                         If(_ent, "CHEGADA", "SAÍDA") & Char(10) &
                         Proper(Text(_data, "dddd")) & ", " & Text(_data, "dd/mm/yyyy") & Char(10) &
-                        "Imigração às " & Text(Int(_hora / 60), "00") & ":" & Text(Mod(_hora, 60), "00") & " (hora local)" & Char(10) &
+                        If(
+                            _hora < 0,
+                            "Imigração: horário a informar",
+                            "Imigração às " & Text(Int(_hora / 60), "00") & ":" & Text(Mod(_hora, 60), "00") & " (hora local)"
+                        ) & Char(10) &
                         If(_ent, "Procedência: ", "Destino: ") &
                         If(IsBlank(Trim(txtIntLocalMap.Text)), "a informar", Trim(txtIntLocalMap.Text)) & Char(10) & Char(10) &
                         If(_ent, "DESEMBARQUE", "EMBARQUE") & Char(10) &
@@ -4772,10 +4903,12 @@ Screens:
                               Patch(tb_alocacoesMapa, LookUp(tb_alocacoesMapa, ID = varAlocSel.id), { aviso_chegada: Now() });
                               UpdateIf(colDia, id = varAlocSel.id, { aviso_ent: Now() });
                               UpdateIf(colReservas, id = varAlocSel.id, { aviso_ent: Now() });
+                              UpdateIf(colHangarDia, id = varAlocSel.id, { aviso_ent: Now() });
                               Set(varAlocSel, Patch(varAlocSel, { aviso_ent: Now() })),
                               Patch(tb_alocacoesMapa, LookUp(tb_alocacoesMapa, ID = varAlocSel.id), { aviso_saida: Now() });
                               UpdateIf(colDia, id = varAlocSel.id, { aviso_sai: Now() });
                               UpdateIf(colReservas, id = varAlocSel.id, { aviso_sai: Now() });
+                              UpdateIf(colHangarDia, id = varAlocSel.id, { aviso_sai: Now() });
                               Set(varAlocSel, Patch(varAlocSel, { aviso_sai: Now() }))
                           );
                           Set(varIntAberto, false);
@@ -4800,10 +4933,12 @@ Screens:
                               Patch(tb_alocacoesMapa, LookUp(tb_alocacoesMapa, ID = varAlocSel.id), { aviso_chegada: Blank() });
                               UpdateIf(colDia, id = varAlocSel.id, { aviso_ent: Blank() });
                               UpdateIf(colReservas, id = varAlocSel.id, { aviso_ent: Blank() });
+                              UpdateIf(colHangarDia, id = varAlocSel.id, { aviso_ent: Blank() });
                               Set(varAlocSel, Patch(varAlocSel, { aviso_ent: Blank() })),
                               Patch(tb_alocacoesMapa, LookUp(tb_alocacoesMapa, ID = varAlocSel.id), { aviso_saida: Blank() });
                               UpdateIf(colDia, id = varAlocSel.id, { aviso_sai: Blank() });
                               UpdateIf(colReservas, id = varAlocSel.id, { aviso_sai: Blank() });
+                              UpdateIf(colHangarDia, id = varAlocSel.id, { aviso_sai: Blank() });
                               Set(varAlocSel, Patch(varAlocSel, { aviso_sai: Blank() }))
                           );
                           Notify("Marca de enviado desfeita.", NotificationType.Information, 3000)
@@ -4818,7 +4953,7 @@ Screens:
             Fill: =thmVeu
             Height: =Parent.Height
             OnSelect: =Set(varHangarAberto, false)
-            Visible: =varHangarAberto
+            Visible: =varHangarAberto And !varIntAberto
             Width: =Parent.Width
       - cntHangarMap:
           Control: GroupContainer@1.5.0
@@ -4843,7 +4978,7 @@ Screens:
             RadiusBottomRight: =0
             RadiusTopLeft: =0
             RadiusTopRight: =0
-            Visible: =varHangarAberto
+            Visible: =varHangarAberto And !varIntAberto
             Width: =If(locHangarExpandido, Parent.Width, Min(640, Parent.Width))
             X: =Parent.Width - Self.Width
           Children:
@@ -5141,7 +5276,8 @@ Screens:
                   Fill: =thmSuperficie
                   FillPortions: =0
                   Height: |-
-                    =If(With({ _p: Upper(Trim(txtHangarPrefixoMap.Value)) }, !IsBlank(_p) And !IsMatch(_p, "^[A-Z0-9]{4,7}$")), 414, 392)
+                    =If(With({ _p: Upper(Trim(txtHangarPrefixoMap.Value)) }, !IsBlank(_p) And !IsMatch(_p, "^[A-Z0-9]{4,7}$")), 414, 392) +
+                    If(IsBlank(locHangarEdit.id), 0, 78)
                   LayoutAlignItems: =LayoutAlignItems.Stretch
                   LayoutDirection: =LayoutDirection.Vertical
                   LayoutGap: =6
@@ -5342,6 +5478,97 @@ Screens:
                         Height: =40
                         MaxLength: =255
                         Value: =locHangarDados.obs
+                  - cntHangarIntMap:
+                      Control: GroupContainer@1.5.0
+                      Variant: AutoLayout
+                      Properties:
+                        DropShadow: =DropShadow.None
+                        Fill: =thmSuperficie
+                        FillPortions: =0
+                        Height: =72
+                        LayoutAlignItems: =LayoutAlignItems.Stretch
+                        LayoutDirection: =LayoutDirection.Vertical
+                        LayoutGap: =4
+                        LayoutMinHeight: =0
+                        LayoutMinWidth: =0
+                        PaddingTop: =6
+                        RadiusBottomLeft: =0
+                        RadiusBottomRight: =0
+                        RadiusTopLeft: =0
+                        RadiusTopRight: =0
+                        Visible: =!IsBlank(locHangarEdit.id)
+                      Children:
+                        - lblHangarIntTituloMap:
+                            Control: Label@2.5.1
+                            Properties:
+                              Color: =thmTextoFraco
+                              Font: =thmFonte
+                              FontWeight: =FontWeight.Bold
+                              Height: =18
+                              Size: =10
+                              Text: ="AVISO AOS ÓRGÃOS FEDERAIS (ADUANA)"
+                        - cntHangarIntLinhaMap:
+                            Control: GroupContainer@1.5.0
+                            Variant: AutoLayout
+                            Properties:
+                              DropShadow: =DropShadow.None
+                              Fill: =thmSuperficie
+                              LayoutAlignItems: =LayoutAlignItems.Stretch
+                              LayoutDirection: =LayoutDirection.Horizontal
+                              LayoutGap: =8
+                              LayoutMinHeight: =0
+                              LayoutMinWidth: =0
+                              RadiusBottomLeft: =0
+                              RadiusBottomRight: =0
+                              RadiusTopLeft: =0
+                              RadiusTopRight: =0
+                            Children:
+                              - btnHangarIntEntradaMap:
+                                  Control: Button@0.0.45
+                                  Properties:
+                                    Appearance: ='ButtonCanvas.Appearance'.Secondary
+                                    BasePaletteColor: =thmOperacional
+                                    BorderRadius: =0
+                                    FillPortions: =1
+                                    FontColor: =thmOperacional
+                                    FontSize: =11
+                                    FontWeight: =FontWeight.Semibold
+                                    Height: =40
+                                    Icon: ="Airplane"
+                                    IconStyle: ='ButtonCanvas.IconStyle'.Filled
+                                    LayoutMinWidth: =0
+                                    OnSelect: |-
+                                      =Set(varAlocSel, LookUp(colHangarDia, id = locHangarEdit.id));
+                                      UpdateContext({ locIntSentido: "ENTRADA", locIntPrint: false, locIntTexto: false });
+                                      Set(varIntAberto, true)
+                                    Text: |-
+                                      =With(
+                                          { _a: LookUp(colHangarDia, id = locHangarEdit.id).aviso_ent },
+                                          If(IsBlank(_a), "GERAR TEXTO ENTRADA", "ENTRADA ✓ " & Text(_a, "dd/mm hh:mm"))
+                                      )
+                              - btnHangarIntSaidaMap:
+                                  Control: Button@0.0.45
+                                  Properties:
+                                    Appearance: ='ButtonCanvas.Appearance'.Secondary
+                                    BasePaletteColor: =thmOperacional
+                                    BorderRadius: =0
+                                    FillPortions: =1
+                                    FontColor: =thmOperacional
+                                    FontSize: =11
+                                    FontWeight: =FontWeight.Semibold
+                                    Height: =40
+                                    Icon: ="ArrowExit"
+                                    IconStyle: ='ButtonCanvas.IconStyle'.Filled
+                                    LayoutMinWidth: =0
+                                    OnSelect: |-
+                                      =Set(varAlocSel, LookUp(colHangarDia, id = locHangarEdit.id));
+                                      UpdateContext({ locIntSentido: "SAIDA", locIntPrint: false, locIntTexto: false });
+                                      Set(varIntAberto, true)
+                                    Text: |-
+                                      =With(
+                                          { _a: LookUp(colHangarDia, id = locHangarEdit.id).aviso_sai },
+                                          If(IsBlank(_a), "GERAR TEXTO SAÍDA", "SAÍDA ✓ " & Text(_a, "dd/mm hh:mm"))
+                                      )
                   - cntHangarBotoesMap:
                       Control: GroupContainer@1.5.0
                       Variant: AutoLayout
