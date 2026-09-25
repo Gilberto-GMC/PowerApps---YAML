@@ -149,7 +149,7 @@ Screens:
                         PaddingLeft: =10
                         PaddingRight: =10
                         PaddingTop: =10
-                        Visible: =If(ScreenCadastrar.Size = ScreenSize.Small, !newMode And !editMode And !viewMode, true)
+                        Visible: =If(ScreenCadastrar.Size = ScreenSize.Small, !newMode And !editMode And !viewMode, !listaRecolhida)
                       Children:
                         - SearchContainer2:
                             Control: GroupContainer@1.5.0
@@ -654,6 +654,38 @@ Screens:
                               LayoutMinWidth: =16
                               Text: =Table2.AllItemsCount&" Registros"
                               Weight: ='TextCanvas.Weight'.Bold
+                  - ToggleListaContainer:
+                      Control: GroupContainer@1.5.0
+                      Variant: AutoLayout
+                      Properties:
+                        DropShadow: =DropShadow.None
+                        Fill: =RGBA(0, 0, 0, 0)
+                        FillPortions: =0
+                        LayoutAlignItems: =LayoutAlignItems.Center
+                        LayoutDirection: =LayoutDirection.Vertical
+                        LayoutJustifyContent: =LayoutJustifyContent.Center
+                        LayoutMaxHeight: =
+                        LayoutMaxWidth: =
+                        LayoutMinHeight: =0
+                        Visible: =ScreenCadastrar.Size <> ScreenSize.Small
+                        Width: =32
+                      Children:
+                        - btnRecolherLista:
+                            Control: Button@0.0.45
+                            Properties:
+                              AccessibleLabel: =Self.Tooltip
+                              Appearance: ='ButtonCanvas.Appearance'.Secondary
+                              BasePaletteColor: =thmPrimaria
+                              FillPortions: =0
+                              Height: =32
+                              Icon: =If(listaRecolhida, "ChevronRight", "ChevronLeft")
+                              IconStyle: ='ButtonCanvas.IconStyle'.Filled
+                              OnSelect: |-
+                                =Set(varUltimaAtividade, Now());
+                                UpdateContext({listaRecolhida: !listaRecolhida})
+                              Text: =
+                              Tooltip: =If(listaRecolhida, "Mostrar a lista", "Esconder a lista")
+                              Width: =32
                   - DeleteConfirmDialogContainer2:
                       Control: GroupContainer@1.5.0
                       Variant: AutoLayout
