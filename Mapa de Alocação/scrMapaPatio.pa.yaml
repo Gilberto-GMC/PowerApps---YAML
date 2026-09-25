@@ -5790,6 +5790,35 @@ Screens:
                                 =If(ThisItem.abs_fim > varHangarRefMin, "", "SAIU · ") & ThisItem.posicao_txt & "   " & Coalesce(ThisItem.prefixo, "—") & If(IsBlank(ThisItem.equip), "", " · " & ThisItem.equip) &
                                 "   entrada " & Text(ThisItem.data_ini, "dd/mm") & " " & Text(Int(ThisItem.h_ini / 60), "00") & ":" & Text(Mod(ThisItem.h_ini, 60), "00") &
                                 If(ThisItem.data_f = mapSaidaEmAberto, "   em aberto", "   saída " & Text(ThisItem.data_f, "dd/mm") & " " & Text(Int(ThisItem.h_fim / 60), "00") & ":" & Text(Mod(ThisItem.h_fim, 60), "00"))
+                        - btnHangarAvisoMap:
+                            Control: Button@0.0.45
+                            Properties:
+                              Appearance: ='ButtonCanvas.Appearance'.Secondary
+                              BasePaletteColor: =thmOperacional
+                              BorderRadius: =0
+                              FillPortions: =0
+                              FontColor: =thmOperacional
+                              FontSize: =11
+                              FontWeight: =FontWeight.Semibold
+                              Height: =44
+                              LayoutMinWidth: =0
+                              OnSelect: |-
+                                =Set(varAlocSel, ThisItem);
+                                UpdateContext(
+                                    {
+                                        locIntSentido: If(IsBlank(ThisItem.aviso_ent), "ENTRADA", "SAIDA"),
+                                        locIntPrint: false,
+                                        locIntTexto: false
+                                    }
+                                );
+                                Set(varIntAberto, true)
+                              PaddingLeft: =8
+                              PaddingRight: =8
+                              Text: |-
+                                ="AVISO" &
+                                If(!IsBlank(ThisItem.aviso_ent), " ✓E", "") &
+                                If(!IsBlank(ThisItem.aviso_sai), " ✓S", "")
+                              Width: =104
                         - btnHangarSaidaMap:
                             Control: Button@0.0.45
                             Properties:
