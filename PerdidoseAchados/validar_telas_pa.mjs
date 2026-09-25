@@ -264,25 +264,33 @@ for (const P of process.argv.slice(2)) {
     'nenhum corpo de bloco escalar orfao' +
     (orfasEscalar.length ? ' -> ' + orfasEscalar.slice(0, 4).join(', ') : ''));
 
-  // 10. PA2108: Text@0.0.51 nao tem propriedade 'Color' (usar FontColor)
-  const cor = [];
-  for (let i = 0; i < lines.length; i++) {
-    if (!/Control: Text@0\.0\.51/.test(lines[i])) continue;
-    for (let j = i + 1; j < lines.length; j++) {
-      if (/^\s*- \S+:\s*$/.test(lines[j])) break;
-      if (/^\s*Color: =/.test(lines[j])) cor.push('L' + (j + 1));
+  // 10. PA2108: propriedade que o controle nao tem. Cada par abaixo foi um erro
+  // real de colagem no Studio; nao adivinhar propriedade, conferir num controle
+  // igual que ja exista no repositorio.
+  const PA2108 = [
+    ["Text@0.0.51",   "Color",   "usar FontColor"],
+    ["Button@0.0.45", "Tooltip", "usar AccessibleLabel"],
+  ];
+  for (const [ctl, prop, saida] of PA2108) {
+    const achados = [];
+    for (let i = 0; i < lines.length; i++) {
+      if (lines[i].indexOf("Control: " + ctl) < 0) continue;
+      for (let j = i + 1; j < lines.length; j++) {
+        if (/^ *- [^ ]+: *$/.test(lines[j])) break;
+        if (new RegExp("^ *" + prop + ": =").test(lines[j])) achados.push("L" + (j + 1));
+      }
     }
+    check(achados.length === 0,
+      "sem '" + prop + "' em " + ctl + " (PA2108 - " + saida + ")" +
+      (achados.length ? " -> " + achados.slice(0, 6).join(", ") : ""));
   }
-  check(cor.length === 0,
-    "sem 'Color' em Text@0.0.51 (PA2108 - usar FontColor)" +
-    (cor.length ? ' -> ' + cor.slice(0, 6).join(', ') : ''));
 
   // 18. propriedade de cor deixada VAZIA cai no tema do Studio (que e roxo).
   // A passada de paleta cobriu Appearance e BasePaletteColor, mas nao os estados
   // Hover/Pressed — e foi por ai que o roxo voltou a aparecer na ScreenCadastrar.
   const vazias = [];
   for (let i = 0; i < lines.length; i++) {
-    const m = lines[i].match(/^s*([A-Za-z]*(?:Color|Fill)): =s*$/);
+    const m = lines[i].match(/^ *([A-Za-z]*(?:Color|Fill)): = *$/);
     if (!m) continue;
     vazias.push("L" + (i + 1) + " " + m[1]);
   }

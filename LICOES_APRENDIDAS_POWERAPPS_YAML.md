@@ -692,3 +692,33 @@ Inverso util: `FillPortions: =1` num filho o transforma no **espacador
 flexivel** que empurra os seguintes para o fim — foi assim que o botao
 transparente de selecao virou o vao entre o status e o botao de acao, sem
 precisar de `X`.
+
+## Barra invertida em heredoc some — verificar SEMPRE o que foi gravado (25/09/2026)
+
+Neste ambiente (Git Bash no Windows), **um `\` escrito dentro de heredoc chega ao
+arquivo pela metade**, mesmo com o delimitador entre aspas (`<<'EOF'`). `\s` vira
+`s`; `\\s` vira `\s`.
+
+Consequencia real: o check 18 do `validar_telas_pa.mjs` nasceu com
+`/^s*(...)/` em vez de `/^\s*(...)/`. Casava com nada, e o validador anunciou
+"TODAS AS VERIFICACOES PASSARAM" por um dia inteiro. **Foi a terceira vez que o
+mesmo erro passou.**
+
+Duas regras, nessa ordem:
+
+1. **Nao usar `\` em regex de script gerado.** A indentacao dos `.pa.yaml` e sempre
+   espaco (o proprio check 5 rejeita TAB), entao ` *` substitui `\s*`, e `[^ ]+`
+   substitui `\S+`. Nenhuma barra, nenhum problema.
+2. **Todo check novo nasce com auto-teste.** Plantar a violacao numa copia do arquivo
+   e conferir que o validador ACUSA. Um check que so sabe dizer "passou" nao prova
+   nada — e exatamente assim que ele falha em silencio.
+
+## `Button@0.0.45` nao tem `Tooltip` (25/09/2026)
+
+Studio: `PA2108 : Unknown property 'Tooltip' for control type 'Button@0.0.45'`.
+Quem tem `Tooltip` e o `Classic/Button@2.2.0` e o `Classic/Icon@2.5.0`. No
+`Button@0.0.45` o equivalente e `AccessibleLabel`, que aceita a mesma formula.
+
+Regra geral: **nao adivinhar propriedade**. Antes de escrever uma que voce nunca
+usou naquele tipo de controle, varrer o repositorio em busca de um controle igual
+que ja a tenha. O par entrou no check 10 do validador, que virou tabela.
