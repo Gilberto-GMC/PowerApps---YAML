@@ -2216,3 +2216,142 @@ Causas confirmadas (quatro, todas invisíveis para os validadores locais, porque
 Validação preventiva: **não automatizada ainda.** Ficou pendente um verificador que, para cada coleção, compare as chaves dos registros de todo `Collect`/`ClearCollect`/`Patch` que a povoa, e outro que confira que toda tela citada em `Navigate` tem arquivo em `out/`. O Verificador do Studio é hoje o único que pega o defeito; ele pode só reavaliar a checagem de tipo entre telas depois de salvar (não confirmado: com o código corrigido colado e sem salvar, os erros continuaram).
 
 **Regra:** uma coleção ou variável de contexto tem um formato só, em todos os pontos que a escrevem. Para passar dados entre telas, mande escalares ou uma tabela de formato fixo, nunca `ThisItem` de fontes diferentes na mesma variável. Antes de dizer que uma entrega está completa, conferir que toda tela referenciada existe em `out/`.
+
+## Dados de apoio (listas que alimentam telas)
+
+### Arquivo de carga com colunas fora da ordem real da lista
+
+- Data: 2026-10-07. Projeto/tela: Inspeção AN (NC 4) / `frmHomePatio` do app Inspeções.
+- Sintoma: 15 linhas inseridas em `tbl_inspMenu` não apareciam no roteiro. Nenhum erro no Studio,
+  nenhum erro no SharePoint.
+
+Causa confirmada: o CSV foi montado na ordem em que as colunas aparecem nas **fórmulas da tela**
+(`inspecao`, `local`, `item`, `descricao`), mas a lista tem `categoria` e `subcategoria` entre `local`
+e `item`. A colagem em grade do SharePoint alinha **por posição**, não por cabeçalho: todos os valores
+entraram uma coluna à esquerda do destino. `inspecao` ficou com o nome do local, e o filtro
+`Filter(tbl_inspMenu, inspecao = "PÁTIO")` passou a não casar com nada.
+
+Agravante: a colagem posicional não reclama. Sem erro, o diagnóstico foi atribuído primeiro a
+delegação e a limite de linhas, que estavam corretos.
+
+Correção: remanejar as colunas na grade, operação por coluna (ordem das linhas é irrelevante), e
+preencher `inspecao` com o valor constante. Preserva as imagens já enviadas, que uma reinserção
+perderia.
+
+Validação preventiva: **ler o esquema real da lista antes de gerar qualquer arquivo de carga** — as
+colunas que as fórmulas usam são um subconjunto, nunca a lista completa. O arquivo deve trazer
+**todas** as colunas editáveis, na ordem da exibição de destino, com as não usadas em branco, e
+nenhuma coluna extra de anotação (referência cruzada vai em arquivo separado).
+
+Impacto global: vale para todo CSV/JSON de carga de lista deste workspace, inclusive os gerados pelo
+`List_Generator`, e para qualquer tela cujo conteúdo venha de lista de domínio (`tbl_inspMenu`,
+`tbl_Modulos`, `tbl_Checklist_generico_base`).
+
+### Duas fontes de dados com nome quase igual no mesmo app
+
+- Data: 2026-10-07. Projeto: Inspeções.
+
+`DataSources.json` tem `tbl_inspMenu` (`1969ee4d-4933-4f6c-aab1-15f45ecc5893`) e `tblInspMenu`
+(`8ea92ff2-142b-4575-b2fe-8ba92c7a505d`), duas listas diferentes no mesmo site. As telas usam a
+primeira; a segunda é resquício.
+
+Validação preventiva: ao instruir inserção de dados, sempre informar o **GUID** da lista, não o nome.
+Conferir em `References/DataSources.json` se existe outra fonte com nome parecido antes de entregar
+qualquer instrução de carga.
+
+## Painel ManualLayout espremido dentro de AutoLayout: a correção é um container intermediário (2026-10-08)
+
+- Projeto/telas: SAFETY / `ScreenDerramamentoForms`, `ScreenIncursaoPistaForms`,
+  `ScreenExcursaoPistaForms`, `ScreenInterferenciaExternaForms`,
+  `ScreenJetBlastForms`, `ScreenOcorrenciaSoloForms`.
+- Sintoma: os painéis de campos renderizam espremidos e sobrepostos no canto
+  superior esquerdo — rótulos truncados ("Matrí", "Cód. I", "Área da r"), campos
+  em cima uns dos outros, a segunda coluna inteira invisível. Nenhum erro, YAML
+  válido, árvore completa.
+- **O defeito é do export original** (`aa0f7bc^`), não foi introduzido por
+  edição. Confirmado colando o export intacto no Studio.
+
+### A estrutura que quebra
+
+```
+ScreenContainerForms_1   AutoLayout vertical, sem LayoutAlignItems (padrão Stretch)
+  Container3_22          ManualLayout, Width: =1138
+    ContainerDerFlu1     AutoLayout vertical, LayoutAlignItems.Stretch
+      ContainerDerFluAero  ManualLayout, SEM Width  <- filhos com X absoluto aqui
+```
+
+O painel ManualLayout não declara largura e os filhos dele são posicionados por
+`X` absoluto calculado para ~760px. Dentro de um pai AutoLayout, ele não recebe
+uma largura própria utilizável e o conteúdo colapsa.
+
+### A correção que funcionou
+
+**Envolver os filhos do painel num `GroupContainer` ManualLayout intermediário**,
+com largura própria. O container quebrado fica como está; o wrapper entra entre
+ele e os filhos:
+
+```yaml
+- ContainerDerFluAero:          # intacto: AlignInContainer, FillPortions, Height, Visible
+    Children:
+      - cntDerFluAeroCampos:    # NOVO
+          Control: GroupContainer@1.5.0
+          Variant: ManualLayout
+          Properties:
+            BorderStyle: =BorderStyle.None
+            DropShadow: =DropShadow.None
+            Height: =220          # a mesma Height do pai
+            Width: =Parent.Width
+          Children:
+            ...os filhos originais, X e Y preservados, reindentados +6...
+```
+
+Detalhes que importam, todos verificados em tela:
+
+- **Sem `X`/`Y` e sem `Fill`** no wrapper. Com `X: =0`/`Y: =0` e
+  `Fill: =RGBA(0,0,0,0)` ainda sobrava desalinhamento; o Studio descarta essas
+  três ao reexportar e o resultado certo é sem elas.
+- **`Width: =Parent.Width`**, não literal. Largura literal (760) já arruma a
+  sobreposição, mas corta a segunda coluna de campos.
+- **`Height` igual à do pai** — copiar a expressão exata, inclusive quando é
+  fórmula (`=ContainerOcoSoloImg.Height + ContainerOcoSoloImg.Y`).
+- **`X`/`Y` dos filhos ficam como estavam.** O wrapper restabelece o sistema de
+  coordenadas; não há nada a recalcular.
+- Painéis gêmeos (os que alternam por `Visible`, como Aeronave × Equipamento no
+  Derramamento) precisam **cada um** do seu wrapper.
+
+### O que NÃO resolve — quatro tentativas, todas descartadas em tela
+
+1. **Acrescentar `Width: =Parent.Width` ao container quebrado.** `Container14`
+   passou a renderizar certo e `ContainerDerFluAero`, **irmão dele, mesmo pai,
+   mesma fórmula**, continuou quebrado.
+2. **Trocar `AlignInContainer.SetByContainer` por `.Stretch`.** A tabela de
+   propriedades dava um padrão perfeito (todos os quebrados com `SetByContainer`,
+   todos os certos sem `AlignInContainer`). Não resolveu.
+3. **Largura literal (`1133`/`1138`) no lugar de `Parent.Width`.** Não resolveu.
+4. **Remover `AlignInContainer` para igualar ao irmão que funciona.** Não
+   resolveu.
+
+Nenhuma dessas quatro é a causa. A `AlignInContainer: =SetByContainer` do
+container externo continua lá na versão que funciona.
+
+### Regra de método (foi o que custou caro aqui)
+
+- **Não medir pixel em captura de tela.** Dá número incoerente e sustenta
+  qualquer hipótese. Duas das quatro tentativas saíram daí.
+- **Medir o controle, o pai e um irmão que funcione, na mesma leitura.** Uma
+  medida isolada confirma qualquer teoria. (`=A.Width & " | " & B.Width & " | " &
+  C.Width` numa `Text` temporária devolveu `1903 | 1920 | 1903` — número real,
+  mas que também não explicou o defeito.)
+- **Estabelecer a linha de base antes de propor correção**: colar o export
+  intacto e ver se o defeito já está lá. Aqui estava — e isso só foi feito depois
+  da quarta tentativa.
+- **Tabela de propriedades levanta hipótese; não fecha diagnóstico.** A
+  correlação "quebrados têm `SetByContainer`" era limpa e estava errada.
+- **Não generalizar correção de layout antes de confirmar em tela.** Quatro
+  correções foram aplicadas em 6 telas antes de qualquer confirmação, e todas
+  tiveram de ser desfeitas.
+
+Validação preventiva: **não automatizável pelo validador local.** O defeito não
+viola nenhuma regra de YAML nem do dicionário de propriedades. O que dá para
+automatizar é um aviso: `GroupContainer` ManualLayout **sem `Width`**, filho de
+AutoLayout, com filhos posicionados por `X` absoluto — candidato ao wrapper.
