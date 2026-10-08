@@ -148,7 +148,7 @@ Screens:
                       Properties:
                         AlignInContainer: =AlignInContainer.Stretch
                         Height: =40
-                        Image: =MOTIVA_WHITE
+                        Image: =logo_asur_limpo
                         LayoutMaxHeight: =
                         LayoutMaxWidth: =
                         LayoutMinHeight: =0
@@ -191,17 +191,17 @@ Screens:
                         LayoutMaxHeight: =
                         LayoutMaxWidth: =
                         OnSelect: |-
-                          =Navigate(
+                          =// Mesma mecanica do botao Editar: as duas variaveis viajam como contexto no
+                          // Navigate. Com Set() elas viravam globais e a tela de Forms lia o contexto,
+                          // que ficava sem valor. E Blank() puro nao tem tipo — por isso o Verificador
+                          // acusava "Nenhum tipo encontrado para a variavel". Defaults() da o tipo.
+                          Navigate(
                               ScreenExcursaoPistaForms,
-                              ScreenTransition.Fade
-                          );
-                          Set(
-                              var_editandoExcPista,
-                              false
-                          );
-                          Set(
-                              var_registroExcPista,
-                              Blank()
+                              ScreenTransition.Fade,
+                              {
+                                  var_editandoExcPista: false,
+                                  var_registroExcPista: Defaults('14.6-tbl_ExcPista')
+                              }
                           );
                           Clear(col_colVeiEnvolvidos);
                           Clear(col_colVeiGalleryImg)
@@ -345,6 +345,8 @@ Screens:
                         LayoutMaxWidth: =
                         LayoutMinHeight: =0
                         LayoutMinWidth: =0
+                        PressedColor: =RGBA(255, 255, 255, 1)
+                        PressedFill: =nfCorPrimariaEsc
                         SelectionColor: =RGBA(255, 255, 255, 1)
                         SelectionFill: =RGBA(186, 202, 226, 1)
                         Size: =11
@@ -380,6 +382,8 @@ Screens:
                         LayoutMaxWidth: =
                         LayoutMinHeight: =0
                         LayoutMinWidth: =0
+                        PressedColor: =RGBA(255, 255, 255, 1)
+                        PressedFill: =nfCorPrimariaEsc
                         SelectionColor: =RGBA(255, 255, 255, 1)
                         SelectionFill: =RGBA(186, 202, 226, 1)
                         Size: =11
@@ -458,6 +462,8 @@ Screens:
                         LayoutMaxWidth: =
                         LayoutMinHeight: =0
                         LayoutMinWidth: =0
+                        PressedColor: =RGBA(255, 255, 255, 1)
+                        PressedFill: =nfCorPrimariaEsc
                         SelectionColor: =RGBA(255, 255, 255, 1)
                         SelectionFill: =RGBA(186, 202, 226, 1)
                         Size: =11
@@ -473,6 +479,7 @@ Screens:
                         Height: =30
                         HintText: |-
                           ="🔍 Buscar por ID"
+                        HoverFill: =nfCorFundoFraco
                         LayoutMaxHeight: =
                         LayoutMaxWidth: =
                         PaddingRight: =6.33
@@ -785,7 +792,7 @@ Screens:
                               Appearance: ='ButtonCanvas.Appearance'.Secondary
                               BorderRadius: =0
                               BorderStyle: =BorderStyle.None
-                              DisplayMode: =DisplayMode.Edit
+                              DisplayMode: =DisplayMode.Disabled
                               Height: =30
                               Icon: ="Edit"
                               IconStyle: ='ButtonCanvas.IconStyle'.Filled
@@ -793,32 +800,34 @@ Screens:
                               LayoutMaxHeight: =
                               LayoutMaxWidth: =
                               OnSelect: |-
-                                =Navigate(
-                                    ScreenExcursaoPistaForms,
-                                    ScreenTransition.Fade,
-                                    {
-                                        var_editandoExcPista: true,
-                                        var_registroExcPista: ThisItem
-                                    }
-                                );
-                                ClearCollect(
-                                    col_excPistaImg,
-                                    ForAll(
-                                        Filter(
-                                            '14.6-tbl_ExcPistaImg',
-                                            excPistaImg_idOcorrencia = ThisItem.excPista_id
-                                        ),
-                                        {
-                                            dbId: ID,
-                                            id: ID,
-                                            img: excPistaImg_imagem
-                                        }
-                                    )
-                                );
-                                ClearCollect(
-                                    col_excPistaImg_orig,
-                                    col_excPistaImg
-                                )
+                                =// Editar desativado a pedido — nada aqui roda. Codigo preservado para quando
+                                // o fluxo de edicao for retomado.
+                                // =Navigate(
+                                //     ScreenExcursaoPistaForms,
+                                //     ScreenTransition.Fade,
+                                //     {
+                                //         var_editandoExcPista: true,
+                                //         var_registroExcPista: ThisItem
+                                //     }
+                                // );
+                                // ClearCollect(
+                                //     col_excPistaImg,
+                                //     ForAll(
+                                //         Filter(
+                                //             '14.6-tbl_ExcPistaImg',
+                                //             excPistaImg_idOcorrencia = ThisItem.excPista_id
+                                //         ),
+                                //         {
+                                //             dbId: ID,
+                                //             id: ID,
+                                //             img: excPistaImg_imagem
+                                //         }
+                                //     )
+                                // );
+                                // ClearCollect(
+                                //     col_excPistaImg_orig,
+                                //     col_excPistaImg
+                                // )
                               PaddingBottom: =5
                               PaddingLeft: =5
                               PaddingRight: =5

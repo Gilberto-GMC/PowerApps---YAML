@@ -2355,3 +2355,51 @@ Validação preventiva: **não automatizável pelo validador local.** O defeito 
 viola nenhuma regra de YAML nem do dicionário de propriedades. O que dá para
 automatizar é um aviso: `GroupContainer` ManualLayout **sem `Width`**, filho de
 AutoLayout, com filhos posicionados por `X` absoluto — candidato ao wrapper.
+
+## `X` dos filhos do template de Gallery se perde na colagem do YAML (2026-10-09)
+
+- Projeto/telas: SAFETY / `ScreenFOD`, `ScreenCSO`, `ScreenVistoriaSafetyFauna`.
+  Galerias com `Variant: BrowseLayout_Vertical_TwoTextOneImageVariant_ver5.0`.
+- Sintoma: depois de colar a tela, ícone, título, data e autor aparecem
+  empilhados na borda esquerda da linha, um por cima do outro. O texto parece
+  "cortado à esquerda" — na verdade está atrás do ícone.
+
+**Medido, não deduzido.** Um rótulo temporário **dentro do template** com
+`=Title1.X & " | " & Title1.Width & " | " & (ButtonCanvas3_1.X +
+ButtonCanvas3_1.Width) & " | " & Parent.TemplateWidth` devolveu
+**`1 | 207 | 1 | 380`**, e o painel de propriedades do Studio confirmou
+`X = 1` no `Title1` e `X = 0` no `ButtonCanvas3_1`.
+
+O YAML declara `X: =82` e `X: =15`. Conferido: **não há chave duplicada** nos
+blocos. E a `Width` do mesmo controle chegou certa (207 = `Parent.TemplateWidth
+- 173`, com `TemplateWidth` = 380). Ou seja, a colagem funcionou — **só o `X`
+dos filhos do template não foi aplicado.**
+
+**Causa: não confirmada.** Descartadas duas hipóteses:
+- nome duplicado — `Title1` e `ButtonCanvas3_1` aparecem uma única vez no app;
+- a variante da galeria — o mesmo `BrowseLayout_Vertical_...ver5.0` é usado em
+  21 galerias do REA com `X` literal funcionando (`X=15`, `X=20`, `X=43`, `X=626`).
+
+**Correção que funciona:** digitar o valor na caixa **X** do painel de
+propriedades do Studio. Fica e resolve — confirmado em tela com o `Title1`
+(`82`), que passou a mostrar o título inteiro. Recolar o YAML **não** resolve:
+o valor se perde de novo.
+
+Sintoma colateral: os irmãos que derivam a posição (`X: =Title1.X`) perdem a
+fórmula junto, então não basta corrigir o título — cada filho do template
+precisa do seu valor.
+
+**Pista não explorada:** dentro do mesmo template, o `NextArrow1` posiciona o
+chevron com `PaddingLeft: =Parent.Width - 40` em vez de `X`. Quem montou a
+galeria já contornava alguma coisa aí. Se o problema voltar, trocar posição por
+`PaddingLeft` nos filhos é o caminho a testar — é outra propriedade e sobrevive
+à colagem.
+
+**Regra:** depois de colar uma tela com Gallery de variante `BrowseLayout`,
+conferir o `X` dos filhos do template antes de dar a entrega por pronta. O
+validador local não pega: o YAML está correto, o defeito é na aplicação.
+
+Validação preventiva: **não automatizável no validador de YAML.** O arquivo está
+certo. O que dá para automatizar é o inverso — gerar, junto com a entrega, a
+tabela de `X`/`Y` esperados dos filhos de cada Gallery, para conferência manual
+em tela.

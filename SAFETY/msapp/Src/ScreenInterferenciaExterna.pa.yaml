@@ -148,7 +148,7 @@ Screens:
                       Properties:
                         AlignInContainer: =AlignInContainer.Stretch
                         Height: =40
-                        Image: =MOTIVA_WHITE
+                        Image: =logo_asur_limpo
                         LayoutMaxHeight: =
                         LayoutMaxWidth: =
                         LayoutMinHeight: =0
@@ -191,18 +191,17 @@ Screens:
                         LayoutMaxHeight: =
                         LayoutMaxWidth: =
                         OnSelect: |-
-                          =Navigate(
+                          =// Mesma mecanica do botao Editar: as duas variaveis viajam como contexto no
+                          // Navigate. Com Set() elas viravam globais e a tela de Forms lia o contexto,
+                          // que ficava sem valor. E Blank() puro nao tem tipo — por isso o Verificador
+                          // acusava "Nenhum tipo encontrado para a variavel". Defaults() da o tipo.
+                          Navigate(
                               ScreenInterferenciaExternaForms,
                               ScreenTransition.Fade,
-                              {var_visiblePainelTipo: true}
-                          );
-                          Set(
-                              var_editandoIntExt,
-                              false
-                          );
-                          Set(
-                              var_registroIntExt,
-                              Blank()
+                              {
+                                  var_editandoIntExt: false,
+                                  var_registroIntExt: Defaults('14.5-tbl_IntExterna')
+                              }
                           )
                         Text: ="Cadastrar"
                         Width: =113.92
@@ -358,6 +357,8 @@ Screens:
                         LayoutMaxWidth: =
                         LayoutMinHeight: =0
                         LayoutMinWidth: =0
+                        PressedColor: =RGBA(255, 255, 255, 1)
+                        PressedFill: =nfCorPrimariaEsc
                         SelectionColor: =RGBA(255, 255, 255, 1)
                         SelectionFill: =RGBA(186, 202, 226, 1)
                         Size: =11
@@ -393,6 +394,8 @@ Screens:
                         LayoutMaxWidth: =
                         LayoutMinHeight: =0
                         LayoutMinWidth: =0
+                        PressedColor: =RGBA(255, 255, 255, 1)
+                        PressedFill: =nfCorPrimariaEsc
                         SelectionColor: =RGBA(255, 255, 255, 1)
                         SelectionFill: =RGBA(186, 202, 226, 1)
                         Size: =11
@@ -474,6 +477,8 @@ Screens:
                         LayoutMaxWidth: =
                         LayoutMinHeight: =0
                         LayoutMinWidth: =0
+                        PressedColor: =RGBA(255, 255, 255, 1)
+                        PressedFill: =nfCorPrimariaEsc
                         SelectionColor: =RGBA(255, 255, 255, 1)
                         SelectionFill: =RGBA(186, 202, 226, 1)
                         Size: =11
@@ -504,6 +509,8 @@ Screens:
                         LayoutMaxWidth: =
                         LayoutMinHeight: =0
                         LayoutMinWidth: =0
+                        PressedColor: =RGBA(255, 255, 255, 1)
+                        PressedFill: =nfCorPrimariaEsc
                         SelectionColor: =RGBA(255, 255, 255, 1)
                         SelectionFill: =RGBA(186, 202, 226, 1)
                         Size: =11
@@ -519,6 +526,7 @@ Screens:
                         Height: =30
                         HintText: |-
                           ="🔍 Buscar por ID"
+                        HoverFill: =nfCorFundoFraco
                         LayoutMaxHeight: =
                         LayoutMaxWidth: =
                         PaddingRight: =6.33
@@ -863,7 +871,7 @@ Screens:
                               Appearance: ='ButtonCanvas.Appearance'.Secondary
                               BorderRadius: =0
                               BorderStyle: =BorderStyle.None
-                              DisplayMode: =DisplayMode.Edit
+                              DisplayMode: =DisplayMode.Disabled
                               Height: =30
                               Icon: ="Edit"
                               IconStyle: ='ButtonCanvas.IconStyle'.Filled
@@ -871,32 +879,34 @@ Screens:
                               LayoutMaxHeight: =
                               LayoutMaxWidth: =
                               OnSelect: |-
-                                =Navigate(
-                                    ScreenInterferenciaExternaForms,
-                                    ScreenTransition.Fade,
-                                    {
-                                        var_editandoIntExt: true,
-                                        var_registroIntExt: ThisItem
-                                    }
-                                );
-                                ClearCollect(
-                                    col_intExtGalleryImg,
-                                    ForAll(
-                                        Filter(
-                                            '14.5-tbl_IntExternaImg',
-                                            intExtImg_idOcorrencia = ThisItem.intExt_id
-                                        ),
-                                        {
-                                            dbId: ID,
-                                            id: ID,
-                                            img: intExtImg_imagem
-                                        }
-                                    )
-                                );
-                                ClearCollect(
-                                    col_intExtGalleryImg_orig,
-                                    col_intExtGalleryImg
-                                )
+                                =// Editar desativado a pedido — nada aqui roda. Codigo preservado para quando
+                                // o fluxo de edicao for retomado.
+                                // =Navigate(
+                                //     ScreenInterferenciaExternaForms,
+                                //     ScreenTransition.Fade,
+                                //     {
+                                //         var_editandoIntExt: true,
+                                //         var_registroIntExt: ThisItem
+                                //     }
+                                // );
+                                // ClearCollect(
+                                //     col_intExtGalleryImg,
+                                //     ForAll(
+                                //         Filter(
+                                //             '14.5-tbl_IntExternaImg',
+                                //             intExtImg_idOcorrencia = ThisItem.intExt_id
+                                //         ),
+                                //         {
+                                //             dbId: ID,
+                                //             id: ID,
+                                //             img: intExtImg_imagem
+                                //         }
+                                //     )
+                                // );
+                                // ClearCollect(
+                                //     col_intExtGalleryImg_orig,
+                                //     col_intExtGalleryImg
+                                // )
                               PaddingBottom: =5
                               PaddingLeft: =5
                               PaddingRight: =5

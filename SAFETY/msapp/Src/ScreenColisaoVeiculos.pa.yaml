@@ -105,7 +105,7 @@ Screens:
                       Properties:
                         AlignInContainer: =AlignInContainer.Stretch
                         Height: =40
-                        Image: =MOTIVA_WHITE
+                        Image: =logo_asur_limpo
                         LayoutMaxHeight: =
                         LayoutMaxWidth: =
                         LayoutMinHeight: =0
@@ -177,17 +177,17 @@ Screens:
                         LayoutMaxHeight: =
                         LayoutMaxWidth: =
                         OnSelect: |-
-                          =Navigate(
+                          =// Mesma mecanica do botao Editar: as duas variaveis viajam como contexto no
+                          // Navigate. Com Set() elas viravam globais e a tela de Forms lia o contexto,
+                          // que ficava sem valor. E Blank() puro nao tem tipo — por isso o Verificador
+                          // acusava "Nenhum tipo encontrado para a variavel". Defaults() da o tipo.
+                          Navigate(
                               ScreenColisaoVeiculosForms,
-                              ScreenTransition.Fade
-                          );
-                          Set(
-                              var_editandoColVei,
-                              false
-                          );
-                          Set(
-                              var_registroColVei,
-                              Blank()
+                              ScreenTransition.Fade,
+                              {
+                                  var_editandoColVei: false,
+                                  var_registroColVei: Defaults('14.4-tbl_ColVeiculos')
+                              }
                           );
                           Clear(col_colVeiEnvolvidos);
                           Clear(col_colVeiGalleryImg)
@@ -331,6 +331,8 @@ Screens:
                         LayoutMaxWidth: =
                         LayoutMinHeight: =0
                         LayoutMinWidth: =0
+                        PressedColor: =RGBA(255, 255, 255, 1)
+                        PressedFill: =nfCorPrimariaEsc
                         SelectionColor: =RGBA(255, 255, 255, 1)
                         SelectionFill: =RGBA(186, 202, 226, 1)
                         Size: =11
@@ -366,6 +368,8 @@ Screens:
                         LayoutMaxWidth: =
                         LayoutMinHeight: =0
                         LayoutMinWidth: =0
+                        PressedColor: =RGBA(255, 255, 255, 1)
+                        PressedFill: =nfCorPrimariaEsc
                         SelectionColor: =RGBA(255, 255, 255, 1)
                         SelectionFill: =RGBA(186, 202, 226, 1)
                         Size: =11
@@ -444,6 +448,8 @@ Screens:
                         LayoutMaxWidth: =
                         LayoutMinHeight: =0
                         LayoutMinWidth: =0
+                        PressedColor: =RGBA(255, 255, 255, 1)
+                        PressedFill: =nfCorPrimariaEsc
                         SelectionColor: =RGBA(255, 255, 255, 1)
                         SelectionFill: =RGBA(186, 202, 226, 1)
                         Size: =11
@@ -459,6 +465,7 @@ Screens:
                         Height: =30
                         HintText: |-
                           ="🔍 Buscar por ID"
+                        HoverFill: =nfCorFundoFraco
                         LayoutMaxHeight: =
                         LayoutMaxWidth: =
                         PaddingRight: =6.33
@@ -804,7 +811,7 @@ Screens:
                               Appearance: ='ButtonCanvas.Appearance'.Secondary
                               BorderRadius: =0
                               BorderStyle: =BorderStyle.None
-                              DisplayMode: =DisplayMode.Edit
+                              DisplayMode: =DisplayMode.Disabled
                               Height: =30
                               Icon: ="Edit"
                               IconStyle: ='ButtonCanvas.IconStyle'.Filled
@@ -812,56 +819,58 @@ Screens:
                               LayoutMaxHeight: =
                               LayoutMaxWidth: =
                               OnSelect: |-
-                                =Navigate(
-                                    ScreenColisaoVeiculosForms,
-                                    ScreenTransition.Fade,
-                                    {
-                                        var_editandoColVei: true,
-                                        var_registroColVei: ThisItem
-                                    }
-                                );
-                                ClearCollect(
-                                    col_colVeiEnvolvidos,
-                                    ForAll(
-                                        Filter(
-                                            '14.4-tbl_ColVeiculosEnvolvidos',
-                                            colVeiEnv_idOcorrencia = ThisItem.colVei_id
-                                        ),
-                                        {
-                                            dbId: ID,
-                                            id: ID,
-                                            nome: colVeiEnv_nome,
-                                            colete: colVeiEnv_colete,
-                                            empresa: colVeiEnv_empresa,
-                                            codVeiculo: colVeiEnv_codVeiculo,
-                                            empresaProp: colVeiEnv_empresaProp,
-                                            cnhCompativel: colVeiEnv_cnhComp,
-                                            boaCondicao: colVeiEnv_boaCondicoes
-                                        }
-                                    )
-                                );
-                                ClearCollect(
-                                    col_colVeiEnvolvidos_orig,
-                                    col_colVeiEnvolvidos
-                                );
-                                ClearCollect(
-                                    col_colVeiGalleryImg,
-                                    ForAll(
-                                        Filter(
-                                            '14.4-tbl_ColVeiculosImg',
-                                            colVeiImg_idOcorrencia = ThisItem.colVei_id
-                                        ),
-                                        {
-                                            dbId: ID,
-                                            id: ID,
-                                            img: colVeiImg_imagem
-                                        }
-                                    )
-                                );
-                                ClearCollect(
-                                    col_colVeiGalleryImg_orig,
-                                    col_colVeiGalleryImg
-                                )
+                                =// Editar desativado a pedido — nada aqui roda. Codigo preservado para quando
+                                // o fluxo de edicao for retomado.
+                                // =Navigate(
+                                //     ScreenColisaoVeiculosForms,
+                                //     ScreenTransition.Fade,
+                                //     {
+                                //         var_editandoColVei: true,
+                                //         var_registroColVei: ThisItem
+                                //     }
+                                // );
+                                // ClearCollect(
+                                //     col_colVeiEnvolvidos,
+                                //     ForAll(
+                                //         Filter(
+                                //             '14.4-tbl_ColVeiculosEnvolvidos',
+                                //             colVeiEnv_idOcorrencia = ThisItem.colVei_id
+                                //         ),
+                                //         {
+                                //             dbId: ID,
+                                //             id: ID,
+                                //             nome: colVeiEnv_nome,
+                                //             colete: colVeiEnv_colete,
+                                //             empresa: colVeiEnv_empresa,
+                                //             codVeiculo: colVeiEnv_codVeiculo,
+                                //             empresaProp: colVeiEnv_empresaProp,
+                                //             cnhCompativel: colVeiEnv_cnhComp,
+                                //             boaCondicao: colVeiEnv_boaCondicoes
+                                //         }
+                                //     )
+                                // );
+                                // ClearCollect(
+                                //     col_colVeiEnvolvidos_orig,
+                                //     col_colVeiEnvolvidos
+                                // );
+                                // ClearCollect(
+                                //     col_colVeiGalleryImg,
+                                //     ForAll(
+                                //         Filter(
+                                //             '14.4-tbl_ColVeiculosImg',
+                                //             colVeiImg_idOcorrencia = ThisItem.colVei_id
+                                //         ),
+                                //         {
+                                //             dbId: ID,
+                                //             id: ID,
+                                //             img: colVeiImg_imagem
+                                //         }
+                                //     )
+                                // );
+                                // ClearCollect(
+                                //     col_colVeiGalleryImg_orig,
+                                //     col_colVeiGalleryImg
+                                // )
                               PaddingBottom: =5
                               PaddingLeft: =5
                               PaddingRight: =5

@@ -1,0 +1,233 @@
+// ══════════════════════════════════════════════════════════════════════════════
+// AirportNow — Safety & Fauna  ·  App.Formulas  (arquivo único)
+// ══════════════════════════════════════════════════════════════════════════════
+// Une o 02_App_Formulas_ptBR.txt (tokens da paleta Asur + nfAeros/nfBlocos/
+// nfDataPiso) com o 28_App_Formulas.txt (o que saiu do OnStart).
+//
+// COLAR EM: App > propriedade "Formulas" (barra de fórmulas).
+// Separadores pt-BR: ";" entre argumentos, ";;" entre definições.
+// Colar JUNTO com o 28_App_OnStart.txt — se o OnStart antigo continuar no app,
+// o Studio acusa nome duplicado entre a variável e a fórmula nomeada.
+//
+// Duplicata resolvida: o 02 definia nfAeros e o 28 definia colAeros com a mesma
+// tabela. Ficou nfAeros como única fonte e colAeros = nfAeros, para as telas
+// antigas (que usam colAeros) e as da sessão anterior (que usam nfAeros)
+// continuarem funcionando sem ClearCollect no OnStart.
+// ══════════════════════════════════════════════════════════════════════════════
+
+
+// ─── AEROPORTOS ───────────────────────────────────────────────────────────────
+nfAeros =
+Table(
+    {IATA: ""   ; ICAO: ""    ; Bloco: ""        ; Aeroporto: ""              ; Cat: 0; Classe: ""   };
+    {IATA: "GYN"; ICAO: "SBGO"; Bloco: "CENTRAL" ; Aeroporto: "GOIÂNIA"       ; Cat: 7; Classe: "III"};
+    {IATA: "IMP"; ICAO: "SBIZ"; Bloco: "CENTRAL" ; Aeroporto: "IMPERATRIZ"    ; Cat: 6; Classe: "II" };
+    {IATA: "PMW"; ICAO: "SBPJ"; Bloco: "CENTRAL" ; Aeroporto: "PALMAS"        ; Cat: 7; Classe: "II" };
+    {IATA: "PLU"; ICAO: "SBBH"; Bloco: "CENTRAL" ; Aeroporto: "PAMPULHA"      ; Cat: 5; Classe: "II" };
+    {IATA: "PNZ"; ICAO: "SBPL"; Bloco: "CENTRAL" ; Aeroporto: "PETROLINA"     ; Cat: 6; Classe: "II" };
+    {IATA: "SLZ"; ICAO: "SBSL"; Bloco: "CENTRAL" ; Aeroporto: "SÃO LUIS"      ; Cat: 7; Classe: "III"};
+    {IATA: "THE"; ICAO: "SBTE"; Bloco: "CENTRAL" ; Aeroporto: "TERESINA"      ; Cat: 7; Classe: "III"};
+    {IATA: "BFH"; ICAO: "SBBI"; Bloco: "SUL"     ; Aeroporto: "BACACHERI"     ; Cat: 5; Classe: "II" };
+    {IATA: "CWB"; ICAO: "SBCT"; Bloco: "SUL"     ; Aeroporto: "CURITIBA"      ; Cat: 7; Classe: "IV" };
+    {IATA: "JOI"; ICAO: "SBJV"; Bloco: "SUL"     ; Aeroporto: "JOINVILLE"     ; Cat: 6; Classe: "II" };
+    {IATA: "NVT"; ICAO: "SBNF"; Bloco: "SUL"     ; Aeroporto: "NAVEGANTES"    ; Cat: 7; Classe: "III"};
+    {IATA: "BGX"; ICAO: "SBBG"; Bloco: "SUL"     ; Aeroporto: "BAGÉ"          ; Cat: 0; Classe: "I"  };
+    {IATA: "IGU"; ICAO: "SBFI"; Bloco: "SUL"     ; Aeroporto: "FOZ DO IGUAÇU" ; Cat: 7; Classe: "III"};
+    {IATA: "LDB"; ICAO: "SBLO"; Bloco: "SUL"     ; Aeroporto: "LONDRINA"      ; Cat: 7; Classe: "II" };
+    {IATA: "PET"; ICAO: "SBPK"; Bloco: "SUL"     ; Aeroporto: "PELOTAS"       ; Cat: 5; Classe: "I"  };
+    {IATA: "URG"; ICAO: "SBUG"; Bloco: "SUL"     ; Aeroporto: "URUGUAIANA"    ; Cat: 5; Classe: "I"  }
+);;
+
+// Mesma tabela, sob o nome que as telas de cadastro já usam.
+colAeros = nfAeros;;
+
+
+nfBlocos =
+Sort(
+    Filter(
+        Distinct(nfAeros; Bloco);
+        !IsBlank(Value)
+    );
+    Value
+);;
+
+
+// ─── DATA PISO PARA CONSULTAS DELEGÁVEIS ──────────────────────────────────────
+nfDataPiso = Date(Year(Today()) - 2; 1; 1);;
+
+
+// ---------- Logo em base64 ----------
+// Ninguém lê essas duas hoje. Como fórmula nomeada elas são preguiçosas:
+// se continuarem sem uso, não custam nada na abertura do app.
+// Comentadas por Douglas: apontavam para logo_asur_limpo, que ainda nao existe como
+// recurso de midia no app — e o Formulas inteiro falhava por causa disso.
+// Nenhuma tela le as duas. Para reativar, subir logo_asur_limpo e tirar o /* */.
+/*
+ImgBase64 = JSON(
+    logo_asur_limpo;
+    JSONFormat.IncludeBinaryData
+);;
+
+ImgBase64Limpo = Mid(
+    ImgBase64;
+    Find(
+        ",";
+        ImgBase64
+    ) + 1
+);;
+*/
+
+// ---------- Parâmetros da URL ----------
+varHub = Param("HUB");;
+
+// ---------- Versão ----------
+var_ultimaVersao = Value(
+    First(
+        Sort(
+            tbl_controle_versoes;
+            ID;
+            SortOrder.Descending
+        )
+    ).Numero_versao
+);;
+
+// ---------- Layout ----------
+var_sideBarWidth = 250;;
+
+
+// ---------- Identificação do usuário ----------
+// ATENÇÃO: o 318 é o primeiro argumento do Coalesce, que devolve o primeiro
+// valor não vazio. Ou seja, o app roda SEMPRE como o usuário 318; o Param e o
+// LookUp nunca são alcançados. Mantive como estava — comportamento idêntico ao
+// de hoje. Para voltar ao usuário real, apagar o "318;" da linha abaixo.
+varIdUser = Coalesce(
+    318;
+    Value(Param("USUARIO"));
+    LookUp(
+        User;
+        usrNome = User().FullName
+    ).ID
+);;
+
+// Substitui o With() do OnStart: um LookUp só, reaproveitado por todas as
+// fórmulas abaixo.
+nfUsuario = LookUp(
+    User;
+    ID = varIdUser
+);;
+
+varNomeUser = nfUsuario.usrNome;;
+varEmailUser = nfUsuario.Email;;
+varFuncaoUser = nfUsuario.Funcao;;
+varBlocoUser = nfUsuario.Bloco;;
+varClusterUser = nfUsuario.Cluster;;
+varAeroUser = nfUsuario.Aeroporto;;
+varPerfilUser = nfUsuario.Perfil;;
+varAutUser = nfUsuario.Autorizacao;;
+varPerfilSafety = nfUsuario.View_safety = 1;;
+
+// ---------- Foto do usuário ----------
+// Hoje isso é uma chamada ao Office 365 em toda abertura do app, e nenhuma tela
+// lê varFotoUser. Como fórmula nomeada, a chamada só acontece se alguém usar.
+varFotoUser = UsuáriosdoOffice365.UserPhoto(
+    First(
+        UsuáriosdoOffice365.SearchUser({searchTerm: varNomeUser})
+    ).Id
+);;
+
+// ---------- ICAO / IATA do aeroporto do usuário ----------
+nfAeroUser = LookUp(
+    colAeros;
+    Aeroporto = varAeroUser
+);;
+
+varICAOUser = nfAeroUser.ICAO;;
+varIATAUser = nfAeroUser.IATA;;
+
+// ---------- Telas por tipo de ocorrência ----------
+col_NavTelas = Table(
+    {
+        Id: 40;
+        TelaListar: ScreenColisaoVeiculos
+    };
+    {
+        Id: 37;
+        TelaListar: ScreenDerramamentoFluido
+    };
+    {
+        Id: 39;
+        TelaListar: ScreenExcursaoPista
+    };
+    {
+        Id: 125;
+        TelaListar: ScreenFauna
+    };
+    {
+        Id: 38;
+        TelaListar: ScreenIncursaoPista
+    };
+    {
+        Id: 41;
+        TelaListar: ScreenInterferenciaExterna
+    };
+    {
+        Id: 43;
+        TelaListar: ScreenJetBlast
+    };
+    {
+        Id: 36;
+        TelaListar: ScreenOcorrenciaSolo
+    };
+    {
+        Id: 131;
+        TelaListar: ScreenFOD
+    };
+    {
+        Id: 139;
+        TelaListar: ScreenCSO
+    };
+    {
+        Id: 127;
+        TelaListar: ScreenVistoriaSafetyFauna
+    }
+);;
+
+// ---------- Módulos do menu ----------
+col_menuModulos = If(
+    varPerfilSafety;
+    Filter(
+        tbl_Modulos;
+        (Menu.Value = "Pátios e Pistas" && SubMenu.Value = "Safety") || Titulo = "Fauna"
+    );
+    Filter(
+        tbl_Modulos;
+        Identificador <> "VIS-SAF" And Identificador <> "CSO";
+        (Menu.Value = "Pátios e Pistas" && SubMenu.Value = "Safety") || Titulo = "Fauna"
+    )
+)
+
+
+
+
+// ─── TEMA ASUR ────────────────────────────────────────────────────────────────
+// Tokens únicos: trocar aqui reflete em todas as telas que os usarem.
+// Alinhado em 2026-10-09 ao App_Formulas_APAC.txt (branch apacs-por-modulos),
+// que é o arquivo com o cabeçalho "App.Formulas — ASUR BRASIL". O teal daqui
+// era #00879A e o do APAC é #0E7C8C; prevaleceu o do APAC. Verde, âmbar e
+// vermelho também passaram a ser os de lá. Os acentos magenta e ciano saíram:
+// vinham da paleta Motiva e não existem no conjunto ASUR (nenhuma tela os usava).
+//
+// Atenção: o Mapa de Alocação ainda está no roxo institucional Motiva (#391694).
+// Não é a referência de cor primária — o APAC é.
+nfCorPrimaria      = RGBA(14; 124; 140; 1);;   // #0E7C8C — teal institucional ASUR
+nfCorPrimariaEsc   = RGBA(10; 90; 102; 1);;    // #0A5A66 — hover / pressed
+nfCorPrimariaClara = RGBA(228; 242; 244; 1);;  // #E4F2F4 — fundo de realce
+nfCorTexto         = RGBA(30; 41; 59; 1);;     // #1E293B — slate-800
+nfCorTextoFraco    = RGBA(100; 116; 139; 1);;  // #64748B — slate-500
+nfCorFundo         = RGBA(255; 255; 255; 1);;  // #FFFFFF
+nfCorFundoFraco    = RGBA(248; 250; 252; 1);;  // #F8FAFC — slate-50
+nfCorBorda         = RGBA(185; 217; 222; 1);;  // #B9D9DE — borda teal clara
+nfCorErro          = RGBA(185; 28; 28; 1);;    // #B91C1C
+nfCorOk            = RGBA(14; 124; 140; 1);;  // #0E7C8C — igual a nfCorPrimaria: o Salvar entra no teal
+nfCorAlerta        = RGBA(180; 83; 9; 1);;     // #B45309
+nfCorAcao          = RGBA(221; 81; 26; 1);;    // #DD511A — laranja de ação
