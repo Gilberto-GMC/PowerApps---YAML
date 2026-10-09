@@ -4,7 +4,13 @@
 //         existir. Correlaciona com conteudo colapsado na colagem do YAML, mas as telas
 //         *Forms tem o mesmo padrao e colam certo. Conferir em tela antes de concluir.
 //   2) propriedade de geometria declarada vazia (ex. "Height: =")
-//   3) informativo: AutoLayout com filhos que declaram X/Y (ali a geometria e ignorada)
+//   3) CONFIRMADO em 2026-10-09 (ScreenJetBlastForms): AutoLayout com
+//      LayoutOverflowY: Scroll em que NENHUM filho visivel declara FillPortions: =0.
+//      Sem filho de altura fixa o motor divide a altura do container entre os filhos,
+//      nada fica mais alto que a area visivel e a barra de rolagem nunca aparece --
+//      a tela fica "travada". Corrigido ali com FillPortions: =0 no container de
+//      conteudo, igual as telas irmas.
+//   4) informativo: AutoLayout com filhos que declaram X/Y (ali a geometria e ignorada)
 // Uso: node build/checar_geometria.js <arquivo.pa.yaml> [...]
 const fs = require('fs');
 const path = require('path');
@@ -28,7 +34,7 @@ function parse(arq) {
         mm = li.match(/^\s*Variant:\s*(.+)$/);      if (mm) variant = mm[1].trim();
       }
       if (cur === ind + 6) {
-        const mm = li.match(/^\s*(X|Y|Width|Height):\s*(.*)$/);
+        const mm = li.match(/^\s*(X|Y|Width|Height|FillPortions|LayoutOverflowY|Visible):\s*(.*)$/);
         if (mm) props[mm[1]] = mm[2];
       }
     }
@@ -54,6 +60,14 @@ for (const arq of process.argv.slice(2)) {
       if (falta.length)
         msgs.push('risco  ' + n.nome + ' L' + n.linha + ': ManualLayout dentro de AutoLayout (' +
                   n.pai.nome + ') sem ' + falta.join(' e ') + ' declarada');
+    }
+
+    if (n.variant === 'AutoLayout' && /Scroll/.test(n.props.LayoutOverflowY || '')) {
+      const f2 = nos.filter(x => x.pai === n);
+      const fixos = f2.filter(c => (c.props.FillPortions || '').trim() === '=0' && (c.props.Visible || '').trim() !== '=false');
+      if (f2.length && !fixos.length)
+        msgs.push('risco  ' + n.nome + ' L' + n.linha + ': AutoLayout com OverflowY Scroll e ' +
+                  f2.length + ' filho(s), nenhum com FillPortions: =0 -- a barra de rolagem pode nao aparecer');
     }
 
     if (n.variant === 'AutoLayout') {

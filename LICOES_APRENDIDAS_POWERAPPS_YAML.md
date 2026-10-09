@@ -2478,3 +2478,32 @@ o defeito já vinha do export, não da recoloração.
    `UpdateContext()` em lugar algum do app — a galeria é 0×0. Vem do export.
 2. `ScreenOcorrenciaSoloDetalhes` / `Container38`: `Height: =` vazia (corrigida
    acima).
+
+## "'var_x' não é reconhecido" que some ao reabrir o Studio (2026-10-09)
+
+**Projeto/tela:** SAFETY — `ScreenExcluir`, logo depois de colar o YAML.
+
+**Mensagem:** `O nome não é válido. 'var_modulo' não é reconhecido.` — com risco
+vermelho em **todas** as variáveis de contexto da tela ao mesmo tempo
+(`var_modulo`, `var_item_id`, `var_item_chave`).
+
+**Causa confirmada:** análise velha do Studio. O Douglas saiu do Studio, voltou,
+e o erro sumiu sozinho — **sem nenhuma alteração no arquivo**. Variável de
+contexto só é reconhecida numa tela quando algum `Navigate(tela, ..., {var: ...})`
+a cria; depois de uma colagem grande o Studio demora a reindexar essas origens e
+exibe o erro enquanto isso.
+
+**Como distinguir de um erro real, antes de investigar:**
+
+| sintoma | provável |
+|---|---|
+| **Todas** as variáveis de contexto da tela sublinhadas de uma vez | análise velha — **fechar e reabrir o Studio primeiro** |
+| **Uma** variável sublinhada, as outras não | erro real: conflito de tipo, ou ninguém manda aquela variável |
+| Mensagem de *tipo incompatível* citando um nome de tela | erro real: a tela de destino não existe (ver a lição do `ScreenMod*`) |
+
+**Validação preventiva:** antes de investigar qualquer "não é reconhecido",
+reabrir o Studio. Só depois varrer as origens com
+`grep -A8 'NomeDaTela,' msapp/Src/*.pa.yaml` para ver quem manda o quê.
+
+**Custo de não saber disso:** um ciclo inteiro de diagnóstico em cima de duas
+hipóteses erradas (nome da tela trocado, botão de origem quebrado).

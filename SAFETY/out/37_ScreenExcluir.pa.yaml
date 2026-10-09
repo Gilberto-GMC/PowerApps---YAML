@@ -1,0 +1,566 @@
+# ************************************************************************************************
+# AirportNow — Safety & Fauna  ·  ScreenExcluir  (corrigida)
+#
+# ⚠️ LOCALE — ARQUIVO NO FORMATO INVARIANTE ("," para argumentos, ";" para encadear,
+#    "." decimal). É assim que a EXIBIÇÃO DE CÓDIGO do Studio lê e grava, mesmo com o
+#    Studio em pt-BR. NÃO converta para ";" / ";;": o arquivo para de compilar.
+#    A conversão para pt-BR (";" / ";;" / vírgula decimal) só vale para o que é colado
+#    na BARRA DE FÓRMULAS — aqui, nada é.
+#
+#
+# COLAR EM: Studio > tela ScreenExcluir > exibição de código > substituir tudo.
+#
+# CORREÇÕES APLICADAS
+#
+# 1. BUG DE CÓPIA — ramo "Colisão de veículos"
+#    Os filhos eram apagados por  colVeiEnv_idOcorrencia = var_item.derFlu_id
+#    e  colVeiImg_idOcorrencia = var_item.derFlu_id.  A coluna "derFlu_id" não
+#    existe na lista de Colisão de Veículos, então a comparação era sempre com
+#    branco: envolvidos, imagens e desdobramentos NUNCA eram apagados. Toda
+#    exclusão de colisão deixava lixo nas listas filhas.
+#
+# 2. CHAVE ERRADA NOS FILHOS — todos os ramos
+#    Os filhos eram apagados comparando com  var_item.ID  (o ID interno do
+#    SharePoint), mas os formulários sempre gravaram os filhos com a coluna
+#    <modulo>_id (que era calculada como "maior + 1" no app). Os dois números
+#    só coincidem enquanto nada é excluído da lista pai — depois da primeira
+#    exclusão eles divergem e a exclusão passa a apagar os filhos da ocorrência
+#    ERRADA, ou nenhum. Agora a comparação usa a mesma coluna que a gravação usa.
+#
+# 3. NAVEGAÇÃO
+#    Volta para as telas por modulo que existem neste app:
+#    ScreenColisaoVeiculos, ScreenDerramamentoFluido, ScreenExcursaoPista,
+#    ScreenIncursaoPista, ScreenInterferenciaExterna, ScreenJetBlast,
+#    ScreenOcorrenciaSolo, ScreenFauna, ScreenDesdobramentos.
+#    ATENCAO: out/03_ScreenExcluir.pa.yaml aponta para as telas consolidadas
+#    ScreenMod*, que NAO existem neste app. Usar ESTE arquivo, nao aquele.
+#
+# OBSERVAÇÃO SOBRE DADOS ANTIGOS
+#    Depois desta correção, <modulo>_id passa a ser igual ao ID do SharePoint
+#    nos registros NOVOS. Os registros antigos mantêm o valor sequencial antigo
+#    — e é justamente por isso que a exclusão tem de comparar por <modulo>_id:
+#    é a única chave que vale para os dois conjuntos.
+#
+# 4. TIPO AMBÍGUO DE "var_item" (achado no Verificador de aplicativo, 2026-09-22)
+#    var_item vinha de {var_item: ThisItem} — só que cada um dos módulos que
+#    navega pra cá manda o ThisItem de uma tabela do SharePoint diferente, e os
+#    dois botões extras (Fauna, Desdobramentos) mandam mais duas. O Studio via
+#    ISSO como uma variável só, de tipo "união" das ~9 tabelas — e reprovava
+#    Clear/leitura de campo específico de módulo em cascata (30 erros).
+#    var_item só era lido de duas formas (var_item.ID e var_item.<modulo>_id,
+#    nunca o registro inteiro), então em vez do registro passou-se a mandar só
+#    os dois números já prontos, mesmo tipo (numérico) nos 9 pontos de origem:
+#        var_item_id:    ThisItem.ID            (era var_item.ID)
+#        var_item_chave: ThisItem.<modulo>_id   (era var_item.<modulo>_id, só
+#                                                 nos 7 módulos com filhos)
+#    Esta função (corrigir_excluir) já escreve esses dois nomes; quem manda os
+#    valores são os próprios botões "Excluir" (7 módulos + Fauna + Desdobra-
+#    mentos, em msapp/Src) — corrigidos junto, fora deste script.
+# ************************************************************************************************
+Screens:
+  ScreenExcluir:
+    Properties:
+      OnVisible: |-
+        =UpdateContext({var_load: false})
+    Children:
+      - Container1:
+          Control: GroupContainer@1.5.0
+          Variant: AutoLayout
+          Properties:
+            DropShadow: =DropShadow.None
+            Height: =Parent.Height
+            LayoutAlignItems: =LayoutAlignItems.Center
+            LayoutDirection: =LayoutDirection.Horizontal
+            LayoutJustifyContent: =LayoutJustifyContent.Center
+            PaddingBottom: =100
+            RadiusBottomLeft: =0
+            RadiusBottomRight: =0
+            RadiusTopLeft: =0
+            RadiusTopRight: =0
+            Width: =Parent.Width
+          Children:
+            - Container2:
+                Control: GroupContainer@1.5.0
+                Variant: AutoLayout
+                Properties:
+                  AlignInContainer: =AlignInContainer.SetByContainer
+                  BorderStyle: =BorderStyle.None
+                  DropShadow: =DropShadow.None
+                  Fill: =nfCorFundoFraco
+                  FillPortions: =0
+                  Height: =180
+                  LayoutDirection: =LayoutDirection.Vertical
+                  LayoutMaxHeight: =
+                  LayoutMaxWidth: =
+                  RadiusBottomLeft: =10
+                  RadiusBottomRight: =10
+                  RadiusTopLeft: =10
+                  RadiusTopRight: =10
+                  Width: =350
+                Children:
+                  - Container7:
+                      Control: GroupContainer@1.5.0
+                      Variant: AutoLayout
+                      Properties:
+                        FillPortions: =0
+                        Height: =40
+                        LayoutDirection: =LayoutDirection.Horizontal
+                        LayoutGap: =5
+                        LayoutMaxHeight: =
+                        LayoutMaxWidth: =
+                        PaddingLeft: =10
+                        PaddingRight: =10
+                        RadiusBottomLeft: =0
+                        RadiusBottomRight: =0
+                        RadiusTopLeft: =0
+                        RadiusTopRight: =0
+                      Children:
+                        - Icon1:
+                            Control: Icon@0.0.7
+                            Properties:
+                              AlignInContainer: =AlignInContainer.Center
+                              Height: =30
+                              Icon: ="Warning"
+                              IconColor: =nfCorAlerta
+                              IconStyle: ='Icon.IconStyle'.Filled
+                              LayoutMaxHeight: =
+                              LayoutMaxWidth: =
+                              LayoutMinHeight: =40
+                              Width: =30
+                        - Label1:
+                            Control: Label@2.5.1
+                            Properties:
+                              FillPortions: =1
+                              FontWeight: =FontWeight.Semibold
+                              LayoutMaxHeight: =
+                              LayoutMaxWidth: =
+                              Size: =12
+                              Text: ="Deseja realmente excluir o item:"
+                  - Label1_1:
+                      Control: Label@2.5.1
+                      Properties:
+                        Align: =Align.Center
+                        AlignInContainer: =AlignInContainer.Stretch
+                        Color: =nfCorPrimaria
+                        FillPortions: =1
+                        LayoutMaxHeight: =
+                        LayoutMaxWidth: =
+                        LayoutMinWidth: =0
+                        Size: =11
+                        Text: =var_protocolo
+                  - Container7_1:
+                      Control: GroupContainer@1.5.0
+                      Variant: AutoLayout
+                      Properties:
+                        DropShadow: =DropShadow.None
+                        FillPortions: =0
+                        Height: =40
+                        LayoutAlignItems: =LayoutAlignItems.Center
+                        LayoutDirection: =LayoutDirection.Horizontal
+                        LayoutGap: =5
+                        LayoutJustifyContent: =LayoutJustifyContent.End
+                        LayoutMaxHeight: =
+                        LayoutMaxWidth: =
+                        PaddingLeft: =10
+                        PaddingRight: =10
+                        RadiusBottomLeft: =0
+                        RadiusBottomRight: =0
+                        RadiusTopLeft: =0
+                        RadiusTopRight: =0
+                      Children:
+                        - ButtonCanvas2:
+                            Control: Button@0.0.45
+                            Properties:
+                              Appearance: ='ButtonCanvas.Appearance'.Subtle
+                              BasePaletteColor: =nfCorPrimaria
+                              IconStyle: ='ButtonCanvas.IconStyle'.Filled
+                              LayoutMaxHeight: =
+                              LayoutMaxWidth: =
+                              OnSelect: =Back()
+                              Text: ="Não"
+                              Width: =60
+                        - ButtonCanvas2_2:
+                            Control: Button@0.0.45
+                            Properties:
+                              Appearance: ='ButtonCanvas.Appearance'.Subtle
+                              BasePaletteColor: =nfCorErro
+                              FontColor: =nfCorErro
+                              IconStyle: ='ButtonCanvas.IconStyle'.Filled
+                              LayoutMaxHeight: =
+                              LayoutMaxWidth: =
+                              OnSelect: |-
+                                =UpdateContext({var_load: true});
+                                Switch(
+                                    var_modulo,
+                                    "Colisão de veículos",////////////////////////////////////////////////////////////////////////////////
+                                    Remove(
+                                        '14.4-tbl_ColVeiculos',
+                                        LookUp(
+                                            '14.4-tbl_ColVeiculos',
+                                            ID = var_item_id
+                                        )
+                                    );
+                                    RemoveIf(
+                                        '14.4-tbl_ColVeiculosEnvolvidos',
+                                        colVeiEnv_idOcorrencia = var_item_chave
+                                    );
+                                    RemoveIf(
+                                        '14.4-tbl_ColVeiculosImg',
+                                        colVeiImg_idOcorrencia = var_item_chave
+                                    );
+                                    RemoveIf(
+                                        tbl_desdobramentos,
+                                        Modulo = var_modulo And ID_ocorrencia = var_item_chave
+                                    );
+                                    If(
+                                        IsBlank(
+                                            LookUp(
+                                                '14.4-tbl_ColVeiculos',
+                                                ID = var_item_id
+                                            )
+                                        ),
+                                        Navigate(
+                                            ScreenSucesso,
+                                            ScreenTransition.Fade,
+                                            {var_navigateSucess: ScreenColisaoVeiculos}
+                                        ),
+                                        Navigate(
+                                            ScreenErro,
+                                            ScreenTransition.Fade,
+                                            {var_navigateErro: ScreenColisaoVeiculos}
+                                        )
+                                    ),
+                                    "Derramamento de fluídos",///////////////////////////////////////////////////////////////////////////
+                                    Remove(
+                                        '14.2-tbl_DerramamentoDeFluidos',
+                                        LookUp(
+                                            '14.2-tbl_DerramamentoDeFluidos',
+                                            ID = var_item_id
+                                        )
+                                    );
+                                    RemoveIf(
+                                        '14.2-tbl_DerFluidosImg',
+                                        derFluFK_id = var_item_chave
+                                    );
+                                    RemoveIf(
+                                        tbl_desdobramentos,
+                                        Modulo = var_modulo And ID_ocorrencia = var_item_chave
+                                    );
+                                    If(
+                                        IsBlank(
+                                            LookUp(
+                                                '14.2-tbl_DerramamentoDeFluidos',
+                                                ID = var_item_id
+                                            )
+                                        ),
+                                        Navigate(
+                                            ScreenSucesso,
+                                            ScreenTransition.Fade,
+                                            {var_navigateSucess: ScreenDerramamentoFluido}
+                                        ),
+                                        Navigate(
+                                            ScreenErro,
+                                            ScreenTransition.Fade,
+                                            {var_navigateErro: ScreenDerramamentoFluido}
+                                        )
+                                    ),
+                                    "Excursão de pista",/////////////////////////////////////////////////////////////////////////////////
+                                    Remove(
+                                        '14.6-tbl_ExcPista',
+                                        LookUp(
+                                            '14.6-tbl_ExcPista',
+                                            ID = var_item_id
+                                        )
+                                    );
+                                    RemoveIf(
+                                        '14.6-tbl_ExcPistaImg',
+                                        excPistaImg_idOcorrencia = var_item_chave
+                                    );
+                                    RemoveIf(
+                                        tbl_desdobramentos,
+                                        Modulo = var_modulo And ID_ocorrencia = var_item_chave
+                                    );
+                                    If(
+                                        IsBlank(
+                                            LookUp(
+                                                '14.6-tbl_ExcPista',
+                                                ID = var_item_id
+                                            )
+                                        ),
+                                        Navigate(
+                                            ScreenSucesso,
+                                            ScreenTransition.Fade,
+                                            {var_navigateSucess: ScreenExcursaoPista}
+                                        ),
+                                        Navigate(
+                                            ScreenErro,
+                                            ScreenTransition.Fade,
+                                            {var_navigateErro: ScreenExcursaoPista}
+                                        )
+                                    ),
+                                    "Incursão em pista",/////////////////////////////////////////////////////////////////////////////////
+                                    Remove(
+                                        '14.3-tbl_IncPista',
+                                        LookUp(
+                                            '14.3-tbl_IncPista',
+                                            ID = var_item_id
+                                        )
+                                    );
+                                    RemoveIf(
+                                        '14.3-tbl_IncPistaImg',
+                                        incPistaImg_idOcorrencia = var_item_chave
+                                    );
+                                    RemoveIf(
+                                        '14.3-tbl_IncPistaEnvolvidos',
+                                        incPistaEnv_idOcorrencia = var_item_chave
+                                    );
+                                    RemoveIf(
+                                        tbl_desdobramentos,
+                                        Modulo = var_modulo And ID_ocorrencia = var_item_chave
+                                    );
+                                    If(
+                                        IsBlank(
+                                            LookUp(
+                                                '14.3-tbl_IncPista',
+                                                ID = var_item_id
+                                            )
+                                        ),
+                                        Navigate(
+                                            ScreenSucesso,
+                                            ScreenTransition.Fade,
+                                            {var_navigateSucess: ScreenIncursaoPista}
+                                        ),
+                                        Navigate(
+                                            ScreenErro,
+                                            ScreenTransition.Fade,
+                                            {var_navigateErro: ScreenIncursaoPista}
+                                        )
+                                    ),
+                                    "Interferência externa",/////////////////////////////////////////////////////////////////////////////////
+                                    Remove(
+                                        '14.5-tbl_IntExterna',
+                                        LookUp(
+                                            '14.5-tbl_IntExterna',
+                                            ID = var_item_id
+                                        )
+                                    );
+                                    RemoveIf(
+                                        '14.5-tbl_IntExternaImg',
+                                        intExtImg_idOcorrencia = var_item_chave
+                                    );
+                                    RemoveIf(
+                                        tbl_desdobramentos,
+                                        Modulo = var_modulo And ID_ocorrencia = var_item_chave
+                                    );
+                                    If(
+                                        IsBlank(
+                                            LookUp(
+                                                '14.5-tbl_IntExterna',
+                                                ID = var_item_id
+                                            )
+                                        ),
+                                        Navigate(
+                                            ScreenSucesso,
+                                            ScreenTransition.Fade,
+                                            {var_navigateSucess: ScreenInterferenciaExterna}
+                                        ),
+                                        Navigate(
+                                            ScreenErro,
+                                            ScreenTransition.Fade,
+                                            {var_navigateErro: ScreenInterferenciaExterna}
+                                        )
+                                    ),
+                                    "Jet blast",/////////////////////////////////////////////////////////////////////////////////
+                                    Remove(
+                                        '14.8-tbl_JetBlast',
+                                        LookUp(
+                                            '14.8-tbl_JetBlast',
+                                            ID = var_item_id
+                                        )
+                                    );
+                                    RemoveIf(
+                                        '14.8-tbl_JetBlastImg',
+                                        jetBlastImg_idOcorrencia = var_item_chave
+                                    );
+                                    RemoveIf(
+                                        '14.8-tbl_JetBlastItemAtingido',
+                                        jetBlastIA_idOcorrencia = var_item_chave
+                                    );
+                                    RemoveIf(
+                                        tbl_desdobramentos,
+                                        Modulo = var_modulo And ID_ocorrencia = var_item_chave
+                                    );
+                                    If(
+                                        IsBlank(
+                                            LookUp(
+                                                '14.8-tbl_JetBlast',
+                                                ID = var_item_id
+                                            )
+                                        ),
+                                        Navigate(
+                                            ScreenSucesso,
+                                            ScreenTransition.Fade,
+                                            {var_navigateSucess: ScreenJetBlast}
+                                        ),
+                                        Navigate(
+                                            ScreenErro,
+                                            ScreenTransition.Fade,
+                                            {var_navigateErro: ScreenJetBlast}
+                                        )
+                                    ),
+                                    "Ocorrência de solo",/////////////////////////////////////////////////////////////////////////////////////
+                                    Remove(
+                                        '16.1-tbl_OcoSolo',
+                                        LookUp(
+                                            '16.1-tbl_OcoSolo',
+                                            ID = var_item_id
+                                        )
+                                    );
+                                    RemoveIf(
+                                        '16.1-tbl_OcoSoloImagens',
+                                        ocoSoloFK_id = var_item_chave
+                                    );
+                                    RemoveIf(
+                                        tbl_desdobramentos,
+                                        Modulo = var_modulo And ID_ocorrencia = var_item_chave
+                                    );
+                                    If(
+                                        IsBlank(
+                                            LookUp(
+                                                '16.1-tbl_OcoSolo',
+                                                ID = var_item_id
+                                            )
+                                        ),
+                                        Navigate(
+                                            ScreenSucesso,
+                                            ScreenTransition.Fade,
+                                            {var_navigateSucess: ScreenOcorrenciaSolo}
+                                        ),
+                                        Navigate(
+                                            ScreenErro,
+                                            ScreenTransition.Fade,
+                                            {var_navigateErro: ScreenOcorrenciaSolo}
+                                        )
+                                    ),
+                                    "Fauna",/////////////////////////////////////////////////////////////////////////////////////
+                                    Switch(
+                                        var_faunaCat,
+                                        "Colisão",
+                                        RemoveIf(
+                                            'AIRPORTNOW - FAUNA RELACIONAMENTO',
+                                            ID_tblPrincipal = var_item_id And 'Tipo de Registro' = "Colisão com dano" || ID_tblPrincipal = var_item_id And 'Tipo de Registro' = "Colisão sem dano" || ID_tblPrincipal = var_item_id And 'Tipo de Registro' = "Quase colisão" || ID_tblPrincipal = var_item_id And 'Tipo de Registro' = "Avistamento"
+                                        );
+                                        RemoveIf(
+                                            'AIRPORTNOW - Colisões/Quase-Colisão/Avistamento',
+                                            ID = var_item_id
+                                        );
+                                        If(
+                                            IsBlank(
+                                                LookUp(
+                                                    'AIRPORTNOW - Colisões/Quase-Colisão/Avistamento',
+                                                    ID = var_item_id
+                                                )
+                                            ),
+                                            Navigate(
+                                                ScreenSucesso,
+                                                ScreenTransition.Fade,
+                                                {var_navigateSucess: ScreenFauna}
+                                            ),
+                                            Navigate(
+                                                ScreenErro,
+                                                ScreenTransition.Fade,
+                                                {var_navigateErro: ScreenFauna}
+                                            )
+                                        ),
+                                        "Presença",
+                                        RemoveIf(
+                                            'AIRPORTNOW - FAUNA RELACIONAMENTO',
+                                            ID_tblPrincipal = var_item_id And 'Tipo de Registro' = "Presença de fauna"
+                                        );
+                                        RemoveIf(
+                                            'Presença de Fauna',
+                                            ID = var_item_id
+                                        );
+                                        If(
+                                            IsBlank(
+                                                LookUp(
+                                                    'Presença de Fauna',
+                                                    ID = var_item_id
+                                                )
+                                            ),
+                                            Navigate(
+                                                ScreenSucesso,
+                                                ScreenTransition.Fade,
+                                                {var_navigateSucess: ScreenFauna}
+                                            ),
+                                            Navigate(
+                                                ScreenErro,
+                                                ScreenTransition.Fade,
+                                                {var_navigateErro: ScreenFauna}
+                                            )
+                                        ),
+                                        "Foco",
+                                        RemoveIf(
+                                            'Formulário de Focos (Atrativos e Vulnerabilidade)',
+                                            ID = var_item_id
+                                        );
+                                        If(
+                                            IsBlank(
+                                                LookUp(
+                                                    'Formulário de Focos (Atrativos e Vulnerabilidade)',
+                                                    ID = var_item_id
+                                                )
+                                            ),
+                                            Navigate(
+                                                ScreenSucesso,
+                                                ScreenTransition.Fade,
+                                                {var_navigateSucess: ScreenFauna}
+                                            ),
+                                            Navigate(
+                                                ScreenErro,
+                                                ScreenTransition.Fade,
+                                                {var_navigateErro: ScreenFauna}
+                                            )
+                                        )
+                                    ),
+                                    "Desdobramentos",/////////////////////////////////////////////////////////////////////////////////////
+                                    Remove(
+                                        tbl_desdobramentos,
+                                        LookUp(
+                                            tbl_desdobramentos,
+                                            ID = var_item_id
+                                        )
+                                    );
+                                    If(
+                                        IsBlank(
+                                            LookUp(
+                                                tbl_desdobramentos,
+                                                ID = var_item_id
+                                            )
+                                        ),
+                                        Navigate(
+                                            ScreenSucesso,
+                                            ScreenTransition.Fade,
+                                            {var_navigateSucess: ScreenDesdobramentos}
+                                        ),
+                                        Navigate(
+                                            ScreenErro,
+                                            ScreenTransition.Fade,
+                                            {var_navigateErro: ScreenDesdobramentos}
+                                        )
+                                    )
+                                );
+                                UpdateContext({var_load: false})
+                              Text: ="Sim"
+                              Visible: =!Spinner1.Visible
+                              Width: =60
+                        - Spinner1:
+                            Control: Spinner@1.4.6
+                            Properties:
+                              AlignInContainer: =AlignInContainer.Stretch
+                              LayoutMaxHeight: =
+                              LayoutMaxWidth: =
+                              LayoutMinHeight: =0
+                              SpinnerSize: ='Spinner.SpinnerSize'.ExtraSmall
+                              Visible: =var_load
+                              Width: =60
