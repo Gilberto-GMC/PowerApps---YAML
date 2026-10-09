@@ -10,7 +10,12 @@
 //      nada fica mais alto que a area visivel e a barra de rolagem nunca aparece --
 //      a tela fica "travada". Corrigido ali com FillPortions: =0 no container de
 //      conteudo, igual as telas irmas.
-//   4) informativo: AutoLayout com filhos que declaram X/Y (ali a geometria e ignorada)
+//   4) CONFIRMADO (varias vezes): os filhos do template de uma Gallery perdem o X
+//      na colagem do YAML -- o valor vira 1 ou a propriedade some. Nenhuma forma
+//      de escrever o YAML evita isso; a correcao e digitar no painel do Studio.
+//      Por isso o verificador IMPRIME a tabela de X/Y esperados de cada template,
+//      para conferencia em tela depois de colar.
+//   5) informativo: AutoLayout com filhos que declaram X/Y (ali a geometria e ignorada)
 // Uso: node build/checar_geometria.js <arquivo.pa.yaml> [...]
 const fs = require('fs');
 const path = require('path');
@@ -77,10 +82,32 @@ for (const arq of process.argv.slice(2)) {
                   ' filho(s) declarando X/Y (ignorados pelo motor de layout)');
     }
   }
+  // Tabela de conferencia dos templates de Gallery. Nao e falha: o YAML esta
+  // certo. E a colagem que descarta o X dos filhos do template, sempre, e a
+  // unica correcao e digitar no painel de propriedades do Studio. A tabela sai
+  // impressa para ser conferida em tela depois de colar.
+  const tabela = [];
+  for (const g of nos.filter(n => /^Gallery@/.test(n.ctrl))) {
+    // Width entra na tabela porque tambem se perde: na galeria de envolvidos da
+    // Colisao, o Icon3 declarava Width: =40 e foi lido como 1.
+    const filhos = nos.filter(x => x.pai === g && ('X' in x.props || 'Y' in x.props || 'Width' in x.props));
+    if (!filhos.length) continue;
+    tabela.push('  ' + g.nome + ' L' + g.linha + '  (Width=' + (g.props.Width || '-').trim() + ')');
+    for (const c of filhos)
+      tabela.push('     ' + c.nome.padEnd(26) +
+                  'X=' + String((c.props.X || '(ausente)').trim()).padEnd(22) +
+                  'Y=' + String((c.props.Y || '(ausente)').trim()).padEnd(12) +
+                  'Width=' + String((c.props.Width || '(ausente)').trim()));
+  }
+
   const erros = msgs.filter(m => m.startsWith('FALHA')).length;
   falhas += erros;
-  console.log('\n' + path.basename(arq) + (msgs.length ? '' : '  ok'));
+  console.log('\n' + path.basename(arq) + (msgs.length || tabela.length ? '' : '  ok'));
   for (const m of msgs) console.log('  ' + m);
+  if (tabela.length) {
+    console.log('  CONFERIR EM TELA apos colar -- a colagem perde o X dos filhos do template:');
+    for (const t of tabela) console.log(t);
+  }
 }
 console.log('\n' + (falhas ? falhas + ' falha(s)' : 'nenhuma falha'));
 process.exit(falhas ? 1 : 0);

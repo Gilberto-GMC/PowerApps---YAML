@@ -2577,3 +2577,55 @@ filhos do template, porque a colagem vai perdê-los de qualquer jeito.
 irmãos idênticos e provou a correção naquele contexto. Estender o resultado para
 uma estrutura diferente (Gallery) sem novo controle foi exatamente o erro que
 este documento já registra em outros pontos — e custou uma colagem do Douglas.
+
+## `ForAll` + `Sequence`: não nomear o campo de saída de `Value` (2026-10-09)
+
+**Projeto/tela:** SAFETY — `ScreenColisaoVeiculosForms`, `ComboBoxMG1` (mapa de
+grade). **Regressão introduzida por mim**, não pelo app.
+
+**Sintoma:** a lista abre com 104 linhas em branco.
+
+**O que eu escrevi (errado):**
+
+```
+ForAll(
+    Sequence(104, 1, 1),
+    {Value: Switch(true, Value <= 26, Char(64 + Value), ...)}
+)
+```
+
+**Causa confirmada:** `Sequence` já devolve uma tabela de uma coluna chamada
+`Value`. Ao criar um campo de saída com o mesmo nome, o `Value` dentro do
+`Switch` passa a apontar para **o campo em definição**, nunca para o número. As
+quatro condições dão falso, o `Switch` devolve branco, e saem 104 brancos.
+
+**Correção confirmada em tela:**
+
+```
+ForAll(
+    Sequence(104, 1, 1) As Celula,
+    {Value: Switch(
+        true,
+        Celula.Value <= 26, Char(64 + Celula.Value),
+        Celula.Value <= 52, "A" & Char(64 + Celula.Value - 26),
+        Celula.Value <= 78, "B" & Char(64 + Celula.Value - 52),
+        "C" & Char(64 + Celula.Value - 78)
+    )}
+)
+```
+
+O `As` dá nome próprio ao registro do laço e desfaz a colisão. A última faixa
+virou o **ramo padrão** do `Switch`: antes, qualquer valor fora das quatro
+condições devolvia branco em silêncio.
+
+**Por que eu tinha mexido:** achei que `ForAll` com corpo escalar não garantia o
+nome `Value` que `DisplayFields`/`SearchFields` procuram. Garante — e a
+`ScreenFOD` usa essa forma com a mesma combo, funcionando. O diagnóstico
+original estava errado e o "conserto" é que quebrou.
+
+**Validação preventiva:** acusar `ForAll(` sobre `Sequence(` cujo corpo seja um
+registro com campo chamado `Value`. É sempre colisão.
+
+**Regra geral:** dentro de `ForAll`/`Filter`/`Sort` sobre tabela de coluna única,
+usar `As <nome>` sempre que o corpo criar um campo com o nome de uma coluna de
+entrada.

@@ -13,12 +13,7 @@ Screens:
         =UpdateContext(
             {
                 //Default color border
-                varBordaDefault: RGBA(
-                    0,
-                    0,
-                    0,
-                    1
-                )
+                varBordaDefault: nfCorBorda
             }
         )
     Children:
@@ -67,12 +62,7 @@ Screens:
                     UpdateContext(
                         {
                             //Default color border
-                            varBordaDefault: RGBA(
-                                0,
-                                0,
-                                0,
-                                1
-                            )
+                            varBordaDefault: nfCorBorda
                         }
                     )
                   PressedBorderColor: =Self.Fill
@@ -588,17 +578,19 @@ Screens:
                               HoverFill: =nfCorFundoFraco
                               InputTextPlaceholder: =
                               Items: |-
-                                =// DisplayFields/SearchFields procuram a coluna "Value". ForAll com corpo
-                                // escalar nao garante esse nome, e a lista abre com 104 linhas em branco.
-                                // O registro explicito fixa o nome da coluna.
+                                =// O corpo do ForAll NAO pode chamar o campo de saida de "Value": o Sequence
+                                // ja produz uma coluna com esse nome, e dentro do Switch o "Value" passa a
+                                // apontar para o campo em definicao, nunca para o numero. Resultado: as quatro
+                                // condicoes dao falso e a lista abre com 104 linhas em branco. O "As Celula"
+                                // separa os dois nomes de vez.
                                 ForAll(
-                                    Sequence(104, 1, 1),
+                                    Sequence(104, 1, 1) As Celula,
                                     {Value: Switch(
                                         true,
-                                        Value <= 26, Char(64 + Value),
-                                        Value <= 52, "A" & Char(64 + (Value - 26)),
-                                        Value <= 78, "B" & Char(64 + (Value - 52)),
-                                        Value <= 104, "C" & Char(64 + (Value - 78))
+                                        Celula.Value <= 26, Char(64 + Celula.Value),
+                                        Celula.Value <= 52, "A" & Char(64 + Celula.Value - 26),
+                                        Celula.Value <= 78, "B" & Char(64 + Celula.Value - 52),
+                                        "C" & Char(64 + Celula.Value - 78)
                                     )}
                                 )
                               LayoutMaxHeight: =
@@ -1472,6 +1464,7 @@ Screens:
                         Align: =Align.Center
                         AlignInContainer: =AlignInContainer.Center
                         Appearance: ='ButtonCanvas.Appearance'.Secondary
+                        BasePaletteColor: =nfCorPrimaria
                         BorderRadius: =4
                         BorderStyle: =BorderStyle.None
                         FontSize: =20
@@ -1503,7 +1496,7 @@ Screens:
                         Layout: ='ButtonCanvas.Layout'.IconBefore
                         LayoutMaxHeight: =
                         LayoutMaxWidth: =
-                        OnSelect: "=UpdateContext(\n    {\n        var_visibleSpiner: true,\n        var_formErro: false,\n        var_colVeiId: Value(Last('14.4-tbl_ColVeiculos').ID) + 1\n    }\n);\nSwitch(\n    true,\n    IsBlank(cmbColVeiAeroCadastro.Selected.Aeroporto) = true,\n    UpdateContext(\n        {\n            var_formErro: true,\n            varBordaDefault: nfCorErro\n        }\n    ),\n    IsBlank(cmbColVeiHoraCadastro.Selected.Value) = true,\n    UpdateContext(\n        {\n            var_formErro: true,\n            varBordaDefault: Color.Red\n        }\n    ),\n    IsBlank(cmbColVeiMinuCadastro.Selected.Value) = true,\n    UpdateContext(\n        {\n            var_formErro: true,\n            varBordaDefault: Color.Red\n        }\n    ),\n    IsBlank(TxtColVeiLocal.Text) = true,\n    UpdateContext(\n        {\n            var_formErro: true,\n            varBordaDefault: Color.Red\n        }\n    ),\n    IsBlank(ComboBoxMG1.Selected.Value) = true,\n    UpdateContext(\n        {\n            var_formErro: true,\n            varBordaDefault: Color.Red\n        }\n    ),\n    IsBlank(ComboBoxMG2.Selected.Value) = true,\n    UpdateContext(\n        {\n            var_formErro: true,\n            varBordaDefault: Color.Red\n        }\n    ),\n    IsBlank(cmbColVeiTipColisao.Selected.Value) = true,\n    UpdateContext(\n        {\n            var_formErro: true,\n            varBordaDefault: Color.Red\n        }\n    ),\n    IsBlank(TxtColVeiDescOcorrencia.Text) = true,\n    UpdateContext(\n        {\n            var_formErro: true,\n            varBordaDefault: Color.Red\n        }\n    ),\n    IsBlank(TxtColVeiDanos.Text) = true,\n    UpdateContext(\n        {\n            var_formErro: true,\n            varBordaDefault: Color.Red\n        }\n    ),\n    CountRows(col_colVeiGalleryImg) = 0,\n    UpdateContext(\n        {\n            var_formErro: true,\n            varBordaDefault: Color.Red\n        }\n    ),\n    CountRows(col_colVeiEnvolvidos) = 0,\n    UpdateContext(\n        {\n            var_formErro: true,\n            varBordaDefault: Color.Red\n        }\n    ),\n    UpdateContext({var_formErro: false})\n);\nIf(\n    var_formErro = true,\n    Notify(\n        \"Atenção todas as informações devem ser preenchidas!\",\n        NotificationType.Error\n    ),\n    //Insert de dados no database------------------------------------------------------------------------------\n    UpdateContext({var_regColVei: Patch(\n        '14.4-tbl_ColVeiculos',\n        Defaults('14.4-tbl_ColVeiculos'),\n        {\n            colVei_id: var_colVeiId,\n            colVei_data: dtpColVeiDataCadastro.SelectedDate,\n            colVei_hora: cmbColVeiHoraCadastro.Selected.Value & \":\" & cmbColVeiMinuCadastro.Selected.Value,\n            colVei_local: TxtColVeiLocal.Text,\n            colVei_mapaGrade: ComboBoxMG1.Selected.Value&\"-\"&ComboBoxMG2.Selected.Value,\n            colVei_tipoColisao: cmbColVeiTipColisao.Selected.Value,\n            colVei_descOcorrencia: TxtColVeiDescOcorrencia.Text,\n            colVei_danos: TxtColVeiDanos.Text,\n            colVei_bloco: cmbColVeiBlocoCadastro.Selected.Value,\n            colVei_aeroporto: cmbColVeiAeroCadastro.Selected.Aeroporto\n        }\n    )});\n    UpdateContext({var_colVeiIdReal: Coalesce(var_regColVei.ID, 0)});\n    If(\n        var_colVeiIdReal <= 0,\n        Notify(\n            \"Não foi possível gravar a ocorrência. Nada foi salvo — tente novamente.\",\n            NotificationType.Error\n        ),\n    //insert dos envolvidos\nForAll(\n        col_colVeiEnvolvidos,\n        Patch(\n            '14.4-tbl_ColVeiculosEnvolvidos',\n            Defaults('14.4-tbl_ColVeiculosEnvolvidos'),\n            {\n                colVeiEnv_idOcorrencia: var_colVeiId,\n                colVeiEnv_nome: nome,\n                colVeiEnv_colete: colete,\n                colVeiEnv_empresa: empresa,\n                colVeiEnv_codVeiculo: codVeiculo,\n                colVeiEnv_empresaProp: empresaProp,\n                colVeiEnv_cnhComp: cnhCompativel,\n                colVeiEnv_boaCondicoes: boaCondicao\n            }\n        )\n    );\n    //insert das imagens\nForAll(\n        col_colVeiGalleryImg,\n        Patch(\n            '14.4-tbl_ColVeiculosImg',\n            Defaults('14.4-tbl_ColVeiculosImg'),\n            {\n                colVeiImg_idOcorrencia: var_colVeiId,\n                colVeiImg_imagem: img\n            }\n        )\n    );\n    \nIf(\n        varPerfilUser = \"Sede\",\n        ClearCollect(\n            col_colVeiRegistros,\n            Sort(\n                '14.4-tbl_ColVeiculos',\n                colVei_id,\n                SortOrder.Descending\n            )\n        ),\n        ClearCollect(\n            col_colVeiRegistros,\n            Sort(\n                Filter(\n                    '14.4-tbl_ColVeiculos',\n                    colVei_aeroporto = varAeroUser\n                ),\n                colVei_id,\n                SortOrder.Descending\n            )\n        )\n    );\n    Select(ButtonResetFormColVei);\n    Navigate(\n        ScreenSucesso,\n        ScreenTransition.Fade,\n        {var_navigateSucess: ScreenColisaoVeiculos}\n    )\n    )\n);\nUpdateContext({var_visibleSpiner: false})"
+                        OnSelect: "=UpdateContext(\n    {\n        var_visibleSpiner: true,\n        var_formErro: false,\n        var_colVeiId: Value(Last('14.4-tbl_ColVeiculos').ID) + 1\n    }\n);\nSwitch(\n    true,\n    IsBlank(cmbColVeiAeroCadastro.Selected.Aeroporto) = true,\n    UpdateContext(\n        {\n            var_formErro: true,\n            varBordaDefault: nfCorErro\n        }\n    ),\n    IsBlank(cmbColVeiHoraCadastro.Selected.Value) = true,\n    UpdateContext(\n        {\n            var_formErro: true,\n            varBordaDefault: nfCorErro\n        }\n    ),\n    IsBlank(cmbColVeiMinuCadastro.Selected.Value) = true,\n    UpdateContext(\n        {\n            var_formErro: true,\n            varBordaDefault: nfCorErro\n        }\n    ),\n    IsBlank(TxtColVeiLocal.Text) = true,\n    UpdateContext(\n        {\n            var_formErro: true,\n            varBordaDefault: nfCorErro\n        }\n    ),\n    IsBlank(ComboBoxMG1.Selected.Value) = true,\n    UpdateContext(\n        {\n            var_formErro: true,\n            varBordaDefault: nfCorErro\n        }\n    ),\n    IsBlank(ComboBoxMG2.Selected.Value) = true,\n    UpdateContext(\n        {\n            var_formErro: true,\n            varBordaDefault: nfCorErro\n        }\n    ),\n    IsBlank(cmbColVeiTipColisao.Selected.Value) = true,\n    UpdateContext(\n        {\n            var_formErro: true,\n            varBordaDefault: nfCorErro\n        }\n    ),\n    IsBlank(TxtColVeiDescOcorrencia.Text) = true,\n    UpdateContext(\n        {\n            var_formErro: true,\n            varBordaDefault: nfCorErro\n        }\n    ),\n    IsBlank(TxtColVeiDanos.Text) = true,\n    UpdateContext(\n        {\n            var_formErro: true,\n            varBordaDefault: nfCorErro\n        }\n    ),\n    CountRows(col_colVeiGalleryImg) = 0,\n    UpdateContext(\n        {\n            var_formErro: true,\n            varBordaDefault: nfCorErro\n        }\n    ),\n    CountRows(col_colVeiEnvolvidos) = 0,\n    UpdateContext(\n        {\n            var_formErro: true,\n            varBordaDefault: nfCorErro\n        }\n    ),\n    UpdateContext({var_formErro: false})\n);\nIf(\n    var_formErro = true,\n    Notify(\n        \"Atenção todas as informações devem ser preenchidas!\",\n        NotificationType.Error\n    ),\n    //Insert de dados no database------------------------------------------------------------------------------\n    UpdateContext({var_regColVei: Patch(\n        '14.4-tbl_ColVeiculos',\n        Defaults('14.4-tbl_ColVeiculos'),\n        {\n            colVei_id: var_colVeiId,\n            colVei_data: dtpColVeiDataCadastro.SelectedDate,\n            colVei_hora: cmbColVeiHoraCadastro.Selected.Value & \":\" & cmbColVeiMinuCadastro.Selected.Value,\n            colVei_local: TxtColVeiLocal.Text,\n            colVei_mapaGrade: ComboBoxMG1.Selected.Value&\"-\"&ComboBoxMG2.Selected.Value,\n            colVei_tipoColisao: cmbColVeiTipColisao.Selected.Value,\n            colVei_descOcorrencia: TxtColVeiDescOcorrencia.Text,\n            colVei_danos: TxtColVeiDanos.Text,\n            colVei_bloco: cmbColVeiBlocoCadastro.Selected.Value,\n            colVei_aeroporto: cmbColVeiAeroCadastro.Selected.Aeroporto\n        }\n    )});\n    UpdateContext({var_colVeiIdReal: Coalesce(var_regColVei.ID, 0)});\n    If(\n        var_colVeiIdReal <= 0,\n        Notify(\n            \"Não foi possível gravar a ocorrência. Nada foi salvo — tente novamente.\",\n            NotificationType.Error\n        ),\n    //insert dos envolvidos\nForAll(\n        col_colVeiEnvolvidos,\n        Patch(\n            '14.4-tbl_ColVeiculosEnvolvidos',\n            Defaults('14.4-tbl_ColVeiculosEnvolvidos'),\n            {\n                colVeiEnv_idOcorrencia: var_colVeiId,\n                colVeiEnv_nome: nome,\n                colVeiEnv_colete: colete,\n                colVeiEnv_empresa: empresa,\n                colVeiEnv_codVeiculo: codVeiculo,\n                colVeiEnv_empresaProp: empresaProp,\n                colVeiEnv_cnhComp: cnhCompativel,\n                colVeiEnv_boaCondicoes: boaCondicao\n            }\n        )\n    );\n    //insert das imagens\nForAll(\n        col_colVeiGalleryImg,\n        Patch(\n            '14.4-tbl_ColVeiculosImg',\n            Defaults('14.4-tbl_ColVeiculosImg'),\n            {\n                colVeiImg_idOcorrencia: var_colVeiId,\n                colVeiImg_imagem: img\n            }\n        )\n    );\n    \nIf(\n        varPerfilUser = \"Sede\",\n        ClearCollect(\n            col_colVeiRegistros,\n            Sort(\n                '14.4-tbl_ColVeiculos',\n                colVei_id,\n                SortOrder.Descending\n            )\n        ),\n        ClearCollect(\n            col_colVeiRegistros,\n            Sort(\n                Filter(\n                    '14.4-tbl_ColVeiculos',\n                    colVei_aeroporto = varAeroUser\n                ),\n                colVei_id,\n                SortOrder.Descending\n            )\n        )\n    );\n    Select(ButtonResetFormColVei);\n    Navigate(\n        ScreenSucesso,\n        ScreenTransition.Fade,\n        {var_navigateSucess: ScreenColisaoVeiculos}\n    )\n    )\n);\nUpdateContext({var_visibleSpiner: false})"
                         PaddingBottom: =0
                         PaddingLeft: =0
                         PaddingRight: =0
