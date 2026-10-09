@@ -2508,7 +2508,7 @@ reabrir o Studio. Só depois varrer as origens com
 **Custo de não saber disso:** um ciclo inteiro de diagnóstico em cima de duas
 hipóteses erradas (nome da tela trocado, botão de origem quebrado).
 
-## CONFIRMADO: `Width` em fórmula faz os filhos perderem o `X` na colagem (2026-10-09)
+## `Width` em fórmula e a perda do `X` na colagem — vale para container, NÃO para Gallery (2026-10-09)
 
 Fecha a lição anterior (`X` dos filhos do template de Gallery se perde na
 colagem), que ficou com a causa em aberto.
@@ -2546,3 +2546,34 @@ propriedades do Studio. Fica. Recolar o YAML não resolve.
 **Validação preventiva — automatizável:** acusar todo `GroupContainer`
 ManualLayout ou Gallery cuja `Width` seja fórmula E que tenha filho declarando
 `X` literal. É o retrato exato dos três casos medidos.
+
+### CORREÇÃO (mesmo dia): a regra NÃO vale para template de Gallery
+
+A seção acima foi escrita logo após o experimento da Derramamento e
+generalizou demais. Testado na `ScreenColisaoVeiculosForms`, **não funcionou**:
+
+| onde | intervenção | resultado |
+|---|---|---|
+| `cntDerFluAeroCampos` — `GroupContainer` ManualLayout | `Width` de fórmula para `=880` | **funcionou**, 26 `X` preservados |
+| `GalleryEnvolvidos` — template de Gallery | toda geometria do template virou literal (`Label65_5.Width` `=476`, `Button4_10.X` `=536`) | **não funcionou** — o Douglas teve de ajustar à mão |
+
+Note que a `GalleryEnvolvidos` **já tinha** `Width: =586` literal antes da
+intervenção, e mesmo assim os filhos perdiam o `X`. Ou seja: a largura literal
+do container nunca foi o que protegia ali.
+
+**O que fica de confirmado:**
+- Em `GroupContainer` ManualLayout, largura literal preservou o `X` dos filhos —
+  confirmado em tela, num experimento com irmão de controle.
+- Em **template de Gallery**, nada do que foi tentado no YAML preservou o `X`.
+  A única correção que funciona continua sendo **digitar o valor na caixa X do
+  painel de propriedades do Studio** — confirmado duas vezes (galeria da FOD e
+  galeria de envolvidos da Colisão).
+
+**Regra de entrega revisada:** tratar container e template de Gallery como casos
+**diferentes**. Para Gallery, entregar sempre junto a tabela de `X` esperados dos
+filhos do template, porque a colagem vai perdê-los de qualquer jeito.
+
+**Lição de método:** o experimento da Derramamento isolou uma variável entre dois
+irmãos idênticos e provou a correção naquele contexto. Estender o resultado para
+uma estrutura diferente (Gallery) sem novo controle foi exatamente o erro que
+este documento já registra em outros pontos — e custou uma colagem do Douglas.
