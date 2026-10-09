@@ -1,0 +1,290 @@
+// =====================================================================
+// App.Formulas — SAFETY / AirportNow
+// Separadores no padrão pt-BR do Studio: ";" entre argumentos, ";;" entre fórmulas.
+// Colar em App > Formulas. Trocar o OnStart NA MESMA EDIÇÃO (28_App_OnStart.txt),
+// senão o Studio acusa nome duplicado entre a variável e a fórmula nomeada.
+// =====================================================================
+
+// ---------- Logo em base64 ----------
+// Ninguém lê essas duas hoje. Como fórmula nomeada elas são preguiçosas:
+// se continuarem sem uso, não custam nada na abertura do app.
+ImgBase64 = JSON(
+    MOTIVA_RGB_Logo_VersaoPositiva_Anil;
+    JSONFormat.IncludeBinaryData
+);;
+
+ImgBase64Limpo = Mid(
+    ImgBase64;
+    Find(
+        ",";
+        ImgBase64
+    ) + 1
+);;
+
+// ---------- Parâmetros da URL ----------
+varHub = Param("HUB");;
+
+// ---------- Versão ----------
+var_ultimaVersao = Value(
+    First(
+        Sort(
+            tbl_controle_versoes;
+            ID;
+            SortOrder.Descending
+        )
+    ).Numero_versao
+);;
+
+// ---------- Layout ----------
+var_sideBarWidth = 250;;
+
+// ---------- Aeroportos ----------
+colAeros = Table(
+    {
+        IATA: "";
+        ICAO: "";
+        Bloco: "";
+        Aeroporto: "";
+        Cat: 0;
+        Classe: ""
+    };
+    {
+        IATA: "GYN";
+        ICAO: "SBGO";
+        Bloco: "CENTRAL";
+        Aeroporto: "GOIÂNIA";
+        Cat: 7;
+        Classe: "III"
+    };
+    {
+        IATA: "IMP";
+        ICAO: "SBIZ";
+        Bloco: "CENTRAL";
+        Aeroporto: "IMPERATRIZ";
+        Cat: 6;
+        Classe: "II"
+    };
+    {
+        IATA: "PMW";
+        ICAO: "SBPJ";
+        Bloco: "CENTRAL";
+        Aeroporto: "PALMAS";
+        Cat: 7;
+        Classe: "II"
+    };
+    {
+        IATA: "PLU";
+        ICAO: "SBBH";
+        Bloco: "CENTRAL";
+        Aeroporto: "PAMPULHA";
+        Cat: 5;
+        Classe: "II"
+    };
+    {
+        IATA: "PNZ";
+        ICAO: "SBPL";
+        Bloco: "CENTRAL";
+        Aeroporto: "PETROLINA";
+        Cat: 6;
+        Classe: "II"
+    };
+    {
+        IATA: "SLZ";
+        ICAO: "SBSL";
+        Bloco: "CENTRAL";
+        Aeroporto: "SÃO LUIS";
+        Cat: 7;
+        Classe: "III"
+    };
+    {
+        IATA: "THE";
+        ICAO: "SBTE";
+        Bloco: "CENTRAL";
+        Aeroporto: "TERESINA";
+        Cat: 7;
+        Classe: "III"
+    };
+    {
+        IATA: "BFH";
+        ICAO: "SBBI";
+        Bloco: "SUL";
+        Aeroporto: "BACACHERI";
+        Cat: 5;
+        Classe: "II"
+    };
+    {
+        IATA: "CWB";
+        ICAO: "SBCT";
+        Bloco: "SUL";
+        Aeroporto: "CURITIBA";
+        Cat: 7;
+        Classe: "IV"
+    };
+    {
+        IATA: "JOI";
+        ICAO: "SBJV";
+        Bloco: "SUL";
+        Aeroporto: "JOINVILLE";
+        Cat: 6;
+        Classe: "II"
+    };
+    {
+        IATA: "NVT";
+        ICAO: "SBNF";
+        Bloco: "SUL";
+        Aeroporto: "NAVEGANTES";
+        Cat: 7;
+        Classe: "III"
+    };
+    {
+        IATA: "BGX";
+        ICAO: "SBBG";
+        Bloco: "SUL";
+        Aeroporto: "BAGÉ";
+        Cat: 0;
+        Classe: "I"
+    };
+    {
+        IATA: "IGU";
+        ICAO: "SBFI";
+        Bloco: "SUL";
+        Aeroporto: "FOZ DO IGUAÇU";
+        Cat: 7;
+        Classe: "III"
+    };
+    {
+        IATA: "LDB";
+        ICAO: "SBLO";
+        Bloco: "SUL";
+        Aeroporto: "LONDRINA";
+        Cat: 7;
+        Classe: "II"
+    };
+    {
+        IATA: "PET";
+        ICAO: "SBPK";
+        Bloco: "SUL";
+        Aeroporto: "PELOTAS";
+        Cat: 5;
+        Classe: "I"
+    };
+    {
+        IATA: "URG";
+        ICAO: "SBUG";
+        Bloco: "SUL";
+        Aeroporto: "URUGUAIANA";
+        Cat: 5;
+        Classe: "I"
+    }
+);;
+
+// ---------- Identificação do usuário ----------
+// ATENÇÃO: o 318 é o primeiro argumento do Coalesce, que devolve o primeiro
+// valor não vazio. Ou seja, o app roda SEMPRE como o usuário 318; o Param e o
+// LookUp nunca são alcançados. Mantive como estava — comportamento idêntico ao
+// de hoje. Para voltar ao usuário real, apagar o "318;" da linha abaixo.
+varIdUser = Coalesce(
+    318;
+    Value(Param("USUARIO"));
+    LookUp(
+        User;
+        usrNome = User().FullName
+    ).ID
+);;
+
+// Substitui o With() do OnStart: um LookUp só, reaproveitado por todas as
+// fórmulas abaixo.
+nfUsuario = LookUp(
+    User;
+    ID = varIdUser
+);;
+
+varNomeUser = nfUsuario.usrNome;;
+varEmailUser = nfUsuario.Email;;
+varFuncaoUser = nfUsuario.Funcao;;
+varBlocoUser = nfUsuario.Bloco;;
+varClusterUser = nfUsuario.Cluster;;
+varAeroUser = nfUsuario.Aeroporto;;
+varPerfilUser = nfUsuario.Perfil;;
+varAutUser = nfUsuario.Autorizacao;;
+varPerfilSafety = nfUsuario.View_safety = 1;;
+
+// ---------- Foto do usuário ----------
+// Hoje isso é uma chamada ao Office 365 em toda abertura do app, e nenhuma tela
+// lê varFotoUser. Como fórmula nomeada, a chamada só acontece se alguém usar.
+varFotoUser = UsuáriosdoOffice365.UserPhoto(
+    First(
+        UsuáriosdoOffice365.SearchUser({searchTerm: varNomeUser})
+    ).Id
+);;
+
+// ---------- ICAO / IATA do aeroporto do usuário ----------
+nfAeroUser = LookUp(
+    colAeros;
+    Aeroporto = varAeroUser
+);;
+
+varICAOUser = nfAeroUser.ICAO;;
+varIATAUser = nfAeroUser.IATA;;
+
+// ---------- Telas por tipo de ocorrência ----------
+col_NavTelas = Table(
+    {
+        Id: 40;
+        TelaListar: ScreenColisaoVeiculos
+    };
+    {
+        Id: 37;
+        TelaListar: ScreenDerramamentoFluido
+    };
+    {
+        Id: 39;
+        TelaListar: ScreenExcursaoPista
+    };
+    {
+        Id: 125;
+        TelaListar: ScreenFauna
+    };
+    {
+        Id: 38;
+        TelaListar: ScreenIncursaoPista
+    };
+    {
+        Id: 41;
+        TelaListar: ScreenInterferenciaExterna
+    };
+    {
+        Id: 43;
+        TelaListar: ScreenJetBlast
+    };
+    {
+        Id: 36;
+        TelaListar: ScreenOcorrenciaSolo
+    };
+    {
+        Id: 131;
+        TelaListar: ScreenFOD
+    };
+    {
+        Id: 139;
+        TelaListar: ScreenCSO
+    };
+    {
+        Id: 127;
+        TelaListar: ScreenVistoriaSafetyFauna
+    }
+);;
+
+// ---------- Módulos do menu ----------
+col_menuModulos = If(
+    varPerfilSafety;
+    Filter(
+        tbl_Modulos;
+        (Menu.Value = "Pátios e Pistas" && SubMenu.Value = "Safety") || Titulo = "Fauna"
+    );
+    Filter(
+        tbl_Modulos;
+        Identificador <> "VIS-SAF" And Identificador <> "CSO";
+        (Menu.Value = "Pátios e Pistas" && SubMenu.Value = "Safety") || Titulo = "Fauna"
+    )
+)

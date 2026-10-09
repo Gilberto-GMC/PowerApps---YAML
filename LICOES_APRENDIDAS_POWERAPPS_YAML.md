@@ -2403,3 +2403,78 @@ Validação preventiva: **não automatizável no validador de YAML.** O arquivo 
 certo. O que dá para automatizar é o inverso — gerar, junto com a entrega, a
 tabela de `X`/`Y` esperados dos filhos de cada Gallery, para conferência manual
 em tela.
+
+## `GroupContainer` ManualLayout sem `Width` declarada dentro de AutoLayout (2026-10-09)
+
+**Projeto/telas:** SAFETY — as 8 telas `Screen*Detalhes`.
+
+**Sintoma:** ao colar o YAML da tela no Studio, o conteúdo colapsa numa coluna
+estreita; rótulos aparecem cortados em ~30px e textos "vazam" para fora do
+container. O cabeçalho e as cores entram corretos.
+
+**Hipótese que foi REFUTADA:** "a colagem descarta geometria literal (`X: =875`)
+e preserva geometria em fórmula (`Width: =Parent.Width`)". Seis medições em tela
+eram compatíveis com ela, mas a medição seguinte derrubou: a tela
+`ScreenDerramamentoForms` tem **374 geometrias literais, 4 em fórmula e 7
+containers ManualLayout** — e cola perfeitamente. Literal não é o problema.
+Registrado aqui para não voltar a ser proposta.
+
+**Causa PROVAVEL, nao confirmada (ler a contraprova no fim):** em 5 das 8 telas, o container de
+conteúdo (`Container38_1`, `Container38_5`, `Container38_2`, `Container38_4`,
+`Container38`) é `Variant: ManualLayout`, é filho de um AutoLayout, e **não
+declara `Width` nenhuma** — numa delas (`Container38`, Ocorrência de Solo) a
+`Height` está declarada vazia (`Height: =`). No app isso funciona porque o motor
+de AutoLayout estica o filho no eixo transversal; o valor nunca precisou existir.
+O arquivo exportado herda essa ausência, e na colagem o container não tem
+tamanho intrínseco para herdar. A tela irmã que colava melhor
+(`ScreenColisaoVeiculosDetalhes` / `Container38_3`) é a única que já declarava
+`Width: =Parent.Width`.
+
+**Correção:** declarar explicitamente o tamanho de todo `GroupContainer`
+ManualLayout que seja filho de AutoLayout. Nas 8 telas foram 10 linhas:
+
+| tela | container | antes | depois |
+|---|---|---|---|
+| Derramamento | `Container38_1` | (ausente) | `Width: =Parent.Width` |
+| Excursão de Pista | `Container38_5` | (ausente) | `Width: =Parent.Width` |
+| Incursão de Pista | `Container38_2` | (ausente) | `Width: =Parent.Width` |
+| Interferência Externa | `Container38_4` | (ausente) | `Width: =Parent.Width` |
+| Acesso Indevido Fauna | `Container38_7` | `=1103` | `Width: =Parent.Width` |
+| Colisão de Veículos | `Container3_32` | `=1138` | `Width: =Parent.Width` |
+| Jet Blast | `Container38_8` | `=1101` | `Width: =Parent.Width` |
+| Ocorrência de Solo | `Container38` | (ausente) + `Height: =` | `Width: =Parent.Width` + `Height: =Parent.Height` |
+
+Nos três casos de `Width` literal a troca é fiel, não cosmética: foi **medido em
+tela** que o AutoLayout já esticava esses containers (`Container3_32` declarava
+`=1138` e lia **1920**). Declarar `=Parent.Width` escreve no arquivo o que o
+motor já fazia.
+
+**Contraprova — por que a causa não está fechada:** o verificador criado para
+esta regra (`SAFETY/build/checar_geometria.js`) acusa o mesmo padrão em
+`ScreenDerramamentoForms`, `ScreenIncursaoPistaForms`, `ScreenJetBlastForms` e
+outras — **telas que colam corretamente**. Logo, ManualLayout sem `Width` dentro
+de AutoLayout é *indício de risco*, não defeito garantido. A correção aplicada é
+fiel e inofensiva (escreve no arquivo o tamanho que o motor já calculava), mas
+**não foi validada em tela**. O único defeito inequívoco das 8 telas é a
+`Height: =` vazia da Ocorrência de Solo.
+
+**Validação preventiva — automatizável:** varrer o YAML e **avisar** (não reprovar) todo
+`GroupContainer` `Variant: ManualLayout` cujo pai seja `Variant: AutoLayout` e
+que não declare `Width` **e** `Height`, e toda propriedade de geometria com valor
+vazio (`Height: =`). Vale também o inverso: `Variant: AutoLayout` com filhos que
+declaram `X`/`Y` — ali a geometria é ignorada por projeto e pode enganar na
+leitura do arquivo.
+
+**Nota de método:** a confirmação não veio de medir pixels na tela, veio de
+comparar o arquivo que quebra com o arquivo que cola bem. Antes disso ficou
+provado por `diff` contra o commit que **as 8 telas não tinham nenhuma diferença
+de geometria ou layout em relação ao export do próprio app** (só cor) — ou seja,
+o defeito já vinha do export, não da recoloração.
+
+### Dois defeitos pré-existentes encontrados no caminho
+
+1. `ScreenDerramamentoDetalhes` / `GalleryDerFluDetImg`: `Height: =var_HGallery`
+   e `Width: =var_WGallery`. Nenhuma das duas variáveis recebe `Set()` ou
+   `UpdateContext()` em lugar algum do app — a galeria é 0×0. Vem do export.
+2. `ScreenOcorrenciaSoloDetalhes` / `Container38`: `Height: =` vazia (corrigida
+   acima).
