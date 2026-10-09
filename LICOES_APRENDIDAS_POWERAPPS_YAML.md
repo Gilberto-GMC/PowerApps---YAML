@@ -2507,3 +2507,42 @@ reabrir o Studio. Só depois varrer as origens com
 
 **Custo de não saber disso:** um ciclo inteiro de diagnóstico em cima de duas
 hipóteses erradas (nome da tela trocado, botão de origem quebrado).
+
+## CONFIRMADO: `Width` em fórmula faz os filhos perderem o `X` na colagem (2026-10-09)
+
+Fecha a lição anterior (`X` dos filhos do template de Gallery se perde na
+colagem), que ficou com a causa em aberto.
+
+**Experimento controlado.** `ScreenDerramamentoForms` tem dois painéis gêmeos
+dentro do mesmo `ContainerDerFlu1`, colados no mesmo Ctrl+V — mesma
+profundidade, mesmo tipo (`GroupContainer` / `ManualLayout`), mesma estrutura de
+grupos, filhos com geometria toda literal:
+
+| painel | `Width` declarada | filhos perderam o `X`? |
+|---|---|---|
+| `cntDerFluAeroCampos` | `=Parent.Width` | **sim, 26 de 26** |
+| `cntDerFluOutrosCampos` | `=880` | **não, nenhum** |
+
+Trocada a largura do primeiro para `=880`, **os 26 `X` passaram a sobreviver** —
+confirmado em tela pelo Douglas.
+
+**Só o `X` se perde.** `Y`, `Width` e `Height` dos filhos chegam corretos nos
+três casos medidos (galeria da FOD, galeria de envolvidos da Colisão, painel de
+aeronave da Derramamento). O valor perdido vira **`1`**, ou a propriedade some.
+
+**Limite conhecido:** não é regra universal. O `Container14` da mesma tela
+também declara `=Parent.Width` e **não** perdeu nada. Portanto a largura em
+fórmula é condição favorável ao defeito, não causa suficiente. Entre dois
+irmãos idênticos, porém, foi a única variável — e a correção funcionou.
+
+**Regra de entrega:** em `GroupContainer` ManualLayout e em template de Gallery
+cujos filhos dependam de `X`, declarar a largura do container como **número
+literal**. Se a largura precisar ser elástica, o `X` dos filhos tem de ser
+conferido em tela depois da colagem.
+
+**Correção quando já quebrou:** digitar o valor na caixa **X** do painel de
+propriedades do Studio. Fica. Recolar o YAML não resolve.
+
+**Validação preventiva — automatizável:** acusar todo `GroupContainer`
+ManualLayout ou Gallery cuja `Width` seja fórmula E que tenha filho declarando
+`X` literal. É o retrato exato dos três casos medidos.
