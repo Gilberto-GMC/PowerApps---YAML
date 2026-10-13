@@ -15,7 +15,7 @@ Decisões de negócio (respostas do usuário em 2026-09-18, ver AUDITORIA_APH.md
      acionamento da equipe e da abertura de porta; fora de voo, a ambulância vem
      depois do início do atendimento;
   2. o formulário é preenchido depois do atendimento, a partir da ficha;
-  3. empresa/CNPJ só para CESSIONARIO COMERCIAL;
+  3. empresa/CNPJ para cessionário comercial, passageiro e tripulante (cia aérea);
   4. R$ 150 só para posto médico de CURITIBA (aeroporto do registro);
   5. limites dos alertas decididos aqui (LIMITES).
 """
@@ -608,7 +608,14 @@ UpdateContext(
     }
 );"""
 
-CESSIONARIO = 'DataCardValue10_2.Selected.Value = "CESSIONARIO COMERCIAL"'
+# Empresa e CNPJ: cessionário comercial (é quem paga) e também passageiro e
+# tripulante, identificados pela companhia aérea (usuário, 2026-09-25).
+# "in [...]" já era usado nesta tela (validação do tipo de ambulância no export).
+COM_EMPRESA = ('DataCardValue10_2.Selected.Value in [\n'
+               '    "CESSIONARIO COMERCIAL",\n'
+               '    "PASSAGEIRO",\n'
+               '    "TRIPULANTE"\n'
+               ']')
 
 
 # ----------------------------------------------------------------------------
@@ -670,12 +677,12 @@ def operacoes():
     s('NÚMERO DO VOO_DataCard1_1', 'Required', 'Self.Visible', 'DataCardValue71_1.Checked')
 
     # empresa/CNPJ: só para cessionário comercial (resposta 3)
-    s('INFORME A EMPRESA/RAZÃO SOCIAL_DataCard1_2', 'Required', CESSIONARIO, '<> "VISITANTE"')
-    s('INFORME A EMPRESA/RAZÃO SOCIAL_DataCard1_2', 'Visible', CESSIONARIO, '<> "VISITANTE"')
+    s('INFORME A EMPRESA/RAZÃO SOCIAL_DataCard1_2', 'Required', COM_EMPRESA, '<> "VISITANTE"')
+    s('INFORME A EMPRESA/RAZÃO SOCIAL_DataCard1_2', 'Visible', COM_EMPRESA, '<> "VISITANTE"')
     s('ComboBoxRazaoSocial_1', 'DefaultSelectedItems', 'Filter(colEmpresasAtivas, RazaoSocial = Parent.Default)', '[Parent.Default]')
     s('ComboBoxRazaoSocial_1', 'OnChange', '', 'var_cnpjAPH')
-    s('CNPJ_DataCard1_2', 'Required', CESSIONARIO, '<> "VISITANTE"')
-    s('CNPJ_DataCard1_2', 'Visible', CESSIONARIO, None)
+    s('CNPJ_DataCard1_2', 'Required', COM_EMPRESA, '<> "VISITANTE"')
+    s('CNPJ_DataCard1_2', 'Visible', COM_EMPRESA, None)
 
     # trocar o tipo de ambulância não apaga mais os horários digitados
     s('DataCardValueRemocao_1', 'OnChange', '', 'Reset(HourValue14_1)')

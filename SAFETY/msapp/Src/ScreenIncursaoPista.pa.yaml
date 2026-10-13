@@ -160,7 +160,7 @@ Screens:
                 Variant: AutoLayout
                 Properties:
                   DropShadow: =DropShadow.None
-                  Fill: =nfCorFundoFraco
+                  Fill: =RGBA(245, 245, 245, 1)
                   FillPortions: =0
                   Height: =80
                   LayoutAlignItems: =LayoutAlignItems.Center
@@ -195,14 +195,6 @@ Screens:
                               ScreenIncursaoPistaForms,
                               ScreenTransition.Fade
                           );
-                          Set(
-                              var_editandoIncPista,
-                              false
-                          );
-                          Set(
-                              var_registroIncPista,
-                              Blank()
-                          );
                           Clear(col_colVeiEnvolvidos);
                           Clear(col_colVeiGalleryImg)
                         Text: ="Cadastrar"
@@ -212,7 +204,7 @@ Screens:
                 Control: Label@2.5.1
                 Properties:
                   AlignInContainer: =AlignInContainer.Stretch
-                  Fill: =nfCorFundoFraco
+                  Fill: =RGBA(245, 245, 245, 1)
                   Height: =10
                   LayoutMaxHeight: =
                   LayoutMaxWidth: =
@@ -223,7 +215,7 @@ Screens:
                 Variant: AutoLayout
                 Properties:
                   DropShadow: =DropShadow.None
-                  Fill: =nfCorFundoFraco
+                  Fill: =RGBA(245, 245, 245, 1)
                   FillPortions: =0
                   Height: =20
                   LayoutDirection: =LayoutDirection.Horizontal
@@ -300,7 +292,7 @@ Screens:
                 Variant: AutoLayout
                 Properties:
                   DropShadow: =DropShadow.None
-                  Fill: =nfCorFundoFraco
+                  Fill: =RGBA(245, 245, 245, 1)
                   FillPortions: =0
                   Height: =60
                   LayoutDirection: =LayoutDirection.Horizontal
@@ -321,12 +313,12 @@ Screens:
                   - cmbIncPistaBloco:
                       Control: Classic/DropDown@2.3.1
                       Properties:
-                        BorderColor: =nfCorBorda
+                        BorderColor: =RGBA(0, 0, 0, 1)
                         BorderThickness: =1
                         ChevronBackground: =RGBA(0, 0, 0, 0)
                         ChevronFill: =RGBA(0, 0, 0, 1)
                         ChevronHoverBackground: =RGBA(0, 0, 0, 0)
-                        ChevronHoverFill: =nfCorPrimaria
+                        ChevronHoverFill: =RGBA(0, 0, 0, 1)
                         Default: |-
                           =If(
                               varPerfilUser = "Base",
@@ -354,12 +346,12 @@ Screens:
                   - cmbIncPistaAeroporto:
                       Control: Classic/DropDown@2.3.1
                       Properties:
-                        BorderColor: =nfCorBorda
+                        BorderColor: =RGBA(0, 0, 0, 1)
                         BorderThickness: =1
                         ChevronBackground: =RGBA(0, 0, 0, 0)
                         ChevronFill: =RGBA(0, 0, 0, 1)
                         ChevronHoverBackground: =RGBA(0, 0, 0, 0)
-                        ChevronHoverFill: =nfCorPrimaria
+                        ChevronHoverFill: =RGBA(0, 0, 0, 1)
                         Default: |-
                           =If(
                               varPerfilUser = "Base",
@@ -389,7 +381,7 @@ Screens:
                   - dtpIncPistaDtfInicio:
                       Control: Classic/DatePicker@2.6.0
                       Properties:
-                        BorderColor: =nfCorBorda
+                        BorderColor: =RGBA(0, 0, 0, 1)
                         BorderThickness: =1
                         DefaultDate: |-
                           =If(
@@ -416,7 +408,7 @@ Screens:
                   - dtpIncPistaDtfTermino:
                       Control: Classic/DatePicker@2.6.0
                       Properties:
-                        BorderColor: =nfCorBorda
+                        BorderColor: =RGBA(0, 0, 0, 1)
                         BorderThickness: =1
                         DefaultDate: =Today() + 1
                         Fill: =RGBA(250, 250, 250, 1)
@@ -437,12 +429,12 @@ Screens:
                   - cmbStatus_5:
                       Control: Classic/DropDown@2.3.1
                       Properties:
-                        BorderColor: =nfCorBorda
+                        BorderColor: =RGBA(0, 0, 0, 1)
                         BorderThickness: =1
                         ChevronBackground: =RGBA(0, 0, 0, 0)
                         ChevronFill: =RGBA(0, 0, 0, 1)
                         ChevronHoverBackground: =RGBA(0, 0, 0, 0)
-                        ChevronHoverFill: =nfCorPrimaria
+                        ChevronHoverFill: =RGBA(0, 0, 0, 1)
                         Default: =""
                         Fill: =RGBA(250, 250, 250, 1)
                         Height: =30
@@ -467,7 +459,7 @@ Screens:
                   - txtIncPistaBuscar:
                       Control: Classic/TextInput@2.3.2
                       Properties:
-                        BorderColor: =nfCorBorda
+                        BorderColor: =RGBA(0, 0, 0, 1)
                         BorderThickness: =1
                         Default: =
                         Height: =30
@@ -786,41 +778,14 @@ Screens:
                               Appearance: ='ButtonCanvas.Appearance'.Secondary
                               BorderRadius: =0
                               BorderStyle: =BorderStyle.None
-                              DisplayMode: =DisplayMode.Edit
+                              DisplayMode: =DisplayMode.Disabled
                               Height: =30
                               Icon: ="Edit"
                               IconStyle: ='ButtonCanvas.IconStyle'.Filled
                               Layout: ='ButtonCanvas.Layout'.IconBefore
                               LayoutMaxHeight: =
                               LayoutMaxWidth: =
-                              OnSelect: |-
-                                =Navigate(
-                                    ScreenIncursaoPistaForms,
-                                    ScreenTransition.Fade,
-                                    {
-                                        var_editandoIncPista: true,
-                                        var_registroIncPista: ThisItem
-                                    }
-                                );
-                                Clear(col_incPistaEnvolvidos);
-                                ClearCollect(
-                                    col_incPistaImg,
-                                    ForAll(
-                                        Filter(
-                                            '14.3-tbl_IncPistaImg',
-                                            incPistaImg_idOcorrencia = ThisItem.incPista_id
-                                        ),
-                                        {
-                                            dbId: ID,
-                                            id: ID,
-                                            img: incPistaImg_imagem
-                                        }
-                                    )
-                                );
-                                ClearCollect(
-                                    col_incPistaImg_orig,
-                                    col_incPistaImg
-                                )
+                              OnSelect: =
                               PaddingBottom: =5
                               PaddingLeft: =5
                               PaddingRight: =5
@@ -905,7 +870,7 @@ Screens:
                               Appearance: ='ButtonCanvas.Appearance'.Secondary
                               BorderRadius: =0
                               BorderStyle: =BorderStyle.None
-                              FontColor: =nfCorErro
+                              FontColor: =RGBA(255, 0, 0, 1)
                               Height: =30
                               Icon: ="Delete"
                               IconStyle: ='ButtonCanvas.IconStyle'.Filled
@@ -918,8 +883,7 @@ Screens:
                                     ScreenTransition.Fade,
                                     {
                                         var_modulo: var_tituloModulo,
-                                        var_item_id: ThisItem.ID,
-                                        var_item_chave: ThisItem.incPista_id,
+                                        var_item: ThisItem,
                                         var_protocolo: Label_protocolo_8.Text
                                     }
                                 )

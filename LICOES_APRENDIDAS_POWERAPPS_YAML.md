@@ -143,6 +143,129 @@ containers e controles de galeria.
 Prevenção: extrair todos os nomes definidos por `- NomeControle:` e reprovar
 qualquer repetição antes da entrega.
 
+### PA2110 quando dois geradores escrevem a mesma tela (2026-09-24)
+
+- Projeto/tela: SAFETY / os 7 módulos de ocorrência.
+- Contexto: `build/gerar_aeroporto_forms.py` passou a inserir o seletor de
+  aeroporto (`cmbFrm<K>Aeroporto`) direto em `msapp/Src`, que é a **fonte** lida
+  por `build/gerar.py` — e o `gerar.py` já inseria um controle de mesmo nome na
+  tela consolidada que produz. Rodar o pipeline depois colocaria os dois na
+  mesma tela.
+- Não chegou ao Studio: `valida.py` reprova nome duplicado antes. A causa, porém,
+  é genérica: **quando um gerador passa a escrever no arquivo-fonte de outro,
+  toda inserção por nome vira candidata a duplicata.**
+- Correção: a inserção passou a ser condicionada à ausência do nome no texto de
+  origem.
+- Prevenção: todo gerador que INSERE controle precisa ser idempotente por nome
+  *e* verificar se a fonte já traz aquele nome — nunca assumir que a fonte é o
+  export intocado.
+
+### YAML: bloco literal `|-` sem recuo derruba o arquivo inteiro (2026-09-24)
+
+- Projeto: SAFETY / formulários dos módulos.
+- Mensagem (PyYAML, antes de chegar ao Studio): `while scanning a simple key` +
+  `could not find expected ':'`.
+- Causa confirmada: o gerador escreveu `Default: |-` e as linhas da fórmula no
+  MESMO recuo da chave. Bloco literal exige recuo **maior** que o da chave; no
+  mesmo nível, a primeira linha da fórmula (`=If(`) é lida como uma nova chave e
+  o parser quebra dezenas de linhas adiante.
+- Correção: linhas de continuação recebem o recuo da chave + 2.
+- Prevenção: carregar todo arquivo gerado com o PyYAML antes de entregar.
+  O Studio recusa a colagem inteira sem dizer onde está o erro; o PyYAML aponta a
+  linha.
+- **Correção (2026-09-24, mesmo dia):** usar `yaml.load(f, Loader=yaml.BaseLoader)`,
+  **não** `yaml.safe_load`. O `SafeLoader` recusa o `=` sozinho de
+  `LayoutMaxHeight: =` (resolve para a tag `tag:yaml.org,2002:value` e diz *could
+  not determine a constructor*) — e o Studio exporta essa linha em quase todo
+  controle de AutoLayout. Com `safe_load`, o próprio export original reprova e o
+  checador vira ruído. O `BaseLoader` continua pegando o erro de recuo do `|-`.
+  Visto em `SAFETY/build/validar_aeroporto.py`: as 12 telas reprovaram no
+  `safe_load` e passaram no `BaseLoader`.
+
+### Coluna com prefixo de outro módulo NÃO é, sozinha, bug de cópia (2026-09-24)
+
+- Data: 2026-09-24. Projeto/tela: SAFETY / `ScreenAcessIndFaunaDetalhes` (e, por
+  tabela, `ScreenExcursaoPista`, `ScreenJetBlast`, `ScreenColisaoVeiculos`).
+- Sintoma aparente: a tela de detalhes lia
+  `var_aceIndFaunaSelect.derFlu_aeroporto`, `.derFlu_data`, `.colVei_danos`,
+  `.intExt_tempo` — prefixos de **outros** módulos. Diagnóstico natural (e
+  errado): "bug de copiar/colar, o campo sai em branco".
+- Causa confirmada, lendo `msapp/References/DataSources.json`: **cinco das oito
+  listas deste app foram criadas copiando a lista de Derramamento**. No
+  SharePoint, renomear uma coluna muda só o **nome de exibição**; o **nome
+  interno** fica o da criação. O export registra os dois:
+
+  ```json
+  "properties": { "derFlu_aeroporto": { "title": "aceIndFauna_aeroporto", ... } }
+  //                ^ nome interno              ^ nome de exibição
+  ```
+
+  E há o mapa explícito `ConnectedDataSourceInfoNameMapping`
+  (`{"derFlu_data": "aceIndFauna_data", ...}`).
+- O Power Apps aceita **as duas formas** em fórmula sobre SharePoint. Neste app
+  as duas convivem: a tela de detalhes usa o nome interno e o `Patch` do
+  formulário, a galeria e os filtros usam o de exibição — tudo em produção.
+- Correção aplicada: padronizar pelo nome de exibição **depois de conferir par a
+  par no mapeamento do export** — nunca deduzindo pelo rótulo da tela.
+- **Risco real do diagnóstico apressado**: "consertar" `derFlu_numVooOrigem`
+  para `colVei_numVooOrigem` quebraria a tela, porque em `14.4-tbl_ColVeiculos`
+  esse interno é, na verdade, `colVei_descOcorrencia`. O nome "óbvio" não existe.
+
+Prevenção (implementada em `SAFETY/build/checar_escopo_safety.py`): validar toda
+coluna citada contra a **união** de nomes internos e de exibição extraída do
+`DataEntityMetadataJson` da lista. Reprovar por prefixo é falso positivo; o que
+reprova de verdade é o nome não existir em nenhuma das duas formas.
+
+Impacto global: antes de tratar `<prefixo alheio>_<campo>` como bug de cópia em
+qualquer projeto deste workspace, abrir `References/DataSources.json` e conferir
+se aquele é o nome interno da própria lista.
+
+### "Nenhum tipo encontrado para a variável X" — contexto do Navigate × Set global (2026-09-24)
+
+- Data: 2026-09-24. Projeto/tela: SAFETY / as 7 telas de lista dos módulos
+  (`ScreenColisaoVeiculos` e irmãs). Erro visto no Studio, em produção.
+- Mensagem completa:
+
+  ```text
+  Nenhum tipo encontrado para a variável 'var_registroColVei'. Certifique-se de
+  que ela esteja Set como um valor que não esteja em Blank em algum lugar no
+  aplicativo.
+  ```
+
+- Causa confirmada: dois botões da MESMA tela alimentavam os MESMOS nomes por
+  mecanismos diferentes —
+
+  ```powerfx
+  // botão "Editar" — 3º argumento do Navigate cria variável de CONTEXTO
+  Navigate(ScreenColisaoVeiculosForms, ScreenTransition.Fade,
+           {var_editandoColVei: true, var_registroColVei: ThisItem})
+
+  // botão "Cadastrar" — Set cria variável GLOBAL
+  Set(var_editandoColVei, false); Set(var_registroColVei, Blank())
+  ```
+
+  São **duas variáveis distintas com o mesmo nome**. A global só recebia
+  `Blank()`; sem nenhum valor tipado em lugar nenhum, o Studio não infere o tipo.
+
+- Agravante silencioso, pior que o erro: os `Default` do formulário liam
+  `var_registro<K>.<coluna>`. Qual das duas o controle enxerga depende do
+  escopo — o formulário só tinha dado vindo pelo caminho do "Editar".
+- Correção: o "Editar" passou a `Set(var_editando<K>, true); Set(var_registro<K>,
+  ThisItem);` **antes** do `Navigate`, e o `Navigate` perdeu o 3º argumento.
+  Nenhuma fórmula de controle mudou — os nomes continuam os mesmos, só deixam
+  de ser de contexto.
+- Validação preventiva (`SAFETY/build/checar_variaveis.py`, reaproveitável):
+  1. varrer todo `Set(nome, valor)` do app e reprovar nome cujo conjunto de
+     valores seja **somente** `Blank()`;
+  2. reprovar nome usado como contexto de `Navigate` que também apareça em
+     `Set()` em qualquer tela.
+
+  Rodado contra a versão anterior do arquivo, reproduz exatamente a mensagem do
+  Studio — antes da colagem.
+- Impacto global: esse par é **indetectável tela a tela**; o Verificador de
+  fórmula de cada controle passa. Só aparece varrendo o app inteiro. Vale para
+  qualquer projeto que use `Navigate` com contexto.
+
 ### Referência a controle inexistente
 
 Exemplo encontrado: `txtPresencaFaunaQuantidade` permaneceu na validação do
@@ -2216,3 +2339,29 @@ Causas confirmadas (quatro, todas invisíveis para os validadores locais, porque
 Validação preventiva: **não automatizada ainda.** Ficou pendente um verificador que, para cada coleção, compare as chaves dos registros de todo `Collect`/`ClearCollect`/`Patch` que a povoa, e outro que confira que toda tela citada em `Navigate` tem arquivo em `out/`. O Verificador do Studio é hoje o único que pega o defeito; ele pode só reavaliar a checagem de tipo entre telas depois de salvar (não confirmado: com o código corrigido colado e sem salvar, os erros continuaram).
 
 **Regra:** uma coleção ou variável de contexto tem um formato só, em todos os pontos que a escrevem. Para passar dados entre telas, mande escalares ou uma tabela de formato fixo, nunca `ThisItem` de fontes diferentes na mesma variável. Antes de dizer que uma entrega está completa, conferir que toda tela referenciada existe em `out/`.
+
+## Tela de entrega em lote colada isolada: variável do OnStart novo "não é reconhecida" (2026-09-23)
+
+- Projeto/tela: Inspeções / `frmCheckListGenericoEQP` (`out/15_…`), `cmbCLGbloco.DisplayMode`.
+- Mensagem: `O nome não é válido. 'varModoFiltroBloco' não é reconhecido.`
+
+Causa confirmada: a tela veio da entrega ABCD, em que a cirurgia C5 trocou a
+fórmula de perfil repetida em cada combo por variáveis calculadas uma vez no
+**App.OnStart novo** (`varModoFiltroAero`, `varModoFiltroBloco`, `varBlocoPadrao`).
+A tela foi colada sozinha, com o OnStart antigo ainda no app: nenhum `Set` da
+variável existe, e o Studio acusa nome desconhecido. O erro de entrega foi meu:
+o checklist de outra tela mandou "colar a out/15 primeiro" sem dizer que ela
+depende do OnStart da mesma entrega.
+
+Correção: acrescentar ao OnStart atual só os `Set` que faltam (mesmo texto do
+OnStart novo, para a colagem completa posterior não mudar nada) e executar o
+OnStart no Studio.
+
+Validação preventiva: `Inspeções/build/checar_dependencias_app.py` (no
+`entregar.sh`) lista, por tela de `out/`, as variáveis que só existem no OnStart
+novo e as `nf*` do App.Formulas novo. Aceita arquivo avulso como argumento.
+
+**Regra:** tela de entrega em lote não é autônoma. Ao recomendar colar uma tela
+fora da ordem do LEIA-ME, listar junto o que ela exige do App (variáveis do
+OnStart, named formulas, coleções carregadas por outra tela) e entregar o trecho
+mínimo para suprir isso.

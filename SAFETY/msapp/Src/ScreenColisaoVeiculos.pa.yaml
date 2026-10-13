@@ -146,7 +146,7 @@ Screens:
                 Variant: AutoLayout
                 Properties:
                   DropShadow: =DropShadow.None
-                  Fill: =nfCorFundoFraco
+                  Fill: =RGBA(245, 245, 245, 1)
                   FillPortions: =0
                   Height: =80
                   LayoutAlignItems: =LayoutAlignItems.Center
@@ -181,14 +181,6 @@ Screens:
                               ScreenColisaoVeiculosForms,
                               ScreenTransition.Fade
                           );
-                          Set(
-                              var_editandoColVei,
-                              false
-                          );
-                          Set(
-                              var_registroColVei,
-                              Blank()
-                          );
                           Clear(col_colVeiEnvolvidos);
                           Clear(col_colVeiGalleryImg)
                         Text: ="Cadastrar"
@@ -198,7 +190,7 @@ Screens:
                 Control: Label@2.5.1
                 Properties:
                   AlignInContainer: =AlignInContainer.Stretch
-                  Fill: =nfCorFundoFraco
+                  Fill: =RGBA(245, 245, 245, 1)
                   Height: =10
                   LayoutMaxHeight: =
                   LayoutMaxWidth: =
@@ -209,7 +201,7 @@ Screens:
                 Variant: AutoLayout
                 Properties:
                   DropShadow: =DropShadow.None
-                  Fill: =nfCorFundoFraco
+                  Fill: =RGBA(245, 245, 245, 1)
                   FillPortions: =0
                   Height: =20
                   LayoutDirection: =LayoutDirection.Horizontal
@@ -286,7 +278,7 @@ Screens:
                 Variant: AutoLayout
                 Properties:
                   DropShadow: =DropShadow.None
-                  Fill: =nfCorFundoFraco
+                  Fill: =RGBA(245, 245, 245, 1)
                   FillPortions: =0
                   Height: =60
                   LayoutDirection: =LayoutDirection.Horizontal
@@ -307,12 +299,12 @@ Screens:
                   - cmbHomeBloco_1:
                       Control: Classic/DropDown@2.3.1
                       Properties:
-                        BorderColor: =nfCorBorda
+                        BorderColor: =RGBA(0, 0, 0, 1)
                         BorderThickness: =1
                         ChevronBackground: =RGBA(0, 0, 0, 0)
                         ChevronFill: =RGBA(0, 0, 0, 1)
                         ChevronHoverBackground: =RGBA(0, 0, 0, 0)
-                        ChevronHoverFill: =nfCorPrimaria
+                        ChevronHoverFill: =RGBA(0, 0, 0, 1)
                         Default: |-
                           =If(
                               varPerfilUser = "Base",
@@ -340,12 +332,12 @@ Screens:
                   - cmbHomeAeroporto_1:
                       Control: Classic/DropDown@2.3.1
                       Properties:
-                        BorderColor: =nfCorBorda
+                        BorderColor: =RGBA(0, 0, 0, 1)
                         BorderThickness: =1
                         ChevronBackground: =RGBA(0, 0, 0, 0)
                         ChevronFill: =RGBA(0, 0, 0, 1)
                         ChevronHoverBackground: =RGBA(0, 0, 0, 0)
-                        ChevronHoverFill: =nfCorPrimaria
+                        ChevronHoverFill: =RGBA(0, 0, 0, 1)
                         Default: |-
                           =If(
                               varPerfilUser = "Base",
@@ -375,7 +367,7 @@ Screens:
                   - dtpHomeDtfInicio_1:
                       Control: Classic/DatePicker@2.6.0
                       Properties:
-                        BorderColor: =nfCorBorda
+                        BorderColor: =RGBA(0, 0, 0, 1)
                         BorderThickness: =1
                         DefaultDate: |-
                           =If(
@@ -402,7 +394,7 @@ Screens:
                   - dtpHomeDtfTermino_1:
                       Control: Classic/DatePicker@2.6.0
                       Properties:
-                        BorderColor: =nfCorBorda
+                        BorderColor: =RGBA(0, 0, 0, 1)
                         BorderThickness: =1
                         DefaultDate: =Today() + 1
                         Fill: =RGBA(250, 250, 250, 1)
@@ -423,12 +415,12 @@ Screens:
                   - cmbHomeStatus_1:
                       Control: Classic/DropDown@2.3.1
                       Properties:
-                        BorderColor: =nfCorBorda
+                        BorderColor: =RGBA(0, 0, 0, 1)
                         BorderThickness: =1
                         ChevronBackground: =RGBA(0, 0, 0, 0)
                         ChevronFill: =RGBA(0, 0, 0, 1)
                         ChevronHoverBackground: =RGBA(0, 0, 0, 0)
-                        ChevronHoverFill: =nfCorPrimaria
+                        ChevronHoverFill: =RGBA(0, 0, 0, 1)
                         Default: =""
                         Fill: =RGBA(250, 250, 250, 1)
                         Height: =30
@@ -453,7 +445,7 @@ Screens:
                   - txtBuscar1_1:
                       Control: Classic/TextInput@2.3.2
                       Properties:
-                        BorderColor: =nfCorBorda
+                        BorderColor: =RGBA(0, 0, 0, 1)
                         BorderThickness: =1
                         Default: =
                         Height: =30
@@ -804,64 +796,14 @@ Screens:
                               Appearance: ='ButtonCanvas.Appearance'.Secondary
                               BorderRadius: =0
                               BorderStyle: =BorderStyle.None
-                              DisplayMode: =DisplayMode.Edit
+                              DisplayMode: =DisplayMode.Disabled
                               Height: =30
                               Icon: ="Edit"
                               IconStyle: ='ButtonCanvas.IconStyle'.Filled
                               Layout: ='ButtonCanvas.Layout'.IconBefore
                               LayoutMaxHeight: =
                               LayoutMaxWidth: =
-                              OnSelect: |-
-                                =Navigate(
-                                    ScreenColisaoVeiculosForms,
-                                    ScreenTransition.Fade,
-                                    {
-                                        var_editandoColVei: true,
-                                        var_registroColVei: ThisItem
-                                    }
-                                );
-                                ClearCollect(
-                                    col_colVeiEnvolvidos,
-                                    ForAll(
-                                        Filter(
-                                            '14.4-tbl_ColVeiculosEnvolvidos',
-                                            colVeiEnv_idOcorrencia = ThisItem.colVei_id
-                                        ),
-                                        {
-                                            dbId: ID,
-                                            id: ID,
-                                            nome: colVeiEnv_nome,
-                                            colete: colVeiEnv_colete,
-                                            empresa: colVeiEnv_empresa,
-                                            codVeiculo: colVeiEnv_codVeiculo,
-                                            empresaProp: colVeiEnv_empresaProp,
-                                            cnhCompativel: colVeiEnv_cnhComp,
-                                            boaCondicao: colVeiEnv_boaCondicoes
-                                        }
-                                    )
-                                );
-                                ClearCollect(
-                                    col_colVeiEnvolvidos_orig,
-                                    col_colVeiEnvolvidos
-                                );
-                                ClearCollect(
-                                    col_colVeiGalleryImg,
-                                    ForAll(
-                                        Filter(
-                                            '14.4-tbl_ColVeiculosImg',
-                                            colVeiImg_idOcorrencia = ThisItem.colVei_id
-                                        ),
-                                        {
-                                            dbId: ID,
-                                            id: ID,
-                                            img: colVeiImg_imagem
-                                        }
-                                    )
-                                );
-                                ClearCollect(
-                                    col_colVeiGalleryImg_orig,
-                                    col_colVeiGalleryImg
-                                )
+                              OnSelect: =
                               PaddingBottom: =5
                               PaddingLeft: =5
                               PaddingRight: =5
@@ -944,7 +886,7 @@ Screens:
                               Appearance: ='ButtonCanvas.Appearance'.Secondary
                               BorderRadius: =0
                               BorderStyle: =BorderStyle.None
-                              FontColor: =nfCorErro
+                              FontColor: =RGBA(255, 0, 0, 1)
                               Height: =30
                               Icon: ="Delete"
                               IconStyle: ='ButtonCanvas.IconStyle'.Filled
@@ -957,8 +899,7 @@ Screens:
                                     ScreenTransition.Fade,
                                     {
                                         var_modulo: var_tituloModulo,
-                                        var_item_id: ThisItem.ID,
-                                        var_item_chave: ThisItem.colVei_id,
+                                        var_item: ThisItem,
                                         var_protocolo: Label_protocolo.Text
                                     }
                                 )

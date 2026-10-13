@@ -37,6 +37,9 @@ echo "── consultas por linha / delegação"
 echo "── erro (OnFailure, retorno de fluxo, named formulas)"
 "$PY" build/checar_erro.py | tail -1
 
+echo "── dependências do App (tela colada isolada exige estes itens do OnStart/Formulas novos)"
+"$PY" build/checar_dependencias_app.py
+
 echo "── variáveis mortas"
 "$PY" build/checar_vars_mortas.py | tail -1
 

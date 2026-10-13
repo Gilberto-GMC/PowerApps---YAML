@@ -220,7 +220,8 @@ O mesmo padrão de hora/minuto aparece em outras 8 telas do app (seção 1). A c
 
    Conferir a saída com o paciente contra o início do atendimento é consequência da regra: em voo a ambulância pode chegar antes de a porta abrir, mas o paciente não sai antes de ser atendido.
 2. **Quando se preenche:** em geral depois do atendimento. Por isso o Nível 3 (tempo real) fica fora; o foco é validar bem o que é transcrito.
-3. **Empresa/CNPJ:** só para cessionário comercial.
+3. **Empresa/CNPJ:** para **cessionário comercial** (é quem paga), **passageiro** e **tripulante** (identificados pela companhia aérea, que tem CNPJ — correção do usuário em 2026-09-25). Nas demais categorias (colaborador, terceiro, órgão público e visitante) o campo não aparece e não é exigido.
+   - A empresa vem do combo, que lista as concessões ativas do aeroporto na planilha `Cessionarios`, e o CNPJ é preenchido a partir dela (o campo é somente leitura). Para passageiro e tripulante, a companhia aérea precisa estar nessa planilha; senão não há como selecionar, e agora o campo é obrigatório.
 4. **R$ 150:** só para o posto médico de Curitiba, pelo aeroporto do registro.
 5. **Limites dos alertas:** o usuário delegou a decisão. Ficaram assim (em `LIMITES`, no gerador):
 
@@ -269,7 +270,7 @@ Resultado da verificação:
 | C2 | valores recalculados também na edição, respeitando a isenção; protocolo gerado se estiver em branco |
 | C5 | moeda como R$ nos rótulos e no relatório |
 | C6 | protocolo com o IATA do registro. A segunda gravação é conferida (`IsError`) e avisa se falhar; salvar de novo corrige |
-| F1, F2 | empresa/CNPJ só aparecem e só são exigidos para cessionário comercial; ao editar, a empresa gravada aparece selecionada |
+| F1, F2 | empresa/CNPJ aparecem e são exigidos para cessionário comercial, passageiro e tripulante (§5); ao editar, a empresa gravada aparece selecionada |
 | F3 | lista de empresas recarregada ao trocar o aeroporto. A consulta ao Excel leva uma condição só; o filtro de concessão ativa fica em memória, no combo (ver §6.5) |
 | F4 | depois de salvar uma edição, o formulário volta para visualização (`ViewForm`) |
 | F5 | "em voo" escondido por chegada espontânea deixa de valer e esconde o número e os horários do voo |
@@ -308,7 +309,7 @@ Resultado da verificação:
 4. Remoção interna com saída 14:32 e retorno 14:33: abre o alerta de ida e volta. "Ajustar" volta ao formulário; "Salvar assim" grava.
 5. Editar um registro antigo sem encerramento: o campo abre vazio, não 00:00, e o Salvar pede o horário.
 6. Cessionário comercial, posto médico: Curitiba sai R$ 150 e outro aeroporto R$ 100. Editar e trocar o tipo de ambulância atualiza o valor (reabrir e conferir).
-7. Passageiro: empresa e CNPJ não aparecem e não são exigidos.
+7. Passageiro e tripulante: empresa e CNPJ aparecem, são exigidos e a companhia aérea é selecionável no combo. Colaborador, terceiro e órgão público: os dois campos não aparecem.
 8. Duplo clique em Salvar num registro novo: um registro só.
 9. Relatório: o PDF abre.
 10. Sem registro selecionado, Editar e Excluir não aparecem.
@@ -345,3 +346,9 @@ Formas de aplicar:
 
 - **Colar a tela inteira de novo (recomendado):** `out/ScreenAPH.pa.yaml`, que já traz também a correção do §6.5. O Salvar tem 11 mil caracteres; colar à mão na barra de fórmulas é onde mais se erra.
 - **Só as quatro fórmulas:** as versões pt-BR, para a barra de fórmulas, estão em `out/ScreenAPH_correcao_porta_ptBR.txt`.
+
+### 6.7 Empresa e CNPJ por categoria (2026-09-25)
+
+Passageiro e tripulante voltaram a exigir empresa e CNPJ, porque são identificados pela companhia aérea (§5). Mudaram quatro propriedades: `Required` e `Visible` dos cartões `INFORME A EMPRESA/RAZÃO SOCIAL_DataCard1_2` e `CNPJ_DataCard1_2`, todas com a mesma fórmula. As versões pt-BR estão em `out/ScreenAPH_correcao_empresa_ptBR.txt`; `out/ScreenAPH.pa.yaml` já está atualizado.
+
+Os literais das categorias (`CESSIONARIO COMERCIAL`, `PASSAGEIRO`, `TRIPULANTE`) têm de ser idênticos aos da coluna CATEGORIA. É o mesmo risco do achado L2, de CCR × MOTIVA: se as opções forem renomeadas na lista, a regra para de casar.
