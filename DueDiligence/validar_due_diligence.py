@@ -1281,9 +1281,14 @@ def main() -> int:
             findings.append(f"metade dos Filter deve restringir à área solicitante; encontrado(s): {area_filters}")
         if fx("_area: cmbDdFiltroArea.Selected.Value") not in fx(items) or fx("If( IsBlank(_area),") not in fx(items):
             findings.append("galDdRegistros.Items: a área entra como ramificação If(IsBlank(_area), ...), fora do Filter")
-        area_combo = (main_controls.get("cmbDdFiltroArea", {}).get("Properties") or {})
-        if str(area_combo.get("Items", "")).strip() != "=cmb_area_solicitante.Items":
-            findings.append("cmbDdFiltroArea deve reutilizar as opções do formulário (cmb_area_solicitante.Items)")
+        # 2026-10-13: Items = cmb_area_solicitante.Items (combo dentro do formulário)
+        # abriu vazio no app. A lista é repetida e conferida aqui contra a do formulário.
+        area_combo = fx(str((main_controls.get("cmbDdFiltroArea", {}).get("Properties") or {}).get("Items", "")))
+        area_form = fx(str((main_controls.get("cmb_area_solicitante", {}).get("Properties") or {}).get("Items", "")))
+        if "cmb_area_solicitante" in area_combo:
+            findings.append("cmbDdFiltroArea não pode ler cmb_area_solicitante.Items (abre vazio no app)")
+        elif not area_form.startswith("=[") or area_combo != area_form:
+            findings.append("cmbDdFiltroArea deve ter exatamente as mesmas áreas de cmb_area_solicitante")
         author_filters = sum("'Criado por'.Email = _email" in body for body in filters)
         if author_filters != 12:
             findings.append(f"metade dos Filter deve restringir ao autor; encontrado(s): {author_filters}")
@@ -3083,8 +3088,15 @@ def main() -> int:
         # já preenchia com Coalesce), visível só para o perfil Compliance.
         on_visible = fx(str((yaml_documents.get(BASE / "ScreenDueDiligence.yaml", {}).get("Screens", {})
                              .get("ScreenDueDiligence", {}).get("Properties") or {}).get("OnVisible", "")))
-        if fx("If( varDdPodeAnalisarCompliance, ClearCollect(colDdAnalistas, tb_dueDiligenceCompliance) )") not in on_visible:
-            findings.append("OnVisible deve carregar colDdAnalistas só para o Compliance (nomes fora da galeria)")
+        for token in (
+            "If( varDdPodeAnalisarCompliance, ClearCollect( colDdAnalistas, ForAll( tb_dueDiligenceCompliance As A,",
+            "email: Lower(Trim(A.email))",
+            # nome curto: primeiro + último (2026-10-13)
+            '_partes: Filter(Split(Trim(A.nome), " "), !IsBlank(Value))',
+            'First(_partes).Value & " " & Last(_partes).Value',
+        ):
+            if fx(token) not in on_visible:
+                findings.append(f"OnVisible: colDdAnalistas sem {token!r} (só Compliance, nome curto, fora da galeria)")
         cab = (main_controls.get("lblDdAnalistaCab", {}).get("Properties") or {})
         linha = (main_controls.get("lblDdAnalista", {}).get("Properties") or {})
         if fx(str(cab.get("Text", ""))) != fx('=If(varDdPodeAnalisarCompliance, "ANALISTA", "")'):
@@ -3108,6 +3120,15 @@ def main() -> int:
         ):
             if fx(token) not in itens:
                 findings.append(f"tbDdAcoes.Items sem {token!r}")
+        if fx('(ItemKey <> "assumir" || ThisItem.status in ["Aguardando Terceiro", "Pendente Compliance"])') not in itens:
+            findings.append("tbDdAcoes.Items: Assumir/Liberar deve sumir das solicitações encerradas")
+        # 2026-10-13, print do app: "Download", "ShieldCheckmark" e "PersonAdd" viram um
+        # círculo vazio no Toolbar; Eye/Edit/Send/Delete aparecem. Só nomes comprovados
+        # em export real do Studio (pastas msapp/Src do repositório).
+        icones_ok = {"Eye", "Edit", "Send", "Delete", "DocumentBulletList", "People", "DismissCircle", "DocumentPdf"}
+        for icone in re.findall(r'"([A-Za-z]+)"', " ".join(re.findall(r"ItemIconName: ([^\n]+?),\s*Item", itens))):
+            if icone not in icones_ok:
+                findings.append(f"tbDdAcoes: ícone {icone!r} sem comprovação (no Toolbar vira círculo vazio)")
         acao = fx(str((main_controls.get("tbDdAcoes", {}).get("Properties") or {}).get("OnSelect", "")))
         inicio = acao.find('"assumir", If(')
         fim = acao.find('"terceiro",', inicio)

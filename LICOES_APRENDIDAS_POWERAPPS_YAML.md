@@ -2420,3 +2420,37 @@ quando a função aceita argumentos extras.
   também tira o espaço colado aos delimitadores, aplicado ao token e à fórmula.
 - `Created` virou `Criado` (nome de exibição no Studio pt-BR). As duas formas
   funcionam no SharePoint (ver a lição de nome interno × exibição); não reverter.
+
+
+## Toolbar@2.0.5: nome de ícone desconhecido vira círculo vazio, sem erro (2026-10-13)
+
+- Projeto/tela: DueDiligence / `ScreenDueDiligence`, `tbDdAcoes` (menu "…" da galeria).
+- Sintoma (print do app publicado): "Baixar Laudo" (`"Download"`), "Analisar"
+  (`"ShieldCheckmark"`) e "Assumir" (`"PersonAdd"`) com um círculo vazio no lugar do
+  ícone. `"Eye"`, `"Edit"`, `"Send"` e `"Delete"` aparecem normalmente. Nenhum aviso
+  no Studio.
+- Causa confirmada pelo print: `ItemIconName` não aceita qualquer nome do catálogo
+  Fluent. `Download` nem existe no Fluent (lá é `ArrowDownload`). `PersonAdd` e
+  `ShieldCheckmark` existem e também não renderizaram.
+- Correção: só nomes que aparecem em **export real do Studio** (`*/msapp/Src`):
+  `DocumentBulletList` (Analisar), `People`/`DismissCircle` (Assumir/Liberar),
+  `DocumentPdf` (Baixar Laudo).
+- Validação preventiva (`DueDiligence/validar_due_diligence.py`, grupo "Analista do
+  Compliance na listagem"): lista de ícones permitidos para `tbDdAcoes`.
+- Regra global: ícone de controle moderno (`Icon` de Button, `ItemIconName` de
+  Toolbar) vem de export real do Studio, nunca do catálogo Fluent nem da memória.
+
+## Combo fora do formulário lendo `Items` de combo dentro do formulário abriu vazio (2026-10-13)
+
+- Projeto/tela: DueDiligence / `ScreenDueDiligence`, `cmbDdFiltroArea` (filtro da
+  listagem) com `Items: =cmb_area_solicitante.Items` (combo dentro de um cartão do
+  `frmDdSolicitante`).
+- Sintoma (print do app): o filtro abriu sem nenhuma opção.
+- Causa **não confirmada**. Hipótese: o formulário está oculto na visão de
+  registros e o controle do cartão não expõe `Items` fora dele.
+- Correção: lista literal repetida no filtro. O validador reprova a referência
+  ao combo do formulário e exige que as duas listas sejam idênticas. Assim a
+  repetição não diverge quando entrar área nova.
+- Regra: para reaproveitar opções entre controles, usar lista literal conferida
+  por validador (ou named formula no `App.Formulas`), nunca a propriedade de
+  controle que mora dentro de cartão de formulário.

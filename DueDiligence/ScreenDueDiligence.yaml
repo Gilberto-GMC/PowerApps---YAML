@@ -54,7 +54,23 @@ Screens:
         );
         If(
             varDdPodeAnalisarCompliance,
-            ClearCollect(colDdAnalistas, tb_dueDiligenceCompliance)
+            ClearCollect(
+                colDdAnalistas,
+                ForAll(
+                    tb_dueDiligenceCompliance As A,
+                    {
+                        email: Lower(Trim(A.email)),
+                        nome: With(
+                            {_partes: Filter(Split(Trim(A.nome), " "), !IsBlank(Value))},
+                            If(
+                                CountRows(_partes) <= 1,
+                                Trim(A.nome),
+                                First(_partes).Value & " " & Last(_partes).Value
+                            )
+                        )
+                    }
+                )
+            )
         )
     Children:
       - Image1:
@@ -3889,7 +3905,7 @@ Screens:
                                           Height: =40
                                           InputTextPlaceholder: ="Área solicitante"
                                           IsSearchable: =false
-                                          Items: =cmb_area_solicitante.Items
+                                          Items: =["Adm. Contratos Concessão", "Administrativo", "Comercial", "Compliance", "Comunicação", "Engenharia/Manutenção", "Financeiro", "Frotas", "Gestão de Pessoas", "Jurídico", "Operações", "Processos Aeroportuários", "SGI", "Suprimentos"]
                                           Width: =200
                                     - dpDdDataInicio:
                                         Control: DatePicker@0.0.46
@@ -4536,7 +4552,7 @@ Screens:
                                                                     {
                                                                         ItemKey: "analisar",
                                                                         ItemDisplayName: "Analisar",
-                                                                        ItemIconName: "ShieldCheckmark",
+                                                                        ItemIconName: "DocumentBulletList",
                                                                         ItemDisabled: Switch(
                                                                             ThisItem.status,
                                                                             "Pendente Compliance",
@@ -4564,12 +4580,10 @@ Screens:
                                                                             "Assumir análise",
                                                                             "Assumir no lugar de " & _nomeAnalista
                                                                         ),
-                                                                        ItemIconName: If(_analiseMinha, "PersonDelete", "PersonAdd"),
+                                                                        ItemIconName: If(_analiseMinha, "DismissCircle", "People"),
                                                                         ItemDisabled: !varDdPodeAnalisarCompliance || !(ThisItem.status in ["Aguardando Terceiro", "Pendente Compliance"]),
                                                                         ItemTooltip: Switch(
                                                                             true,
-                                                                            !(ThisItem.status in ["Aguardando Terceiro", "Pendente Compliance"]),
-                                                                            "Solicitação encerrada: o analista não muda mais",
                                                                             _analiseMinha,
                                                                             "Tirar seu nome desta solicitação",
                                                                             IsBlank(_nomeAnalista),
@@ -4602,7 +4616,7 @@ Screens:
                                                                     {
                                                                         ItemKey: "laudo",
                                                                         ItemDisplayName: "Baixar Laudo",
-                                                                        ItemIconName: "Download",
+                                                                        ItemIconName: "DocumentPdf",
                                                                         ItemDisabled: Not(
                                                                             ThisItem.status in [
                                                                                 "Aprovado",
@@ -4627,7 +4641,7 @@ Screens:
                                                                         )
                                                                     }
                                                                 ),
-                                                                (ItemKey <> "analisar" && ItemKey <> "assumir") || varDdPodeAnalisarCompliance
+                                                                ((ItemKey <> "analisar" && ItemKey <> "assumir") || varDdPodeAnalisarCompliance) && (ItemKey <> "assumir" || ThisItem.status in ["Aguardando Terceiro", "Pendente Compliance"])
                                                             )
                                                         )
                                                       OnSelect: |-
