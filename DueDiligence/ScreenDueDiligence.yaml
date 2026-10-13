@@ -3673,6 +3673,41 @@ Screens:
                                                             IsBlank(varRegistroDueDiligence.ID),
                                                             Blank(),
                                                             LookUp(tb_dueDiligence, ID = varRegistroDueDiligence.ID)
+                                                        ),
+                                                        // Mesmo CNPJ/CPF com outra solicitação ativa (só Cancelado e Vencido liberam).
+                                                        // O documento pode estar gravado com máscara ou só com dígitos: compara as formas.
+                                                        _duplicada: With(
+                                                            {
+                                                                _doc: Trim(txt_cnpj_cpf.Value),
+                                                                _dig: Concat(Split(Trim(txt_cnpj_cpf.Value), "") As _c, If(IsMatch(_c.Value, Match.Digit), _c.Value, ""))
+                                                            },
+                                                            With(
+                                                                {
+                                                                    _soDigitos: If(IsBlank(_dig), _doc, _dig),
+                                                                    _comMascara: Switch(
+                                                                        Len(_dig),
+                                                                        14, Left(_dig, 2) & "." & Mid(_dig, 3, 3) & "." & Mid(_dig, 6, 3) & "/" & Mid(_dig, 9, 4) & "-" & Mid(_dig, 13, 2),
+                                                                        11, Left(_dig, 3) & "." & Mid(_dig, 4, 3) & "." & Mid(_dig, 7, 3) & "-" & Mid(_dig, 10, 2),
+                                                                        _doc
+                                                                    )
+                                                                },
+                                                                If(
+                                                                    IsBlank(_doc),
+                                                                    Blank(),
+                                                                    With(
+                                                                        {
+                                                                            _mesmoDocumento: Filter(
+                                                                                tb_dueDiligence,
+                                                                                ativo = 1 && (cnpj_cpf = _doc || cnpj_cpf = _soDigitos || cnpj_cpf = _comMascara)
+                                                                            )
+                                                                        },
+                                                                        LookUp(
+                                                                            _mesmoDocumento,
+                                                                            ID <> Coalesce(varRegistroDueDiligence.ID, 0) && !(status in ["Cancelado", "Vencido"])
+                                                                        )
+                                                                    )
+                                                                )
+                                                            )
                                                         )
                                                     },
                                                     If(
@@ -3681,6 +3716,20 @@ Screens:
                                                             "A solicitação mudou enquanto você editava (por exemplo, o terceiro respondeu, a solicitação foi cancelada ou houve um reenvio do Forms) e não pode ser salva. Reabra a solicitação.",
                                                             NotificationType.Error,
                                                             10000
+                                                        ),
+                                                        !IsBlank(_duplicada.ID),
+                                                        Notify(
+                                                            "Já existe a solicitação DD-" & Text(_duplicada.ID, "000000") & " para este CNPJ/CPF (" & _duplicada.status & If(
+                                                                !IsBlank(_duplicada.data_vencimento) && _duplicada.status in ["Aprovado", "Aprovado com Ressalvas", "Reprovado Parcialmente"],
+                                                                ", válida até " & Text(_duplicada.data_vencimento, "[$-pt-BR]dd/mm/yyyy"),
+                                                                ""
+                                                            ) & "). " & If(
+                                                                _duplicada.status in ["Reprovado", "Reprovado Parcialmente"],
+                                                                "Para uma nova avaliação, procure o Compliance.",
+                                                                "Acompanhe essa solicitação em vez de abrir outra."
+                                                            ),
+                                                            NotificationType.Error,
+                                                            12000
                                                         ),
                                                 UpdateContext(
                                                     {
@@ -6197,7 +6246,7 @@ Screens:
                                       "<div style='font-size:11px;color:#64748b;margin-bottom:7px'>" & Coalesce(ThisItem.status_anterior, "-") & " → " & Coalesce(ThisItem.status_novo, "-") & "</div>" &
                                       "<div style='font-size:12px;color:#374151;background:#f9fafb;padding:8px'>" & Substitute(Coalesce(ThisItem.descricao, "Sem descrição"), Char(10), "<br>") & "</div>" &
                                       If(IsBlank(ThisItem.prazo_resposta), "", "<div style='margin-top:7px;font-size:10px;font-weight:700;color:#B54708'>&#128197; Prazo para resposta: " & Text(ThisItem.prazo_resposta, "[$-pt-BR]dd/mm/yyyy") & "</div>") &
-                                      "<div style='margin-top:7px;font-size:10px;color:#9ca3af'>&#128100; " & ThisItem.'Criado por'.DisplayName & "<br><br><br><br><br></div></div></div>"
+                                      "<div style='margin-top:7px;font-size:10px;color:#9ca3af'>&#128100; " & ThisItem.'Criado por'.DisplayName & If(IsEmpty(ThisItem.Anexos), "", "<br><br><br><br><br>") & "</div></div></div>"
                                     PaddingTop: =10
                                     Width: =Parent.TemplateWidth
                               - attDdHistoricoItem:
@@ -6215,6 +6264,7 @@ Screens:
                                     PaddingLeft: =3
                                     PressedFill: =App.Theme.Colors.Lighter50
                                     Size: =8
+                                    Visible: =!IsEmpty(ThisItem.Anexos)
                                     Width: =Parent.TemplateWidth - 27
                                     X: =15
                                     Y: =htmlDdHistoricoItem.Height - 70

@@ -3156,6 +3156,37 @@ def main() -> int:
 
     validator.check("Analista do Compliance na listagem", check_compliance_analyst)
 
+    def check_duplicate_document(findings: list[str]) -> str:
+        # 2026-10-13: DD-000152 e DD-000154 abertas para o mesmo CNPJ. O Salvar recusa
+        # documento com outra solicitação ativa; só Cancelado e Vencido liberam.
+        salvar = fx(str((main_controls.get("btnDdSalvarForm", {}).get("Properties") or {}).get("OnSelect", "")))
+        for token in (
+            "_duplicada: With(",
+            # gravado com máscara ou só dígitos: as três formas entram na consulta
+            "ativo = 1 && (cnpj_cpf = _doc || cnpj_cpf = _soDigitos || cnpj_cpf = _comMascara)",
+            # ID <> e "in" não delegam no SharePoint: ficam no LookUp local
+            'ID <> Coalesce(varRegistroDueDiligence.ID, 0) && !(status in ["Cancelado", "Vencido"])',
+            "!IsBlank(_duplicada.ID), Notify(",
+        ):
+            if fx(token) not in salvar:
+                findings.append(f"btnDdSalvarForm sem a trava de documento duplicado {token!r}")
+        trava = salvar.find("!IsBlank(_duplicada.ID)")
+        envio = salvar.find("SubmitForm(frmDdSolicitante)")
+        lock = salvar.find("varDdOcupadoDesde: Now()")
+        if trava >= 0 and not (0 <= trava < lock < envio):
+            findings.append("a checagem de duplicidade deve vir antes da trava de reentrância e do SubmitForm")
+        inicio_consulta = salvar.find("_mesmoDocumento: Filter(")
+        fim_consulta = salvar.find("LookUp(_mesmoDocumento", inicio_consulta)
+        if min(inicio_consulta, fim_consulta) < 0:
+            findings.append("consulta de duplicidade deve ser Filter delegável seguido de LookUp local")
+        consulta = salvar[inicio_consulta:fim_consulta] if min(inicio_consulta, fim_consulta) >= 0 else ""
+        for proibido in ("ID <>", " in [", "IsBlank("):
+            if proibido in consulta:
+                findings.append(f"consulta de duplicidade com operação não delegável {proibido!r}")
+        return "Salvar recusa CNPJ/CPF com solicitação ativa, com consulta delegável"
+
+    validator.check("CNPJ/CPF sem solicitação ativa duplicada", check_duplicate_document)
+
     print()
     if validator.errors:
         print(
