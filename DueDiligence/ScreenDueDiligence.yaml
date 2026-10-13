@@ -3853,7 +3853,7 @@ Screens:
                                     DropShadow: =DropShadow.None
                                     Fill: =RGBA(248, 250, 252, 1)
                                     FillPortions: =0
-                                    Height: =105
+                                    Height: =108
                                     LayoutAlignItems: =LayoutAlignItems.Center
                                     LayoutDirection: =LayoutDirection.Horizontal
                                     LayoutGap: =8
@@ -3878,6 +3878,18 @@ Screens:
                                           InputTextPlaceholder: ="Status"
                                           IsSearchable: =false
                                           Items: =["Aguardando Terceiro", "Pendente Compliance", "Aprovado", "Aprovado com Ressalvas", "Reprovado Parcialmente", "Reprovado", "Cancelado", "Vencido"]
+                                          Width: =200
+                                    - cmbDdFiltroArea:
+                                        Control: ComboBox@0.0.51
+                                        Properties:
+                                          Appearance: ='ComboboxCanvas.Appearance'.FilledLighter
+                                          BorderColor: =RGBA(229, 229, 229, 1)
+                                          BorderRadius: =0
+                                          BorderThickness: =1
+                                          Height: =40
+                                          InputTextPlaceholder: ="Área solicitante"
+                                          IsSearchable: =false
+                                          Items: =cmb_area_solicitante.Items
                                           Width: =200
                                     - dpDdDataInicio:
                                         Control: DatePicker@0.0.46
@@ -3932,6 +3944,7 @@ Screens:
                                           Layout: ='ButtonCanvas.Layout'.IconOnly
                                           OnSelect: |-
                                             =Reset(cmbDdFiltroStatus);
+                                            Reset(cmbDdFiltroArea);
                                             Reset(dpDdDataInicio);
                                             Reset(dpDdDataFim);
                                             Reset(txtDdBuscar);
@@ -4091,126 +4104,263 @@ Screens:
                                                         If(IsBlank(_d), Trim(txtDdBuscar.Value), Left(_d, 3) & If(Len(_d) > 3, "." & Mid(_d, 4, 3), "") & If(Len(_d) > 6, "." & Mid(_d, 7, 3), "") & If(Len(_d) > 9, "-" & Mid(_d, 10, 2), ""))
                                                     ),
                                                     _minhas: togDdMinhasSolicitacoes.Checked,
-                                                    _email: User().Email
+                                                    _email: User().Email,
+                                                    _area: cmbDdFiltroArea.Selected.Value
                                                 },
                                                 SortByColumns(
                                                     If(
-                                                        _minhas,
+                                                        IsBlank(_area),
                                                         If(
-                                                            IsBlank(_status),
-                                                            Switch(
-                                                                true,
-                                                                IsBlank(_busca),
-                                                                Filter(
-                                                                    tb_dueDiligence,
-                                                                    ativo = 1 &&
-                                                                    'Criado por'.Email = _email &&
-                                                                    Criado >= _dataInicio &&
-                                                                    Criado < _dataFimExclusiva
+                                                            _minhas,
+                                                            If(
+                                                                IsBlank(_status),
+                                                                Switch(
+                                                                    true,
+                                                                    IsBlank(_busca),
+                                                                    Filter(
+                                                                        tb_dueDiligence,
+                                                                        ativo = 1 &&
+                                                                        'Criado por'.Email = _email &&
+                                                                        Criado >= _dataInicio &&
+                                                                        Criado < _dataFimExclusiva
+                                                                    ),
+                                                                    IsNumeric(_busca) && Len(_busca) <= 6,
+                                                                    Filter(
+                                                                        tb_dueDiligence,
+                                                                        ativo = 1 &&
+                                                                        'Criado por'.Email = _email &&
+                                                                        ID = _idBusca &&
+                                                                        Criado >= _dataInicio &&
+                                                                        Criado < _dataFimExclusiva
+                                                                    ),
+                                                                    Filter(
+                                                                        tb_dueDiligence,
+                                                                        ativo = 1 &&
+                                                                        'Criado por'.Email = _email &&
+                                                                        (StartsWith(razao_social, _busca) || StartsWith(cnpj_cpf, _busca) || StartsWith(cnpj_cpf, _buscaCnpj) || StartsWith(cnpj_cpf, _buscaCpf)) &&
+                                                                        Criado >= _dataInicio &&
+                                                                        Criado < _dataFimExclusiva
+                                                                    )
                                                                 ),
-                                                                IsNumeric(_busca) && Len(_busca) <= 6,
-                                                                Filter(
-                                                                    tb_dueDiligence,
-                                                                    ativo = 1 &&
-                                                                    'Criado por'.Email = _email &&
-                                                                    ID = _idBusca &&
-                                                                    Criado >= _dataInicio &&
-                                                                    Criado < _dataFimExclusiva
-                                                                ),
-                                                                Filter(
-                                                                    tb_dueDiligence,
-                                                                    ativo = 1 &&
-                                                                    'Criado por'.Email = _email &&
-                                                                    (StartsWith(razao_social, _busca) || StartsWith(cnpj_cpf, _busca) || StartsWith(cnpj_cpf, _buscaCnpj) || StartsWith(cnpj_cpf, _buscaCpf)) &&
-                                                                    Criado >= _dataInicio &&
-                                                                    Criado < _dataFimExclusiva
+                                                                Switch(
+                                                                    true,
+                                                                    IsBlank(_busca),
+                                                                    Filter(
+                                                                        tb_dueDiligence,
+                                                                        ativo = 1 &&
+                                                                        'Criado por'.Email = _email &&
+                                                                        status = _status &&
+                                                                        Criado >= _dataInicio &&
+                                                                        Criado < _dataFimExclusiva
+                                                                    ),
+                                                                    IsNumeric(_busca) && Len(_busca) <= 6,
+                                                                    Filter(
+                                                                        tb_dueDiligence,
+                                                                        ativo = 1 &&
+                                                                        'Criado por'.Email = _email &&
+                                                                        ID = _idBusca &&
+                                                                        status = _status &&
+                                                                        Criado >= _dataInicio &&
+                                                                        Criado < _dataFimExclusiva
+                                                                    ),
+                                                                    Filter(
+                                                                        tb_dueDiligence,
+                                                                        ativo = 1 &&
+                                                                        'Criado por'.Email = _email &&
+                                                                        status = _status &&
+                                                                        (StartsWith(razao_social, _busca) || StartsWith(cnpj_cpf, _busca) || StartsWith(cnpj_cpf, _buscaCnpj) || StartsWith(cnpj_cpf, _buscaCpf)) &&
+                                                                        Criado >= _dataInicio &&
+                                                                        Criado < _dataFimExclusiva
+                                                                    )
                                                                 )
                                                             ),
-                                                            Switch(
-                                                                true,
-                                                                IsBlank(_busca),
-                                                                Filter(
-                                                                    tb_dueDiligence,
-                                                                    ativo = 1 &&
-                                                                    'Criado por'.Email = _email &&
-                                                                    status = _status &&
-                                                                    Criado >= _dataInicio &&
-                                                                    Criado < _dataFimExclusiva
+                                                            If(
+                                                                IsBlank(_status),
+                                                                Switch(
+                                                                    true,
+                                                                    IsBlank(_busca),
+                                                                    Filter(
+                                                                        tb_dueDiligence,
+                                                                        ativo = 1 &&
+                                                                        Criado >= _dataInicio &&
+                                                                        Criado < _dataFimExclusiva
+                                                                    ),
+                                                                    IsNumeric(_busca) && Len(_busca) <= 6,
+                                                                    Filter(
+                                                                        tb_dueDiligence,
+                                                                        ativo = 1 &&
+                                                                        ID = _idBusca &&
+                                                                        Criado >= _dataInicio &&
+                                                                        Criado < _dataFimExclusiva
+                                                                    ),
+                                                                    Filter(
+                                                                        tb_dueDiligence,
+                                                                        ativo = 1 &&
+                                                                        (StartsWith(razao_social, _busca) || StartsWith(cnpj_cpf, _busca) || StartsWith(cnpj_cpf, _buscaCnpj) || StartsWith(cnpj_cpf, _buscaCpf)) &&
+                                                                        Criado >= _dataInicio &&
+                                                                        Criado < _dataFimExclusiva
+                                                                    )
                                                                 ),
-                                                                IsNumeric(_busca) && Len(_busca) <= 6,
-                                                                Filter(
-                                                                    tb_dueDiligence,
-                                                                    ativo = 1 &&
-                                                                    'Criado por'.Email = _email &&
-                                                                    ID = _idBusca &&
-                                                                    status = _status &&
-                                                                    Criado >= _dataInicio &&
-                                                                    Criado < _dataFimExclusiva
-                                                                ),
-                                                                Filter(
-                                                                    tb_dueDiligence,
-                                                                    ativo = 1 &&
-                                                                    'Criado por'.Email = _email &&
-                                                                    status = _status &&
-                                                                    (StartsWith(razao_social, _busca) || StartsWith(cnpj_cpf, _busca) || StartsWith(cnpj_cpf, _buscaCnpj) || StartsWith(cnpj_cpf, _buscaCpf)) &&
-                                                                    Criado >= _dataInicio &&
-                                                                    Criado < _dataFimExclusiva
+                                                                Switch(
+                                                                    true,
+                                                                    IsBlank(_busca),
+                                                                    Filter(
+                                                                        tb_dueDiligence,
+                                                                        ativo = 1 &&
+                                                                        status = _status &&
+                                                                        Criado >= _dataInicio &&
+                                                                        Criado < _dataFimExclusiva
+                                                                    ),
+                                                                    IsNumeric(_busca) && Len(_busca) <= 6,
+                                                                    Filter(
+                                                                        tb_dueDiligence,
+                                                                        ativo = 1 &&
+                                                                        ID = _idBusca &&
+                                                                        status = _status &&
+                                                                        Criado >= _dataInicio &&
+                                                                        Criado < _dataFimExclusiva
+                                                                    ),
+                                                                    Filter(
+                                                                        tb_dueDiligence,
+                                                                        ativo = 1 &&
+                                                                        status = _status &&
+                                                                        (StartsWith(razao_social, _busca) || StartsWith(cnpj_cpf, _busca) || StartsWith(cnpj_cpf, _buscaCnpj) || StartsWith(cnpj_cpf, _buscaCpf)) &&
+                                                                        Criado >= _dataInicio &&
+                                                                        Criado < _dataFimExclusiva
+                                                                    )
                                                                 )
                                                             )
                                                         ),
                                                         If(
-                                                            IsBlank(_status),
-                                                            Switch(
-                                                                true,
-                                                                IsBlank(_busca),
-                                                                Filter(
-                                                                    tb_dueDiligence,
-                                                                    ativo = 1 &&
-                                                                    Criado >= _dataInicio &&
-                                                                    Criado < _dataFimExclusiva
+                                                            _minhas,
+                                                            If(
+                                                                IsBlank(_status),
+                                                                Switch(
+                                                                    true,
+                                                                    IsBlank(_busca),
+                                                                    Filter(
+                                                                        tb_dueDiligence,
+                                                                        ativo = 1 &&
+                                                                        area_solicitante = _area &&
+                                                                        'Criado por'.Email = _email &&
+                                                                        Criado >= _dataInicio &&
+                                                                        Criado < _dataFimExclusiva
+                                                                    ),
+                                                                    IsNumeric(_busca) && Len(_busca) <= 6,
+                                                                    Filter(
+                                                                        tb_dueDiligence,
+                                                                        ativo = 1 &&
+                                                                        area_solicitante = _area &&
+                                                                        'Criado por'.Email = _email &&
+                                                                        ID = _idBusca &&
+                                                                        Criado >= _dataInicio &&
+                                                                        Criado < _dataFimExclusiva
+                                                                    ),
+                                                                    Filter(
+                                                                        tb_dueDiligence,
+                                                                        ativo = 1 &&
+                                                                        area_solicitante = _area &&
+                                                                        'Criado por'.Email = _email &&
+                                                                        (StartsWith(razao_social, _busca) || StartsWith(cnpj_cpf, _busca) || StartsWith(cnpj_cpf, _buscaCnpj) || StartsWith(cnpj_cpf, _buscaCpf)) &&
+                                                                        Criado >= _dataInicio &&
+                                                                        Criado < _dataFimExclusiva
+                                                                    )
                                                                 ),
-                                                                IsNumeric(_busca) && Len(_busca) <= 6,
-                                                                Filter(
-                                                                    tb_dueDiligence,
-                                                                    ativo = 1 &&
-                                                                    ID = _idBusca &&
-                                                                    Criado >= _dataInicio &&
-                                                                    Criado < _dataFimExclusiva
-                                                                ),
-                                                                Filter(
-                                                                    tb_dueDiligence,
-                                                                    ativo = 1 &&
-                                                                    (StartsWith(razao_social, _busca) || StartsWith(cnpj_cpf, _busca) || StartsWith(cnpj_cpf, _buscaCnpj) || StartsWith(cnpj_cpf, _buscaCpf)) &&
-                                                                    Criado >= _dataInicio &&
-                                                                    Criado < _dataFimExclusiva
+                                                                Switch(
+                                                                    true,
+                                                                    IsBlank(_busca),
+                                                                    Filter(
+                                                                        tb_dueDiligence,
+                                                                        ativo = 1 &&
+                                                                        area_solicitante = _area &&
+                                                                        'Criado por'.Email = _email &&
+                                                                        status = _status &&
+                                                                        Criado >= _dataInicio &&
+                                                                        Criado < _dataFimExclusiva
+                                                                    ),
+                                                                    IsNumeric(_busca) && Len(_busca) <= 6,
+                                                                    Filter(
+                                                                        tb_dueDiligence,
+                                                                        ativo = 1 &&
+                                                                        area_solicitante = _area &&
+                                                                        'Criado por'.Email = _email &&
+                                                                        ID = _idBusca &&
+                                                                        status = _status &&
+                                                                        Criado >= _dataInicio &&
+                                                                        Criado < _dataFimExclusiva
+                                                                    ),
+                                                                    Filter(
+                                                                        tb_dueDiligence,
+                                                                        ativo = 1 &&
+                                                                        area_solicitante = _area &&
+                                                                        'Criado por'.Email = _email &&
+                                                                        status = _status &&
+                                                                        (StartsWith(razao_social, _busca) || StartsWith(cnpj_cpf, _busca) || StartsWith(cnpj_cpf, _buscaCnpj) || StartsWith(cnpj_cpf, _buscaCpf)) &&
+                                                                        Criado >= _dataInicio &&
+                                                                        Criado < _dataFimExclusiva
+                                                                    )
                                                                 )
                                                             ),
-                                                            Switch(
-                                                                true,
-                                                                IsBlank(_busca),
-                                                                Filter(
-                                                                    tb_dueDiligence,
-                                                                    ativo = 1 &&
-                                                                    status = _status &&
-                                                                    Criado >= _dataInicio &&
-                                                                    Criado < _dataFimExclusiva
+                                                            If(
+                                                                IsBlank(_status),
+                                                                Switch(
+                                                                    true,
+                                                                    IsBlank(_busca),
+                                                                    Filter(
+                                                                        tb_dueDiligence,
+                                                                        ativo = 1 &&
+                                                                        area_solicitante = _area &&
+                                                                        Criado >= _dataInicio &&
+                                                                        Criado < _dataFimExclusiva
+                                                                    ),
+                                                                    IsNumeric(_busca) && Len(_busca) <= 6,
+                                                                    Filter(
+                                                                        tb_dueDiligence,
+                                                                        ativo = 1 &&
+                                                                        area_solicitante = _area &&
+                                                                        ID = _idBusca &&
+                                                                        Criado >= _dataInicio &&
+                                                                        Criado < _dataFimExclusiva
+                                                                    ),
+                                                                    Filter(
+                                                                        tb_dueDiligence,
+                                                                        ativo = 1 &&
+                                                                        area_solicitante = _area &&
+                                                                        (StartsWith(razao_social, _busca) || StartsWith(cnpj_cpf, _busca) || StartsWith(cnpj_cpf, _buscaCnpj) || StartsWith(cnpj_cpf, _buscaCpf)) &&
+                                                                        Criado >= _dataInicio &&
+                                                                        Criado < _dataFimExclusiva
+                                                                    )
                                                                 ),
-                                                                IsNumeric(_busca) && Len(_busca) <= 6,
-                                                                Filter(
-                                                                    tb_dueDiligence,
-                                                                    ativo = 1 &&
-                                                                    ID = _idBusca &&
-                                                                    status = _status &&
-                                                                    Criado >= _dataInicio &&
-                                                                    Criado < _dataFimExclusiva
-                                                                ),
-                                                                Filter(
-                                                                    tb_dueDiligence,
-                                                                    ativo = 1 &&
-                                                                    status = _status &&
-                                                                    (StartsWith(razao_social, _busca) || StartsWith(cnpj_cpf, _busca) || StartsWith(cnpj_cpf, _buscaCnpj) || StartsWith(cnpj_cpf, _buscaCpf)) &&
-                                                                    Criado >= _dataInicio &&
-                                                                    Criado < _dataFimExclusiva
+                                                                Switch(
+                                                                    true,
+                                                                    IsBlank(_busca),
+                                                                    Filter(
+                                                                        tb_dueDiligence,
+                                                                        ativo = 1 &&
+                                                                        area_solicitante = _area &&
+                                                                        status = _status &&
+                                                                        Criado >= _dataInicio &&
+                                                                        Criado < _dataFimExclusiva
+                                                                    ),
+                                                                    IsNumeric(_busca) && Len(_busca) <= 6,
+                                                                    Filter(
+                                                                        tb_dueDiligence,
+                                                                        ativo = 1 &&
+                                                                        area_solicitante = _area &&
+                                                                        ID = _idBusca &&
+                                                                        status = _status &&
+                                                                        Criado >= _dataInicio &&
+                                                                        Criado < _dataFimExclusiva
+                                                                    ),
+                                                                    Filter(
+                                                                        tb_dueDiligence,
+                                                                        ativo = 1 &&
+                                                                        area_solicitante = _area &&
+                                                                        status = _status &&
+                                                                        (StartsWith(razao_social, _busca) || StartsWith(cnpj_cpf, _busca) || StartsWith(cnpj_cpf, _buscaCnpj) || StartsWith(cnpj_cpf, _buscaCpf)) &&
+                                                                        Criado >= _dataInicio &&
+                                                                        Criado < _dataFimExclusiva
+                                                                    )
                                                                 )
                                                             )
                                                         )

@@ -1273,10 +1273,19 @@ def main() -> int:
             balanced_call(items, match.start() + len("Filter"))
             for match in re.finditer(r"Filter\(\s*tb_dueDiligence\b", items)
         ]
-        if len(filters) != 12:
-            findings.append(f"galDdRegistros.Items deve ter 12 Filter delegáveis; encontrado(s): {len(filters)}")
+        # Área solicitante (2026-10-13) dobra as ramificações: 24 Filter, 12 com a área.
+        if len(filters) != 24:
+            findings.append(f"galDdRegistros.Items deve ter 24 Filter delegáveis; encontrado(s): {len(filters)}")
+        area_filters = sum("area_solicitante = _area" in body for body in filters)
+        if area_filters != 12:
+            findings.append(f"metade dos Filter deve restringir à área solicitante; encontrado(s): {area_filters}")
+        if fx("_area: cmbDdFiltroArea.Selected.Value") not in fx(items) or fx("If( IsBlank(_area),") not in fx(items):
+            findings.append("galDdRegistros.Items: a área entra como ramificação If(IsBlank(_area), ...), fora do Filter")
+        area_combo = (main_controls.get("cmbDdFiltroArea", {}).get("Properties") or {})
+        if str(area_combo.get("Items", "")).strip() != "=cmb_area_solicitante.Items":
+            findings.append("cmbDdFiltroArea deve reutilizar as opções do formulário (cmb_area_solicitante.Items)")
         author_filters = sum("'Criado por'.Email = _email" in body for body in filters)
-        if author_filters != 6:
+        if author_filters != 12:
             findings.append(f"metade dos Filter deve restringir ao autor; encontrado(s): {author_filters}")
         for body in filters:
             for token in ("IsBlank(", "_minhas", "!"):
@@ -1286,6 +1295,8 @@ def main() -> int:
         clear = str((main_controls.get("btnDdLimparFiltros", {}).get("Properties") or {}).get("OnSelect", ""))
         if "Reset(togDdMinhasSolicitacoes)" not in clear:
             findings.append("btnDdLimparFiltros não limpa o filtro Minhas solicitações")
+        if "Reset(cmbDdFiltroArea)" not in clear:
+            findings.append("btnDdLimparFiltros não limpa o filtro Área solicitante")
         counter = main_controls.get("lblDdQtd", {})
         counter_text = str((counter.get("Properties") or {}).get("Text", ""))
         if "CARREGADO(S)" not in counter_text or "ENCONTRADO(S)" in counter_text:
