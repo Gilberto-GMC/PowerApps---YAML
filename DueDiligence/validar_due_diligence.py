@@ -283,6 +283,19 @@ def balanced_call(text: str, open_index: int) -> str:
     return text[open_index + 1:]
 
 
+def fx(text: str) -> str:
+    """Normaliza o espaçamento de uma fórmula para comparar com tokens.
+
+    O Studio reformata o código ao exportar: quebra a linha logo após `(`, `[`
+    e `{`, um argumento por linha. Colapsar espaços não basta (vira "If( x"),
+    então também some o espaço colado aos delimitadores. Aplicar dos dois lados
+    da comparação: fx(token) in fx(formula).
+    """
+    text = re.sub(r"\s+", " ", text)
+    text = re.sub(r"([\(\[\{]) ", r"\1", text)
+    return re.sub(r" ([\)\]\}])", r"\1", text)
+
+
 def strip_powerfx_literals_and_comments(formula: str) -> str:
     """Mascara strings, identificadores citados e comentários de uma fórmula."""
     return scan_powerfx_literals(formula)[0]
@@ -1300,7 +1313,7 @@ def main() -> int:
                 "DateDiff(varDdOcupadoDesde, Now(), TimeUnit.Seconds) < 30",
                 "varDdOcupadoDesde: Now()",
             ):
-                if token not in formula:
+                if fx(token) not in fx(formula):
                     findings.append(f"{control_name}.OnSelect sem trava de reentrância {token!r}")
         for form_name in ("frmDdSolicitante", "frmDdDesdobramento"):
             form = main_controls.get(form_name)
@@ -1452,7 +1465,7 @@ def main() -> int:
             "_laudo.saida_erro",
             "_laudo.saida_laudo_url",
         ):
-            if token not in main_yaml_text:
+            if fx(token) not in fx(main_yaml_text):
                 findings.append(f"ScreenDueDiligence.yaml: botão do laudo sem {token!r}")
 
         return "pacote DD04 pronto, coerente com o gatilho real e com o botão do app"
@@ -1842,8 +1855,8 @@ def main() -> int:
         toolbar_properties = toolbar.get("Properties") or {}
         toolbar_formula = str(toolbar_properties.get("OnSelect", ""))
         toolbar_items = str(toolbar_properties.get("Items", ""))
-        compact_items = re.sub(r"\s+", " ", toolbar_items)
-        compact_formula = re.sub(r"\s+", " ", toolbar_formula)
+        compact_items = fx(toolbar_items)
+        compact_formula = fx(toolbar_formula)
         if "varDdPodeAnalisarCompliance" not in toolbar_items:
             findings.append("tbDdAcoes.Items não protege a análise pelo perfil Compliance")
         # Editar (qualquer usuário, até a resposta do terceiro) e Analisar (só o
@@ -1854,16 +1867,16 @@ def main() -> int:
             'ItemKey: "analisar", ItemDisplayName: "Analisar",',
             '"Pendente Compliance", !varDdPodeAnalisarCompliance',
             '"Aguardando Terceiro", !varDdPodeAnalisarCompliance',
-            'ItemKey <> "analisar" || varDdPodeAnalisarCompliance',
+            '(ItemKey <> "analisar" && ItemKey <> "assumir") || varDdPodeAnalisarCompliance',
             '_antesDaResposta: ThisItem.status = "Aguardando Terceiro" && IsBlank(ThisItem.data_resposta_terceiro)',
         ):
-            if token not in compact_items:
+            if fx(token) not in compact_items:
                 findings.append(f"tbDdAcoes.Items não mantém a regra de edição/análise {token!r}")
         # Estados encerrados caem no padrão do Switch: análise sempre bloqueada.
-        if not re.search(r"ItemDisabled: Switch\(.*?, true \),", compact_items):
+        if not re.search(r"ItemDisabled: Switch\(.*?, true\),", compact_items):
             findings.append("tbDdAcoes.Items deve bloquear a análise dos estados encerrados por padrão")
         edit_start = compact_formula.find('"editar", With(')
-        analyze_start = compact_formula.find('"analisar", If(', edit_start)
+        analyze_start = compact_formula.find('"analisar", If(', max(edit_start, 0))
         next_branch = compact_formula.find('"terceiro",', analyze_start)
         if min(edit_start, analyze_start, next_branch) < 0:
             findings.append("tbDdAcoes.OnSelect deve ter os ramos \"editar\" e \"analisar\" antes de \"terceiro\"")
@@ -1876,7 +1889,7 @@ def main() -> int:
                 'varAcaoDueDiligence: "edit"',
                 "EditForm(frmDdSolicitante)",
             ):
-                if token not in edit_branch:
+                if fx(token) not in edit_branch:
                     findings.append(f"tbDdAcoes.OnSelect, ramo editar, sem {token!r}")
             for forbidden in ("NewForm(frmDdDesdobramento)", "varDdPodeAnalisarCompliance"):
                 if forbidden in edit_branch:
@@ -1887,7 +1900,7 @@ def main() -> int:
                 "ViewForm(frmDdSolicitante)",
                 "NewForm(frmDdDesdobramento)",
             ):
-                if token not in analyze_branch:
+                if fx(token) not in analyze_branch:
                     findings.append(f"tbDdAcoes.OnSelect, ramo analisar, sem {token!r}")
             if "EditForm(frmDdSolicitante)" in analyze_branch:
                 findings.append("tbDdAcoes.OnSelect, ramo analisar, deve abrir a solicitação só para leitura")
@@ -2056,11 +2069,12 @@ def main() -> int:
         # 2026-09-18: órgão público em convênio, termo de cooperação ou cessão de área nunca
         # recebe o Forms. Sem gatilho é risco baixo automático; com gatilho vai direto para
         # Pendente Compliance. Doação e patrocínio seguem com o Forms (risco alto).
-        compact = re.sub(r"\s+", " ", main_yaml_text)
+        compact = fx(main_yaml_text)
         regra = (
             '_orgaoSemQuestionario: dd_categoria_contraparte.Selected.codigo_opcao = "categoria_contraparte_01" && '
             'dd_tipo_contrato.Selected.codigo_opcao in ["tipo_contrato_11", "tipo_contrato_12", "tipo_contrato_13"]'
         )
+        regra = fx(regra)
         if compact.count(regra) != 2:
             findings.append(f"regra do órgão público sem questionário deve estar no resumo e no Salvar; encontrada {compact.count(regra)}x")
         for token in (
@@ -2069,7 +2083,7 @@ def main() -> int:
             '"Ao salvar, segue direto para o Compliance"',
             'ThisItem.classificacao_contraparte = "FLUXO II" && ThisItem.tipo_contrato in ["Órgão público — Convênio", "Órgão público — Termo de cooperação", "Órgão público — Cessão de área"]',
         ):
-            if token not in compact:
+            if fx(token) not in compact:
                 findings.append(f"caminho do órgão público sem {token!r}")
         if compact.count("varDdSemQuestionarioForm: false") < 2:
             findings.append("varDdSemQuestionarioForm deve ser desligado com varFluxoForm")
@@ -2557,7 +2571,7 @@ def main() -> int:
             "If(IsBlank(ThisItem.prazo_reavaliacao), \"\", \"<div>Prazo de reavaliação",
             'Substitute(Substitute(Substitute(Coalesce(ThisItem.razao_social, "-"), "&", "&amp;")',
         ):
-            if token not in toolbar:
+            if fx(token) not in fx(toolbar):
                 findings.append(f"laudo sem o tratamento esperado {token!r}")
         # Sem questionário (Fluxo I/II), a seção do terceiro não entra no laudo.
         if not re.search(r"If\(\s*_semQuestionario,\s*\"\",\s*\"<div class='lbl'>Questionário do terceiro", toolbar):
@@ -2961,19 +2975,17 @@ def main() -> int:
             "varDdPodeAnalisarCompliance || Lower(Trim(Coalesce(ThisItem.'Criado por'.Email, \"\"))) "
             "= Lower(Trim(User().Email))"
         )
-        toolbar_items = re.sub(r"\s+", " ", str((main_controls.get("tbDdAcoes", {}).get("Properties") or {}).get("Items", "")))
-        toolbar_select = re.sub(r"\s+", " ", str((main_controls.get("tbDdAcoes", {}).get("Properties") or {}).get("OnSelect", "")))
-        confirmar = re.sub(
-            r"\s+", " ", str((main_controls.get("btnDdExcluirConfirmar", {}).get("Properties") or {}).get("OnSelect", ""))
-        )
-        if f"_podeExcluir: {pode}" not in toolbar_items:
+        toolbar_items = fx(str((main_controls.get("tbDdAcoes", {}).get("Properties") or {}).get("Items", "")))
+        toolbar_select = fx(str((main_controls.get("tbDdAcoes", {}).get("Properties") or {}).get("OnSelect", "")))
+        confirmar = fx(str((main_controls.get("btnDdExcluirConfirmar", {}).get("Properties") or {}).get("OnSelect", "")))
+        if fx(f"_podeExcluir: {pode}") not in toolbar_items:
             findings.append("tbDdAcoes.Items sem _podeExcluir (Compliance ou autor, por e-mail)")
         if "ItemDisabled: !_podeExcluir," not in toolbar_items:
             findings.append("o item Excluir deve ficar desabilitado para quem não pode excluir")
-        if f'"excluir", If( {pode},' not in toolbar_select:
+        if fx(f'"excluir", If( {pode},') not in toolbar_select:
             findings.append("tbDdAcoes.OnSelect: o ramo excluir deve conferir a permissão antes de abrir a confirmação")
         registro = pode.replace("ThisItem.", "varRegistroDueDiligence.")
-        if f"=If( !({registro})," not in confirmar:
+        if fx(f"=If( !({registro}),") not in confirmar:
             findings.append("btnDdExcluirConfirmar deve recusar a exclusão de quem não é o Compliance nem o autor")
         # Exibir o nome é legítimo; comparar a pessoa por nome, não. O campo "Criado por"
         # só pode ser comparado pelo e-mail (lição do Service Desk, 2026-09-11).
@@ -2987,6 +2999,130 @@ def main() -> int:
         return "excluir liberado só para o Compliance e para quem abriu, conferido nas três camadas"
 
     validator.check("Exclusão restrita ao Compliance e ao autor", check_delete_permission)
+
+    def check_chaining_separator(findings: list[str]) -> str:
+        # 2026-10-13: fórmula invariante colada na barra de fórmulas pt-BR. Lá, ';' é
+        # separador de ARGUMENTO, e o Studio reexportou cada encadeamento como ','.
+        # Não dá erro: If/IfError aceitam argumentos extras e a fórmula muda de sentido
+        # (btnDdExcluirConfirmar passou a avisar "Só o Compliance..." e nunca excluía).
+        # Sinais: ação na posição de condição de um If, ou IfError com 4+ argumentos.
+        acoes = (
+            r"(?:UpdateContext|Set|Notify|Navigate|Back|Patch|Remove|RemoveIf|Refresh|Collect|ClearCollect|"
+            r"Clear|Reset|ResetForm|SubmitForm|NewForm|EditForm|ViewForm|Select|SetFocus|Download|Launch)\s*\("
+        )
+
+        def argumentos(masked: str, abre: int) -> list[str]:
+            profundidade = 0
+            inicio = abre + 1
+            partes: list[str] = []
+            for indice in range(abre, len(masked)):
+                char = masked[indice]
+                if char in "([{":
+                    profundidade += 1
+                elif char in ")]}":
+                    profundidade -= 1
+                    if profundidade == 0:
+                        partes.append(masked[inicio:indice].strip())
+                        return partes
+                elif char == "," and profundidade == 1:
+                    partes.append(masked[inicio:indice].strip())
+                    inicio = indice + 1
+            return partes
+
+        conferidas = 0
+
+        def walk(value: Any, location: str, file_name: str) -> None:
+            nonlocal conferidas
+            if isinstance(value, dict):
+                for key, child in value.items():
+                    walk(child, f"{location}.{key}" if location else str(key), file_name)
+            elif isinstance(value, list):
+                for index, child in enumerate(value):
+                    walk(child, f"{location}[{index}]", file_name)
+            elif isinstance(value, str) and value.startswith("="):
+                masked = strip_powerfx_literals_and_comments(value)
+                for match in re.finditer(r"(?<![\w.])(If|IfError)\s*\(", masked):
+                    conferidas += 1
+                    partes = argumentos(masked, match.end() - 1)
+                    partes_local = location.split(".")
+                    controle = ".".join(partes_local[-3::2]) if len(partes_local) >= 3 else location
+                    if match.group(1) == "IfError":
+                        if len(partes) >= 4:
+                            findings.append(
+                                f"{file_name}: {controle}: IfError com {len(partes)} argumentos — "
+                                "encadeamento ';' virou ',' (barra de fórmulas pt-BR)?"
+                            )
+                        continue
+                    for condicao in partes[0:len(partes) - 1:2]:
+                        if re.match(acoes, condicao):
+                            findings.append(
+                                f"{file_name}: {controle}: If com {condicao.split('(')[0]}(...) na posição de condição — "
+                                "encadeamento ';' virou ',' (barra de fórmulas pt-BR)?"
+                            )
+
+        for path, document in yaml_documents.items():
+            walk(document, "", display(path))
+        return f"{conferidas} If/IfError conferido(s), encadeamento ';' preservado"
+
+    validator.check("Encadeamento ';' preservado (colagem na barra pt-BR)", check_chaining_separator)
+
+    def check_compliance_analyst(findings: list[str]) -> str:
+        # 2026-10-13: o Compliance marca quem está analisando cada solicitação em
+        # andamento. Grava responsavel_compliance_email (a mesma coluna que a decisão
+        # já preenchia com Coalesce), visível só para o perfil Compliance.
+        on_visible = fx(str((yaml_documents.get(BASE / "ScreenDueDiligence.yaml", {}).get("Screens", {})
+                             .get("ScreenDueDiligence", {}).get("Properties") or {}).get("OnVisible", "")))
+        if fx("If( varDdPodeAnalisarCompliance, ClearCollect(colDdAnalistas, tb_dueDiligenceCompliance) )") not in on_visible:
+            findings.append("OnVisible deve carregar colDdAnalistas só para o Compliance (nomes fora da galeria)")
+        cab = (main_controls.get("lblDdAnalistaCab", {}).get("Properties") or {})
+        linha = (main_controls.get("lblDdAnalista", {}).get("Properties") or {})
+        if fx(str(cab.get("Text", ""))) != fx('=If(varDdPodeAnalisarCompliance, "ANALISTA", "")'):
+            findings.append("lblDdAnalistaCab deve mostrar ANALISTA só para o Compliance")
+        if not fx(str(linha.get("Text", ""))).startswith(fx('=If( !varDdPodeAnalisarCompliance, "",')):
+            findings.append("lblDdAnalista deve ficar vazio fora do perfil Compliance")
+        for nome, props in (("lblDdAnalistaCab", cab), ("lblDdAnalista", linha)):
+            # Os dois rótulos são o espaçador FillPortions entre STATUS e AÇÕES:
+            # escondê-los desalinharia a grade para quem não é do Compliance.
+            if "Visible" in props:
+                findings.append(f"{nome} não pode ter Visible (é o espaçador da grade); esconda pelo Text")
+            if str(props.get("FillPortions", "")).strip() != "=1":
+                findings.append(f"{nome} deve manter FillPortions: =1")
+        if "tb_dueDiligenceCompliance" in str(linha.get("Text", "")) or "colDdAnalistas" not in str(linha.get("Text", "")):
+            findings.append("lblDdAnalista consulta a lista por linha; use colDdAnalistas")
+        itens = fx(str((main_controls.get("tbDdAcoes", {}).get("Properties") or {}).get("Items", "")))
+        for token in (
+            'ItemKey: "assumir"',
+            '_analiseMinha: !IsBlank(ThisItem.responsavel_compliance_email) && Lower(Trim(ThisItem.responsavel_compliance_email)) = Lower(Trim(User().Email))',
+            'ItemDisabled: !varDdPodeAnalisarCompliance || !(ThisItem.status in ["Aguardando Terceiro", "Pendente Compliance"])',
+        ):
+            if fx(token) not in itens:
+                findings.append(f"tbDdAcoes.Items sem {token!r}")
+        acao = fx(str((main_controls.get("tbDdAcoes", {}).get("Properties") or {}).get("OnSelect", "")))
+        inicio = acao.find('"assumir", If(')
+        fim = acao.find('"terceiro",', inicio)
+        if min(inicio, fim) < 0:
+            findings.append("tbDdAcoes.OnSelect sem o ramo \"assumir\" antes de \"terceiro\"")
+        else:
+            ramo = acao[inicio:fim]
+            for token in (
+                '!varDdPodeAnalisarCompliance || !(ThisItem.status in ["Aguardando Terceiro", "Pendente Compliance"])',
+                "DateDiff(varDdOcupadoDesde, Now(), TimeUnit.Seconds) < 30",
+                "_registroBase: LookUp(tb_dueDiligence, ID = ThisItem.ID)",
+                '!(_registroBase.status in ["Aguardando Terceiro", "Pendente Compliance"])',
+                # compara com o que a pessoa viu: quem assumiu no meio do caminho não é sobrescrito
+                "_atual <> _visto",
+                "If( IsError( Patch( tb_dueDiligence, _registroBase, {responsavel_compliance_email: If(_atual = _eu, \"\", _eu)}",
+            ):
+                if fx(token) not in ramo:
+                    findings.append(f"tbDdAcoes.OnSelect, ramo assumir, sem {token!r}")
+            if ramo.count("varDdOcupadoDesde: Blank()") < 4:
+                findings.append("tbDdAcoes.OnSelect, ramo assumir: a trava precisa ser liberada em todas as saídas")
+        decisao = fx(main_yaml_text)
+        if fx("Coalesce(_registroBase.responsavel_compliance_email, Lower(User().Email))") not in decisao:
+            findings.append("a decisão deve manter quem assumiu (Coalesce) e só preencher quando vazio")
+        return "analista visível só ao Compliance, assumir/liberar com releitura e trava"
+
+    validator.check("Analista do Compliance na listagem", check_compliance_analyst)
 
     print()
     if validator.errors:

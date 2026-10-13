@@ -2365,3 +2365,58 @@ novo e as `nf*` do App.Formulas novo. Aceita arquivo avulso como argumento.
 fora da ordem do LEIA-ME, listar junto o que ela exige do App (variáveis do
 OnStart, named formulas, coleções carregadas por outra tela) e entregar o trecho
 mínimo para suprir isso.
+
+
+## Fórmula invariante colada na barra pt-BR: `;` vira `,` e muda o sentido SEM erro (2026-10-13)
+
+- Projeto/tela: DueDiligence / `ScreenDueDiligence`, `btnDdExcluirConfirmar.OnSelect`.
+- Sintoma: nenhum erro no Studio. Achado comparando o export enviado
+  (commit "Atualização 13-10-2026") com a versão anterior: os encadeamentos
+  `UpdateContext(...); Notify(...)` e `RemoveIf(...); Remove(...); Notify(...)`
+  voltaram como `UpdateContext(...), Notify(...)` e `RemoveIf(...), Remove(...), ...`.
+
+Causa confirmada pelo diff: é o caminho inverso da lição de locale (2026-08-13).
+Uma fórmula no formato invariante (`;` encadeia) foi colada na **barra de
+fórmulas pt-BR**, onde `;` é separador de **argumento**. O Studio aceitou porque
+`If` e `IfError` são variádicos, e reexportou cada `;` como `,`. O resultado
+compila e faz outra coisa:
+
+```powerfx
+If(!pode, UpdateContext(...), Notify("Só o Compliance..."), ...)
+//         resultado 1        condição 2 (!): Notify roda e devolve true
+```
+
+Para quem PODE excluir, o botão mostrava "Só o Compliance ou quem abriu a
+solicitação pode excluir." e não excluía nada. O `IfError` com 6 argumentos
+virou pares valor/fallback: o `Remove` da solicitação passou a ser fallback.
+
+Correção: restaurar os quatro `;` (fórmula idêntica à versão anterior, conferida
+token a token).
+
+Validação preventiva (`DueDiligence/validar_due_diligence.py`, grupo "Encadeamento
+';' preservado"): reprovar `If` com função de ação (`UpdateContext`, `Notify`,
+`Patch`, `Remove`, `Set`, `Reset`...) na **posição de condição**, e `IfError` com
+4+ argumentos. Rodado no workspace inteiro: zero falso positivo na versão anterior
+do Due Diligence; reprova exatamente o botão quebrado na versão enviada.
+
+Impacto global: a mesma varredura acusou suspeitos em Inspeções
+(`frmHomePatio`, `frmHomePista`, `frmHomeTPS`) e REA (`ScreenGestaoViaturas`,
+`ScreenOcorrenciasNaoAeronauticas`), ainda não corrigidos.
+
+**Regra:** fórmula para a barra de fórmulas sai convertida para pt-BR (`;;`
+encadeia). Não basta dizer "converta": fórmula invariante colada lá **não dá erro**
+quando a função aceita argumentos extras.
+
+## Export do Studio traz `%DATACARD_` e reformata as fórmulas (2026-10-13)
+
+- Projeto: DueDiligence / `ScreenDueDiligence` (export enviado em 2026-10-13).
+- O export do Studio escreveu `MaxLength: =DataSourceInfo(%DATACARD_DATASOURCE_NAME.ID%, ...)`
+  em 52 `TypedDataCard`. É o mesmo placeholder da lição "Placeholders internos do
+  template": o Studio exporta, mas não aceita de volta na colagem. Antes de
+  reentregar um export, remover essas linhas (são o padrão do cartão, sem efeito).
+- O mesmo export quebra a linha depois de cada `(`/`[`/`{`, um argumento por
+  linha. Validador que compara token depois de só colapsar espaços (`"If( x"` ≠
+  `"If(x"`) passou a acusar 65 falsos positivos. Correção: `fx()` no validador
+  também tira o espaço colado aos delimitadores, aplicado ao token e à fórmula.
+- `Created` virou `Criado` (nome de exibição no Studio pt-BR). As duas formas
+  funcionam no SharePoint (ver a lição de nome interno × exibição); não reverter.
