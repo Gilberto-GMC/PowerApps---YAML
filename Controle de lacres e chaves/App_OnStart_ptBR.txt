@@ -1,0 +1,89 @@
+// ══════════════════════════════════════════════════════════════════════════════
+// AirportNow — Controle de Chaves e Lacres  ·  App.OnStart
+// ══════════════════════════════════════════════════════════════════════════════
+// COLAR EM: Studio > árvore de controles > App > propriedade "OnStart".
+// LOCALE pt-BR (barra de fórmulas): ";" separa argumentos, ";;" encadeia.
+//
+// PRÉ-REQUISITO: colar antes o App.Formulas (App_Formulas_ptBR.txt).
+//
+// O que mudou em relação ao OnStart anterior:
+//   · colAeros vem de nfAeros (120 linhas a menos, mesmo conteúdo);
+//   · o registro do usuário é buscado UMA vez (antes eram três LookUp iguais);
+//   · col_colaboradores SAIU: virou nfColaboradores no App.Formulas, com todos
+//     os aeroportos. Qualquer tela que ainda leia col_colaboradores vai acusar
+//     erro no Studio — trocar lá por nfColaboradores.
+//
+// O que ficou aqui de propósito: as variáveis do usuário (varNomeUser,
+// varAeroUser, varPerfilUser...). Todas as telas leem esses nomes; trocá-las por
+// named formulas exigiria mexer em todas, inclusive nas que não estão no repositório.
+// ══════════════════════════════════════════════════════════════════════════════
+
+// Aeroportos
+ClearCollect(
+    colAeros;
+    nfAeros
+);;
+
+// Usuário
+Set(
+    varIdUser;
+    Coalesce(
+        Value(Param("USUARIO"));
+        LookUp(
+            User;
+            usrNome = User().FullName
+        ).ID
+    )
+);;
+
+// Dados do usuário
+With(
+    {
+        dados: LookUp(
+            User;
+            ID = Value(varIdUser)
+        )
+    };
+    With(
+        {
+            dadosAero: LookUp(
+                colAeros;
+                Aeroporto = dados.Aeroporto
+            )
+        };
+        Concurrent(
+            Set(varDadosUser; dados);
+            Set(varNomeUser; dados.usrNome);
+            Set(varEmailUser; dados.Email);
+            Set(varFuncaoUser; dados.Funcao);
+            Set(varBlocoUser; dados.Bloco);
+            Set(varClusterUser; dados.Cluster);
+            Set(varAeroUser; dados.Aeroporto);
+            Set(varPerfilUser; dados.Perfil);
+            Set(varAutUser; dados.Autorizacao);
+            Set(varICAOUser; dadosAero.ICAO);
+            Set(varIATAUser; dadosAero.IATA);
+            Set(
+                varFotoUser;
+                IfError(
+                    UsuáriosdoOffice365.UserPhoto(First(UsuáriosdoOffice365.SearchUser({searchTerm: dados.usrNome})).Id);
+                    Blank()
+                )
+            )
+        )
+    )
+);;
+
+// Última versão
+Set(
+    var_ultimaVersao;
+    Value(
+        First(
+            Sort(
+                tbl_controle_versoes;
+                ID;
+                SortOrder.Descending
+            )
+        ).Numero_versao
+    )
+);;
