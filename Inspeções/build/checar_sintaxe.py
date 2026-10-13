@@ -8,7 +8,9 @@ Regras (todas de lições registradas em LICOES_APRENDIDAS_POWERAPPS_YAML.md):
  3. propriedade de linha única contendo `: ` ou ` #` sem aspas YAML (o Studio
     grava essas como bloco `|-` ou com aspas simples; escrito à mão, quebra o YAML);
  4. `;;` em código ativo (pt-BR colado por engano);
- 5. `ThisRecord.<coluna de origem>` dentro de ForAll(Distinct(...)) — Distinct devolve Value.
+ 5. `ThisRecord.<coluna de origem>` dentro de ForAll(Distinct(...)) — Distinct devolve Value;
+ 6. teto de data `col <= Today()` (direto ou via `If(IsBlank(dtp), Today(), ...)`): Today() é
+    00:00 de hoje, então registro data/hora criado hoje fica fora (lição 2026-10-13).
 
 Uso: python build/checar_sintaxe.py [--baseline] [--dir PASTA]
 """
@@ -110,6 +112,9 @@ def main():
                 mm = re.search(r'ThisRecord\.([A-Za-z_]\w*)', trecho)
                 if mm and mm.group(1) != 'Value':
                     problemas.append((nome_arq, linha, prop, f"ForAll(Distinct(...)) lendo ThisRecord.{mm.group(1)} — Distinct devolve Value"))
+            if re.search(r'<=\s*(If\(\s*IsBlank\([^()]*\)\s*,\s*)?Today\(\)', m):
+                # aviso (não erro) enquanto frmHomeTPS/frmZPAapontamentos/out/ não forem corrigidos
+                avisos.append((nome_arq, linha, prop, "teto de data '<= Today()' exclui o dia de hoje — use '< DateAdd(Coalesce(dtp, Today()), 1, TimeUnit.Days)'"))
     for a, l, p, e in problemas:
         print(f"   {'!' if baseline else '✗'} {a}:{l}  {p}: {e}")
     for a, l, p, e in avisos:

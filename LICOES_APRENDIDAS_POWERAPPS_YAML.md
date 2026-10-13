@@ -2216,3 +2216,26 @@ Causas confirmadas (quatro, todas invisíveis para os validadores locais, porque
 Validação preventiva: **não automatizada ainda.** Ficou pendente um verificador que, para cada coleção, compare as chaves dos registros de todo `Collect`/`ClearCollect`/`Patch` que a povoa, e outro que confira que toda tela citada em `Navigate` tem arquivo em `out/`. O Verificador do Studio é hoje o único que pega o defeito; ele pode só reavaliar a checagem de tipo entre telas depois de salvar (não confirmado: com o código corrigido colado e sem salvar, os erros continuaram).
 
 **Regra:** uma coleção ou variável de contexto tem um formato só, em todos os pontos que a escrevem. Para passar dados entre telas, mande escalares ou uma tabela de formato fixo, nunca `ThisItem` de fontes diferentes na mesma variável. Antes de dizer que uma entrega está completa, conferir que toda tela referenciada existe em `out/`.
+
+## Dropdown com opção em branco via `Ungroup(Table(...Distinct...))` e teto de data em `Today()` (2026-10-13)
+
+- Projeto/tela: Inspeções / `frmHomePatio`, filtros de "Gerenciar não conformidades" (`cmbHomeLocal_1`, `cmbHomeItem_2`) e consultas `GalleryInspPatioitens.Items` e `HtmlText3_1.HtmlText` (PDF).
+- Sintoma no Studio: sublinhado vermelho em `cmbHomeLocal_1.Selected.Value` e `cmbHomeItem_2.Selected.Value` (e nos `IsBlank`/`StartsWith` em volta) dentro do `Filter` da galeria. **Mensagem exata não registrada** (só print da barra de fórmulas).
+
+O que está confirmado:
+
+1. A única diferença entre a tela com erro e o export publicado (App Checker sem nenhum erro de fórmula nessa tela) é a troca dos `Items` dos dois combos: lista fixa `["", "PÁTIO DE AERONAVES", ...]` → `Ungroup(Table({opcoes: Table({Value: ""})}, {opcoes: Distinct(col_inspPatiomenu, local)}), "opcoes")`. A causa exata da rejeição desse `Ungroup` **não foi confirmada**.
+2. O mesmo filtro dinâmico já compila no próprio app: `frmHomeApont.cmbHomeLocal` usa `AllowEmptySelection: =true`, `Default: =""` e `Items: =Distinct(col, local)`. Correção: esse padrão, sem `Ungroup`/`Table` aninhado.
+3. Junto vinha `Default: ="Todos"`, valor que não existe na lista. Com a lista fixa o primeiro item era `""` e o filtro ficava neutro por acaso; com `Distinct` (sem branco) o primeiro item passaria a ser um local real e a galeria nasceria filtrada sem ninguém escolher.
+4. **Teto de data em `Today()`**: `Criado <= If(IsBlank(dtpTermino), Today(), DateAdd(dtpTermino, 1, Days))`. `Today()` é 00:00 de hoje; `Criado` é data/hora. Com o término em branco (padrão do controle, sem `DefaultDate`) **nenhum item criado hoje aparecia**, embora o comentário dissesse "Inclui a data de término". Correção: `Criado < DateAdd(Coalesce(dtpTermino.SelectedDate, Today()), 1, TimeUnit.Days)`.
+
+Correções no mesmo arquivo (`Inspeções/build/corrigir_patio_2026_10_13.py`): os filtros opcionais `IsBlank(x) || StartsWith(col, x)` viraram `StartsWith(col, Text(x))` nas três consultas (lição 2026-09-17), e as 4 referências a controles de outras telas saíram (`MainContainerListar*`, `GalleryApontListagem`, `'7.4-tbl_InspPista'`), com as mesmas trocas da entrega de 2026-09-17.
+
+Validação automatizada: `Inspeções/build/checar_sintaxe.py` regra 6 acusa `<= Today()` e `<= If(IsBlank(x), Today(), ...)`. Está como **aviso** porque o mesmo defeito existe em `frmHomeTPS` (galeria e PDF), `frmZPAapontamentos` e nos arquivos de `out/`; vira erro depois que esses forem corrigidos.
+
+**Regras:**
+- Opção "todos" em dropdown clássico: `AllowEmptySelection: =true` + `Default: =""` + `Items: =Distinct(...)`. Não montar tabela com `Ungroup(Table(...))`.
+- `Default` de dropdown tem que ser um valor que existe em `Items`, ou `""` quando há seleção vazia.
+- Teto de intervalo sobre coluna data/hora é sempre `< início do dia seguinte`, nunca `<= Today()` nem `<= data escolhida`.
+
+Impacto global: procurar `<= Today()` em todo filtro de período (TPS, ZPA e qualquer tela com `dtp*Termino`) e `Ungroup(Table(` em `Items` de dropdown.
