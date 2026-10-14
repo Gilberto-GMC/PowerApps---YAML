@@ -351,8 +351,10 @@ pelo `forms_envio_id` de cada solicitação. Se a ativação acima não for feit
 parâmetro aparece na barra de endereço, mas o Forms deixa a pergunta vazia.
 
 O código continua visível e editável no Forms. Ele serve para correlação, não
-como prova de identidade; o DD02 rejeita código inexistente, duplicado, antigo
-ou que não pertença a uma solicitação em `Aguardando Terceiro` no `FLUXO III`.
+como prova de identidade; o DD02 rejeita código inexistente, duplicado ou que
+não pertença a uma solicitação em `Aguardando Terceiro` no `FLUXO III`. Código
+de envio anterior só é aceito nas condições de "Resposta por link de um envio
+anterior".
 
 O `responseId` devolvido pelo gatilho do Forms pode ser numérico. Nos corpos
 REST enviados ao SharePoint, o DD02 converte explicitamente esse valor e todos
@@ -441,10 +443,39 @@ alteração posterior no item reenviaria o e-mail sem ninguém pedir.
    continuam encerrando a execução como `Failed`, mas a mensagem é montada
    por `Diagnostico_Correlacao` / `Diagnostico_Resposta_Invalida`: código
    recebido, quantidade de registros encontrados, ID da solicitação, status e
-   fluxo atuais, envio não processado, resposta inválida e resposta anterior já
-   processada (segundo envio do terceiro). O reenvio pelo app gera um novo
-   `forms_envio_id`; resposta enviada pelo link anterior cai em
-   `DD02_CORRELACAO_INVALIDA` por desenho.
+   fluxo atuais, envio não processado, e-mail do link anterior, resposta
+   inválida e resposta anterior já processada (segundo envio do terceiro).
+
+### Resposta por link de um envio anterior (2026-10-14)
+
+O app gera um `forms_envio_id` novo a cada reenvio e a cada edição que troca o
+e-mail ou corrige uma falha de envio. O terceiro que respondia pelo e-mail
+anterior perdia a resposta (`DD02_CORRELACAO_INVALIDA`). Agora:
+
+- o DD01 grava, na linha `Envio ao terceiro` do histórico, as colunas
+  `forms_envio_id` (código do link) e `email_envio` (e-mail que o recebeu);
+- quando o código não é o atual de nenhuma solicitação, o DD02 procura esse
+  código no histórico e lê a solicitação daquele envio;
+- a resposta só é aceita se a solicitação estiver em `Aguardando Terceiro`, no
+  `FLUXO III`, sem resposta processada, sem envio novo em processamento e se
+  `email_envio` for igual ao `email_terceiro` atual (ignorando maiúsculas). Um
+  link mandado para um e-mail que depois foi corrigido continua recusado;
+- aceita a resposta, o DD02 grava o código usado em `forms_envio_id` e
+  `forms_envio_processado_id` no mesmo MERGE. O app só exibe respostas do
+  `forms_envio_id` atual, e os dois campos iguais não disparam o DD01;
+- o histórico `Resposta do terceiro` registra que a resposta veio de um link
+  anterior;
+- código duplicado em duas solicitações continua recusado.
+
+Envios feitos antes desta versão não têm o código na coluna nova e seguem
+recusados; recupere-os manualmente (gravar o código antigo nos dois campos da
+solicitação, em um único salvamento pelo formulário do item, e reenviar a
+execução).
+
+Ordem de implantação: criar as duas colunas na `tb_dueDiligenceDesdobramentos`
+(`forms_envio_id` Texto 100 indexada; `email_envio` Texto 255) **antes** de
+importar o DD01. Sem elas, o SharePoint recusa a linha de histórico do envio
+(HTTP 400) e o envio fica sem registro.
 
 ### Normalização e idempotência
 

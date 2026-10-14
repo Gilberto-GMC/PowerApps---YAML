@@ -642,9 +642,23 @@ def main() -> int:
             # precisa dizer o código, o status e a regra que barrou.
             "\"message\": \"@outputs('Diagnostico_Correlacao')\"",
             "\"message\": \"@outputs('Diagnostico_Resposta_Invalida')\"",
+            # Link de envio anterior (2026-10-14): localizado pelo histórico,
+            # só aceito com o mesmo e-mail e sem resposta; o código usado passa a
+            # ser o da solicitação, senão o app não mostra as respostas.
+            "HTTP_Localizar_Envio_Anterior",
+            "getbytitle(''tb_dueDiligenceDesdobramentos'')/items?$select=ID,solicitacao_id,forms_envio_id,email_envio",
+            "equals(toLower(trim(variables('varEmailEnvioAnterior')))",
+            "\"forms_envio_id\": \"@string(outputs('Codigo_Acompanhamento'))\"",
+            "\"forms_envio_processado_id\": \"@string(outputs('Codigo_Acompanhamento'))\"",
         ):
             if token not in process_text:
                 findings.append(f"DD02 sem contrato obrigatório: {token!r}")
+        for token in (
+            "\"forms_envio_id\": \"@string(body('HTTP_Obter_Item_Atual')?['forms_envio_id'])\"",
+            "\"email_envio\": \"@string(body('HTTP_Obter_Item_Atual')?['email_terceiro'])\"",
+        ):
+            if token not in send_text:
+                findings.append(f"DD01 sem registro do envio no histórico: {token!r}")
         # Aprovação automática depois da resposta (2026-09-16): risco baixo ou médio,
         # sem gatilho crítico e sem resposta de risco alto; o resto vai ao Compliance.
         for token in (

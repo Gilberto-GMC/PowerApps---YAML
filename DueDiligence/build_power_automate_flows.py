@@ -365,6 +365,9 @@ def send_actions():
                     "@concat('Questionário enviado ao terceiro. Identificador do envio: ', "
                     "string(body('HTTP_Obter_Item_Atual')?['forms_envio_id']), '.')"
                 ),
+                # O DD02 localiza por aqui a resposta dada por um link anterior.
+                "forms_envio_id": "@string(body('HTTP_Obter_Item_Atual')?['forms_envio_id'])",
+                "email_envio": "@string(body('HTTP_Obter_Item_Atual')?['email_terceiro'])",
                 "visivel_solicitante": 1,
                 "ativo": 1,
             },
@@ -496,7 +499,11 @@ def send_actions():
 def process_actions():
     response_id = "@triggerOutputs()?['body/resourceData/responseId']"
     code = f"@trim(string(body('Obter_detalhes_da_resposta')?['{TRACKING_QUESTION_ID}']))"
-    first_parent = "first(body('HTTP_Localizar_Solicitacao')?['value'])"
+    # A solicitação vem do envio atual ou, na falta dele, de um envio anterior
+    # registrado no histórico; a partir daqui todo o fluxo lê a variável.
+    first_parent = "variables('varSolicitacao')"
+    previous_link = "variables('varEnvioAnterior')"
+    tracking = "outputs('Codigo_Acompanhamento')"
 
     actions = {
         "Obter_detalhes_da_resposta": conn_action(
@@ -535,23 +542,124 @@ def process_actions():
             0,
             {"Inicializar_Erro_Parametro": ["Succeeded"]},
         ),
+        "Inicializar_Solicitacao": initialize_variable(
+            "varSolicitacao",
+            "object",
+            {},
+            {"Inicializar_Quantidade_Risco_Alto": ["Succeeded"]},
+        ),
+        "Inicializar_Envio_Anterior": initialize_variable(
+            "varEnvioAnterior",
+            "boolean",
+            False,
+            {"Inicializar_Solicitacao": ["Succeeded"]},
+        ),
+        "Inicializar_Email_Envio_Anterior": initialize_variable(
+            "varEmailEnvioAnterior",
+            "string",
+            "",
+            {"Inicializar_Envio_Anterior": ["Succeeded"]},
+        ),
         "Codigo_Acompanhamento": compose(
-            code, {"Inicializar_Quantidade_Risco_Alto": ["Succeeded"]}
+            code, {"Inicializar_Email_Envio_Anterior": ["Succeeded"]}
         ),
     }
-    lookup_prefix = (
-        f"_api/web/lists/getbytitle('{MAIN_LIST}')/items?"
+    main_select = (
         "$select=ID,status,fluxo_classificacao,classificacao_risco,risco_final,gatilho_dd,"
-        "forms_correlacao_id,forms_envio_id,forms_envio_processado_id,forms_ultima_resposta_id"
+        "forms_correlacao_id,forms_envio_id,forms_envio_processado_id,forms_ultima_resposta_id,"
+        "email_terceiro"
+    )
+    lookup_prefix = (
+        f"_api/web/lists/getbytitle('{MAIN_LIST}')/items?{main_select}"
         "&$filter=forms_envio_id eq '"
     )
+    escaped_code = (
+        f"replace({tracking}, {wdl_literal(chr(39))}, {wdl_literal(chr(39) * 2)})"
+    )
     lookup_uri = (
-        f"@concat({wdl_literal(lookup_prefix)}, "
-        f"replace(outputs('Codigo_Acompanhamento'), {wdl_literal(chr(39))}, "
-        f"{wdl_literal(chr(39) * 2)}), {wdl_literal(chr(39))})"
+        f"@concat({wdl_literal(lookup_prefix)}, {escaped_code}, {wdl_literal(chr(39))})"
     )
     actions["HTTP_Localizar_Solicitacao"] = sp_http(
         "GET", lookup_uri, run_after={"Codigo_Acompanhamento": ["Succeeded"]}
+    )
+
+    # Link de um envio anterior (2026-10-14): o app gera um código novo a cada
+    # reenvio ou troca de e-mail, e o terceiro que respondia pelo e-mail antigo
+    # perdia a resposta. O DD01 grava código e e-mail de cada envio no
+    # histórico; o DD02 usa esse registro quando o código não é o atual.
+    history_prefix = (
+        f"_api/web/lists/getbytitle('{HISTORY_LIST}')/items?"
+        "$select=ID,solicitacao_id,forms_envio_id,email_envio&$top=10"
+        "&$filter=forms_envio_id eq '"
+    )
+    history_uri = (
+        f"@concat({wdl_literal(history_prefix)}, {escaped_code}, {wdl_literal(chr(39))})"
+    )
+    previous_send = "first(body('HTTP_Localizar_Envio_Anterior')?['value'])"
+    by_id_prefix = f"_api/web/lists/getbytitle('{MAIN_LIST}')/items?{main_select}&$filter=ID eq "
+    by_id_uri = (
+        f"@concat({wdl_literal(by_id_prefix)}, string(int({previous_send}?['solicitacao_id'])))"
+    )
+    previous_found_actions = {
+        "HTTP_Obter_Solicitacao_Envio_Anterior": sp_http("GET", by_id_uri),
+        "Definir_Solicitacao_Envio_Anterior": {
+            "runAfter": {"HTTP_Obter_Solicitacao_Envio_Anterior": ["Succeeded"]},
+            "type": "SetVariable",
+            "inputs": {
+                "name": "varSolicitacao",
+                "value": (
+                    "@if(equals(length(body('HTTP_Obter_Solicitacao_Envio_Anterior')?['value']), 1), "
+                    "first(body('HTTP_Obter_Solicitacao_Envio_Anterior')?['value']), json('{}'))"
+                ),
+            },
+        },
+        "Definir_Envio_Anterior": {
+            "runAfter": {"Definir_Solicitacao_Envio_Anterior": ["Succeeded"]},
+            "type": "SetVariable",
+            "inputs": {"name": "varEnvioAnterior", "value": True},
+        },
+        "Definir_Email_Envio_Anterior": {
+            "runAfter": {"Definir_Envio_Anterior": ["Succeeded"]},
+            "type": "SetVariable",
+            "inputs": {
+                "name": "varEmailEnvioAnterior",
+                "value": f"@string(coalesce({previous_send}?['email_envio'], ''))",
+            },
+        },
+    }
+    search_previous_actions = {
+        "HTTP_Localizar_Envio_Anterior": sp_http("GET", history_uri),
+        "Condicao_Envio_Anterior_Encontrado": condition(
+            "@greater(length(body('HTTP_Localizar_Envio_Anterior')?['value']), 0)",
+            previous_found_actions,
+            {"Envio_Anterior_Nao_Registrado": compose("Código ausente do histórico de envios.")},
+            {"HTTP_Localizar_Envio_Anterior": ["Succeeded"]},
+        ),
+    }
+    actions["Condicao_Envio_Atual"] = condition(
+        "@equals(length(body('HTTP_Localizar_Solicitacao')?['value']), 1)",
+        {
+            "Definir_Solicitacao_Atual": {
+                "runAfter": {},
+                "type": "SetVariable",
+                "inputs": {
+                    "name": "varSolicitacao",
+                    "value": "@first(body('HTTP_Localizar_Solicitacao')?['value'])",
+                },
+            }
+        },
+        {
+            # Código duplicado em duas solicitações continua sendo recusado.
+            "Condicao_Buscar_Envio_Anterior": condition(
+                (
+                    "@and(equals(length(body('HTTP_Localizar_Solicitacao')?['value']), 0), "
+                    f"not(empty({tracking})))"
+                ),
+                search_previous_actions,
+                {"Sem_Busca_Envio_Anterior": compose("Código vazio ou duplicado.")},
+            )
+        },
+        {"HTTP_Localizar_Solicitacao": ["Succeeded"]},
     )
 
     # Valida todas as respostas antes de gravar a primeira linha.
@@ -568,9 +676,27 @@ def process_actions():
     q_t5 = next(q["id"] for q in QUESTIONS if q.get("text_answer"))
     check_status = f"equals({first_parent}?['status'], {wdl_literal(STATUS_AGUARDANDO_TERCEIRO)})"
     check_fluxo = f"equals(toUpper(trim(string({first_parent}?['fluxo_classificacao']))), 'FLUXO III')"
-    check_envio = f"equals(string({first_parent}?['forms_envio_id']), outputs('Codigo_Acompanhamento'))"
-    check_processado = (
-        f"equals(string({first_parent}?['forms_envio_processado_id']), outputs('Codigo_Acompanhamento'))"
+    check_envio = f"equals(string({first_parent}?['forms_envio_id']), {tracking})"
+    check_processado = f"equals(string({first_parent}?['forms_envio_processado_id']), {tracking})"
+    # Link anterior: só enquanto não há resposta, sem envio novo em andamento
+    # e se o e-mail que recebeu aquele link é o e-mail atual do terceiro (um
+    # link mandado para o endereço errado não vale).
+    check_sem_envio_pendente = (
+        f"and(not(empty(string(coalesce({first_parent}?['forms_envio_id'], '')))), "
+        f"equals(string(coalesce({first_parent}?['forms_envio_processado_id'], '')), "
+        f"string(coalesce({first_parent}?['forms_envio_id'], ''))))"
+    )
+    check_sem_resposta = (
+        f"empty(string(coalesce({first_parent}?['forms_ultima_resposta_id'], '')))"
+    )
+    check_email = (
+        "and(not(empty(trim(variables('varEmailEnvioAnterior')))), "
+        "equals(toLower(trim(variables('varEmailEnvioAnterior'))), "
+        f"toLower(trim(string(coalesce({first_parent}?['email_terceiro'], ''))))))"
+    )
+    check_link = (
+        f"or(and(not({previous_link}),{check_envio},{check_processado}),"
+        f"and({previous_link},{check_sem_envio_pendente},{check_sem_resposta},{check_email}))"
     )
     check_answers = (
         "and("
@@ -582,9 +708,7 @@ def process_actions():
         f"not(empty(trim(string(body('Obter_detalhes_da_resposta')?['{q_t5}']))))"
         ")"
     )
-    validation = (
-        f"@and({check_status},{check_fluxo},{check_envio},{check_processado},{check_answers})"
-    )
+    validation = f"@and({check_status},{check_fluxo},{check_link},{check_answers})"
 
     # A rejeição continua a mesma; a mensagem diz qual regra barrou e com que
     # valor, para o Compliance decidir sem abrir o SharePoint às cegas.
@@ -594,27 +718,36 @@ def process_actions():
     invalid_reason = (
         "@concat("
         f"'Solicitação ID ', string({first_parent}?['ID']), ' recusou a resposta. ', "
+        f"if({previous_link}, concat('Código ', {tracking}, ' é de um envio anterior; o atual é ', "
+        f"{stored('forms_envio_id')}, '. '), ''), "
         f"if(not({check_status}), concat('Status atual = ', {stored('status')}, "
         f"' (esperado {STATUS_AGUARDANDO_TERCEIRO}). '), ''), "
         f"if(not({check_fluxo}), concat('Fluxo = ', {stored('fluxo_classificacao')}, "
         "' (esperado FLUXO III). '), ''), "
-        f"if(not({check_processado}), concat('Envio ainda não processado pelo DD01 "
+        f"if(and(not({previous_link}), not({check_processado})), concat('Envio ainda não processado pelo DD01 "
         f"(forms_envio_processado_id = ', {stored('forms_envio_processado_id')}, '). '), ''), "
+        f"if(and({previous_link}, not({check_sem_envio_pendente})), "
+        "'Há um envio novo em processamento pelo DD01. ', ''), "
+        f"if(and({previous_link}, not({check_email})), concat('O link anterior foi enviado para ', "
+        "if(empty(trim(variables('varEmailEnvioAnterior'))), '(e-mail não registrado)', "
+        "variables('varEmailEnvioAnterior')), ' e o e-mail atual do terceiro é ', "
+        f"{stored('email_terceiro')}, '. '), ''), "
         f"if(not({check_answers}), 'Resposta obrigatória vazia ou diferente de Sim/Não. ', ''), "
-        f"if(empty(string(coalesce({first_parent}?['forms_ultima_resposta_id'], ''))), '', "
+        f"if({check_sem_resposta}, '', "
         "concat('Já existe resposta processada (Response ID ', "
         f"{stored('forms_ultima_resposta_id')}, '); provável segundo envio do terceiro. ')), "
         f"'Forms Response ID: ', string({response_id[1:]}), '.')"
     )
     not_found_reason = (
         "@concat("
-        "if(empty(outputs('Codigo_Acompanhamento')), "
+        f"if(empty({tracking}), "
         "'Código de acompanhamento vazio na resposta do Forms', "
         "concat('Não há exatamente uma solicitação com o Código de acompanhamento ', "
-        "outputs('Codigo_Acompanhamento'), ' (', "
+        f"{tracking}, ' (', "
         "string(length(body('HTTP_Localizar_Solicitacao')?['value'])), "
-        "' encontrada(s)). Causas comuns: link de um envio anterior ao último reenvio, "
-        "código alterado no Forms ou solicitação excluída')), "
+        "' encontrada(s)) e o código não está no histórico de envios. Causas comuns: "
+        "envio feito antes do registro do código no histórico, código alterado no Forms "
+        "ou solicitação excluída')), "
         f"'. Forms Response ID: ', string({response_id[1:]}), '.')"
     )
 
@@ -645,7 +778,7 @@ def process_actions():
         {"Condicao_Resposta_Valida": not_duplicate},
     )
     found = condition(
-        "@equals(length(body('HTTP_Localizar_Solicitacao')?['value']), 1)",
+        f"@not(empty({first_parent}))",
         {"Condicao_Resposta_Repetida": duplicate_check},
         {
             "Diagnostico_Correlacao": compose(not_found_reason),
@@ -656,7 +789,7 @@ def process_actions():
                 {"Diagnostico_Correlacao": ["Succeeded"]},
             ),
         },
-        {"HTTP_Localizar_Solicitacao": ["Succeeded"]},
+        {"Condicao_Envio_Atual": ["Succeeded"]},
     )
     actions["Condicao_Correlacao_Encontrada"] = found
     return actions
@@ -719,6 +852,11 @@ def build_valid_response_actions(first_parent: str, response_id: str):
         ),
         "data_resposta_terceiro": "@variables('varDataResposta')",
         "forms_ultima_resposta_id": f"@string({response_id[1:]})",
+        # O app só mostra as respostas do forms_envio_id atual: quando o terceiro
+        # usa um link anterior, esse código passa a ser o da solicitação. Os dois
+        # campos mudam juntos, então o DD01 não vê intenção de envio.
+        "forms_envio_id": "@string(outputs('Codigo_Acompanhamento'))",
+        "forms_envio_processado_id": "@string(outputs('Codigo_Acompanhamento'))",
         "status": status_after_response,
         "data_conclusao": f"@if({automatic}, utcNow(), null)",
         # Meio-dia UTC: a coluna é só data e não pode recuar um dia no fuso local.
@@ -761,6 +899,8 @@ def build_valid_response_actions(first_parent: str, response_id: str):
                 "string(variables('varQuantidadeRiscoAlto')), "
                 "' classificação(ões) de risco alto. Forms Response ID: ', "
                 "string(triggerOutputs()?['body/resourceData/responseId']), '.', "
+                "if(variables('varEnvioAnterior'), concat(' Recebida pelo link de um envio anterior (código ', "
+                "outputs('Codigo_Acompanhamento'), '), que passou a ser o código da solicitação.'), ''), "
                 f"if({automatic}, "
                 f"concat(' Aprovação automática: risco ', string({first_parent}?['classificacao_risco']), "
                 "', sem gatilho crítico e sem resposta de risco alto do terceiro. Vigência até ', "
@@ -783,7 +923,7 @@ def build_valid_response_actions(first_parent: str, response_id: str):
         run_after={"Montar_Historico_Resposta": ["Succeeded"]},
     )
     consolidate_actions["Resposta_Processada"] = compose(
-        "@concat('Solicitação ', string(first(body('HTTP_Localizar_Solicitacao')?['value'])?['ID']), "
+        f"@concat('Solicitação ', string({first_parent}?['ID']), "
         "' processada com ', string(length(variables('varRespostas'))), ' respostas.')",
         {
             "HTTP_Registrar_Historico_Resposta": [
