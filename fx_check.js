@@ -122,8 +122,10 @@ function analisa(arquivo, mortos) {
 
     // Propriedade solta no nível do controle, irmã de 'Control:' em vez de filha de 'Properties:'.
     // O Studio recusa com PA1001 "Property 'X' not found on type ControlInstance" (24/09/2026).
+    // Layout (Form) e MetadataKey (cartao de formulario) sao do esquema, nao propriedades: o
+    // scrMapaImport.pa.yaml, colado e em producao, tem os dois (14/10/2026).
     const chaveSolta = l.match(/^\s*([A-Za-z_][A-Za-z0-9_]*):/);
-    if (chaveSolta && !/^\s*- /.test(l) && !["Control", "Variant", "Properties", "Children", "Screens", "ComponentDefinitions"].includes(chaveSolta[1])) {
+    if (chaveSolta && !/^\s*- /.test(l) && !["Control", "Variant", "Properties", "Children", "Screens", "ComponentDefinitions", "Layout", "MetadataKey"].includes(chaveSolta[1])) {
       // acha o cabeçalho do bloco: primeira linha acima com o mesmo recuo
       let j = i - 1;
       while (j >= 0 && (!linhas[j].trim() || recuoDe(linhas[j]) > r)) j--;

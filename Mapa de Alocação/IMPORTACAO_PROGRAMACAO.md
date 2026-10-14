@@ -185,10 +185,11 @@ andamento.
 O passo a passo completo, ação por ação e campo por campo, está em **`FLUXO_IMPORTACAO.md`**.
 
 Resumo: gatilho em item modificado com `status = PRONTO`, salva o anexo numa biblioteca, roda o script,
-apaga a importação anterior do mês pela coluna `origem`, grava os registros num laço sequencial
+apaga a importação anterior pela coluna `origem` — **só nos dias que a planilha cobre**, pelo intervalo
+`data_de`/`data_ate` que o script devolve —, grava os registros num laço sequencial
 atualizando `processados` de 25 em 25, e fecha com `CONCLUIDO`.
 
-As três armadilhas que o documento detalha, e que não são óbvias:
+As armadilhas que o documento detalha, e que não são óbvias:
 
 1. **Condição de gatilho é obrigatória.** O fluxo altera o item que o dispara — sem a condição
    `status = PRONTO` no gatilho, ele entra em laço infinito. Condição no corpo do fluxo não resolve:
@@ -197,6 +198,11 @@ As três armadilhas que o documento detalha, e que não são óbvias:
    corrida entre ramos. Custa 8 a 12 minutos para ~700 itens, e é o preço da barra funcionar.
 3. **`ativo` tem que ser mapeado explicitamente.** O default em produção é `0`, e registro com
    `ativo = 0` some do app sem erro nenhum.
+4. **Planilha parcial substitui só os dias dela.** Até 14/10/2026 qualquer planilha apagava o mês
+   inteiro: mandar só do dia 26 em diante derrubava do 1 ao 25, sem aviso. Hoje o script devolve o
+   intervalo coberto e o fluxo apaga só dentro dele.
+5. **Mês de referência errado não é mais silêncio.** Planilha de outubro com o mês em novembro
+   terminava em 0 registros sem mensagem; agora o script recusa dizendo quais meses a planilha traz.
 
 ---
 

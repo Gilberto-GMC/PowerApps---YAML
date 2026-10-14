@@ -66,6 +66,9 @@ interface Pendencia {
 }
 interface Resultado {
   ok: boolean; mensagem: string; mes_ref: string;
+  /** Primeiro e ultimo dia cobertos pela planilha, em yyyy-MM-dd. O fluxo apaga a importacao
+   *  anterior SO dentro deste intervalo: planilha de meio de mes nao derruba o mes inteiro. */
+  data_de: string; data_ate: string;
   total: number; registros: Registro[]; pendencias: Pendencia[];
 }
 interface ConfigPrePosicao {
@@ -111,7 +114,7 @@ function bloqueadasPor(codigo: string, ocupa: { [codigo: string]: string[] }): s
   return fora;
 }
 function recusa(mesRef: string, mensagem: string): Resultado {
-  return { ok: false, mensagem: mensagem, mes_ref: mesRef, total: 0, registros: [], pendencias: [] };
+  return { ok: false, mensagem: mensagem, mes_ref: mesRef, data_de: "", data_ate: "", total: 0, registros: [], pendencias: [] };
 }
 
 // ============================================================ principal
@@ -298,6 +301,15 @@ function main(workbook: ExcelScript.Workbook, mesRef: string = "", config: strin
     );
   }
 
+  // Intervalo coberto pela planilha, pela data do pouso — e o que o fluxo apaga antes de gravar.
+  let diaDe = dataIso(paresDoMes[0].p.serial);
+  let diaAte = diaDe;
+  for (const x of paresDoMes) {
+    const d = dataIso(x.p.serial);
+    if (d < diaDe) diaDe = d;
+    if (d > diaAte) diaAte = d;
+  }
+
   // --- alocação
   const ocupPosicao: { [k: string]: number[][] } = {};
   const ocupPortao: { [k: string]: number[][] } = {};
@@ -405,8 +417,11 @@ function main(workbook: ExcelScript.Workbook, mesRef: string = "", config: strin
 
   const resultado: Resultado = {
     ok: true,
-    mensagem: registros.length + " registro(s) prontos" + (avisos.length ? " — " + avisos.join(", ") : ""),
+    mensagem: registros.length + " registro(s) prontos de " + diaDe + " a " + diaAte +
+      (avisos.length ? " — " + avisos.join(", ") : ""),
     mes_ref: mesRef,
+    data_de: diaDe,
+    data_ate: diaAte,
     total: registros.length,
     registros: registros,
     pendencias: pendencias,
@@ -419,6 +434,7 @@ function main(workbook: ExcelScript.Workbook, mesRef: string = "", config: strin
   const log: string[] = [];
   log.push(resultado.mensagem);
   log.push("aeroporto: " + AEROPORTO + " | mes: " + (mesRef || "todos") + " | registros: " + registros.length + " | pendencias: " + pendencias.length);
+  log.push("intervalo da planilha (o que o fluxo apaga antes de gravar): " + diaDe + " a " + diaAte);
   if (pendencias.length) {
     log.push("--- pendencias ---");
     log.push(pendencias.map(p =>

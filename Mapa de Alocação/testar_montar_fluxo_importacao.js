@@ -56,6 +56,19 @@ const CASOS = [
     espera: "Criar_registro: falta a obrigatória ativo",
   },
   {
+    nome: "exclusão fora da condição do intervalo (apagaria o mês inteiro)",
+    planta: (wf) => {
+      const ap = acao(wf, "Apagar_anteriores");
+      ap.actions = { Excluir_registro_anterior: ap.actions.No_intervalo.actions.Excluir_registro_anterior };
+    },
+    espera: "Apagar_anteriores: a exclusão tem de estar dentro da condição No_intervalo",
+  },
+  {
+    nome: "condição do intervalo que não olha as datas da planilha",
+    planta: (wf) => { acao(wf, "No_intervalo").expression = { equals: ["@outputs('Resultado_script')?['ok']", true] }; },
+    espera: "No_intervalo tem de comparar data_de e data_ate do Resultado_script",
+  },
+  {
     nome: "referência a ação que não existe",
     planta: (wf) => { acao(wf, "Apagar_anteriores").foreach = "@outputs('Obter_importacao_velha')?['body/value']"; },
     espera: "referência a ação inexistente: Obter_importacao_velha",

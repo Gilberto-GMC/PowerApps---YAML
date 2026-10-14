@@ -263,6 +263,25 @@ if (!/outputs\('Obter_preposicoes'\)/.test(mc) || !/outputs\('Obter_posicoes'\)/
   erros.push("Montar_config tem de levar Obter_preposicoes e Obter_posicoes");
 }
 
+// a importação anterior é apagada SÓ no intervalo que a planilha cobre (14/10/2026: planilha só do dia 26
+// em diante apagou o mês inteiro, porque o filtro era o mês e nada olhava a data de cada item)
+const apg = processar.Apagar_anteriores;
+const noIntervalo = apg && apg.actions && apg.actions.No_intervalo;
+if (!noIntervalo || noIntervalo.type !== "If") {
+  erros.push("Apagar_anteriores: a exclusão tem de estar dentro da condição No_intervalo");
+} else {
+  const exp = JSON.stringify(noIntervalo.expression || "");
+  if (!/data_de/.test(exp) || !/data_ate/.test(exp)) {
+    erros.push("No_intervalo tem de comparar data_de e data_ate do Resultado_script");
+  }
+  if (!noIntervalo.actions || !noIntervalo.actions.Excluir_registro_anterior) {
+    erros.push("No_intervalo: o ramo sim tem de ter o Excluir_registro_anterior");
+  }
+  if (Object.keys(apg.actions).length !== 1) {
+    erros.push("Apagar_anteriores: nada pode excluir fora da condição No_intervalo");
+  }
+}
+
 // nenhuma ação sumiu nem apareceu na remontagem
 const antes = Object.keys(plano).sort().join(",");
 const depois = [...nomes.keys()].filter((n) => nomes.get(n) <= 1 && n !== "Processar").sort().join(",");

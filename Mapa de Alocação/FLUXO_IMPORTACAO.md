@@ -480,11 +480,31 @@ Sem este passo, rodar duas vezes duplica ~700 registros.
 Em **⋯ → Configurações**, ligue a **Paginação** com limite 5000 — sem isso vêm só 100 itens e a
 limpeza fica pela metade.
 
-**Aplicar a cada** sobre `value` → **SharePoint — Excluir item** (`Id` = `ID` do item).
+**Aplicar a cada** sobre `value` → **Condition `No_intervalo`** → ramo **Se sim** → **SharePoint —
+Excluir item** (`Id` = `ID` do item).
+
+Expressão da condição — modo avançado:
+
+```
+@and(
+    greaterOrEquals(formatDateTime(items('Apagar_anteriores')?['data_operacao'], 'yyyy-MM-dd'), outputs('Resultado_script')?['data_de']),
+    lessOrEquals(formatDateTime(items('Apagar_anteriores')?['data_operacao'], 'yyyy-MM-dd'), outputs('Resultado_script')?['data_ate'])
+)
+```
+
+> **Por que a condição existe (14/10/2026).** O Osmar mandou uma planilha só do dia 26 em diante,
+> porque a malha mudou no meio do mês — e a importação **apagou o mês inteiro**, já que o filtro é a
+> `origem` do mês e nada olhava a data de cada item. Com a condição, planilha de 26 a 31 substitui
+> só 26 a 31; planilha do mês fechado continua se comportando como antes. O intervalo vem do próprio
+> script, em `data_de` e `data_ate` (data do pouso, a mesma que vira `data_operacao`).
+>
+> A comparação é de texto `yyyy-MM-dd`, que ordena certo, e vale para Navegantes (UTC-3): data só de
+> dia é guardada como meia-noite local, que em UTC cai no mesmo dia. Num fuso a leste de Greenwich
+> isso escorregaria um dia.
 
 > Tem que filtrar pela `origem`, não pela `observacao`: `observacao` é coluna Nota, e o SharePoint
-> **não aceita filtro OData em coluna de várias linhas**. Filtrar por data seria pior — apagaria
-> também o que foi lançado à mão.
+> **não aceita filtro OData em coluna de várias linhas**. O filtro de data não substitui a `origem`:
+> é ela que protege o que foi lançado à mão, que a condição também não apaga.
 
 ---
 
