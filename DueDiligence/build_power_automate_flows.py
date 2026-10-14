@@ -566,12 +566,14 @@ def process_actions():
     q_t1 = QUESTIONS[0]["id"]
     q_t12 = QUESTIONS[1]["id"]
     q_t5 = next(q["id"] for q in QUESTIONS if q.get("text_answer"))
-    validation = (
-        "@and("
-        f"equals({first_parent}?['status'], {wdl_literal(STATUS_AGUARDANDO_TERCEIRO)}),"
-        f"equals(toUpper(trim(string({first_parent}?['fluxo_classificacao']))), 'FLUXO III'),"
-        f"equals(string({first_parent}?['forms_envio_id']), outputs('Codigo_Acompanhamento')) ,"
-        f"equals(string({first_parent}?['forms_envio_processado_id']), outputs('Codigo_Acompanhamento')) ,"
+    check_status = f"equals({first_parent}?['status'], {wdl_literal(STATUS_AGUARDANDO_TERCEIRO)})"
+    check_fluxo = f"equals(toUpper(trim(string({first_parent}?['fluxo_classificacao']))), 'FLUXO III')"
+    check_envio = f"equals(string({first_parent}?['forms_envio_id']), outputs('Codigo_Acompanhamento'))"
+    check_processado = (
+        f"equals(string({first_parent}?['forms_envio_processado_id']), outputs('Codigo_Acompanhamento'))"
+    )
+    check_answers = (
+        "and("
         + ",".join(binary_checks)
         + ","
         f"or(not(equals(toLower(trim(string(body('Obter_detalhes_da_resposta')?['{q_t1}']))), 'sim')),"
@@ -580,20 +582,54 @@ def process_actions():
         f"not(empty(trim(string(body('Obter_detalhes_da_resposta')?['{q_t5}']))))"
         ")"
     )
+    validation = (
+        f"@and({check_status},{check_fluxo},{check_envio},{check_processado},{check_answers})"
+    )
+
+    # A rejeição continua a mesma; a mensagem diz qual regra barrou e com que
+    # valor, para o Compliance decidir sem abrir o SharePoint às cegas.
+    def stored(field: str) -> str:
+        return f"string(coalesce({first_parent}?['{field}'], '(vazio)'))"
+
+    invalid_reason = (
+        "@concat("
+        f"'Solicitação ID ', string({first_parent}?['ID']), ' recusou a resposta. ', "
+        f"if(not({check_status}), concat('Status atual = ', {stored('status')}, "
+        f"' (esperado {STATUS_AGUARDANDO_TERCEIRO}). '), ''), "
+        f"if(not({check_fluxo}), concat('Fluxo = ', {stored('fluxo_classificacao')}, "
+        "' (esperado FLUXO III). '), ''), "
+        f"if(not({check_processado}), concat('Envio ainda não processado pelo DD01 "
+        f"(forms_envio_processado_id = ', {stored('forms_envio_processado_id')}, '). '), ''), "
+        f"if(not({check_answers}), 'Resposta obrigatória vazia ou diferente de Sim/Não. ', ''), "
+        f"if(empty(string(coalesce({first_parent}?['forms_ultima_resposta_id'], ''))), '', "
+        "concat('Já existe resposta processada (Response ID ', "
+        f"{stored('forms_ultima_resposta_id')}, '); provável segundo envio do terceiro. ')), "
+        f"'Forms Response ID: ', string({response_id[1:]}), '.')"
+    )
+    not_found_reason = (
+        "@concat("
+        "if(empty(outputs('Codigo_Acompanhamento')), "
+        "'Código de acompanhamento vazio na resposta do Forms', "
+        "concat('Não há exatamente uma solicitação com o Código de acompanhamento ', "
+        "outputs('Codigo_Acompanhamento'), ' (', "
+        "string(length(body('HTTP_Localizar_Solicitacao')?['value'])), "
+        "' encontrada(s)). Causas comuns: link de um envio anterior ao último reenvio, "
+        "código alterado no Forms ou solicitação excluída')), "
+        f"'. Forms Response ID: ', string({response_id[1:]}), '.')"
+    )
 
     valid_actions = build_valid_response_actions(first_parent, response_id)
     not_duplicate = condition(
         validation,
         valid_actions,
         {
+            "Diagnostico_Resposta_Invalida": compose(invalid_reason),
             "Falha_Resposta_Invalida": terminate(
                 "Failed",
                 "DD02_RESPOSTA_INVALIDA",
-                (
-                    "O código, o status, o fluxo ou uma das respostas não corresponde "
-                    "à solicitação atualmente aguardada."
-                ),
-            )
+                "@outputs('Diagnostico_Resposta_Invalida')",
+                {"Diagnostico_Resposta_Invalida": ["Succeeded"]},
+            ),
         },
     )
     duplicate_check = condition(
@@ -612,11 +648,13 @@ def process_actions():
         "@equals(length(body('HTTP_Localizar_Solicitacao')?['value']), 1)",
         {"Condicao_Resposta_Repetida": duplicate_check},
         {
+            "Diagnostico_Correlacao": compose(not_found_reason),
             "Falha_Correlacao": terminate(
                 "Failed",
                 "DD02_CORRELACAO_INVALIDA",
-                "Nenhuma solicitação única foi localizada pelo Código de acompanhamento.",
-            )
+                "@outputs('Diagnostico_Correlacao')",
+                {"Diagnostico_Correlacao": ["Succeeded"]},
+            ),
         },
         {"HTTP_Localizar_Solicitacao": ["Succeeded"]},
     )

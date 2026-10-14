@@ -437,6 +437,14 @@ alteração posterior no item reenviaria o e-mail sem ninguém pedir.
 6. Rejeitar a resposta se `forms_envio_id <> forms_envio_processado_id`, se o
    fluxo não for `FLUXO III`, se o status não for `Aguardando Terceiro` ou se
    qualquer resposta obrigatória estiver vazia/inválida.
+7. As duas rejeições (`DD02_CORRELACAO_INVALIDA` e `DD02_RESPOSTA_INVALIDA`)
+   continuam encerrando a execução como `Failed`, mas a mensagem é montada
+   por `Diagnostico_Correlacao` / `Diagnostico_Resposta_Invalida`: código
+   recebido, quantidade de registros encontrados, ID da solicitação, status e
+   fluxo atuais, envio não processado, resposta inválida e resposta anterior já
+   processada (segundo envio do terceiro). O reenvio pelo app gera um novo
+   `forms_envio_id`; resposta enviada pelo link anterior cai em
+   `DD02_CORRELACAO_INVALIDA` por desenho.
 
 ### Normalização e idempotência
 

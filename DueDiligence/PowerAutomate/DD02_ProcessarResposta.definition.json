@@ -245,7 +245,7 @@
                       "and": [
                         {
                           "equals": [
-                            "@and(equals(first(body('HTTP_Localizar_Solicitacao')?['value'])?['status'], 'Aguardando Terceiro'),equals(toUpper(trim(string(first(body('HTTP_Localizar_Solicitacao')?['value'])?['fluxo_classificacao']))), 'FLUXO III'),equals(string(first(body('HTTP_Localizar_Solicitacao')?['value'])?['forms_envio_id']), outputs('Codigo_Acompanhamento')) ,equals(string(first(body('HTTP_Localizar_Solicitacao')?['value'])?['forms_envio_processado_id']), outputs('Codigo_Acompanhamento')) ,contains(createArray('sim','não'), toLower(trim(string(body('Obter_detalhes_da_resposta')?['rc17ec46a782c4e9bb8577f1776f7b6a5'])))),contains(createArray('sim','não'), toLower(trim(string(body('Obter_detalhes_da_resposta')?['reabf29569f654ca7876bd8dd6470ef47'])))),contains(createArray('sim','não'), toLower(trim(string(body('Obter_detalhes_da_resposta')?['r41b1c93b2d5c4cb090fe93048d907b04'])))),contains(createArray('sim','não'), toLower(trim(string(body('Obter_detalhes_da_resposta')?['rdefccd229818492b9bbe6727758760a7'])))),contains(createArray('sim','não'), toLower(trim(string(body('Obter_detalhes_da_resposta')?['ra29396cc8af3475eab68360908138053'])))),contains(createArray('sim','não'), toLower(trim(string(body('Obter_detalhes_da_resposta')?['r631326ae893c4c17b3a4c3c627cf6df3'])))),contains(createArray('sim','não'), toLower(trim(string(body('Obter_detalhes_da_resposta')?['r7eb11f1294d7429391236b5d533ad22c'])))),contains(createArray('sim','não'), toLower(trim(string(body('Obter_detalhes_da_resposta')?['rf48abfb5124f4eedaf80b66c72091c0c'])))),contains(createArray('sim','não'), toLower(trim(string(body('Obter_detalhes_da_resposta')?['r37e5d456c486487e91f8e39948d26375'])))),or(not(equals(toLower(trim(string(body('Obter_detalhes_da_resposta')?['rc17ec46a782c4e9bb8577f1776f7b6a5']))), 'sim')),contains(createArray('sim','não'), toLower(trim(string(body('Obter_detalhes_da_resposta')?['rc8315faaa6674c8584da070ee5350001']))))),not(empty(trim(string(body('Obter_detalhes_da_resposta')?['r26254dcbbf9b4275aa3b824059f6c571'])))))",
+                            "@and(equals(first(body('HTTP_Localizar_Solicitacao')?['value'])?['status'], 'Aguardando Terceiro'),equals(toUpper(trim(string(first(body('HTTP_Localizar_Solicitacao')?['value'])?['fluxo_classificacao']))), 'FLUXO III'),equals(string(first(body('HTTP_Localizar_Solicitacao')?['value'])?['forms_envio_id']), outputs('Codigo_Acompanhamento')),equals(string(first(body('HTTP_Localizar_Solicitacao')?['value'])?['forms_envio_processado_id']), outputs('Codigo_Acompanhamento')),and(contains(createArray('sim','não'), toLower(trim(string(body('Obter_detalhes_da_resposta')?['rc17ec46a782c4e9bb8577f1776f7b6a5'])))),contains(createArray('sim','não'), toLower(trim(string(body('Obter_detalhes_da_resposta')?['reabf29569f654ca7876bd8dd6470ef47'])))),contains(createArray('sim','não'), toLower(trim(string(body('Obter_detalhes_da_resposta')?['r41b1c93b2d5c4cb090fe93048d907b04'])))),contains(createArray('sim','não'), toLower(trim(string(body('Obter_detalhes_da_resposta')?['rdefccd229818492b9bbe6727758760a7'])))),contains(createArray('sim','não'), toLower(trim(string(body('Obter_detalhes_da_resposta')?['ra29396cc8af3475eab68360908138053'])))),contains(createArray('sim','não'), toLower(trim(string(body('Obter_detalhes_da_resposta')?['r631326ae893c4c17b3a4c3c627cf6df3'])))),contains(createArray('sim','não'), toLower(trim(string(body('Obter_detalhes_da_resposta')?['r7eb11f1294d7429391236b5d533ad22c'])))),contains(createArray('sim','não'), toLower(trim(string(body('Obter_detalhes_da_resposta')?['rf48abfb5124f4eedaf80b66c72091c0c'])))),contains(createArray('sim','não'), toLower(trim(string(body('Obter_detalhes_da_resposta')?['r37e5d456c486487e91f8e39948d26375'])))),or(not(equals(toLower(trim(string(body('Obter_detalhes_da_resposta')?['rc17ec46a782c4e9bb8577f1776f7b6a5']))), 'sim')),contains(createArray('sim','não'), toLower(trim(string(body('Obter_detalhes_da_resposta')?['rc8315faaa6674c8584da070ee5350001']))))),not(empty(trim(string(body('Obter_detalhes_da_resposta')?['r26254dcbbf9b4275aa3b824059f6c571']))))))",
                             true
                           ]
                         }
@@ -872,14 +872,23 @@
                     },
                     "else": {
                       "actions": {
-                        "Falha_Resposta_Invalida": {
+                        "Diagnostico_Resposta_Invalida": {
                           "runAfter": {},
+                          "type": "Compose",
+                          "inputs": "@concat('Solicitação ID ', string(first(body('HTTP_Localizar_Solicitacao')?['value'])?['ID']), ' recusou a resposta. ', if(not(equals(first(body('HTTP_Localizar_Solicitacao')?['value'])?['status'], 'Aguardando Terceiro')), concat('Status atual = ', string(coalesce(first(body('HTTP_Localizar_Solicitacao')?['value'])?['status'], '(vazio)')), ' (esperado Aguardando Terceiro). '), ''), if(not(equals(toUpper(trim(string(first(body('HTTP_Localizar_Solicitacao')?['value'])?['fluxo_classificacao']))), 'FLUXO III')), concat('Fluxo = ', string(coalesce(first(body('HTTP_Localizar_Solicitacao')?['value'])?['fluxo_classificacao'], '(vazio)')), ' (esperado FLUXO III). '), ''), if(not(equals(string(first(body('HTTP_Localizar_Solicitacao')?['value'])?['forms_envio_processado_id']), outputs('Codigo_Acompanhamento'))), concat('Envio ainda não processado pelo DD01 (forms_envio_processado_id = ', string(coalesce(first(body('HTTP_Localizar_Solicitacao')?['value'])?['forms_envio_processado_id'], '(vazio)')), '). '), ''), if(not(and(contains(createArray('sim','não'), toLower(trim(string(body('Obter_detalhes_da_resposta')?['rc17ec46a782c4e9bb8577f1776f7b6a5'])))),contains(createArray('sim','não'), toLower(trim(string(body('Obter_detalhes_da_resposta')?['reabf29569f654ca7876bd8dd6470ef47'])))),contains(createArray('sim','não'), toLower(trim(string(body('Obter_detalhes_da_resposta')?['r41b1c93b2d5c4cb090fe93048d907b04'])))),contains(createArray('sim','não'), toLower(trim(string(body('Obter_detalhes_da_resposta')?['rdefccd229818492b9bbe6727758760a7'])))),contains(createArray('sim','não'), toLower(trim(string(body('Obter_detalhes_da_resposta')?['ra29396cc8af3475eab68360908138053'])))),contains(createArray('sim','não'), toLower(trim(string(body('Obter_detalhes_da_resposta')?['r631326ae893c4c17b3a4c3c627cf6df3'])))),contains(createArray('sim','não'), toLower(trim(string(body('Obter_detalhes_da_resposta')?['r7eb11f1294d7429391236b5d533ad22c'])))),contains(createArray('sim','não'), toLower(trim(string(body('Obter_detalhes_da_resposta')?['rf48abfb5124f4eedaf80b66c72091c0c'])))),contains(createArray('sim','não'), toLower(trim(string(body('Obter_detalhes_da_resposta')?['r37e5d456c486487e91f8e39948d26375'])))),or(not(equals(toLower(trim(string(body('Obter_detalhes_da_resposta')?['rc17ec46a782c4e9bb8577f1776f7b6a5']))), 'sim')),contains(createArray('sim','não'), toLower(trim(string(body('Obter_detalhes_da_resposta')?['rc8315faaa6674c8584da070ee5350001']))))),not(empty(trim(string(body('Obter_detalhes_da_resposta')?['r26254dcbbf9b4275aa3b824059f6c571'])))))), 'Resposta obrigatória vazia ou diferente de Sim/Não. ', ''), if(empty(string(coalesce(first(body('HTTP_Localizar_Solicitacao')?['value'])?['forms_ultima_resposta_id'], ''))), '', concat('Já existe resposta processada (Response ID ', string(coalesce(first(body('HTTP_Localizar_Solicitacao')?['value'])?['forms_ultima_resposta_id'], '(vazio)')), '); provável segundo envio do terceiro. ')), 'Forms Response ID: ', string(triggerOutputs()?['body/resourceData/responseId']), '.')"
+                        },
+                        "Falha_Resposta_Invalida": {
+                          "runAfter": {
+                            "Diagnostico_Resposta_Invalida": [
+                              "Succeeded"
+                            ]
+                          },
                           "type": "Terminate",
                           "inputs": {
                             "runStatus": "Failed",
                             "runError": {
                               "code": "DD02_RESPOSTA_INVALIDA",
-                              "message": "O código, o status, o fluxo ou uma das respostas não corresponde à solicitação atualmente aguardada."
+                              "message": "@outputs('Diagnostico_Resposta_Invalida')"
                             }
                           }
                         }
@@ -892,14 +901,23 @@
           },
           "else": {
             "actions": {
-              "Falha_Correlacao": {
+              "Diagnostico_Correlacao": {
                 "runAfter": {},
+                "type": "Compose",
+                "inputs": "@concat(if(empty(outputs('Codigo_Acompanhamento')), 'Código de acompanhamento vazio na resposta do Forms', concat('Não há exatamente uma solicitação com o Código de acompanhamento ', outputs('Codigo_Acompanhamento'), ' (', string(length(body('HTTP_Localizar_Solicitacao')?['value'])), ' encontrada(s)). Causas comuns: link de um envio anterior ao último reenvio, código alterado no Forms ou solicitação excluída')), '. Forms Response ID: ', string(triggerOutputs()?['body/resourceData/responseId']), '.')"
+              },
+              "Falha_Correlacao": {
+                "runAfter": {
+                  "Diagnostico_Correlacao": [
+                    "Succeeded"
+                  ]
+                },
                 "type": "Terminate",
                 "inputs": {
                   "runStatus": "Failed",
                   "runError": {
                     "code": "DD02_CORRELACAO_INVALIDA",
-                    "message": "Nenhuma solicitação única foi localizada pelo Código de acompanhamento."
+                    "message": "@outputs('Diagnostico_Correlacao')"
                   }
                 }
               }

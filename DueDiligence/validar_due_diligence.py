@@ -638,6 +638,10 @@ def main() -> int:
             "'Aguardando Terceiro'",
             "Pendente Compliance",
             "terceiro_t05_texto",
+            # Rejeição sem motivo não é diagnosticável (2026-10-14): a falha
+            # precisa dizer o código, o status e a regra que barrou.
+            "\"message\": \"@outputs('Diagnostico_Correlacao')\"",
+            "\"message\": \"@outputs('Diagnostico_Resposta_Invalida')\"",
         ):
             if token not in process_text:
                 findings.append(f"DD02 sem contrato obrigatório: {token!r}")
