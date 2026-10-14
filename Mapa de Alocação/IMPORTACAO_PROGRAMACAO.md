@@ -52,14 +52,34 @@ de copiar o padrão de uma lista para outra de natureza diferente.
 
 ## O script
 
-### Como testar sem fluxo nenhum
+Ele **não** mora no OneDrive de ninguém: está em
+`Group - AIRPORT NOW › Documentos › Roteiros › Importar programacao.osts`, e é de lá que o fluxo o roda
+(ação *Run script from SharePoint library*). Quem edita, edita esse arquivo — cópia no OneDrive pessoal
+é gêmeo parado, e já causou confusão. Ver **FLUXO_IMPORTACAO.md → "Tirar o script do OneDrive pessoal"**.
 
-1. Abra a planilha no **Excel Online** → **Automatizar** → **Novo Script**.
-2. Cole o conteúdo de `importar_programacao.ts` e salve como `Importar programacao`.
-3. **Executar**. O painel mostra o retorno: `ok`, `mensagem`, `total`, `registros` e `pendencias`.
+### Como atualizar o script instalado
 
-Rodando contra `Programação set.26.xlsx` o esperado é **698 registros e 7 pendências**. Esse número é
-o teste de regressão do script: se mudar sem a planilha ter mudado, alguma configuração foi mexida.
+1. **Excel Online**, abrindo um arquivo que esteja **no site do AirportNow** (a própria planilha de
+   programação serve) → **Automatizar** → **Todos os scripts**.
+2. Na lista, o grupo dos scripts da biblioteca mostra **`Importar programacao`** — é esse, não o do
+   OneDrive pessoal, se ainda existir algum lá.
+3. **⋯ → Editar**. No editor: **Ctrl+A** e cole o conteúdo inteiro de `importar_programacao.ts`.
+   Substituir tudo, não remendar trechos.
+4. **Salvar**. O editor não pode ficar com erro de TypeScript sublinhado — se ficar, a colagem veio
+   pela metade.
+5. Testar **pela tela do app**, não pelo botão Executar (ver abaixo): uma importação de verdade, com
+   o mês certo. A mensagem de sucesso passa a dizer o período, por exemplo
+   *"1394 registro(s) prontos de 2026-10-01 a 2026-10-31"* — é o sinal de que a versão nova está valendo.
+
+### O botão Executar do editor não serve mais (desde 15/09/2026)
+
+O script recebe dois parâmetros do fluxo: `mesRef` e `config` (as listas `tb_prePosicao` e
+`tb_posicoes` do aeroporto). Rodando à mão, os dois vêm vazios e ele **recusa de propósito**, com
+*"Configuração do aeroporto não recebida"*. Isso é a trava funcionando, não defeito.
+
+Referência histórica: contra `Programação set.26.xlsx`, com a configuração de Navegantes, o esperado
+eram **698 registros e 7 pendências**. Se um dia mudar sem a planilha ter mudado, alguma configuração
+foi mexida.
 
 ### O formato que a planilha precisa ter
 
