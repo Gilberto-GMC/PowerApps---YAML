@@ -282,6 +282,22 @@ function main(workbook: ExcelScript.Workbook, mesRef: string = "", config: strin
     ? estadias.filter(x => dataIso(x.p.serial).substring(0, 7) === mesRef)
     : estadias;
 
+  // Mes escolhido sem nenhuma linha: antes terminava em 0 registros, calado. Agora diz o que a
+  // planilha traz, que quase sempre e o mes anterior ou o seguinte escolhido por engano.
+  if (!paresDoMes.length) {
+    const mesesDaPlanilha: string[] = [];
+    for (const x of estadias) {
+      const m = dataIso(x.p.serial).substring(0, 7);
+      if (mesesDaPlanilha.indexOf(m) < 0) mesesDaPlanilha.push(m);
+    }
+    mesesDaPlanilha.sort();
+    return recusa(
+      mesRef,
+      "A planilha nao tem nenhum movimento em " + mesRef + ". Ela traz: " + mesesDaPlanilha.join(", ") +
+      ". Escolha em MES DE REFERENCIA o mes que corresponde a planilha."
+    );
+  }
+
   // --- alocação
   const ocupPosicao: { [k: string]: number[][] } = {};
   const ocupPortao: { [k: string]: number[][] } = {};
