@@ -166,7 +166,12 @@ Screens:
                         Font: =thmFonte
                         HtmlText: |-
                           ="<div style='" & htmlFonte & "font-size:11px;color:" & hxTextoFraco & ";padding:2px 0 12px 0;'>" &
-                          CountRows(Filter(colPosicoesTodas, aeroporto = drpAeroIni.Selected.Value)) & " posições cadastradas</div>"
+                          CountRows(Filter(colPosicoesTodas, aeroporto = drpAeroIni.Selected.Value)) & " posições cadastradas" &
+                          If(
+                              CountRows(colAerosPermitidos) > 1,
+                              "",
+                              " &middot; único aeroporto com pátio cadastrado"
+                          ) & "</div>"
                         Size: =11
                   - lblDataIni:
                       Control: Label@2.5.1
@@ -223,6 +228,25 @@ Screens:
                         PaddingLeft: =18
                         PaddingRight: =18
                         Text: ="POSIÇÕES E CORES"
+                  - btnHubIni:
+                      Control: Button@0.0.45
+                      Properties:
+                        Appearance: ='ButtonCanvas.Appearance'.Subtle
+                        BasePaletteColor: =thmTextoFraco
+                        BorderRadius: =0
+                        FontColor: =thmTextoFraco
+                        FontSize: =12
+                        FontWeight: =FontWeight.Semibold
+                        Height: =40
+                        Icon: ="ArrowLeft"
+                        IconStyle: ='ButtonCanvas.IconStyle'.Filled
+                        LayoutMinWidth: =0
+                        OnSelect: |-
+                          =Launch(hubUrl, { USUARIO: usrMapa.ID }, LaunchTarget.Replace)
+                        PaddingLeft: =18
+                        PaddingRight: =18
+                        Text: ="VOLTAR AO AIRPORTNOW"
+                        Visible: =hubAberto
                   - htmRodapeIni:
                       Control: HtmlViewer@2.1.0
                       Properties:
