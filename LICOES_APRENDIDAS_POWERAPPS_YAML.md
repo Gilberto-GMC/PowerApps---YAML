@@ -879,3 +879,33 @@ nao houver `AccessAppScope: true`, reprovar.
 Licao geral: **"trocar a paleta do app" nao termina nas telas.** Levantar tambem
 os componentes, e lembrar que cada um tem seu proprio arquivo e seu proprio
 acesso ao escopo do app.
+
+## PA2231 — `Default` vazio em propriedade de entrada de componente (19/10/2026)
+
+Projeto: Novo Hub AirportNow, componentes `HeaderTitle` e `MenuLateral`.
+
+Mensagem do Studio na colagem, uma por propriedade, e o componente inteiro e
+recusado:
+`error PA2231 : Custom input property of kind 'Input' requires a non-empty
+'Default' formula.`
+
+Causa: `Default: =` (vazio) em `CustomProperties` de `PropertyKind: Input`.
+O detalhe que engana: **o componente roda assim hoje no app**. O Studio aceita o
+vazio na interface de propriedades e recusa na colagem de codigo-fonte. Entao
+exportar e reimportar o mesmo componente, sem alterar nada, ja falha.
+
+Correcao, mantendo `IsBlank()` verdadeiro — que e o que o codigo testa:
+
+| DataType | Default |
+| --- | --- |
+| Text | `=""` |
+| Screen | `=Blank()` |
+
+`IsBlank("")` e `IsBlank(Blank())` sao os dois verdadeiros, entao ramos como
+`If(!IsBlank(Comp.ScreenNavigator), Navigate(...), Back())` continuam caindo no
+mesmo lado.
+
+Validacao preventiva: dentro de `CustomProperties`, reprovar `Default: =` vazio
+quando o `PropertyKind` daquela propriedade for `Input`. **Nao** vale para
+`Default: =` de controle (`Classic/TextInput`, por exemplo), que e legitimo — a
+regra tem que olhar o escopo, nao a linha.

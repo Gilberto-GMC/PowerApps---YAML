@@ -58,6 +58,28 @@ function validar(arquivo) {
     if (/\b(?:thm|hx)[A-Za-z]+\b/.test(txt) && !/^\s*AccessAppScope: true\s*$/m.test(txt)) {
       erros.push(`${path.basename(arquivo)} usa token do App.Formulas sem "AccessAppScope: true"`);
     }
+    // PA2231: propriedade de entrada com Default vazio e recusada na colagem,
+    // mesmo que o componente ja rode assim no app. Texto -> ="", Screen -> =Blank().
+    // Nao vale para Default: = de CONTROLE, so dentro de CustomProperties.
+    {
+      const ini = linhas.findIndex((l) => /^\s*CustomProperties:\s*$/.test(l));
+      if (ini >= 0) {
+        const indentCP = linhas[ini].match(/^\s*/)[0].length;
+        let kind = null;
+        let nome = null;
+        for (let i = ini + 1; i < linhas.length; i++) {
+          const l = linhas[i];
+          if (l.trim() && l.match(/^\s*/)[0].length <= indentCP) break;
+          const mNome = l.match(/^\s{2,}(\w+):\s*$/);
+          if (mNome && l.match(/^\s*/)[0].length === indentCP + 2) { nome = mNome[1]; kind = null; continue; }
+          const mKind = l.match(/^\s*PropertyKind:\s*(\w+)/);
+          if (mKind) { kind = mKind[1]; continue; }
+          if (/^\s*Default:\s*=\s*$/.test(l) && kind === 'Input') {
+            e(i, `PA2231: propriedade de entrada "${nome}" com Default vazio`);
+          }
+        }
+      }
+    }
   } else if (!/^Screens:\r?\n {2}\S.*:\r?\n {4}Properties:/.test(txt)) {
     erros.push(`${path.basename(arquivo)}:1 raiz invalida — exige "Screens:\\n  Tela:\\n    Properties:"`);
   }
@@ -204,6 +226,20 @@ function autoteste() {
       '      Fill: =thmPrimaria',
       '',
     ].join('\n'), /AccessAppScope/],
+    ['default vazio em propriedade de entrada', [
+      'ComponentDefinitions:',
+      '  Comp1:',
+      '    DefinitionType: CanvasComponent',
+      '    AccessAppScope: true',
+      '    CustomProperties:',
+      '      Sub1:',
+      '        PropertyKind: Input',
+      '        DataType: Text',
+      '        Default: =',
+      '    Properties:',
+      '      Fill: =thmPrimaria',
+      '',
+    ].join('\n'), /PA2231/],
     ['parent em galeria', [
       'Screens:',
       '  L:',
