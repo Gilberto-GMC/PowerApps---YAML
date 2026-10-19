@@ -24,6 +24,22 @@ const EXTERNOS = new Set([
   'usrHub', 'usrEhRoot', 'usrVeSafety', 'col_menu', 'col_menuModulos',
 ]);
 
+// O App.Formulas e colado na barra de formulas do Studio, em pt-BR: separador
+// decimal e VIRGULA. "RGBA(166; 166; 166; 0.5)" nao e reconhecido e derruba a
+// declaracao inteira, e so aparece como "o nome nao e valido" no controle que usa.
+function validarFormulas() {
+  const erros = [];
+  const linhas = fs.readFileSync(TOKENS_FX, 'utf8').split(/\r?\n/);
+  linhas.forEach((l, i) => {
+    if (/^\s*\/\//.test(l)) return;
+    const semTexto = l.replace(/'[^']*'/g, "''").replace(/"[^"]*"/g, '""');
+    if (/\b\d+\.\d+\b/.test(semTexto)) {
+      erros.push(`App_Formulas_Hub.txt:${i + 1} decimal com ponto em dialeto pt-BR — usar virgula: ${l.trim()}`);
+    }
+  });
+  return erros;
+}
+
 function validar(arquivo) {
   const txt = fs.readFileSync(arquivo, 'utf8');
   const linhas = txt.split(/\r?\n/);
@@ -156,6 +172,12 @@ if (!autoteste()) process.exit(2);
 console.log('autoteste: 5 regras reprovaram os casos construidos\n');
 
 let falhou = false;
+const errosFx = validarFormulas();
+console.log('App_Formulas_Hub.txt');
+errosFx.forEach((x) => console.log(`  ERRO:  ${x}`));
+if (!errosFx.length) console.log('  ok');
+else falhou = true;
+
 for (const alvo of alvos) {
   const { erros, avisos, tokens } = validar(alvo);
   console.log(`${path.basename(alvo)} — ${tokens} tokens distintos em uso`);
