@@ -1,5 +1,9 @@
 # Novo Hub AirportNow — identidade visual ASUR
 
+> Paleta: **teal `#0E7C8C`**, a mesma do `App_Formulas_Mapa.txt` na branch
+> `mapa-programacao`. O roxo `#391694` é a paleta **Motiva**, de outro projeto —
+> não usar aqui.
+
 O entregável é o **`App_Formulas_Hub.txt`**: o `App.Formulas` inteiro, pronto
 para substituir o que está no Studio de uma vez. Este arquivo aqui é só a
 documentação da troca — não copie daqui.
@@ -16,10 +20,10 @@ que referencia `thmPrimaria` antes do token existir falha inteira na colagem.
 
 | Literal original | Token | Onde |
 | --- | --- | --- |
-| `RGBA(96, 70, 237, 1)` | `thmPrimaria` | spinner, bordas, rótulos do painel de senha, ícone de aviso |
+| `RGBA(96, 70, 237, 1)` (roxo) | `thmPrimaria` (`#0E7C8C`, teal ASUR) | spinner, bordas, rótulos do painel de senha, ícone de aviso |
 | `RGBA(40, 134, 222, 1)` | `thmPrimaria` | ícones Person/Eye, rótulos ocultos |
 | `RGBA(109, 49, 162, 1)` | `thmPrimaria` | borda do `Container43` |
-| `RGBA(0, 18, 107, 1)` | `thmPrimariaEscura` | bordas, ícones Salvar/Cancelar |
+| `RGBA(0, 18, 107, 1)` | `thmPrimariaEscura` (`#0A5A66`) | bordas, ícones Salvar/Cancelar |
 | `RGBA(9, 33, 98, 1)` | `thmPrimariaEscura` | rótulo de versão |
 | `RGBA(247, 247, 247, 1)` | `thmFundo` | fundo da tela, faixa do título |
 | `RGBA(255, 255, 255, 1)` | `thmSuperficie` / `thmTextoInverso` | fundos / texto sobre botão |

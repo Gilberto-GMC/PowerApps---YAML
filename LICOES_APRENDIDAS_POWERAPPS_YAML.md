@@ -303,7 +303,8 @@ Correção: adotar o padrão já estabelecido em `Mapa de Alocação`
 (`ColorValue(hx*)`, para controle nativo). Nenhuma tela declara cor literal.
 Trocar a marca passa a ser editar um bloco no `App.Formulas`.
 
-Paleta institucional Motiva/ASUR: `#391694` primária, `#2A106E` escura,
+Paleta **Motiva** — NÃO é a da ASUR, ver a lição de 19/10/2026 no fim deste
+arquivo: `#391694` primária, `#2A106E` escura,
 `#EDE9FB` clara, `#C9C5E6` borda, `#F8FAFC` fundo, `#1E293B` texto,
 `#64748B` texto fraco, `#DD511A` ação, `#15803D`/`#B45309`/`#B91C1C`
 verde/âmbar/vermelho.
@@ -751,3 +752,33 @@ enquanto o `App.Formulas` ja declarava `varHUB` com o mesmo valor. Ao varrer uma
 tela, procurar tambem por **identificadores** repetidos (GUID, URL do ambiente,
 nome de lista), nao so por cor: a mesma divida de literal, so que invisivel na
 busca por `RGBA(`.
+
+## ASUR e teal, Motiva e roxo — e o repositorio diz as duas coisas (19/10/2026)
+
+Projeto: Novo Hub AirportNow, tela Login.
+
+Sintoma: pedido de "trocar para as cores da ASUR" foi atendido com o roxo
+`#391694`. O usuario mandou um print da tela de inicio do Mapa publicada: teal.
+A tela inteira saiu na marca errada.
+
+Causa: duas fontes no repositorio, uma defasada, e a mais facil de achar e a
+errada. A licao de 24/09/2026 deste arquivo dizia "Paleta institucional
+Motiva/ASUR: `#391694`", e o `Mapa de Alocacao/AppFormulas_Mapa.fx.md` da branch
+`agent/mapa-alocacao-novas-funcionalidades` repete o roxo. A paleta ASUR vigente
+esta em `Mapa de Alocacao/App_Formulas_Mapa.txt` na branch **`mapa-programacao`**,
+onde vive o commit de rebrand.
+
+Paleta ASUR: `#0E7C8C` primaria, `#0A5A66` escura, `#E4F2F4` clara, `#B9D9DE`
+borda. Neutros, acao, verde/ambar/vermelho sao iguais nas duas.
+
+Correcao: trocar os quatro hex no `App.Formulas`. **Nenhuma tela mudou** — e o
+que o padrao de token compra: errar a marca inteira custa quatro linhas.
+
+Validacao preventiva, em duas frentes:
+
+1. Antes de aplicar identidade visual, ler a paleta do
+   `App_Formulas_*.txt` da branch onde o rebrand foi feito, nunca de um `.md` de
+   documentacao nem de uma licao antiga — documento envelhece, arquivo de
+   colagem nao.
+2. Quando duas fontes discordam, a que o usuario ve rodando ganha. Pedir o print
+   custa menos que refazer a tela.
