@@ -812,3 +812,39 @@ construido: trocar `0,5` por `0.5` tem que derrubar o validador.
 Licao geral: **erro de "nome nao reconhecido" em token aponta para a declaracao,
 nao para o uso.** Antes de procurar erro de digitacao no controle, conferir se a
 linha que declara o token compila.
+
+## Um `;` no lugar de `,` desliga o paralelismo do `Concurrent` (19/10/2026)
+
+Projeto: Novo Hub AirportNow, tela Home, `Function_resumo_diario_1`.
+
+Sintoma: o resumo diario demorava muito para carregar, apesar de o codigo estar
+todo dentro de um `Concurrent`.
+
+Causa: entre o `ClearCollect(col_derFluidos, ...)` e o `ClearCollect(col_incPista,
+...)` havia `;` no lugar de `,`. Em Power Fx, `a; b` dentro de um argumento e uma
+**sequencia**: os 22 ClearCollect seguintes viraram UM argumento do `Concurrent`,
+executado em serie. Nao ha erro, nao ha aviso — so lentidao.
+
+Correcao: trocar o `;` por `,`.
+
+Validacao preventiva: contar os argumentos do `Concurrent` e comparar com o numero
+de `ClearCollect` dentro dele. Divergiu, ha separador errado. Uma unica linha
+`);` deve existir no bloco: a que fecha o proprio `Concurrent`.
+
+Licao geral: em Power Fx o separador carrega semantica. `,` e `;` nao sao estilo —
+um e argumento, o outro e sequencia. Ver tambem a licao do separador decimal.
+
+## Coleta que ninguem usa: conferir o merge, nao so o `ClearCollect` (19/10/2026)
+
+Mesma tela. `col_testMotorV2` e coletado dentro do `Concurrent` (uma consulta a
+`tbl_teste_de_motores`, 100 registros) e **nao aparece** no `ClearCollect` que monta
+`col_resumoDiario`. O par `col_desHibrido`/`col_desHibridoV2` esta la, os dois. Ou
+falta incluir, e o resumo esta subcontando testes de motores, ou a coleta sobra e
+esta custando uma consulta por carga.
+
+Nao foi corrigido: as duas saidas mudam numero na tela, e isso e decisao do dono do
+dado, nao do revisor.
+
+Validacao preventiva: toda colecao criada por `ClearCollect` dentro do bloco de
+coleta tem que aparecer no merge. Comparar as duas listas e acusar a diferenca —
+nos dois sentidos.

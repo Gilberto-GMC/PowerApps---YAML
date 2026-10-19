@@ -85,12 +85,18 @@ function validar(arquivo) {
   }
 
   // 6. Nenhum literal de cor sobrando (branco, preto e transparencia sao estrutura).
-  const PRESERVADOS = new Set([
-    'RGBA(255, 255, 255, 0.8)', 'RGBA(0, 0, 0, 0)',
-  ]);
+  // Branco e preto com alfa < 1 sao transparencia estrutural (veu, hover, sombra),
+  // nao cor de marca. Tudo o mais tem que ser token.
+  const estrutural = (lit) => {
+    const m = lit.match(/RGBA\(\s*(\d+),\s*(\d+),\s*(\d+),\s*([\d.]+)\s*\)/);
+    if (!m) return false;
+    const [r, g, b, a] = m.slice(1).map(Number);
+    const brancoOuPreto = (r === 255 && g === 255 && b === 255) || (r === 0 && g === 0 && b === 0);
+    return brancoOuPreto && a < 1;
+  };
   linhas.forEach((l, i) => {
     for (const m of l.matchAll(/RGBA\(\s*\d+,\s*\d+,\s*\d+,\s*[\d.]+\s*\)/g)) {
-      if (!PRESERVADOS.has(m[0])) e(i, `literal de cor fora do token: ${m[0]}`);
+      if (!estrutural(m[0])) e(i, `literal de cor fora do token: ${m[0]}`);
     }
     if (/\bColor\.(Red|Blue|Green|Black|Orange)\b/.test(l)) e(i, 'cor nomeada literal — usar token');
     if (/['"]#[0-9A-Fa-f]{6}/.test(l)) e(i, 'hex literal — usar hx*');
@@ -109,11 +115,40 @@ function validar(arquivo) {
     }
   }
 
+  // 7b. Dentro do template de galeria, Parent.Width/Height nao existe — e TemplateWidth
+  // /TemplateHeight. Dono da linha e a galeria MAIS INTERNA que a contem, nunca todas
+  // as ancestrais (falso positivo recorrente treina o operador a ignorar o validador).
+  {
+    const pilha = []; // { indent, tipo }
+    linhas.forEach((l, i) => {
+      const mNome = l.match(/^(\s*)- \w+:$/);
+      if (mNome) {
+        const ind = mNome[1].length;
+        while (pilha.length && pilha[pilha.length - 1].indent >= ind) pilha.pop();
+        pilha.push({ indent: ind, tipo: null });
+        return;
+      }
+      const mCtrl = l.match(/^\s*Control:\s*(\S+)/);
+      if (mCtrl && pilha.length) { pilha[pilha.length - 1].tipo = mCtrl[1]; return; }
+      if (!/Parent\.(Width|Height)\b/.test(l)) return;
+      const ind = l.match(/^\s*/)[0].length;
+      // A linha pertence ao controle donos[ultimo]; o "Parent" da formula e o
+      // controle imediatamente acima dele — donos[ultimo - 1].
+      const donos = pilha.filter((p) => p.indent < ind);
+      const dono = donos[donos.length - 2];
+      if (dono && /^Gallery@/.test(dono.tipo || '')) {
+        e(i, 'Parent.Width/Height dentro do template de galeria — usar Parent.TemplateWidth/TemplateHeight');
+      }
+    });
+  }
+
   // 8. Toda referencia a controle existe na tela.
   const declarados = new Set();
   for (const m of txt.matchAll(/^\s*- (\w+):$/gm)) declarados.add(m[1]);
   linhas.forEach((l, i) => {
     for (const m of l.matchAll(/\bSelect\((\w+)\)/g)) {
+      // Parent e Self sao palavras-chave, nao controles declarados.
+      if (m[1] === 'Parent' || m[1] === 'Self') continue;
       if (!declarados.has(m[1])) e(i, `Select(${m[1]}) — controle inexistente nesta tela`);
     }
   });
@@ -142,6 +177,7 @@ function validar(arquivo) {
 }
 
 // --- autoteste: cada regra precisa reprovar pelo menos um caso construido ---
+let totalCasos = 0;
 function autoteste() {
   const casos = [
     ['raiz', 'Screens:\n Login:\n  Properties:\n', /raiz invalida/],
@@ -149,7 +185,26 @@ function autoteste() {
     ['token', 'Screens:\n  L:\n    Properties:\n      Fill: =thmInventado\n', /nao definido/],
     ['literal', 'Screens:\n  L:\n    Properties:\n      Fill: =RGBA(1, 2, 3, 1)\n', /literal de cor/],
     ['select', 'Screens:\n  L:\n    Properties:\n      OnVisible: =Select(btnFantasma)\n', /controle inexistente/],
+    ['cor translucida de marca', 'Screens:\n  L:\n    Properties:\n      Fill: =RGBA(96, 70, 237, 0.5)\n', /literal de cor/],
+    ['parent em galeria', [
+      'Screens:',
+      '  L:',
+      '    Properties:',
+      '      Fill: =thmFundo',
+      '    Children:',
+      '      - Gal1:',
+      '          Control: Gallery@2.15.0',
+      '          Properties:',
+      '            Items: =col_x',
+      '          Children:',
+      '            - Lbl1:',
+      '                Control: Label@2.5.1',
+      '                Properties:',
+      '                  Width: =Parent.Width',
+      '',
+    ].join('\n'), /template de galeria/],
   ];
+  totalCasos = casos.length;
   const tmp = path.join(__dirname, '.autoteste.pa.yaml');
   let ok = true;
   for (const [nome, conteudo, padrao] of casos) {
@@ -169,7 +224,7 @@ const alvos = process.argv.slice(2).length
   : fs.readdirSync(__dirname).filter((f) => f.endsWith('.pa.yaml')).map((f) => path.join(__dirname, f));
 
 if (!autoteste()) process.exit(2);
-console.log('autoteste: 5 regras reprovaram os casos construidos\n');
+console.log(`autoteste: ${totalCasos} regras reprovaram os casos construidos\n`);
 
 let falhou = false;
 const errosFx = validarFormulas();
