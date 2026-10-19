@@ -976,3 +976,35 @@ defeito em dado, login e escopo — foi o que aconteceu aqui.
 Licao geral, cara: **"a tela colou sem erro" nao quer dizer que a tela chegou
 inteira.** Depois de colar, conferir a arvore contra a lista de controles do
 arquivo. Um `grep` de `- \w+:` no YAML da a lista esperada.
+
+## Remendar atributo de SVG com regex quebra o arquivo (19/10/2026)
+
+Projeto: Novo Hub AirportNow, logo da ASUR na barra.
+
+Sintoma: o SVG gerado nao renderizava — icone de imagem quebrada, e nenhum erro
+no servidor (HTTP 200, `image/svg+xml`). Visto so ao abrir o arquivo direto no
+navegador: `error on line 1 at column 4193: Attribute fill redefined`.
+
+Causa: a troca de cor foi feita com regra de texto, acrescentando
+`fill="#fff"` na frente de um `<path>` que ja carregava um `fill` mais adiante na
+mesma tag. Dois `fill` na mesma tag e erro de XML, nao aviso — e o navegador
+para no primeiro erro.
+
+Correcao: nao remendar atributo. Para cada tag, **remover todos** os `fill` e
+`stroke` e reescrever um so:
+
+```js
+s = s.replace(/<path\b([^>]*)\/>/g, (todo, attrs) => {
+  const temNone = /\sfill="none"/.test(attrs);
+  const a = attrs.replace(/\sfill="[^"]*"/g, "").replace(/\sstroke="[^"]*"/g, "");
+  return `<path${temNone ? ' fill="none" stroke="#fff"' : ' fill="#fff"'}${a}/>`;
+});
+```
+
+Validacao preventiva: depois de gerar SVG, **abrir o arquivo no navegador**, nao
+so dentro de um `<img>`. Em `<img>` o erro de XML aparece como imagem quebrada,
+sem mensagem; aberto direto, o parser diz a linha e a coluna.
+
+Licao geral, a mesma do `\b` em heredoc: para mexer em marcacao, regex de texto
+e a ferramenta errada quando o que se quer e um atributo. Reescrever a tag
+inteira e mais seguro que emendar um pedaco dela.
