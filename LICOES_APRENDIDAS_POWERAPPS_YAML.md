@@ -2255,3 +2255,32 @@ no fim do bloco do controle (depois de `Children:` o recuo engana).
 
 **Verificação automática:** `fx_check.js` acusa chave no nível do controle que não seja
 Control/Variant/Properties/Children. Também acusa chave solta depois de lista no mesmo recuo (17/09/2026).
+
+## Mover para App.Formulas: procurar o nome em todas as telas, não só no OnStart (2026-10-19)
+
+**O que aconteceu.** Movendo o `OnStart` do hub do AirportNow para fórmulas nomeadas, três nomes
+foram junto e não podiam: o menu lateral do Home ficou vazio depois da colagem.
+
+**Por quê.** Fórmula nomeada é declaração: ela não se reescreve. Qualquer `Set`, `Collect`,
+`ClearCollect` ou `Clear` daquele nome, em qualquer tela, é incompatível — e o `OnStart` sozinho
+não revela isso. Os três casos:
+
+| nome | quem reescrevia | onde |
+|---|---|---|
+| `var_sideBarWidth` | `Set(var_sideBarWidth, 60)` ao recolher o menu | ícone hambúrguer do Home |
+| `col_historicoVersao` | `Clear(col_historicoVersao)` ao fechar o painel | ícone de fechar do Home |
+| `col_menu` | `ClearCollect` no botão de login | tela de Login |
+
+O usuário chegou a confirmar que o menu *não* recolhia — e o código da tela dizia o contrário.
+Pergunta não substitui busca no app.
+
+**Armadilha extra do `col_menu`:** `ClearCollect(col; {a}; If(cond; {b}); {c})` descarta o item
+quando o `If` devolve branco. `Table({a}; If(cond; {b}); {c})` não faz o mesmo — a linha em branco
+entra no tipo e pode derrubar a tabela inteira. Traduzir `ClearCollect` para `Table` não é
+mecânico; linha condicional precisa virar coluna de filtro (`Filter(Table(... Mostrar: cond ...);
+Mostrar)`) ou ficar onde estava.
+
+**Como evitar.** Antes de mover um nome para o `Formulas`, procurar no app inteiro (Ctrl+F, todas
+as telas) por `Set(<nome>`, `Collect(<nome>`, `ClearCollect(<nome>` e `Clear(<nome>`. Se achar
+qualquer um, o nome fica como está. O Studio recusa a criação da fórmula quando o `Set` está
+visível, mas um `ClearCollect` em tela distante pode passar e só aparecer como tela vazia.
