@@ -47,8 +47,18 @@ function validar(arquivo) {
   const avisos = [];
   const e = (i, msg) => erros.push(`${path.basename(arquivo)}:${i + 1} ${msg}`);
 
-  // 1. Estrutura raiz exata.
-  if (!/^Screens:\r?\n {2}\S.*:\r?\n {4}Properties:/.test(txt)) {
+  // 1. Estrutura raiz exata — tela ou componente.
+  const ehComponente = /^ComponentDefinitions:/.test(txt);
+  if (ehComponente) {
+    if (!/^ComponentDefinitions:\r?\n {2}\S.*:\r?\n {4}DefinitionType: CanvasComponent/.test(txt)) {
+      erros.push(`${path.basename(arquivo)}:1 raiz de componente invalida — exige "ComponentDefinitions:\\n  Nome:\\n    DefinitionType: CanvasComponent"`);
+    }
+    // Sem AccessAppScope o componente nao enxerga o App.Formulas: todo thm*/hx*
+    // dentro dele fica "nome nao reconhecido".
+    if (/\b(?:thm|hx)[A-Za-z]+\b/.test(txt) && !/^\s*AccessAppScope: true\s*$/m.test(txt)) {
+      erros.push(`${path.basename(arquivo)} usa token do App.Formulas sem "AccessAppScope: true"`);
+    }
+  } else if (!/^Screens:\r?\n {2}\S.*:\r?\n {4}Properties:/.test(txt)) {
     erros.push(`${path.basename(arquivo)}:1 raiz invalida — exige "Screens:\\n  Tela:\\n    Properties:"`);
   }
   if (txt.charCodeAt(0) === 0xfeff) erros.push(`${path.basename(arquivo)}:1 BOM no inicio do arquivo`);
@@ -186,6 +196,14 @@ function autoteste() {
     ['literal', 'Screens:\n  L:\n    Properties:\n      Fill: =RGBA(1, 2, 3, 1)\n', /literal de cor/],
     ['select', 'Screens:\n  L:\n    Properties:\n      OnVisible: =Select(btnFantasma)\n', /controle inexistente/],
     ['cor translucida de marca', 'Screens:\n  L:\n    Properties:\n      Fill: =RGBA(96, 70, 237, 0.5)\n', /literal de cor/],
+    ['componente sem AccessAppScope', [
+      'ComponentDefinitions:',
+      '  Comp1:',
+      '    DefinitionType: CanvasComponent',
+      '    Properties:',
+      '      Fill: =thmPrimaria',
+      '',
+    ].join('\n'), /AccessAppScope/],
     ['parent em galeria', [
       'Screens:',
       '  L:',
