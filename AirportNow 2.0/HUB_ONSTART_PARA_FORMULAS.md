@@ -22,6 +22,9 @@ varIdUser = Value(Param("USUARIO"));;
 
 var_versao = 1667;;
 
+// Largura do menu lateral — ele não recolhe, então é constante (confirmado em 19/10/2026).
+var_sideBarWidth = 250;;
+
 // Última versão publicada, direto da lista — era Set no OnStart.
 var_ultimaVersao =
 Value(
@@ -138,10 +141,6 @@ If(
     ClearCollect(
         col_menuModulos;
         tbl_Modulos
-    );;
-    Set(
-        var_sideBarWidth;
-        250
     )
 );;
 Set(
@@ -167,7 +166,6 @@ Set(
 | `Launch` do `hidenavbar` | é ação: reabre o app com a barra escondida |
 | `varSessaoAtiva`, `varUltimaAtividade`, `varForcarExpiracao` | mudam o tempo todo — o `Timer` e cada clique reescrevem |
 | `var_adminEdit` | é botão de liga/desliga da edição da index |
-| `var_sideBarWidth` | **conferir antes**: se algum lugar faz `Set(var_sideBarWidth; …)` para recolher o menu, tem de continuar variável. Se o menu nunca recolhe, pode virar `var_sideBarWidth = 250` |
 | `col_menuModulos` | ver a observação de delegação abaixo |
 
 ### `col_menuModulos`: dá para virar fórmula, mas eu não faria agora
@@ -187,6 +185,7 @@ Deixei como `ClearCollect`.
 
 1. **Nenhum `Set` pode sobrar com esses nomes.** Fórmula nomeada e variável não convivem: se alguma
    tela fizer `Set(varHUB; …)`, `Set(varIdUser; …)`, `Set(var_versao; …)`, `Set(var_ultimaVersao; …)`,
+   `Set(var_sideBarWidth; …)`,
    `ClearCollect(colAeros; …)`, `ClearCollect(col_menu; …)`, `ClearCollect(col_NavTelas; …)` ou
    `ClearCollect(col_historicoVersao; …)`, o Studio recusa. Procure cada nome no app inteiro
    (Ctrl+F, "Pesquisar em todas as telas") antes de colar.
