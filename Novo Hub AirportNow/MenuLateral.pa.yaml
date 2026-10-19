@@ -1,0 +1,509 @@
+ComponentDefinitions:
+  MenuLateral:
+    DefinitionType: CanvasComponent
+    AccessAppScope: true
+    CustomProperties:
+      Home:
+        PropertyKind: Input
+        DisplayName: Home
+        Description: Uma propriedade personalizada
+        DataType: Screen
+        Default: =Home
+      IdTela:
+        PropertyKind: Output
+        DisplayName: IdTela
+        Description: Uma propriedade personalizada
+        DataType: Number
+      Navegacao:
+        PropertyKind: Input
+        DisplayName: Navegacao
+        Description: Uma propriedade personalizada
+        DataType: Screen
+        Default: =
+      Sair:
+        PropertyKind: Input
+        DisplayName: Sair
+        Description: Uma propriedade personalizada
+        DataType: Screen
+        Default: =Login
+      TITULO:
+        PropertyKind: Input
+        DisplayName: TITULO
+        Description: Uma propriedade personalizada
+        RaiseOnReset: true
+        DataType: Text
+        Default: |-
+          =If(
+              varPerfilUser = "Base",
+              "AIRPORT NOW - AEROPORTO DE " & Upper(varAeroUser),
+              varPerfilUser = "Bloco",
+              "AIRPORT NOW - BLOCO " & Upper(varBlocoUser),
+              varPerfilUser = "Sede",
+              "AIRPORT NOW - SEDE",
+              "AIRPORT NOW"
+          )
+      funcaoUsuario:
+        PropertyKind: Input
+        DisplayName: funcaoUsuario
+        Description: Uma propriedade personalizada
+        DataType: Text
+        Default: =varFuncaoUser
+      idUsuario:
+        PropertyKind: Input
+        DisplayName: idUsuario
+        Description: Uma propriedade personalizada
+        DataType: Number
+        Default: =varIdUser
+      menuLoad:
+        PropertyKind: Input
+        DisplayName: menuLoad
+        Description: Uma propriedade personalizada
+        DataType: Table
+        Default: |-
+          =//collect criada no select do botão de login, tela 0-frmLogin
+          col_menu
+      nomeMenu:
+        PropertyKind: Input
+        DisplayName: nomeMenu
+        Description: Uma propriedade personalizada
+        DataType: Text
+        Default: ="Home"
+      nomeUsuario:
+        PropertyKind: Input
+        DisplayName: nomeUsuario
+        Description: Uma propriedade personalizada
+        DataType: Text
+        Default: =varNomeUser
+      varAeroUser:
+        PropertyKind: Input
+        DisplayName: varAeroUser
+        Description: Uma propriedade personalizada
+        DataType: Text
+        Default: =varAeroUser
+      varPerfilUser:
+        PropertyKind: Input
+        DisplayName: varPerfilUser
+        Description: Uma propriedade personalizada
+        DataType: Text
+        Default: =varPerfilUser
+      var_sideBarWidth:
+        PropertyKind: Input
+        DisplayName: var_sideBarWidth
+        Description: Uma propriedade personalizada
+        DataType: Number
+        Default: =var_sideBarWidth
+    Properties:
+      Fill: =If(var_checkThemeColor, thmPrimaria, thmSuperficie)
+      Height: =Max(App.Height, App.MinScreenHeight)
+      IdTela: =//Gallery1_1.Selected.IdTela
+      Width: =240
+    Children:
+      - Container81_1:
+          Control: GroupContainer@1.5.0
+          Variant: AutoLayout
+          Properties:
+            DropShadow: =DropShadow.None
+            Height: =Parent.Height
+            LayoutDirection: =LayoutDirection.Vertical
+            PaddingLeft: =1
+            PaddingRight: =1
+            PaddingTop: =If(var_sideBarWidth > 200 ,95,0)
+            RadiusBottomLeft: =0
+            RadiusBottomRight: =0
+            RadiusTopLeft: =0
+            RadiusTopRight: =0
+            Width: =240
+          Children:
+            - Label91_3:
+                Control: Label@2.5.1
+                Properties:
+                  Align: =Align.Center
+                  BorderColor: =thmPrimariaEscura
+                  Color: =thmTextoInverso
+                  Font: =Font.'Open Sans'
+                  FontWeight: =FontWeight.Semibold
+                  Height: =5
+                  LayoutMaxHeight: =
+                  LayoutMaxWidth: =
+                  LayoutMinWidth: =30
+                  PaddingBottom: =0
+                  Size: =10
+                  Text: =
+                  Visible: =var_sideBarWidth > 200
+                  Width: =250
+            - Label91_4:
+                Control: Label@2.5.1
+                Properties:
+                  Align: =Align.Center
+                  AutoHeight: =true
+                  BorderColor: =thmPrimariaEscura
+                  Color: =thmTexto
+                  Font: =Font.'Open Sans'
+                  FontWeight: =FontWeight.Bold
+                  Height: =22
+                  LayoutMaxHeight: =
+                  LayoutMaxWidth: =
+                  LayoutMinWidth: =30
+                  PaddingBottom: =0
+                  PaddingLeft: =0
+                  PaddingRight: =0
+                  Size: =8
+                  Text: =MenuLateral.nomeUsuario
+                  Visible: =var_sideBarWidth > 200
+                  Width: =240
+            - Label91_5:
+                Control: Label@2.5.1
+                Properties:
+                  Align: =Align.Center
+                  AutoHeight: =true
+                  BorderColor: =thmPrimariaEscura
+                  Color: =thmTextoFraco
+                  Font: =Font.'Open Sans'
+                  Height: =20
+                  LayoutMaxHeight: =
+                  LayoutMaxWidth: =
+                  LayoutMinWidth: =30
+                  Size: =7
+                  Text: =MenuLateral.funcaoUsuario
+                  VerticalAlign: =VerticalAlign.Top
+                  Visible: =var_sideBarWidth > 200
+                  Width: =240
+            - Gallery1_2:
+                Control: Gallery@2.15.0
+                Variant: Vertical
+                Properties:
+                  AlignInContainer: =AlignInContainer.SetByContainer
+                  BorderColor: =thmPrimariaEscura
+                  DelayItemLoading: =false
+                  Height: =530
+                  Items: =MenuLateral.menuLoad
+                  LayoutMaxHeight: =
+                  LayoutMaxWidth: =
+                  LoadingSpinner: =LoadingSpinner.None
+                  ShowScrollbar: =false
+                  TemplatePadding: =12
+                  TemplateSize: =30
+                  Width: =240
+                Children:
+                  - ButtonCanvas1_7:
+                      Control: Button@0.0.45
+                      Properties:
+                        Appearance: |-
+                          =If(
+                              MenuLateral.nomeMenu = ThisItem.Nome,
+                              'ButtonCanvas.Appearance'.Primary,
+                              'ButtonCanvas.Appearance'.Secondary
+                          )
+                        BasePaletteColor: =thmPrimaria
+                        BorderRadius: =4
+                        BorderRadiusBottomLeft: =0
+                        BorderRadiusBottomRight: =0
+                        BorderRadiusTopLeft: =0
+                        BorderRadiusTopRight: =0
+                        BorderStyle: =BorderStyle.None
+                        FontColor: |-
+                          =If(
+                              MenuLateral.nomeMenu = ThisItem.Nome,
+                              thmTextoInverso,
+                              thmTexto
+                          )
+                        FontSize: =14
+                        Height: =30
+                        Icon: =
+                        Layout: ='ButtonCanvas.Layout'.IconBefore
+                        OnSelect: =Select(Button1)
+                        Text: =ThisItem.Nome
+                        Visible: =false //MenuLateral.var_sideBarWidth > 200
+                        Width: =220
+                  - Button1:
+                      Control: Classic/Button@2.2.0
+                      Properties:
+                        Align: =Align.Left
+                        BorderColor: =ColorFade(Self.Fill, -15%)
+                        BorderStyle: =BorderStyle.None
+                        BorderThickness: =0
+                        Color: =thmTexto
+                        DisabledBorderColor: =thmDesabilitado
+                        Fill: =thmSuperficie
+                        Font: =Font.'Open Sans'
+                        FontWeight: |-
+                          =If(
+                              MenuLateral.nomeMenu = ThisItem.Nome,
+                              FontWeight.Semibold,
+                              FontWeight.Normal
+                          )
+                        Height: =30
+                        HoverBorderColor: =ColorFade(Self.BorderColor, 20%)
+                        HoverColor: =thmPrimariaEscura
+                        HoverFill: =thmPrimariaClara
+                        OnSelect: |-
+                          =Set(varUltimaAtividade, Now());
+                          With(
+                              {
+                                  ctx: {
+                                      LOGADO: "z0x9c8v7b6n5" & Text(
+                                          Now(),
+                                          "ddmmyyyy"
+                                      ) & Rand() * 100,
+                                      USUARIO: MenuLateral.idUsuario,
+                                      HUB: varHUB
+                                  }
+                              },
+                              Switch(
+                                  ThisItem.Nome,
+                                  "Aviso Meteorológico",
+                                  Launch(
+                                      "https://apps.powerapps.com/play/providers/Microsoft.PowerApps/apps/25e2bbe9-181c-4e0b-8aab-1a2f285fb049?hideNavBar=true",
+                                      ctx,
+                                      LaunchTarget.Replace
+                                  ),
+                                  "Lições Aprendidas",
+                                  Launch(
+                                      "https://apps.powerapps.com/play/providers/Microsoft.PowerApps/apps/824a93a0-8357-40e9-bb8c-5bb328087114?hideNavBar=true",
+                                      ctx,
+                                      LaunchTarget.Replace
+                                  ),
+                                  "Resposta emergência",
+                                  Launch(
+                                      "https://apps.powerapps.com/play/providers/Microsoft.PowerApps/apps/854315c7-2e8f-461f-90b5-cd3cb463f973?hideNavBar=true",
+                                      ctx,
+                                      LaunchTarget.Replace
+                                  ),
+                                  "AVSEC",
+                                  Launch(
+                                      "https://apps.powerapps.com/play/providers/Microsoft.PowerApps/apps/3093a8b5-5cdf-437d-8621-e75a77629ba7?hideNavBar=true",
+                                      ctx,
+                                      LaunchTarget.Replace
+                                  ),
+                                  "Safety & Fauna",
+                                  Launch(
+                                      "https://apps.powerapps.com/play/providers/Microsoft.PowerApps/apps/abf801f0-1e4c-4345-b0fd-a44c2e186faa?hideNavBar=true",
+                                      ctx,
+                                      LaunchTarget.Replace
+                                  ),
+                                  "SGI",
+                                  Launch(
+                                      "https://apps.powerapps.com/play/providers/Microsoft.PowerApps/apps/12171de9-5c91-4f51-8e97-9550540661fd?hideNavBar=true",
+                                      ctx,
+                                      LaunchTarget.Replace
+                                  ),
+                                  "Treinamentos",
+                                  Launch(
+                                      "https://grupoccr.sharepoint.com/sites/Portal-AirportNow?env=Embedded",
+                                      {},
+                                      LaunchTarget.New
+                                  ),
+                                  "Sair",
+                                  Launch(
+                                      "https://apps.powerapps.com/play/providers/Microsoft.PowerApps/apps/" & varHUB & "?hideNavBar=true",
+                                      {},
+                                      LaunchTarget.Replace
+                                  ),
+                                  Navigate(
+                                      ThisItem.Tela,
+                                      ScreenTransition.Fade
+                                  )
+                              )
+                          )
+                        PaddingLeft: =40
+                        PaddingRight: =0
+                        PressedBorderColor: =
+                        PressedColor: =
+                        PressedFill: =
+                        RadiusBottomLeft: =4
+                        RadiusBottomRight: =4
+                        RadiusTopLeft: =4
+                        RadiusTopRight: =4
+                        Size: =10
+                        Text: =ThisItem.Nome
+                        Visible: =MenuLateral.var_sideBarWidth > 200
+                        Width: =225
+                  - Container45:
+                      Control: GroupContainer@1.5.0
+                      Variant: ManualLayout
+                      Properties:
+                        DropShadow: =DropShadow.None
+                        Height: =28
+                        PaddingLeft: =If(ThisItem.Nome = "Sair", 5,0)
+                        Width: =34
+                      Children:
+                        - Icon26_2:
+                            Control: Classic/Icon@2.5.0
+                            Properties:
+                              BorderColor: =thmPrimariaEscura
+                              Color: =thmTexto
+                              Fill: |-
+                                =If(
+                                    MenuLateral.nomeMenu = ThisItem.Nome And MenuLateral.var_sideBarWidth < 200,
+                                    thmGradeLinha,
+                                    thmTransparente
+                                )
+                              Height: =28
+                              HoverColor: =If( MenuLateral.var_sideBarWidth < 200, ColorFade(Self.Color, 50%))
+                              HoverFill: =thmTransparente
+                              Icon: =ThisItem.Icon
+                              OnSelect: =Select(Button1)
+                              PaddingBottom: =4
+                              PaddingLeft: |-
+                                =Switch(
+                                    ThisItem.Icon,
+                                    Icon.Video,
+                                    7,
+                                    Icon.Leave,
+                                    7,
+                                    0
+                                )
+                              PaddingRight: =Self.PaddingLeft
+                              PaddingTop: =4
+                              Tooltip: =ThisItem.Nome
+                              Width: =34
+            - Container32:
+                Control: GroupContainer@1.5.0
+                Variant: AutoLayout
+                Properties:
+                  DropShadow: =DropShadow.None
+                  LayoutAlignItems: =LayoutAlignItems.End
+                  LayoutDirection: =LayoutDirection.Horizontal
+                  LayoutJustifyContent: =LayoutJustifyContent.Center
+                  LayoutMaxHeight: =
+                  LayoutMaxWidth: =
+                  LayoutMinHeight: =0
+                  LayoutMinWidth: =0
+                  PaddingBottom: =10
+                  RadiusBottomLeft: =0
+                  RadiusBottomRight: =0
+                  RadiusTopLeft: =0
+                  RadiusTopRight: =0
+                  Visible: =false
+                Children:
+                  - Toggle4:
+                      Control: Toggle@1.1.5
+                      Properties:
+                        Label: =
+                        LayoutMaxHeight: =
+                        LayoutMaxWidth: =
+                        OnCheck: =Set(var_checkThemeColor, true)
+                        OnUncheck: =Set(var_checkThemeColor, false)
+                        Width: =60
+                  - Image20_1:
+                      Control: Image@2.2.3
+                      Properties:
+                        BorderColor: =thmPrimariaEscura
+                        BorderStyle: =BorderStyle.None
+                        DisplayMode: =DisplayMode.View
+                        Height: =35
+                        Image: =dark
+                        LayoutMaxHeight: =
+                        LayoutMaxWidth: =
+                        Width: =30
+      - Image6:
+          Control: Image@2.2.3
+          Properties:
+            BorderColor: =thmPrimariaEscura
+            Height: =84
+            Image: |-
+              =With(
+                  {blocoUser: LookUp(colAeros, Aeroporto = MenuLateral.varAeroUser).Bloco},
+                  Switch(
+                      true,
+                      MenuLateral.varPerfilUser = "Sede",
+                      logoSEDE,
+                      MenuLateral.varPerfilUser = "Bloco" And blocoUser = "SUL",
+                      logoBSul,
+                      MenuLateral.varPerfilUser = "Bloco" And blocoUser = "CENTRAL",
+                      logoBCentral,
+                      MenuLateral.varPerfilUser = "Base" And MenuLateral.varAeroUser = "BACACHERI",
+                      logoBFH,
+                      MenuLateral.varPerfilUser = "Base" And MenuLateral.varAeroUser = "BAGÉ",
+                      logoBGX,
+                      MenuLateral.varPerfilUser = "Base" And MenuLateral.varAeroUser = "CURITIBA",
+                      logoCWB,
+                      MenuLateral.varPerfilUser = "Base" And MenuLateral.varAeroUser = "FOZ DO IGUAÇU",
+                      logoIGU,
+                      MenuLateral.varPerfilUser = "Base" And MenuLateral.varAeroUser = "JOINVILLE",
+                      logoJOI,
+                      MenuLateral.varPerfilUser = "Base" And MenuLateral.varAeroUser = "LONDRINA",
+                      logoLDB,
+                      MenuLateral.varPerfilUser = "Base" And MenuLateral.varAeroUser = "NAVEGANTES",
+                      logoNVT,
+                      MenuLateral.varPerfilUser = "Base" And MenuLateral.varAeroUser = "PELOTAS",
+                      logoPET,
+                      MenuLateral.varPerfilUser = "Base" And MenuLateral.varAeroUser = "URUGUAIANA",
+                      logoURG,
+                      MenuLateral.varPerfilUser = "Base" And MenuLateral.varAeroUser = "GOIÂNIA",
+                      logoGYN,
+                      MenuLateral.varPerfilUser = "Base" And MenuLateral.varAeroUser = "IMPERATRIZ",
+                      logoIMP,
+                      MenuLateral.varPerfilUser = "Base" And MenuLateral.varAeroUser = "PALMAS",
+                      logoPMW,
+                      MenuLateral.varPerfilUser = "Base" And MenuLateral.varAeroUser = "PAMPULHA",
+                      logoPLU,
+                      MenuLateral.varPerfilUser = "Base" And MenuLateral.varAeroUser = "PETROLINA",
+                      logoPNZ,
+                      MenuLateral.varPerfilUser = "Base" And MenuLateral.varAeroUser = "SÃO LUIS",
+                      logoSLZ,
+                      MenuLateral.varPerfilUser = "Base" And MenuLateral.varAeroUser = "TERESINA",
+                      logoTHE
+                  )
+              )
+            PaddingLeft: =15
+            Visible: =false
+            Width: =240
+      - Image38_1:
+          Control: Image@2.2.3
+          Properties:
+            BorderColor: =thmPrimaria
+            BorderThickness: =2
+            Height: =50
+            Image: =varFotoUser
+            OnSelect: =Launch("https://delve.office.com/?v=work",{},LaunchTarget.New)
+            RadiusBottomLeft: =100
+            RadiusBottomRight: =100
+            RadiusTopLeft: =100
+            RadiusTopRight: =100
+            Visible: =var_sideBarWidth > 200
+            Width: =50
+            X: =Parent.Width/ 2 - Self.Width / 2
+            Y: =50
+      - Icon13_1:
+          Control: Classic/Icon@2.5.0
+          Properties:
+            BorderColor: =thmPrimariaEscura
+            Color: =thmTransparente
+            Height: =68
+            Icon: =Icon.Camera
+            OnSelect: |-
+              =Set(varUltimaAtividade, Now());
+              Launch("https://delve.office.com/?v=work",{},LaunchTarget.New)
+            Visible: =var_sideBarWidth > 200
+            Width: =80
+            X: =22
+            Y: =10
+      - Label2:
+          Control: Label@2.5.1
+          Properties:
+            Align: =Align.Center
+            BorderColor: =thmPrimariaEscura
+            Color: =thmPrimaria
+            Font: =Font.'Open Sans'
+            FontWeight: =FontWeight.Bold
+            Height: =60
+            PaddingTop: =0
+            Size: =15
+            Text: |-
+              =With(
+                  {blocoUser: LookUp(colAeros, Aeroporto = MenuLateral.varAeroUser).Bloco},
+                  Switch(
+                      true,
+                      MenuLateral.varPerfilUser = "Sede",
+                      MenuLateral.varPerfilUser,
+                      MenuLateral.varPerfilUser = "Bloco" And blocoUser = "SUL",
+                      "SUL",
+                      MenuLateral.varPerfilUser = "Bloco" And blocoUser = "CENTRAL",
+                      "CENTRAL",
+                      MenuLateral.varPerfilUser = "Base",
+                      MenuLateral.varAeroUser
+                  )
+              )
+            Visible: =var_sideBarWidth > 200
+            Width: =Parent.Width

@@ -848,3 +848,34 @@ dado, nao do revisor.
 Validacao preventiva: toda colecao criada por `ClearCollect` dentro do bloco de
 coleta tem que aparecer no merge. Comparar as duas listas e acusar a diferenca —
 nos dois sentidos.
+
+## Componente de canvas so enxerga o `App.Formulas` com `AccessAppScope: true` (19/10/2026)
+
+Projeto: Novo Hub AirportNow, componentes `MenuLateral` e `HeaderTitle`.
+
+Sintoma: depois de trocar a paleta nas telas, o menu lateral e a barra de titulo
+continuaram roxos. Nao havia literal de cor nas telas para explicar — as cores
+estavam dentro dos componentes, que o YAML da tela nao carrega.
+
+Causa, em duas camadas:
+
+1. Componente e arquivo separado (`ComponentDefinitions:`, nao `Screens:`).
+   Trocar a paleta das telas nunca alcanca o que esta dentro dele.
+2. Um componente so resolve nome do `App.Formulas` quando tem
+   `AccessAppScope: true`. O `MenuLateral` tinha (por isso ja usava `varHUB` e
+   `colAeros`); o `HeaderTitle` nao tinha, e qualquer `thmPrimaria` ali dentro
+   daria "o nome nao e reconhecido" — o mesmo erro enganoso do separador decimal.
+
+Correcao: ligar `AccessAppScope: true` no componente.
+
+Alternativa, quando o Studio recusar app scope (componente vindo de biblioteca):
+declarar a cor como propriedade de entrada com `Default: =thmPrimaria`. O default
+e avaliado no escopo do **host**, entao resolve mesmo sem app scope, e as telas
+que ja usam o componente nao precisam passar nada.
+
+Validacao preventiva: em arquivo de componente, se houver `thm*`/`hx*` no corpo e
+nao houver `AccessAppScope: true`, reprovar.
+
+Licao geral: **"trocar a paleta do app" nao termina nas telas.** Levantar tambem
+os componentes, e lembrar que cada um tem seu proprio arquivo e seu proprio
+acesso ao escopo do app.
