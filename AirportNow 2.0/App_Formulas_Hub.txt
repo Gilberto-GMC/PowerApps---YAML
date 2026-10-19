@@ -3,6 +3,12 @@
 // O que saiu do OnStart por ser declaração, não ação (19/10/2026).
 // Dialeto pt-BR: ';' entre argumentos, ';;' entre declarações.
 // Ver AirportNow 2.0/HUB_ONSTART_PARA_FORMULAS.md para o que ficou e por quê.
+//
+// ⚠️ REVISADO depois do teste: col_menu, col_historicoVersao e var_sideBarWidth saíram daqui e
+// voltaram para o OnStart. Os três são reescritos durante o uso — a tela Home prova isso:
+//   · Icon11 (hambúrguer) faz Set(var_sideBarWidth, 60) para recolher o menu;
+//   · Icon17 faz Clear(col_historicoVersao) ao fechar o histórico;
+//   · col_menu é montado no botão da tela de Login, não só no OnStart.
 // =====================================================================================
 
 // ====================== identidade do hub ======================
@@ -12,9 +18,6 @@ varHUB = "a5af3add-12da-4107-b027-23daea7b0056";;
 varIdUser = Value(Param("USUARIO"));;
 
 var_versao = 1667;;
-
-// Largura do menu lateral — ele não recolhe, então é constante (confirmado em 19/10/2026).
-var_sideBarWidth = 250;;
 
 // Última versão publicada, direto da lista — era Set no OnStart.
 var_ultimaVersao =
@@ -26,16 +29,6 @@ Value(
             SortOrder.Descending
         )
     ).Numero_versao
-);;
-
-// Histórico de versões, sempre atual.
-// ⚠️ No OnStart isto nunca carregava: a condição era CountRows(col_historicoVersao) > 0, que só
-// preenche se já estiver preenchido. Como fórmula o problema desaparece — não há carga.
-col_historicoVersao =
-Sort(
-    tbl_controle_versoes;
-    Numero_versao;
-    SortOrder.Descending
 );;
 
 // ====================== rede de aeroportos ======================
@@ -64,13 +57,14 @@ Table(
 
 // ====================== usuário conectado ======================
 // Era o mesmo LookUp duas vezes dentro do col_menu, uma para Root e outra para View_safety.
+// Continuam úteis: o OnStart usa os dois ao montar o col_menu.
 usrHub = LookUp(User; usrNome = User().FullName);;
 usrEhRoot = Value(usrHub.Root) = 1;;
 usrVeSafety = Value(usrHub.View_safety) = 1;;
 
 // ====================== telas de navegação ======================
-// ⚠️ Referência de tela dentro de tabela fixa não tem precedente como fórmula nomeada no
-// repositório. Se o Studio recusar, este bloco e o col_menu voltam para o OnStart — o resto vale.
+// Tabela fixa, ninguém reescreve. Se o Studio recusar referência de tela em fórmula nomeada,
+// este bloco volta para o OnStart como ClearCollect e o resto do arquivo continua valendo.
 col_NavTelas =
 Table(
     { Id: 26; TelaListar: '7.1.1-frmDesenbHibrid' };
@@ -88,21 +82,4 @@ Table(
     { Id: 59; TelaListar: frmCheckListGenericoEQP };
     { Id: 63; TelaListar: frmFollowMe };
     { Id: 66; TelaListar: frmTesteBalizamento }
-);;
-
-// ====================== menu lateral ======================
-col_menu =
-Table(
-    { Icon: Icon.Home; Nome: "Home"; Tela: Home };
-    { Icon: Icon.Waffle; Nome: "Resumo Diário"; Tela: frmResumoDiario };
-    If(usrEhRoot; { Icon: Icon.Settings; Nome: "Admin"; Tela: frmAdmin });
-    { Icon: Icon.Airplane; Nome: "Pátios e Pistas"; Tela: frmPatiosPistas };
-    { Icon: Icon.OfficeBuilding; Nome: "Terminal de Passageiros"; Tela: frmTerminalPassageiro };
-    { Icon: Icon.Hospital; Nome: "Resposta emergência"; Tela: Home };
-    { Icon: Icon.Lock; Nome: "AVSEC"; Tela: Home };
-    If(usrVeSafety; { Icon: Icon.Warning; Nome: "Safety & Fauna"; Tela: Home });
-    { Icon: Icon.GlobeWarning; Nome: "SGI"; Tela: Home };
-    { Icon: Icon.Folder; Nome: "Lições Aprendidas"; Tela: Home };
-    { Icon: Icon.Video; Nome: "Treinamentos"; Tela: Home };
-    { Icon: Icon.Leave; Nome: "Sair"; Tela: Login }
 )

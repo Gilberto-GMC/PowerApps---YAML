@@ -1,7 +1,10 @@
 // =====================================================================================
 // AirportNow 2.0 — App.OnStart depois de mover as declarações para App.Formulas (19/10/2026).
-// Só sobrou o que é ação ou estado que muda durante o uso.
-// Colar o App_Formulas_Hub.txt ANTES: enquanto o Formulas não existir, varIdUser aqui é vazio.
+// Colar este PRIMEIRO, depois o App_Formulas_Hub.txt: enquanto o Formulas não existir,
+// varIdUser aqui fica sublinhado, e o aviso some sozinho quando o Formulas entrar.
+//
+// Ficou aqui tudo que é ação ou estado reescrito durante o uso — inclusive col_menu,
+// col_historicoVersao e var_sideBarWidth, que tentei mover e não podiam sair.
 // =====================================================================================
 
 If(
@@ -29,6 +32,94 @@ If(
     ClearCollect(
         col_menuModulos;
         tbl_Modulos
+    );;
+    // Criação do menu side bar — usrEhRoot e usrVeSafety vêm do App.Formulas
+    ClearCollect(
+        col_menu;
+        {
+            Icon: Icon.Home;
+            Nome: "Home";
+            Tela: Home
+        };
+        {
+            Icon: Icon.Waffle;
+            Nome: "Resumo Diário";
+            Tela: frmResumoDiario
+        };
+        If(
+            usrEhRoot;
+            {
+                Icon: Icon.Settings;
+                Nome: "Admin";
+                Tela: frmAdmin
+            }
+        );
+        {
+            Icon: Icon.Airplane;
+            Nome: "Pátios e Pistas";
+            Tela: frmPatiosPistas
+        };
+        {
+            Icon: Icon.OfficeBuilding;
+            Nome: "Terminal de Passageiros";
+            Tela: frmTerminalPassageiro
+        };
+        {
+            Icon: Icon.Hospital;
+            Nome: "Resposta emergência";
+            Tela: Home
+        };
+        {
+            Icon: Icon.Lock;
+            Nome: "AVSEC";
+            Tela: Home
+        };
+        If(
+            usrVeSafety;
+            {
+                Icon: Icon.Warning;
+                Nome: "Safety & Fauna";
+                Tela: Home
+            }
+        );
+        {
+            Icon: Icon.GlobeWarning;
+            Nome: "SGI";
+            Tela: Home
+        };
+        {
+            Icon: Icon.Folder;
+            Nome: "Lições Aprendidas";
+            Tela: Home
+        };
+        {
+            Icon: Icon.Video;
+            Nome: "Treinamentos";
+            Tela: Home
+        };
+        {
+            Icon: Icon.Leave;
+            Nome: "Sair";
+            Tela: Login
+        }
+    );;
+    //largura do menu sidebar — o hambúrguer do Home reescreve para 60 ao recolher
+    Set(
+        var_sideBarWidth;
+        250
+    );;
+    // Coleta do histórico de versões — o X do painel faz Clear, então é coleção mesmo.
+    // Correção: a condição era > 0, que só carregava se já estivesse carregado — nunca entrava.
+    If(
+        CountRows(col_historicoVersao) = 0;
+        ClearCollect(
+            col_historicoVersao;
+            Sort(
+                tbl_controle_versoes;
+                Numero_versao;
+                SortOrder.Descending
+            )
+        )
     )
 );;
 //para sessão (tempo de 15 minutos)

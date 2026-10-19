@@ -159,6 +159,23 @@ Set(
 
 ---
 
+## ⚠️ Revisão de 19/10/2026 — três voltaram para o OnStart
+
+A primeira colagem deixou o menu lateral do Home vazio. A tela Home mostra por quê: os três são
+reescritos durante o uso, e fórmula nomeada não se reescreve.
+
+| o quê | a prova, na própria tela |
+|---|---|
+| `var_sideBarWidth` | `Icon11` (hambúrguer) faz `Set(var_sideBarWidth, 60)` — **o menu recolhe sim** |
+| `col_historicoVersao` | `Icon17` faz `Clear(col_historicoVersao)` ao fechar o painel de versões |
+| `col_menu` | o `menuLoad` do componente diz: *collect criada no select do botão de login*. E `Table()` com `If(cond; registro)` sem senão não engole a linha em branco como o `ClearCollect` engolia |
+
+Os três voltaram ao `OnStart`. O `usrEhRoot` e o `usrVeSafety` continuam no `Formulas` e são usados
+de lá pelo `col_menu`, então a dedução do `LookUp` repetido não se perdeu.
+
+Lição: antes de mover um nome, procurar `Set(`, `ClearCollect(`, `Collect(` e `Clear(` dele em
+**todas** as telas — não basta olhar o `OnStart`.
+
 ## 3. O que **não** pode virar fórmula, e por quê
 
 | o quê | por quê fica |
