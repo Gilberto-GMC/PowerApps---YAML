@@ -54,10 +54,20 @@ e-mail do login — ou seja, abrir direto continua funcionando.
 
 `LOGADO` e `HUB` são ignorados pelo Mapa; vão junto para manter o padrão dos outros módulos.
 
-## ⚠️ O `ALO-PAT` continua apontando para o app antigo
+## O `ALO-PAT` foi aposentado (19/10/2026)
 
-Na seção *Ocorrências envolvendo*, o identificador `ALO-PAT` abre
-`bbf03a1d-0a54-4732-bbaa-1c5f8be757d0` — o **App B**, "Reserva e Alocação de Pátios", que o Mapa
-veio substituir. Enquanto os dois estiverem no hub, duas apps gravam nas mesmas posições sem se
-enxergar. Decidir entre desativar aquele item (Status = `Desativado`) ou apontá-lo para o Mapa é
-assunto da Etapa 1 do plano de unificação, e não foi feito aqui.
+Decisão do Douglas: *"não vamos mais usar o app antigo"*. O identificador `ALO-PAT` abria o
+`bbf03a1d-0a54-4732-bbaa-1c5f8be757d0` — o **App B**, "Reserva e Alocação de Pátios", que gravava em
+`tbl_aloca_aeronave` e disputava as mesmas posições de pátio sem enxergar o Mapa.
+
+Duas coisas, e as duas precisam ser feitas:
+
+1. **Na lista dos módulos**, pôr o item do `ALO-PAT` em `Status = Desativado`. É isso que tira o
+   cartão do hub: as galerias filtram `Status.Value = "Ativo"`.
+2. **Na tela** (já feito neste arquivo), o ramo do `Switch` que abria aquele app foi removido do
+   `OnSelect` da galeria de *Ocorrências envolvendo*. Não sobrou nenhuma referência ao app antigo
+   em `frmPatiosPistas`.
+
+O App B em si continua publicado no ambiente. Despublicá-lo ou deixá-lo somente leitura é a Etapa 1
+do plano de unificação e continua em aberto — enquanto ele existir, quem tiver o link direto ainda
+consegue gravar por lá.
