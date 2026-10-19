@@ -782,3 +782,33 @@ Validacao preventiva, em duas frentes:
    colagem nao.
 2. Quando duas fontes discordam, a que o usuario ve rodando ganha. Pedir o print
    custa menos que refazer a tela.
+
+## pt-BR no `App.Formulas`: o separador decimal tambem muda (19/10/2026)
+
+Projeto: Novo Hub AirportNow, tela Login.
+
+Mensagem do Studio, na propriedade `DisabledFill` de `Button20_51`:
+`O nome não é válido. 'thmDesabilitadoFundo' não é reconhecido.`
+
+Enganoso: o token **estava** colado no `App.Formulas`. O que falhou foi a
+declaracao dele, e o Studio so reclama la na frente, no controle que a usa, como
+se o nome nao existisse.
+
+Causa: `thmDesabilitadoFundo = RGBA(166; 166; 166; 0.5);;`. No dialeto pt-BR o
+separador decimal e **virgula**: `0.5` nao e um numero, a declaracao inteira nao
+compila e o nome nunca passa a existir. Ja estava certo no Mapa —
+`thmVeu = RGBA(30; 41; 59; 0,42)` — e passou despercebido porque so uma linha do
+bloco tinha casa decimal.
+
+Correcao: `RGBA(166; 166; 166; 0,5);;`.
+
+Regra completa do dialeto pt-BR, que agora vale inteira:
+`;` entre argumentos, `;;` entre declaracoes, **`,` no decimal**.
+
+Validacao preventiva: no `validate_hub.js`, varrer o `App_Formulas_*.txt` atras
+de `\d+\.\d+` fora de string e comentario, e reprovar. A regra tem caso
+construido: trocar `0,5` por `0.5` tem que derrubar o validador.
+
+Licao geral: **erro de "nome nao reconhecido" em token aponta para a declaracao,
+nao para o uso.** Antes de procurar erro de digitacao no controle, conferir se a
+linha que declara o token compila.
