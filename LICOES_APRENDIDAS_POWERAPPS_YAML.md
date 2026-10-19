@@ -915,3 +915,29 @@ Validacao preventiva: dentro de `CustomProperties`, reprovar `Default: =` vazio
 quando o `PropertyKind` daquela propriedade for `Input`. **Nao** vale para
 `Default: =` de controle (`Classic/TextInput`, por exemplo), que e legitimo — a
 regra tem que olhar o escopo, nao a linha.
+
+## Recolar a definicao de um componente apaga as instancias dele nas telas (19/10/2026)
+
+Projeto: Novo Hub AirportNow, `MenuLateral` na tela Home.
+
+Sintoma: depois de recolar o componente `MenuLateral`, o menu lateral ficou
+vazio — so o hamburguer e o rotulo de versao, que sao da tela. A colecao
+`col_menu` tinha 12 linhas, o login estava feito, as variaveis preenchidas.
+O controle `MenuLateral_1` simplesmente nao existia mais na arvore.
+
+Causa: colar `ComponentDefinitions:` substitui a definicao, e a instancia que
+estava na tela nao sobrevive. A tela continua valida, so que sem aquele filho.
+
+Correcao: recolar a tela depois do componente. O bloco da instancia
+(`Control: CanvasComponent` + `ComponentName:`) volta com todas as ligacoes.
+
+**Ordem de colagem, agora completa e obrigatoria:**
+
+1. `App.Formulas` — senao nenhum token existe;
+2. componentes — senao a instancia nao tem o que referenciar;
+3. telas — por ultimo, sempre, e **de novo** toda vez que um componente que elas
+   usam for recolado.
+
+Diagnostico que economiza tempo: antes de culpar dado ou variavel, conferir se o
+controle ainda esta na arvore. Tres sessoes de investigacao foram gastas em
+colecao vazia, login e escopo de componente — e o controle e que tinha sumido.
