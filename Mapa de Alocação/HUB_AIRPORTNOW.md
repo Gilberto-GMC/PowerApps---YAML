@@ -1,22 +1,22 @@
 # Colocar o Mapa de Alocação no hub do AirportNow
 
 O hub abre cada módulo por `Launch(...)` com `LaunchTarget.Replace`. O Mapa entra na tela
-**`frmPatiosPistas`** (menu *Pátios e Pistas*), numa seção nova chamada **Outros**.
+**`frmPatiosPistas`** (menu *Pátios e Pistas*), numa seção nova chamada **Diversos**.
 
 | o quê | valor |
 |---|---|
 | ID do aplicativo | `daaf8c38-3170-4f50-9e14-2e1f61ac24b1` |
 | Identificador no catálogo | `MAPA-ALO` |
 | Menu | `Pátios e Pistas` |
-| SubMenu | `Outros` |
+| SubMenu | `Diversos` |
 | Parâmetros recebidos | `USUARIO` (único que o Mapa lê), mais `LOGADO` e `HUB` por convenção |
 
 ## 1. Lista dos módulos (origem de `col_menuModulos`)
 
-A seção só aparece quando houver item ativo nela — galeria vazia some sozinha, mas o rótulo "Outros:"
+A seção só aparece quando houver item ativo nela — galeria vazia some sozinha, mas o rótulo "Diversos:"
 fica. Então o cadastro vem **antes** de colar a tela.
 
-1. Na coluna de escolha **SubMenu**, acrescentar o valor **`Outros`**. Sem isso o item não pode ser
+1. Na coluna de escolha **SubMenu**, acrescentar o valor **`Diversos`**. Sem isso o item não pode ser
    gravado.
 2. Criar o item do módulo:
 
@@ -24,7 +24,7 @@ fica. Então o cadastro vem **antes** de colar a tela.
 |---|---|
 | Titulo | `Mapa de Alocação` |
 | Menu | `Pátios e Pistas` |
-| SubMenu | `Outros` |
+| SubMenu | `Diversos` |
 | Status | `Ativo` |
 | Identificador | `MAPA-ALO` |
 | Logo | imagem do módulo (a galeria usa `Logo.Small`) |
@@ -38,8 +38,8 @@ fica. Então o cadastro vem **antes** de colar a tela.
 
 Colar a tela inteira. O que foi acrescentado, em relação à versão que estava no app:
 
-- `Label6_328` — rótulo **"Outros:"**, em Y 527;
-- `Gallery30_3` — galeria da seção, em Y 547, filtrando `SubMenu.Value = "Outros"`;
+- `Label6_328` — rótulo **"Diversos:"**, em Y 527;
+- `Gallery30_3` — galeria da seção, em Y 547, filtrando `SubMenu.Value = "Diversos"`;
 - dentro dela, o cartão (`Container84_27` e filhos), igual aos das outras seções, com o `OnSelect`
   do botão abrindo o Mapa quando `Identificador = "MAPA-ALO"`.
 
