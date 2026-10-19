@@ -7,7 +7,8 @@
 const fs = require('fs');
 const path = require('path');
 
-const TOKENS_FX = path.join(__dirname, 'App_Formulas_Hub.fx.md');
+// Fonte unica dos tokens: o App.Formulas inteiro, do jeito que vai ser colado.
+const TOKENS_FX = path.join(__dirname, 'App_Formulas_Hub.txt');
 
 // Tokens definidos no bloco do App.Formulas (dialeto pt-BR: "nome =" no inicio da linha).
 function tokensDefinidos() {

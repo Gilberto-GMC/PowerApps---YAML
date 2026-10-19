@@ -1,0 +1,131 @@
+// =====================================================================================
+// AirportNow 2.0 — App.Formulas
+// O que saiu do OnStart por ser declaração, não ação (19/10/2026).
+// Dialeto pt-BR: ';' entre argumentos, ';;' entre declarações.
+// Ver AirportNow 2.0/HUB_ONSTART_PARA_FORMULAS.md para o que ficou e por quê.
+//
+// ⚠️ REVISADO depois do teste: col_menu, col_historicoVersao e var_sideBarWidth saíram daqui e
+// voltaram para o OnStart. Os três são reescritos durante o uso — a tela Home prova isso:
+//   · Icon11 (hambúrguer) faz Set(var_sideBarWidth, 60) para recolher o menu;
+//   · Icon17 faz Clear(col_historicoVersao) ao fechar o histórico;
+//   · col_menu é montado no botão da tela de Login, não só no OnStart.
+// =====================================================================================
+
+// ====================== identidade do hub ======================
+varHUB = "a5af3add-12da-4107-b027-23daea7b0056";;
+
+// ID do usuário na lista User, vindo de quem abriu este app. Sem parâmetro, 0.
+//varIdUser = Value(Param("USUARIO"));;
+
+var_versao = 1667;;
+
+// Última versão publicada, direto da lista — era Set no OnStart.
+var_ultimaVersao =
+Value(
+    First(
+        Sort(
+            tbl_controle_versoes;
+            ID;
+            SortOrder.Descending
+        )
+    ).Numero_versao
+);;
+
+// ====================== rede de aeroportos ======================
+// As duas linhas em branco são os separadores de bloco das listas suspensas — mantidas.
+colAeros =
+Table(
+    { IATA: ""; ICAO: ""; Bloco: "CENTRAL"; Aeroporto: "" };
+    { IATA: "GYN"; ICAO: "SBGO"; Bloco: "CENTRAL"; Aeroporto: "GOIÂNIA" };
+    { IATA: "IMP"; ICAO: "SBIZ"; Bloco: "CENTRAL"; Aeroporto: "IMPERATRIZ" };
+    { IATA: "PMW"; ICAO: "SBPJ"; Bloco: "CENTRAL"; Aeroporto: "PALMAS" };
+    { IATA: "PLU"; ICAO: "SBBH"; Bloco: "CENTRAL"; Aeroporto: "PAMPULHA" };
+    { IATA: "PNZ"; ICAO: "SBPL"; Bloco: "CENTRAL"; Aeroporto: "PETROLINA" };
+    { IATA: "SLZ"; ICAO: "SBSL"; Bloco: "CENTRAL"; Aeroporto: "SÃO LUIS" };
+    { IATA: "THE"; ICAO: "SBTE"; Bloco: "CENTRAL"; Aeroporto: "TERESINA" };
+    { IATA: ""; ICAO: ""; Bloco: "SUL"; Aeroporto: "" };
+    { IATA: "BFH"; ICAO: "SBBI"; Bloco: "SUL"; Aeroporto: "BACACHERI" };
+    { IATA: "CWB"; ICAO: "SBCT"; Bloco: "SUL"; Aeroporto: "CURITIBA" };
+    { IATA: "JOI"; ICAO: "SBJV"; Bloco: "SUL"; Aeroporto: "JOINVILLE" };
+    { IATA: "NVT"; ICAO: "SBNF"; Bloco: "SUL"; Aeroporto: "NAVEGANTES" };
+    { IATA: "BGX"; ICAO: "SBBG"; Bloco: "SUL"; Aeroporto: "BAGÉ" };
+    { IATA: "IGU"; ICAO: "SBFI"; Bloco: "SUL"; Aeroporto: "FOZ DO IGUAÇU" };
+    { IATA: "LDB"; ICAO: "SBLO"; Bloco: "SUL"; Aeroporto: "LONDRINA" };
+    { IATA: "PET"; ICAO: "SBPK"; Bloco: "SUL"; Aeroporto: "PELOTAS" };
+    { IATA: "URG"; ICAO: "SBUG"; Bloco: "SUL"; Aeroporto: "URUGUAIANA" }
+);;
+
+// ====================== usuário conectado ======================
+// Era o mesmo LookUp duas vezes dentro do col_menu, uma para Root e outra para View_safety.
+// Continuam úteis: o OnStart usa os dois ao montar o col_menu.
+usrHub = LookUp(User; usrNome = User().FullName);;
+usrEhRoot = Value(usrHub.Root) = 1;;
+usrVeSafety = Value(usrHub.View_safety) = 1;;
+
+// ====================== telas de navegação ======================
+// Tabela fixa, ninguém reescreve. Se o Studio recusar referência de tela em fórmula nomeada,
+// este bloco volta para o OnStart como ClearCollect e o resto do arquivo continua valendo.
+col_NavTelas =
+Table(
+    { Id: 26; TelaListar: '7.1.1-frmDesenbHibrid' };
+    { Id: 27; TelaListar: '7.2-frmTestMotorres' };
+    { Id: 32; TelaListar: '6.2-frmNaoAcomPaxListar' };
+    { Id: 34; TelaListar: '12.1-frmImpObras' };
+    { Id: 35; TelaListar: '11-frmPerdAcha' };
+    { Id: 51; TelaListar: frmOcorrenciasGerais };
+    { Id: 52; TelaListar: frmOcorrenciasGerais };
+    { Id: 53; TelaListar: frmOcorrenciasGerais };
+    { Id: 54; TelaListar: frmOcorrenciasGerais };
+    { Id: 55; TelaListar: frmOcorrenciasGerais };
+    { Id: 56; TelaListar: frmOcorrenciasGerais };
+    { Id: 57; TelaListar: frmOcorrenciasGerais };
+    { Id: 59; TelaListar: frmCheckListGenericoEQP };
+    { Id: 63; TelaListar: frmFollowMe };
+    { Id: 66; TelaListar: frmTesteBalizamento }
+);;
+
+// ====================== identidade visual ASUR (19/10/2026) ======================
+// Ponto único de troca da marca. Nenhuma tela declara cor literal: as telas
+// referenciam thm* (controle nativo) e hx* (dentro do HTML dos HtmlViewer).
+// Trocar a marca = editar este bloco. Ordem de colagem: este arquivo PRIMEIRO,
+// as telas depois — tela que referencia thmPrimaria antes do token existir é
+// rejeitada inteira pelo Studio.
+
+// 🎨 Hex — usados dentro do HTML dos HtmlViewer
+hxPrimaria        = "#391694";;   // roxo institucional Motiva/ASUR
+hxPrimariaEscura  = "#2A106E";;
+hxPrimariaClara   = "#EDE9FB";;
+hxBorda           = "#C9C5E6";;
+hxFundo           = "#F8FAFC";;
+hxSuperficie      = "#FFFFFF";;
+hxTexto           = "#1E293B";;
+hxTextoFraco      = "#64748B";;
+hxAcao            = "#DD511A";;   // laranja de ação
+hxVerde           = "#15803D";;
+hxAmbar           = "#B45309";;
+hxVermelho        = "#B91C1C";;
+
+// 🎨 Cores dos controles nativos — derivadas dos hex acima, nunca redigitadas
+thmPrimaria          = ColorValue(hxPrimaria);;
+thmPrimariaEscura    = ColorValue(hxPrimariaEscura);;
+thmPrimariaClara     = ColorValue(hxPrimariaClara);;
+thmBorda             = ColorValue(hxBorda);;
+thmFundo             = ColorValue(hxFundo);;
+thmSuperficie        = ColorValue(hxSuperficie);;
+thmTexto             = ColorValue(hxTexto);;
+thmTextoFraco        = ColorValue(hxTextoFraco);;
+thmAcao              = ColorValue(hxAcao);;
+thmVerde             = ColorValue(hxVerde);;
+thmAmbar             = ColorValue(hxAmbar);;
+thmVermelho          = ColorValue(hxVermelho);;
+thmTextoInverso      = RGBA(255; 255; 255; 1);;
+thmTransparente      = RGBA(0; 0; 0; 0);;
+
+// Estado desabilitado — é estrutura, não marca. Mantido igual ao original.
+thmDesabilitado      = RGBA(166; 166; 166; 1);;
+thmDesabilitadoFundo = RGBA(166; 166; 166; 0.5);;
+
+// 🔤 Tipografia — Sora é a fonte da marca, mas não existe no Power Apps e o
+// sanitizador do HtmlViewer não carrega webfont. Segoe UI é a substituta e está
+// em todos os clientes.
+thmFonte             = Font.'Segoe UI'
