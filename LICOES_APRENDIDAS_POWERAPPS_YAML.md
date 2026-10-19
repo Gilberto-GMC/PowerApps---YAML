@@ -899,11 +899,17 @@ Correcao, mantendo `IsBlank()` verdadeiro — que e o que o codigo testa:
 | DataType | Default |
 | --- | --- |
 | Text | `=""` |
-| Screen | `=Blank()` |
+| Screen | `=If(false, Home)` |
 
-`IsBlank("")` e `IsBlank(Blank())` sao os dois verdadeiros, entao ramos como
-`If(!IsBlank(Comp.ScreenNavigator), Navigate(...), Back())` continuam caindo no
-mesmo lado.
+**`=Blank()` NAO serve para `Screen`**: o Studio responde `Valor Control
+esperado` — `Blank()` nao carrega tipo de controle. `If(false, Home)` resolve os
+dois lados de uma vez: o tipo vem do ramo verdadeiro (uma tela que existe), e o
+valor e Blank porque a condicao e falsa.
+
+`IsBlank("")` e `IsBlank(If(false, Home))` sao os dois verdadeiros, entao ramos
+como `If(!IsBlank(Comp.ScreenNavigator), Navigate(...), Back())` continuam caindo
+no mesmo lado. Trocar por uma tela de verdade no default quebraria o `Back()` de
+toda tela que nao passa a propriedade.
 
 Validacao preventiva: dentro de `CustomProperties`, reprovar `Default: =` vazio
 quando o `PropertyKind` daquela propriedade for `Input`. **Nao** vale para
