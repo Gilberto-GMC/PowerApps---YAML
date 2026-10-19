@@ -1,0 +1,108 @@
+// =====================================================================================
+// AirportNow 2.0 — App.Formulas
+// O que saiu do OnStart por ser declaração, não ação (19/10/2026).
+// Dialeto pt-BR: ';' entre argumentos, ';;' entre declarações.
+// Ver AirportNow 2.0/HUB_ONSTART_PARA_FORMULAS.md para o que ficou e por quê.
+// =====================================================================================
+
+// ====================== identidade do hub ======================
+varHUB = "a5af3add-12da-4107-b027-23daea7b0056";;
+
+// ID do usuário na lista User, vindo de quem abriu este app. Sem parâmetro, 0.
+varIdUser = Value(Param("USUARIO"));;
+
+var_versao = 1667;;
+
+// Largura do menu lateral — ele não recolhe, então é constante (confirmado em 19/10/2026).
+var_sideBarWidth = 250;;
+
+// Última versão publicada, direto da lista — era Set no OnStart.
+var_ultimaVersao =
+Value(
+    First(
+        Sort(
+            tbl_controle_versoes;
+            ID;
+            SortOrder.Descending
+        )
+    ).Numero_versao
+);;
+
+// Histórico de versões, sempre atual.
+// ⚠️ No OnStart isto nunca carregava: a condição era CountRows(col_historicoVersao) > 0, que só
+// preenche se já estiver preenchido. Como fórmula o problema desaparece — não há carga.
+col_historicoVersao =
+Sort(
+    tbl_controle_versoes;
+    Numero_versao;
+    SortOrder.Descending
+);;
+
+// ====================== rede de aeroportos ======================
+// As duas linhas em branco são os separadores de bloco das listas suspensas — mantidas.
+colAeros =
+Table(
+    { IATA: ""; ICAO: ""; Bloco: "CENTRAL"; Aeroporto: "" };
+    { IATA: "GYN"; ICAO: "SBGO"; Bloco: "CENTRAL"; Aeroporto: "GOIÂNIA" };
+    { IATA: "IMP"; ICAO: "SBIZ"; Bloco: "CENTRAL"; Aeroporto: "IMPERATRIZ" };
+    { IATA: "PMW"; ICAO: "SBPJ"; Bloco: "CENTRAL"; Aeroporto: "PALMAS" };
+    { IATA: "PLU"; ICAO: "SBBH"; Bloco: "CENTRAL"; Aeroporto: "PAMPULHA" };
+    { IATA: "PNZ"; ICAO: "SBPL"; Bloco: "CENTRAL"; Aeroporto: "PETROLINA" };
+    { IATA: "SLZ"; ICAO: "SBSL"; Bloco: "CENTRAL"; Aeroporto: "SÃO LUIS" };
+    { IATA: "THE"; ICAO: "SBTE"; Bloco: "CENTRAL"; Aeroporto: "TERESINA" };
+    { IATA: ""; ICAO: ""; Bloco: "SUL"; Aeroporto: "" };
+    { IATA: "BFH"; ICAO: "SBBI"; Bloco: "SUL"; Aeroporto: "BACACHERI" };
+    { IATA: "CWB"; ICAO: "SBCT"; Bloco: "SUL"; Aeroporto: "CURITIBA" };
+    { IATA: "JOI"; ICAO: "SBJV"; Bloco: "SUL"; Aeroporto: "JOINVILLE" };
+    { IATA: "NVT"; ICAO: "SBNF"; Bloco: "SUL"; Aeroporto: "NAVEGANTES" };
+    { IATA: "BGX"; ICAO: "SBBG"; Bloco: "SUL"; Aeroporto: "BAGÉ" };
+    { IATA: "IGU"; ICAO: "SBFI"; Bloco: "SUL"; Aeroporto: "FOZ DO IGUAÇU" };
+    { IATA: "LDB"; ICAO: "SBLO"; Bloco: "SUL"; Aeroporto: "LONDRINA" };
+    { IATA: "PET"; ICAO: "SBPK"; Bloco: "SUL"; Aeroporto: "PELOTAS" };
+    { IATA: "URG"; ICAO: "SBUG"; Bloco: "SUL"; Aeroporto: "URUGUAIANA" }
+);;
+
+// ====================== usuário conectado ======================
+// Era o mesmo LookUp duas vezes dentro do col_menu, uma para Root e outra para View_safety.
+usrHub = LookUp(User; usrNome = User().FullName);;
+usrEhRoot = Value(usrHub.Root) = 1;;
+usrVeSafety = Value(usrHub.View_safety) = 1;;
+
+// ====================== telas de navegação ======================
+// ⚠️ Referência de tela dentro de tabela fixa não tem precedente como fórmula nomeada no
+// repositório. Se o Studio recusar, este bloco e o col_menu voltam para o OnStart — o resto vale.
+col_NavTelas =
+Table(
+    { Id: 26; TelaListar: '7.1.1-frmDesenbHibrid' };
+    { Id: 27; TelaListar: '7.2-frmTestMotorres' };
+    { Id: 32; TelaListar: '6.2-frmNaoAcomPaxListar' };
+    { Id: 34; TelaListar: '12.1-frmImpObras' };
+    { Id: 35; TelaListar: '11-frmPerdAcha' };
+    { Id: 51; TelaListar: frmOcorrenciasGerais };
+    { Id: 52; TelaListar: frmOcorrenciasGerais };
+    { Id: 53; TelaListar: frmOcorrenciasGerais };
+    { Id: 54; TelaListar: frmOcorrenciasGerais };
+    { Id: 55; TelaListar: frmOcorrenciasGerais };
+    { Id: 56; TelaListar: frmOcorrenciasGerais };
+    { Id: 57; TelaListar: frmOcorrenciasGerais };
+    { Id: 59; TelaListar: frmCheckListGenericoEQP };
+    { Id: 63; TelaListar: frmFollowMe };
+    { Id: 66; TelaListar: frmTesteBalizamento }
+);;
+
+// ====================== menu lateral ======================
+col_menu =
+Table(
+    { Icon: Icon.Home; Nome: "Home"; Tela: Home };
+    { Icon: Icon.Waffle; Nome: "Resumo Diário"; Tela: frmResumoDiario };
+    If(usrEhRoot; { Icon: Icon.Settings; Nome: "Admin"; Tela: frmAdmin });
+    { Icon: Icon.Airplane; Nome: "Pátios e Pistas"; Tela: frmPatiosPistas };
+    { Icon: Icon.OfficeBuilding; Nome: "Terminal de Passageiros"; Tela: frmTerminalPassageiro };
+    { Icon: Icon.Hospital; Nome: "Resposta emergência"; Tela: Home };
+    { Icon: Icon.Lock; Nome: "AVSEC"; Tela: Home };
+    If(usrVeSafety; { Icon: Icon.Warning; Nome: "Safety & Fauna"; Tela: Home });
+    { Icon: Icon.GlobeWarning; Nome: "SGI"; Tela: Home };
+    { Icon: Icon.Folder; Nome: "Lições Aprendidas"; Tela: Home };
+    { Icon: Icon.Video; Nome: "Treinamentos"; Tela: Home };
+    { Icon: Icon.Leave; Nome: "Sair"; Tela: Login }
+)

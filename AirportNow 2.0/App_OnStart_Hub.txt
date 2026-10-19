@@ -1,0 +1,46 @@
+// =====================================================================================
+// AirportNow 2.0 — App.OnStart depois de mover as declarações para App.Formulas (19/10/2026).
+// Só sobrou o que é ação ou estado que muda durante o uso.
+// Colar o App_Formulas_Hub.txt ANTES: enquanto o Formulas não existir, varIdUser aqui é vazio.
+// =====================================================================================
+
+If(
+    IsBlank(Param("hidenavbar"));
+    Launch(
+        "https://apps.powerapps.com/play/e/default-d233d58a-9973-43a7-af69-6763630548a0/a/a5af3add-12da-4107-b027-23daea7b0056?tenantId=d233d58a-9973-43a7-af69-6763630548a0&hint=bfceed7a-bad1-47b6-874a-8cc49015d7f0&sourcetime=1752170432674&hidenavbar=true";
+        {
+            LOGADO: "z0x9c8v7b6n5" & Text(
+                Now();
+                "ddmmyyyy"
+            ) & Rand() * 100;
+            USUARIO: varIdUser
+        };
+        LaunchTarget.Replace
+    )
+);;
+If(
+    Host.OSType = "Windows";
+    // Habilita Botão para liberar a edição da tela index
+    Set(
+        var_adminEdit;
+        false
+    );;
+    // Coleta os módulos
+    ClearCollect(
+        col_menuModulos;
+        tbl_Modulos
+    )
+);;
+//para sessão (tempo de 15 minutos)
+Set(
+    varSessaoAtiva;
+    true
+);;
+Set(
+    varUltimaAtividade;
+    Now()
+);;
+Set(
+    varForcarExpiracao;
+    false
+)
