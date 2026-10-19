@@ -941,3 +941,38 @@ Correcao: recolar a tela depois do componente. O bloco da instancia
 Diagnostico que economiza tempo: antes de culpar dado ou variavel, conferir se o
 controle ainda esta na arvore. Tres sessoes de investigacao foram gastas em
 colecao vazia, login e escopo de componente — e o controle e que tinha sumido.
+
+## A colagem de YAML descarta instancia de componente (19/10/2026)
+
+Projeto: Novo Hub AirportNow, `MenuLateral` na tela Home.
+
+**Correcao da licao anterior**: nao foi recolar o componente que apagou a
+instancia. A instancia **nunca e colada**. O Studio descarta silenciosamente o
+bloco
+
+```yaml
+- MenuLateral_1:
+    Control: CanvasComponent
+    ComponentName: MenuLateral
+```
+
+sem erro, sem aviso, sem PA. A tela cola inteira e aparentemente certa; o filho
+some. A exportacao produz esse bloco, a colagem nao o aceita de volta —
+exportar e reimportar a mesma tela ja perde o componente.
+
+Prova: `SidebarContainerInterno` ficou com `Icon11` e `TextCanvas8`, e o
+`MenuLateral_1` nao estava na arvore, enquanto o bloco estava no arquivo colado.
+
+Correcao: reinserir a instancia a mao (Inserir → Personalizado → o componente),
+posicionar na ordem certa dentro do container AutoLayout e preencher as
+propriedades personalizadas. Ver
+`Novo Hub AirportNow/INSTANCIA_MENULATERAL.md` para o passo a passo e os valores.
+
+Validacao preventiva: ao entregar tela que contem `Control: CanvasComponent`,
+avisar na secao de checklist que aquele controle **nao vem na colagem** e listar
+as propriedades a preencher. Sem isso o usuario perde o componente e procura o
+defeito em dado, login e escopo — foi o que aconteceu aqui.
+
+Licao geral, cara: **"a tela colou sem erro" nao quer dizer que a tela chegou
+inteira.** Depois de colar, conferir a arvore contra a lista de controles do
+arquivo. Um `grep` de `- \w+:` no YAML da a lista esperada.
