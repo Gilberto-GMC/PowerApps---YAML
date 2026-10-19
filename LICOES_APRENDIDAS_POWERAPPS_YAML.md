@@ -722,3 +722,32 @@ Quem tem `Tooltip` e o `Classic/Button@2.2.0` e o `Classic/Icon@2.5.0`. No
 Regra geral: **nao adivinhar propriedade**. Antes de escrever uma que voce nunca
 usou naquele tipo de controle, varrer o repositorio em busca de um controle igual
 que ja a tenha. O par entrou no check 10 do validador, que virou tabela.
+
+## `App.Formulas` e `.pa.yaml` falam dialetos diferentes (19/10/2026)
+
+Projeto: Novo Hub AirportNow, tela Login.
+
+Sintoma: ao gerar o bloco de tokens ASUR, a tela veio com `RGBA(247, 247, 247, 1)`
+— virgula entre argumentos — e o `App.Formulas` do mesmo app usa
+`RGBA(255; 255; 255; 1)` e `;;` entre declaracoes. Parecia incoerencia do app.
+
+Causa: nao e. O `.pa.yaml` e **sempre invariante** (virgula), porque e o arquivo
+de origem da tela. O `App.Formulas` e colado na barra de formulas do Studio, que
+usa o separador do **idioma do autor** — pt-BR, logo `;` entre argumentos e `;;`
+entre declaracoes.
+
+Correcao: gerar o bloco de `App.Formulas` no dialeto pt-BR e a tela em virgula,
+no mesmo pacote, sem converter um pelo outro.
+
+Validacao preventiva: antes de entregar um bloco de `App.Formulas`, conferir o
+separador de um bloco existente do mesmo app. Se o arquivo de tokens usa `;;` e
+o `.pa.yaml` usa `,`, esta certo.
+
+## Rebrand: o GUID do proprio app ja costuma existir como token (19/10/2026)
+
+Mesma tela. O botao "Atualizar para V. N" trazia
+`Launch("/providers/Microsoft.PowerApps/apps/a5af3add-...")` com o GUID digitado,
+enquanto o `App.Formulas` ja declarava `varHUB` com o mesmo valor. Ao varrer uma
+tela, procurar tambem por **identificadores** repetidos (GUID, URL do ambiente,
+nome de lista), nao so por cor: a mesma divida de literal, so que invisivel na
+busca por `RGBA(`.
