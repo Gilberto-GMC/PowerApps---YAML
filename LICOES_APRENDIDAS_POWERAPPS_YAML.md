@@ -1055,3 +1055,34 @@ Licao geral: quando pedirem para filtrar a carga, **escolher o eixo que delega
 para todos os perfis**, nao o que parece mais natural. Um filtro que delega so
 para parte dos usuarios e pior que nenhum: esconde o custo no perfil que mais
 carrega.
+
+## Token de HTML com aspa simples quebra o `style='...'` em silencio (20/10/2026)
+
+Projeto: Novo Hub AirportNow, telas Login e Home.
+
+Sintoma: na Login nova, o titulo "Airport Now" saiu pequeno e alinhado a
+esquerda, e o botao Entrar sem degrade — so o texto. A faixa diagonal, que nao
+usa o token, saiu certa. Visto ao renderizar as mesmas strings HTML num
+navegador antes de entregar.
+
+Causa: `htmlFonte = "font-family:'Segoe UI',Arial,sans-serif;..."`, usado como
+`"<div style='" & htmlFonte & " font-size:34px; ...'>"`. A aspa simples do nome
+da fonte fecha o atributo `style` no meio; tamanho, cor e degrade viram lixo de
+atributo e sao descartados. Sem erro, sem aviso.
+
+O mesmo defeito estava nos templates do resumo diario da Home desde a
+tokenizacao. Passou despercebido porque la o estilo que importa esta nos
+elementos internos; so o `div` externo perdia fonte, cor e padding.
+
+Correcao: tirar a aspa do valor — `font-family:Segoe UI,Arial,sans-serif;`.
+CSS aceita nome de familia com varias palavras sem aspa. Conserta as duas telas
+sem mexer em nenhuma.
+
+Validacao preventiva: reprovar token `html*` no `App.Formulas` cujo valor
+contenha aspa simples. Testado nos dois sentidos — com a aspa de volta, o
+validador reprova; sem ela, passa.
+
+Licao geral: **token que vai ser concatenado dentro de outra linguagem tem que
+respeitar a aspa daquela linguagem.** O `htmlFonte` veio do Mapa, onde e usado
+dentro de `style="..."` (aspa dupla escapada). Copiar o token sem copiar o
+jeito de usar foi o erro.
