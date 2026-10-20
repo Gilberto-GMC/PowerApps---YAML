@@ -426,6 +426,13 @@ Screens:
                                           )
                                       );
                                       ClearCollect(
+                                          col_destinacoes,
+                                          Filter(
+                                              tbl_perdidosAchadosDestinacao,
+                                              arquivar = 0
+                                          )
+                                      );
+                                      ClearCollect(
                                           col_itensDoacao,
                                           Filter(
                                               colInventarioItensBase,
@@ -492,6 +499,15 @@ Screens:
                                               colInventarioItensBase,
                                               arquivar = 0
                                                   And (
+                                                      (
+                                                          TabListDestinar.Selected.Value = "AGUARDANDO APROVAÇÃO"
+                                                          And status = stDestAprovacao
+                                                      )
+                                                      Or (
+                                                          TabListDestinar.Selected.Value = "AGUARDANDO DESTINAÇÃO"
+                                                          And status = stDestDestinacao
+                                                      )
+                                                      Or
                                                       (
                                                           TabListDestinar.Selected.Value = "DOAÇÃO"
                                                           And status = "Doado"
@@ -596,7 +612,7 @@ Screens:
                               Appearance: =TabListAppearance.FilledCircular
                               FontWeight: =FontWeight.Semibold
                               Items: |-
-                                =Table({Value: "DESTINAR"}, {Value: "DOAÇÃO"}, {Value: "ENCAMINHAMENTO À JUSTIÇA"}, {Value: "DESCARTE"}, {Value: "DESTRUIÇÃO"})
+                                =Table({Value: "DESTINAR"}, {Value: "AGUARDANDO APROVAÇÃO"}, {Value: "AGUARDANDO DESTINAÇÃO"}, {Value: "DOAÇÃO"}, {Value: "ENCAMINHAMENTO À JUSTIÇA"}, {Value: "DESCARTE"}, {Value: "DESTRUIÇÃO"})
                               LayoutMinHeight: =16
                               LayoutMinWidth: =16
                               Size: =18
@@ -729,8 +745,31 @@ Screens:
                                                         );
                                                         EditForm(FormItensDoar)
                                                       Text: ="Doar"
+                                                      Visible: =TBL_ITENS.categoria in colCatDoaveis.Value
                                                       AlignInContainer: =AlignInContainer.Center
                                                       Width: =100
+                                                - DestinarButton:
+                                                    Control: Button@0.0.45
+                                                    Properties:
+                                                      AlignInContainer: =AlignInContainer.Center
+                                                      Appearance: ='ButtonCanvas.Appearance'.Secondary
+                                                      BasePaletteColor: =thmPrimaria
+                                                      Icon: ="ArrowExit"
+                                                      IconStyle: ='ButtonCanvas.IconStyle'.Filled
+                                                      OnSelect: |-
+                                                        =Set(varUltimaAtividade, Now());
+                                                        UpdateContext(
+                                                            {
+                                                                var_itemDest: TBL_ITENS,
+                                                                var_visibleFormDest: true
+                                                            }
+                                                        );
+                                                        Reset(cmbDestModalidade);
+                                                        Reset(cmbDestMotivo);
+                                                        Reset(txtDestObs)
+                                                      Text: ="Destinar"
+                                                      Visible: =varPodeDestinar And Not(TBL_ITENS.categoria in colCatDoaveis.Value)
+                                                      Width: =110
                                     - Rectangle1:
                                         Control: Rectangle@2.3.0
                                         Properties:
@@ -913,6 +952,252 @@ Screens:
                               VerticalAlign: =VerticalAlign.Middle
                               Weight: ='TextCanvas.Weight'.Semibold
                               Width: =200
+      - ContainerDestinacao:
+          Control: GroupContainer@1.5.0
+          Variant: AutoLayout
+          Properties:
+            Fill: =RGBA(0, 0, 0, 0.7)
+            Height: =Parent.Height
+            LayoutAlignItems: =LayoutAlignItems.Center
+            LayoutDirection: =LayoutDirection.Vertical
+            LayoutJustifyContent: =LayoutJustifyContent.Center
+            Visible: =var_visibleFormDest
+            Width: =Parent.Width
+          Children:
+            - CardDestinacao:
+                Control: GroupContainer@1.5.0
+                Variant: AutoLayout
+                Properties:
+                  AlignInContainer: =AlignInContainer.Center
+                  BorderColor: =RGBA(0, 0, 0, 0)
+                  BorderStyle: =BorderStyle.None
+                  DropShadow: =DropShadow.ExtraBold
+                  Fill: =RGBA(255, 255, 255, 1)
+                  FillPortions: =0
+                  Height: =440
+                  LayoutAlignItems: =LayoutAlignItems.Stretch
+                  LayoutDirection: =LayoutDirection.Vertical
+                  LayoutGap: =0
+                  LayoutMaxHeight: =
+                  LayoutMaxWidth: =
+                  LayoutMinHeight: =0
+                  RadiusBottomLeft: =8
+                  RadiusBottomRight: =8
+                  RadiusTopLeft: =8
+                  RadiusTopRight: =8
+                  Width: =600
+                Children:
+                  - BarraDestinacao:
+                      Control: GroupContainer@1.5.0
+                      Variant: AutoLayout
+                      Properties:
+                        AlignInContainer: =AlignInContainer.Stretch
+                        DropShadow: =DropShadow.None
+                        Fill: =thmPrimaria
+                        FillPortions: =0
+                        Height: =44
+                        LayoutAlignItems: =LayoutAlignItems.Center
+                        LayoutDirection: =LayoutDirection.Horizontal
+                        LayoutGap: =0
+                        LayoutMaxHeight: =
+                        LayoutMaxWidth: =
+                        LayoutMinHeight: =0
+                        PaddingLeft: =16
+                      Children:
+                        - TituloDestinacao:
+                            Control: Label@2.5.1
+                            Properties:
+                              BorderColor: =RGBA(0, 0, 0, 0)
+                              BorderStyle: =BorderStyle.None
+                              Color: =RGBA(255, 255, 255, 1)
+                              Fill: =RGBA(0, 0, 0, 0)
+                              FillPortions: =1
+                              FontWeight: =FontWeight.Semibold
+                              Text: ="Destinação final"
+                        - FecharDestinacao:
+                            Control: Button@0.0.45
+                            Properties:
+                              AccessibleLabel: ="Fechar"
+                              Appearance: ='ButtonCanvas.Appearance'.Transparent
+                              FillPortions: =0
+                              FontColor: =RGBA(255, 255, 255, 1)
+                              FontSize: =20
+                              Height: =40
+                              Icon: ="DismissCircle"
+                              IconStyle: ='ButtonCanvas.IconStyle'.Outline
+                              OnSelect: =UpdateContext({var_visibleFormDest: false})
+                              Text: =
+                              Width: =50
+                  - CorpoDestinacao:
+                      Control: GroupContainer@1.5.0
+                      Variant: AutoLayout
+                      Properties:
+                        AlignInContainer: =AlignInContainer.Stretch
+                        DropShadow: =DropShadow.None
+                        Fill: =RGBA(0, 0, 0, 0)
+                        FillPortions: =1
+                        LayoutAlignItems: =LayoutAlignItems.Stretch
+                        LayoutDirection: =LayoutDirection.Vertical
+                        LayoutGap: =6
+                        LayoutMaxHeight: =
+                        LayoutMaxWidth: =
+                        LayoutMinHeight: =0
+                        PaddingBottom: =16
+                        PaddingLeft: =20
+                        PaddingRight: =20
+                        PaddingTop: =16
+                      Children:
+                        - ItemDestinacao:
+                            Control: Label@2.5.1
+                            Properties:
+                              AlignInContainer: =AlignInContainer.Stretch
+                              BorderColor: =thmBorda
+                              BorderThickness: =1
+                              Color: =thmTexto
+                              Fill: =thmFundo
+                              FillPortions: =0
+                              Height: =54
+                              PaddingLeft: =10
+                              Size: =12
+                              Text: |-
+                                ="Item " & var_itemDest.ID & "  —  " & var_itemDest.categoria & " / " & var_itemDest.subCategoria & Char(10) & var_itemDest.descricao
+                        - RotModalidade:
+                            Control: Label@2.5.1
+                            Properties:
+                              AlignInContainer: =AlignInContainer.Stretch
+                              BorderColor: =RGBA(0, 0, 0, 0)
+                              BorderStyle: =BorderStyle.None
+                              Color: =thmTextoFraco
+                              FillPortions: =0
+                              Height: =20
+                              Size: =11
+                              Text: ="*  Modalidade"
+                        - cmbDestModalidade:
+                            Control: ComboBox@0.0.51
+                            Properties:
+                              AlignInContainer: =AlignInContainer.Stretch
+                              FillPortions: =0
+                              Height: =40
+                              Items: =colDestModalidades
+                              SelectMultiple: =false
+                        - RotMotivo:
+                            Control: Label@2.5.1
+                            Properties:
+                              AlignInContainer: =AlignInContainer.Stretch
+                              BorderColor: =RGBA(0, 0, 0, 0)
+                              BorderStyle: =BorderStyle.None
+                              Color: =thmTextoFraco
+                              FillPortions: =0
+                              Height: =20
+                              Size: =11
+                              Text: ="*  Motivo"
+                        - cmbDestMotivo:
+                            Control: ComboBox@0.0.51
+                            Properties:
+                              AlignInContainer: =AlignInContainer.Stretch
+                              FillPortions: =0
+                              Height: =40
+                              Items: =colDestMotivos
+                              SelectMultiple: =false
+                        - RotObs:
+                            Control: Label@2.5.1
+                            Properties:
+                              AlignInContainer: =AlignInContainer.Stretch
+                              BorderColor: =RGBA(0, 0, 0, 0)
+                              BorderStyle: =BorderStyle.None
+                              Color: =thmTextoFraco
+                              FillPortions: =0
+                              Height: =20
+                              Size: =11
+                              Text: ="Observação"
+                        - txtDestObs:
+                            Control: TextInput@0.0.54
+                            Properties:
+                              AlignInContainer: =AlignInContainer.Stretch
+                              FillPortions: =1
+                              LayoutMinHeight: =60
+                              Mode: ='TextInputCanvas.Mode'.MultiLine
+                              Placeholder: ="Opcional"
+                  - RodapeDestinacao:
+                      Control: GroupContainer@1.5.0
+                      Variant: AutoLayout
+                      Properties:
+                        AlignInContainer: =AlignInContainer.Stretch
+                        DropShadow: =DropShadow.None
+                        Fill: =RGBA(0, 0, 0, 0)
+                        FillPortions: =0
+                        Height: =60
+                        LayoutAlignItems: =LayoutAlignItems.Center
+                        LayoutDirection: =LayoutDirection.Horizontal
+                        LayoutGap: =10
+                        LayoutJustifyContent: =LayoutJustifyContent.End
+                        LayoutMaxHeight: =
+                        LayoutMaxWidth: =
+                        LayoutMinHeight: =0
+                        PaddingBottom: =12
+                        PaddingRight: =20
+                      Children:
+                        - CancelarDestinacao:
+                            Control: Button@0.0.45
+                            Properties:
+                              Appearance: ='ButtonCanvas.Appearance'.Secondary
+                              BasePaletteColor: =thmPrimaria
+                              FillPortions: =0
+                              Height: =36
+                              OnSelect: =UpdateContext({var_visibleFormDest: false})
+                              Text: ="Cancelar"
+                              Width: =110
+                        - SalvarDestinacao:
+                            Control: Button@0.0.45
+                            Properties:
+                              Appearance: ='ButtonCanvas.Appearance'.Primary
+                              BasePaletteColor: =thmAcao
+                              DisplayMode: |-
+                                =If(
+                                    IsBlank(cmbDestModalidade.Selected.Value) Or IsBlank(cmbDestMotivo.Selected.Value),
+                                    DisplayMode.Disabled,
+                                    DisplayMode.Edit
+                                )
+                              FillPortions: =0
+                              Height: =36
+                              Icon: ="Save"
+                              IconStyle: ='ButtonCanvas.IconStyle'.Filled
+                              OnSelect: |-
+                                =Set(varUltimaAtividade, Now());
+                                Patch(
+                                    tbl_perdidosAchadosDestinacao,
+                                    Defaults(tbl_perdidosAchadosDestinacao),
+                                    {
+                                        ID_item: var_itemDest.ID,
+                                        aeroporto: LookUp(colInventarioPaisBase, ID = var_itemDest.ID_fk).aeroporto,
+                                        modalidade: cmbDestModalidade.Selected.Value,
+                                        motivo: cmbDestMotivo.Selected.Value,
+                                        solicitado_em: Now(),
+                                        solicitado_por: varNomeUser,
+                                        obs: txtDestObs.Value,
+                                        arquivar: 0
+                                    }
+                                );
+                                If(
+                                    IsEmpty(Errors(tbl_perdidosAchadosDestinacao)),
+                                    Patch(
+                                        tbl_perdidosAchadosItens,
+                                        LookUp(tbl_perdidosAchadosItens, ID = var_itemDest.ID),
+                                        {status: stDestAprovacao}
+                                    );
+                                    Select(FUNCTION_DOAR);
+                                    Notify(
+                                        "Item enviado para aprovação da Gerência do Aeroporto.",
+                                        NotificationType.Success
+                                    );
+                                    UpdateContext({var_visibleFormDest: false}),
+                                    Notify(
+                                        "Não foi possível registrar a destinação. O item não foi alterado.",
+                                        NotificationType.Error
+                                    )
+                                )
+                              Text: ="Registrar"
+                              Width: =140
       - ContainerItemView_1:
           Control: GroupContainer@1.5.0
           Variant: AutoLayout
