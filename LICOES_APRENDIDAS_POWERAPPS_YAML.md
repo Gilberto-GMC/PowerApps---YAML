@@ -1126,3 +1126,37 @@ tratar como defeito de tela, conferir o maior `Numero_versao` da lista.
 Licao geral: **num app que se relanca no OnStart, a primeira passagem e um
 rascunho.** Qualquer popup, notificacao ou carga que acontecer nela e trabalho
 jogado fora — e, se for visivel, vira susto para o usuario.
+
+## `HtmlViewer` com conteudo do tamanho do controle ganha barra de rolagem (20/10/2026)
+
+Projeto: Novo Hub AirportNow, tela Login.
+
+Sintoma: depois de colar a Login nova, barra de rolagem vertical na foto e no
+botao Entrar, com setinhas de rolagem ao lado do botao. O conteudo aparecia
+certo; a barra e que sobrava.
+
+Causa: o HTML foi escrito como `<div style='width:" & Self.Width & "px; height:"
+& Self.Height & "px; ...'>`. O corpo do HTML renderizado pelo `HtmlViewer` tem
+margem propria, entao um filho com exatamente a largura do controle estoura, e o
+viewer desenha barra. Zerar `PaddingLeft/Right/Top/Bottom` no controle nao
+resolve: a margem e do documento, nao do controle.
+
+Correcao: tirar o filho do fluxo, com `position:fixed` e as quatro bordas em 0:
+
+```
+position:fixed; top:0; left:0; right:0; bottom:0; overflow:hidden;
+```
+
+Assim o div preenche a area visivel do viewer, ignora a margem do corpo e nunca
+estoura. Centralizacao passa a ser `display:flex; align-items:center;
+justify-content:center;` — `line-height` igual a altura deixa de ser necessario.
+
+Validacao preventiva: ao gerar HTML para `HtmlViewer`, renderizar cada trecho
+num iframe do tamanho exato do controle e comparar `scrollWidth`/`scrollHeight`
+com `clientWidth`/`clientHeight`. Se estourar, o viewer vai desenhar barra.
+
+Licao relacionada: conteudo mais alto que o controle tambem gera barra por
+outro caminho — na mesma tela, o painel do formulario estava com
+`LayoutMinHeight: =400` enquanto o conteudo somava ~430 depois do titulo e dos
+campos maiores. Ao aumentar controle dentro de AutoLayout, refazer a conta da
+altura do container.
