@@ -1086,3 +1086,43 @@ Licao geral: **token que vai ser concatenado dentro de outra linguagem tem que
 respeitar a aspa daquela linguagem.** O `htmlFonte` veio do Mapa, onde e usado
 dentro de `style="..."` (aspa dupla escapada). Copiar o token sem copiar o
 jeito de usar foi o erro.
+
+## Popup que pisca: condicao de tela sobre formula nomeada assincrona (20/10/2026)
+
+Projeto: Novo Hub AirportNow, tela Login, `ContainerVesaoDesatualizada`.
+Relatado por usuario no app publicado: "aparece uma msg muito louca aqui, mas
+ela some rapida".
+
+Condicao original: `Visible: =var_versao < var_ultimaVersao`, com
+
+- `var_versao = 1667` — constante no `App.Formulas`;
+- `var_ultimaVersao` — formula nomeada que consulta `tbl_controle_versoes`.
+
+Duas causas somadas, e so a primeira e obvia:
+
+1. **Formula nomeada que consulta lista nao responde no primeiro render.** Ate a
+   consulta voltar, `var_ultimaVersao` e Blank, e a comparacao com Blank nao
+   avalia como o autor imagina. Condicao de `Visible` ligada a consulta tem que
+   exigir que ela ja tenha respondido.
+2. **A primeira passagem e descartavel.** O `App.OnStart` faz
+   `If(IsBlank(Param("hidenavbar")); Launch(<o proprio app>?hidenavbar=true; ...;
+   LaunchTarget.Replace))`. Abrir o app sem o parametro renderiza a tela inteira
+   e, logo depois, joga tudo fora e recarrega. Tudo que pintar nessa passagem
+   aparece e some — que e exatamente o sintoma relatado.
+
+Correcao:
+
+```powerfx
+!IsBlank(Param("hidenavbar")) And
+!IsBlank(var_ultimaVersao) And
+var_versao < var_ultimaVersao
+```
+
+Terceiro ponto, que a correcao NAO resolve: `var_versao` e constante digitada no
+`App.Formulas`. Quem acrescenta linha em `tbl_controle_versoes` sem republicar
+com o numero novo faz o aviso disparar, corretamente, para todo mundo. Antes de
+tratar como defeito de tela, conferir o maior `Numero_versao` da lista.
+
+Licao geral: **num app que se relanca no OnStart, a primeira passagem e um
+rascunho.** Qualquer popup, notificacao ou carga que acontecer nela e trabalho
+jogado fora — e, se for visivel, vira susto para o usuario.
