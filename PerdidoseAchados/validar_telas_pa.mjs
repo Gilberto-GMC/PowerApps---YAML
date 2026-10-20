@@ -285,6 +285,20 @@ for (const P of process.argv.slice(2)) {
       (achados.length ? " -> " + achados.slice(0, 6).join(", ") : ""));
   }
 
+  // 19. PA1001 YamlInvalidSyntax: valor em LINHA UNICA que contem { chave: valor }.
+  // O ": " dentro das chaves faz o YAML ler o resto como mapa, e a colagem morre
+  // com "While scanning a plain scalar value, found invalid mapping". A saida e
+  // escalar de bloco (|-), que e o que o Studio emite nesses casos.
+  const chaveEmLinha = [];
+  for (let i = 0; i < lines.length; i++) {
+    const m = lines[i].match(/^ *([A-Za-z_][A-Za-z0-9_]*): =(.*)$/);
+    if (!m) continue;
+    if (!/{[^}]*: /.test(m[2])) continue;
+    chaveEmLinha.push("L" + (i + 1) + " " + m[1]);
+  }
+  check(chaveEmLinha.length === 0,
+    "nenhum valor em linha unica com { chave: valor } (PA1001 - usar |-)" +
+    (chaveEmLinha.length ? " -> " + chaveEmLinha.slice(0, 6).join(", ") : ""));
   // 18. propriedade de cor deixada VAZIA cai no tema do Studio (que e roxo).
   // A passada de paleta cobriu Appearance e BasePaletteColor, mas nao os estados
   // Hover/Pressed — e foi por ai que o roxo voltou a aparecer na ScreenCadastrar.

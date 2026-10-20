@@ -722,3 +722,26 @@ Quem tem `Tooltip` e o `Classic/Button@2.2.0` e o `Classic/Icon@2.5.0`. No
 Regra geral: **nao adivinhar propriedade**. Antes de escrever uma que voce nunca
 usou naquele tipo de controle, varrer o repositorio em busca de um controle igual
 que ja a tenha. O par entrou no check 10 do validador, que virou tabela.
+
+## PA1001: `{ chave: valor }` em valor de linha unica quebra a colagem (20/10/2026)
+
+Studio: `error PA1001 : An error occurred while parsing PaYaml. Error code:
+YamlInvalidSyntax; Reason: While scanning a plain scalar value, found invalid
+mapping.`
+
+Causa: o `": "` dentro das chaves faz o YAML tratar o resto da linha como mapa.
+
+```yaml
+# QUEBRA
+OnSelect: =UpdateContext({var_visibleFormDest: false})
+
+# CERTO
+OnSelect: |-
+  =UpdateContext({var_visibleFormDest: false})
+```
+
+Vale para `UpdateContext`, `Patch`, `Set` com registro, `Table({...})` — qualquer
+valor em uma linha so que contenha chave e dois-pontos entre chaves. O Studio sempre
+emite esses casos como escalar de bloco; quem escreve YAML a mao e que cai nisso.
+
+Virou o **check 19** do `validar_telas_pa.mjs`, com auto-teste.
