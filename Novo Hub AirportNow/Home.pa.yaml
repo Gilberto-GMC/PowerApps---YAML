@@ -637,15 +637,15 @@ Screens:
                                           OnSelect: |-
                                             =//Set(varUltimaAtividade; Now());;
                                             UpdateContext({var_resumoLoad: true});
+                                            // Em variavel global, nao em campo de With: o analisador de
+                                            // delegacao reconhece Set, e nem sempre reconhece With.
+                                            Set(
+                                                varDesde,
+                                                DateAdd(Today(), -7, TimeUnit.Days)
+                                            );
                                             //Coleta do resumo diário
                                             With(
-                                                {
-                                                    LIMIT: 100,
-                                                    // Janela de 7 dias: a mesma que o seletor de data mostra.
-                                                    // Comparacao de data delega no SharePoint; filtro por
-                                                    // aeroporto nao delegaria para Bloco (9) nem Sede (19).
-                                                    DESDE: DateAdd(Today(), -7, TimeUnit.Days)
-                                                },
+                                                {LIMIT: 100},
                                                 Concurrent(
                                                     ClearCollect(
                                                         col_ocoAvsec,
@@ -655,7 +655,7 @@ Screens:
                                                                     Sort(
                                                                         Filter(
                                                                             tbl_OcorrenciasAVSEC,
-                                                                            Criado >= DESDE
+                                                                            Criado >= varDesde
                                                                         ),
                                                                         ID,
                                                                         SortOrder.Descending
@@ -694,7 +694,7 @@ Screens:
                                                                     Sort(
                                                                         Filter(
                                                                             '7.1-tbl_DesembHibrid',
-                                                                            Criado >= DESDE
+                                                                            Criado >= varDesde
                                                                         ),
                                                                         ID,
                                                                         SortOrder.Descending
@@ -732,7 +732,7 @@ Screens:
                                                                     Sort(
                                                                         Filter(
                                                                             tbl_desemb_hibrido,
-                                                                            Criado >= DESDE
+                                                                            Criado >= varDesde
                                                                         ),
                                                                         ID,
                                                                         SortOrder.Descending
@@ -770,7 +770,7 @@ Screens:
                                                                     Sort(
                                                                         Filter(
                                                                             '7.2-tbl_TesteMotores',
-                                                                            Criado >= DESDE
+                                                                            Criado >= varDesde
                                                                         ),
                                                                         ID,
                                                                         SortOrder.Descending
@@ -808,7 +808,7 @@ Screens:
                                                                     Sort(
                                                                         Filter(
                                                                             tbl_teste_de_motores,
-                                                                            Criado >= DESDE
+                                                                            Criado >= varDesde
                                                                         ),
                                                                         ID,
                                                                         SortOrder.Descending
@@ -846,7 +846,7 @@ Screens:
                                                                     Sort(
                                                                         Filter(
                                                                             '7.4-tbl_InspPista',
-                                                                            Criado >= DESDE
+                                                                            Criado >= varDesde
                                                                         ),
                                                                         ID,
                                                                         SortOrder.Descending
@@ -884,7 +884,7 @@ Screens:
                                                                     Sort(
                                                                         Filter(
                                                                             tbl_inspZpa,
-                                                                            Criado >= DESDE
+                                                                            Criado >= varDesde
                                                                         ),
                                                                         ID,
                                                                         SortOrder.Descending
@@ -922,7 +922,7 @@ Screens:
                                                                     Sort(
                                                                         Filter(
                                                                             '7.3-tbl_DescAIS',
-                                                                            Criado >= DESDE
+                                                                            Criado >= varDesde
                                                                         ),
                                                                         ID,
                                                                         SortOrder.Descending
@@ -959,7 +959,7 @@ Screens:
                                                                     Sort(
                                                                         Filter(
                                                                             '12.1-tbl_ImpactoObras',
-                                                                            Criado >= DESDE
+                                                                            Criado >= varDesde
                                                                         ),
                                                                         ID,
                                                                         SortOrder.Descending
@@ -996,7 +996,7 @@ Screens:
                                                                     Sort(
                                                                         Filter(
                                                                             tbl_perdidosAchados,
-                                                                            Criado >= DESDE
+                                                                            Criado >= varDesde
                                                                         ),
                                                                         ID,
                                                                         SortOrder.Descending
@@ -1033,7 +1033,7 @@ Screens:
                                                                     Sort(
                                                                         Filter(
                                                                             '16.1-tbl_OcoSolo',
-                                                                            Criado >= DESDE
+                                                                            Criado >= varDesde
                                                                         ),
                                                                         ID,
                                                                         SortOrder.Descending
@@ -1071,7 +1071,7 @@ Screens:
                                                                     Sort(
                                                                         Filter(
                                                                             '14.2-tbl_DerramamentoDeFluidos',
-                                                                            Criado >= DESDE
+                                                                            Criado >= varDesde
                                                                         ),
                                                                         ID,
                                                                         SortOrder.Descending
@@ -1109,7 +1109,7 @@ Screens:
                                                                     Sort(
                                                                         Filter(
                                                                             '14.3-tbl_IncPista',
-                                                                            Criado >= DESDE
+                                                                            Criado >= varDesde
                                                                         ),
                                                                         ID,
                                                                         SortOrder.Descending
@@ -1147,7 +1147,7 @@ Screens:
                                                                     Sort(
                                                                         Filter(
                                                                             '14.6-tbl_ExcPista',
-                                                                            Criado >= DESDE
+                                                                            Criado >= varDesde
                                                                         ),
                                                                         ID,
                                                                         SortOrder.Descending
@@ -1185,7 +1185,7 @@ Screens:
                                                                     Sort(
                                                                         Filter(
                                                                             '14.4-tbl_ColVeiculos',
-                                                                            Criado >= DESDE
+                                                                            Criado >= varDesde
                                                                         ),
                                                                         ID,
                                                                         SortOrder.Descending
@@ -1223,7 +1223,7 @@ Screens:
                                                                     Sort(
                                                                         Filter(
                                                                             '14.5-tbl_IntExterna',
-                                                                            Criado >= DESDE
+                                                                            Criado >= varDesde
                                                                         ),
                                                                         ID,
                                                                         SortOrder.Descending
@@ -1261,7 +1261,7 @@ Screens:
                                                                     Sort(
                                                                         Filter(
                                                                             '14.8-tbl_JetBlast',
-                                                                            Criado >= DESDE
+                                                                            Criado >= varDesde
                                                                         ),
                                                                         ID,
                                                                         SortOrder.Descending
@@ -1299,7 +1299,7 @@ Screens:
                                                                     Sort(
                                                                         Filter(
                                                                             'Presença de Fauna',
-                                                                            Criado >= DESDE
+                                                                            Criado >= varDesde
                                                                         ),
                                                                         ID,
                                                                         SortOrder.Descending
@@ -1337,7 +1337,7 @@ Screens:
                                                                     Sort(
                                                                         Filter(
                                                                             'AIRPORTNOW - Colisões/Quase-Colisão/Avistamento',
-                                                                            Criado >= DESDE
+                                                                            Criado >= varDesde
                                                                         ),
                                                                         ID,
                                                                         SortOrder.Descending
@@ -1375,7 +1375,7 @@ Screens:
                                                                     Sort(
                                                                         Filter(
                                                                             'Formulário de Focos (Atrativos e Vulnerabilidade)',
-                                                                            Criado >= DESDE
+                                                                            Criado >= varDesde
                                                                         ),
                                                                         ID,
                                                                         SortOrder.Descending
@@ -1413,7 +1413,7 @@ Screens:
                                                                     Sort(
                                                                         Filter(
                                                                             'tbl_CHECK-LIST-VEICULO-CCI',
-                                                                            Criado >= DESDE
+                                                                            Criado >= varDesde
                                                                         ),
                                                                         ID,
                                                                         SortOrder.Descending
@@ -1450,7 +1450,7 @@ Screens:
                                                                     Sort(
                                                                         Filter(
                                                                             'tbl_CHECK-LIST-EQUIP-RSCI',
-                                                                            Criado >= DESDE
+                                                                            Criado >= varDesde
                                                                         ),
                                                                         ID,
                                                                         SortOrder.Descending
@@ -1487,7 +1487,7 @@ Screens:
                                                                     Sort(
                                                                         Filter(
                                                                             'tbl_CHECK-LIST-EPI-EPR',
-                                                                            Criado >= DESDE
+                                                                            Criado >= varDesde
                                                                         ),
                                                                         ID,
                                                                         SortOrder.Descending
@@ -1524,7 +1524,7 @@ Screens:
                                                                     Sort(
                                                                         Filter(
                                                                             'tbl_CHECK-LIST-SME',
-                                                                            Criado >= DESDE
+                                                                            Criado >= varDesde
                                                                         ),
                                                                         ID,
                                                                         SortOrder.Descending
@@ -1561,7 +1561,7 @@ Screens:
                                                                     Sort(
                                                                         Filter(
                                                                             tbl_Checklist_REA_base,
-                                                                            Criado >= DESDE
+                                                                            Criado >= varDesde
                                                                         ),
                                                                         ID,
                                                                         SortOrder.Descending
@@ -1602,7 +1602,7 @@ Screens:
                                                                     Sort(
                                                                         Filter(
                                                                             tbl_ReaOcorrencias,
-                                                                            Criado >= DESDE
+                                                                            Criado >= varDesde
                                                                         ),
                                                                         ID,
                                                                         SortOrder.Descending
@@ -1640,7 +1640,7 @@ Screens:
                                                                     Sort(
                                                                         Filter(
                                                                             tbl_AvisoMeteorologico,
-                                                                            Criado >= DESDE
+                                                                            Criado >= varDesde
                                                                         ),
                                                                         ID,
                                                                         SortOrder.Descending
@@ -1678,7 +1678,7 @@ Screens:
                                                                     Sort(
                                                                         Filter(
                                                                             tbl_ocorrencias_gerais,
-                                                                            Criado >= DESDE
+                                                                            Criado >= varDesde
                                                                         ),
                                                                         ID,
                                                                         SortOrder.Descending
@@ -1717,7 +1717,7 @@ Screens:
                                                                     Sort(
                                                                         Filter(
                                                                             tbl_inspPatio,
-                                                                            Criado >= DESDE
+                                                                            Criado >= varDesde
                                                                         ),
                                                                         ID,
                                                                         SortOrder.Descending
@@ -1755,7 +1755,7 @@ Screens:
                                                                     Sort(
                                                                         Filter(
                                                                             tbl_inspTPS,
-                                                                            Criado >= DESDE
+                                                                            Criado >= varDesde
                                                                         ),
                                                                         ID,
                                                                         SortOrder.Descending
@@ -1793,7 +1793,7 @@ Screens:
                                                                     Sort(
                                                                         Filter(
                                                                             tbl_TesteBalizamento,
-                                                                            Criado >= DESDE
+                                                                            Criado >= varDesde
                                                                         ),
                                                                         ID,
                                                                         SortOrder.Descending
@@ -1831,7 +1831,7 @@ Screens:
                                                                     Sort(
                                                                         Filter(
                                                                             '6.2-tbl_NaoAcomPax',
-                                                                            Criado >= DESDE
+                                                                            Criado >= varDesde
                                                                         ),
                                                                         ID,
                                                                         SortOrder.Descending
@@ -1868,7 +1868,7 @@ Screens:
                                                                     Sort(
                                                                         Filter(
                                                                             tbl_comboios,
-                                                                            Criado >= DESDE
+                                                                            Criado >= varDesde
                                                                         ),
                                                                         ID,
                                                                         SortOrder.Descending
