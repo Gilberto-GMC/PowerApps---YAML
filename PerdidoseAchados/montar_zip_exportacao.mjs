@@ -23,8 +23,14 @@ const TELEMETRIA = 'd9a3f618-25c7-4b0e-8f42-6ab017c35d9e';
 // Constantes do ambiente, iguais as do pacote do Mapa: mesmo tenant, mesmo
 // conector. Na importacao o Power Automate pede para escolher a conexao de
 // qualquer forma, entao o CONN_ID serve so de sugestao.
+// ASSET_ID e a pasta dentro do pacote; FLOW_ID e o id do fluxo em si. No
+// List_Generator_v2.zip os dois sao diferentes, e foi so copiando esse pacote
+// inteiro que a importacao parou de pedir "salve como novo fluxo primeiro".
+const ASSET_ID = '2a6f41c8-93be-4d57-8e10-5b7c2fa09d34';
 const API_ID = '1821735d-649e-4ffe-933f-35a1c1e32c2a';
 const CONN_ID = '822f4c97-d670-4aa7-baf5-c0129e3ecf71';
+// nome da conexao do SharePoint neste tenant — vai em connectionReferences
+const CONN_NAME = 'shared-sharepointonl-0cd12861-383f-4b6e-9359-db983fb70160';
 const ICON = 'https://static.powerapps.com/resource/ppcr/releases/v1.0.1827/1.0.1827.4913/sharepointonline/icon.png';
 
 const bruto = JSON.parse(fs.readFileSync(ENTRADA, 'utf8'));
@@ -32,7 +38,7 @@ const definition = bruto.properties ? bruto.properties.definition : (bruto.defin
 if (!definition || !definition.actions) throw new Error('definicao sem actions: ' + ENTRADA);
 
 const resources = {};
-resources[FLOW_ID] = {
+resources[ASSET_ID] = {
   type: 'Microsoft.Flow/flows',
   suggestedCreationType: 'New',
   creationType: 'Existing, New, Update',
@@ -74,11 +80,36 @@ const manifest = {
   resources,
 };
 
+// Mesma forma do definition.json do List_Generator_v2.zip. Sem o apiId e sem o
+// connectionReferences a importacao falha com "save it as a new flow first".
+const flowAsset = () => ({
+  name: FLOW_ID,
+  id: '/providers/Microsoft.Flow/flows/' + FLOW_ID,
+  type: 'Microsoft.Flow/flows',
+  properties: {
+    apiId: '/providers/Microsoft.PowerApps/apis/shared_logicflows',
+    displayName: NOME,
+    definition,
+    connectionReferences: {
+      shared_sharepointonline: {
+        connectionName: CONN_NAME,
+        source: 'Invoker',
+        id: '/providers/Microsoft.PowerApps/apis/shared_sharepointonline',
+        tier: 'NotSpecified',
+        apiName: 'sharepointonline',
+        isProcessSimpleApiReferenceConversionAlreadyDone: false,
+      },
+    },
+    flowFailureAlertSubscribed: false,
+    isManaged: false,
+  },
+});
+
 const entradas = [
-  ['Microsoft.Flow/flows/' + FLOW_ID + '/apisMap.json', JSON.stringify({ shared_sharepointonline: API_ID })],
-  ['Microsoft.Flow/flows/' + FLOW_ID + '/connectionsMap.json', JSON.stringify({ shared_sharepointonline: CONN_ID })],
-  ['Microsoft.Flow/flows/' + FLOW_ID + '/definition.json', JSON.stringify({ name: FLOW_ID, id: '/providers/Microsoft.Flow/flows/' + FLOW_ID, type: 'Microsoft.Flow/flows', properties: { displayName: NOME, definition } })],
-  ['Microsoft.Flow/flows/manifest.json', JSON.stringify({ packageSchemaVersion: '1.0', flowAssets: { assetPaths: [FLOW_ID] } })],
+  ['Microsoft.Flow/flows/' + ASSET_ID + '/apisMap.json', JSON.stringify({ shared_sharepointonline: API_ID })],
+  ['Microsoft.Flow/flows/' + ASSET_ID + '/connectionsMap.json', JSON.stringify({ shared_sharepointonline: CONN_ID })],
+  ['Microsoft.Flow/flows/' + ASSET_ID + '/definition.json', JSON.stringify(flowAsset())],
+  ['Microsoft.Flow/flows/manifest.json', JSON.stringify({ packageSchemaVersion: '1.0', flowAssets: { assetPaths: [ASSET_ID] } })],
   ['manifest.json', JSON.stringify(manifest)],
 ];
 
