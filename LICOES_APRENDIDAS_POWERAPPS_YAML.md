@@ -2365,3 +2365,146 @@ novo e as `nf*` do App.Formulas novo. Aceita arquivo avulso como argumento.
 fora da ordem do LEIA-ME, listar junto o que ela exige do App (variáveis do
 OnStart, named formulas, coleções carregadas por outra tela) e entregar o trecho
 mínimo para suprir isso.
+
+## Fluxo de PDF ausente quebra o relatório REA (2026-10-19)
+
+- Projeto/tela: REA / `frmRelatoriosOcorrencias`, botões `ButtonCanvas1_11`
+  (Criar PDF) e `ButtonCanvas11_2` (Abrir PDF).
+- Erro no Studio: `O operador "." não pode ser usado em valores Error.` em
+  `Download(varResposta.url)`. O `AppCheckerResult.sarif` do export registra
+  também `app-ErrUnknownNamespaceFunction` para `Run` do fluxo
+  `'PowerAppV2->Criararquivo,Criarlinkdecompartilhamentoparaum...'`, seguido de
+  `app-ErrIncompatibleCtxtVariableTypes` em `varResposta` e `app-ErrInvalidDot`
+  em `.url`.
+- Causa confirmada: o app exportado não reconhece o fluxo chamado por Criar PDF.
+  Assim, sua chamada tem tipo `Error`, `varResposta` não tem o registro esperado
+  e o acesso a `.url` é inválido. O pacote de solução local contém 11 fluxos,
+  mas nenhum com esse nome. Não há evidência suficiente para afirmar por que a
+  vinculação se perdeu nem que o PDF em si deixou de ser gerado.
+- Evidência posterior no Studio: o fluxo disponível aparece como
+  `CRIAR-PDF-IMAGEM`; a linha `PowerAppV2->Criararquivo,...` é mostrada abaixo do
+  nome. A edição funcional enviada depois pelo usuário confirma que a chamada
+  continua usando `'PowerAppV2->Criararquivo,Criarlinkdecompartilhamentoparaum...'.Run(...)`.
+  O nome de exibição não deve substituir automaticamente o identificador Power Fx.
+- Correção necessária no Studio: recuperar/adicionar ao app o fluxo correto,
+  conferir seus dois parâmetros e sua resposta de texto `url`, atualizar a
+  fórmula com o nome que o Studio registrar e envolver a chamada em tratamento
+  de erro. Só habilitar Abrir PDF quando o fluxo devolver uma URL não vazia.
+  A conexão foi posteriormente confirmada pelo PDF que abriu e pelo TXT do
+  usuário; o YAML local não cria essa associação sozinho em outros aplicativos.
+- Validação preventiva: `REA/build/verificar_relatorio_ocorrencias.ps1` reprova
+  os três diagnósticos no SARIF para essa tela e a ativação incondicional de
+  `var_loadSave`. Após a reconexão, exportar novamente o app e executar o
+  validador contra o YAML e o SARIF atualizados.
+- Impacto global: qualquer tela que usa `Fluxo.Run(...).campo` deve validar que
+  o fluxo continua vinculado ao app e que a resposta tem o campo esperado.
+
+Na mesma tela, `GalleryRelatorio.TemplateSize` era `150` enquanto o contêiner
+filho tinha `Height = Parent.Height` (altura da galeria inteira) e outro filho
+exigia altura mínima de `200`. Correção local: template de `300` e altura do
+contêiner igual a `Parent.TemplateHeight`. O validador também rejeita a
+combinação antiga; para controles dentro de uma galeria, usar as dimensões do
+template, não as dimensões da galeria.
+
+## REA: um registro usado como galeria gera `ThisItem` sem campos (2026-10-19)
+
+- Projeto/tela: REA / `frmRelatoriosOcorrencias`.
+- Mensagem do Studio: `O nome não é válido. 'Hora_inicio' não é reconhecido.`
+  A captura também mostra erros em outros campos do cabeçalho e corpo.
+- Causa confirmada no YAML: `GalleryRelatorio.Items = var_dadosRelatorio`, mas
+  `var_dadosRelatorio` é um único registro passado pelo `Navigate`, não uma
+  tabela. O `ThisItem` da galeria não recebe o esquema da lista esperado pelas
+  fórmulas. A coluna `Hora_inicio` existe em `tbl_ReaOcorrencias`, conforme
+  `References/DataSources.json`; não é erro de grafia da coluna.
+- Correção: a versão `REA/out/frmRelatoriosOcorrencias_ASUR.pa.yaml` consulta
+  `tbl_ReaOcorrencias` pelo ID do registro selecionado e vincula todos os
+  rótulos diretamente ao registro tipado. Remove a galeria de uma linha. A
+  tela foi redesenhada na paleta verde usada pelo projeto Due Diligence.
+- Validação preventiva: `REA/build/validar_relatorio_asur.py` proíbe
+  `GalleryRelatorio`/`ThisItem`, valida as colunas contra o esquema do
+  SharePoint e detecta controles duplicados, placeholders e fluxo não vinculado.
+  A colagem no Studio e novo App Checker ainda são necessários para validar o
+  comportamento no aplicativo real.
+
+## REA: relatório colado isoladamente não reconhece variável de navegação (2026-10-19)
+
+- Projeto/tela: REA / `frmRelatoriosOcorrencias`, propriedade `OnVisible` da
+  primeira versão redesenhada.
+- Erro no Studio: `O nome não é válido. 'var_dadosRelatorio' não é reconhecido.`
+- Causa confirmada: a tela entregue consultava `tbl_ReaOcorrencias` com
+  `LookUp(..., ID = var_dadosRelatorio.ID)`. A variável de contexto era criada
+  apenas pelo `Navigate` do botão na tela de origem. Quando o relatório foi
+  colado sem aquela definição no mesmo contexto do Studio, a fórmula não tinha
+  um identificador tipado. O arquivo entregue dependia de uma etapa que não
+  estava garantida pela colagem isolada.
+- Correção: `OnVisible` usa o ID da seleção de `GalleryOcorrenciasREA`, controle
+  que já existe na tela de origem do mesmo app, para consultar uma única vez a
+  lista `tbl_ReaOcorrencias`. A tela não depende mais de `var_dadosRelatorio`.
+  O `Navigate` da tela de origem foi simplificado para remover o parâmetro de
+  contexto que deixou de ser usado; o YAML de `out/` e o de `msapp/Src/` foram
+  sincronizados.
+- Validação preventiva: `REA/build/validar_relatorio_asur.py` reprova qualquer
+  uso de `var_dadosRelatorio`, exige a referência ao ID da galeria e verifica
+  que galeria e lista constam no export do app. Também procura variáveis não
+  definidas na própria tela, confere as cores do Due Diligence, os alinhamentos
+  principais do documento e a igualdade entre as duas cópias do YAML.
+
+**Regra:** ao entregar uma tela para colagem isolada, verificar todas as
+variáveis de contexto usadas pela tela contra os pontos que as definem. Uma
+referência que só nasce em `Navigate` não é autônoma; usar uma origem já
+existente no app ou entregar a mudança de navegação junto da tela.
+
+## REA: PDF abriu após demora, com relatório excessivamente largo (2026-10-19)
+
+- Projeto/tela: REA / `frmRelatoriosOcorrencias`, `cntDocumentoRelatorioRea`,
+  `btnCriarPdfRea` e `btnAbrirPdfRea`.
+- Sintoma: primeiro o navegador ficou na página de carregamento do link do
+  SharePoint. Depois o usuário confirmou que o PDF abriu e enviou uma captura
+  com uma página, faixas muito largas e os campos concentrados à esquerda.
+- Evidência confirmada: o fluxo gerou um arquivo que o SharePoint conseguiu
+  exibir. A captura não confirma corrupção, falha de autenticação, dimensões
+  físicas do papel ou a causa da demora. Não registrar a demora como falha
+  comprovada de `Download`.
+- Risco confirmado no código: o documento tinha `Width = 820`, mas não tinha
+  alinhamento individual nem limites de largura explícitos no pai AutoLayout.
+  A fórmula `PDF` também não fixava `Size`. O aspecto da captura é compatível
+  com largura efetiva maior que a grade de controles; isso precisa ser
+  revalidado com o próximo PDF gerado no Studio.
+- Correção: documento e barra de ações usam `AlignInContainer.Center` e
+  `LayoutMinWidth = LayoutMaxWidth = 820`. O PDF exporta somente o documento,
+  com `Size: "A4"`, `DPI: 96`, retrato, margem de 12 mm e expansão para textos
+  longos. Abrir PDF usa `Launch` para navegar ao link compartilhado, preservando
+  a URL. Isso não garante redução da latência do SharePoint.
+- A geração pelo fluxo de nome exibido `CRIAR-PDF-IMAGEM` foi incorporada ao
+  YAML. A entrega final usa o identificador Power Fx da edição funcional do
+  usuário, que é diferente do nome exibido. O validador não valida conexões remotas.
+- Validação preventiva: `REA/build/validar_relatorio_asur.py` exige alinhamento
+  e limites do documento, alvo/opções de `PDF`, chamada do fluxo identificado e
+  abertura por `Launch`. Novo arquivo gerado no Studio é necessário para medir
+  o resultado; um link antigo não reflete alterações posteriores no layout.
+
+## REA: preservar a edição funcional do usuário e o identificador real do fluxo (2026-10-19)
+
+- Projeto/tela: REA / `frmRelatoriosOcorrencias`; evidência: arquivo
+  `frmRelatoriosOcorrencias.txt` enviado pelo usuário e captura do PDF aberto.
+- Erro de revisão confirmado: o gerador anterior reconstruía o cabeçalho e
+  assumia que o nome exibido `CRIAR-PDF-IMAGEM` era o namespace Power Fx.
+  A versão funcional usa o identificador longo `PowerAppV2->...`, o componente
+  `HeaderTitle_11` e mantém Abrir PDF visível, desabilitado sem URL.
+- Correção: guardar o TXT intacto em `REA/modelos/` e usar essa edição como
+  base do gerador. Alterar somente alinhamento/limites do documento e barra,
+  opções de `PDF` e navegação do link. Preservar o contrato e alias do fluxo.
+- O novo print confirma conteúdo pequeno no topo de uma página, mas não
+  comprova a dimensão física do PDF nem a causa exata do redimensionamento.
+  A4/96 DPI explícitos e limites de largura são ajustes locais; a validação da
+  escala depende de gerar outro arquivo no Studio.
+- Prevenção: `validar_relatorio_asur.py` compara toda a árvore com o modelo,
+  permitindo mudanças apenas em oito propriedades de quatro controles.
+  Compara o namespace com o modelo funcional, confere os campos contra o
+  SharePoint, alinhamentos, dependências do componente e opções do PDF.
+  O leitor aceita fórmulas simples e blocos `|-` exportados pelo Studio; não
+  trata um escalar válido como JSON obrigatório nem como erro de fórmula.
+- Impacto global: o namespace de um fluxo deve vir do código funcional ou do
+  autocompletar do Studio. Um diagnóstico antigo de conexão perdida não prova
+  que o mesmo identificador será inválido depois da reconexão. Quando o usuário
+  entrega uma edição final, o gerador deve partir dela e proteger suas mudanças.

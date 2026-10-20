@@ -1,5 +1,10 @@
 # Auditoria — Airport Now · Resposta à Emergência · Atendimento Pré-hospitalar (APH)
 
+> Esta auditoria documenta o export de 18/09/2026. A base atual do aplicativo
+> é a exportação de 19/10/2026 descrita em `BASE_ATUAL.md`. Os caminhos
+> `msapp/` e `extracted/` abaixo agora apontam para a base atual; para rever
+> a versão auditada, use o pacote de 18/09/2026 ou o histórico do Git.
+
 Data: 2026-09-18. Origem: `AirportNow-RespostaàEmergência_20260918135434.zip`, extraído em `extracted/` (pacote) e `msapp/` (conteúdo do .msapp). Caminhos relativos a `REA/msapp/Src/`, salvo indicação. As linhas referem-se ao export original e mudam depois de qualquer entrega colada e reexportada.
 
 **Status:** as decisões de negócio estão no §5. O Nível 1, a cobrança e a garantia do registro foram gerados e verificados em `out/ScreenAPH.pa.yaml` (§6), mas ainda não foram colados no Studio.
