@@ -587,9 +587,9 @@ Screens:
                                                 ChevronHoverFill: =thmPrimaria
                                                 Default: |-
                                                   =If(
-                                                      varPerfilUser = "Base",
-                                                      varAeroUser,
-                                                      Blank()
+                                                      varPerfilUser = "Sede",
+                                                      Blank(),
+                                                      varAeroUser
                                                   )
                                                 DisplayMode: |-
                                                   =If(
@@ -639,7 +639,13 @@ Screens:
                                             UpdateContext({var_resumoLoad: true});
                                             //Coleta do resumo diário
                                             With(
-                                                {LIMIT: 100},
+                                                {
+                                                    LIMIT: 100,
+                                                    // Janela de 7 dias: a mesma que o seletor de data mostra.
+                                                    // Comparacao de data delega no SharePoint; filtro por
+                                                    // aeroporto nao delegaria para Bloco (9) nem Sede (19).
+                                                    DESDE: DateAdd(Today(), -7, TimeUnit.Days)
+                                                },
                                                 Concurrent(
                                                     ClearCollect(
                                                         col_ocoAvsec,
@@ -647,7 +653,10 @@ Screens:
                                                             ShowColumns(
                                                                 FirstN(
                                                                     Sort(
-                                                                        tbl_OcorrenciasAVSEC,
+                                                                        Filter(
+                                                                            tbl_OcorrenciasAVSEC,
+                                                                            Criado >= DESDE
+                                                                        ),
                                                                         ID,
                                                                         SortOrder.Descending
                                                                     ),
@@ -683,7 +692,10 @@ Screens:
                                                             ShowColumns(
                                                                 FirstN(
                                                                     Sort(
-                                                                        '7.1-tbl_DesembHibrid',
+                                                                        Filter(
+                                                                            '7.1-tbl_DesembHibrid',
+                                                                            Criado >= DESDE
+                                                                        ),
                                                                         ID,
                                                                         SortOrder.Descending
                                                                     ),
@@ -718,7 +730,10 @@ Screens:
                                                             ShowColumns(
                                                                 FirstN(
                                                                     Sort(
-                                                                        tbl_desemb_hibrido,
+                                                                        Filter(
+                                                                            tbl_desemb_hibrido,
+                                                                            Criado >= DESDE
+                                                                        ),
                                                                         ID,
                                                                         SortOrder.Descending
                                                                     ),
@@ -753,7 +768,10 @@ Screens:
                                                             ShowColumns(
                                                                 FirstN(
                                                                     Sort(
-                                                                        '7.2-tbl_TesteMotores',
+                                                                        Filter(
+                                                                            '7.2-tbl_TesteMotores',
+                                                                            Criado >= DESDE
+                                                                        ),
                                                                         ID,
                                                                         SortOrder.Descending
                                                                     ),
@@ -788,7 +806,10 @@ Screens:
                                                             ShowColumns(
                                                                 FirstN(
                                                                     Sort(
-                                                                        tbl_teste_de_motores,
+                                                                        Filter(
+                                                                            tbl_teste_de_motores,
+                                                                            Criado >= DESDE
+                                                                        ),
                                                                         ID,
                                                                         SortOrder.Descending
                                                                     ),
@@ -823,7 +844,10 @@ Screens:
                                                             ShowColumns(
                                                                 FirstN(
                                                                     Sort(
-                                                                        '7.4-tbl_InspPista',
+                                                                        Filter(
+                                                                            '7.4-tbl_InspPista',
+                                                                            Criado >= DESDE
+                                                                        ),
                                                                         ID,
                                                                         SortOrder.Descending
                                                                     ),
@@ -858,7 +882,10 @@ Screens:
                                                             ShowColumns(
                                                                 FirstN(
                                                                     Sort(
-                                                                        tbl_inspZpa,
+                                                                        Filter(
+                                                                            tbl_inspZpa,
+                                                                            Criado >= DESDE
+                                                                        ),
                                                                         ID,
                                                                         SortOrder.Descending
                                                                     ),
@@ -893,7 +920,10 @@ Screens:
                                                             ShowColumns(
                                                                 FirstN(
                                                                     Sort(
-                                                                        '7.3-tbl_DescAIS',
+                                                                        Filter(
+                                                                            '7.3-tbl_DescAIS',
+                                                                            Criado >= DESDE
+                                                                        ),
                                                                         ID,
                                                                         SortOrder.Descending
                                                                     ),
@@ -927,7 +957,10 @@ Screens:
                                                             ShowColumns(
                                                                 FirstN(
                                                                     Sort(
-                                                                        '12.1-tbl_ImpactoObras',
+                                                                        Filter(
+                                                                            '12.1-tbl_ImpactoObras',
+                                                                            Criado >= DESDE
+                                                                        ),
                                                                         ID,
                                                                         SortOrder.Descending
                                                                     ),
@@ -961,7 +994,10 @@ Screens:
                                                             ShowColumns(
                                                                 FirstN(
                                                                     Sort(
-                                                                        tbl_perdidosAchados,
+                                                                        Filter(
+                                                                            tbl_perdidosAchados,
+                                                                            Criado >= DESDE
+                                                                        ),
                                                                         ID,
                                                                         SortOrder.Descending
                                                                     ),
@@ -995,7 +1031,10 @@ Screens:
                                                             ShowColumns(
                                                                 FirstN(
                                                                     Sort(
-                                                                        '16.1-tbl_OcoSolo',
+                                                                        Filter(
+                                                                            '16.1-tbl_OcoSolo',
+                                                                            Criado >= DESDE
+                                                                        ),
                                                                         ID,
                                                                         SortOrder.Descending
                                                                     ),
@@ -1030,7 +1069,10 @@ Screens:
                                                             ShowColumns(
                                                                 FirstN(
                                                                     Sort(
-                                                                        '14.2-tbl_DerramamentoDeFluidos',
+                                                                        Filter(
+                                                                            '14.2-tbl_DerramamentoDeFluidos',
+                                                                            Criado >= DESDE
+                                                                        ),
                                                                         ID,
                                                                         SortOrder.Descending
                                                                     ),
@@ -1065,7 +1107,10 @@ Screens:
                                                             ShowColumns(
                                                                 FirstN(
                                                                     Sort(
-                                                                        '14.3-tbl_IncPista',
+                                                                        Filter(
+                                                                            '14.3-tbl_IncPista',
+                                                                            Criado >= DESDE
+                                                                        ),
                                                                         ID,
                                                                         SortOrder.Descending
                                                                     ),
@@ -1100,7 +1145,10 @@ Screens:
                                                             ShowColumns(
                                                                 FirstN(
                                                                     Sort(
-                                                                        '14.6-tbl_ExcPista',
+                                                                        Filter(
+                                                                            '14.6-tbl_ExcPista',
+                                                                            Criado >= DESDE
+                                                                        ),
                                                                         ID,
                                                                         SortOrder.Descending
                                                                     ),
@@ -1135,7 +1183,10 @@ Screens:
                                                             ShowColumns(
                                                                 FirstN(
                                                                     Sort(
-                                                                        '14.4-tbl_ColVeiculos',
+                                                                        Filter(
+                                                                            '14.4-tbl_ColVeiculos',
+                                                                            Criado >= DESDE
+                                                                        ),
                                                                         ID,
                                                                         SortOrder.Descending
                                                                     ),
@@ -1170,7 +1221,10 @@ Screens:
                                                             ShowColumns(
                                                                 FirstN(
                                                                     Sort(
-                                                                        '14.5-tbl_IntExterna',
+                                                                        Filter(
+                                                                            '14.5-tbl_IntExterna',
+                                                                            Criado >= DESDE
+                                                                        ),
                                                                         ID,
                                                                         SortOrder.Descending
                                                                     ),
@@ -1205,7 +1259,10 @@ Screens:
                                                             ShowColumns(
                                                                 FirstN(
                                                                     Sort(
-                                                                        '14.8-tbl_JetBlast',
+                                                                        Filter(
+                                                                            '14.8-tbl_JetBlast',
+                                                                            Criado >= DESDE
+                                                                        ),
                                                                         ID,
                                                                         SortOrder.Descending
                                                                     ),
@@ -1240,7 +1297,10 @@ Screens:
                                                             ShowColumns(
                                                                 FirstN(
                                                                     Sort(
-                                                                        'Presença de Fauna',
+                                                                        Filter(
+                                                                            'Presença de Fauna',
+                                                                            Criado >= DESDE
+                                                                        ),
                                                                         ID,
                                                                         SortOrder.Descending
                                                                     ),
@@ -1275,7 +1335,10 @@ Screens:
                                                             ShowColumns(
                                                                 FirstN(
                                                                     Sort(
-                                                                        'AIRPORTNOW - Colisões/Quase-Colisão/Avistamento',
+                                                                        Filter(
+                                                                            'AIRPORTNOW - Colisões/Quase-Colisão/Avistamento',
+                                                                            Criado >= DESDE
+                                                                        ),
                                                                         ID,
                                                                         SortOrder.Descending
                                                                     ),
@@ -1310,7 +1373,10 @@ Screens:
                                                             ShowColumns(
                                                                 FirstN(
                                                                     Sort(
-                                                                        'Formulário de Focos (Atrativos e Vulnerabilidade)',
+                                                                        Filter(
+                                                                            'Formulário de Focos (Atrativos e Vulnerabilidade)',
+                                                                            Criado >= DESDE
+                                                                        ),
                                                                         ID,
                                                                         SortOrder.Descending
                                                                     ),
@@ -1345,7 +1411,10 @@ Screens:
                                                             ShowColumns(
                                                                 FirstN(
                                                                     Sort(
-                                                                        'tbl_CHECK-LIST-VEICULO-CCI',
+                                                                        Filter(
+                                                                            'tbl_CHECK-LIST-VEICULO-CCI',
+                                                                            Criado >= DESDE
+                                                                        ),
                                                                         ID,
                                                                         SortOrder.Descending
                                                                     ),
@@ -1379,7 +1448,10 @@ Screens:
                                                             ShowColumns(
                                                                 FirstN(
                                                                     Sort(
-                                                                        'tbl_CHECK-LIST-EQUIP-RSCI',
+                                                                        Filter(
+                                                                            'tbl_CHECK-LIST-EQUIP-RSCI',
+                                                                            Criado >= DESDE
+                                                                        ),
                                                                         ID,
                                                                         SortOrder.Descending
                                                                     ),
@@ -1413,7 +1485,10 @@ Screens:
                                                             ShowColumns(
                                                                 FirstN(
                                                                     Sort(
-                                                                        'tbl_CHECK-LIST-EPI-EPR',
+                                                                        Filter(
+                                                                            'tbl_CHECK-LIST-EPI-EPR',
+                                                                            Criado >= DESDE
+                                                                        ),
                                                                         ID,
                                                                         SortOrder.Descending
                                                                     ),
@@ -1447,7 +1522,10 @@ Screens:
                                                             ShowColumns(
                                                                 FirstN(
                                                                     Sort(
-                                                                        'tbl_CHECK-LIST-SME',
+                                                                        Filter(
+                                                                            'tbl_CHECK-LIST-SME',
+                                                                            Criado >= DESDE
+                                                                        ),
                                                                         ID,
                                                                         SortOrder.Descending
                                                                     ),
@@ -1481,7 +1559,10 @@ Screens:
                                                             ShowColumns(
                                                                 FirstN(
                                                                     Sort(
-                                                                        tbl_Checklist_REA_base,
+                                                                        Filter(
+                                                                            tbl_Checklist_REA_base,
+                                                                            Criado >= DESDE
+                                                                        ),
                                                                         ID,
                                                                         SortOrder.Descending
                                                                     ),
@@ -1519,7 +1600,10 @@ Screens:
                                                             ShowColumns(
                                                                 FirstN(
                                                                     Sort(
-                                                                        tbl_ReaOcorrencias,
+                                                                        Filter(
+                                                                            tbl_ReaOcorrencias,
+                                                                            Criado >= DESDE
+                                                                        ),
                                                                         ID,
                                                                         SortOrder.Descending
                                                                     ),
@@ -1554,7 +1638,10 @@ Screens:
                                                             ShowColumns(
                                                                 FirstN(
                                                                     Sort(
-                                                                        tbl_AvisoMeteorologico,
+                                                                        Filter(
+                                                                            tbl_AvisoMeteorologico,
+                                                                            Criado >= DESDE
+                                                                        ),
                                                                         ID,
                                                                         SortOrder.Descending
                                                                     ),
@@ -1589,7 +1676,10 @@ Screens:
                                                             ShowColumns(
                                                                 FirstN(
                                                                     Sort(
-                                                                        tbl_ocorrencias_gerais,
+                                                                        Filter(
+                                                                            tbl_ocorrencias_gerais,
+                                                                            Criado >= DESDE
+                                                                        ),
                                                                         ID,
                                                                         SortOrder.Descending
                                                                     ),
@@ -1625,7 +1715,10 @@ Screens:
                                                             ShowColumns(
                                                                 FirstN(
                                                                     Sort(
-                                                                        tbl_inspPatio,
+                                                                        Filter(
+                                                                            tbl_inspPatio,
+                                                                            Criado >= DESDE
+                                                                        ),
                                                                         ID,
                                                                         SortOrder.Descending
                                                                     ),
@@ -1660,7 +1753,10 @@ Screens:
                                                             ShowColumns(
                                                                 FirstN(
                                                                     Sort(
-                                                                        tbl_inspTPS,
+                                                                        Filter(
+                                                                            tbl_inspTPS,
+                                                                            Criado >= DESDE
+                                                                        ),
                                                                         ID,
                                                                         SortOrder.Descending
                                                                     ),
@@ -1695,7 +1791,10 @@ Screens:
                                                             ShowColumns(
                                                                 FirstN(
                                                                     Sort(
-                                                                        tbl_TesteBalizamento,
+                                                                        Filter(
+                                                                            tbl_TesteBalizamento,
+                                                                            Criado >= DESDE
+                                                                        ),
                                                                         ID,
                                                                         SortOrder.Descending
                                                                     ),
@@ -1730,7 +1829,10 @@ Screens:
                                                             ShowColumns(
                                                                 FirstN(
                                                                     Sort(
-                                                                        '6.2-tbl_NaoAcomPax',
+                                                                        Filter(
+                                                                            '6.2-tbl_NaoAcomPax',
+                                                                            Criado >= DESDE
+                                                                        ),
                                                                         ID,
                                                                         SortOrder.Descending
                                                                     ),
@@ -1764,7 +1866,10 @@ Screens:
                                                             ShowColumns(
                                                                 FirstN(
                                                                     Sort(
-                                                                        tbl_comboios,
+                                                                        Filter(
+                                                                            tbl_comboios,
+                                                                            Criado >= DESDE
+                                                                        ),
                                                                         ID,
                                                                         SortOrder.Descending
                                                                     ),

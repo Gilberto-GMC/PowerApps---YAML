@@ -197,6 +197,21 @@ function validar(arquivo) {
   linhas.forEach((l, i) => {
     if (/Sort\(\s*$/.test(l) && /Sort\(/.test(l)) { /* multilinha, tratado abaixo */ }
   });
+  // 10b. Carga inicial sem recorte por data. Ordenar a lista inteira por ID e
+  // cortar com FirstN traz os N mais recentes de TODOS os aeroportos — lento, e
+  // o corte ainda descarta registro do usuario. O checklist manda limitar a
+  // consulta inicial por data, que e o que delega no SharePoint.
+  linhas.forEach((l, i) => {
+    const m = l.match(/Sort\(\s*$/);
+    if (!m) return;
+    const fonte = (linhas[i + 1] || '').trim().replace(/,$/, '');
+    const ordenaPorId = /^ID,?$/.test((linhas[i + 2] || '').trim());
+    if (!ordenaPorId) return;
+    if (/^Filter\($/.test(fonte)) return;
+    if (/^col_/.test(fonte)) return; // colecao em memoria, nao e consulta
+    e(i + 1, `consulta sem recorte inicial por data: Sort(${fonte}, ID, ...)`);
+  });
+
   const semQuebra = txt.replace(/\s+/g, ' ');
   if (/LookUp\( Sort\(/.test(semQuebra)) {
     erros.push(`${path.basename(arquivo)} LookUp sobre Sort da lista inteira — nao delegavel`);
@@ -218,6 +233,24 @@ function autoteste() {
     ['literal', 'Screens:\n  L:\n    Properties:\n      Fill: =RGBA(1, 2, 3, 1)\n', /literal de cor/],
     ['select', 'Screens:\n  L:\n    Properties:\n      OnVisible: =Select(btnFantasma)\n', /controle inexistente/],
     ['cor translucida de marca', 'Screens:\n  L:\n    Properties:\n      Fill: =RGBA(96, 70, 237, 0.5)\n', /literal de cor/],
+    ['consulta sem recorte por data', [
+      'Screens:',
+      '  L:',
+      '    Properties:',
+      '      OnVisible: |-',
+      '        =ClearCollect(',
+      '            col_x,',
+      '            FirstN(',
+      '                Sort(',
+      '                    tbl_Alguma,',
+      '                    ID,',
+      '                    SortOrder.Descending',
+      '                ),',
+      '                100',
+      '            )',
+      '        )',
+      '',
+    ].join('\n'), /recorte inicial por data/],
     ['componente sem AccessAppScope', [
       'ComponentDefinitions:',
       '  Comp1:',
