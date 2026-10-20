@@ -1008,3 +1008,50 @@ sem mensagem; aberto direto, o parser diz a linha e a coluna.
 Licao geral, a mesma do `\b` em heredoc: para mexer em marcacao, regex de texto
 e a ferramenta errada quando o que se quer e um atributo. Reescrever a tag
 inteira e mais seguro que emendar um pedaco dela.
+
+## Recorte da carga inicial: o eixo e a data, nao o aeroporto (20/10/2026)
+
+Projeto: Novo Hub AirportNow, tela Home, `Function_resumo_diario_1`.
+
+Sintoma: resumo diario lento. O pedido foi "filtrar pelo aeroporto do usuario".
+
+O que a leitura mostrou: as 33 listas eram carregadas como
+`FirstN(Sort(lista, ID, Desc), 100)` — os 100 mais recentes de **todos** os 19
+aeroportos — e o recorte por aeroporto acontecia depois, em memoria. Ate 3.300
+linhas por carga. E nao era so lentidao: quando uma lista tinha mais de 100
+registros recentes de outros aeroportos, os do usuario ficavam fora do corte e o
+total na tela saia **menor do que a realidade**.
+
+Por que filtrar por aeroporto nao resolve:
+
+- so delega para perfil Base (1 aeroporto). Bloco tem 9, Sede tem 19, e `in`
+  sobre colecao nao delega no SharePoint;
+- as listas guardam o aeroporto em 8 colunas de nomes diferentes (`Aeroporto`,
+  `derFlu_aeroporto`, `AEROPORTO`, `field_6`, ...), umas por nome e outras por
+  IATA — dai o `StartsWith` duplo no filtro em memoria.
+
+Correcao: recortar por **data**, que delega para todo mundo igual e combina com
+o que a tela mostra ("Total de Registros do Dia"):
+
+```powerfx
+With(
+    {LIMIT: 100, DESDE: DateAdd(Today(), -7, TimeUnit.Days)},
+    ... FirstN(Sort(Filter(lista, Criado >= DESDE), ID, SortOrder.Descending), LIMIT) ...
+)
+```
+
+Sete dias porque o seletor de data ja mostrava `FirstN(..., 7)`: as duas pontas
+passam a usar a mesma janela. O recorte por aeroporto continua em memoria, agora
+sobre um conjunto pequeno — e Bloco e Sede seguem vendo tudo o que e deles.
+
+Pre-requisito de ambiente: **indice na coluna `Criado`** de cada lista. Sem
+indice, lista acima de 5.000 itens faz o SharePoint recusar a consulta filtrada,
+e a troca sai de lentidao para erro.
+
+Validacao preventiva: reprovar `Sort(<lista>, ID, ...)` sem `Filter` em volta,
+dentro de carga inicial. Colecao em memoria (`col_*`) fica de fora da regra.
+
+Licao geral: quando pedirem para filtrar a carga, **escolher o eixo que delega
+para todos os perfis**, nao o que parece mais natural. Um filtro que delega so
+para parte dos usuarios e pior que nenhum: esconde o custo no perfil que mais
+carrega.
