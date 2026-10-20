@@ -285,6 +285,20 @@ for (const P of process.argv.slice(2)) {
       (achados.length ? " -> " + achados.slice(0, 6).join(", ") : ""));
   }
 
+  // 20. membro de enum escrito com a caixa errada. O Studio so acusa ao colar,
+  // com "O nome nao e valido. X nao e reconhecido". Cada par abaixo foi um erro
+  // real; a grafia certa e a que o proprio Studio emite nas telas que ja existem.
+  const ENUMS = [
+    ["'TextInputCanvas.Mode'.MultiLine", "'TextInputCanvas.Mode'.Multiline"],
+  ];
+  for (const [errado, certo] of ENUMS) {
+    const achados = [];
+    for (let i = 0; i < lines.length; i++)
+      if (lines[i].indexOf(errado) >= 0) achados.push("L" + (i + 1));
+    check(achados.length === 0,
+      "sem " + errado + " (usar " + certo + ")" +
+      (achados.length ? " -> " + achados.slice(0, 6).join(", ") : ""));
+  }
   // 19. PA1001 YamlInvalidSyntax: valor em LINHA UNICA que contem { chave: valor }.
   // O ": " dentro das chaves faz o YAML ler o resto como mapa, e a colagem morre
   // com "While scanning a plain scalar value, found invalid mapping". A saida e

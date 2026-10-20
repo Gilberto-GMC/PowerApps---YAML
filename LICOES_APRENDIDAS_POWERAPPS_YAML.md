@@ -745,3 +745,17 @@ valor em uma linha so que contenha chave e dois-pontos entre chaves. O Studio se
 emite esses casos como escalar de bloco; quem escreve YAML a mao e que cai nisso.
 
 Virou o **check 19** do `validar_telas_pa.mjs`, com auto-teste.
+
+## Membro de enum com caixa errada (20/10/2026)
+
+Studio: `O nome nao e valido. 'MultiLine' nao e reconhecido.`
+
+Era `Mode: ='TextInputCanvas.Mode'.MultiLine`. O certo e **`Multiline`**, com L
+minusculo — e o que as dez outras ocorrencias do repositorio ja usavam.
+
+Nao adivinhar a grafia de membro de enum. Antes de escrever, rodar
+`grep -rh "<NomeDoEnum>" --include='*.pa.yaml' .` e copiar a grafia que ja existe:
+o que esta nos arquivos foi emitido pelo proprio Studio e por definicao esta certo.
+
+Virou o **check 20** do `validar_telas_pa.mjs`, que e uma tabela de pares
+(grafia errada, grafia certa). Cada erro novo desses acrescenta uma linha.
