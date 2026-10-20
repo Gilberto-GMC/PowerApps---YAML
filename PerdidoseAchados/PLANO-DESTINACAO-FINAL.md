@@ -57,7 +57,7 @@ competente"*.
 **3. Falta um campo que o PRO exige e ninguém pediu: o método.** O item 5.15 manda
 registrar *"item, data, responsável e método aplicado"*, com exemplos "danificação
 física, rompimento estrutural". Os cinco campos do 5.17 não incluem o método — são
-duas exigências diferentes no mesmo procedimento. Entra como `dest_metodo`,
+duas exigências diferentes no mesmo procedimento. Entra como `metodo` na lista de destinação,
 obrigatório só na modalidade Destruição.
 
 *(Observação sobre o documento: o fluxo do 5.15 vai do passo 4 direto ao 6 — não existe
@@ -123,56 +123,93 @@ dizer de quem é a vez — que é justamente o que o 5.17 quer rastreável.
 
 ---
 
-## Colunas novas em `tbl_perdidosAchadosItens`
+## Onde os dados moram — lista separada, nao colunas no item
 
-Prefixo `dest_` para não colidir com o descarte imediato.
+**Decidido em 20/10/2026, por proposta do Douglas.** A primeira versao deste plano
+punha treze colunas `dest_` em `tbl_perdidosAchadosItens`. Medicao que derrubou a
+ideia: **sete telas coletam de 1200 a 1500 linhas da lista de itens, e nenhuma usa
+`ShowColumns`.**
 
-| Nome interno | Tipo | Etapa | Observação |
-|---|---|---|---|
-| `dest_modalidade` | Linha única de texto | identificação | `Destruição`, `Encaminhamento à Justiça` ou `Descarte` — ComboBox |
-| `dest_motivo` | Linha única de texto | identificação | lista fechada de 11 itens, abaixo |
-| `dest_solicitado_em` | Data e Hora | identificação | |
-| `dest_solicitado_por` | Linha única de texto | identificação | `varNomeUser` |
-| `dest_aprovado_em` | Data e Hora | aprovação | |
-| `dest_aprovado_por` | Linha única de texto | aprovação | |
-| `dest_em` | Data e Hora | execução | a **data** do 5.17 |
-| `dest_usuario` | Linha única de texto | execução | o **responsável** do 5.17 |
-| `dest_destinatario` | Linha única de texto | execução | o **destinatário final** do 5.17 — **campo livre**, sem lista |
-| `dest_metodo` | Linha única de texto | execução | o **método aplicado** do 5.15; só na Destruição |
-| `dest_certificado_num` | Linha única de texto | execução | número do CDF |
-| `dest_mtr` | Linha única de texto | execução | Manifesto de Transporte de Resíduos, "quando exigido" (5.15) |
-| `dest_obs` | Várias linhas de texto | qualquer | |
+| Tela | Coleção | Linhas |
+|---|---|---|
+| `ScreenCadastrar` | `col_itensCadastradosBase` | 1200 |
+| `ScreenConsultListar` | `col_itensPAconsultaBase` | 1200 |
+| `ScreenEntregaListar` | `col_itensPAconsultaBase` | 1200 |
+| `ScreenEntregaRecibo` | `colItensEntregaReciboBase` | 1500 |
+| `ScreenInventario` | `colInventarioItensBase` | 1500 |
+| `ScreenInventarioDoacao` | `colItensComDataDevBase` | 1500 |
+| `ScreenInventarioSeparar` | `colItensComDataBase` | 1500 |
 
-**Não criar como coluna Escolha.** Este app não usa nenhuma coluna Choice do SharePoint
-— toda lista fechada é texto alimentado por ComboBox. Uma Choice seria o único campo
-tipo *record* do sistema e exigiria `.Value` em toda leitura.
+Sem projecao de colunas, **toda coluna nova viaja 1500 vezes em cada abertura de cada
+uma dessas telas** — inclusive nas seis que nunca vao ler nada de destinacao. Treze
+colunas seriam cerca de 19.500 valores a mais por abertura, num app que ja e dos
+maiores da casa.
 
-**O anexo do CDF** (resposta 5) usa a coluna **Anexos** nativa do SharePoint, via
-controle `AddMedia`, como a `foto` do item já faz. Não é coluna nova.
+Pior: as colunas seriam quase todas vazias. So o item que chega ao fim da guarda sem
+ser doado tem destinacao.
 
-### Lista fechada de `dest_motivo`
+### A lista
 
-As dez alíneas do 5.11, transcritas do PDF, mais a hipótese do 5.14:
+`tbl_perdidosAchadosDestinacao` — **uma linha por tentativa de destinacao**, definida
+em [lista_tbl_perdidosAchadosDestinacao.json](lista_tbl_perdidosAchadosDestinacao.json).
 
-```
-a) Roupas molhadas ou contaminadas
-b) Peças íntimas
-c) Alimentos e bebidas, abertos ou fechados
-d) Medicamentos perecíveis ou com necessidade de refrigeração
-e) Itens de higiene pessoal de uso individual
-f) Almofadas de pescoço, tapa-olhos e travesseiros
-g) Fones de ouvido descartáveis
-h) Embalagens violadas
-i) Produtos com prazo de validade vencido ou ilegível
-j) Estado de conservação inadequado, odor forte ou contaminação aparente
-   Não apresenta condições de doação                        (5.14)
-```
+| Coluna | Tipo | Etapa |
+|---|---|---|
+| `ID_item` | Número, **indexada**, obrigatória | chave para `tbl_perdidosAchadosItens.ID` |
+| `aeroporto` | Texto, **indexada** | denormalizado, para filtrar sem join |
+| `modalidade` | Texto | identificação |
+| `motivo` | Texto | identificação |
+| `solicitado_em` / `solicitado_por` | Data e Hora / Texto | identificação |
+| `aprovado_em` / `aprovado_por` | Data e Hora / Texto | aprovação |
+| `destinado_em` / `destinado_por` | Data e Hora / Texto | execução |
+| `destinatario` | Texto | execução — campo livre |
+| `metodo` | Texto | execução — o "método aplicado" do 5.15 |
+| `certificado_num` / `mtr` | Texto | execução |
+| `obs` | Várias linhas | qualquer |
+| `arquivar` | Número, padrão 0 | idiom do app |
 
-> A alínea "c" tem nota no PRO: em desembarque internacional, o Agente deve confirmar
-> a destinação junto à **ANVISA e ao VIGIAGRO**. Fora do escopo desta entrega, mas é
-> candidato natural a um aviso na tela.
+**O `status` continua no item**, porque e ele que alimenta as abas e os filtros que ja
+existem. A lista de itens ganha **zero colunas**.
+
+**O Certificado de Destinacao Final** vai no anexo nativo desta lista, nao na de itens.
+
+### O que se ganha de quebra
+
+Uma tentativa de destinacao que nao vinga — aprovacao negada, item que volta para a
+guarda — vira **outra linha**, com historico. Treze colunas no item nao conseguiriam
+expressar isso: a segunda tentativa sobrescreveria a primeira, e o 5.17 pede
+rastreabilidade do processo, nao so do desfecho.
+
+E converge com a ferramenta: o fluxo `List_Generator` **so cria lista nova** e se
+recusa a mexer em lista existente (ver "Cuidado com o List_Generator"). Lista nova e
+exatamente o caminho que ele sabe fazer.
+
+### O que custa
+
+**Duas gravacoes por transicao** em vez de uma: o registro na lista de destinacao e o
+`status` no item. Ordem obrigatoria — **primeiro o registro, depois o status**. Se a
+segunda falhar, sobra um registro sem mudanca de status: detectavel e repetivel. Na
+ordem inversa, o item ficaria com status de destinacao e nenhum registro, que e
+exatamente o que o 5.17 chama de processo invalido.
+
+Mais uma fonte de dados e mais uma colecao — mas pequena, entao cabe inteira num
+`ClearCollect` sem preocupacao de delegacao.
 
 ---
+
+## Cuidado com o List_Generator
+
+O fluxo foi lido em 20/10/2026 (`List_Generator_v2.zip`). A primeira acao depois do
+`Parse_Definicao` e `HTTP_Verificar_Lista`, seguida de `Condicao_Lista_Ja_Existe`:
+
+> Se a lista ja existe, o fluxo **termina com falha** e a mensagem
+> *"Ja existe uma lista chamada X. O fluxo nao altera lista existente: exclua a lista
+> e rode de novo."*
+
+**Nao ha risco de perda de dado em rodar o fluxo** — ele para antes de tocar em
+qualquer coisa. **O risco esta em obedecer a mensagem de erro:** excluir a lista e
+rodar de novo apagaria todo o historico de Perdidos e Achados.
+
 
 ## Alterações de tela
 
@@ -193,7 +230,7 @@ a mostrar conteúdo.
 ### `ScreenConsultListar`
 
 O bloco de rastreabilidade (`HtmlTextRastreio`) ganha a linha da destinação quando
-houver `dest_modalidade`. Mesma condição de hoje: sem dado, não aparece.
+houver registro de destinação para o item. Mesma condição de hoje: sem dado, não aparece.
 
 ---
 
@@ -226,7 +263,7 @@ que ele marcou como "conforme as respostas abaixo".
 
 | Etapa | Horas |
 |---|---:|
-| Colunas no SharePoint + conferência dos nomes internos | 0,5 |
+| Lista nova pelo List_Generator + conferência dos nomes internos | 0,5 |
 | `App.Formulas`: `catNaoDoaveis`, motivos, modalidades | 1,0 |
 | `ScreenInventario`: botão, formulário de identificação, duas abas novas | 7,0 |
 | Aprovação e execução, com anexo do CDF | 5,0 |
