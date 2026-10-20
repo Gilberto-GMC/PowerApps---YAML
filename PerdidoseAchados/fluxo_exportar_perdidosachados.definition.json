@@ -1,0 +1,216 @@
+{
+  "name": "Exportar Perdidos e Achados",
+  "id": "/providers/Microsoft.Flow/flows/00000000-0000-0000-0000-000000000000",
+  "type": "Microsoft.Flow/flows",
+  "properties": {
+    "displayName": "Exportar Perdidos e Achados",
+    "definition": {
+      "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+      "contentVersion": "1.0.0.0",
+      "parameters": {
+        "$connections": {
+          "defaultValue": {},
+          "type": "Object"
+        },
+        "$authentication": {
+          "defaultValue": {},
+          "type": "SecureObject"
+        }
+      },
+      "triggers": {
+        "Quando_um_pedido_entra": {
+          "recurrence": {
+            "frequency": "Minute",
+            "interval": 1
+          },
+          "evaluatedRecurrence": {
+            "frequency": "Minute",
+            "interval": 1
+          },
+          "splitOn": "@triggerOutputs()?['body/value']",
+          "type": "OpenApiConnection",
+          "inputs": {
+            "parameters": {
+              "dataset": "https://grupoccr.sharepoint.com/sites/AIRPORTNOW",
+              "table": "tb_exportacaoPA"
+            },
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+              "connectionName": "shared_sharepointonline",
+              "operationId": "GetOnUpdatedItems"
+            },
+            "authentication": "@parameters('$authentication')"
+          },
+          "conditions": [
+            {
+              "expression": "@equals(triggerBody()?['status'], 'PRONTO')"
+            }
+          ]
+        }
+      },
+      "actions": {
+        "Marcar_processando": {
+          "runAfter": {},
+          "type": "OpenApiConnection",
+          "inputs": {
+            "parameters": {
+              "dataset": "https://grupoccr.sharepoint.com/sites/AIRPORTNOW",
+              "table": "tb_exportacaoPA",
+              "id": "@triggerBody()?['ID']",
+              "item/aeroporto": "@triggerBody()?['aeroporto']",
+              "item/tipo": "@triggerBody()?['tipo']",
+              "item/ativo": "@triggerBody()?['ativo']",
+              "item/status": "PROCESSANDO"
+            },
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+              "connectionName": "shared_sharepointonline",
+              "operationId": "PatchItem"
+            },
+            "authentication": "@parameters('$authentication')"
+          }
+        },
+        "Obter_itens": {
+          "runAfter": {
+            "Marcar_processando": [
+              "Succeeded"
+            ]
+          },
+          "type": "OpenApiConnection",
+          "inputs": {
+            "parameters": {
+              "dataset": "https://grupoccr.sharepoint.com/sites/AIRPORTNOW",
+              "table": "tbl_perdidosAchadosItens",
+              "$filter": "arquivar eq 0 and Aeroporto eq '@{triggerBody()?['aeroporto']}' and status eq '@{if(equals(triggerBody()?['tipo'],'SEPARADOS'),'Separado','Recebido')}'",
+              "$orderby": "recebido desc",
+              "$top": 5000
+            },
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+              "connectionName": "shared_sharepointonline",
+              "operationId": "GetItems"
+            },
+            "authentication": "@parameters('$authentication')"
+          }
+        },
+        "Filtrar_opcionais": {
+          "runAfter": {
+            "Obter_itens": [
+              "Succeeded"
+            ]
+          },
+          "type": "Query",
+          "inputs": {
+            "from": "@body('Obter_itens')?['value']",
+            "where": "@and(and(and(and(and(and(contains(createArray('Artigos religiosos','Artigos sexuais','Bagagem','Bebidas/Alimentos','Bijuterias/Joias','Cama, mesa e banho','Cortantes','Ferramenta','Fumígeno','Infantil','Itens esportivos','Itens médico','Objetos de arte','Óculos','Papelaria','Pessoais','Pet','Produtos de uso pessoal','Produtos químicos','Regionais','Souvenir','Veículo','Vestuário'),coalesce(item()?['categoria'],'')),if(equals(triggerBody()?['tipo'],'SEPARADOS'),true,greaterOrEquals(div(sub(ticks(utcNow()),ticks(item()?['recebido'])),864000000000),90))),or(empty(coalesce(triggerBody()?['categoria'],'')),equals(item()?['categoria'],triggerBody()?['categoria']))),or(empty(coalesce(triggerBody()?['subcategoria'],'')),equals(item()?['subCategoria'],triggerBody()?['subcategoria']))),or(empty(coalesce(triggerBody()?['data_de'],'')),greaterOrEquals(item()?['recebido'],formatDateTime(triggerBody()?['data_de'],'yyyy-MM-dd')))),or(empty(coalesce(triggerBody()?['data_ate'],'')),lessOrEquals(formatDateTime(item()?['recebido'],'yyyy-MM-dd'),formatDateTime(triggerBody()?['data_ate'],'yyyy-MM-dd')))),or(empty(coalesce(triggerBody()?['busca'],'')),startsWith(toLower(coalesce(item()?['marca'],'')),toLower(triggerBody()?['busca']))))"
+          }
+        },
+        "Montar_linhas": {
+          "runAfter": {
+            "Filtrar_opcionais": [
+              "Succeeded"
+            ]
+          },
+          "type": "Select",
+          "inputs": {
+            "from": "@body('Filtrar_opcionais')",
+            "select": "@concat('\"',item()?['ID'],'\";\"',formatDateTime(item()?['recebido'],'dd/MM/yyyy'),'\";\"',coalesce(item()?['categoria'],''),'\";\"',coalesce(item()?['subCategoria'],''),'\";\"',coalesce(item()?['marca'],''),'\";\"',replace(coalesce(item()?['descricao'],''),'\"',''''),'\";\"',div(sub(ticks(utcNow()),ticks(item()?['recebido'])),864000000000),'\";\"',coalesce(item()?['Aeroporto'],''),'\"')"
+          }
+        },
+        "Criar_arquivo": {
+          "runAfter": {
+            "Montar_linhas": [
+              "Succeeded"
+            ]
+          },
+          "type": "OpenApiConnection",
+          "inputs": {
+            "parameters": {
+              "dataset": "https://grupoccr.sharepoint.com/sites/AIRPORTNOW",
+              "folderPath": "/Documentos Partilhados/exportacoes",
+              "name": "perdidosachados_@{toLower(triggerBody()?['tipo'])}_@{triggerBody()?['aeroporto']}_@{formatDateTime(utcNow(),'yyyyMMdd_HHmm')}.csv",
+              "body": "@{concat(decodeUriComponent('%EF%BB%BF'),'\"Item\";\"Data\";\"Categoria\";\"Subcategoria\";\"Marca\";\"Descricao\";\"Dias em custodia\";\"Aeroporto\"',decodeUriComponent('%0D%0A'),join(body('Montar_linhas'),decodeUriComponent('%0D%0A')))}"
+            },
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+              "connectionName": "shared_sharepointonline",
+              "operationId": "CreateFile"
+            },
+            "authentication": "@parameters('$authentication')"
+          }
+        },
+        "Concluir": {
+          "runAfter": {
+            "Criar_arquivo": [
+              "Succeeded"
+            ]
+          },
+          "type": "OpenApiConnection",
+          "inputs": {
+            "parameters": {
+              "dataset": "https://grupoccr.sharepoint.com/sites/AIRPORTNOW",
+              "table": "tb_exportacaoPA",
+              "id": "@triggerBody()?['ID']",
+              "item/aeroporto": "@triggerBody()?['aeroporto']",
+              "item/tipo": "@triggerBody()?['tipo']",
+              "item/ativo": "@triggerBody()?['ativo']",
+              "item/status": "CONCLUIDO",
+              "item/total": "@length(body('Filtrar_opcionais'))",
+              "item/arquivo_nome": "@body('Criar_arquivo')?['Name']",
+              "item/arquivo_url": "@{concat('https://grupoccr.sharepoint.com/sites/AIRPORTNOW',body('Criar_arquivo')?['Path'])}"
+            },
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+              "connectionName": "shared_sharepointonline",
+              "operationId": "PatchItem"
+            },
+            "authentication": "@parameters('$authentication')"
+          }
+        },
+        "Marcar_erro": {
+          "runAfter": {
+            "Obter_itens": [
+              "Failed",
+              "TimedOut"
+            ],
+            "Filtrar_opcionais": [
+              "Failed",
+              "TimedOut"
+            ],
+            "Montar_linhas": [
+              "Failed",
+              "TimedOut"
+            ],
+            "Criar_arquivo": [
+              "Failed",
+              "TimedOut"
+            ],
+            "Concluir": [
+              "Failed",
+              "TimedOut"
+            ]
+          },
+          "type": "OpenApiConnection",
+          "inputs": {
+            "parameters": {
+              "dataset": "https://grupoccr.sharepoint.com/sites/AIRPORTNOW",
+              "table": "tb_exportacaoPA",
+              "id": "@triggerBody()?['ID']",
+              "item/aeroporto": "@triggerBody()?['aeroporto']",
+              "item/tipo": "@triggerBody()?['tipo']",
+              "item/ativo": "@triggerBody()?['ativo']",
+              "item/status": "ERRO",
+              "item/mensagem": "Falha ao gerar o arquivo. Veja o historico da execucao no fluxo Exportar Perdidos e Achados."
+            },
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+              "connectionName": "shared_sharepointonline",
+              "operationId": "PatchItem"
+            },
+            "authentication": "@parameters('$authentication')"
+          }
+        }
+      }
+    }
+  }
+}
