@@ -1160,3 +1160,30 @@ outro caminho — na mesma tela, o painel do formulario estava com
 `LayoutMinHeight: =400` enquanto o conteudo somava ~430 depois do titulo e dos
 campos maiores. Ao aumentar controle dentro de AutoLayout, refazer a conta da
 altura do container.
+
+## `position:fixed` em `HtmlViewer` pinta a tela inteira (20/10/2026)
+
+Projeto: Novo Hub AirportNow, tela Login.
+
+Sintoma: a faixa diagonal cobriu o app inteiro — campos, botao e card sumiram
+atras de um degrade em tela cheia.
+
+Causa: o `HtmlViewer` do Power Apps **injeta o conteudo no DOM do proprio app**,
+nao num iframe. Entao `position:fixed` se ancora na janela toda, nao no
+controle, e o div escapa dos limites do `HtmlViewer`.
+
+Erro de metodo meu, que vale registrar: testei o HTML dentro de um `<iframe>` do
+tamanho do controle, onde `position:fixed` se ancora no iframe e o resultado
+parecia certo. **Iframe nao reproduz o `HtmlViewer`.** Verificacao em navegador
+so vale para o que e puramente visual (cor, fonte, degrade), nunca para
+posicionamento que dependa do contexto de empilhamento.
+
+Correcao: nao usar `HtmlViewer` para elemento grafico que precise preencher o
+controle. Gerar um **SVG com `preserveAspectRatio="none"`** e usar `Image` com
+`ImagePosition.Fill`. O `Image` estica sem margem, sem barra de rolagem e sem
+escapar do controle. Degrade, forma diagonal e canto arredondado saem todos em
+SVG.
+
+`HtmlViewer` fica para o que e mesmo texto — como o titulo bicolor, que `Label`
+nao consegue fazer. E, nele, o div **nao** leva `width`/`height` explicitos:
+sem tamanho, nao estoura e nao gera barra.
