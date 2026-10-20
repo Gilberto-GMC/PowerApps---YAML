@@ -164,6 +164,83 @@ thmAmbar          = ColorValue(hxAmbar);;
 thmVermelho       = ColorValue(hxVermelho);;
 thmTextoBarra     = ColorValue(hxTextoBarra);;
 
+
+// ===== Destinacao final — PRO Perdidos e Achados Rev. 03 =====
+// Plano em PLANO-DESTINACAO-FINAL.md. As tres listas abaixo sao as unicas
+// fontes: tela nenhuma deve repetir categoria, motivo ou modalidade.
+
+// Categorias que PODEM ser doadas. E a regra dos itens 5.13 e 5.16 do PRO
+// (nada de eletronicos nem documentos), que ate 20/10/2026 vivia escrita a mao
+// dentro da ScreenInventarioSeparar. Nao doavel = o que NAO esta aqui, entao
+// categoria nova nasce fora da doacao ate alguem decidir o contrario.
+colCatDoaveis =
+Table(
+    {Value: "Artigos religiosos"};
+    {Value: "Artigos sexuais"};
+    {Value: "Bagagem"};
+    {Value: "Bebidas/Alimentos"};
+    {Value: "Bijuterias/Joias"};
+    {Value: "Cama, mesa e banho"};
+    {Value: "Cortantes"};
+    {Value: "Ferramenta"};
+    {Value: "Fumígeno"};
+    {Value: "Infantil"};
+    {Value: "Itens esportivos"};
+    {Value: "Itens médico"};
+    {Value: "Objetos de arte"};
+    {Value: "Óculos"};
+    {Value: "Papelaria"};
+    {Value: "Pessoais"};
+    {Value: "Pet"};
+    {Value: "Produtos de uso pessoal"};
+    {Value: "Produtos químicos"};
+    {Value: "Regionais"};
+    {Value: "Souvenir"};
+    {Value: "Veículo"};
+    {Value: "Vestuário"}
+);;
+
+// Modalidades de destinacao final gravadas em dest_modalidade.
+// O item 5.12 do PRO lista Devolucao ao Usuario, Doacao, Descarte e Destruicao.
+// "Encaminhamento a Justica" e o termo que a operacao usa e que ja esta nas abas
+// da ScreenInventario; no PRO ele aparece no 5.15 como "encaminhamento a orgao
+// publico" e no 5.1.3 como Correios / Policia Federal / orgao competente.
+colDestModalidades =
+Table(
+    {Value: "Destruição"};
+    {Value: "Encaminhamento à Justiça"};
+    {Value: "Descarte"}
+);;
+
+// Motivos — alineas "a" a "j" do item 5.11, mais a hipotese do 5.14.
+// Aprovados pela Carmen Mamani Orosco em 09/10/2026.
+// Cuidado com a alinea "c": em desembarque internacional o PRO manda confirmar
+// a destinacao junto a ANVISA e ao VIGIAGRO.
+colDestMotivos =
+Table(
+    {Value: "Roupas molhadas ou contaminadas"};
+    {Value: "Peças íntimas"};
+    {Value: "Alimentos e bebidas, abertos ou fechados"};
+    {Value: "Medicamentos perecíveis ou com necessidade de refrigeração"};
+    {Value: "Itens de higiene pessoal de uso individual"};
+    {Value: "Almofadas de pescoço, tapa-olhos e travesseiros"};
+    {Value: "Fones de ouvido descartáveis"};
+    {Value: "Embalagens violadas"};
+    {Value: "Produtos com prazo de validade vencido ou ilegível"};
+    {Value: "Estado de conservação inadequado, odor forte ou contaminação aparente"};
+    {Value: "Não apresenta condições de doação"}
+);;
+
+// Status do ciclo. Dois intermediarios porque o fluxo do item 5.15 tem duas maos
+// diferentes: a Gerencia do Aeroporto aprova, o SGI Meio Ambiente executa.
+stDestAprovacao   = "Aguardando aprovação";;
+stDestDestinacao  = "Aguardando destinação";;
+
+// Quem pode registrar destinacao final. A Carmen confirmou que o acesso e
+// restrito, mas ainda nao disse a qual perfil (ponto 3 do e-mail de 09/10).
+// Ate la vale o Admin, que ja e o precedente do app. TROCAR SO AQUI.
+varPodeDestinar = varAutUser = "Admin";;
+
 ```
 
 ## App.OnStart — o que sobra
