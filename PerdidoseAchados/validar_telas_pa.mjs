@@ -299,6 +299,34 @@ for (const P of process.argv.slice(2)) {
       "sem " + errado + " (usar " + certo + ")" +
       (achados.length ? " -> " + achados.slice(0, 6).join(", ") : ""));
   }
+  // 21. propriedade declarada duas vezes no mesmo controle. Em YAML a ultima vence
+  // em silencio, entao o efeito e uma propriedade que some sem erro nenhum.
+  // Acontece ao inserir uma propriedade sem ver que ela ja existia como escalar de
+  // bloco (|-), que nao casa com a busca ingenua por "Nome: =".
+  const dupProp = [];
+  {
+    let ini = -1, pInd = -1, vistas = null;
+    for (let i = 0; i < lines.length; i++) {
+      const novo = lines[i].match(/^( *)- ([A-Za-z_][A-Za-z0-9_]*):s*$/);
+      if (novo) { ini = i; pInd = -1; vistas = new Map(); continue; }
+      if (ini < 0) continue;
+      if (/^ *Properties:s*$/.test(lines[i])) {
+        const prox = lines[i + 1] || "";
+        pInd = prox.length - prox.replace(/^ +/, "").length;
+        continue;
+      }
+      if (pInd < 0) continue;
+      const n = lines[i].length - lines[i].replace(/^ +/, "").length;
+      if (n !== pInd) continue;
+      const m = lines[i].match(/^ *([A-Za-z_][A-Za-z0-9_]*): /);
+      if (!m) continue;
+      if (vistas.has(m[1])) dupProp.push("L" + (i + 1) + " " + m[1] + " (ja em L" + (vistas.get(m[1]) + 1) + ")");
+      else vistas.set(m[1], i);
+    }
+  }
+  check(dupProp.length === 0,
+    "nenhuma propriedade repetida no mesmo controle" +
+    (dupProp.length ? " -> " + dupProp.slice(0, 6).join(", ") : ""));
   // 19. PA1001 YamlInvalidSyntax: valor em LINHA UNICA que contem { chave: valor }.
   // O ": " dentro das chaves faz o YAML ler o resto como mapa, e a colagem morre
   // com "While scanning a plain scalar value, found invalid mapping". A saida e

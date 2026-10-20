@@ -759,3 +759,25 @@ o que esta nos arquivos foi emitido pelo proprio Studio e por definicao esta cer
 
 Virou o **check 20** do `validar_telas_pa.mjs`, que e uma tabela de pares
 (grafia errada, grafia certa). Cada erro novo desses acrescenta uma linha.
+
+## Procurar propriedade so por `Nome: =` nao enxerga o escalar de bloco (20/10/2026)
+
+Conferi se os date pickers da `ScreenInventarioSeparar` tinham `OnChange` com
+`grep "^ *OnChange: ="` — nao acharam nada, concluí que faltava e inseri. Os dois
+**ja tinham**, na forma `OnChange: |-` com o corpo embaixo. Resultado: propriedade
+declarada duas vezes.
+
+Em YAML a ultima declaracao vence, **em silencio**. Nao ha erro de colagem: a
+propriedade simplesmente passa a valer outra coisa. Foi sorte o efeito ser nenhum
+neste caso, porque as duas formulas faziam o mesmo.
+
+Uma propriedade pode aparecer de tres formas, e a busca tem que cobrir as tres:
+
+```yaml
+Nome: =formula          # valor em linha
+Nome: |-                # escalar de bloco, o corpo vem indentado embaixo
+Nome: "=formula\r\n..." # string serializada, formato antigo
+```
+
+Busque sempre por `^ *Nome:` — sem o `=`. Virou o **check 21** do
+`validar_telas_pa.mjs`, que acusa propriedade repetida dentro do mesmo controle.
