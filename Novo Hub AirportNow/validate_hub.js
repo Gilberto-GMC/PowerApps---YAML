@@ -27,11 +27,21 @@ const EXTERNOS = new Set([
 // O App.Formulas e colado na barra de formulas do Studio, em pt-BR: separador
 // decimal e VIRGULA. "RGBA(166; 166; 166; 0.5)" nao e reconhecido e derruba a
 // declaracao inteira, e so aparece como "o nome nao e valido" no controle que usa.
+// Token html* entra dentro de style='...' nas telas. Aspa simples no valor fecha o
+// atributo no meio e o resto do estilo e descartado, sem erro nenhum.
+function htmlTokenComAspaSimples(linha) {
+  const m = linha.match(/^\s*(html\w+)\s*=\s*"([^"]*)"/);
+  return !!(m && m[2].includes("'"));
+}
+
 function validarFormulas() {
   const erros = [];
   const linhas = fs.readFileSync(TOKENS_FX, 'utf8').split(/\r?\n/);
   linhas.forEach((l, i) => {
     if (/^\s*\/\//.test(l)) return;
+    if (htmlTokenComAspaSimples(l)) {
+      erros.push(`App_Formulas_Hub.txt:${i + 1} token html* com aspa simples — fecha o style='...' no meio: ${l.trim()}`);
+    }
     const semTexto = l.replace(/'[^']*'/g, "''").replace(/"[^"]*"/g, '""');
     if (/\b\d+\.\d+\b/.test(semTexto)) {
       erros.push(`App_Formulas_Hub.txt:${i + 1} decimal com ponto em dialeto pt-BR — usar virgula: ${l.trim()}`);
@@ -303,6 +313,13 @@ function autoteste() {
     }
   }
   fs.unlinkSync(tmp);
+  // Regra do App.Formulas: testada direto na funcao, nos dois sentidos.
+  totalCasos += 1;
+  if (!htmlTokenComAspaSimples(`htmlFonte = "font-family:'Segoe UI',Arial;"`)
+      || htmlTokenComAspaSimples(`htmlFonte = "font-family:Segoe UI,Arial;"`)) {
+    console.error('AUTOTESTE FALHOU: a regra "html* com aspa simples" nao discrimina os dois casos');
+    ok = false;
+  }
   return ok;
 }
 
