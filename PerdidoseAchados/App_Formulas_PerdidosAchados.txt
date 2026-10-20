@@ -1,0 +1,169 @@
+// ===== Contexto de execução =====
+varHub = Param("HUB");;
+
+// ===== Aeroportos (tabela estática) =====
+colAeros =
+Table(
+    {IATA: "GYN"; ICAO: "SBGO"; Bloco: "CENTRAL"; Aeroporto: "GOIÂNIA"; Cluster: "GOIÂNIA"};
+    {IATA: "IMP"; ICAO: "SBIZ"; Bloco: "CENTRAL"; Aeroporto: "IMPERATRIZ"; Cluster: "GOIÂNIA"};
+    {IATA: "PMW"; ICAO: "SBPJ"; Bloco: "CENTRAL"; Aeroporto: "PALMAS"; Cluster: "GOIÂNIA"};
+    {IATA: "PLU"; ICAO: "SBBH"; Bloco: "CENTRAL"; Aeroporto: "PAMPULHA"; Cluster: "GOIÂNIA"};
+    {IATA: "PNZ"; ICAO: "SBPL"; Bloco: "CENTRAL"; Aeroporto: "PETROLINA"; Cluster: "SÃO LUÍS"};
+    {IATA: "SLZ"; ICAO: "SBSL"; Bloco: "CENTRAL"; Aeroporto: "SÃO LUIS"; Cluster: "SÃO LUÍS"};
+    {IATA: "THE"; ICAO: "SBTE"; Bloco: "CENTRAL"; Aeroporto: "TERESINA"; Cluster: "SÃO LUÍS"};
+    {IATA: "BFH"; ICAO: "SBBI"; Bloco: "SUL"; Aeroporto: "BACACHERI"; Cluster: "CURITIBA"};
+    {IATA: "CWB"; ICAO: "SBCT"; Bloco: "SUL"; Aeroporto: "CURITIBA"; Cluster: "CURITIBA"};
+    {IATA: "JOI"; ICAO: "SBJV"; Bloco: "SUL"; Aeroporto: "JOINVILLE"; Cluster: "CURITIBA"};
+    {IATA: "NVT"; ICAO: "SBNF"; Bloco: "SUL"; Aeroporto: "NAVEGANTES"; Cluster: "CURITIBA"};
+    {IATA: "BGX"; ICAO: "SBBG"; Bloco: "SUL"; Aeroporto: "BAGÉ"; Cluster: "FOZ DO IGUAÇU"};
+    {IATA: "IGU"; ICAO: "SBFI"; Bloco: "SUL"; Aeroporto: "FOZ DO IGUAÇU"; Cluster: "FOZ DO IGUAÇU"};
+    {IATA: "LDB"; ICAO: "SBLO"; Bloco: "SUL"; Aeroporto: "LONDRINA"; Cluster: "FOZ DO IGUAÇU"};
+    {IATA: "PET"; ICAO: "SBPK"; Bloco: "SUL"; Aeroporto: "PELOTAS"; Cluster: "FOZ DO IGUAÇU"};
+    {IATA: "URG"; ICAO: "SBUG"; Bloco: "SUL"; Aeroporto: "URUGUAIANA"; Cluster: "FOZ DO IGUAÇU"}
+);;
+
+// ===== Usuário =====
+// Parâmetro vindo do hub; se ausente, cai no usuário logado.
+varIdUser =
+Coalesce(
+    IfError(Value(Param("USUARIO")); Blank());
+    LookUp(User; usrNome = User().FullName).ID
+);;
+
+varDadosUser = LookUp(User; ID = Value(varIdUser));;
+varDadosAeroUser = LookUp(colAeros; Aeroporto = varDadosUser.Aeroporto);;
+
+varNomeUser = varDadosUser.usrNome;;
+varEmailUser = varDadosUser.Email;;
+varFuncaoUser = varDadosUser.Funcao;;
+varBlocoUser = varDadosUser.Bloco;;
+varClusterUser = varDadosUser.Cluster;;
+varAeroUser = varDadosUser.Aeroporto;;
+varPerfilUser = varDadosUser.Perfil;;
+varAutUser = varDadosUser.Autorizacao;;
+varICAOUser = varDadosAeroUser.ICAO;;
+varIATAUser = varDadosAeroUser.IATA;;
+
+varFotoUser =
+IfError(
+    UsuáriosdoOffice365.UserPhoto(
+        First(UsuáriosdoOffice365.SearchUser({searchTerm: varNomeUser})).Id
+    );
+    Blank()
+);;
+
+// ===== Versão do app =====
+var_ultimaVersao =
+Value(
+    First(
+        Sort(tbl_controle_versoes; ID; SortOrder.Descending)
+    ).Numero_versao
+);;
+// ===== Design System ASUR Brasil — tokens =====
+// Mesma fonte do projeto "Mapa de Alocacao" (AppFormulas_Mapa.fx.md, secao 7).
+// Nenhuma tela deve declarar cor literal: trocar a marca = editar so este bloco.
+
+// Hex — usados dentro do HTML dos HtmlViewer
+hxPrimaria        = "#0A5A66";;   // verde-petroleo institucional ASUR
+hxPrimariaEscura  = "#06424B";;
+hxPrimariaClara   = "#E3F1F3";;
+hxAcao            = "#007382";;   // teal de acao (botao primario do Mapa)
+hxFundo           = "#F5F8F9";;
+hxBorda           = "#B9D6DB";;
+hxTexto           = "#1E293B";;
+hxTextoFraco      = "#64748B";;
+hxVerde           = "#15803D";;
+hxAmbar           = "#B45309";;
+hxVermelho        = "#B91C1C";;
+hxTextoBarra      = "#D6DDE0";;   // texto sobre fundo escuro — nunca branco puro
+
+// Cores dos controles nativos — derivadas dos hex acima, nunca redigitadas
+thmPrimaria       = ColorValue(hxPrimaria);;
+thmPrimariaEscura = ColorValue(hxPrimariaEscura);;
+thmPrimariaClara  = ColorValue(hxPrimariaClara);;
+thmAcao           = ColorValue(hxAcao);;
+thmFundo          = ColorValue(hxFundo);;
+thmBorda          = ColorValue(hxBorda);;
+thmTexto          = ColorValue(hxTexto);;
+thmTextoFraco     = ColorValue(hxTextoFraco);;
+thmVerde          = ColorValue(hxVerde);;
+thmAmbar          = ColorValue(hxAmbar);;
+thmVermelho       = ColorValue(hxVermelho);;
+thmTextoBarra     = ColorValue(hxTextoBarra);;
+
+
+// ===== Destinacao final — PRO Perdidos e Achados Rev. 03 =====
+// Plano em PLANO-DESTINACAO-FINAL.md. As tres listas abaixo sao as unicas
+// fontes: tela nenhuma deve repetir categoria, motivo ou modalidade.
+
+// Categorias que PODEM ser doadas. E a regra dos itens 5.13 e 5.16 do PRO
+// (nada de eletronicos nem documentos), que ate 20/10/2026 vivia escrita a mao
+// dentro da ScreenInventarioSeparar. Nao doavel = o que NAO esta aqui, entao
+// categoria nova nasce fora da doacao ate alguem decidir o contrario.
+colCatDoaveis =
+Table(
+    {Value: "Artigos religiosos"};
+    {Value: "Artigos sexuais"};
+    {Value: "Bagagem"};
+    {Value: "Bebidas/Alimentos"};
+    {Value: "Bijuterias/Joias"};
+    {Value: "Cama, mesa e banho"};
+    {Value: "Cortantes"};
+    {Value: "Ferramenta"};
+    {Value: "Fumígeno"};
+    {Value: "Infantil"};
+    {Value: "Itens esportivos"};
+    {Value: "Itens médico"};
+    {Value: "Objetos de arte"};
+    {Value: "Óculos"};
+    {Value: "Papelaria"};
+    {Value: "Pessoais"};
+    {Value: "Pet"};
+    {Value: "Produtos de uso pessoal"};
+    {Value: "Produtos químicos"};
+    {Value: "Regionais"};
+    {Value: "Souvenir"};
+    {Value: "Veículo"};
+    {Value: "Vestuário"}
+);;
+
+// Modalidades de destinacao final gravadas em dest_modalidade.
+// O item 5.12 do PRO lista Devolucao ao Usuario, Doacao, Descarte e Destruicao.
+// "Encaminhamento a Justica" e o termo que a operacao usa e que ja esta nas abas
+// da ScreenInventario; no PRO ele aparece no 5.15 como "encaminhamento a orgao
+// publico" e no 5.1.3 como Correios / Policia Federal / orgao competente.
+colDestModalidades =
+Table(
+    {Value: "Destruição"};
+    {Value: "Encaminhamento à Justiça"};
+    {Value: "Descarte"}
+);;
+
+// Motivos — alineas "a" a "j" do item 5.11, mais a hipotese do 5.14.
+// Aprovados pela Carmen Mamani Orosco em 09/10/2026.
+// Cuidado com a alinea "c": em desembarque internacional o PRO manda confirmar
+// a destinacao junto a ANVISA e ao VIGIAGRO.
+colDestMotivos =
+Table(
+    {Value: "Roupas molhadas ou contaminadas"};
+    {Value: "Peças íntimas"};
+    {Value: "Alimentos e bebidas, abertos ou fechados"};
+    {Value: "Medicamentos perecíveis ou com necessidade de refrigeração"};
+    {Value: "Itens de higiene pessoal de uso individual"};
+    {Value: "Almofadas de pescoço, tapa-olhos e travesseiros"};
+    {Value: "Fones de ouvido descartáveis"};
+    {Value: "Embalagens violadas"};
+    {Value: "Produtos com prazo de validade vencido ou ilegível"};
+    {Value: "Estado de conservação inadequado, odor forte ou contaminação aparente"};
+    {Value: "Não apresenta condições de doação"}
+);;
+
+// Status do ciclo. Dois intermediarios porque o fluxo do item 5.15 tem duas maos
+// diferentes: a Gerencia do Aeroporto aprova, o SGI Meio Ambiente executa.
+stDestAprovacao   = "Aguardando aprovação";;
+stDestDestinacao  = "Aguardando destinação";;
+
+// Quem pode registrar destinacao final. A Carmen confirmou que o acesso e
+// restrito, mas ainda nao disse a qual perfil (ponto 3 do e-mail de 09/10).
+// Ate la vale o Admin, que ja e o precedente do app. TROCAR SO AQUI.
+varPodeDestinar = varAutUser = "Admin";;

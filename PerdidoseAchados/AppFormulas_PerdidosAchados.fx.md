@@ -70,6 +70,12 @@ Coalesce(
 
 ## App.Formulas
 
+> **Para colar no Studio use o [App_Formulas_PerdidosAchados.txt](App_Formulas_PerdidosAchados.txt)**,
+> que e so o bloco abaixo, sem o markdown em volta. Ele e gerado por
+> `node gerar_formulas_txt.mjs` — rode depois de qualquer mudanca aqui, senao os
+> dois divergem. O script recusa gravar se houver parentese, chave ou aspa
+> desbalanceada, ou definicao repetida.
+
 ```
 // ===== Contexto de execução =====
 varHub = Param("HUB");;
