@@ -924,6 +924,90 @@ Screens:
                                     Width: =200
                                     X: =941
                                     Y: =755
+                              - btnExportarEleg:
+                                  Control: Button@0.0.45
+                                  Properties:
+                                    AlignInContainer: =AlignInContainer.Center
+                                    Appearance: ='ButtonCanvas.Appearance'.Secondary
+                                    BasePaletteColor: =thmPrimaria
+                                    DisplayMode: |-
+                                      =If(
+                                          varPedidoExpEleg.status = "PRONTO" Or varPedidoExpEleg.status = "PROCESSANDO",
+                                          DisplayMode.Disabled,
+                                          DisplayMode.Edit
+                                      )
+                                    FillPortions: =0
+                                    Height: =34
+                                    Icon: ="DocumentPdf"
+                                    IconStyle: ='ButtonCanvas.IconStyle'.Filled
+                                    OnSelect: |-
+                                      =Set(varUltimaAtividade, Now());
+                                      Set(
+                                          varPedidoExpEleg,
+                                          Patch(
+                                              tb_exportacaoPA,
+                                              Defaults(tb_exportacaoPA),
+                                              {
+                                                  aeroporto: Coalesce(ComboboxCanvasAeroporto_6.Selected.Value, varAeroUser),
+                                                  tipo: "ELEGIVEIS",
+                                                  categoria: ComboboxCanvasCat_7.Selected.Value,
+                                                  subcategoria: ComboboxCanvasSubCat_7.Selected.Value,
+                                                  data_de: dtpFilterInicio_6.SelectedDate,
+                                                  data_ate: dtpFilterTermino_6.SelectedDate,
+                                                  busca: SearchInput2_6.Text,
+                                                  solicitante: varNomeUser,
+                                                  status: "PRONTO",
+                                                  ativo: 1
+                                              }
+                                          )
+                                      );
+                                      Notify(
+                                          "Pedido enviado. O arquivo leva cerca de um minuto.",
+                                          NotificationType.Information
+                                      )
+                                    Text: ="Exportar Excel"
+                                    Width: =160
+                              - lblExportarEleg:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    AlignInContainer: =AlignInContainer.Center
+                                    BorderColor: =RGBA(0, 0, 0, 0)
+                                    BorderStyle: =BorderStyle.None
+                                    Color: |-
+                                      =If(
+                                          varPedidoExpEleg.status = "ERRO",
+                                          thmVermelho,
+                                          thmTextoFraco
+                                      )
+                                    FillPortions: =0
+                                    Height: =34
+                                    Size: =11
+                                    Text: |-
+                                      =Switch(
+                                          varPedidoExpEleg.status,
+                                          "PRONTO", "Na fila...",
+                                          "PROCESSANDO", "Gerando o arquivo...",
+                                          "CONCLUIDO", varPedidoExpEleg.total & " item(ns) no arquivo",
+                                          "ERRO", varPedidoExpEleg.mensagem,
+                                          ""
+                                      )
+                                    Width: =240
+                              - btnBaixarEleg:
+                                  Control: Button@0.0.45
+                                  Properties:
+                                    AlignInContainer: =AlignInContainer.Center
+                                    Appearance: ='ButtonCanvas.Appearance'.Primary
+                                    BasePaletteColor: =thmAcao
+                                    FillPortions: =0
+                                    Height: =34
+                                    Icon: ="Save"
+                                    IconStyle: ='ButtonCanvas.IconStyle'.Filled
+                                    OnSelect: |-
+                                      =Set(varUltimaAtividade, Now());
+                                      Launch(varPedidoExpEleg.arquivo_url)
+                                    Text: ="Baixar"
+                                    Visible: =varPedidoExpEleg.status = "CONCLUIDO"
+                                    Width: =120
                               - Text5_2:
                                   Control: ModernText@1.0.0
                                   Properties:
@@ -981,6 +1065,21 @@ Screens:
                   DropShadow: =DropShadow.None
                   LayoutMinHeight: =16
                   LayoutMinWidth: =16
+      - tmrExportarEleg:
+          Control: Timer@2.1.0
+          Properties:
+            AutoStart: =true
+            Duration: =5000
+            OnTimerEnd: |-
+              =If(
+                  varPedidoExpEleg.status = "PRONTO" Or varPedidoExpEleg.status = "PROCESSANDO",
+                  Set(
+                      varPedidoExpEleg,
+                      LookUp(tb_exportacaoPA, ID = varPedidoExpEleg.ID)
+                  )
+              )
+            Repeat: =true
+            Visible: =false
       - Timer2_9:
           Control: Timer@2.1.0
           Properties:

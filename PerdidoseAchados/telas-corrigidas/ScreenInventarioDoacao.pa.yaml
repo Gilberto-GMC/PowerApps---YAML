@@ -827,6 +827,90 @@ Screens:
                                     Width: =350
                                     X: =10
                                     Y: =924
+                              - btnExportarSep:
+                                  Control: Button@0.0.45
+                                  Properties:
+                                    AlignInContainer: =AlignInContainer.Center
+                                    Appearance: ='ButtonCanvas.Appearance'.Secondary
+                                    BasePaletteColor: =thmPrimaria
+                                    DisplayMode: |-
+                                      =If(
+                                          varPedidoExpSep.status = "PRONTO" Or varPedidoExpSep.status = "PROCESSANDO",
+                                          DisplayMode.Disabled,
+                                          DisplayMode.Edit
+                                      )
+                                    FillPortions: =0
+                                    Height: =34
+                                    Icon: ="DocumentPdf"
+                                    IconStyle: ='ButtonCanvas.IconStyle'.Filled
+                                    OnSelect: |-
+                                      =Set(varUltimaAtividade, Now());
+                                      Set(
+                                          varPedidoExpSep,
+                                          Patch(
+                                              tb_exportacaoPA,
+                                              Defaults(tb_exportacaoPA),
+                                              {
+                                                  aeroporto: Coalesce(ComboboxCanvasAeroporto_7.Selected.Value, varAeroUser),
+                                                  tipo: "SEPARADOS",
+                                                  categoria: ComboboxCanvasCat_8.Selected.Value,
+                                                  subcategoria: ComboboxCanvasSubCat_8.Selected.Value,
+                                                  data_de: dtpFilterInicio_7.SelectedDate,
+                                                  data_ate: dtpFilterTermino_7.SelectedDate,
+                                                  busca: SearchInput2_7.Text,
+                                                  solicitante: varNomeUser,
+                                                  status: "PRONTO",
+                                                  ativo: 1
+                                              }
+                                          )
+                                      );
+                                      Notify(
+                                          "Pedido enviado. O arquivo leva cerca de um minuto.",
+                                          NotificationType.Information
+                                      )
+                                    Text: ="Exportar Excel"
+                                    Width: =160
+                              - lblExportarSep:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    AlignInContainer: =AlignInContainer.Center
+                                    BorderColor: =RGBA(0, 0, 0, 0)
+                                    BorderStyle: =BorderStyle.None
+                                    Color: |-
+                                      =If(
+                                          varPedidoExpSep.status = "ERRO",
+                                          thmVermelho,
+                                          thmTextoFraco
+                                      )
+                                    FillPortions: =0
+                                    Height: =34
+                                    Size: =11
+                                    Text: |-
+                                      =Switch(
+                                          varPedidoExpSep.status,
+                                          "PRONTO", "Na fila...",
+                                          "PROCESSANDO", "Gerando o arquivo...",
+                                          "CONCLUIDO", varPedidoExpSep.total & " item(ns) no arquivo",
+                                          "ERRO", varPedidoExpSep.mensagem,
+                                          ""
+                                      )
+                                    Width: =240
+                              - btnBaixarSep:
+                                  Control: Button@0.0.45
+                                  Properties:
+                                    AlignInContainer: =AlignInContainer.Center
+                                    Appearance: ='ButtonCanvas.Appearance'.Primary
+                                    BasePaletteColor: =thmAcao
+                                    FillPortions: =0
+                                    Height: =34
+                                    Icon: ="Save"
+                                    IconStyle: ='ButtonCanvas.IconStyle'.Filled
+                                    OnSelect: |-
+                                      =Set(varUltimaAtividade, Now());
+                                      Launch(varPedidoExpSep.arquivo_url)
+                                    Text: ="Baixar"
+                                    Visible: =varPedidoExpSep.status = "CONCLUIDO"
+                                    Width: =120
                               - Text5_3:
                                   Control: ModernText@1.0.0
                                   Properties:
@@ -846,6 +930,21 @@ Screens:
                                     Width: =486
                                     X: =632
                                     Y: =10
+      - tmrExportarSep:
+          Control: Timer@2.1.0
+          Properties:
+            AutoStart: =true
+            Duration: =5000
+            OnTimerEnd: |-
+              =If(
+                  varPedidoExpSep.status = "PRONTO" Or varPedidoExpSep.status = "PROCESSANDO",
+                  Set(
+                      varPedidoExpSep,
+                      LookUp(tb_exportacaoPA, ID = varPedidoExpSep.ID)
+                  )
+              )
+            Repeat: =true
+            Visible: =false
       - Timer2_11:
           Control: Timer@2.1.0
           Properties:
