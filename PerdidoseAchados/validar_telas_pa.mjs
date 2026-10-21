@@ -327,6 +327,26 @@ for (const P of process.argv.slice(2)) {
   check(dupProp.length === 0,
     "nenhuma propriedade repetida no mesmo controle" +
     (dupProp.length ? " -> " + dupProp.slice(0, 6).join(", ") : ""));
+  // 22. Rectangle sem Fill nenhum. O check 18 pega Fill vazio, mas propriedade
+  // AUSENTE tambem cai no tema do Studio - foi o que pintou de roxo os separadores
+  // da ScreenInventario depois de toda a passada de paleta.
+  const semFill = [];
+  for (let i = 0; i < lines.length; i++) {
+    const m = lines[i].match(/^( *)- ([A-Za-z_][A-Za-z0-9_]*):[ ]*$/);
+    if (!m) continue;
+    if (!/Control: Rectangle@/.test(lines[i + 1] || "")) continue;
+    const ind = m[1].length;
+    let tem = false;
+    for (let k = i + 1; k < lines.length; k++) {
+      const d = lines[k].length - lines[k].replace(/^ +/, "").length;
+      if (d <= ind && lines[k].trim()) break;
+      if (d === ind + 6 && /^ *Fill: /.test(lines[k])) tem = true;
+    }
+    if (!tem) semFill.push("L" + (i + 1) + " " + m[2]);
+  }
+  check(semFill.length === 0,
+    "nenhum Rectangle sem Fill (ausente tambem cai no tema)" +
+    (semFill.length ? " -> " + semFill.slice(0, 6).join(", ") : ""));
   // 19. PA1001 YamlInvalidSyntax: valor em LINHA UNICA que contem { chave: valor }.
   // O ": " dentro das chaves faz o YAML ler o resto como mapa, e a colagem morre
   // com "While scanning a plain scalar value, found invalid mapping". A saida e

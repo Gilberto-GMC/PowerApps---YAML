@@ -636,9 +636,10 @@ Screens:
                                   Control: GroupContainer@1.5.0
                                   Variant: AutoLayout
                                   Properties:
+                                    Visible: =CountRows(Filter(col_itensDoacao, ID_fk = ThisItem.ID)) > 0
                                     DropShadow: =DropShadow.Regular
                                     Fill: =If(ThisItem.IsSelected, RGBA(0, 0, 0, 0.20), RGBA(0, 0, 0, 0.05))
-                                    Height: =CountRows(Filter(col_itensDoacao, ID_fk = ThisItem.ID)) * 50 + 11
+                                    Height: =If(CountRows(Filter(col_itensDoacao, ID_fk = ThisItem.ID)) = 0, 0, CountRows(Filter(col_itensDoacao, ID_fk = ThisItem.ID)) * 50 + 11)
                                     LayoutAlignItems: =LayoutAlignItems.Stretch
                                     LayoutDirection: =LayoutDirection.Vertical
                                     LayoutGap: =0
@@ -753,6 +754,7 @@ Screens:
                                     - Rectangle1:
                                         Control: Rectangle@2.3.0
                                         Properties:
+                                          Fill: =thmBorda
                                           OnSelect: =Select(TableItensDestinar)
                                           AlignInContainer: =AlignInContainer.Stretch
                                           FillPortions: =0
@@ -766,7 +768,7 @@ Screens:
                               LayoutMaxHeight: =
                               LayoutMaxWidth: =
                               PaddingRight: =20
-                              Text: =TableItensDestinar.AllItemsCount&" Registros"
+                              Text: =CountRows(Filter(col_perdidosFiltrados As P, !IsEmpty(Filter(col_itensDoacao, ID_fk = P.ID))))&" Registros"
                               VerticalAlign: =VerticalAlign.Middle
                               Weight: ='TextCanvas.Weight'.Semibold
                               Width: =200
@@ -800,9 +802,10 @@ Screens:
                                   Control: GroupContainer@1.5.0
                                   Variant: AutoLayout
                                   Properties:
+                                    Visible: =CountRows(Filter(col_itensDestinados, ID_fk = ThisItem.ID)) > 0
                                     DropShadow: =DropShadow.Regular
                                     Fill: =If(ThisItem.IsSelected, RGBA(0, 0, 0, 0.20), RGBA(0, 0, 0, 0.05))
-                                    Height: =CountRows(Filter(col_itensDestinados, ID_fk = ThisItem.ID)) * 50 + 11
+                                    Height: =If(CountRows(Filter(col_itensDestinados, ID_fk = ThisItem.ID)) = 0, 0, CountRows(Filter(col_itensDestinados, ID_fk = ThisItem.ID)) * 50 + 11)
                                     LayoutAlignItems: =LayoutAlignItems.Stretch
                                     LayoutDirection: =LayoutDirection.Vertical
                                     LayoutGap: =0
@@ -995,6 +998,7 @@ Screens:
                                     - Rectangle1_1:
                                         Control: Rectangle@2.3.0
                                         Properties:
+                                          Fill: =thmBorda
                                           OnSelect: =Select(TableItensDestinado)
                                           AlignInContainer: =AlignInContainer.Stretch
                                           FillPortions: =0
@@ -1008,7 +1012,7 @@ Screens:
                               LayoutMaxHeight: =
                               LayoutMaxWidth: =
                               PaddingRight: =20
-                              Text: =TableItensDestinado.AllItemsCount&" Registros"
+                              Text: =CountRows(Filter(col_perdidosDestinados As P, !IsEmpty(Filter(col_itensDestinados, ID_fk = P.ID))))&" Registros"
                               VerticalAlign: =VerticalAlign.Middle
                               Weight: ='TextCanvas.Weight'.Semibold
                               Width: =200

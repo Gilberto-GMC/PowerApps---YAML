@@ -834,3 +834,19 @@ gravar — o erro apareceria so no primeiro upload, em producao.
 
 **Regra:** lista criada pelo List_Generator que precise de anexo exige esse passo
 manual. Vale para qualquer projeto deste workspace.
+
+## Propriedade de cor AUSENTE tambem cai no tema (21/10/2026)
+
+O check 18 pega `Fill: =` **vazio**. Nao pegava `Fill` que simplesmente **nao existe**
+no controle — e o efeito e o mesmo: cor do tema do Studio, que e roxo Motiva.
+
+Apareceu nos separadores `Rectangle1` e `Rectangle1_1` da `ScreenInventario`: dois
+riscos roxos atravessando a aba DOACAO, sobrevivendo a uma passada de paleta que
+trocou 241 literais e 27 referencias ao tema.
+
+Virou o **check 22**: todo `Rectangle@` precisa declarar `Fill`. Nas 13 telas do
+projeto o total de infratores era exatamente 2 — a regra nao gera ruido.
+
+*(O Douglas chegou a mesma conclusao no Novo Hub no mesmo dia, pelo commit
+"Licao: trocar paleta nao alcanca propriedade ausente". Vale portar a regra para
+o `validate_hub.js`.)*
