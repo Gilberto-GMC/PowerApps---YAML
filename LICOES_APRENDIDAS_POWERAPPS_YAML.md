@@ -303,7 +303,8 @@ Correção: adotar o padrão já estabelecido em `Mapa de Alocação`
 (`ColorValue(hx*)`, para controle nativo). Nenhuma tela declara cor literal.
 Trocar a marca passa a ser editar um bloco no `App.Formulas`.
 
-Paleta institucional Motiva/ASUR: `#391694` primária, `#2A106E` escura,
+Paleta **Motiva** — NÃO é a da ASUR, ver a lição de 19/10/2026 no fim deste
+arquivo: `#391694` primária, `#2A106E` escura,
 `#EDE9FB` clara, `#C9C5E6` borda, `#F8FAFC` fundo, `#1E293B` texto,
 `#64748B` texto fraco, `#DD511A` ação, `#15803D`/`#B45309`/`#B91C1C`
 verde/âmbar/vermelho.
@@ -722,3 +723,608 @@ Quem tem `Tooltip` e o `Classic/Button@2.2.0` e o `Classic/Icon@2.5.0`. No
 Regra geral: **nao adivinhar propriedade**. Antes de escrever uma que voce nunca
 usou naquele tipo de controle, varrer o repositorio em busca de um controle igual
 que ja a tenha. O par entrou no check 10 do validador, que virou tabela.
+
+## `App.Formulas` e `.pa.yaml` falam dialetos diferentes (19/10/2026)
+
+Projeto: Novo Hub AirportNow, tela Login.
+
+Sintoma: ao gerar o bloco de tokens ASUR, a tela veio com `RGBA(247, 247, 247, 1)`
+— virgula entre argumentos — e o `App.Formulas` do mesmo app usa
+`RGBA(255; 255; 255; 1)` e `;;` entre declaracoes. Parecia incoerencia do app.
+
+Causa: nao e. O `.pa.yaml` e **sempre invariante** (virgula), porque e o arquivo
+de origem da tela. O `App.Formulas` e colado na barra de formulas do Studio, que
+usa o separador do **idioma do autor** — pt-BR, logo `;` entre argumentos e `;;`
+entre declaracoes.
+
+Correcao: gerar o bloco de `App.Formulas` no dialeto pt-BR e a tela em virgula,
+no mesmo pacote, sem converter um pelo outro.
+
+Validacao preventiva: antes de entregar um bloco de `App.Formulas`, conferir o
+separador de um bloco existente do mesmo app. Se o arquivo de tokens usa `;;` e
+o `.pa.yaml` usa `,`, esta certo.
+
+## Rebrand: o GUID do proprio app ja costuma existir como token (19/10/2026)
+
+Mesma tela. O botao "Atualizar para V. N" trazia
+`Launch("/providers/Microsoft.PowerApps/apps/a5af3add-...")` com o GUID digitado,
+enquanto o `App.Formulas` ja declarava `varHUB` com o mesmo valor. Ao varrer uma
+tela, procurar tambem por **identificadores** repetidos (GUID, URL do ambiente,
+nome de lista), nao so por cor: a mesma divida de literal, so que invisivel na
+busca por `RGBA(`.
+
+## ASUR e teal, Motiva e roxo — e o repositorio diz as duas coisas (19/10/2026)
+
+Projeto: Novo Hub AirportNow, tela Login.
+
+Sintoma: pedido de "trocar para as cores da ASUR" foi atendido com o roxo
+`#391694`. O usuario mandou um print da tela de inicio do Mapa publicada: teal.
+A tela inteira saiu na marca errada.
+
+Causa: duas fontes no repositorio, uma defasada, e a mais facil de achar e a
+errada. A licao de 24/09/2026 deste arquivo dizia "Paleta institucional
+Motiva/ASUR: `#391694`", e o `Mapa de Alocacao/AppFormulas_Mapa.fx.md` da branch
+`agent/mapa-alocacao-novas-funcionalidades` repete o roxo. A paleta ASUR vigente
+esta em `Mapa de Alocacao/App_Formulas_Mapa.txt` na branch **`mapa-programacao`**,
+onde vive o commit de rebrand.
+
+Paleta ASUR: `#0E7C8C` primaria, `#0A5A66` escura, `#E4F2F4` clara, `#B9D9DE`
+borda. Neutros, acao, verde/ambar/vermelho sao iguais nas duas.
+
+Correcao: trocar os quatro hex no `App.Formulas`. **Nenhuma tela mudou** — e o
+que o padrao de token compra: errar a marca inteira custa quatro linhas.
+
+Validacao preventiva, em duas frentes:
+
+1. Antes de aplicar identidade visual, ler a paleta do
+   `App_Formulas_*.txt` da branch onde o rebrand foi feito, nunca de um `.md` de
+   documentacao nem de uma licao antiga — documento envelhece, arquivo de
+   colagem nao.
+2. Quando duas fontes discordam, a que o usuario ve rodando ganha. Pedir o print
+   custa menos que refazer a tela.
+
+## pt-BR no `App.Formulas`: o separador decimal tambem muda (19/10/2026)
+
+Projeto: Novo Hub AirportNow, tela Login.
+
+Mensagem do Studio, na propriedade `DisabledFill` de `Button20_51`:
+`O nome não é válido. 'thmDesabilitadoFundo' não é reconhecido.`
+
+Enganoso: o token **estava** colado no `App.Formulas`. O que falhou foi a
+declaracao dele, e o Studio so reclama la na frente, no controle que a usa, como
+se o nome nao existisse.
+
+Causa: `thmDesabilitadoFundo = RGBA(166; 166; 166; 0.5);;`. No dialeto pt-BR o
+separador decimal e **virgula**: `0.5` nao e um numero, a declaracao inteira nao
+compila e o nome nunca passa a existir. Ja estava certo no Mapa —
+`thmVeu = RGBA(30; 41; 59; 0,42)` — e passou despercebido porque so uma linha do
+bloco tinha casa decimal.
+
+Correcao: `RGBA(166; 166; 166; 0,5);;`.
+
+Regra completa do dialeto pt-BR, que agora vale inteira:
+`;` entre argumentos, `;;` entre declaracoes, **`,` no decimal**.
+
+Validacao preventiva: no `validate_hub.js`, varrer o `App_Formulas_*.txt` atras
+de `\d+\.\d+` fora de string e comentario, e reprovar. A regra tem caso
+construido: trocar `0,5` por `0.5` tem que derrubar o validador.
+
+Licao geral: **erro de "nome nao reconhecido" em token aponta para a declaracao,
+nao para o uso.** Antes de procurar erro de digitacao no controle, conferir se a
+linha que declara o token compila.
+
+## Um `;` no lugar de `,` desliga o paralelismo do `Concurrent` (19/10/2026)
+
+Projeto: Novo Hub AirportNow, tela Home, `Function_resumo_diario_1`.
+
+Sintoma: o resumo diario demorava muito para carregar, apesar de o codigo estar
+todo dentro de um `Concurrent`.
+
+Causa: entre o `ClearCollect(col_derFluidos, ...)` e o `ClearCollect(col_incPista,
+...)` havia `;` no lugar de `,`. Em Power Fx, `a; b` dentro de um argumento e uma
+**sequencia**: os 22 ClearCollect seguintes viraram UM argumento do `Concurrent`,
+executado em serie. Nao ha erro, nao ha aviso — so lentidao.
+
+Correcao: trocar o `;` por `,`.
+
+Validacao preventiva: contar os argumentos do `Concurrent` e comparar com o numero
+de `ClearCollect` dentro dele. Divergiu, ha separador errado. Uma unica linha
+`);` deve existir no bloco: a que fecha o proprio `Concurrent`.
+
+Licao geral: em Power Fx o separador carrega semantica. `,` e `;` nao sao estilo —
+um e argumento, o outro e sequencia. Ver tambem a licao do separador decimal.
+
+## Coleta que ninguem usa: conferir o merge, nao so o `ClearCollect` (19/10/2026)
+
+Mesma tela. `col_testMotorV2` e coletado dentro do `Concurrent` (uma consulta a
+`tbl_teste_de_motores`, 100 registros) e **nao aparece** no `ClearCollect` que monta
+`col_resumoDiario`. O par `col_desHibrido`/`col_desHibridoV2` esta la, os dois. Ou
+falta incluir, e o resumo esta subcontando testes de motores, ou a coleta sobra e
+esta custando uma consulta por carga.
+
+Nao foi corrigido: as duas saidas mudam numero na tela, e isso e decisao do dono do
+dado, nao do revisor.
+
+Validacao preventiva: toda colecao criada por `ClearCollect` dentro do bloco de
+coleta tem que aparecer no merge. Comparar as duas listas e acusar a diferenca —
+nos dois sentidos.
+
+## Componente de canvas so enxerga o `App.Formulas` com `AccessAppScope: true` (19/10/2026)
+
+Projeto: Novo Hub AirportNow, componentes `MenuLateral` e `HeaderTitle`.
+
+Sintoma: depois de trocar a paleta nas telas, o menu lateral e a barra de titulo
+continuaram roxos. Nao havia literal de cor nas telas para explicar — as cores
+estavam dentro dos componentes, que o YAML da tela nao carrega.
+
+Causa, em duas camadas:
+
+1. Componente e arquivo separado (`ComponentDefinitions:`, nao `Screens:`).
+   Trocar a paleta das telas nunca alcanca o que esta dentro dele.
+2. Um componente so resolve nome do `App.Formulas` quando tem
+   `AccessAppScope: true`. O `MenuLateral` tinha (por isso ja usava `varHUB` e
+   `colAeros`); o `HeaderTitle` nao tinha, e qualquer `thmPrimaria` ali dentro
+   daria "o nome nao e reconhecido" — o mesmo erro enganoso do separador decimal.
+
+Correcao: ligar `AccessAppScope: true` no componente.
+
+Alternativa, quando o Studio recusar app scope (componente vindo de biblioteca):
+declarar a cor como propriedade de entrada com `Default: =thmPrimaria`. O default
+e avaliado no escopo do **host**, entao resolve mesmo sem app scope, e as telas
+que ja usam o componente nao precisam passar nada.
+
+Validacao preventiva: em arquivo de componente, se houver `thm*`/`hx*` no corpo e
+nao houver `AccessAppScope: true`, reprovar.
+
+Licao geral: **"trocar a paleta do app" nao termina nas telas.** Levantar tambem
+os componentes, e lembrar que cada um tem seu proprio arquivo e seu proprio
+acesso ao escopo do app.
+
+## PA2231 — `Default` vazio em propriedade de entrada de componente (19/10/2026)
+
+Projeto: Novo Hub AirportNow, componentes `HeaderTitle` e `MenuLateral`.
+
+Mensagem do Studio na colagem, uma por propriedade, e o componente inteiro e
+recusado:
+`error PA2231 : Custom input property of kind 'Input' requires a non-empty
+'Default' formula.`
+
+Causa: `Default: =` (vazio) em `CustomProperties` de `PropertyKind: Input`.
+O detalhe que engana: **o componente roda assim hoje no app**. O Studio aceita o
+vazio na interface de propriedades e recusa na colagem de codigo-fonte. Entao
+exportar e reimportar o mesmo componente, sem alterar nada, ja falha.
+
+Correcao, mantendo `IsBlank()` verdadeiro — que e o que o codigo testa:
+
+| DataType | Default |
+| --- | --- |
+| Text | `=""` |
+| Screen | `=If(false, Home)` |
+
+**`=Blank()` NAO serve para `Screen`**: o Studio responde `Valor Control
+esperado` — `Blank()` nao carrega tipo de controle. `If(false, Home)` resolve os
+dois lados de uma vez: o tipo vem do ramo verdadeiro (uma tela que existe), e o
+valor e Blank porque a condicao e falsa.
+
+`IsBlank("")` e `IsBlank(If(false, Home))` sao os dois verdadeiros, entao ramos
+como `If(!IsBlank(Comp.ScreenNavigator), Navigate(...), Back())` continuam caindo
+no mesmo lado. Trocar por uma tela de verdade no default quebraria o `Back()` de
+toda tela que nao passa a propriedade.
+
+Validacao preventiva: dentro de `CustomProperties`, reprovar `Default: =` vazio
+quando o `PropertyKind` daquela propriedade for `Input`. **Nao** vale para
+`Default: =` de controle (`Classic/TextInput`, por exemplo), que e legitimo — a
+regra tem que olhar o escopo, nao a linha.
+
+## Recolar a definicao de um componente apaga as instancias dele nas telas (19/10/2026)
+
+Projeto: Novo Hub AirportNow, `MenuLateral` na tela Home.
+
+Sintoma: depois de recolar o componente `MenuLateral`, o menu lateral ficou
+vazio — so o hamburguer e o rotulo de versao, que sao da tela. A colecao
+`col_menu` tinha 12 linhas, o login estava feito, as variaveis preenchidas.
+O controle `MenuLateral_1` simplesmente nao existia mais na arvore.
+
+Causa: colar `ComponentDefinitions:` substitui a definicao, e a instancia que
+estava na tela nao sobrevive. A tela continua valida, so que sem aquele filho.
+
+Correcao: recolar a tela depois do componente. O bloco da instancia
+(`Control: CanvasComponent` + `ComponentName:`) volta com todas as ligacoes.
+
+**Ordem de colagem, agora completa e obrigatoria:**
+
+1. `App.Formulas` — senao nenhum token existe;
+2. componentes — senao a instancia nao tem o que referenciar;
+3. telas — por ultimo, sempre, e **de novo** toda vez que um componente que elas
+   usam for recolado.
+
+Diagnostico que economiza tempo: antes de culpar dado ou variavel, conferir se o
+controle ainda esta na arvore. Tres sessoes de investigacao foram gastas em
+colecao vazia, login e escopo de componente — e o controle e que tinha sumido.
+
+## A colagem de YAML descarta instancia de componente (19/10/2026)
+
+Projeto: Novo Hub AirportNow, `MenuLateral` na tela Home.
+
+**Correcao da licao anterior**: nao foi recolar o componente que apagou a
+instancia. A instancia **nunca e colada**. O Studio descarta silenciosamente o
+bloco
+
+```yaml
+- MenuLateral_1:
+    Control: CanvasComponent
+    ComponentName: MenuLateral
+```
+
+sem erro, sem aviso, sem PA. A tela cola inteira e aparentemente certa; o filho
+some. A exportacao produz esse bloco, a colagem nao o aceita de volta —
+exportar e reimportar a mesma tela ja perde o componente.
+
+Prova: `SidebarContainerInterno` ficou com `Icon11` e `TextCanvas8`, e o
+`MenuLateral_1` nao estava na arvore, enquanto o bloco estava no arquivo colado.
+
+Correcao: reinserir a instancia a mao (Inserir → Personalizado → o componente),
+posicionar na ordem certa dentro do container AutoLayout e preencher as
+propriedades personalizadas. Ver
+`Novo Hub AirportNow/INSTANCIA_MENULATERAL.md` para o passo a passo e os valores.
+
+Validacao preventiva: ao entregar tela que contem `Control: CanvasComponent`,
+avisar na secao de checklist que aquele controle **nao vem na colagem** e listar
+as propriedades a preencher. Sem isso o usuario perde o componente e procura o
+defeito em dado, login e escopo — foi o que aconteceu aqui.
+
+Licao geral, cara: **"a tela colou sem erro" nao quer dizer que a tela chegou
+inteira.** Depois de colar, conferir a arvore contra a lista de controles do
+arquivo. Um `grep` de `- \w+:` no YAML da a lista esperada.
+
+## Remendar atributo de SVG com regex quebra o arquivo (19/10/2026)
+
+Projeto: Novo Hub AirportNow, logo da ASUR na barra.
+
+Sintoma: o SVG gerado nao renderizava — icone de imagem quebrada, e nenhum erro
+no servidor (HTTP 200, `image/svg+xml`). Visto so ao abrir o arquivo direto no
+navegador: `error on line 1 at column 4193: Attribute fill redefined`.
+
+Causa: a troca de cor foi feita com regra de texto, acrescentando
+`fill="#fff"` na frente de um `<path>` que ja carregava um `fill` mais adiante na
+mesma tag. Dois `fill` na mesma tag e erro de XML, nao aviso — e o navegador
+para no primeiro erro.
+
+Correcao: nao remendar atributo. Para cada tag, **remover todos** os `fill` e
+`stroke` e reescrever um so:
+
+```js
+s = s.replace(/<path\b([^>]*)\/>/g, (todo, attrs) => {
+  const temNone = /\sfill="none"/.test(attrs);
+  const a = attrs.replace(/\sfill="[^"]*"/g, "").replace(/\sstroke="[^"]*"/g, "");
+  return `<path${temNone ? ' fill="none" stroke="#fff"' : ' fill="#fff"'}${a}/>`;
+});
+```
+
+Validacao preventiva: depois de gerar SVG, **abrir o arquivo no navegador**, nao
+so dentro de um `<img>`. Em `<img>` o erro de XML aparece como imagem quebrada,
+sem mensagem; aberto direto, o parser diz a linha e a coluna.
+
+Licao geral, a mesma do `\b` em heredoc: para mexer em marcacao, regex de texto
+e a ferramenta errada quando o que se quer e um atributo. Reescrever a tag
+inteira e mais seguro que emendar um pedaco dela.
+
+## Recorte da carga inicial: o eixo e a data, nao o aeroporto (20/10/2026)
+
+Projeto: Novo Hub AirportNow, tela Home, `Function_resumo_diario_1`.
+
+Sintoma: resumo diario lento. O pedido foi "filtrar pelo aeroporto do usuario".
+
+O que a leitura mostrou: as 33 listas eram carregadas como
+`FirstN(Sort(lista, ID, Desc), 100)` — os 100 mais recentes de **todos** os 19
+aeroportos — e o recorte por aeroporto acontecia depois, em memoria. Ate 3.300
+linhas por carga. E nao era so lentidao: quando uma lista tinha mais de 100
+registros recentes de outros aeroportos, os do usuario ficavam fora do corte e o
+total na tela saia **menor do que a realidade**.
+
+Por que filtrar por aeroporto nao resolve:
+
+- so delega para perfil Base (1 aeroporto). Bloco tem 9, Sede tem 19, e `in`
+  sobre colecao nao delega no SharePoint;
+- as listas guardam o aeroporto em 8 colunas de nomes diferentes (`Aeroporto`,
+  `derFlu_aeroporto`, `AEROPORTO`, `field_6`, ...), umas por nome e outras por
+  IATA — dai o `StartsWith` duplo no filtro em memoria.
+
+Correcao: recortar por **data**, que delega para todo mundo igual e combina com
+o que a tela mostra ("Total de Registros do Dia"):
+
+```powerfx
+With(
+    {LIMIT: 100, DESDE: DateAdd(Today(), -7, TimeUnit.Days)},
+    ... FirstN(Sort(Filter(lista, Criado >= DESDE), ID, SortOrder.Descending), LIMIT) ...
+)
+```
+
+Sete dias porque o seletor de data ja mostrava `FirstN(..., 7)`: as duas pontas
+passam a usar a mesma janela. O recorte por aeroporto continua em memoria, agora
+sobre um conjunto pequeno — e Bloco e Sede seguem vendo tudo o que e deles.
+
+Pre-requisito de ambiente: **indice na coluna `Criado`** de cada lista. Sem
+indice, lista acima de 5.000 itens faz o SharePoint recusar a consulta filtrada,
+e a troca sai de lentidao para erro.
+
+Validacao preventiva: reprovar `Sort(<lista>, ID, ...)` sem `Filter` em volta,
+dentro de carga inicial. Colecao em memoria (`col_*`) fica de fora da regra.
+
+Licao geral: quando pedirem para filtrar a carga, **escolher o eixo que delega
+para todos os perfis**, nao o que parece mais natural. Um filtro que delega so
+para parte dos usuarios e pior que nenhum: esconde o custo no perfil que mais
+carrega.
+
+## Token de HTML com aspa simples quebra o `style='...'` em silencio (20/10/2026)
+
+Projeto: Novo Hub AirportNow, telas Login e Home.
+
+Sintoma: na Login nova, o titulo "Airport Now" saiu pequeno e alinhado a
+esquerda, e o botao Entrar sem degrade — so o texto. A faixa diagonal, que nao
+usa o token, saiu certa. Visto ao renderizar as mesmas strings HTML num
+navegador antes de entregar.
+
+Causa: `htmlFonte = "font-family:'Segoe UI',Arial,sans-serif;..."`, usado como
+`"<div style='" & htmlFonte & " font-size:34px; ...'>"`. A aspa simples do nome
+da fonte fecha o atributo `style` no meio; tamanho, cor e degrade viram lixo de
+atributo e sao descartados. Sem erro, sem aviso.
+
+O mesmo defeito estava nos templates do resumo diario da Home desde a
+tokenizacao. Passou despercebido porque la o estilo que importa esta nos
+elementos internos; so o `div` externo perdia fonte, cor e padding.
+
+Correcao: tirar a aspa do valor — `font-family:Segoe UI,Arial,sans-serif;`.
+CSS aceita nome de familia com varias palavras sem aspa. Conserta as duas telas
+sem mexer em nenhuma.
+
+Validacao preventiva: reprovar token `html*` no `App.Formulas` cujo valor
+contenha aspa simples. Testado nos dois sentidos — com a aspa de volta, o
+validador reprova; sem ela, passa.
+
+Licao geral: **token que vai ser concatenado dentro de outra linguagem tem que
+respeitar a aspa daquela linguagem.** O `htmlFonte` veio do Mapa, onde e usado
+dentro de `style="..."` (aspa dupla escapada). Copiar o token sem copiar o
+jeito de usar foi o erro.
+
+## Popup que pisca: condicao de tela sobre formula nomeada assincrona (20/10/2026)
+
+Projeto: Novo Hub AirportNow, tela Login, `ContainerVesaoDesatualizada`.
+Relatado por usuario no app publicado: "aparece uma msg muito louca aqui, mas
+ela some rapida".
+
+Condicao original: `Visible: =var_versao < var_ultimaVersao`, com
+
+- `var_versao = 1667` — constante no `App.Formulas`;
+- `var_ultimaVersao` — formula nomeada que consulta `tbl_controle_versoes`.
+
+Duas causas somadas, e so a primeira e obvia:
+
+1. **Formula nomeada que consulta lista nao responde no primeiro render.** Ate a
+   consulta voltar, `var_ultimaVersao` e Blank, e a comparacao com Blank nao
+   avalia como o autor imagina. Condicao de `Visible` ligada a consulta tem que
+   exigir que ela ja tenha respondido.
+2. **A primeira passagem e descartavel.** O `App.OnStart` faz
+   `If(IsBlank(Param("hidenavbar")); Launch(<o proprio app>?hidenavbar=true; ...;
+   LaunchTarget.Replace))`. Abrir o app sem o parametro renderiza a tela inteira
+   e, logo depois, joga tudo fora e recarrega. Tudo que pintar nessa passagem
+   aparece e some — que e exatamente o sintoma relatado.
+
+Correcao:
+
+```powerfx
+!IsBlank(Param("hidenavbar")) And
+!IsBlank(var_ultimaVersao) And
+var_versao < var_ultimaVersao
+```
+
+Terceiro ponto, que a correcao NAO resolve: `var_versao` e constante digitada no
+`App.Formulas`. Quem acrescenta linha em `tbl_controle_versoes` sem republicar
+com o numero novo faz o aviso disparar, corretamente, para todo mundo. Antes de
+tratar como defeito de tela, conferir o maior `Numero_versao` da lista.
+
+Licao geral: **num app que se relanca no OnStart, a primeira passagem e um
+rascunho.** Qualquer popup, notificacao ou carga que acontecer nela e trabalho
+jogado fora — e, se for visivel, vira susto para o usuario.
+
+## `HtmlViewer` com conteudo do tamanho do controle ganha barra de rolagem (20/10/2026)
+
+Projeto: Novo Hub AirportNow, tela Login.
+
+Sintoma: depois de colar a Login nova, barra de rolagem vertical na foto e no
+botao Entrar, com setinhas de rolagem ao lado do botao. O conteudo aparecia
+certo; a barra e que sobrava.
+
+Causa: o HTML foi escrito como `<div style='width:" & Self.Width & "px; height:"
+& Self.Height & "px; ...'>`. O corpo do HTML renderizado pelo `HtmlViewer` tem
+margem propria, entao um filho com exatamente a largura do controle estoura, e o
+viewer desenha barra. Zerar `PaddingLeft/Right/Top/Bottom` no controle nao
+resolve: a margem e do documento, nao do controle.
+
+Correcao: tirar o filho do fluxo, com `position:fixed` e as quatro bordas em 0:
+
+```
+position:fixed; top:0; left:0; right:0; bottom:0; overflow:hidden;
+```
+
+Assim o div preenche a area visivel do viewer, ignora a margem do corpo e nunca
+estoura. Centralizacao passa a ser `display:flex; align-items:center;
+justify-content:center;` — `line-height` igual a altura deixa de ser necessario.
+
+Validacao preventiva: ao gerar HTML para `HtmlViewer`, renderizar cada trecho
+num iframe do tamanho exato do controle e comparar `scrollWidth`/`scrollHeight`
+com `clientWidth`/`clientHeight`. Se estourar, o viewer vai desenhar barra.
+
+Licao relacionada: conteudo mais alto que o controle tambem gera barra por
+outro caminho — na mesma tela, o painel do formulario estava com
+`LayoutMinHeight: =400` enquanto o conteudo somava ~430 depois do titulo e dos
+campos maiores. Ao aumentar controle dentro de AutoLayout, refazer a conta da
+altura do container.
+
+## `position:fixed` em `HtmlViewer` pinta a tela inteira (20/10/2026)
+
+Projeto: Novo Hub AirportNow, tela Login.
+
+Sintoma: a faixa diagonal cobriu o app inteiro — campos, botao e card sumiram
+atras de um degrade em tela cheia.
+
+Causa: o `HtmlViewer` do Power Apps **injeta o conteudo no DOM do proprio app**,
+nao num iframe. Entao `position:fixed` se ancora na janela toda, nao no
+controle, e o div escapa dos limites do `HtmlViewer`.
+
+Erro de metodo meu, que vale registrar: testei o HTML dentro de um `<iframe>` do
+tamanho do controle, onde `position:fixed` se ancora no iframe e o resultado
+parecia certo. **Iframe nao reproduz o `HtmlViewer`.** Verificacao em navegador
+so vale para o que e puramente visual (cor, fonte, degrade), nunca para
+posicionamento que dependa do contexto de empilhamento.
+
+Correcao: nao usar `HtmlViewer` para elemento grafico que precise preencher o
+controle. Gerar um **SVG com `preserveAspectRatio="none"`** e usar `Image` com
+`ImagePosition.Fill`. O `Image` estica sem margem, sem barra de rolagem e sem
+escapar do controle. Degrade, forma diagonal e canto arredondado saem todos em
+SVG.
+
+`HtmlViewer` fica para o que e mesmo texto — como o titulo bicolor, que `Label`
+nao consegue fazer. E, nele, o div **nao** leva `width`/`height` explicitos:
+sem tamanho, nao estoura e nao gera barra.
+
+## Trocar a paleta nao alcanca propriedade que nao esta no YAML (21/10/2026)
+
+Projeto: Novo Hub AirportNow, tela ScreenServiceDeskForm.
+
+Sintoma: depois de tokenizar a tela inteira para a paleta ASUR, o combo de
+usuario aparecia **sem nenhum nome** na lista, a seta do combo ficava branca
+sobre um quadrado roxo, e o campo de descricao pintava de lilas ao passar o
+mouse. Os literais de cor tinham sumido do arquivo e o validador passava.
+
+Causa: **propriedade de cor que nao esta escrita no YAML pega o valor do TEMA
+do Studio**, que continua sendo o Motiva. Nao havia literal roxo para procurar
+porque nao havia propriedade nenhuma. Em concreto, faltavam:
+
+- `Color` nos dois `Classic/ComboBox` e no `Classic/TextInput` — e a cor do
+  **texto dos itens**. Os nomes estavam na lista o tempo todo, escritos numa
+  cor ilegivel sobre o fundo claro;
+- `ChevronBackground` / `ChevronHoverBackground` nos combos — `ChevronFill` e a
+  cor da **seta**, nao do quadrado atras dela;
+- `HoverFill`, `PressedFill` e os `Disabled*`, que so apareciam na interacao.
+
+Erro de metodo meu, e o mesmo tres vezes seguidas: eu procurava roxo no arquivo
+e tokenizava **o que existia**, enquanto o defeito estava **no que nao existia**.
+Diagnostico so por leitura do YAML nao enxerga ausencia.
+
+Diagnostico errado pelo caminho: concluí que `Choices()` da coluna de pessoa
+voltava vazio e cheguei a propor trocar a fonte de dados. O print do Studio
+mostrou a tabela cheia, com `DisplayName`, email e cargo. **Lista que parece
+vazia na tela pode estar cheia e ilegivel** — conferir o valor antes de culpar
+a consulta.
+
+Mesma familia do `Button@0.0.45` sem `BasePaletteColor` e do `Progress@1.1.34`,
+que so tem cor pelo tema.
+
+Verificacao preventiva: regra 7a do `validate_hub.js`, com autoteste —
+controle classico que declara `Fill`/`SelectionFill` e nao declara `Color`, ou
+que declara `ChevronFill` sem `ChevronBackground`, reprova. Na primeira
+execucao ela ja encontrou um campo que eu tinha deixado passar.
+
+Ao trocar a identidade visual de uma tela, **listar as propriedades de cor que
+o controle aceita** e declarar as que faltam, em vez de so substituir as que
+ja estao la.
+
+## `Classic/ComboBox` com mais de um `DisplayFields` rende a lista vazia (21/10/2026)
+
+Projeto: Novo Hub AirportNow, tela ScreenServiceDeskForm, combo de usuario.
+
+Sintoma: a lista abre com a altura certa, com barra de rolagem, e **sem nenhuma
+linha visivel**. Nenhum erro no Studio.
+
+Causa observada: `DisplayFields` com mais de um campo. Tres observacoes, com o
+resto do controle igual:
+
+- `["DisplayName","DisplayName","Picture"]` -> vazio (estado original);
+- `["DisplayName"]` -> nomes aparecem (confirmado em tela);
+- `["DisplayName","Email"]` -> vazio de novo.
+
+A terceira foi uma regressao minha: troquei um estado **ja confirmado
+funcionando** por dois campos so para mostrar nome e e-mail juntos. Trocar o
+que esta comprovado por uma melhoria cosmetica custa um ciclo inteiro de
+ida e volta com quem testa.
+
+Correcao: manter **um unico** `DisplayFields`. Para mostrar dois dados na
+mesma linha, montar a coluna antes, em `Items`, e exibir so ela:
+
+    Items: AddColumns(Choices([@Lista].Coluna); NomeEmail; DisplayName & " — " & Email)
+    DisplayFields: ["NomeEmail"]
+
+Atencao ao `Update` quando a coluna e do tipo Pessoa: o registro selecionado
+passa a ter uma coluna a mais, e gravar isso direto no campo pode ser recusado.
+Nesse caso o `Update` volta a buscar o registro limpo pelo `Claims`.
+
+`SearchFields` aceita varios campos sem esse problema — a busca por e-mail
+continua funcionando mesmo exibindo so o nome.
+
+Verificacao preventiva: regra 7c do `validate_hub.js`, com autoteste.
+
+## Combo de pessoa: texto branco e `Choices()` que nao ve o diretorio (21/10/2026)
+
+Projeto: Novo Hub AirportNow, tela ScreenServiceDeskForm, combo de usuario.
+Confirmado em tela pelo Douglas.
+
+Foram **duas** causas distintas, uma atras da outra.
+
+### 1. Lista com linhas, sem texto
+
+Sintoma: a lista abre, tem barra de rolagem, a faixa de hover acende numa
+linha — e nenhum texto aparece.
+
+Causa: `SelectionColor` e `PressedColor` estavam em branco sobre fundo claro.
+`SelectionColor` **ja vinha branco do YAML original**, nao foi a tokenizacao
+que introduziu. Em `Classic/ComboBox` as linhas da lista acabam desenhadas com
+essas cores, nao so o item selecionado.
+
+Correcao: nenhuma cor de **texto** do combo em branco; os fundos de estado
+(`SelectionFill`, `PressedFill`, `HoverFill`) em tom claro. Assim nao existe
+combinacao branco-sobre-claro em estado nenhum.
+
+Metodo que finalmente funcionou: parar de trocar **uma propriedade por ciclo**
+e **eliminar a classe inteira** de uma vez. Antes disso eu gastei tres
+colagens do Douglas testando hipoteses separadas, e duas estavam erradas —
+inclusive uma que quebrou o que ja funcionava. Quando o sintoma nao identifica
+a propriedade, vale mais fechar todas as saidas numa tacada.
+
+Sinal que valeu ouro no print: **a faixa de hover acendendo**. Ela prova que a
+linha existe e recebe evento, e elimina de uma vez `Items`, `DisplayFields` e
+delegacao. Procurar esse tipo de evidencia antes de teorizar.
+
+### 2. Faltava gente, e a busca nao achava o proprio usuario
+
+Causa: `Choices([@Lista].ColunaPessoa)` **nao consulta o diretorio da
+empresa**. Devolve apenas quem o site do SharePoint ja conhece — quem ja foi
+gravado em algum campo de pessoa daquele site. Usuario novo nunca aparece.
+
+Correcao: `Items` vem do conector de usuarios, filtrado pelo que a pessoa
+digita:
+
+    AddColumns(
+        UsuáriosdoOffice365.SearchUser({searchTerm: Self.SearchText; top: 50});
+        NomeEmail; DisplayName & " — " & Mail
+    )
+
+No diretorio o campo de e-mail chama **`Mail`**, nao `Email` — conferir todas
+as referencias de uma vez, senao metade do formulario fica com o campo errado.
+
+O campo Pessoa exige registro no formato do SharePoint, e o diretorio nao
+devolve `Claims`. Montar no `Update`:
+
+    {
+        '@odata.type': "#Microsoft.Azure.Connectors.SharePoint.SPListExpandedUser";
+        Claims: "i:0#.f|membership|" & Lower(Combo.Selected.Mail);
+        DisplayName: Combo.Selected.DisplayName;
+        Email: Combo.Selected.Mail
+    }
+
+O formato do `Claims` nao se chuta: ele aparece na previa do proprio
+`Choices()` na barra de formulas do Studio.
+
+Cuidado herdado: `DefaultSelectedItems` apontando para `Parent.Default` deixa
+de casar, porque o valor salvo tem `Claims` e os itens do diretorio nao. Em
+formulario novo nao aparece; em tela de edicao, o combo abre vazio.
