@@ -178,6 +178,20 @@ function validar(arquivo) {
     }
   }
 
+  // 7c. Classic/ComboBox com mais de um DisplayFields rende a lista VAZIA, sem
+  // erro nenhum no Studio. Visto tres vezes no combo de usuario do Service Desk.
+  // Para mostrar dois dados, concatenar em Items e exibir um campo so.
+  for (const b of blocos) {
+    if (!/Control:\s*Classic\/ComboBox@/.test(b)) continue;
+    const m = b.match(/DisplayFields:\s*=\[([^\]]*)\]/);
+    if (!m) continue;
+    const campos = m[1].split(',').filter((x) => x.trim().length);
+    if (campos.length > 1) {
+      const nome = (b.match(/- (\w+):/) || [, '?'])[1];
+      erros.push(`${path.basename(arquivo)} ${nome}: DisplayFields com ${campos.length} campos — a lista rende vazia; usar um campo so`);
+    }
+  }
+
   // 7b. Dentro do template de galeria, Parent.Width/Height nao existe — e TemplateWidth
   // /TemplateHeight. Dono da linha e a galeria MAIS INTERNA que a contem, nunca todas
   // as ancestrais (falso positivo recorrente treina o operador a ignorar o validador).
@@ -292,6 +306,17 @@ function autoteste() {
       '            Fill: =thmFundo',
       '',
     ].join('\n'), /nao Color/],
+    ['combo com varios DisplayFields', [
+      'Screens:',
+      '  L:',
+      '    Children:',
+      '      - cmbY:',
+      '          Control: Classic/ComboBox@2.4.0',
+      '          Properties:',
+      '            Color: =thmTexto',
+      '            DisplayFields: =["DisplayName","Email"]',
+      '',
+    ].join('\n'), /rende vazia/],
     ['componente sem AccessAppScope', [
       'ComponentDefinitions:',
       '  Comp1:',

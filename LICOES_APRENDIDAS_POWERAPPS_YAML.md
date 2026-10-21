@@ -1229,3 +1229,37 @@ execucao ela ja encontrou um campo que eu tinha deixado passar.
 Ao trocar a identidade visual de uma tela, **listar as propriedades de cor que
 o controle aceita** e declarar as que faltam, em vez de so substituir as que
 ja estao la.
+
+## `Classic/ComboBox` com mais de um `DisplayFields` rende a lista vazia (21/10/2026)
+
+Projeto: Novo Hub AirportNow, tela ScreenServiceDeskForm, combo de usuario.
+
+Sintoma: a lista abre com a altura certa, com barra de rolagem, e **sem nenhuma
+linha visivel**. Nenhum erro no Studio.
+
+Causa observada: `DisplayFields` com mais de um campo. Tres observacoes, com o
+resto do controle igual:
+
+- `["DisplayName","DisplayName","Picture"]` -> vazio (estado original);
+- `["DisplayName"]` -> nomes aparecem (confirmado em tela);
+- `["DisplayName","Email"]` -> vazio de novo.
+
+A terceira foi uma regressao minha: troquei um estado **ja confirmado
+funcionando** por dois campos so para mostrar nome e e-mail juntos. Trocar o
+que esta comprovado por uma melhoria cosmetica custa um ciclo inteiro de
+ida e volta com quem testa.
+
+Correcao: manter **um unico** `DisplayFields`. Para mostrar dois dados na
+mesma linha, montar a coluna antes, em `Items`, e exibir so ela:
+
+    Items: AddColumns(Choices([@Lista].Coluna); NomeEmail; DisplayName & " — " & Email)
+    DisplayFields: ["NomeEmail"]
+
+Atencao ao `Update` quando a coluna e do tipo Pessoa: o registro selecionado
+passa a ter uma coluna a mais, e gravar isso direto no campo pode ser recusado.
+Nesse caso o `Update` volta a buscar o registro limpo pelo `Claims`.
+
+`SearchFields` aceita varios campos sem esse problema — a busca por e-mail
+continua funcionando mesmo exibindo so o nome.
+
+Verificacao preventiva: regra 7c do `validate_hub.js`, com autoteste.
