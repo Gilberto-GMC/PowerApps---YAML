@@ -730,7 +730,12 @@ Screens:
                                           DisplayName: =DataSourceInfo([@tbl_ServiceDesk], DataSourceInfo.DisplayName, desk_usuario)
                                           Height: =116
                                           Required: =true
-                                          Update: =DataCardValue11_3.Selected
+                                          Update: |-
+                                            =// Sem a coluna NomeEmail: campo Pessoa recusa registro com coluna a mais.
+                                            LookUp(
+                                                Choices([@tbl_ServiceDesk].desk_usuario),
+                                                Claims = DataCardValue11_3.Selected.Claims
+                                            )
                                           Width: =Parent.Width
                                           X: =0
                                           Y: =1
@@ -764,7 +769,7 @@ Screens:
                                                 ChevronHoverFill: =thmTextoInverso
                                                 Color: =thmTexto
                                                 DefaultSelectedItems: =Parent.Default
-                                                DisplayFields: =["DisplayName"]
+                                                DisplayFields: =["NomeEmail"]
                                                 DisabledBorderColor: =thmDesabilitado
                                                 DisabledColor: =thmDesabilitado
                                                 DisabledFill: =thmDesabilitadoFundo
@@ -773,12 +778,17 @@ Screens:
                                                 HoverBorderColor: =thmPrimaria
                                                 HoverColor: =thmTexto
                                                 HoverFill: =thmPrimariaClara
-                                                Items: =Choices([@tbl_ServiceDesk].desk_usuario)
+                                                Items: |-
+                                                  =AddColumns(
+                                                      Choices([@tbl_ServiceDesk].desk_usuario),
+                                                      NomeEmail,
+                                                      DisplayName & " — " & Email
+                                                  )
                                                 PaddingLeft: =10
                                                 PressedBorderColor: =thmPrimaria
                                                 PressedColor: =thmTextoInverso
                                                 PressedFill: =thmPrimaria
-                                                SearchFields: =["DisplayName","Email"]
+                                                SearchFields: =["NomeEmail"]
                                                 SelectMultiple: =false
                                                 SelectionColor: =thmTextoInverso
                                                 SelectionFill: =thmPrimaria
