@@ -517,7 +517,7 @@ Screens:
                                                   {
                                                       locUsr: LookUp(
                                                           User,
-                                                          usrNome = varDeskUsuario
+                                                          Email = varDeskUsuEmail
                                                       )
                                                   },
                                                   If(
@@ -525,7 +525,7 @@ Screens:
                                                       Error(
                                                           {
                                                               Kind: ErrorKind.NotFound,
-                                                              Message: "Usuário não localizado no cadastro; a senha temporária não foi aplicada."
+                                                              Message: "Nenhum cadastro no AirportNow com este e-mail; a senha temporária não foi aplicada."
                                                           }
                                                       ),
                                                       Patch(
@@ -589,8 +589,16 @@ Screens:
                                       If(
                                           varDeskErroFluxo,
 
+                                          Patch(
+                                              tbl_ServiceDesk,
+                                              LookUp(
+                                                  tbl_ServiceDesk,
+                                                  desk_id = varNumChamado
+                                              ),
+                                              {desk_status: "Em atendimento"}
+                                          );
                                           Notify(
-                                              "Chamado " & Text(varNumChamado, "000000") & " registrado, mas uma etapa posterior falhou. Não envie novamente; utilize Voltar.",
+                                              "Chamado " & Text(varNumChamado, "000000") & " registrado, mas uma etapa posterior falhou. Ele voltou para a fila. Não envie novamente; utilize Voltar.",
                                               NotificationType.Warning,
                                               6000
                                           ),
@@ -756,7 +764,7 @@ Screens:
                                                 ChevronHoverFill: =thmTextoInverso
                                                 Color: =thmTexto
                                                 DefaultSelectedItems: =Parent.Default
-                                                DisplayFields: =["DisplayName"]
+                                                DisplayFields: =["DisplayName","Email"]
                                                 DisabledBorderColor: =thmDesabilitado
                                                 DisabledColor: =thmDesabilitado
                                                 DisabledFill: =thmDesabilitadoFundo
@@ -1333,6 +1341,21 @@ Screens:
                                                   "Preencha os campos obrigatórios antes de confirmar.",
                                                   NotificationType.Warning,
                                                   4000
+                                              ),
+
+                                              cmbDeskCategoria.Selected.Chave = "RESET_SENHA" &&
+                                              IsBlank(
+                                                  LookUp(
+                                                      User,
+                                                      Email = DataCardValue11_3.Selected.Email
+                                                  )
+                                              ),
+
+                                              UpdateContext({varDeskOcupadoDesde: Blank()});
+                                              Notify(
+                                                  "Esta pessoa ainda não tem cadastro no AirportNow, então não há senha para redefinir. Use outra categoria.",
+                                                  NotificationType.Warning,
+                                                  6000
                                               ),
 
                                               Set(
