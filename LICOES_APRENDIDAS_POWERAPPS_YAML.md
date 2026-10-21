@@ -809,3 +809,28 @@ do `Button@0.0.45`.
 Nao havia nenhum outro `ModernTabList` no workspace para copiar. O jeito de
 descobrir, sem adivinhar: selecionar o controle no Studio e abrir o **dropdown de
 propriedades** (canto superior esquerdo), que lista todas pelo nome real.
+
+## CORRECAO: o List_Generator cria toda lista com anexos DESLIGADOS (21/10/2026)
+
+A licao anterior, "o campo de anexos nao tem o mesmo nome em toda lista", estava
+**errada no diagnostico**. Nem `ThisItem.Anexos` nem `ThisItem.Attachments`
+funcionam em `tbl_perdidosAchadosDestinacao` porque **o campo nao existe**.
+
+O fluxo `List_Generator`, na acao `HTTP_Ajustar_Lista`, manda um MERGE com:
+
+```json
+{"__metadata":{"type":"SP.List"},"EnableAttachments":false,"MajorVersionLimit":50}
+```
+
+Toda lista que ele cria nasce sem anexos. As tres listas onde `ThisItem.Anexos`
+funciona foram criadas pela interface do SharePoint, que liga anexos por padrao.
+
+**Consequencia que ia passar despercebida:** sem anexos na lista, nao e so o
+`Default` que falha. O `Update: =<controle>.Attachments` tambem nao teria onde
+gravar — o erro apareceria so no primeiro upload, em producao.
+
+**Como resolver:** Configuracoes da lista > Configuracoes avancadas > Anexos:
+*Habilitados*. Depois disso o campo passa a existir e o `Default` volta a valer.
+
+**Regra:** lista criada pelo List_Generator que precise de anexo exige esse passo
+manual. Vale para qualquer projeto deste workspace.
