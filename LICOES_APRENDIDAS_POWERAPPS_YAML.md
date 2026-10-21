@@ -1187,3 +1187,45 @@ SVG.
 `HtmlViewer` fica para o que e mesmo texto — como o titulo bicolor, que `Label`
 nao consegue fazer. E, nele, o div **nao** leva `width`/`height` explicitos:
 sem tamanho, nao estoura e nao gera barra.
+
+## Trocar a paleta nao alcanca propriedade que nao esta no YAML (21/10/2026)
+
+Projeto: Novo Hub AirportNow, tela ScreenServiceDeskForm.
+
+Sintoma: depois de tokenizar a tela inteira para a paleta ASUR, o combo de
+usuario aparecia **sem nenhum nome** na lista, a seta do combo ficava branca
+sobre um quadrado roxo, e o campo de descricao pintava de lilas ao passar o
+mouse. Os literais de cor tinham sumido do arquivo e o validador passava.
+
+Causa: **propriedade de cor que nao esta escrita no YAML pega o valor do TEMA
+do Studio**, que continua sendo o Motiva. Nao havia literal roxo para procurar
+porque nao havia propriedade nenhuma. Em concreto, faltavam:
+
+- `Color` nos dois `Classic/ComboBox` e no `Classic/TextInput` — e a cor do
+  **texto dos itens**. Os nomes estavam na lista o tempo todo, escritos numa
+  cor ilegivel sobre o fundo claro;
+- `ChevronBackground` / `ChevronHoverBackground` nos combos — `ChevronFill` e a
+  cor da **seta**, nao do quadrado atras dela;
+- `HoverFill`, `PressedFill` e os `Disabled*`, que so apareciam na interacao.
+
+Erro de metodo meu, e o mesmo tres vezes seguidas: eu procurava roxo no arquivo
+e tokenizava **o que existia**, enquanto o defeito estava **no que nao existia**.
+Diagnostico so por leitura do YAML nao enxerga ausencia.
+
+Diagnostico errado pelo caminho: concluí que `Choices()` da coluna de pessoa
+voltava vazio e cheguei a propor trocar a fonte de dados. O print do Studio
+mostrou a tabela cheia, com `DisplayName`, email e cargo. **Lista que parece
+vazia na tela pode estar cheia e ilegivel** — conferir o valor antes de culpar
+a consulta.
+
+Mesma familia do `Button@0.0.45` sem `BasePaletteColor` e do `Progress@1.1.34`,
+que so tem cor pelo tema.
+
+Verificacao preventiva: regra 7a do `validate_hub.js`, com autoteste —
+controle classico que declara `Fill`/`SelectionFill` e nao declara `Color`, ou
+que declara `ChevronFill` sem `ChevronBackground`, reprova. Na primeira
+execucao ela ja encontrou um campo que eu tinha deixado passar.
+
+Ao trocar a identidade visual de uma tela, **listar as propriedades de cor que
+o controle aceita** e declarar as que faltam, em vez de so substituir as que
+ja estao la.
