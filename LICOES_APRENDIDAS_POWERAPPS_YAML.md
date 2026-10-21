@@ -1263,3 +1263,68 @@ Nesse caso o `Update` volta a buscar o registro limpo pelo `Claims`.
 continua funcionando mesmo exibindo so o nome.
 
 Verificacao preventiva: regra 7c do `validate_hub.js`, com autoteste.
+
+## Combo de pessoa: texto branco e `Choices()` que nao ve o diretorio (21/10/2026)
+
+Projeto: Novo Hub AirportNow, tela ScreenServiceDeskForm, combo de usuario.
+Confirmado em tela pelo Douglas.
+
+Foram **duas** causas distintas, uma atras da outra.
+
+### 1. Lista com linhas, sem texto
+
+Sintoma: a lista abre, tem barra de rolagem, a faixa de hover acende numa
+linha — e nenhum texto aparece.
+
+Causa: `SelectionColor` e `PressedColor` estavam em branco sobre fundo claro.
+`SelectionColor` **ja vinha branco do YAML original**, nao foi a tokenizacao
+que introduziu. Em `Classic/ComboBox` as linhas da lista acabam desenhadas com
+essas cores, nao so o item selecionado.
+
+Correcao: nenhuma cor de **texto** do combo em branco; os fundos de estado
+(`SelectionFill`, `PressedFill`, `HoverFill`) em tom claro. Assim nao existe
+combinacao branco-sobre-claro em estado nenhum.
+
+Metodo que finalmente funcionou: parar de trocar **uma propriedade por ciclo**
+e **eliminar a classe inteira** de uma vez. Antes disso eu gastei tres
+colagens do Douglas testando hipoteses separadas, e duas estavam erradas —
+inclusive uma que quebrou o que ja funcionava. Quando o sintoma nao identifica
+a propriedade, vale mais fechar todas as saidas numa tacada.
+
+Sinal que valeu ouro no print: **a faixa de hover acendendo**. Ela prova que a
+linha existe e recebe evento, e elimina de uma vez `Items`, `DisplayFields` e
+delegacao. Procurar esse tipo de evidencia antes de teorizar.
+
+### 2. Faltava gente, e a busca nao achava o proprio usuario
+
+Causa: `Choices([@Lista].ColunaPessoa)` **nao consulta o diretorio da
+empresa**. Devolve apenas quem o site do SharePoint ja conhece — quem ja foi
+gravado em algum campo de pessoa daquele site. Usuario novo nunca aparece.
+
+Correcao: `Items` vem do conector de usuarios, filtrado pelo que a pessoa
+digita:
+
+    AddColumns(
+        UsuáriosdoOffice365.SearchUser({searchTerm: Self.SearchText; top: 50});
+        NomeEmail; DisplayName & " — " & Mail
+    )
+
+No diretorio o campo de e-mail chama **`Mail`**, nao `Email` — conferir todas
+as referencias de uma vez, senao metade do formulario fica com o campo errado.
+
+O campo Pessoa exige registro no formato do SharePoint, e o diretorio nao
+devolve `Claims`. Montar no `Update`:
+
+    {
+        '@odata.type': "#Microsoft.Azure.Connectors.SharePoint.SPListExpandedUser";
+        Claims: "i:0#.f|membership|" & Lower(Combo.Selected.Mail);
+        DisplayName: Combo.Selected.DisplayName;
+        Email: Combo.Selected.Mail
+    }
+
+O formato do `Claims` nao se chuta: ele aparece na previa do proprio
+`Choices()` na barra de formulas do Studio.
+
+Cuidado herdado: `DefaultSelectedItems` apontando para `Parent.Default` deixa
+de casar, porque o valor salvo tem `Claims` e os itens do diretorio nao. Em
+formulario novo nao aparece; em tela de edicao, o combo abre vazio.
