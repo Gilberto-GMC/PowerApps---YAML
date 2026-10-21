@@ -63,7 +63,9 @@ Só `USUARIO` importa: é o ID na lista `User` do AirportNow, e dele saem perfil
 permissão de edição (`usrMapa` em `App_Formulas_Mapa.txt`). Aberto fora do hub, o Mapa cai no
 e-mail do login — ou seja, abrir direto continua funcionando.
 
-`LOGADO` e `HUB` são ignorados pelo Mapa; vão junto para manter o padrão dos outros módulos.
+O `HUB` alimenta o botão **VOLTAR AO AIRPORTNOW**, no menu das telas e na de início (19/10/2026).
+Sem ele — Mapa aberto direto pelo link — vale o id fixo em `mapHubPadrao`, e o botão aparece do mesmo
+jeito. O `LOGADO` é ignorado; vai junto para manter o padrão dos outros módulos.
 
 ## O App B continua publicado
 
