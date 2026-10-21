@@ -1,5 +1,12 @@
 # Due Diligence — Fase 2
 
+> **Fluxos DD01/DD02 em produção:** os pacotes `*_PRONTO.zip` e o gerador
+> `build_power_automate_flows.py` abaixo são a versão anterior à arquitetura
+> de captura durável. Para novas implantações, use
+> [IMPLANTAR_RESILIENCIA_DD01_DD02.md](IMPLANTAR_RESILIENCIA_DD01_DD02.md)
+> e os pacotes `*_RESILIENTE.zip` gerados a partir dos exports ativos de 20/10.
+> Não use `Update` com um pacote antigo sobre os fluxos publicados.
+
 ## Contrato aprovado
 
 - A fonte funcional é a planilha `Canal Confidencial.url` (arquivo XLSX com extensão incorreta).
@@ -349,6 +356,10 @@ formulário.
 O DD01 já monta o endereço com `origin=lprLink` e substitui o valor de teste
 pelo `forms_envio_id` de cada solicitação. Se a ativação acima não for feita, o
 parâmetro aparece na barra de endereço, mas o Forms deixa a pergunta vazia.
+O e-mail do DD01 também mostra o código esperado; o terceiro deve conferir o
+campo no formulário e preenchê-lo se estiver vazio ou diferente. Quando houver
+reenvio, o e-mail avisa para usar somente o convite mais recente, pois o DD02
+recusa códigos dos links anteriores.
 
 O código continua visível e editável no Forms. Ele serve para correlação, não
 como prova de identidade; o DD02 rejeita código inexistente, duplicado, antigo
@@ -388,7 +399,8 @@ Configure concorrência do gatilho como `1` e use:
    - `email_terceiro` preenchido.
 3. Montar o link do Forms preenchendo `rf6e81f83fe194d4c80dbfd30fc7b8301`
    com o `forms_envio_id` atual usando `uriComponent()`.
-4. Enviar o e-mail em HTML ao `email_terceiro`.
+4. Enviar o e-mail em HTML ao `email_terceiro`, com o código atual visível para
+   conferência no Forms.
 5. Atualizar o item principal:
    - `forms_formulario_id = itUz0nOZp0OvaWdjYwVIoMoEbKAMYIZFqUAdth6B_EFURVRKSFdaVDE4Q1RIV0VTRkxFSjFZS0VEQS4u`;
    - `forms_envio_processado_id = forms_envio_id`;

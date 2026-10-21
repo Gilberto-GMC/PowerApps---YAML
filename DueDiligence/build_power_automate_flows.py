@@ -297,7 +297,12 @@ def send_actions():
         "<p>A ASUR Brasil solicita o preenchimento do questionário de Due Diligence "
         "referente à empresa <strong>@{body('HTTP_Obter_Item_Atual')?['razao_social']}</strong>.</p>"
         "<p><a href=\"@{outputs('Montar_Link_Questionario')}\">Acessar questionário</a></p>"
-        "<p>O código de acompanhamento já está preenchido no link. Não o altere.</p>"
+        "<p>Código de acompanhamento desta solicitação: "
+        "<strong>@{body('HTTP_Obter_Item_Atual')?['forms_envio_id']}</strong>.</p>"
+        "<p>Confira se esse código aparece no formulário antes de enviar. "
+        "Se estiver vazio ou diferente, informe o código acima.</p>"
+        "<p>Se você recebeu mais de um convite, use somente o link do e-mail "
+        "mais recente; os links anteriores deixam de valer após o reenvio.</p>"
         "<p>Mensagem enviada automaticamente. Em caso de dúvida, responda ao solicitante da contratação.</p>"
     )
 
@@ -1958,6 +1963,7 @@ def validate():
 
 
 def main():
+    print("AVISO: DD01/DD02 *_PRONTO.zip são legados. Para implantação, use build_fluxos_resilientes.py.")
     configure_send()
     configure_process()
     configure_expiry()

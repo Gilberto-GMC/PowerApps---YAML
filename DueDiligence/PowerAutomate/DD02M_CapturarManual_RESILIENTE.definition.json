@@ -1,0 +1,312 @@
+{
+  "name": "7c4d36f0-a2ae-5712-97a6-43e46530aeee",
+  "id": "/providers/Microsoft.Flow/flows/7c4d36f0-a2ae-5712-97a6-43e46530aeee",
+  "type": "Microsoft.Flow/flows",
+  "properties": {
+    "apiId": "/providers/Microsoft.PowerApps/apis/shared_logicflows",
+    "displayName": "Capturar resposta manual Due Diligence (DD02M)",
+    "definition": {
+      "metadata": {
+        "workflowEntityId": null,
+        "processAdvisorMetadata": null,
+        "flowChargedByPaygo": null,
+        "flowclientsuspensionreason": "None",
+        "flowclientsuspensiontime": null,
+        "flowclientsuspensionreasondetails": null,
+        "creator": {
+          "id": "a06c04ca-600c-4586-a940-1db61e81fc41",
+          "type": "User",
+          "tenantId": "d233d58a-9973-43a7-af69-6763630548a0"
+        },
+        "provisioningMethod": "FromDefinition",
+        "failureAlertSubscription": true,
+        "clientLastModifiedTime": "2026-10-14T17:49:42.2946937Z",
+        "lastModifiedBy": "a06c04ca-600c-4586-a940-1db61e81fc41",
+        "connectionKeySavedTimeKey": "2026-10-14T17:49:21.0532874Z",
+        "creationSource": "Portal",
+        "modifiedSources": "Portal"
+      },
+      "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+      "contentVersion": "1.0.0.0",
+      "parameters": {
+        "$authentication": {
+          "defaultValue": {},
+          "type": "SecureObject"
+        },
+        "$connections": {
+          "defaultValue": {},
+          "type": "Object"
+        }
+      },
+      "triggers": {
+        "manual": {
+          "type": "Request",
+          "kind": "Button",
+          "inputs": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "number": {
+                  "description": "ID numérico da resposta no Microsoft Forms",
+                  "title": "Response ID",
+                  "type": "number",
+                  "x-ms-content-hint": "NUMBER",
+                  "x-ms-dynamically-added": true
+                }
+              },
+              "required": [
+                "number"
+              ]
+            }
+          }
+        }
+      },
+      "actions": {
+        "Obter_detalhes_da_resposta": {
+          "runAfter": {},
+          "type": "OpenApiConnection",
+          "inputs": {
+            "parameters": {
+              "form_id": "itUz0nOZp0OvaWdjYwVIoMoEbKAMYIZFqUAdth6B_EFURVRKSFdaVDE4Q1RIV0VTRkxFSjFZS0VEQS4u",
+              "response_id": "@triggerBody()?['number']"
+            },
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_microsoftforms",
+              "connectionName": "shared_microsoftforms",
+              "operationId": "GetFormResponseById"
+            },
+            "authentication": "@parameters('$authentication')"
+          }
+        },
+        "Montar_Chave_Resposta": {
+          "runAfter": {
+            "Obter_detalhes_da_resposta": [
+              "Succeeded"
+            ]
+          },
+          "type": "Compose",
+          "inputs": "@concat('itUz0nOZp0OvaWdjYwVIoMoEbKAMYIZFqUAdth6B_EFURVRKSFdaVDE4Q1RIV0VTRkxFSjFZS0VEQS4u|', string(triggerBody()?['number']))"
+        },
+        "HTTP_Consultar_Inbox": {
+          "runAfter": {
+            "Montar_Chave_Resposta": [
+              "Succeeded"
+            ]
+          },
+          "type": "OpenApiConnection",
+          "inputs": {
+            "parameters": {
+              "dataset": "https://grupoccr.sharepoint.com/sites/ComplianceAeroportos",
+              "parameters/method": "GET",
+              "parameters/uri": "@concat('_api/web/lists/getbytitle(''tb_dueDiligenceRespostasInbox'')/items?$select=ID,forms_chave&$filter=forms_chave eq ''', replace(outputs('Montar_Chave_Resposta'), '''', ''''''), '''')",
+              "parameters/headers": {
+                "Accept": "application/json;odata=nometadata"
+              }
+            },
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+              "connectionName": "shared_sharepointonline",
+              "operationId": "HttpRequest"
+            },
+            "authentication": "@parameters('$authentication')",
+            "retryPolicy": {
+              "type": "none"
+            }
+          }
+        },
+        "Condicao_Inbox_Vazia": {
+          "runAfter": {
+            "HTTP_Consultar_Inbox": [
+              "Succeeded"
+            ]
+          },
+          "type": "If",
+          "expression": {
+            "and": [
+              {
+                "equals": [
+                  "@equals(length(body('HTTP_Consultar_Inbox')?['value']), 0)",
+                  true
+                ]
+              }
+            ]
+          },
+          "actions": {
+            "Montar_Entrada": {
+              "runAfter": {},
+              "type": "Compose",
+              "inputs": {
+                "forms_chave": "@string(outputs('Montar_Chave_Resposta'))",
+                "forms_formulario_id": "itUz0nOZp0OvaWdjYwVIoMoEbKAMYIZFqUAdth6B_EFURVRKSFdaVDE4Q1RIV0VTRkxFSjFZS0VEQS4u",
+                "forms_resposta_id": "@string(triggerBody()?['number'])",
+                "codigo_acompanhamento": "@trim(string(body('Obter_detalhes_da_resposta')?['rf6e81f83fe194d4c80dbfd30fc7b8301']))",
+                "conteudo_json": "@string(body('Obter_detalhes_da_resposta'))",
+                "capturado_em": "@utcNow()",
+                "estado": "Pendente",
+                "tentativas": 0
+              }
+            },
+            "HTTP_Criar_Entrada": {
+              "runAfter": {
+                "Montar_Entrada": [
+                  "Succeeded"
+                ]
+              },
+              "type": "OpenApiConnection",
+              "inputs": {
+                "parameters": {
+                  "dataset": "https://grupoccr.sharepoint.com/sites/ComplianceAeroportos",
+                  "parameters/method": "POST",
+                  "parameters/uri": "_api/web/lists/getbytitle('tb_dueDiligenceRespostasInbox')/items",
+                  "parameters/headers": {
+                    "Accept": "application/json;odata=nometadata",
+                    "Content-Type": "application/json;odata=nometadata"
+                  },
+                  "parameters/body": "@string(outputs('Montar_Entrada'))"
+                },
+                "host": {
+                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+                  "connectionName": "shared_sharepointonline",
+                  "operationId": "HttpRequest"
+                },
+                "authentication": "@parameters('$authentication')",
+                "retryPolicy": {
+                  "type": "none"
+                }
+              }
+            },
+            "HTTP_Conferir_Inbox_Apos_Falha": {
+              "runAfter": {
+                "HTTP_Criar_Entrada": [
+                  "Failed",
+                  "TimedOut"
+                ]
+              },
+              "type": "OpenApiConnection",
+              "inputs": {
+                "parameters": {
+                  "dataset": "https://grupoccr.sharepoint.com/sites/ComplianceAeroportos",
+                  "parameters/method": "GET",
+                  "parameters/uri": "@concat('_api/web/lists/getbytitle(''tb_dueDiligenceRespostasInbox'')/items?$select=ID,forms_chave&$filter=forms_chave eq ''', replace(outputs('Montar_Chave_Resposta'), '''', ''''''), '''')",
+                  "parameters/headers": {
+                    "Accept": "application/json;odata=nometadata"
+                  }
+                },
+                "host": {
+                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+                  "connectionName": "shared_sharepointonline",
+                  "operationId": "HttpRequest"
+                },
+                "authentication": "@parameters('$authentication')",
+                "retryPolicy": {
+                  "type": "none"
+                }
+              }
+            },
+            "Condicao_Entrada_Existe_Apos_Falha": {
+              "runAfter": {
+                "HTTP_Conferir_Inbox_Apos_Falha": [
+                  "Succeeded"
+                ]
+              },
+              "type": "If",
+              "expression": {
+                "and": [
+                  {
+                    "equals": [
+                      "@equals(length(body('HTTP_Conferir_Inbox_Apos_Falha')?['value']), 1)",
+                      true
+                    ]
+                  }
+                ]
+              },
+              "actions": {
+                "Entrada_Ja_Capturada": {
+                  "runAfter": {},
+                  "type": "Compose",
+                  "inputs": "Response ID já consta na Inbox."
+                }
+              },
+              "else": {
+                "actions": {
+                  "Falha_Captura": {
+                    "runAfter": {},
+                    "type": "Terminate",
+                    "inputs": {
+                      "runStatus": "Failed",
+                      "runError": {
+                        "code": "DD02_CAPTURA_FALHOU",
+                        "message": "Resposta não confirmada na Inbox."
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "else": {
+            "actions": {
+              "Condicao_Registro_Existente": {
+                "runAfter": {},
+                "type": "If",
+                "expression": {
+                  "and": [
+                    {
+                      "equals": [
+                        "@equals(length(body('HTTP_Consultar_Inbox')?['value']), 1)",
+                        true
+                      ]
+                    }
+                  ]
+                },
+                "actions": {
+                  "Resposta_Ja_Registrada": {
+                    "runAfter": {},
+                    "type": "Compose",
+                    "inputs": "Response ID já capturado."
+                  }
+                },
+                "else": {
+                  "actions": {
+                    "Falha_Chave_Ambigua": {
+                      "runAfter": {},
+                      "type": "Terminate",
+                      "inputs": {
+                        "runStatus": "Failed",
+                        "runError": {
+                          "code": "DD02_CHAVE_DUPLICADA",
+                          "message": "Mais de uma entrada para o Response ID."
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "outputs": {}
+    },
+    "connectionReferences": {
+      "shared_microsoftforms": {
+        "connectionName": "shared-microsoftform-391140b1-7340-4f41-a9fa-21898cc21062",
+        "source": "Embedded",
+        "id": "/providers/Microsoft.PowerApps/apis/shared_microsoftforms",
+        "tier": "NotSpecified",
+        "apiName": "microsoftforms",
+        "isProcessSimpleApiReferenceConversionAlreadyDone": false
+      },
+      "shared_sharepointonline": {
+        "connectionName": "shared-sharepointonl-0cd12861-383f-4b6e-9359-db983fb70160",
+        "source": "Embedded",
+        "id": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+        "tier": "NotSpecified",
+        "apiName": "sharepointonline",
+        "isProcessSimpleApiReferenceConversionAlreadyDone": false
+      }
+    },
+    "flowFailureAlertSubscribed": true,
+    "isManaged": false
+  }
+}

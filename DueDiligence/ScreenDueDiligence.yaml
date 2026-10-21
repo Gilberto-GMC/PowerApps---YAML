@@ -701,7 +701,7 @@ Screens:
                                                                           tb_dueDiligenceTerceiroRespostas,
                                                                           !IsBlank(varRegistroDueDiligence.ID) &&
                                                                           solicitacao_id = varRegistroDueDiligence.ID &&
-                                                                          forms_envio_id = varRegistroDueDiligence.forms_envio_id &&
+                                                                          forms_resposta_id = varRegistroDueDiligence.forms_ultima_resposta_id &&
                                                                           ativo = 1
                                                                       )
                                                                   },
@@ -3587,6 +3587,19 @@ Screens:
                                           Width: =Parent.Width
                                           X: =0
                                           Y: =200
+                                    - forms_destinatario_versao_id_DataCard:
+                                        Control: TypedDataCard@1.0.7
+                                        Variant: TextualEdit
+                                        Properties:
+                                          DataField: ="forms_destinatario_versao_id"
+                                          Default: =ThisItem.forms_destinatario_versao_id
+                                          DisplayName: =DataSourceInfo([@tb_dueDiligence], DataSourceInfo.DisplayName, forms_destinatario_versao_id)
+                                          Required: =false
+                                          Update: =varDdDestinatarioVersaoForm
+                                          Visible: =false
+                                          Width: =Parent.Width
+                                          X: =0
+                                          Y: =200
                               - cntDdSalvar:
                                   Control: GroupContainer@1.5.0
                                   Variant: ManualLayout
@@ -3832,6 +3845,11 @@ Screens:
                                                                     varDdSemQuestionarioForm: _fluxo = "FLUXO III" && _orgaoSemQuestionario,
                                                                     varRiscoFinalTextoForm: _riscoTexto,
                                                                     varRiscoFinalCategoriaForm: _riscoCategoria,
+                                                                    varDdDestinatarioVersaoForm: If(
+                                                                        _emailAlterado || IsBlank(varRegistroDueDiligence.ID),
+                                                                        Text(GUID()),
+                                                                        varRegistroDueDiligence.forms_destinatario_versao_id
+                                                                    ),
                                                                     varDdFormsEnvioForm: If(
                                                                         _fluxo = "FLUXO III" && _orgaoSemQuestionario,
                                                                         Coalesce(
@@ -4691,7 +4709,7 @@ Screens:
                                                                         _resp: Sort(
                                                                             Filter(
                                                                                 tb_dueDiligenceTerceiroRespostas,
-                                                                                solicitacao_id = ThisItem.ID && forms_envio_id = ThisItem.forms_envio_id && ativo = 1
+                                                                                solicitacao_id = ThisItem.ID && forms_resposta_id = ThisItem.forms_ultima_resposta_id && ativo = 1
                                                                             ),
                                                                             ordem
                                                                         ),
@@ -5881,7 +5899,7 @@ Screens:
                                             Filter(
                                                 tb_dueDiligenceTerceiroRespostas,
                                                 solicitacao_id = varRegistroDueDiligence.ID &&
-                                                forms_envio_id = varRegistroDueDiligence.forms_envio_id &&
+                                                forms_resposta_id = varRegistroDueDiligence.forms_ultima_resposta_id &&
                                                 ativo = 1
                                             ),
                                             ordem,

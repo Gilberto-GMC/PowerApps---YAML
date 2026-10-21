@@ -1896,7 +1896,7 @@ def main() -> int:
         responses_formula = str((responses.get("Properties") or {}).get("HtmlText", ""))
         for token in (
             "tb_dueDiligenceTerceiroRespostas",
-            "forms_envio_id = varRegistroDueDiligence.forms_envio_id",
+            "forms_resposta_id = varRegistroDueDiligence.forms_ultima_resposta_id",
             "R.classificacao",
             "R.resposta",
         ):

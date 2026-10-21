@@ -1,0 +1,224 @@
+{
+  "name": "adbd3026-62d7-54d9-a713-47a1301eddc6",
+  "id": "/providers/Microsoft.Flow/flows/adbd3026-62d7-54d9-a713-47a1301eddc6",
+  "type": "Microsoft.Flow/flows",
+  "properties": {
+    "apiId": "/providers/Microsoft.PowerApps/apis/shared_logicflows",
+    "displayName": "Monitorar pendências Due Diligence (DD06)",
+    "definition": {
+      "metadata": {
+        "workflowEntityId": null,
+        "processAdvisorMetadata": null,
+        "flowChargedByPaygo": null,
+        "flowclientsuspensionreason": "None",
+        "flowclientsuspensiontime": null,
+        "flowclientsuspensionreasondetails": null,
+        "creator": {
+          "id": "a06c04ca-600c-4586-a940-1db61e81fc41",
+          "type": "User",
+          "tenantId": "d233d58a-9973-43a7-af69-6763630548a0"
+        },
+        "provisioningMethod": "FromDefinition",
+        "failureAlertSubscription": true,
+        "clientLastModifiedTime": "2026-10-14T17:51:10.2263921Z",
+        "lastModifiedBy": "a06c04ca-600c-4586-a940-1db61e81fc41",
+        "connectionKeySavedTimeKey": "2026-10-14T17:50:49.1781824Z",
+        "creationSource": "Portal",
+        "modifiedSources": "Portal"
+      },
+      "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+      "contentVersion": "1.0.0.0",
+      "parameters": {
+        "$authentication": {
+          "defaultValue": {},
+          "type": "SecureObject"
+        },
+        "$connections": {
+          "defaultValue": {},
+          "type": "Object"
+        }
+      },
+      "triggers": {
+        "Recorrencia_Monitoramento": {
+          "recurrence": {
+            "frequency": "Hour",
+            "interval": 1
+          },
+          "type": "Recurrence",
+          "runtimeConfiguration": {
+            "concurrency": {
+              "runs": 1
+            }
+          }
+        }
+      },
+      "actions": {
+        "HTTP_Buscar_Revisao": {
+          "runAfter": {},
+          "type": "OpenApiConnection",
+          "inputs": {
+            "parameters": {
+              "dataset": "https://grupoccr.sharepoint.com/sites/ComplianceAeroportos",
+              "parameters/method": "GET",
+              "parameters/uri": "_api/web/lists/getbytitle('tb_dueDiligenceRespostasInbox')/items?$select=ID,estado,forms_resposta_id&$top=1&$filter=estado eq 'Revisao'",
+              "parameters/headers": {
+                "Accept": "application/json;odata=nometadata"
+              }
+            },
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+              "connectionName": "shared_sharepointonline",
+              "operationId": "HttpRequest"
+            },
+            "authentication": "@parameters('$authentication')",
+            "retryPolicy": {
+              "type": "none"
+            }
+          }
+        },
+        "HTTP_Buscar_Pendente_Antiga": {
+          "runAfter": {
+            "HTTP_Buscar_Revisao": [
+              "Succeeded"
+            ]
+          },
+          "type": "OpenApiConnection",
+          "inputs": {
+            "parameters": {
+              "dataset": "https://grupoccr.sharepoint.com/sites/ComplianceAeroportos",
+              "parameters/method": "GET",
+              "parameters/uri": "_api/web/lists/getbytitle('tb_dueDiligenceRespostasInbox')/items?$select=ID,estado,capturado_em&$top=1&$orderby=capturado_em asc&$filter=estado eq 'Pendente'",
+              "parameters/headers": {
+                "Accept": "application/json;odata=nometadata"
+              }
+            },
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+              "connectionName": "shared_sharepointonline",
+              "operationId": "HttpRequest"
+            },
+            "authentication": "@parameters('$authentication')",
+            "retryPolicy": {
+              "type": "none"
+            }
+          }
+        },
+        "HTTP_Buscar_Convite_Preparado": {
+          "runAfter": {
+            "HTTP_Buscar_Pendente_Antiga": [
+              "Succeeded"
+            ]
+          },
+          "type": "OpenApiConnection",
+          "inputs": {
+            "parameters": {
+              "dataset": "https://grupoccr.sharepoint.com/sites/ComplianceAeroportos",
+              "parameters/method": "GET",
+              "parameters/uri": "_api/web/lists/getbytitle('tb_dueDiligenceEnvios')/items?$select=ID,estado_envio,criado_em&$top=1&$orderby=ID asc&$filter=estado_envio eq 'Preparado'",
+              "parameters/headers": {
+                "Accept": "application/json;odata=nometadata"
+              }
+            },
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+              "connectionName": "shared_sharepointonline",
+              "operationId": "HttpRequest"
+            },
+            "authentication": "@parameters('$authentication')",
+            "retryPolicy": {
+              "type": "none"
+            }
+          }
+        },
+        "HTTP_Buscar_Solicitacao_Sem_Envio": {
+          "runAfter": {
+            "HTTP_Buscar_Convite_Preparado": [
+              "Succeeded"
+            ]
+          },
+          "type": "OpenApiConnection",
+          "inputs": {
+            "parameters": {
+              "dataset": "https://grupoccr.sharepoint.com/sites/ComplianceAeroportos",
+              "parameters/method": "GET",
+              "parameters/uri": "_api/web/lists/getbytitle('tb_dueDiligence')/items?$select=ID,status,forms_envio_id,forms_envio_processado_id,data_envio_terceiro,Modified&$top=1&$orderby=Modified asc&$filter=status eq 'Aguardando Terceiro' and forms_envio_id ne null and data_envio_terceiro eq null",
+              "parameters/headers": {
+                "Accept": "application/json;odata=nometadata"
+              }
+            },
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+              "connectionName": "shared_sharepointonline",
+              "operationId": "HttpRequest"
+            },
+            "authentication": "@parameters('$authentication')",
+            "retryPolicy": {
+              "type": "none"
+            }
+          }
+        },
+        "Condicao_Pendencias": {
+          "runAfter": {
+            "HTTP_Buscar_Solicitacao_Sem_Envio": [
+              "Succeeded"
+            ]
+          },
+          "type": "If",
+          "expression": {
+            "and": [
+              {
+                "equals": [
+                  "@or(greater(length(body('HTTP_Buscar_Revisao')?['value']), 0),and(greater(length(body('HTTP_Buscar_Pendente_Antiga')?['value']), 0),less(ticks(coalesce(first(body('HTTP_Buscar_Pendente_Antiga')?['value'])?['capturado_em'], utcNow())), ticks(addMinutes(utcNow(), -15)))),and(greater(length(body('HTTP_Buscar_Convite_Preparado')?['value']), 0),less(ticks(coalesce(first(body('HTTP_Buscar_Convite_Preparado')?['value'])?['criado_em'], utcNow())), ticks(addMinutes(utcNow(), -15)))),and(greater(length(body('HTTP_Buscar_Solicitacao_Sem_Envio')?['value']), 0),less(ticks(coalesce(first(body('HTTP_Buscar_Solicitacao_Sem_Envio')?['value'])?['Modified'], utcNow())), ticks(addMinutes(utcNow(), -15)))))",
+                  true
+                ]
+              }
+            ]
+          },
+          "actions": {
+            "Falha_Pendencias": {
+              "runAfter": {},
+              "type": "Terminate",
+              "inputs": {
+                "runStatus": "Failed",
+                "runError": {
+                  "code": "DD06_PENDENCIAS",
+                  "message": "Há resposta em revisão, resposta pendente, convite preparado ou solicitação sem envio há mais de 15 minutos. Verifique Inbox, Envios, tb_dueDiligence e DD01/DD02P."
+                }
+              }
+            }
+          },
+          "else": {
+            "actions": {
+              "Sem_Pendencias": {
+                "runAfter": {},
+                "type": "Compose",
+                "inputs": "Inbox e convites sem atraso acima do limite."
+              }
+            }
+          }
+        }
+      },
+      "outputs": {}
+    },
+    "connectionReferences": {
+      "shared_sharepointonline": {
+        "connectionName": "shared-sharepointonl-0cd12861-383f-4b6e-9359-db983fb70160",
+        "source": "Embedded",
+        "id": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+        "tier": "NotSpecified",
+        "apiName": "sharepointonline",
+        "isProcessSimpleApiReferenceConversionAlreadyDone": false
+      },
+      "shared_office365": {
+        "connectionName": "4df3db90a08a4e1eb4233913c747be07",
+        "source": "Embedded",
+        "id": "/providers/Microsoft.PowerApps/apis/shared_office365",
+        "tier": "NotSpecified",
+        "apiName": "office365",
+        "isProcessSimpleApiReferenceConversionAlreadyDone": false
+      }
+    },
+    "flowFailureAlertSubscribed": true,
+    "isManaged": false
+  }
+}
