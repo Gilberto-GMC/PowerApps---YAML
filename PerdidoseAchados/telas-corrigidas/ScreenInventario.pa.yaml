@@ -964,6 +964,33 @@ Screens:
                                                       Text: ="Cancelar"
                                                       Visible: =varPodeDestinar And TabListDestinar.Selected.Value = "AGUARDANDO APROVAÇÃO"
                                                       Width: =110
+                                                - ExecutarButton:
+                                                    Control: Button@0.0.45
+                                                    Properties:
+                                                      AlignInContainer: =AlignInContainer.Center
+                                                      Appearance: ='ButtonCanvas.Appearance'.Primary
+                                                      BasePaletteColor: =thmAcao
+                                                      Icon: ="ArrowExit"
+                                                      IconStyle: ='ButtonCanvas.IconStyle'.Filled
+                                                      OnSelect: |-
+                                                        =Set(varUltimaAtividade, Now());
+                                                        UpdateContext(
+                                                            {
+                                                                var_itemExec: TBL_ITENS,
+                                                                var_regExec: LookUp(col_destinacoes, ID_item = TBL_ITENS.ID And IsBlank(destinado_em)),
+                                                                var_visibleFormExec: true
+                                                            }
+                                                        );
+                                                        EditForm(FormExecAnexo);
+                                                        Reset(dtpExecEm);
+                                                        Reset(txtExecResp);
+                                                        Reset(txtExecDestinatario);
+                                                        Reset(txtExecMetodo);
+                                                        Reset(txtExecCertificado);
+                                                        Reset(txtExecMtr)
+                                                      Text: ="Registrar"
+                                                      Visible: =varPodeDestinar And TabListDestinar.Selected.Value = "AGUARDANDO DESTINAÇÃO"
+                                                      Width: =120
                                     - Rectangle1_1:
                                         Control: Rectangle@2.3.0
                                         Properties:
@@ -984,6 +1011,387 @@ Screens:
                               VerticalAlign: =VerticalAlign.Middle
                               Weight: ='TextCanvas.Weight'.Semibold
                               Width: =200
+      - ContainerExecucao:
+          Control: GroupContainer@1.5.0
+          Variant: AutoLayout
+          Properties:
+            Fill: =RGBA(0, 0, 0, 0.7)
+            Height: =Parent.Height
+            LayoutAlignItems: =LayoutAlignItems.Center
+            LayoutDirection: =LayoutDirection.Vertical
+            LayoutJustifyContent: =LayoutJustifyContent.Center
+            Visible: =var_visibleFormExec
+            Width: =Parent.Width
+          Children:
+            - CardExecucao:
+                Control: GroupContainer@1.5.0
+                Variant: AutoLayout
+                Properties:
+                  AlignInContainer: =AlignInContainer.Center
+                  BorderColor: =RGBA(0, 0, 0, 0)
+                  BorderStyle: =BorderStyle.None
+                  DropShadow: =DropShadow.ExtraBold
+                  Fill: =RGBA(255, 255, 255, 1)
+                  FillPortions: =0
+                  Height: =If(Parent.Height - 60 < 640, Parent.Height - 60, 640)
+                  LayoutAlignItems: =LayoutAlignItems.Stretch
+                  LayoutDirection: =LayoutDirection.Vertical
+                  LayoutGap: =0
+                  LayoutMaxHeight: =
+                  LayoutMaxWidth: =
+                  LayoutMinHeight: =0
+                  RadiusBottomLeft: =8
+                  RadiusBottomRight: =8
+                  RadiusTopLeft: =8
+                  RadiusTopRight: =8
+                  Width: =620
+                Children:
+                  - BarraExecucao:
+                      Control: GroupContainer@1.5.0
+                      Variant: AutoLayout
+                      Properties:
+                        AlignInContainer: =AlignInContainer.Stretch
+                        DropShadow: =DropShadow.None
+                        Fill: =thmPrimaria
+                        FillPortions: =0
+                        Height: =44
+                        LayoutAlignItems: =LayoutAlignItems.Center
+                        LayoutDirection: =LayoutDirection.Horizontal
+                        LayoutGap: =0
+                        LayoutMaxHeight: =
+                        LayoutMaxWidth: =
+                        LayoutMinHeight: =0
+                        PaddingLeft: =16
+                      Children:
+                        - TituloExecucao:
+                            Control: Label@2.5.1
+                            Properties:
+                              BorderColor: =RGBA(0, 0, 0, 0)
+                              BorderStyle: =BorderStyle.None
+                              Color: =RGBA(255, 255, 255, 1)
+                              Fill: =RGBA(0, 0, 0, 0)
+                              FillPortions: =1
+                              FontWeight: =FontWeight.Semibold
+                              Text: ="Registrar destinação"
+                        - FecharExecucao:
+                            Control: Button@0.0.45
+                            Properties:
+                              AccessibleLabel: ="Fechar"
+                              Appearance: ='ButtonCanvas.Appearance'.Transparent
+                              FillPortions: =0
+                              FontColor: =RGBA(255, 255, 255, 1)
+                              FontSize: =20
+                              Height: =40
+                              Icon: ="DismissCircle"
+                              IconStyle: ='ButtonCanvas.IconStyle'.Outline
+                              OnSelect: |-
+                                =UpdateContext({var_visibleFormExec: false})
+                              Text: =
+                              Width: =50
+                  - CorpoExecucao:
+                      Control: GroupContainer@1.5.0
+                      Variant: AutoLayout
+                      Properties:
+                        AlignInContainer: =AlignInContainer.Stretch
+                        DropShadow: =DropShadow.None
+                        Fill: =RGBA(0, 0, 0, 0)
+                        FillPortions: =1
+                        LayoutAlignItems: =LayoutAlignItems.Stretch
+                        LayoutDirection: =LayoutDirection.Vertical
+                        LayoutGap: =4
+                        LayoutMaxHeight: =
+                        LayoutMaxWidth: =
+                        LayoutMinHeight: =0
+                        LayoutOverflowY: =LayoutOverflow.Scroll
+                        PaddingBottom: =16
+                        PaddingLeft: =20
+                        PaddingRight: =20
+                        PaddingTop: =16
+                      Children:
+                        - ItemExecucao:
+                            Control: Label@2.5.1
+                            Properties:
+                              AlignInContainer: =AlignInContainer.Stretch
+                              BorderColor: =thmBorda
+                              BorderThickness: =1
+                              Color: =thmTexto
+                              Fill: =thmFundo
+                              FillPortions: =0
+                              Height: =68
+                              PaddingLeft: =10
+                              Size: =12
+                              Text: |-
+                                ="Item " & var_itemExec.ID & "  —  " & var_itemExec.categoria & " / " & var_itemExec.subCategoria & Char(10) & var_regExec.modalidade & "  —  " & var_regExec.motivo
+                        - RotExecEm:
+                            Control: Label@2.5.1
+                            Properties:
+                              AlignInContainer: =AlignInContainer.Stretch
+                              BorderColor: =RGBA(0, 0, 0, 0)
+                              BorderStyle: =BorderStyle.None
+                              Color: =thmTextoFraco
+                              FillPortions: =0
+                              Height: =20
+                              Size: =11
+                              Text: ="*  Data da destinação"
+                        - dtpExecEm:
+                            Control: DatePicker@0.0.46
+                            Properties:
+                              AlignInContainer: =AlignInContainer.Stretch
+                              FillPortions: =0
+                              FontSize: =14
+                              Format: ='DatePickerCanvas.Format'.Short
+                              Height: =34
+                              SelectedDate: =Today()
+                        - RotExecResp:
+                            Control: Label@2.5.1
+                            Properties:
+                              AlignInContainer: =AlignInContainer.Stretch
+                              BorderColor: =RGBA(0, 0, 0, 0)
+                              BorderStyle: =BorderStyle.None
+                              Color: =thmTextoFraco
+                              FillPortions: =0
+                              Height: =20
+                              Size: =11
+                              Text: ="*  Responsável pela execução"
+                        - txtExecResp:
+                            Control: TextInput@0.0.54
+                            Properties:
+                              AlignInContainer: =AlignInContainer.Stretch
+                              FillPortions: =0
+                              Height: =34
+                              Placeholder: ="Quem executou"
+                              Value: =varNomeUser
+                        - RotExecDestinatario:
+                            Control: Label@2.5.1
+                            Properties:
+                              AlignInContainer: =AlignInContainer.Stretch
+                              BorderColor: =RGBA(0, 0, 0, 0)
+                              BorderStyle: =BorderStyle.None
+                              Color: =thmTextoFraco
+                              FillPortions: =0
+                              Height: =20
+                              Size: =11
+                              Text: ="Destinatário final"
+                        - txtExecDestinatario:
+                            Control: TextInput@0.0.54
+                            Properties:
+                              AlignInContainer: =AlignInContainer.Stretch
+                              FillPortions: =0
+                              Height: =34
+                              Placeholder: ="Correios, Polícia Federal, empresa contratada..."
+                        - RotExecMetodo:
+                            Control: Label@2.5.1
+                            Properties:
+                              AlignInContainer: =AlignInContainer.Stretch
+                              BorderColor: =RGBA(0, 0, 0, 0)
+                              BorderStyle: =BorderStyle.None
+                              Color: =thmTextoFraco
+                              FillPortions: =0
+                              Height: =20
+                              Size: =11
+                              Text: ="*  Método aplicado"
+                              Visible: =var_regExec.modalidade = "Destruição"
+                        - txtExecMetodo:
+                            Control: TextInput@0.0.54
+                            Properties:
+                              AlignInContainer: =AlignInContainer.Stretch
+                              FillPortions: =0
+                              Height: =34
+                              Placeholder: ="Danificação física, rompimento estrutural..."
+                              Visible: =var_regExec.modalidade = "Destruição"
+                        - RotExecCertificado:
+                            Control: Label@2.5.1
+                            Properties:
+                              AlignInContainer: =AlignInContainer.Stretch
+                              BorderColor: =RGBA(0, 0, 0, 0)
+                              BorderStyle: =BorderStyle.None
+                              Color: =thmTextoFraco
+                              FillPortions: =0
+                              Height: =20
+                              Size: =11
+                              Text: ="Nº do Certificado de Destinação Final"
+                        - txtExecCertificado:
+                            Control: TextInput@0.0.54
+                            Properties:
+                              AlignInContainer: =AlignInContainer.Stretch
+                              FillPortions: =0
+                              Height: =34
+                              Placeholder: ="Número do CDF"
+                        - RotExecMtr:
+                            Control: Label@2.5.1
+                            Properties:
+                              AlignInContainer: =AlignInContainer.Stretch
+                              BorderColor: =RGBA(0, 0, 0, 0)
+                              BorderStyle: =BorderStyle.None
+                              Color: =thmTextoFraco
+                              FillPortions: =0
+                              Height: =20
+                              Size: =11
+                              Text: ="MTR — Manifesto de Transporte de Resíduos"
+                        - txtExecMtr:
+                            Control: TextInput@0.0.54
+                            Properties:
+                              AlignInContainer: =AlignInContainer.Stretch
+                              FillPortions: =0
+                              Height: =34
+                              Placeholder: ="Quando exigido"
+                        - FormExecAnexo:
+                            Control: Form@2.4.4
+                            Layout: Vertical
+                            Properties:
+                              AlignInContainer: =AlignInContainer.Stretch
+                              BorderStyle: =BorderStyle.None
+                              DataSource: =tbl_perdidosAchadosDestinacao
+                              DefaultMode: =FormMode.Edit
+                              FillPortions: =0
+                              Height: =200
+                              Item: =var_regExec
+                              LayoutMaxHeight: =
+                              LayoutMaxWidth: =
+                              NumberOfColumns: =1
+                              OnSuccess: |-
+                                =Patch(
+                                    tbl_perdidosAchadosDestinacao,
+                                    var_regExec,
+                                    {
+                                        destinado_em: dtpExecEm.SelectedDate,
+                                        destinado_por: txtExecResp.Value,
+                                        destinatario: txtExecDestinatario.Value,
+                                        metodo: txtExecMetodo.Value,
+                                        certificado_num: txtExecCertificado.Value,
+                                        mtr: txtExecMtr.Value
+                                    }
+                                );
+                                If(
+                                    IsEmpty(Errors(tbl_perdidosAchadosDestinacao)),
+                                    Patch(
+                                        tbl_perdidosAchadosItens,
+                                        LookUp(tbl_perdidosAchadosItens, ID = var_itemExec.ID),
+                                        {
+                                            status: Switch(
+                                                var_regExec.modalidade,
+                                                "Destruição", "Destruído",
+                                                "Encaminhamento à Justiça", "Encaminhado à Justiça",
+                                                "Descarte", "Descartado"
+                                            )
+                                        }
+                                    );
+                                    Select(FUNCTION_DOAR);
+                                    Notify(
+                                        "Destinação registrada.",
+                                        NotificationType.Success
+                                    );
+                                    UpdateContext({var_visibleFormExec: false}),
+                                    Notify(
+                                        "Não foi possível gravar a destinação. O item não foi alterado.",
+                                        NotificationType.Error
+                                    )
+                                )
+                              Width: =Parent.Width - 40
+                            Children:
+                              - Anexos_DataCardExec:
+                                  Control: TypedDataCard@1.0.7
+                                  Variant: ClassicAttachmentsEdit
+                                  Properties:
+                                    BorderColor: =thmBorda
+                                    DataField: ="{Attachments}"
+                                    Default: =ThisItem.Anexos
+                                    DisplayName: ="Certificado de Destinação Final"
+                                    Height: =190
+                                    Required: =false
+                                    Update: =attExecCertificado.Attachments
+                                    Width: =Parent.Width
+                                    X: =0
+                                    Y: =0
+                                  Children:
+                                    - lblExecAnexo:
+                                        Control: Label@2.5.1
+                                        MetadataKey: FieldName
+                                        Properties:
+                                          AutoHeight: =true
+                                          BorderColor: =RGBA(0, 0, 0, 0)
+                                          BorderStyle: =BorderStyle.None
+                                          Color: =thmTextoFraco
+                                          Height: =20
+                                          PaddingLeft: =0
+                                          Size: =11
+                                          Text: ="Anexar o Certificado de Destinação Final"
+                                          Width: =Parent.Width - 60
+                                          Wrap: =false
+                                          Y: =0
+                                    - attExecCertificado:
+                                        Control: Attachments@2.3.0
+                                        MetadataKey: FieldValue
+                                        Properties:
+                                          BorderColor: =If(IsBlank(Parent.Error), thmBorda, thmVermelho)
+                                          BorderThickness: =1
+                                          DisplayMode: =Parent.DisplayMode
+                                          Height: =150
+                                          ItemColor: =RGBA(255, 255, 255, 1)
+                                          ItemFill: =thmPrimaria
+                                          Items: =Parent.Default
+                                          PaddingBottom: =5
+                                          PaddingLeft: =5
+                                          PaddingRight: =5
+                                          PaddingTop: =5
+                                          PressedColor: =RGBA(255, 255, 255, 1)
+                                          PressedFill: =thmPrimariaEscura
+                                          Size: =10
+                                          Width: =Parent.Width - 26
+                                          X: =2
+                                          Y: =lblExecAnexo.Y + lblExecAnexo.Height + 5
+                  - RodapeExecucao:
+                      Control: GroupContainer@1.5.0
+                      Variant: AutoLayout
+                      Properties:
+                        AlignInContainer: =AlignInContainer.Stretch
+                        DropShadow: =DropShadow.None
+                        Fill: =RGBA(0, 0, 0, 0)
+                        FillPortions: =0
+                        Height: =60
+                        LayoutAlignItems: =LayoutAlignItems.Center
+                        LayoutDirection: =LayoutDirection.Horizontal
+                        LayoutGap: =10
+                        LayoutJustifyContent: =LayoutJustifyContent.End
+                        LayoutMaxHeight: =
+                        LayoutMaxWidth: =
+                        LayoutMinHeight: =0
+                        PaddingBottom: =12
+                        PaddingRight: =20
+                      Children:
+                        - CancelarExecucao:
+                            Control: Button@0.0.45
+                            Properties:
+                              Appearance: ='ButtonCanvas.Appearance'.Secondary
+                              BasePaletteColor: =thmPrimaria
+                              FillPortions: =0
+                              Height: =36
+                              OnSelect: |-
+                                =UpdateContext({var_visibleFormExec: false})
+                              Text: ="Cancelar"
+                              Width: =110
+                        - ConcluirExecucao:
+                            Control: Button@0.0.45
+                            Properties:
+                              Appearance: ='ButtonCanvas.Appearance'.Primary
+                              BasePaletteColor: =thmAcao
+                              DisplayMode: |-
+                                =If(
+                                    IsBlank(dtpExecEm.SelectedDate)
+                                        Or IsBlank(txtExecResp.Value)
+                                        Or (var_regExec.modalidade = "Destruição" And IsBlank(txtExecMetodo.Value)),
+                                    DisplayMode.Disabled,
+                                    DisplayMode.Edit
+                                )
+                              FillPortions: =0
+                              Height: =36
+                              Icon: ="Save"
+                              IconStyle: ='ButtonCanvas.IconStyle'.Filled
+                              OnSelect: |-
+                                =Set(varUltimaAtividade, Now());
+                                SubmitForm(FormExecAnexo)
+                              Text: ="Concluir"
+                              Width: =150
       - ContainerDestinacao:
           Control: GroupContainer@1.5.0
           Variant: AutoLayout
