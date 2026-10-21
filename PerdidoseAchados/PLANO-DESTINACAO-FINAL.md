@@ -7,6 +7,22 @@ Mercia e GESTAO AIRPORTNOW.
 **Norma:** *Procedimento Perdidos e Achados 2026 VF – ASUR*, **Rev. 03**, lido na
 íntegra em 15/10/2026.
 
+> ## ✅ ENTREGUE EM 21/10/2026
+>
+> As tres etapas funcionando em tela, testadas pelo Douglas:
+> `Recebido` → `Aguardando aprovação` → `Aguardando destinação` →
+> `Destruído` / `Encaminhado à Justiça` / `Descartado`.
+>
+> Tres coisas que so apareceram na execucao e estao registradas em
+> `LICOES_APRENDIDAS_POWERAPPS_YAML.md`: `{chave: valor}` em linha unica quebra a
+> colagem (PA1001), `Multiline` nao e `MultiLine`, e **o List_Generator cria toda
+> lista com anexos desligados** — foi preciso habilitar na mao para o Certificado
+> de Destinacao Final funcionar.
+>
+> Continuam abertos com a area os pontos 1, 3 e 7 da tabela abaixo. Nenhum bloqueia:
+> o perfil esta em `varPodeDestinar` e as categorias em `colCatDoaveis`, cada um numa
+> linha so do `App.Formulas`.
+
 **Problema que fecha:** o Airport Now tem caminho completo para doação — separação
 após 90 dias, doação com instituição e data, encerramento do atendimento. Para o que
 **não pode** ser doado, não há caminho. O item 5.13 proíbe doar eletrônicos e
