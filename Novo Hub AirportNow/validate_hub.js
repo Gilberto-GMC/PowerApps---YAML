@@ -157,6 +157,27 @@ function validar(arquivo) {
     }
   }
 
+  // 7a. Controle classico que pinta o fundo por token mas nao declara a cor do
+  // TEXTO (ou o fundo da seta) deixa essa parte com a cor do TEMA do Studio, que
+  // continua Motiva. Foi o que escondeu os nomes do combo de usuario: Color nunca
+  // esteve no YAML, nem no original, entao tokenizar o que existia nao bastava.
+  const EXIGE_SE_PINTADO = [
+    { tipo: /Control:\s*Classic\/ComboBox@/, se: /(^|\n)\s*(Fill|SelectionFill):/, exige: ['Color'] },
+    { tipo: /Control:\s*Classic\/ComboBox@/, se: /(^|\n)\s*ChevronFill:/, exige: ['ChevronBackground'] },
+    { tipo: /Control:\s*Classic\/TextInput@/, se: /(^|\n)\s*Fill:/, exige: ['Color', 'HoverFill'] },
+  ];
+  for (const b of blocos) {
+    for (const r of EXIGE_SE_PINTADO) {
+      if (!r.tipo.test(b) || !r.se.test(b)) continue;
+      const nome = (b.match(/- (\w+):/) || [, '?'])[1];
+      for (const p of r.exige) {
+        if (!new RegExp('(^|\\n)\\s*' + p + ':').test(b)) {
+          erros.push(`${path.basename(arquivo)} ${nome}: declara cor mas nao ${p} — essa parte fica com a cor do tema`);
+        }
+      }
+    }
+  }
+
   // 7b. Dentro do template de galeria, Parent.Width/Height nao existe — e TemplateWidth
   // /TemplateHeight. Dono da linha e a galeria MAIS INTERNA que a contem, nunca todas
   // as ancestrais (falso positivo recorrente treina o operador a ignorar o validador).
@@ -261,6 +282,16 @@ function autoteste() {
       '        )',
       '',
     ].join('\n'), /recorte inicial por data/],
+    ['classico pintado sem Color', [
+      'Screens:',
+      '  L:',
+      '    Children:',
+      '      - cmbX:',
+      '          Control: Classic/ComboBox@2.4.0',
+      '          Properties:',
+      '            Fill: =thmFundo',
+      '',
+    ].join('\n'), /nao Color/],
     ['componente sem AccessAppScope', [
       'ComponentDefinitions:',
       '  Comp1:',
