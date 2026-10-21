@@ -97,7 +97,7 @@ const definition = {
       type: 'Query',
       inputs: {
         from: "@body('Obter_itens')?['value']",
-        where: '@and(and(and(and(and(and(' +
+        where: '@and(and(and(and(and(and(and(' +
           // so categoria doavel — itens 5.13 e 5.16 do PRO
           'contains(' + arr(DOAVEIS) + ",coalesce(item()?['categoria'],'')),"
           // ELEGIVEIS exige os 90 dias de guarda; SEPARADOS ja passou por isso
@@ -107,7 +107,10 @@ const definition = {
           + "or(empty(coalesce(triggerBody()?['data_de'],'')),greaterOrEquals(item()?['recebido'],formatDateTime(triggerBody()?['data_de'],'yyyy-MM-dd')))),"
           + "or(empty(coalesce(triggerBody()?['data_ate'],'')),lessOrEquals(formatDateTime(item()?['recebido'],'yyyy-MM-dd'),formatDateTime(triggerBody()?['data_ate'],'yyyy-MM-dd')))),"
           // a busca das duas telas e StartsWith na marca; aqui vale o mesmo
-          + "or(empty(coalesce(triggerBody()?['busca'],'')),startsWith(toLower(coalesce(item()?['marca'],'')),toLower(triggerBody()?['busca']))))",
+          + "or(empty(coalesce(triggerBody()?['busca'],'')),startsWith(toLower(coalesce(item()?['marca'],'')),toLower(triggerBody()?['busca'])))),"
+          // a tela manda os IDs marcados entre virgulas, com virgula nas pontas:
+          // sem as pontas, contains(',12,','1') casaria e o 12 entraria por engano
+          + "contains(coalesce(triggerBody()?['ids'],''),concat(',',item()?['ID'],',')))",
       },
     },
 
