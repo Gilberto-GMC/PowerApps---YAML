@@ -781,3 +781,31 @@ Nome: "=formula\r\n..." # string serializada, formato antigo
 
 Busque sempre por `^ *Nome:` — sem o `=`. Virou o **check 21** do
 `validar_telas_pa.mjs`, que acusa propriedade repetida dentro do mesmo controle.
+
+## O campo de anexos nao tem o mesmo nome em toda lista (21/10/2026)
+
+`Default: =ThisItem.Anexos` funciona em `tb_focoAtracaoFauna`, em `PresencaFauna` e
+na Inspecao — tres listas do mesmo tenant. **Nao funciona** em
+`tbl_perdidosAchadosDestinacao`: Studio responde "'Anexos' nao e reconhecido".
+
+A diferenca e como a lista nasceu. As que vieram pela interface do SharePoint em
+pt-BR tem o campo de anexos com rotulo `Anexos`; a que o fluxo **List_Generator**
+criou por REST ficou com `Attachments`.
+
+Ou seja: tres precedentes concordando **nao** garantem o quarto caso. Para o campo de
+anexos, conferir na lista especifica. O `DataField` nao muda — e sempre
+`="{Attachments}"` — so o `Default` e que segue o rotulo.
+
+Se der erro e nao houver como conferir, **apagar o `Default`** e uma saida boa: o
+upload continua funcionando e o `Update` grava; perde-se apenas exibir anexo que ja
+exista.
+
+## `ModernTabList@1.0.0` se pinta com `BasePaletteColor` (21/10/2026)
+
+A pilha da guia selecionada, com `Appearance: =TabListAppearance.FilledCircular`,
+vinha do tema do Studio — roxo Motiva. A propriedade e `BasePaletteColor`, a mesma
+do `Button@0.0.45`.
+
+Nao havia nenhum outro `ModernTabList` no workspace para copiar. O jeito de
+descobrir, sem adivinhar: selecionar o controle no Studio e abrir o **dropdown de
+propriedades** (canto superior esquerdo), que lista todas pelo nome real.
