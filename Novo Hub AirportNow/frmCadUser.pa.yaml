@@ -1,0 +1,1513 @@
+Screens:
+  frmCadUser:
+    Properties:
+      Fill: =thmFundo
+      LoadingSpinnerColor: =thmPrimaria
+      OnVisible: |-
+        =UpdateContext(
+            {
+                varCadCarregando: true,
+                varCadSelId: Blank(),
+                varCadOcupadoDesde: Blank(),
+                varCadTentou: false,
+                varCadConfirmar: ""
+            }
+        );
+        Set(
+            varCadAad,
+            Blank()
+        );
+        ClearCollect(
+            col_usuarios,
+            User
+        );
+        UpdateContext({varCadCarregando: false})
+    Children:
+      - HeaderTitle_28:
+          Control: CanvasComponent
+          ComponentName: HeaderTitle
+          Properties:
+            Height: =50
+            IconVisible: =true
+            ScreenNavigator: =If(false, Home)
+            Width: =Max(App.Width, App.MinScreenWidth)
+            var_subtitulo1: =""
+            var_subtitulo2: =""
+            var_tituloModulo: =var_tituloModulo
+      - ContainerCadUser_1:
+          Control: GroupContainer@1.5.0
+          Variant: ManualLayout
+          Properties:
+            DropShadow: =DropShadow.None
+            Fill: =thmFundo
+            Height: =Parent.Height
+            RadiusBottomLeft: =0
+            RadiusBottomRight: =0
+            RadiusTopLeft: =0
+            RadiusTopRight: =0
+            Width: =Parent.Width
+          Children:
+            - cntCadMain:
+                Control: GroupContainer@1.5.0
+                Variant: ManualLayout
+                Properties:
+                  DropShadow: =DropShadow.None
+                  Fill: =thmFundo
+                  Height: =Parent.Height - HeaderTitle_28.Height
+                  RadiusBottomLeft: =0
+                  RadiusBottomRight: =0
+                  RadiusTopLeft: =0
+                  RadiusTopRight: =0
+                  Width: =Parent.Width
+                  Y: =HeaderTitle_28.Height
+                Children:
+                  - cntCadShell:
+                      Control: GroupContainer@1.5.0
+                      Variant: ManualLayout
+                      Properties:
+                        BorderStyle: =BorderStyle.None
+                        DropShadow: =DropShadow.None
+                        Height: =Parent.Height - If(Parent.Height < 700, 16, 48)
+                        RadiusBottomLeft: =0
+                        RadiusBottomRight: =0
+                        RadiusTopLeft: =0
+                        RadiusTopRight: =0
+                        Width: =Max(300, Parent.Width - If(Parent.Width < 700, 16, 64))
+                        X: =(Parent.Width - Self.Width) / 2
+                        Y: =If(Parent.Height < 700, 8, 24)
+                      Children:
+                        - cntCadSidebar:
+                            Control: GroupContainer@1.5.0
+                            Variant: ManualLayout
+                            Properties:
+                              DropShadow: =DropShadow.None
+                              Fill: =thmPrimariaEscura
+                              Height: =Parent.Height-4
+                              RadiusBottomLeft: =0
+                              RadiusBottomRight: =0
+                              RadiusTopLeft: =0
+                              RadiusTopRight: =0
+                              Visible: =Parent.Width >= 1100
+                              Width: =300
+                              Y: =2
+                            Children:
+                              - recCadSidebarOverlay:
+                                  Control: Rectangle@2.3.0
+                                  Properties:
+                                    BorderColor: =thmTransparente
+                                    Fill: =RGBA(0, 0, 0, 0.16)
+                                    Height: =Parent.Height
+                                    Width: =Parent.Width
+                              - lblCadBrand:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    AutoHeight: =true
+                                    Color: =thmTextoInverso
+                                    Font: =Font.'Open Sans'
+                                    FontWeight: =FontWeight.Bold
+                                    PaddingBottom: =0
+                                    PaddingLeft: =0
+                                    PaddingRight: =0
+                                    PaddingTop: =0
+                                    Size: =24
+                                    Text: ="Airport Now"
+                                    Width: =240
+                                    X: =28
+                                    Y: =34
+                              - lblCadSideTitle:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    AutoHeight: =true
+                                    Color: =RGBA(255, 255, 255, 0.72)
+                                    Font: =Font.'Open Sans'
+                                    PaddingBottom: =0
+                                    PaddingLeft: =0
+                                    PaddingRight: =0
+                                    PaddingTop: =0
+                                    Size: =11
+                                    Text: ="Quem acessa o AirPort Now"
+                                    Width: =240
+                                    X: =28
+                                    Y: =75
+                              - recCadSideDivider:
+                                  Control: Rectangle@2.3.0
+                                  Properties:
+                                    BorderColor: =thmTransparente
+                                    Fill: =RGBA(255, 255, 255, 0.18)
+                                    Height: =1
+                                    Width: =244
+                                    X: =28
+                                    Y: =117
+                              - htmCadResumo:
+                                  Control: HtmlViewer@2.1.0
+                                  Properties:
+                                    Font: =Font.'Open Sans'
+                                    Height: =260
+                                    HtmlText: |-
+                                      ="<div style='font-family:Open Sans,Segoe UI,sans-serif;'>" &
+                                      "<div style='font-size:12px;font-weight:600;color:rgba(255,255,255,.92);margin-bottom:14px;'>Base de usuários</div>" &
+                                      "<table style='width:100%;border-collapse:collapse;'>" &
+                                      "<tr><td style='padding:9px 0;font-size:12px;color:rgba(255,255,255,.78);'>Cadastrados</td>" &
+                                      "<td style='text-align:right;font-size:20px;font-weight:800;color:" & hxSuperficie & ";'>" & CountRows(col_usuarios) & "</td></tr>" &
+                                      "<tr><td style='padding:9px 0;font-size:12px;color:rgba(255,255,255,.78);'>Administradores</td>" &
+                                      "<td style='text-align:right;font-size:20px;font-weight:800;color:" & hxAmbar & ";'>" &
+                                      CountRows(Filter(col_usuarios, Autorizacao = "Admin" Or Autorizacao = "AdmAVSEC")) & "</td></tr>" &
+                                      "<tr><td style='padding:9px 0;font-size:12px;color:rgba(255,255,255,.78);'>Atendem chamados</td>" &
+                                      "<td style='text-align:right;font-size:20px;font-weight:800;color:" & hxSuperficie & ";'>" &
+                                      CountRows(Filter(col_usuarios, usr_papel_chamados = "ATENDENTE" Or usr_papel_chamados = "GESTOR")) & "</td></tr>" &
+                                      "<tr><td style='padding:9px 0;border-top:1px solid rgba(255,255,255,.18);font-size:12px;color:rgba(255,255,255,.6);'>Aguardando 1º acesso</td>" &
+                                      "<td style='text-align:right;border-top:1px solid rgba(255,255,255,.18);font-size:20px;font-weight:800;color:rgba(255,255,255,.72);'>" &
+                                      CountRows(Filter(col_usuarios, Validacao = 0)) & "</td></tr>" &
+                                      "</table></div>"
+                                    PaddingBottom: =0
+                                    PaddingLeft: =0
+                                    PaddingRight: =0
+                                    PaddingTop: =0
+                                    Size: =11
+                                    Width: =244
+                                    X: =28
+                                    Y: =144
+                              - cntCadSenhaBox:
+                                  Control: GroupContainer@1.5.0
+                                  Variant: ManualLayout
+                                  Properties:
+                                    BorderColor: =RGBA(255, 255, 255, 0.16)
+                                    BorderThickness: =1
+                                    DropShadow: =DropShadow.None
+                                    Fill: =RGBA(255, 255, 255, 0.08)
+                                    Height: =106
+                                    RadiusBottomLeft: =0
+                                    RadiusBottomRight: =0
+                                    RadiusTopLeft: =0
+                                    RadiusTopRight: =0
+                                    Width: =244
+                                    X: =28
+                                    Y: =Parent.Height - 134
+                                  Children:
+                                    - lblCadSenhaTitle:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          Color: =thmTextoInverso
+                                          Font: =Font.'Open Sans'
+                                          FontWeight: =FontWeight.Semibold
+                                          Height: =24
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                          PaddingTop: =0
+                                          Size: =10
+                                          Text: ="Senha inicial"
+                                          Width: =204
+                                          X: =18
+                                          Y: =14
+                                    - lblCadSenhaText:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          AutoHeight: =true
+                                          Color: =RGBA(255, 255, 255, 0.68)
+                                          Font: =Font.'Open Sans'
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                          PaddingTop: =0
+                                          Size: =9
+                                          Text: ="Todo cadastro e todo reset gravam ccr" & Year(Now()) & ". O usuário troca no primeiro acesso."
+                                          Width: =204
+                                          X: =18
+                                          Y: =40
+                        - cntCadPanel:
+                            Control: GroupContainer@1.5.0
+                            Variant: ManualLayout
+                            Properties:
+                              BorderColor: =thmGradeLinha
+                              BorderThickness: =1
+                              DropShadow: =DropShadow.None
+                              Fill: =thmSuperficie
+                              Height: =Parent.Height-4
+                              RadiusBottomLeft: =0
+                              RadiusBottomRight: =0
+                              RadiusTopLeft: =0
+                              RadiusTopRight: =0
+                              Width: =Parent.Width - If(cntCadSidebar.Visible, 324, 0)
+                              X: =If(cntCadSidebar.Visible, 324, 0)
+                              Y: =2
+                            Children:
+                              - lblCadEyebrow:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    Color: =thmPrimaria
+                                    Font: =Font.'Open Sans'
+                                    FontWeight: =FontWeight.Bold
+                                    Height: =20
+                                    PaddingBottom: =0
+                                    PaddingLeft: =0
+                                    PaddingRight: =0
+                                    PaddingTop: =0
+                                    Size: =9
+                                    Text: ="ADMINISTRAÇÃO"
+                                    Width: =260
+                                    X: =If(Parent.Width < 600, 18, 28)
+                                    Y: =20
+                              - lblCadTitulo:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    AutoHeight: =true
+                                    Color: =thmTexto
+                                    Font: =Font.'Open Sans'
+                                    FontWeight: =FontWeight.Bold
+                                    PaddingBottom: =0
+                                    PaddingLeft: =0
+                                    PaddingRight: =0
+                                    PaddingTop: =0
+                                    Size: =22
+                                    Text: ="Cadastro de usuários"
+                                    Width: =Parent.Width - (2 * If(Parent.Width < 600, 18, 28))
+                                    X: =If(Parent.Width < 600, 18, 28)
+                                    Y: =42
+                              - lblCadSubtitulo:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    AutoHeight: =true
+                                    Color: =thmTextoFraco
+                                    Font: =Font.'Open Sans'
+                                    PaddingBottom: =0
+                                    PaddingLeft: =0
+                                    PaddingRight: =0
+                                    PaddingTop: =0
+                                    Size: =10
+                                    Text: ="Selecione alguém na lista para editar, ou busque um nome no diretório para cadastrar."
+                                    Width: =Parent.Width - (2 * If(Parent.Width < 600, 18, 28))
+                                    X: =If(Parent.Width < 600, 18, 28)
+                                    Y: =76
+                              - recCadHeaderDivider:
+                                  Control: Rectangle@2.3.0
+                                  Properties:
+                                    BorderColor: =thmTransparente
+                                    Fill: =thmGradeLinha
+                                    Height: =1
+                                    Width: =Parent.Width
+                                    Y: =108
+                              - cntCadLista:
+                                  Control: GroupContainer@1.5.0
+                                  Variant: ManualLayout
+                                  Properties:
+                                    BorderStyle: =BorderStyle.None
+                                    DropShadow: =DropShadow.None
+                                    Fill: =thmSuperficie
+                                    Height: =Parent.Height - 232
+                                    RadiusBottomLeft: =0
+                                    RadiusBottomRight: =0
+                                    RadiusTopLeft: =0
+                                    RadiusTopRight: =0
+                                    Width: =Min(400, Max(260, (Parent.Width - 72) * 0.30))
+                                    X: =24
+                                    Y: =124
+                                  Children:
+                                    - TextInputConsultaNome:
+                                        Control: Classic/TextInput@2.3.2
+                                        Properties:
+                                          BorderColor: =thmBorda
+                                          BorderThickness: =1
+                                          Color: =thmTexto
+                                          Default: =""
+                                          DelayOutput: =true
+                                          Fill: =thmFundo
+                                          Font: =Font.'Open Sans'
+                                          Height: =34
+                                          HintText: ="Buscar por nome"
+                                          HoverBorderColor: =thmPrimaria
+                                          HoverFill: =thmFundo
+                                          PaddingLeft: =10
+                                          RadiusBottomLeft: =0
+                                          RadiusBottomRight: =0
+                                          RadiusTopLeft: =0
+                                          RadiusTopRight: =0
+                                          Size: =10
+                                          Width: =Parent.Width
+                                    - Label5_38:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          Color: =thmTextoFraco
+                                          Font: =Font.'Open Sans'
+                                          FontWeight: =FontWeight.Semibold
+                                          Height: =16
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                          PaddingTop: =0
+                                          Size: =8
+                                          Text: ="AEROPORTO"
+                                          Width: =(Parent.Width - 10) / 2
+                                          Y: =46
+                                    - DropdownConsultaAeroporto:
+                                        Control: Classic/DropDown@2.3.1
+                                        Properties:
+                                          AllowEmptySelection: =true
+                                          BorderColor: =thmBorda
+                                          ChevronBackground: =thmPrimaria
+                                          ChevronFill: =thmTextoInverso
+                                          ChevronHoverBackground: =thmPrimariaEscura
+                                          ChevronHoverFill: =thmTextoInverso
+                                          Color: =thmTexto
+                                          Default: =Blank()
+                                          Fill: =thmFundo
+                                          Font: =Font.'Open Sans'
+                                          Height: =32
+                                          HoverColor: =thmTexto
+                                          HoverFill: =thmPrimariaClara
+                                          Items: =colAeros
+                                          Items.Value: =Aeroporto
+                                          PressedColor: =thmTexto
+                                          PressedFill: =thmPrimariaClara
+                                          SelectionColor: =thmTexto
+                                          SelectionFill: =thmPrimariaClara
+                                          Size: =9
+                                          Width: =(Parent.Width - 10) / 2
+                                          Y: =64
+                                    - Label5_40:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          Color: =thmTextoFraco
+                                          Font: =Font.'Open Sans'
+                                          FontWeight: =FontWeight.Semibold
+                                          Height: =16
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                          PaddingTop: =0
+                                          Size: =8
+                                          Text: ="AUTORIZAÇÃO"
+                                          Width: =(Parent.Width - 10) / 2
+                                          X: =(Parent.Width + 10) / 2
+                                          Y: =46
+                                    - DropdownConsultaAutorizacao:
+                                        Control: Classic/DropDown@2.3.1
+                                        Properties:
+                                          AllowEmptySelection: =true
+                                          BorderColor: =thmBorda
+                                          ChevronBackground: =thmPrimaria
+                                          ChevronFill: =thmTextoInverso
+                                          ChevronHoverBackground: =thmPrimariaEscura
+                                          ChevronHoverFill: =thmTextoInverso
+                                          Color: =thmTexto
+                                          Default: =Blank()
+                                          Fill: =thmFundo
+                                          Font: =Font.'Open Sans'
+                                          Height: =32
+                                          HoverColor: =thmTexto
+                                          HoverFill: =thmPrimariaClara
+                                          Items: =["","Usuário","Admin","AdmAVSEC"]
+                                          Items.Value: =Value
+                                          PressedColor: =thmTexto
+                                          PressedFill: =thmPrimariaClara
+                                          SelectionColor: =thmTexto
+                                          SelectionFill: =thmPrimariaClara
+                                          Size: =9
+                                          Width: =(Parent.Width - 10) / 2
+                                          X: =(Parent.Width + 10) / 2
+                                          Y: =64
+                                    - Label63:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          Color: =thmTextoFraco
+                                          Font: =Font.'Open Sans'
+                                          Height: =18
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                          PaddingTop: =0
+                                          Size: =9
+                                          Text: =galUser.AllItemsCount & " de " & CountRows(col_usuarios) & " usuário(s)"
+                                          Width: =Parent.Width
+                                          Y: =106
+                                    - galUser:
+                                        Control: Gallery@2.15.0
+                                        Variant: Vertical
+                                        Properties:
+                                          BorderColor: =thmGradeLinha
+                                          BorderStyle: =BorderStyle.None
+                                          Fill: =thmSuperficie
+                                          Height: =Parent.Height - Self.Y
+                                          Items: |-
+                                            =SortByColumns(
+                                                Filter(
+                                                    col_usuarios,
+                                                    StartsWith(
+                                                        Aeroporto,
+                                                        Text(DropdownConsultaAeroporto.Selected.Aeroporto)
+                                                    ),
+                                                    StartsWith(
+                                                        Autorizacao,
+                                                        Text(DropdownConsultaAutorizacao.Selected.Value)
+                                                    ),
+                                                    StartsWith(
+                                                        usrNome,
+                                                        Text(TextInputConsultaNome.Text)
+                                                    )
+                                                ),
+                                                "usrNome",
+                                                SortOrder.Ascending
+                                            )
+                                          TemplatePadding: =0
+                                          TemplateSize: =64
+                                          Visible: =And(Not(varCadCarregando), Self.AllItemsCount > 0)
+                                          Width: =Parent.Width
+                                          Y: =130
+                                        Children:
+                                          - htmCadLinha:
+                                              Control: HtmlViewer@2.1.0
+                                              Properties:
+                                                Fill: =thmSuperficie
+                                                Font: =Font.'Open Sans'
+                                                Height: =62
+                                                HtmlText: |-
+                                                  ="<table style='width:100%;border-collapse:collapse;border-left:3px solid " &
+                                                  If(varCadSelId = ThisItem.ID, hxPrimaria, hxSuperficie) &
+                                                  ";border-bottom:1px solid " & hxGradeLinha & ";font-family:Open Sans,Segoe UI,sans-serif;'><tr>" &
+                                                  "<td style='vertical-align:top;padding:10px 6px 0 10px;'>" &
+                                                  "<div style='font-size:12px;font-weight:700;color:" & hxTexto & ";'>" & Coalesce(ThisItem.usrNome, "—") & "</div>" &
+                                                  "<div style='font-size:10px;color:" & hxTextoFraco & ";margin-top:4px;'>" &
+                                                  Coalesce(ThisItem.Aeroporto, "—") & " &middot; " & Coalesce(ThisItem.Bloco, "—") & "</div></td>" &
+                                                  "<td style='width:96px;vertical-align:top;text-align:right;padding:10px 8px 0 0;'>" &
+                                                  "<span style='display:inline-block;background:" &
+                                                  Switch(ThisItem.Autorizacao, "Admin", hxPrimariaClara, "AdmAVSEC", hxAmbarClaro, hxGradeLinha) &
+                                                  ";color:" &
+                                                  Switch(ThisItem.Autorizacao, "Admin", hxPrimaria, "AdmAVSEC", hxAmbar, hxTextoFraco) &
+                                                  ";padding:3px 8px;font-size:9px;font-weight:700;'>" &
+                                                  Upper(Coalesce(ThisItem.Autorizacao, "—")) & "</span>" &
+                                                  If(
+                                                      ThisItem.usr_papel_chamados = "GESTOR" Or ThisItem.usr_papel_chamados = "ATENDENTE",
+                                                      "<div style='font-size:9px;font-weight:700;color:" & hxPrimariaEscura & ";margin-top:5px;'>" & ThisItem.usr_papel_chamados & "</div>",
+                                                      ""
+                                                  ) &
+                                                  "</td></tr></table>"
+                                                OnSelect: |-
+                                                  =Select(Parent);
+                                                  UpdateContext({varCadSelId: ThisItem.ID});
+                                                  ClearCollect(
+                                                      colUsrPerfTemp,
+                                                      Filter(
+                                                          UserPerfil,
+                                                          IdUser = ThisItem.ID
+                                                      )
+                                                  );
+                                                  Set(
+                                                      varCadAad,
+                                                      First(
+                                                          UsuáriosdoOffice365.SearchUser({searchTerm: ThisItem.usrNome})
+                                                      )
+                                                  );
+                                                  UpdateContext({varCadTentou: false})
+                                                PaddingBottom: =0
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                                PaddingTop: =0
+                                                Size: =10
+                                                Width: =Parent.TemplateWidth - 34
+                                          - Icon10:
+                                              Control: Classic/Icon@2.5.0
+                                              Properties:
+                                                Color: =thmTextoFraco
+                                                Height: =22
+                                                Icon: =Icon.Lock
+                                                OnSelect: |-
+                                                  =Select(Parent);
+                                                  UpdateContext(
+                                                      {
+                                                          varCadSelId: ThisItem.ID,
+                                                          varCadConfirmar: "RESET"
+                                                      }
+                                                  )
+                                                PaddingBottom: =4
+                                                PaddingLeft: =4
+                                                PaddingRight: =4
+                                                PaddingTop: =4
+                                                Tooltip: ="Resetar a senha deste usuário"
+                                                Width: =22
+                                                X: =Parent.TemplateWidth - 28
+                                                Y: =20
+                                    - cntCadListaVazia:
+                                        Control: GroupContainer@1.5.0
+                                        Variant: ManualLayout
+                                        Properties:
+                                          BorderColor: =thmGradeLinha
+                                          BorderThickness: =1
+                                          DropShadow: =DropShadow.None
+                                          Fill: =thmFundo
+                                          Height: =140
+                                          RadiusBottomLeft: =0
+                                          RadiusBottomRight: =0
+                                          RadiusTopLeft: =0
+                                          RadiusTopRight: =0
+                                          Visible: =And(Not(varCadCarregando), galUser.AllItemsCount = 0)
+                                          Width: =Parent.Width
+                                          Y: =130
+                                        Children:
+                                          - lblCadListaVaziaTitulo:
+                                              Control: Label@2.5.1
+                                              Properties:
+                                                Align: =Align.Center
+                                                Color: =thmTexto
+                                                Font: =Font.'Open Sans'
+                                                FontWeight: =FontWeight.Semibold
+                                                Height: =26
+                                                Size: =12
+                                                Text: ="Nenhum usuário neste filtro"
+                                                Width: =Parent.Width - 32
+                                                X: =16
+                                                Y: =40
+                                          - lblCadListaVaziaTexto:
+                                              Control: Label@2.5.1
+                                              Properties:
+                                                Align: =Align.Center
+                                                AutoHeight: =true
+                                                Color: =thmTextoFraco
+                                                Font: =Font.'Open Sans'
+                                                PaddingBottom: =0
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                                PaddingTop: =0
+                                                Size: =9
+                                                Text: ="Limpe a busca ou troque o aeroporto e a autorização."
+                                                Width: =Parent.Width - 48
+                                                X: =24
+                                                Y: =72
+                              - cntCadForm:
+                                  Control: GroupContainer@1.5.0
+                                  Variant: ManualLayout
+                                  Properties:
+                                    BorderStyle: =BorderStyle.None
+                                    DropShadow: =DropShadow.None
+                                    Fill: =thmSuperficie
+                                    Height: =Parent.Height - 232
+                                    RadiusBottomLeft: =0
+                                    RadiusBottomRight: =0
+                                    RadiusTopLeft: =0
+                                    RadiusTopRight: =0
+                                    Width: =Parent.Width - (cntCadLista.X + cntCadLista.Width + 28) - 24
+                                    X: =cntCadLista.X + cntCadLista.Width + 28
+                                    Y: =124
+                                  Children:
+                                    - Label5_44:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          Color: =thmTexto
+                                          Font: =Font.'Open Sans'
+                                          FontWeight: =FontWeight.Semibold
+                                          Height: =18
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                          PaddingTop: =0
+                                          Size: =9
+                                          Text: ="Localizar no diretório"
+                                          Width: =Parent.Width
+                                    - txtUsrAvcbLoc_1:
+                                        Control: Classic/TextInput@2.3.2
+                                        Properties:
+                                          BorderColor: =thmBorda
+                                          BorderThickness: =1
+                                          Color: =thmTexto
+                                          Default: =galUser.Selected.usrNome
+                                          DelayOutput: =true
+                                          Fill: =thmPrimariaClara
+                                          Font: =Font.'Open Sans'
+                                          Height: =32
+                                          HintText: ="Digite o nome para buscar no Office 365"
+                                          HoverBorderColor: =thmPrimaria
+                                          HoverFill: =thmPrimariaClara
+                                          PaddingLeft: =10
+                                          RadiusBottomLeft: =0
+                                          RadiusBottomRight: =0
+                                          RadiusTopLeft: =0
+                                          RadiusTopRight: =0
+                                          Size: =10
+                                          Width: =Parent.Width - 118
+                                          Y: =18
+                                    - btnCadBuscarAad:
+                                        Control: Button@0.0.45
+                                        Properties:
+                                          Appearance: ='ButtonCanvas.Appearance'.Secondary
+                                          BasePaletteColor: =thmPrimaria
+                                          BorderRadius: =0
+                                          DisplayMode: =If(IsBlank(Trim(txtUsrAvcbLoc_1.Text)), DisplayMode.Disabled, DisplayMode.Edit)
+                                          FontSize: =11
+                                          Icon: ="Search"
+                                          IconStyle: ='ButtonCanvas.IconStyle'.Outline
+                                          Layout: ='ButtonCanvas.Layout'.IconBefore
+                                          OnSelect: |-
+                                            =Set(
+                                                varCadAad,
+                                                First(
+                                                    UsuáriosdoOffice365.SearchUser({searchTerm: Trim(txtUsrAvcbLoc_1.Text)})
+                                                )
+                                            );
+                                            If(
+                                                IsBlank(varCadAad.DisplayName),
+                                                Notify(
+                                                    "Ninguém encontrado no diretório com esse nome.",
+                                                    NotificationType.Warning,
+                                                    4000
+                                                )
+                                            )
+                                          Text: ="Buscar"
+                                          Width: =106
+                                          X: =Parent.Width - 106
+                                          Y: =18
+                                    - Label5_45:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          Color: =thmTexto
+                                          Font: =Font.'Open Sans'
+                                          FontWeight: =FontWeight.Semibold
+                                          Height: =18
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                          PaddingTop: =0
+                                          Size: =9
+                                          Text: ="Nome completo *"
+                                          Width: =Parent.Width
+                                          Y: =62
+                                    - txtCadUsrNome:
+                                        Control: Classic/TextInput@2.3.2
+                                        Properties:
+                                          BorderColor: =If(varCadTentou && IsBlank(Trim(Self.Text)), thmVermelho, thmBorda)
+                                          BorderThickness: =1
+                                          Color: =thmTexto
+                                          Default: =If(IsBlank(txtUsrAvcbLoc_1.Text), "", Coalesce(varCadAad.DisplayName, ""))
+                                          Fill: =thmFundo
+                                          Font: =Font.'Open Sans'
+                                          Height: =32
+                                          HoverBorderColor: =thmPrimaria
+                                          HoverFill: =thmFundo
+                                          PaddingLeft: =10
+                                          RadiusBottomLeft: =0
+                                          RadiusBottomRight: =0
+                                          RadiusTopLeft: =0
+                                          RadiusTopRight: =0
+                                          Size: =10
+                                          Width: =Parent.Width
+                                          Y: =80
+                                    - Label5_47:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          Color: =thmTexto
+                                          Font: =Font.'Open Sans'
+                                          FontWeight: =FontWeight.Semibold
+                                          Height: =18
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                          PaddingTop: =0
+                                          Size: =9
+                                          Text: ="E-mail *"
+                                          Width: =(Parent.Width - 12) / 2
+                                          Y: =124
+                                    - txtCadUsrEmail:
+                                        Control: Classic/TextInput@2.3.2
+                                        Properties:
+                                          BorderColor: =If(varCadTentou && IsBlank(Trim(Self.Text)), thmVermelho, thmBorda)
+                                          BorderThickness: =1
+                                          Color: =thmTexto
+                                          Default: =If(IsBlank(txtUsrAvcbLoc_1.Text), "", Coalesce(varCadAad.Mail, ""))
+                                          Fill: =thmFundo
+                                          Font: =Font.'Open Sans'
+                                          Height: =32
+                                          HoverBorderColor: =thmPrimaria
+                                          HoverFill: =thmFundo
+                                          PaddingLeft: =10
+                                          RadiusBottomLeft: =0
+                                          RadiusBottomRight: =0
+                                          RadiusTopLeft: =0
+                                          RadiusTopRight: =0
+                                          Size: =10
+                                          Width: =(Parent.Width - 12) / 2
+                                          Y: =142
+                                    - Label5_46:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          Color: =thmTexto
+                                          Font: =Font.'Open Sans'
+                                          FontWeight: =FontWeight.Semibold
+                                          Height: =18
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                          PaddingTop: =0
+                                          Size: =9
+                                          Text: ="Usuário de login *"
+                                          Width: =(Parent.Width - 12) / 2
+                                          X: =(Parent.Width + 12) / 2
+                                          Y: =124
+                                    - txtCadUsrUser:
+                                        Control: Classic/TextInput@2.3.2
+                                        Properties:
+                                          BorderColor: =If(varCadTentou && IsBlank(Trim(Self.Text)), thmVermelho, thmBorda)
+                                          BorderThickness: =1
+                                          Color: =thmTexto
+                                          Default: |-
+                                            =If(
+                                                IsBlank(txtCadUsrEmail.Text),
+                                                "",
+                                                Left(
+                                                    txtCadUsrEmail.Text,
+                                                    Coalesce(
+                                                        Find("@", txtCadUsrEmail.Text),
+                                                        Len(txtCadUsrEmail.Text) + 1
+                                                    ) - 1
+                                                )
+                                            )
+                                          Fill: =thmFundo
+                                          Font: =Font.'Open Sans'
+                                          Height: =32
+                                          HoverBorderColor: =thmPrimaria
+                                          HoverFill: =thmFundo
+                                          PaddingLeft: =10
+                                          RadiusBottomLeft: =0
+                                          RadiusBottomRight: =0
+                                          RadiusTopLeft: =0
+                                          RadiusTopRight: =0
+                                          Size: =10
+                                          Width: =(Parent.Width - 12) / 2
+                                          X: =(Parent.Width + 12) / 2
+                                          Y: =142
+                                    - Label5_48:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          Color: =thmTexto
+                                          Font: =Font.'Open Sans'
+                                          FontWeight: =FontWeight.Semibold
+                                          Height: =18
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                          PaddingTop: =0
+                                          Size: =9
+                                          Text: ="Área"
+                                          Width: =(Parent.Width - 12) / 2
+                                          Y: =186
+                                    - txtCadUsrArea:
+                                        Control: Classic/TextInput@2.3.2
+                                        Properties:
+                                          BorderColor: =thmBorda
+                                          BorderThickness: =1
+                                          Color: =thmTexto
+                                          Default: =If(IsBlank(txtUsrAvcbLoc_1.Text), "", Coalesce(varCadAad.Department, ""))
+                                          Fill: =thmFundo
+                                          Font: =Font.'Open Sans'
+                                          Height: =32
+                                          HoverBorderColor: =thmPrimaria
+                                          HoverFill: =thmFundo
+                                          PaddingLeft: =10
+                                          RadiusBottomLeft: =0
+                                          RadiusBottomRight: =0
+                                          RadiusTopLeft: =0
+                                          RadiusTopRight: =0
+                                          Size: =10
+                                          Width: =(Parent.Width - 12) / 2
+                                          Y: =204
+                                    - Label5_49:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          Color: =thmTexto
+                                          Font: =Font.'Open Sans'
+                                          FontWeight: =FontWeight.Semibold
+                                          Height: =18
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                          PaddingTop: =0
+                                          Size: =9
+                                          Text: ="Função"
+                                          Width: =(Parent.Width - 12) / 2
+                                          X: =(Parent.Width + 12) / 2
+                                          Y: =186
+                                    - txtCadUsrFunc:
+                                        Control: Classic/TextInput@2.3.2
+                                        Properties:
+                                          BorderColor: =thmBorda
+                                          BorderThickness: =1
+                                          Color: =thmTexto
+                                          Default: =If(IsBlank(txtUsrAvcbLoc_1.Text), "", Coalesce(varCadAad.JobTitle, ""))
+                                          Fill: =thmFundo
+                                          Font: =Font.'Open Sans'
+                                          Height: =32
+                                          HoverBorderColor: =thmPrimaria
+                                          HoverFill: =thmFundo
+                                          PaddingLeft: =10
+                                          RadiusBottomLeft: =0
+                                          RadiusBottomRight: =0
+                                          RadiusTopLeft: =0
+                                          RadiusTopRight: =0
+                                          Size: =10
+                                          Width: =(Parent.Width - 12) / 2
+                                          X: =(Parent.Width + 12) / 2
+                                          Y: =204
+                                    - Label5_32:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          Color: =thmTexto
+                                          Font: =Font.'Open Sans'
+                                          FontWeight: =FontWeight.Semibold
+                                          Height: =18
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                          PaddingTop: =0
+                                          Size: =9
+                                          Text: ="Aeroporto *"
+                                          Width: =(Parent.Width - 12) / 2
+                                          Y: =248
+                                    - cmbUserAero:
+                                        Control: Classic/DropDown@2.3.1
+                                        Properties:
+                                          BorderColor: =If(varCadTentou && IsBlank(Self.Selected.Value), thmVermelho, thmBorda)
+                                          ChevronBackground: =thmPrimaria
+                                          ChevronFill: =thmTextoInverso
+                                          ChevronHoverBackground: =thmPrimariaEscura
+                                          ChevronHoverFill: =thmTextoInverso
+                                          Color: =thmTexto
+                                          Default: |-
+                                            =With(
+                                                {
+                                                    IATA_USER: LookUp(
+                                                        colAeros,
+                                                        IATA = Right(
+                                                            txtCadUsrArea.Text,
+                                                            3
+                                                        )
+                                                    ).Aeroporto
+                                                },
+                                                If(
+                                                    IsBlank(IATA_USER),
+                                                    "CURITIBA",
+                                                    IATA_USER
+                                                )
+                                            )
+                                          Fill: =thmFundo
+                                          Font: =Font.'Open Sans'
+                                          Height: =32
+                                          HoverColor: =thmTexto
+                                          HoverFill: =thmPrimariaClara
+                                          Items: =Distinct(colAeros, Aeroporto)
+                                          Items.Value: =Value
+                                          PressedColor: =thmTexto
+                                          PressedFill: =thmPrimariaClara
+                                          SelectionColor: =thmTexto
+                                          SelectionFill: =thmPrimariaClara
+                                          Size: =10
+                                          Width: =(Parent.Width - 12) / 2
+                                          Y: =266
+                                    - Label5_43:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          Color: =thmTexto
+                                          Font: =Font.'Open Sans'
+                                          FontWeight: =FontWeight.Semibold
+                                          Height: =18
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                          PaddingTop: =0
+                                          Size: =9
+                                          Text: ="Bloco (definido pelo aeroporto)"
+                                          Width: =(Parent.Width - 12) / 2
+                                          X: =(Parent.Width + 12) / 2
+                                          Y: =248
+                                    - Label5_33:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          BorderColor: =thmGradeLinha
+                                          BorderThickness: =1
+                                          Color: =thmTextoFraco
+                                          Fill: =thmGradeLinha
+                                          Font: =Font.'Open Sans'
+                                          Height: =32
+                                          PaddingLeft: =10
+                                          Size: =10
+                                          Text: =LookUp(colAeros, Aeroporto = cmbUserAero.Selected.Value, Bloco)
+                                          Width: =(Parent.Width - 12) / 2
+                                          X: =(Parent.Width + 12) / 2
+                                          Y: =266
+                                    - Label5_50:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          Color: =thmTexto
+                                          Font: =Font.'Open Sans'
+                                          FontWeight: =FontWeight.Semibold
+                                          Height: =18
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                          PaddingTop: =0
+                                          Size: =9
+                                          Text: ="Perfil (escopo) *"
+                                          Width: =(Parent.Width - 12) / 2
+                                          Y: =310
+                                    - cmbCadUsrPerf:
+                                        Control: Classic/DropDown@2.3.1
+                                        Properties:
+                                          BorderColor: =If(varCadTentou && IsBlank(Self.Selected.Value), thmVermelho, thmBorda)
+                                          ChevronBackground: =thmPrimaria
+                                          ChevronFill: =thmTextoInverso
+                                          ChevronHoverBackground: =thmPrimariaEscura
+                                          ChevronHoverFill: =thmTextoInverso
+                                          Color: =thmTexto
+                                          Default: =galUser.Selected.Perfil
+                                          Fill: =thmFundo
+                                          Font: =Font.'Open Sans'
+                                          Height: =32
+                                          HoverColor: =thmTexto
+                                          HoverFill: =thmPrimariaClara
+                                          Items: =["Base","Sede","Bloco"]
+                                          Items.Value: =Value
+                                          PressedColor: =thmTexto
+                                          PressedFill: =thmPrimariaClara
+                                          SelectionColor: =thmTexto
+                                          SelectionFill: =thmPrimariaClara
+                                          Size: =10
+                                          Width: =(Parent.Width - 12) / 2
+                                          Y: =328
+                                    - Label5_51:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          Color: =thmTexto
+                                          Font: =Font.'Open Sans'
+                                          FontWeight: =FontWeight.Semibold
+                                          Height: =18
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                          PaddingTop: =0
+                                          Size: =9
+                                          Text: ="Autorização *"
+                                          Width: =(Parent.Width - 12) / 2
+                                          X: =(Parent.Width + 12) / 2
+                                          Y: =310
+                                    - cmbCadUsrAut:
+                                        Control: Classic/DropDown@2.3.1
+                                        Properties:
+                                          BorderColor: =If(varCadTentou && IsBlank(Self.Selected.Value), thmVermelho, thmBorda)
+                                          ChevronBackground: =thmPrimaria
+                                          ChevronFill: =thmTextoInverso
+                                          ChevronHoverBackground: =thmPrimariaEscura
+                                          ChevronHoverFill: =thmTextoInverso
+                                          Color: =thmTexto
+                                          Default: =galUser.Selected.Autorizacao
+                                          Fill: =thmFundo
+                                          Font: =Font.'Open Sans'
+                                          Height: =32
+                                          HoverColor: =thmTexto
+                                          HoverFill: =thmPrimariaClara
+                                          Items: =["Usuário","Admin","AdmAVSEC"]
+                                          Items.Value: =Value
+                                          PressedColor: =thmTexto
+                                          PressedFill: =thmPrimariaClara
+                                          SelectionColor: =thmTexto
+                                          SelectionFill: =thmPrimariaClara
+                                          Size: =10
+                                          Width: =(Parent.Width - 12) / 2
+                                          X: =(Parent.Width + 12) / 2
+                                          Y: =328
+                                    - Label5_53:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          Color: =thmTexto
+                                          Font: =Font.'Open Sans'
+                                          FontWeight: =FontWeight.Semibold
+                                          Height: =18
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                          PaddingTop: =0
+                                          Size: =9
+                                          Text: ="Papel nos chamados"
+                                          Width: =(Parent.Width - 12) / 2
+                                          Y: =372
+                                    - cmbCadUsrPapel:
+                                        Control: Classic/DropDown@2.3.1
+                                        Properties:
+                                          BorderColor: =thmBorda
+                                          ChevronBackground: =thmPrimaria
+                                          ChevronFill: =thmTextoInverso
+                                          ChevronHoverBackground: =thmPrimariaEscura
+                                          ChevronHoverFill: =thmTextoInverso
+                                          Color: =thmTexto
+                                          Default: =galUser.Selected.usr_papel_chamados
+                                          Fill: =thmFundo
+                                          Font: =Font.'Open Sans'
+                                          Height: =32
+                                          HoverColor: =thmTexto
+                                          HoverFill: =thmPrimariaClara
+                                          Items: =["","ATENDENTE","GESTOR"]
+                                          Items.Value: =Value
+                                          PressedColor: =thmTexto
+                                          PressedFill: =thmPrimariaClara
+                                          SelectionColor: =thmTexto
+                                          SelectionFill: =thmPrimariaClara
+                                          Size: =10
+                                          Width: =(Parent.Width - 12) / 2
+                                          Y: =390
+                                    - Label9:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          AutoHeight: =true
+                                          Color: =If(IsBlank(LookUp(col_usuarios, Email = txtCadUsrEmail.Text).Email), thmAmbar, thmVerde)
+                                          Font: =Font.'Open Sans'
+                                          FontWeight: =FontWeight.Semibold
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                          PaddingTop: =0
+                                          Size: =9
+                                          Text: |-
+                                            =If(
+                                                IsBlank(Trim(txtCadUsrEmail.Text)),
+                                                "Busque um nome no diretório ou selecione alguém na lista.",
+                                                IsBlank(LookUp(col_usuarios, Email = txtCadUsrEmail.Text).Email),
+                                                "Este e-mail ainda não tem cadastro. Ao cadastrar, a senha inicial será ccr" & Year(Now()) & ".",
+                                                "Este e-mail já está cadastrado no sistema. Use Salvar alterações."
+                                            )
+                                          Width: =Parent.Width
+                                          Y: =434
+                                    - htmCadSelecionado:
+                                        Control: HtmlViewer@2.1.0
+                                        Properties:
+                                          Fill: =thmSuperficie
+                                          Font: =Font.'Open Sans'
+                                          Height: =150
+                                          HtmlText: |-
+                                            ="<div style='font-family:Open Sans,Segoe UI,sans-serif;border:1px solid " & hxGradeLinha & ";background:" & hxFundo & ";padding:16px 18px;'>" &
+                                            "<div style='font-size:9px;font-weight:800;letter-spacing:.08em;color:" & hxPrimaria & ";'>USUÁRIO SELECIONADO</div>" &
+                                            "<div style='font-size:15px;font-weight:800;color:" & hxTexto & ";margin-top:6px;'>" &
+                                            Coalesce(galUser.Selected.usrNome, "—") & "</div>" &
+                                            "<table style='width:100%;border-collapse:collapse;margin-top:12px;'>" &
+                                            "<tr>" &
+                                            "<td style='font-size:10px;color:" & hxTextoFraco & ";padding:3px 0;'>Login</td>" &
+                                            "<td style='font-size:11px;font-weight:600;color:" & hxTexto & ";padding:3px 0;'>" & Coalesce(galUser.Selected.Usuarios, "—") & "</td>" &
+                                            "<td style='font-size:10px;color:" & hxTextoFraco & ";padding:3px 0 3px 24px;'>Aeroporto</td>" &
+                                            "<td style='font-size:11px;font-weight:600;color:" & hxTexto & ";padding:3px 0;'>" &
+                                            Coalesce(galUser.Selected.Aeroporto, "—") & " &middot; " & Coalesce(galUser.Selected.Bloco, "—") & "</td>" &
+                                            "</tr><tr>" &
+                                            "<td style='font-size:10px;color:" & hxTextoFraco & ";padding:3px 0;'>Papel nos chamados</td>" &
+                                            "<td style='font-size:11px;font-weight:600;color:" & hxPrimariaEscura & ";padding:3px 0;'>" &
+                                            If(IsBlank(galUser.Selected.usr_papel_chamados), "Solicitante", galUser.Selected.usr_papel_chamados) & "</td>" &
+                                            "<td style='font-size:10px;color:" & hxTextoFraco & ";padding:3px 0 3px 24px;'>Senha</td>" &
+                                            "<td style='font-size:11px;font-weight:700;color:" &
+                                            If(galUser.Selected.Validacao = 0, hxAmbar, hxVerde) & ";padding:3px 0;'>" &
+                                            If(galUser.Selected.Validacao = 0, "Aguardando 1º acesso", "Definida pelo usuário") & "</td>" &
+                                            "</tr></table></div>"
+                                          PaddingBottom: =0
+                                          PaddingLeft: =0
+                                          PaddingRight: =0
+                                          PaddingTop: =0
+                                          Size: =10
+                                          Visible: =Not(IsBlank(galUser.Selected.ID))
+                                          Width: =Parent.Width
+                                          Y: =474
+                              - recCadFooterDivider:
+                                  Control: Rectangle@2.3.0
+                                  Properties:
+                                    BorderColor: =thmTransparente
+                                    Fill: =thmGradeLinha
+                                    Height: =1
+                                    Width: =Parent.Width
+                                    Y: =Parent.Height - 84
+                              - btnCadResetSenha:
+                                  Control: Button@0.0.45
+                                  Properties:
+                                    Appearance: ='ButtonCanvas.Appearance'.Secondary
+                                    BasePaletteColor: =thmPrimaria
+                                    BorderRadius: =0
+                                    DisplayMode: =If(IsBlank(galUser.Selected.ID), DisplayMode.Disabled, DisplayMode.Edit)
+                                    FontSize: =11
+                                    Height: =38
+                                    Icon: ="LockClosed"
+                                    IconStyle: ='ButtonCanvas.IconStyle'.Outline
+                                    Layout: ='ButtonCanvas.Layout'.IconBefore
+                                    OnSelect: |-
+                                      =UpdateContext({varCadConfirmar: "RESET"})
+                                    Text: ="Resetar senha"
+                                    Width: =150
+                                    X: =24
+                                    Y: =Parent.Height - 64
+                              - btnCadExcluir:
+                                  Control: Button@0.0.45
+                                  Properties:
+                                    Appearance: ='ButtonCanvas.Appearance'.Secondary
+                                    BasePaletteColor: =thmVermelho
+                                    BorderRadius: =0
+                                    DisplayMode: =If(IsBlank(galUser.Selected.ID), DisplayMode.Disabled, DisplayMode.Edit)
+                                    FontSize: =11
+                                    Height: =38
+                                    Icon: ="Delete"
+                                    IconStyle: ='ButtonCanvas.IconStyle'.Outline
+                                    Layout: ='ButtonCanvas.Layout'.IconBefore
+                                    OnSelect: |-
+                                      =UpdateContext({varCadConfirmar: "EXCLUIR"})
+                                    Text: ="Excluir"
+                                    Width: =132
+                                    X: =182
+                                    Y: =Parent.Height - 64
+                              - btnCadSalvar:
+                                  Control: Button@0.0.45
+                                  Properties:
+                                    Appearance: ='ButtonCanvas.Appearance'.Secondary
+                                    BasePaletteColor: =thmPrimaria
+                                    BorderRadius: =0
+                                    DisplayMode: =If(Or(IsBlank(galUser.Selected.ID), Not(IsBlank(varCadOcupadoDesde))), DisplayMode.Disabled, DisplayMode.Edit)
+                                    FontSize: =11
+                                    FontWeight: =FontWeight.Semibold
+                                    Height: =38
+                                    Icon: ="Save"
+                                    IconStyle: ='ButtonCanvas.IconStyle'.Outline
+                                    Layout: ='ButtonCanvas.Layout'.IconBefore
+                                    OnSelect: |-
+                                      =UpdateContext({varCadTentou: true});
+                                      If(
+                                          IsBlank(Trim(txtCadUsrNome.Text)) ||
+                                          IsBlank(Trim(txtCadUsrEmail.Text)) ||
+                                          IsBlank(Trim(txtCadUsrUser.Text)) ||
+                                          IsBlank(cmbUserAero.Selected.Value) ||
+                                          IsBlank(cmbCadUsrPerf.Selected.Value) ||
+                                          IsBlank(cmbCadUsrAut.Selected.Value),
+                                          Notify(
+                                              "Preencha nome, e-mail, usuário, aeroporto, perfil e autorização.",
+                                              NotificationType.Warning,
+                                              4000
+                                          ),
+
+                                          !IsBlank(varCadOcupadoDesde) && DateDiff(varCadOcupadoDesde, Now(), TimeUnit.Seconds) < 30,
+                                          Notify(
+                                              "Aguarde: a gravação anterior ainda está sendo processada.",
+                                              NotificationType.Warning,
+                                              3000
+                                          ),
+
+                                          UpdateContext({varCadOcupadoDesde: Now()});
+                                          IfError(
+                                              Patch(
+                                                  User,
+                                                  LookUp(
+                                                      User,
+                                                      ID = galUser.Selected.ID
+                                                  ),
+                                                  {
+                                                      Bloco: Label5_33.Text,
+                                                      Cluster: LookUp(
+                                                          colAeros,
+                                                          Aeroporto = cmbUserAero.Selected.Value,
+                                                          Cluster
+                                                      ),
+                                                      Aeroporto: cmbUserAero.Selected.Value,
+                                                      usrNome: Trim(txtCadUsrNome.Text),
+                                                      Email: Trim(txtCadUsrEmail.Text),
+                                                      Usuarios: Trim(txtCadUsrUser.Text),
+                                                      Area: Trim(txtCadUsrArea.Text),
+                                                      Funcao: Trim(txtCadUsrFunc.Text),
+                                                      Perfil: cmbCadUsrPerf.Selected.Value,
+                                                      Autorizacao: cmbCadUsrAut.Selected.Value,
+                                                      usr_papel_chamados: cmbCadUsrPapel.Selected.Value
+                                                  }
+                                              );
+                                              Refresh(User);
+                                              ClearCollect(
+                                                  col_usuarios,
+                                                  User
+                                              );
+                                              UpdateContext({varCadTentou: false});
+                                              Notify(
+                                                  "Alterações salvas.",
+                                                  NotificationType.Success,
+                                                  3000
+                                              ),
+                                              Notify(
+                                                  "Não foi possível salvar. Nenhuma alteração foi gravada.",
+                                                  NotificationType.Error,
+                                                  6000
+                                              )
+                                          );
+                                          UpdateContext({varCadOcupadoDesde: Blank()})
+                                      )
+                                    Text: ="Salvar alterações"
+                                    Width: =190
+                                    X: =Parent.Width - 386
+                                    Y: =Parent.Height - 64
+                              - btnCadCadastrar:
+                                  Control: Button@0.0.45
+                                  Properties:
+                                    BasePaletteColor: =thmPrimaria
+                                    BorderRadius: =0
+                                    DisplayMode: |-
+                                      =If(
+                                          Or(
+                                              Not(IsBlank(LookUp(col_usuarios, Email = txtCadUsrEmail.Text).Email)),
+                                              Not(IsBlank(varCadOcupadoDesde))
+                                          ),
+                                          DisplayMode.Disabled,
+                                          DisplayMode.Edit
+                                      )
+                                    FontSize: =11
+                                    FontWeight: =FontWeight.Semibold
+                                    Height: =38
+                                    Icon: ="Add"
+                                    IconStyle: ='ButtonCanvas.IconStyle'.Filled
+                                    Layout: ='ButtonCanvas.Layout'.IconBefore
+                                    OnSelect: |-
+                                      =UpdateContext({varCadTentou: true});
+                                      If(
+                                          IsBlank(Trim(txtCadUsrNome.Text)) ||
+                                          IsBlank(Trim(txtCadUsrEmail.Text)) ||
+                                          IsBlank(Trim(txtCadUsrUser.Text)) ||
+                                          IsBlank(cmbUserAero.Selected.Value) ||
+                                          IsBlank(cmbCadUsrPerf.Selected.Value) ||
+                                          IsBlank(cmbCadUsrAut.Selected.Value),
+                                          Notify(
+                                              "Preencha nome, e-mail, usuário, aeroporto, perfil e autorização.",
+                                              NotificationType.Warning,
+                                              4000
+                                          ),
+
+                                          !IsBlank(LookUp(col_usuarios, Email = Trim(txtCadUsrEmail.Text)).Email),
+                                          Notify(
+                                              "Já existe um cadastro com este e-mail.",
+                                              NotificationType.Warning,
+                                              4000
+                                          ),
+
+                                          !IsBlank(varCadOcupadoDesde) && DateDiff(varCadOcupadoDesde, Now(), TimeUnit.Seconds) < 30,
+                                          Notify(
+                                              "Aguarde: a gravação anterior ainda está sendo processada.",
+                                              NotificationType.Warning,
+                                              3000
+                                          ),
+
+                                          UpdateContext({varCadOcupadoDesde: Now()});
+                                          IfError(
+                                              Patch(
+                                                  User,
+                                                  Defaults(User),
+                                                  {
+                                                      Bloco: Label5_33.Text,
+                                                      Cluster: LookUp(
+                                                          colAeros,
+                                                          Aeroporto = cmbUserAero.Selected.Value,
+                                                          Cluster
+                                                      ),
+                                                      Aeroporto: cmbUserAero.Selected.Value,
+                                                      usrNome: Trim(txtCadUsrNome.Text),
+                                                      Email: Trim(txtCadUsrEmail.Text),
+                                                      Usuarios: Trim(txtCadUsrUser.Text),
+                                                      Area: Trim(txtCadUsrArea.Text),
+                                                      Funcao: Trim(txtCadUsrFunc.Text),
+                                                      Perfil: cmbCadUsrPerf.Selected.Value,
+                                                      Autorizacao: cmbCadUsrAut.Selected.Value,
+                                                      usr_papel_chamados: cmbCadUsrPapel.Selected.Value,
+                                                      Senha: "ccr" & Year(Now()),
+                                                      Validacao: 0
+                                                  }
+                                              );
+                                              Refresh(User);
+                                              ClearCollect(
+                                                  col_usuarios,
+                                                  User
+                                              );
+                                              UpdateContext({varCadTentou: false});
+                                              Notify(
+                                                  "Usuário cadastrado. Senha inicial: ccr" & Year(Now()) & ".",
+                                                  NotificationType.Success,
+                                                  6000
+                                              ),
+                                              Notify(
+                                                  "Não foi possível cadastrar. Nada foi gravado.",
+                                                  NotificationType.Error,
+                                                  6000
+                                              )
+                                          );
+                                          UpdateContext({varCadOcupadoDesde: Blank()})
+                                      )
+                                    Text: ="Cadastrar"
+                                    Width: =148
+                                    X: =Parent.Width - 172
+                                    Y: =Parent.Height - 64
+                              - cntCadConfirm:
+                                  Control: GroupContainer@1.5.0
+                                  Variant: ManualLayout
+                                  Properties:
+                                    DropShadow: =DropShadow.None
+                                    Fill: =RGBA(0, 0, 0, 0.45)
+                                    Height: =Parent.Height
+                                    RadiusBottomLeft: =0
+                                    RadiusBottomRight: =0
+                                    RadiusTopLeft: =0
+                                    RadiusTopRight: =0
+                                    Visible: =varCadConfirmar <> ""
+                                    Width: =Parent.Width
+                                  Children:
+                                    - cntCadConfirmCard:
+                                        Control: GroupContainer@1.5.0
+                                        Variant: ManualLayout
+                                        Properties:
+                                          BorderColor: =thmGradeLinha
+                                          BorderThickness: =1
+                                          DropShadow: =DropShadow.ExtraBold
+                                          Fill: =thmSuperficie
+                                          Height: =206
+                                          RadiusBottomLeft: =0
+                                          RadiusBottomRight: =0
+                                          RadiusTopLeft: =0
+                                          RadiusTopRight: =0
+                                          Width: =430
+                                          X: =(Parent.Width - Self.Width) / 2
+                                          Y: =(Parent.Height - Self.Height) / 2
+                                        Children:
+                                          - Label38:
+                                              Control: Label@2.5.1
+                                              Properties:
+                                                Color: =thmTexto
+                                                Font: =Font.'Open Sans'
+                                                FontWeight: =FontWeight.Bold
+                                                Height: =28
+                                                PaddingBottom: =0
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                                PaddingTop: =0
+                                                Size: =14
+                                                Text: =If(varCadConfirmar = "EXCLUIR", "Excluir usuário", "Resetar a senha")
+                                                Width: =Parent.Width - 56
+                                                X: =28
+                                                Y: =26
+                                          - lblCadConfirmTexto:
+                                              Control: Label@2.5.1
+                                              Properties:
+                                                AutoHeight: =true
+                                                Color: =thmTextoFraco
+                                                Font: =Font.'Open Sans'
+                                                PaddingBottom: =0
+                                                PaddingLeft: =0
+                                                PaddingRight: =0
+                                                PaddingTop: =0
+                                                Size: =10
+                                                Text: |-
+                                                  =If(
+                                                      varCadConfirmar = "EXCLUIR",
+                                                      "O cadastro de " & Coalesce(galUser.Selected.usrNome, "—") & " será removido e a pessoa perde o acesso ao AirPort Now. Não há como desfazer.",
+                                                      "A senha de " & Coalesce(galUser.Selected.usrNome, "—") & " volta para ccr" & Year(Now()) & " e será trocada no próximo acesso."
+                                                  )
+                                                Width: =Parent.Width - 56
+                                                X: =28
+                                                Y: =62
+                                          - ButtonCanvas3:
+                                              Control: Button@0.0.45
+                                              Properties:
+                                                Appearance: ='ButtonCanvas.Appearance'.Secondary
+                                                BasePaletteColor: =thmPrimaria
+                                                BorderRadius: =0
+                                                FontSize: =11
+                                                Height: =40
+                                                OnSelect: |-
+                                                  =UpdateContext({varCadConfirmar: ""})
+                                                Text: ="Não, voltar"
+                                                Width: =140
+                                                X: =Parent.Width - 306
+                                                Y: =Parent.Height - 60
+                                          - ButtonCanvas1:
+                                              Control: Button@0.0.45
+                                              Properties:
+                                                BasePaletteColor: =If(varCadConfirmar = "EXCLUIR", thmVermelho, thmPrimaria)
+                                                BorderRadius: =0
+                                                DisplayMode: =If(IsBlank(varCadOcupadoDesde), DisplayMode.Edit, DisplayMode.Disabled)
+                                                FontSize: =11
+                                                FontWeight: =FontWeight.Semibold
+                                                Height: =40
+                                                OnSelect: |-
+                                                  =If(
+                                                      IsBlank(galUser.Selected.ID),
+                                                      Notify(
+                                                          "Selecione um usuário na lista.",
+                                                          NotificationType.Warning,
+                                                          3000
+                                                      );
+                                                      UpdateContext({varCadConfirmar: ""}),
+
+                                                      UpdateContext({varCadOcupadoDesde: Now()});
+                                                      IfError(
+                                                          If(
+                                                              varCadConfirmar = "EXCLUIR",
+                                                              Remove(
+                                                                  User,
+                                                                  LookUp(
+                                                                      User,
+                                                                      ID = galUser.Selected.ID
+                                                                  )
+                                                              ),
+                                                              Patch(
+                                                                  User,
+                                                                  LookUp(
+                                                                      User,
+                                                                      ID = galUser.Selected.ID
+                                                                  ),
+                                                                  {
+                                                                      Senha: "ccr" & Year(Now()),
+                                                                      Validacao: 0
+                                                                  }
+                                                              )
+                                                          );
+                                                          Refresh(User);
+                                                          ClearCollect(
+                                                              col_usuarios,
+                                                              User
+                                                          );
+                                                          Notify(
+                                                              If(
+                                                                  varCadConfirmar = "EXCLUIR",
+                                                                  "Usuário excluído.",
+                                                                  "Senha resetada para ccr" & Year(Now()) & "."
+                                                              ),
+                                                              NotificationType.Success,
+                                                              5000
+                                                          ),
+                                                          Notify(
+                                                              "Não foi possível concluir a operação. Nada foi alterado.",
+                                                              NotificationType.Error,
+                                                              6000
+                                                          )
+                                                      );
+                                                      UpdateContext(
+                                                          {
+                                                              varCadOcupadoDesde: Blank(),
+                                                              varCadConfirmar: ""
+                                                          }
+                                                      )
+                                                  )
+                                                Text: =If(varCadConfirmar = "EXCLUIR", "Sim, excluir", "Sim, resetar")
+                                                Width: =150
+                                                X: =Parent.Width - 156
+                                                Y: =Parent.Height - 60
+                              - cntCadLoading:
+                                  Control: GroupContainer@1.5.0
+                                  Variant: ManualLayout
+                                  Properties:
+                                    DropShadow: =DropShadow.None
+                                    Fill: =RGBA(255, 255, 255, 0.9)
+                                    Height: =Parent.Height
+                                    RadiusBottomLeft: =0
+                                    RadiusBottomRight: =0
+                                    RadiusTopLeft: =0
+                                    RadiusTopRight: =0
+                                    Visible: =varCadCarregando
+                                    Width: =Parent.Width
+                                  Children:
+                                    - lblCadLoading:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          Align: =Align.Center
+                                          Color: =thmPrimariaEscura
+                                          Font: =Font.'Open Sans'
+                                          FontWeight: =FontWeight.Bold
+                                          Height: =28
+                                          Text: ="Carregando usuários..."
+                                          Width: =Parent.Width - 32
+                                          X: =16
+                                          Y: =(Parent.Height - Self.Height) / 2

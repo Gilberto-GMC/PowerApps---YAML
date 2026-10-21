@@ -165,6 +165,8 @@ function validar(arquivo) {
     { tipo: /Control:\s*Classic\/ComboBox@/, se: /(^|\n)\s*(Fill|SelectionFill):/, exige: ['Color'] },
     { tipo: /Control:\s*Classic\/ComboBox@/, se: /(^|\n)\s*ChevronFill:/, exige: ['ChevronBackground'] },
     { tipo: /Control:\s*Classic\/TextInput@/, se: /(^|\n)\s*Fill:/, exige: ['Color', 'HoverFill'] },
+    { tipo: /Control:\s*Classic\/DropDown@/, se: /(^|\n)\s*(Fill|SelectionFill):/, exige: ['Color'] },
+    { tipo: /Control:\s*Classic\/DropDown@/, se: /(^|\n)\s*ChevronFill:/, exige: ['ChevronBackground'] },
   ];
   for (const b of blocos) {
     for (const r of EXIGE_SE_PINTADO) {
