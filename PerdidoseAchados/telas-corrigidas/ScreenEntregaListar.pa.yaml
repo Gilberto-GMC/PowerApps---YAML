@@ -400,7 +400,13 @@ Screens:
                                     OnSelect: |-
                                       =Set(varUltimaAtividade, Now());
                                       With(
-                                          {idBusca: IfError(Value(SearchInput2_2.Value), Blank())},
+                                          {
+                                              idBusca: IfError(Value(SearchInput2_2.Value), Blank()),
+                                              aero: Coalesce(
+                                                  ComboboxCanvasAeroporto_1.Selected.Value,
+                                                  If(varPerfilUser = "Base", varAeroUser, Blank())
+                                              )
+                                          },
                                           If(
                                               !IsBlank(SearchInput2_2.Value) And !IsBlank(idBusca),
                                               ClearCollect(
@@ -424,26 +430,68 @@ Screens:
                                                       ID_fk = idBusca
                                                   )
                                               ),
-                                              ClearCollect(
-                                                  col_perdidosConsultaBase,
-                                                  FirstN(
-                                                      SortByColumns(
-                                                          tbl_perdidosAchados,
-                                                          "ID",
-                                                          SortOrder.Descending
-                                                      ),
-                                                      300
+                                              If(
+                                                  IsBlank(aero),
+                                                  ClearCollect(
+                                                      col_perdidosConsultaBase,
+                                                      FirstN(
+                                                          SortByColumns(
+                                                              Filter(
+                                                                  tbl_perdidosAchados,
+                                                                  arquivado = 0,
+                                                                  status = "Em andamento"
+                                                              ),
+                                                              "ID",
+                                                              SortOrder.Descending
+                                                          ),
+                                                          300
+                                                      )
+                                                  );
+                                                  ClearCollect(
+                                                      col_itensPAconsultaBase,
+                                                      FirstN(
+                                                          SortByColumns(
+                                                              Filter(
+                                                                  tbl_perdidosAchadosItens,
+                                                                  arquivar = 0
+                                                              ),
+                                                              "ID",
+                                                              SortOrder.Descending
+                                                          ),
+                                                          1200
+                                                      )
                                                   )
-                                              );
-                                              ClearCollect(
-                                                  col_itensPAconsultaBase,
-                                                  FirstN(
-                                                      SortByColumns(
-                                                          tbl_perdidosAchadosItens,
-                                                          "ID",
-                                                          SortOrder.Descending
-                                                      ),
-                                                      1200
+                                                  ,
+                                                  ClearCollect(
+                                                      col_perdidosConsultaBase,
+                                                      FirstN(
+                                                          SortByColumns(
+                                                              Filter(
+                                                                  tbl_perdidosAchados,
+                                                                  arquivado = 0,
+                                                                  status = "Em andamento",
+                                                                  aeroporto = aero
+                                                              ),
+                                                              "ID",
+                                                              SortOrder.Descending
+                                                          ),
+                                                          300
+                                                      )
+                                                  );
+                                                  ClearCollect(
+                                                      col_itensPAconsultaBase,
+                                                      FirstN(
+                                                          SortByColumns(
+                                                              Filter(
+                                                                  tbl_perdidosAchadosItens,
+                                                                  arquivar = 0,
+                                                                  Aeroporto = aero
+                                                              ),
+                                                              "ID",
+                                                              SortOrder.Descending
+                                                          ),
+                                                          1200
+                                                      )
                                                   )
                                               )
                                           );
@@ -667,7 +715,8 @@ Screens:
                                   Properties:
                                     DropShadow: =DropShadow.Regular
                                     Fill: =If(ThisItem.IsSelected, RGBA(0, 0, 0, 0.20), RGBA(0, 0, 0, 0.05))
-                                    Height: =40 + CountRows(Filter(col_itensPAconsulta, ID_fk = ThisItem.ID)) * 52
+                                    Height: =If(!IsEmpty(Filter(col_itensPAconsulta, ID_fk = ThisItem.ID)), 40 + CountRows(Filter(col_itensPAconsulta, ID_fk = ThisItem.ID)) * 52, 0)
+                                    Visible: =!IsEmpty(Filter(col_itensPAconsulta, ID_fk = ThisItem.ID))
                                     LayoutAlignItems: =LayoutAlignItems.Stretch
                                     LayoutDirection: =LayoutDirection.Vertical
                                     LayoutGap: =0
