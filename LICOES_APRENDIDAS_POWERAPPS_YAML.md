@@ -2629,3 +2629,140 @@ registro com campo chamado `Value`. É sempre colisão.
 **Regra geral:** dentro de `ForAll`/`Filter`/`Sort` sobre tabela de coluna única,
 usar `As <nome>` sempre que o corpo criar um campo com o nome de uma coluna de
 entrada.
+
+## Auditoria de variáveis
+
+### "Variável morta" apurada só nas telas — argumento de fluxo não conta
+
+- Data: 2026-10-22. Projeto: Inspeções / `App.OnStart`.
+- Achado: a entrega de 17/09 (`Inspeções/out/01_App_OnStart_ptBR.txt`, lote A6/C2) removeu
+  `Set(varEmailUser; ...)` por tê-la classificado como não lida. Ela **é** lida em
+  `frmInspPistaCad`, como primeiro argumento de
+  `'Airportnow-notificaçãodecriação'.Run(varEmailUser; ...)`.
+- Consequência se tivesse sido colada: o e-mail de criação de inspeção sairia sem destinatário,
+  sem erro no Studio e sem erro em execução.
+
+Causa confirmada: a varredura procurou leituras em propriedades de controle e ignorou argumentos
+passados a conectores e fluxos, que no YAML aparecem dentro de strings escapadas
+(`OnSuccess: "=...\n 'Fluxo'.Run(\n varEmailUser;` ) — fora do alcance de um grep por
+`\bvar\b` em linha limpa.
+
+Validação preventiva: antes de declarar uma variável morta, procurar o nome no arquivo **inteiro**,
+incluindo dentro de strings escapadas (`grep -o ".\{160\}<var>.\{80\}"` para ver o contexto), e
+conferir explicitamente os `.Run(`, `Patch`, `Collect`, `Navigate` e `UpdateContext` de todas as
+telas. Lista de nomes da App Checker não substitui essa busca.
+
+Impacto global: revisar qualquer entrega que remova variáveis — `REA`, `Inspeção de Pista` e
+`SAFETY` têm lotes do mesmo tipo.
+
+### App.Formulas — bloco copiado de outro arquivo perde o `;;` da última declaração
+
+- Data: 2026-10-22. Projeto: Inspeções / `App.Formulas`.
+- Mensagem do Studio: `Operador esperado. Esperamos um operador como +, * ou & neste ponto na
+  fórmula.`, apontando para a linha `htmlFonte = "font-family:..."`.
+
+Causa confirmada: o bloco de tokens veio do `App_Formulas_Hub.txt`, onde `htmlFonte` é a **última
+declaração do arquivo** e por isso não precisa de terminador. Colado no meio do App.Formulas do
+Inspeções, passou a ter `nfAeros = Table(` logo abaixo: sem o `;;`, o parser lê as duas declarações
+como uma expressão só e cobra um operador.
+
+Correção: `;;` ao fim da linha.
+
+Validação preventiva: ao montar um App.Formulas a partir de blocos de outro arquivo, verificar que
+**toda declaração de uma linha** termina em `;;` antes de um eventual `//` de comentário:
+
+```js
+l.replace(/\/\/.*$/, "").trimEnd().endsWith(";;")
+```
+
+Declarações que abrem bloco multilinha (terminam em `(`) ficam de fora da regra; o `;;` delas fica
+no `)` de fechamento. A mesma verificação vale para o `App.OnStart` em pt-BR.
+
+### ColorFade herda o alfa da cor-base: tokenizar cor translúcida apaga conteúdo da tela
+
+- Data: 2026-10-22. Projeto: Inspeções / `frmHome`, `frmHomePatio`, `frmHomePista`,
+  `frmCheckListGenericoEQP`.
+- Sintoma relatado: "quando passa o mouse por cima fica apagado"; cartão do módulo e rótulo
+  "Apontamentos" sumiam. **Sem erro no painel do Studio** — a fórmula é válida.
+
+Causa confirmada: ao trocar cores literais pelos tokens da paleta ASUR, literais com alfa < 1
+(`RGBA(0,18,107,0.1)`, `RGBA(71,158,245,0.2)`, `RGBA(9,33,98,0.5)`) viraram
+`ColorFade(thmPrimaria, 0.9)`. `ColorFade` clareia ou escurece mas **preserva o alfa da base**, e os
+tokens `thm*` são opacos. O resultado é uma chapa sólida.
+
+O estrago só aparece quando há controle sobreposto: nestas telas o `Classic/Icon` ou o
+`Classic/Button` de clique tem `Width: =Parent.Width` e `Height: =Parent.Height` e cobre um rótulo
+irmão declarado antes dele. Com fill translúcido o rótulo aparecia por baixo; com fill opaco, some.
+
+Correção: reconstruir o alfa a partir do token hexadecimal, que mantém o vínculo com a paleta:
+
+```powerfx
+DisabledFill: =ColorValue(hxPrimaria & "1A")        // 10%
+HoverFill:    =ColorValue(hxPrimaria & "80")        // 50%
+PressedFill:  =ColorValue(hxPrimariaEscura & "80")
+```
+
+Tabela de alfa para o sufixo: 10% = `1A`, 20% = `33`, 50% = `80`, 70% = `B3`, 90% = `E6`.
+
+Validação preventiva, antes de entregar qualquer tela recolorida:
+
+1. Para cada `HoverFill`/`PressedFill`/`DisabledFill` que virou token, conferir o **alfa do literal
+   original**. Se era < 1, `ColorFade` está errado por construção.
+2. Listar os controles com `Width: =Parent.Width` **e** `Height: =Parent.Height` que tenham um irmão
+   declarado antes deles no mesmo container — são os candidatos a encobrir conteúdo.
+3. `ColorFade` opaco só é aceitável em controle com `Fill` sólido e texto próprio (`Text`), onde não
+   há nada por baixo.
+
+Impacto global: vale para toda troca de paleta. Validação estática — contagem de controles, tokens
+definidos, YAML bem-formado — **não pega este defeito**; só ver a tela rodando pega. O mesmo buraco
+deixou passar o `Distinct` nos dropdowns do `frmHomePatio` na mesma semana.
+
+## Último degrau de `Coalesce` gravando em formato diferente do que o filtro procura (2026-10-23)
+
+**Projeto/tela:** SAFETY — `ScreenFaunaForms`, os três cartões `Aeroporto`
+(`Aeroporto_DataCard1` COLISÃO, `_DataCard4` PRESENÇA, `_DataCard10` FOCO).
+
+**Sintoma relatado:** a `ScreenFauna` não mostrava nenhum registro para
+Navegantes. Curitiba aparecia normalmente. Nenhum erro, nenhum aviso.
+
+**Causa confirmada** (o Douglas conferiu na lista: a coluna tinha `NAVEGANTES`,
+não `NVT`):
+
+```powerfx
+// Default do cartao
+Coalesce(
+    Coalesce(ThisItem.Aeroporto, LookUp(colAeros, Aeroporto = Combo.Selected.Value).IATA),
+    varAeroUser          // <- nome completo; a coluna guarda IATA
+)
+
+// Default do proprio combobox
+If(varPerfilUser = "Base", varAeroUser, Blank())
+```
+
+Perfil **Base**: o combo já vem preenchido, o `LookUp` acha, grava a **IATA**.
+Perfil **Bloco** ou **Sede**: o combo vem **em branco**, o `LookUp` devolve
+branco, e o último degrau do `Coalesce` grava o **nome completo**. A galeria
+filtra por `Aeroporto = Selected.IATA` e esses registros somem para sempre.
+
+Por isso o defeito parecia ser "de um aeroporto só": dependia do perfil de quem
+cadastrou, não do aeroporto.
+
+**Correção:** `varAeroUser` → `varIATAUser` (`= nfAeroUser.IATA`) nos três
+cartões. Resolve os dois perfis de uma vez: para Base continua gravando a IATA
+certa; para Sede, `varAeroUser` não casa em `colAeros`, `varIATAUser` fica
+branco e o `Required: =true` do cartão passa a **barrar o envio** — que é o
+comportamento correto, em vez de gravar o aeroporto errado em silêncio.
+
+**Como diagnosticar sem acesso ao SharePoint:** `CountRows(Filter(lista, Col =
+"valor"))` com igualdade simples **é delegável**, então devolve a contagem real
+do servidor e ignora o limite de linhas do app. Foi o que separou "dado errado"
+de "delegação cortando".
+
+**Validação preventiva:** sempre que uma coluna guardar um código (IATA, sigla,
+id) e o formulário a preencher por `LookUp`, conferir **todos os degraus do
+`Coalesce`**: qualquer um que devolva o rótulo em vez do código grava lixo
+silencioso. O mesmo vale para o ramo `else` de um `If`.
+
+**Nota:** `msapp/Properties.json` diz `DefaultConnectedDataSourceMaxGetRowsCount:
+500`, mas o app já estava em 2000 — o export é de 31/08 e **não serve para ler
+configuração atual**. Perguntar ao Douglas em vez de confiar no arquivo.
