@@ -139,20 +139,21 @@ ForAll(
     }
 );;
 
-// 🛡️ Posições/pátios do aeroporto ativo, com rede de segurança: se o filtro não achar nada
-// (varAero em branco, aeroporto sem posição cadastrada), cai para a tabela inteira em vez de
-// deixar a grade em branco. Toda tela lê estas duas, nunca colPosicoesTodas/colPatiosTodos direto.
+// 🛡️ Posições/pátios do aeroporto ativo. A rede de segurança vale SÓ para varAero em branco.
+// ⚠️ Até 27/10/2026 ela também pegava "aeroporto sem nenhuma posição" e caía para a tabela inteira —
+// aeroporto em implantação (FOZ DO IGUAÇU) mostrava as posições de NAVEGANTES como se fossem dele.
+// Aeroporto vazio tem que aparecer vazio. Toda tela lê estas duas, nunca colPosicoesTodas/colPatiosTodos direto.
 colPosicoesAero =
 With(
     { _f: Filter(colPosicoesTodas; aeroporto = varAero) };
-    Filter(If(CountRows(_f) = 0; colPosicoesTodas; _f); Coalesce(tipo; "") <> "HANGAR")
+    Filter(If(IsBlank(varAero); colPosicoesTodas; _f); Coalesce(tipo; "") <> "HANGAR")
 );;
 
 // Pátio que só tem hangar (HANGARES) não vira faixa na grade nem opção no filtro de pátio.
 colPatiosAero =
 With(
     { _f: Filter(colPatiosTodos; aeroporto = varAero) };
-    Filter(If(CountRows(_f) = 0; colPatiosTodos; _f) As _pt; !IsEmpty(Filter(colPosicoesAero As _pp; _pp.patio = _pt.patio)))
+    Filter(If(IsBlank(varAero); colPatiosTodos; _f) As _pt; !IsEmpty(Filter(colPosicoesAero As _pp; _pp.patio = _pt.patio)))
 );;
 
 // 🏭 Hangares — posição cadastrada com tipo HANGAR (tela POSIÇÕES E CORES), desde 16/09/2026.

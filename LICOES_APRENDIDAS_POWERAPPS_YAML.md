@@ -2284,3 +2284,20 @@ Mostrar)`) ou ficar onde estava.
 as telas) por `Set(<nome>`, `Collect(<nome>`, `ClearCollect(<nome>` e `Clear(<nome>`. Se achar
 qualquer um, o nome fica como está. O Studio recusa a criação da fórmula quando o `Set` está
 visível, mas um `ClearCollect` em tela distante pode passar e só aparecer como tela vazia.
+
+## Rede de segurança que mente: vazio legítimo não é erro (2026-10-27)
+
+**O que aconteceu.** Implantando FOZ DO IGUAÇU, a tela de cadastro abriu dizendo *FOZ DO IGUAÇU · 26
+posições* — as 26 de NAVEGANTES. `colPosicoesAero` tinha um `If(CountRows(_f) = 0; <tabela inteira>;
+_f)` para a grade nunca ficar em branco.
+
+**Por quê.** A rede foi escrita quando só existia um aeroporto, onde *filtro vazio* só podia ser erro.
+Com aeroporto novo, vazio passou a ser o estado normal do primeiro dia — e a rede apagou justamente o
+sinal de que não havia nada cadastrado, mostrando dado de outro aeroporto como se fosse dele.
+
+**Como evitar.** Fallback cobre o estado inválido (`IsBlank(varAero)`), nunca o resultado vazio. Lista
+vazia é resposta, não falha: quem trata é a tela, com um aviso ("aeroporto ainda sem pátio").
+
+**Mesma classe de erro:** o botão POSIÇÕES E CORES só fazia `Navigate` e deixava `varAero` com o valor
+anterior. Enquanto havia um aeroporto só, ninguém via. Toda navegação que depende de um seletor grava
+a escolha antes de navegar.
