@@ -99,13 +99,14 @@ Screens:
                               // Quantas linhas o pátio ocupa na grade e qual e a posicao desta dentro dele — e o que
                               // permite espalhar as letras da sigla uma por linha, centradas no grupo.
                               _qtdPatio: CountRows(Filter(colPosicoesAero As _qa, _qa.patio = _p.patio And IsBlank(_qa.ocupa))),
-                              // Desempate por nome: duas posicoes com a MESMA ordem davam o mesmo indice e a
+                              // Desempate pelo id_posicao: duas posicoes com a MESMA ordem davam o mesmo indice e a
                               // mesma letra da sigla aparecia duas vezes (13 e 13R em FOZ DO IGUACU, 27/10/2026).
+                              // O desempate e por id e nao por nome porque o Power Fx nao compara texto com <=.
                               _idxPatio: CountRows(
                                   Filter(
                                       colPosicoesAero As _qb,
                                       _qb.patio = _p.patio And IsBlank(_qb.ocupa) And
-                                      (_qb.ordem < _p.ordem Or (_qb.ordem = _p.ordem And _qb.posicao <= _p.posicao))
+                                      (_qb.ordem < _p.ordem Or (_qb.ordem = _p.ordem And _qb.id <= _p.id))
                                   )
                               ),
                               // Posicao que consome esta: a T6C consome T5 e T6, e o operador precisa lembrar disso

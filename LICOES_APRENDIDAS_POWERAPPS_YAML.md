@@ -2301,3 +2301,13 @@ vazia é resposta, não falha: quem trata é a tela, com um aviso ("aeroporto ai
 **Mesma classe de erro:** o botão POSIÇÕES E CORES só fazia `Navigate` e deixava `varAero` com o valor
 anterior. Enquanto havia um aeroporto só, ninguém via. Toda navegação que depende de um seletor grava
 a escolha antes de navegar.
+
+## Power Fx não compara texto com `<`, `<=`, `>` (2026-10-27)
+
+Desempatar um índice por nome — `_qb.posicao <= _p.posicao` — parece natural e o Studio recusa:
+*Tipo de argumento inválido. Esperando um dos seguintes: Number, Date, Time, DateTime, Dynamic.* Os
+operadores de ordem só valem para número e data; texto só aceita `=` e `<>`.
+
+Para desempate determinístico, use uma chave numérica que já exista no registro — no Mapa,
+`id_posicao` (`id` em `colPosicoesTodas`). Ordenar texto exige `Sort`, que devolve tabela, não
+comparação.
