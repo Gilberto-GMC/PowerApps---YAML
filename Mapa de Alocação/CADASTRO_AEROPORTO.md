@@ -74,10 +74,13 @@ Estado em 16/09/2026. Aeroporto é identificado pelo **nome** (`NAVEGANTES`), n�
 
 - **Tipo que ficou REMOTA.** Em 16/09/2026 HAVAN e POLY foram salvas sem trocar o tipo e apareceram como
   linhas na grade, sem o botão HANGARES. Sintoma = hangar na grade.
-- **OCUPA no lado errado some com a posição.** Quem tem OCUPA preenchido **não é linha da grade** — é a
-  alternativa, que aparece entre parênteses nas linhas que consome (T5 mostra `(T6C)`). Em FOZ DO IGUAÇU
-  (27/10/2026) o OCUPA foi para as posições 7, 8 e 9, e elas sumiram da grade: o certo era `7L ocupa 7`,
-  porque a linha é o estacionamento físico e a variante de aviação geral é que é alternativa.
+- **OCUPA some com a posição — e às vezes o certo é não usar OCUPA.** Quem tem OCUPA preenchido **não é
+  linha da grade**: é a alternativa, que aparece entre parênteses nas linhas que consome (T5 mostra
+  `(T6C)`). Serve para posição **combinada**, que não precisa de linha própria. Quando as duas posições
+  são reais e o operador aloca por qualquer uma das duas — `12` e `12L` em FOZ DO IGUAÇU, o mesmo
+  espaço usado por um 737 ou por um Legacy — o OCUPA fica vazio e a exclusão vai para **RESTRIÇÕES**:
+  tipo Bloqueio, posição afetada, **nenhum equipamento dos dois lados**, que é a forma de valer para
+  qualquer aeronave. A regra pega nos dois sentidos, então basta uma linha por par.
 - **Renomear posição com lançamento.** O nome fica gravado em cada lançamento (`posicao_txt`); renomear
   deixa o histórico apontando para um nome que não existe mais. Crie outra e desative a antiga.
 - **Trocar o código de um pátio.** Mesmo problema: cada posição guarda o código.

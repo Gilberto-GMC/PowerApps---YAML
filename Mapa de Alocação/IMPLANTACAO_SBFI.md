@@ -8,9 +8,11 @@ FOZ DO IGUAÇU em contexto. O mesmo conteúdo em `implantacao_sbfi_posicoes.tsv`
 
 ⚠️ **Confirmar com a supervisão antes de salvar** — ver *Pontos em aberto* no fim.
 
-> **Correção de 27/10/2026.** A primeira versão desta folha mandava o OCUPA para a posição cheia
-> (`7` ocupa `7L`) e as posições 7, 8 e 9 sumiram da grade: quem tem OCUPA preenchido não é linha,
-> é a alternativa. A linha é o estacionamento físico; o OCUPA vai na variante (`7L` ocupa `7`).
+> **Decisão de 27/10/2026: em IGU não se usa OCUPA.** A dupla `7`/`7L` é a mesma área, mas as duas
+> precisam **aparecer na grade** — o supervisor aloca pelo nome que usa. OCUPA tira a posição da grade
+> (quem tem OCUPA preenchido vira alternativa, mostrada entre parênteses na linha que consome), então
+> o campo fica **vazio nas 22 posições** e a exclusão mútua vai para **RESTRIÇÕES**, que bloqueia sem
+> esconder. Em Navegantes o OCUPA continua certo: lá a T6C é combinada e não precisa de linha própria.
 
 ---
 
@@ -52,11 +54,11 @@ B737 MAX8 / E195 / E295.
 | Posição | Ordem | Tipo | Classe / Aeronave máxima | Equip. máx. | Envergadura | OCUPA |
 |---|---|---|---|---|---|---|
 | `7` | 1 | REMOTA | B737 MAX8 | B38M | | *(vazio)* |
-| `7L` | 2 | REMOTA | Legacy 500 | | | `7` |
+| `7L` | 2 | REMOTA | Legacy 500 | | | *(vazio)* |
 | `8` | 3 | REMOTA | B737 MAX8 | B38M | | *(vazio)* |
-| `8L` | 4 | REMOTA | Legacy 500 | | | `8` |
+| `8L` | 4 | REMOTA | Legacy 500 | | | *(vazio)* |
 | `9` | 5 | REMOTA | B737 MAX8 | B38M | | *(vazio)* |
-| `9L` | 6 | REMOTA | Legacy 500 | | | `9` |
+| `9L` | 6 | REMOTA | Legacy 500 | | | *(vazio)* |
 | `10` | 7 | REMOTA | envergadura até 15 m | | 15 | |
 | `11` | 8 | REMOTA | envergadura até 15 m | | 15 | |
 
@@ -65,15 +67,42 @@ B737 MAX8 / E195 / E295.
 | Posição | Ordem | Tipo | Classe / Aeronave máxima | Equip. máx. | OCUPA |
 |---|---|---|---|---|---|
 | `12` | 1 | REMOTA | A321NEO | A21N | *(vazio)* |
-| `12L` | 2 | REMOTA | Legacy 500 | | `12` |
+| `12L` | 2 | REMOTA | Legacy 500 | | *(vazio)* |
 | `13` | 3 | REMOTA | B737 MAX8 | B38M | *(vazio)* |
-| `13R` | 4 | REMOTA | Legacy 500 | | `13` |
+| `13R` | 4 | REMOTA | Legacy 500 | | *(vazio)* |
 | `14` | 5 | REMOTA | B737 MAX8 | B38M | *(vazio)* |
-| `14R` | 6 | REMOTA | Legacy 500 | | `14` |
+| `14R` | 6 | REMOTA | Legacy 500 | | *(vazio)* |
 | `15` | 7 | REMOTA | B737 MAX8 | B38M | *(vazio)* |
-| `15L` | 8 | REMOTA | Legacy 500 | | `15` |
+| `15L` | 8 | REMOTA | Legacy 500 | | *(vazio)* |
 
 Total: 3 pátios, 22 posições.
+
+## 3. Restrições
+
+Tela **RESTRIÇÕES**, uma regra por par. Tipo **Bloqueio**, **nenhum equipamento dos dois lados** — é
+assim que a regra vale para qualquer aeronave — e a mensagem que o operador vai ler. A regra pega nos
+dois sentidos: uma linha só por par.
+
+| Posição | Posições afetadas | Tipo | Equipamentos | Mensagem |
+|---|---|---|---|---|
+| `7` | `7L` | Bloqueio | nenhum | A 7 e a 7L são o mesmo espaço físico: só uma aeronave por vez. |
+| `8` | `8L` | Bloqueio | nenhum | A 8 e a 8L são o mesmo espaço físico: só uma aeronave por vez. |
+| `9` | `9L` | Bloqueio | nenhum | A 9 e a 9L são o mesmo espaço físico: só uma aeronave por vez. |
+| `12` | `12L` | Bloqueio | nenhum | A 12 e a 12L são o mesmo espaço físico: só uma aeronave por vez. |
+| `13` | `13R` | Bloqueio | nenhum | A 13 e a 13R são o mesmo espaço físico: só uma aeronave por vez. |
+| `14` | `14R` | Bloqueio | nenhum | A 14 e a 14R são o mesmo espaço físico: só uma aeronave por vez. |
+| `15` | `15L` | Bloqueio | nenhum | A 15 e a 15L são o mesmo espaço físico: só uma aeronave por vez. |
+
+> O botão **TESTAR** vai dizer que a regra não pegaria nada — é esperado num aeroporto sem histórico
+> de lançamento. Ele olha os últimos dias de operação, que em IGU ainda não existem.
+
+### OCUPA ou restrição?
+
+| | OCUPA | Restrição de par |
+|---|---|---|
+| a posição aparece na grade | **não** | sim |
+| bloqueia o uso simultâneo | sim | sim |
+| quando usar | a posição é **combinação** de outras e não precisa de linha (T6C em Navegantes) | as duas posições são reais e o operador aloca por qualquer uma das duas (7 e 7L em IGU) |
 
 ---
 
