@@ -77,6 +77,9 @@ Upper(Trim(Coalesce(
 
 // Aeroportos que o usuário pode abrir. O dele entra SEMPRE e primeiro, mesmo sem pátio ainda — senão o
 // usuário de um aeroporto novo cairia em outro e cadastraria os pátios no lugar errado.
+// 🏢 Perfil SEDE enxerga a REDE INTEIRA (colAerosRede), não só os aeroportos que já têm pátio: é a Sede
+// quem implanta aeroporto novo, e sem isso faltava como escolher o aeroporto para cadastrar o primeiro
+// pátio — ovo e galinha achado na implantação de FOZ DO IGUAÇU (27/10/2026).
 colAerosPermitidos =
 With(
     { _padrao: Upper(Trim(Coalesce(usrMapa.Aeroporto; ""))) };
@@ -85,6 +88,7 @@ With(
             Filter(
                 Split(
                     _padrao & ";" &
+                    If(usrPerfil = "SEDE"; Concat(colAerosRede As _r; Upper(Trim(_r.Aeroporto)); ";") & ";"; "") &
                     Concat(
                         Filter(
                             colAerosMapa;

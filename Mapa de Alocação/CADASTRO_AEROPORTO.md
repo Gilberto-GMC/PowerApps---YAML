@@ -38,9 +38,14 @@ Estado em 16/09/2026. Aeroporto é identificado pelo **nome** (`NAVEGANTES`), n�
    - **`Perfil`**: **Base** (só o próprio aeroporto), **Bloco** (os aeroportos do mesmo `Bloco`) ou **Sede** (todos);
    - o bloco de cada aeroporto vem de `colAerosRede` no App.Formulas — a mesma tabela `nfAeros` do SAFETY;
    - quem **não está na lista** entra **somente leitura**.
-2. **Entre no app com um usuário daquele aeroporto** (ou um SEDE/BLOCO escolhendo-o em TROCAR CONTEXTO). O
-   aeroporto padrão aparece mesmo sem pátio cadastrado; tudo o que se cadastra depois vale para ele. Quando o
-   primeiro pátio ativo existir, o aeroporto passa a aparecer para quem tem acesso.
+2. **Entre no app no contexto daquele aeroporto.** Duas formas:
+   - **perfil Sede**: escolha o aeroporto em TROCAR CONTEXTO (ou no seletor da tela Início). Desde
+     27/10/2026 a Sede enxerga **toda a rede** de `colAerosRede`, inclusive aeroporto que ainda não tem
+     pátio — é o que permite cadastrar o primeiro;
+   - **perfil Base/Bloco**: o aeroporto da linha do usuário aparece mesmo sem pátio cadastrado.
+
+   Tudo o que se cadastra depois vale para o aeroporto em contexto — confira o nome no cabeçalho antes de
+   começar. Quando o primeiro pátio ativo existir, o aeroporto passa a aparecer para todo mundo que tem acesso.
 
 > **Quando o módulo entrar no AirportNow:** o app já aceita `?USUARIO=<ID>`, a mesma convenção do SAFETY.
 >
