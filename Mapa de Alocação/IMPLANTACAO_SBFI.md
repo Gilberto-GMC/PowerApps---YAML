@@ -32,6 +32,11 @@ cadastre cada hangar como posição com **Tipo = HANGAR**.
 
 ## 2. Posições
 
+**A ordem tem que ser única dentro do pátio.** Tanto faz 1, 2, 3… ou o próprio número da posição —
+mas duas posições com a mesma ordem embaralham a sequência da grade e repetem a letra da sigla do
+pátio. Usando o número da posição, a variante leva **meio ponto**: `13` fica com 13 e `13R` com
+**13,5**.
+
 `Classe/Aeronave máxima` é o texto que aparece na linha da posição. `Equip. máx.` é o código do
 maior equipamento aceito — use a sigla como está na tela **EQUIPAMENTOS**.
 
