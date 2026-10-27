@@ -8,6 +8,10 @@ FOZ DO IGUAÇU em contexto. O mesmo conteúdo em `implantacao_sbfi_posicoes.tsv`
 
 ⚠️ **Confirmar com a supervisão antes de salvar** — ver *Pontos em aberto* no fim.
 
+> **Correção de 27/10/2026.** A primeira versão desta folha mandava o OCUPA para a posição cheia
+> (`7` ocupa `7L`) e as posições 7, 8 e 9 sumiram da grade: quem tem OCUPA preenchido não é linha,
+> é a alternativa. A linha é o estacionamento físico; o OCUPA vai na variante (`7L` ocupa `7`).
+
 ---
 
 ## 1. Pátios
@@ -47,12 +51,12 @@ B737 MAX8 / E195 / E295.
 
 | Posição | Ordem | Tipo | Classe / Aeronave máxima | Equip. máx. | Envergadura | OCUPA |
 |---|---|---|---|---|---|---|
-| `7` | 1 | REMOTA | B737 MAX8 | B38M | | `7L` ? |
-| `7L` | 2 | REMOTA | Legacy 500 | | | |
-| `8` | 3 | REMOTA | B737 MAX8 | B38M | | `8L` ? |
-| `8L` | 4 | REMOTA | Legacy 500 | | | |
-| `9` | 5 | REMOTA | B737 MAX8 | B38M | | `9L` ? |
-| `9L` | 6 | REMOTA | Legacy 500 | | | |
+| `7` | 1 | REMOTA | B737 MAX8 | B38M | | *(vazio)* |
+| `7L` | 2 | REMOTA | Legacy 500 | | | `7` |
+| `8` | 3 | REMOTA | B737 MAX8 | B38M | | *(vazio)* |
+| `8L` | 4 | REMOTA | Legacy 500 | | | `8` |
+| `9` | 5 | REMOTA | B737 MAX8 | B38M | | *(vazio)* |
+| `9L` | 6 | REMOTA | Legacy 500 | | | `9` |
 | `10` | 7 | REMOTA | envergadura até 15 m | | 15 | |
 | `11` | 8 | REMOTA | envergadura até 15 m | | 15 | |
 
@@ -60,14 +64,14 @@ B737 MAX8 / E195 / E295.
 
 | Posição | Ordem | Tipo | Classe / Aeronave máxima | Equip. máx. | OCUPA |
 |---|---|---|---|---|---|
-| `12` | 1 | REMOTA | A321NEO | A21N | `12L` ? |
-| `12L` | 2 | REMOTA | Legacy 500 | | |
-| `13` | 3 | REMOTA | B737 MAX8 | B38M | `13R` ? |
-| `13R` | 4 | REMOTA | Legacy 500 | | |
-| `14` | 5 | REMOTA | B737 MAX8 | B38M | `14R` ? |
-| `14R` | 6 | REMOTA | Legacy 500 | | |
-| `15` | 7 | REMOTA | B737 MAX8 | B38M | `15L` ? |
-| `15L` | 8 | REMOTA | Legacy 500 | | |
+| `12` | 1 | REMOTA | A321NEO | A21N | *(vazio)* |
+| `12L` | 2 | REMOTA | Legacy 500 | | `12` |
+| `13` | 3 | REMOTA | B737 MAX8 | B38M | *(vazio)* |
+| `13R` | 4 | REMOTA | Legacy 500 | | `13` |
+| `14` | 5 | REMOTA | B737 MAX8 | B38M | *(vazio)* |
+| `14R` | 6 | REMOTA | Legacy 500 | | `14` |
+| `15` | 7 | REMOTA | B737 MAX8 | B38M | *(vazio)* |
+| `15L` | 8 | REMOTA | Legacy 500 | | `15` |
 
 Total: 3 pátios, 22 posições.
 
@@ -79,10 +83,11 @@ Total: 3 pátios, 22 posições.
    provavelmente são PONTE — e aí cada uma precisa do **portão** correspondente cadastrado, senão o
    voo aparece tracejado na grade. **Tipo vem REMOTA por padrão: confira antes de salvar.**
 2. **Portões.** Nenhum quadro traz. Faltam os números em uso e a correspondência posição → portão.
-3. **O `L` e o `R` são meia-posição?** A leitura natural é que `7L` é parte da área de `7`: entra um
-   Legacy quando não há um 737. Se for isso, `7` precisa de **OCUPA = `7L`** (e assim por diante),
-   senão o app deixa alocar as duas ao mesmo tempo. **Confirme antes** — se forem posições
-   independentes, o campo OCUPA fica vazio.
+3. **O `L` e o `R` são meia-posição?** A leitura natural é que `7L` é a mesma área de `7` usada por um
+   Legacy quando não há um 737. Sendo isso, o **OCUPA vai na variante**: `7L` ocupa `7`. Nunca o
+   contrário — posição com OCUPA preenchido **sai da grade** (foi o que sumiu com 7, 8 e 9 em
+   27/10/2026). Se forem posições independentes, que podem receber duas aeronaves ao mesmo tempo, o
+   OCUPA fica vazio nas duas.
 4. **Posições 10 e 11.** O texto estava rasurado na foto; li *15 m*, que seria limite de envergadura.
    Confirmar o valor e se é envergadura mesmo.
 5. **`13R`/`14R` ou `13L`/`14L`.** A foto não deixa certo. O nome fica gravado em cada alocação —
