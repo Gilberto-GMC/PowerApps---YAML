@@ -7,7 +7,7 @@ Screens:
         Set(varMenuConfig, true);
         Set(varMapaVisivel, false);
         Set(varPodeCadastro, DataSourceInfo('tb_posicoes', DataSourceInfo.EditPermission));
-        Set(varModoRef, Coalesce(varModoRef, "POSICOES"));
+        Set(varModoRef, Coalesce(varModoRef, If(CountRows(Filter(colPatiosTodos, aeroporto = varAero)) = 0, "PATIOS", "POSICOES")));
         Set(varPosSelRef, Blank());
         Set(varPatSelRef, Blank());
         UpdateContext({ locErroRef: false });
@@ -378,24 +378,6 @@ Screens:
                               RadiusTopLeft: =0
                               RadiusTopRight: =0
                             Children:
-                              - btnModoPosRef:
-                                  Control: Button@0.0.45
-                                  Properties:
-                                    Appearance: ='ButtonCanvas.Appearance'.Secondary
-                                    BasePaletteColor: =If(varModoRef = "POSICOES", thmAcao, thmTextoFraco)
-                                    BorderRadius: =0
-                                    FontColor: =If(varModoRef = "POSICOES", thmAcao, thmTextoFraco)
-                                    FontSize: =12
-                                    FontWeight: =FontWeight.Semibold
-                                    Height: =38
-                                    LayoutMinHeight: =38
-                                    LayoutMinWidth: =0
-                                    OnSelect: |-
-                                        =Set(varModoRef, "POSICOES")
-                                    PaddingLeft: =14
-                                    PaddingRight: =14
-                                    Text: ="POSIÇÕES"
-                                    Width: =150
                               - btnModoPatRef:
                                   Control: Button@0.0.45
                                   Properties:
@@ -414,6 +396,24 @@ Screens:
                                     PaddingRight: =14
                                     Text: ="PÁTIOS"
                                     Width: =130
+                              - btnModoPosRef:
+                                  Control: Button@0.0.45
+                                  Properties:
+                                    Appearance: ='ButtonCanvas.Appearance'.Secondary
+                                    BasePaletteColor: =If(varModoRef = "POSICOES", thmAcao, thmTextoFraco)
+                                    BorderRadius: =0
+                                    FontColor: =If(varModoRef = "POSICOES", thmAcao, thmTextoFraco)
+                                    FontSize: =12
+                                    FontWeight: =FontWeight.Semibold
+                                    Height: =38
+                                    LayoutMinHeight: =38
+                                    LayoutMinWidth: =0
+                                    OnSelect: |-
+                                        =Set(varModoRef, "POSICOES")
+                                    PaddingLeft: =14
+                                    PaddingRight: =14
+                                    Text: ="POSIÇÕES"
+                                    Width: =150
                               - btnModoPrtRef:
                                   Control: Button@0.0.45
                                   Properties:
