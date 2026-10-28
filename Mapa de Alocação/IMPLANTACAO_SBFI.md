@@ -143,10 +143,14 @@ que "só a queda".
 | cia | nome_planilha | posicoes | portoes | prioridade |
 |---|---|---|---|---|
 | `TAM` | `LATAM` | `3,4,5,6,7,8,1,2,9,12,13,14,15` | *(vazio)* | 0 |
-| `GLO` | `GOL` | *(a mesma)* | *(vazio)* | 0 |
-| `AZU` | `AZUL` | *(a mesma)* | *(vazio)* | 0 |
-| `JAT` | `JETSMART` | *(a mesma)* | *(vazio)* | 0 |
-| `*` | `*` | *(a mesma)* | *(vazio)* | 0 |
+| `GLO` | `GOL` | `3,4,5,6,7,8,1,2,9,12,13,14,15` | *(vazio)* | 0 |
+| `AZU` | `AZUL` | `3,4,5,6,7,8,1,2,9,12,13,14,15` | *(vazio)* | 0 |
+| `JAT` | `JETSMART` | `3,4,5,6,7,8,1,2,9,12,13,14,15` | *(vazio)* | 0 |
+| `*` | `*` | `3,4,5,6,7,8,1,2,9,12,13,14,15` | *(vazio)* | 0 |
+
+> ⚠️ A sequência vai **escrita por extenso nas cinco linhas**. Em 28/10/2026 esta tabela dizia
+> *"(a mesma)"* nas quatro últimas e foi digitado literalmente: o script recusou dizendo que a
+> posição `a mesma` não existe. A recusa é nominal e não apaga nada, mas custou uma rodada.
 
 **`portoes` fica vazio de propósito:** em IGU o portão vem da posição (`portao`/`portao_int`), não de
 uma lista por companhia.
