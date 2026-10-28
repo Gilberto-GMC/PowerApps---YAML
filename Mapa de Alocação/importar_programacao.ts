@@ -33,10 +33,12 @@
 /** Equivalência IATA da planilha → código do catálogo tb_equipamentos. */
 const EQUIPAMENTO: { [iata: string]: string } = {
   "73H": "B738", "7M8": "B38M", "320": "A320", "319": "A319", "295": "E295", "76V": "B763",
+  // Foz do Iguaçu, 28/10/2026 — codigos que Navegantes nao recebia.
+  "321": "A321", "32N": "A20N", "73G": "B737",
 };
 
 /** Rotas internacionais: aparecendo na chegada ou na saída, o registro nasce com internacional = 1. */
-const DESTINOS_INTERNACIONAIS = ["AGT"];
+const DESTINOS_INTERNACIONAIS = ["AGT", "SCL"];
 
 /** Acima disso não é a mesma aeronave girando — o pouso fica sem par. */
 const MAX_SOLO_MIN = 24 * 60;

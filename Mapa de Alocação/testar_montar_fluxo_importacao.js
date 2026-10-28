@@ -69,6 +69,14 @@ const CASOS = [
     espera: "No_intervalo tem de comparar data_de e data_ate do Resultado_script",
   },
   {
+    nome: "exclusão da importação anterior sem filtrar o aeroporto",
+    planta: (wf) => {
+      const p = acao(wf, "Obter_importacao_anterior").inputs.parameters;
+      p["$filter"] = p["$filter"].split(" and aeroporto eq")[0];
+    },
+    espera: "Obter_importacao_anterior tem de filtrar também por aeroporto",
+  },
+  {
     nome: "referência a ação que não existe",
     planta: (wf) => { acao(wf, "Apagar_anteriores").foreach = "@outputs('Obter_importacao_velha')?['body/value']"; },
     espera: "referência a ação inexistente: Obter_importacao_velha",

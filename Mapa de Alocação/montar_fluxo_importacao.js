@@ -282,6 +282,13 @@ if (!noIntervalo || noIntervalo.type !== "If") {
   }
 }
 
+// a importação anterior que se apaga é a DESTE aeroporto (28/10/2026: o filtro só tinha origem, então
+// importar outubro de Foz do Iguaçu apagaria os registros de outubro de Navegantes no mesmo intervalo)
+const obt = JSON.stringify((processar.Obter_importacao_anterior && processar.Obter_importacao_anterior.inputs) || "");
+if (!/aeroporto eq/.test(obt)) {
+  erros.push("Obter_importacao_anterior tem de filtrar também por aeroporto");
+}
+
 // nenhuma ação sumiu nem apareceu na remontagem
 const antes = Object.keys(plano).sort().join(",");
 const depois = [...nomes.keys()].filter((n) => nomes.get(n) <= 1 && n !== "Processar").sort().join(",");
