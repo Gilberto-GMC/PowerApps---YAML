@@ -130,6 +130,38 @@ dois sentidos: uma linha só por par.
 > O botão **TESTAR** vai dizer que a regra não pegaria nada — é esperado num aeroporto sem histórico
 > de lançamento. Ele olha os últimos dias de operação, que em IGU ainda não existem.
 
+## 5. Pré-posição da importação
+
+Lista `tb_prePosicao`, direto no SharePoint — não tem tela. Cinco linhas, todas com
+`aeroporto = FOZ DO IGUAÇU` e `ativo = 1`.
+
+Decisão do Douglas em 28/10/2026: **IGU não tem box habitual por companhia** — é por ordem de
+chegada. Então as quatro companhias usam a mesma sequência da linha de queda. A coluna `posicoes` é
+obrigatória no SharePoint, por isso a sequência se repete em vez de ficar vazia; o efeito é o mesmo
+que "só a queda".
+
+| cia | nome_planilha | posicoes | portoes | prioridade |
+|---|---|---|---|---|
+| `TAM` | `LATAM` | `3,4,5,6,7,8,1,2,9,12,13,14,15` | *(vazio)* | 0 |
+| `GLO` | `GOL` | *(a mesma)* | *(vazio)* | 0 |
+| `AZU` | `AZUL` | *(a mesma)* | *(vazio)* | 0 |
+| `JAT` | `JETSMART` | *(a mesma)* | *(vazio)* | 0 |
+| `*` | `*` | *(a mesma)* | *(vazio)* | 0 |
+
+**`portoes` fica vazio de propósito:** em IGU o portão vem da posição (`portao`/`portao_int`), não de
+uma lista por companhia.
+
+**A sequência só tem posição que recebe avião de linha.** Ficaram de fora `10` e `11` (envergadura de
+15 m) e as variantes de aviação geral. Isso importa porque **o script não confere envergadura**: o que
+estiver na queda ele usa, e um 737 cairia numa posição que não comporta.
+
+Os boxes com portão vêm primeiro, depois `1`, `2`, `9` e o pátio 03.
+
+> Ensaio com a planilha de 28 a 31/10 e esta configuração: **110 registros, zero pendências**, usando
+> só os boxes 3 a 8. A distribuição fica concentrada nos primeiros da lista — é como o algoritmo
+> funciona, pega o primeiro livre. Se um dia incomodar, a saída é dar a cada companhia uma ordem
+> própria em `posicoes`.
+
 ### OCUPA ou restrição?
 
 | | OCUPA | Restrição de par |
