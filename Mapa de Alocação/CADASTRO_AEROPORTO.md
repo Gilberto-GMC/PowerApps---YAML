@@ -21,6 +21,7 @@ Estado em 16/09/2026. Aeroporto é identificado pelo **nome** (`NAVEGANTES`), n�
 | Usuários e aeroporto de cada um | lista **`User`** do AirportNow (a mesma do SAFETY e da Gestão de Chamados) | administrador do AirportNow |
 | Lista de aeroportos com mapa | **derivada** dos pátios ativos em `tb_patios` + aeroporto padrão do usuário | automático |
 | Portões e cores | lista `tb_portoes` (**por aeroporto**) — tela POSIÇÕES E CORES › PORTÕES | operador |
+| Portão fixo de cada posição | colunas `portao`/`portao_int` de `tb_posicoes` — tela POSIÇÕES E CORES › POSIÇÕES | operador |
 | Companhias e cores | lista `tb_companhias` (**vale para todos os aeroportos**) — tela POSIÇÕES E CORES › COMPANHIAS | operador |
 
 > Desde 17/09/2026 portões e companhias são listas. Portão é físico, então cada aeroporto cadastra os seus;
@@ -56,7 +57,12 @@ Estado em 16/09/2026. Aeroporto é identificado pelo **nome** (`NAVEGANTES`), n�
 4. **Posições** — tela POSIÇÕES E CORES › POSIÇÕES. Confira o **Tipo** de cada uma: vem REMOTA por padrão.
    - `OCUPA` para posição que consome outras (ex. T6C ocupa `T5,T6`).
    - Hangar: Tipo = **HANGAR**, no pátio dos hangares, sem classe, travas ou OCUPA.
-5. **Restrições** — tela RESTRIÇÕES: bloqueios entre posições vizinhas e vetos de equipamento. Use o botão
+5. **Portão fixo**, se o aeroporto for daqueles em que cada posição tem o seu portão (Foz do Iguaçu:
+   Box 06 é sempre o portão 04). No formulário da posição, campo **PORTÃO FIXO** — e **PORTÃO DO VOO
+   INTERNACIONAL** quando a mesma posição troca de portão no voo internacional (Box 03: portão 07 no
+   doméstico, 03 no internacional). Cadastre os portões **antes**, senão não há o que escolher.
+   Deixando vazio, o portão continua sendo escolhido no lançamento, como em Navegantes.
+6. **Restrições** — tela RESTRIÇÕES: bloqueios entre posições vizinhas e vetos de equipamento. Use o botão
    TESTAR para conferir que a regra pega algum lançamento.
 6. **Pré-posição** (só se o aeroporto for **importar programação**) — na lista `tb_prePosicao`, direto no
    SharePoint:

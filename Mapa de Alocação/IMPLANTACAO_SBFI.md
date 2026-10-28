@@ -82,7 +82,36 @@ B737 MAX8 / E195 / E295.
 
 Total: 3 pátios, 22 posições.
 
-## 3. Restrições
+## 3. Portões
+
+Tela **PORTÕES**. São sete, confirmados pelo Gustavo em 28/10/2026, e cada um atende um box — o
+mesmo número da posição no quadro. A cor pinta o contorno do bloco na grade.
+
+| Portão | Ordem | Box / posição |
+|---|---|---|
+| `01` | 1 | 8 |
+| `02` | 2 | 7 |
+| `03` | 3 | 3 — **operação internacional** |
+| `04` | 4 | 6 |
+| `05` | 5 | 5 |
+| `06` | 6 | 4 |
+| `07` | 7 | 3 — doméstico |
+
+Depois de cadastrar os portões, volte às posições e preencha o **PORTÃO FIXO** de cada uma:
+
+| Posição | Portão fixo | Portão do voo internacional |
+|---|---|---|
+| `3` | 07 | **03** |
+| `4` | 06 | |
+| `5` | 05 | |
+| `6` | 04 | |
+| `7` | 02 | |
+| `8` | 01 | |
+
+As demais ficam sem portão fixo — inclusive `1` e `2`, que não têm portão, e as variantes de aviação
+geral. Posição sem portão fixo cai na regra antiga: o portão é escolhido no lançamento.
+
+## 4. Restrições
 
 Tela **RESTRIÇÕES**, uma regra por par. Tipo **Bloqueio**, **nenhum equipamento dos dois lados** — é
 assim que a regra vale para qualquer aeronave — e a mensagem que o operador vai ler. A regra pega nos

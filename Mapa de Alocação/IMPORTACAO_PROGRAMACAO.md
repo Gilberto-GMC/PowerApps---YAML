@@ -142,8 +142,14 @@ Duas tentativas, nesta ordem: a preferência da companhia, depois a queda geral.
 **o voo vira pendência em vez de ir para um lugar qualquer** — posição inventada vira avião no lugar
 errado, e ninguém teria como saber que foi chute.
 
-Portão é diferente: cai para qualquer um livre, porque **portão fora do habitual incomoda menos que
-portão vazio**. Cargueiro fica sem portão de propósito — não é falta de portão livre.
+Portão tem dois mundos, e quem decide é a posição:
+
+- **posição com `portao` preenchido** (Foz do Iguaçu, desde 28/10/2026): o portão *é* a posição, um box
+  um portão. Não há escolha nem disputa — posição livre, portão livre. Voo internacional usa o
+  `portao_int` quando a posição tem um (Box 03: portão 07 no doméstico, 03 no internacional).
+- **posição sem `portao`** (Navegantes): vale a lista da companhia e depois a queda, pegando o primeiro
+  livre — **portão fora do habitual incomoda menos que portão vazio**. Cargueiro fica sem portão de
+  propósito, não é falta de portão livre.
 
 `T6C` consome `T5` e `T6`: ocupar uma bloqueia as outras, nos dois sentidos. É o mesmo fato que a
 coluna `ocupa` de `colPosicoes` declara para a tela.

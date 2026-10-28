@@ -78,6 +78,9 @@ interface ConfigPrePosicao {
 }
 interface ConfigPosicao {
   posicao: string; id_posicao: number; patio: string; ocupa?: string;
+  /** Portao fixo da posicao (Foz do Iguacu: um box, um portao). Vazio = portao escolhido pela lista
+   *  da companhia, como em Navegantes. portao_int e o portao do voo internacional na mesma posicao. */
+  portao?: string; portao_int?: string;
 }
 interface Config {
   aeroporto: string; preposicoes: ConfigPrePosicao[]; posicoes: ConfigPosicao[];
@@ -138,13 +141,16 @@ function main(workbook: ExcelScript.Workbook, mesRef: string = "", config: strin
   if (!cfgPosicoes.length) return recusa(mesRef, "Nenhuma posição ativa em tb_posicoes para " + AEROPORTO + ".");
 
   /** id_posicao e pátio por código de posição. */
-  const POSICAO: { [codigo: string]: { id: number; patio: string } } = {};
+  const POSICAO: { [codigo: string]: { id: number; patio: string; portao: string; portaoInt: string } } = {};
   /** Posição que consome outras (coluna ocupa). */
   const OCUPA: { [codigo: string]: string[] } = {};
   for (const p of cfgPosicoes) {
     const codigo = String(p.posicao || "").trim();
     if (!codigo) continue;
-    POSICAO[codigo] = { id: Number(p.id_posicao), patio: String(p.patio || "") };
+    POSICAO[codigo] = {
+      id: Number(p.id_posicao), patio: String(p.patio || ""),
+      portao: String(p.portao || "").trim(), portaoInt: String(p.portao_int || "").trim(),
+    };
     const consome = lista(p.ocupa);
     if (consome.length) OCUPA[codigo] = consome;
   }
@@ -366,18 +372,28 @@ function main(workbook: ExcelScript.Workbook, mesRef: string = "", config: strin
     const foraPrePosicao = prePos.posicoes.indexOf(posicao) < 0;
     for (const b of bloqueadasPor(posicao, OCUPA)) marcar(ocupPosicao, b, ini, fim);
 
-    // portão: pré-posição, depois qualquer um livre. Melhor um portão fora do habitual que nenhum.
+    let internacional = 0;
+    for (const d of DESTINOS_INTERNACIONAIS) {
+      if (par.p.rota.indexOf(d) >= 0 || par.d.rota.indexOf(d) >= 0) { internacional = 1; break; }
+    }
+
+    // Portao. Dois mundos, e a posicao decide qual vale:
+    //
+    //   - posicao com portao fixo (Foz do Iguacu, 28/10/2026): o portao E a posicao, um box um portao.
+    //     Nao ha escolha nem disputa — se a posicao esta livre, o portao dela esta. Voo internacional
+    //     usa o portao_int quando a posicao tem um (Box 03: portao 07 no domestico, 03 no internacional).
+    //   - posicao sem portao fixo (Navegantes): vale a lista da companhia e depois a queda, pegando o
+    //     primeiro livre. Melhor um portao fora do habitual que nenhum.
     let portao = "";
-    if (prePos.portoes.length) {
+    const fixo = POSICAO[posicao];
+    if (fixo.portao) {
+      portao = internacional === 1 && fixo.portaoInt !== "" ? fixo.portaoInt : fixo.portao;
+      marcar(ocupPortao, portao, ini, fim);
+    } else if (prePos.portoes.length) {
       for (const g of prePos.portoes.concat(QUEDA_PORTOES)) {
         if (livre(ocupPortao, g, ini, fim)) { portao = g; break; }
       }
       if (portao) marcar(ocupPortao, portao, ini, fim);
-    }
-
-    let internacional = 0;
-    for (const d of DESTINOS_INTERNACIONAIS) {
-      if (par.p.rota.indexOf(d) >= 0 || par.d.rota.indexOf(d) >= 0) { internacional = 1; break; }
     }
 
     registros.push({

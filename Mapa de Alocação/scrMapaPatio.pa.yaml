@@ -2629,7 +2629,7 @@ Screens:
                   - drpPosicaoMap:
                       Control: DropDown@0.0.45
                       Properties:
-                        DefaultSelectedItems: =[Coalesce(varForm.posicao, "T1")]
+                        DefaultSelectedItems: =[Coalesce(varForm.posicao, First(colPosicoesSel).Value)]
                         DisplayMode: =If(varPodeEditar, DisplayMode.Edit, DisplayMode.View)
                         Height: =40
                         Items: =Filter(colPosicoesSel, locNonce >= 0)
@@ -2914,7 +2914,17 @@ Screens:
                   - drpPortaoMap:
                       Control: DropDown@0.0.45
                       Properties:
-                        DefaultSelectedItems: =[Coalesce(varForm.portao, "—")]
+                        DefaultSelectedItems: |-
+                          =[
+                              Coalesce(
+                                  varForm.portao,
+                                  With(
+                                      { _pg: LookUp(colPosicoesAero As _pgl, _pgl.posicao = drpPosicaoMap.Selected.Value) },
+                                      If(tglInternacionalMap.Checked, Coalesce(_pg.portao_int, _pg.portao), _pg.portao)
+                                  ),
+                                  "—"
+                              )
+                          ]
                         DisplayMode: =If(varPodeEditar, DisplayMode.Edit, DisplayMode.View)
                         Height: =40
                         Items: =Filter(colPortoesSel, locNonce >= 0)

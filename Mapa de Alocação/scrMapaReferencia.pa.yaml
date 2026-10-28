@@ -30,6 +30,8 @@ Screens:
                 ClearCollect(colCiaRef, Sort(tb_companhias, ordem, SortOrder.Ascending));
                 ClearCollect(colPatiosSelRef, Table({ Value: "—" }));
                 Collect(colPatiosSelRef, ForAll(colPatRef As _p, { Value: _p.nome_patio }));
+                ClearCollect(colPortoesSelRef, Table({ Value: "—" }));
+                Collect(colPortoesSelRef, ForAll(colPrtRef As _g, { Value: _g.portao }));
                 ClearCollect(colEquipSelRef, Table({ Value: "—" }));
                 Collect(colEquipSelRef, ForAll(Sort(Filter(tb_equipamentos, ativo = 1), equip, SortOrder.Ascending) As _e, { Value: _e.equip }));
                 ClearCollect(colTiposPosRef, Table({ Value: "PONTE" }, { Value: "REMOTA" }, { Value: "HELIPONTO" }, { Value: "HANGAR" }));
@@ -530,6 +532,7 @@ Screens:
                                 "<tr><td style='padding:2px 14px 2px 0;vertical-align:top;'><b>Equipamento máximo</b></td><td>Código do maior equipamento aceito (ex. B738).</td></tr>" &
                                 "<tr><td style='padding:2px 14px 2px 0;vertical-align:top;'><b>Comprimento / Envergadura</b></td><td>Travas físicas em metros. <b>0 desliga</b> a trava.</td></tr>" &
                                 "<tr><td style='padding:2px 14px 2px 0;vertical-align:top;'><b>OCUPA</b></td><td>Posições que esta consome quando usada, separadas por vírgula. Ex.: T6C ocupa <b>T5,T6</b> — ocupar uma bloqueia as outras. Cada nome precisa existir. <span style='color:" & hxVermelho & ";font-weight:700;'>Quem tem OCUPA preenchido não vira linha da grade:</span> aparece entre parênteses no rótulo das linhas que consome. Preencha OCUPA na posição <b>alternativa</b> (a combinada, a de aviação geral), nunca na posição física que tem que continuar na grade.</td></tr>" &
+                                "<tr><td style='padding:2px 14px 2px 0;vertical-align:top;'><b>Portão fixo</b></td><td>Para aeroporto onde cada posição tem o seu portão (Foz do Iguaçu: Box 06 é sempre o portão 04). Preenchido, o lançamento já abre com ele e a importação não escolhe outro. Vazio, o portão é escolhido no lançamento, como em Navegantes. O <b>portão do voo internacional</b> é o segundo portão da mesma posição, usado quando o voo é internacional (Box 03: portão 07 no doméstico, 03 no internacional).</td></tr>" &
                                 "<tr><td style='padding:2px 14px 2px 0;vertical-align:top;'><b>Contingência</b></td><td>Posição reservada para emergência (em Navegantes, a T7). Gravar nela pede um segundo toque em SALVAR para confirmar.</td></tr>" &
                                 "</table>" &
 
@@ -671,6 +674,8 @@ Screens:
                                                                   comp: Text(Coalesce(ThisItem.comp_max, 0)),
                                                                   env: Text(Coalesce(ThisItem.env_max, 0)),
                                                                   ocupa: Coalesce(ThisItem.ocupa, ""),
+                                                                  portao: Coalesce(ThisItem.portao, ""),
+                                                                  portao_int: Coalesce(ThisItem.portao_int, ""),
                                                                   conting: ThisItem.contingencia = 1,
                                                                   ativo: ThisItem.ativo = 1
                                                               }
@@ -904,6 +909,42 @@ Screens:
                                           DisplayMode: =If(varPodeCadastro, DisplayMode.Edit, DisplayMode.View)
                                           Height: =40
                                           MaxLength: =100
+                                    - lblPortaoPosRef:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          Color: =thmTextoFraco
+                                          Font: =thmFonte
+                                          FontWeight: =FontWeight.Bold
+                                          Height: =18
+                                          PaddingTop: =6
+                                          Size: =10
+                                          Text: ="PORTÃO FIXO (vazio = o portão é escolhido no lançamento)"
+                                    - drpPortaoPosRef:
+                                        Control: DropDown@0.0.45
+                                        Properties:
+                                          DefaultSelectedItems: =[Coalesce(varFormPos.portao, "—")]
+                                          DisplayMode: =If(varPodeCadastro, DisplayMode.Edit, DisplayMode.View)
+                                          Height: =40
+                                          Items: =colPortoesSelRef
+                                    - lblPortaoIntPosRef:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          Color: =thmTextoFraco
+                                          Font: =thmFonte
+                                          FontWeight: =FontWeight.Bold
+                                          Height: =18
+                                          PaddingTop: =6
+                                          Size: =10
+                                          Text: ="PORTÃO DO VOO INTERNACIONAL (vazio = usa o fixo)"
+                                          Visible: =drpPortaoPosRef.Selected.Value <> "—"
+                                    - drpPortaoIntPosRef:
+                                        Control: DropDown@0.0.45
+                                        Properties:
+                                          DefaultSelectedItems: =[Coalesce(varFormPos.portao_int, "—")]
+                                          DisplayMode: =If(varPodeCadastro, DisplayMode.Edit, DisplayMode.View)
+                                          Height: =40
+                                          Items: =colPortoesSelRef
+                                          Visible: =drpPortaoPosRef.Selected.Value <> "—"
                                     - tglContingRef:
                                         Control: Toggle@1.1.5
                                         Properties:
@@ -967,7 +1008,8 @@ Screens:
                                                         {
                                                             id: Max(colPosRef, id_posicao) + 1, posicao: "", patio: "—", ordem: "",
                                                             tipo: "REMOTA", classe: "—", aeronave_max: "", equip_max: "—",
-                                                            comp: "0", env: "0", ocupa: "", conting: false, ativo: true
+                                                            comp: "0", env: "0", ocupa: "", portao: "", portao_int: "",
+                                                            conting: false, ativo: true
                                                         }
                                                     )
                                                 Text: ="NOVO"
@@ -1041,6 +1083,12 @@ Screens:
                                                                             comp_max: If(IsNumeric(txtCompPosRef.Value), Value(txtCompPosRef.Value), 0),
                                                                             env_max: If(IsNumeric(txtEnvPosRef.Value), Value(txtEnvPosRef.Value), 0),
                                                                             ocupa: Upper(Substitute(Trim(txtOcupaRef.Value), " ", "")),
+                                                                            portao: If(drpPortaoPosRef.Selected.Value = "—", "", drpPortaoPosRef.Selected.Value),
+                                                                            portao_int: If(
+                                                                                drpPortaoPosRef.Selected.Value = "—" Or drpPortaoIntPosRef.Selected.Value = "—",
+                                                                                "",
+                                                                                drpPortaoIntPosRef.Selected.Value
+                                                                            ),
                                                                             contingencia: If(tglContingRef.Checked, 1, 0),
                                                                             ativo: If(tglAtivoPosRef.Checked, 1, 0)
                                                                         }
