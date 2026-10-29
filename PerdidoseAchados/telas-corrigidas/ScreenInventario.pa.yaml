@@ -601,7 +601,10 @@ Screens:
                               TemplateSize: =RowContainerDestinar.Height
                               Items: |-
                                 =SortByColumns(
-                                    col_perdidosFiltrados,
+                                    Filter(
+                                        col_perdidosFiltrados,
+                                        ID in col_itensDoacao.ID_fk
+                                    ),
                                     "data",
                                     SortOrder.Descending
                                 )
@@ -771,7 +774,10 @@ Screens:
                               TemplateSize: =RowContainerDestinado.Height
                               Items: |-
                                 =SortByColumns(
-                                    col_perdidosDestinados,
+                                    Filter(
+                                        col_perdidosDestinados,
+                                        ID in Filter(col_itensDestinados, status = If(TabListDestinar.Selected.Value = "AGUARDANDO DESTINAÇÃO", stDestDestinacao, stDestAprovacao)).ID_fk
+                                    ),
                                     "data",
                                     SortOrder.Descending
                                 )
