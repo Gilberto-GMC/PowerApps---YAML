@@ -1,0 +1,680 @@
+Screens:
+  frmTerminalPassageiro:
+    Properties:
+      Fill: =thmFundo
+      LoadingSpinnerColor: =thmPrimaria
+      OnVisible: |-
+        =Set(
+            var_tituloModulo,
+            "Terminal de Passageiros"
+        );
+        If(
+            !varSessaoAtiva ||
+            DateDiff(varUltimaAtividade, Now(), TimeUnit.Minutes) >= 15,
+            Set(varForcarExpiracao, true)
+        )
+    Children:
+      - ScreenContainerDinamicHome_19:
+          Control: GroupContainer@1.5.0
+          Variant: AutoLayout
+          Properties:
+            DropShadow: =DropShadow.None
+            Height: =Parent.Height
+            LayoutAlignItems: =LayoutAlignItems.Stretch
+            LayoutDirection: =LayoutDirection.Vertical
+            RadiusBottomLeft: =0
+            RadiusBottomRight: =0
+            RadiusTopLeft: =0
+            RadiusTopRight: =0
+            Width: =Parent.Width
+          Children:
+            - HeaderTitle_14:
+                Control: CanvasComponent
+                ComponentName: HeaderTitle
+                Properties:
+                  Height: =50
+                  IconVisible: =true
+                  ScreenNavigator: =If(false, Home)
+                  Width: =Max(App.Width, App.MinScreenWidth)
+                  var_subtitulo1: =""
+                  var_subtitulo2: =""
+                  var_tituloModulo: =var_tituloModulo
+            - BottomContainer1_20:
+                Control: GroupContainer@1.5.0
+                Variant: AutoLayout
+                Properties:
+                  AlignInContainer: =AlignInContainer.SetByContainer
+                  DropShadow: =DropShadow.None
+                  LayoutAlignItems: =LayoutAlignItems.Stretch
+                  LayoutDirection: =LayoutDirection.Horizontal
+                  LayoutGap: =5
+                  LayoutMaxHeight: =
+                  LayoutMaxWidth: =
+                  LayoutWrap: =true
+                  RadiusBottomLeft: =0
+                  RadiusBottomRight: =0
+                  RadiusTopLeft: =0
+                  RadiusTopRight: =0
+                Children:
+                  - MainContainer2_20:
+                      Control: GroupContainer@1.5.0
+                      Variant: AutoLayout
+                      Properties:
+                        BorderStyle: =BorderStyle.None
+                        DropShadow: =DropShadow.None
+                        Fill: =thmSuperficie
+                        FillPortions: =7
+                        LayoutDirection: =LayoutDirection.Vertical
+                        LayoutMaxHeight: =
+                        LayoutMaxWidth: =
+                        RadiusBottomLeft: =0
+                        RadiusBottomRight: =0
+                        RadiusTopLeft: =0
+                        RadiusTopRight: =0
+                      Children:
+                        - ContainerHomeObras_1:
+                            Control: GroupContainer@1.5.0
+                            Variant: ManualLayout
+                            Properties:
+                              BorderStyle: =BorderStyle.None
+                              DropShadow: =DropShadow.None
+                              Height: =718
+                              LayoutMaxHeight: =
+                              LayoutMaxWidth: =
+                              RadiusBottomLeft: =0
+                              RadiusBottomRight: =0
+                              RadiusTopLeft: =0
+                              RadiusTopRight: =0
+                              Width: =0
+                              Y: =50
+                            Children:
+                              - Label6_304:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    BorderColor: =thmPrimariaEscura
+                                    Color: =thmPrimaria
+                                    Fill: =thmSuperficie
+                                    Font: =Font.'Open Sans'
+                                    FontWeight: =FontWeight.Semibold
+                                    Height: =30
+                                    PaddingLeft: =20
+                                    Size: =11
+                                    Text: ="Inspeções:"
+                                    Width: =Parent.Width - 10
+                                    X: =10
+                                    Y: =20
+                              - Gallery30_3:
+                                  Control: Gallery@2.15.0
+                                  Variant: Horizontal
+                                  Properties:
+                                    BorderColor: =thmTransparente
+                                    Height: =120
+                                    Items: |-
+                                      =Sort(
+                                          Filter(
+                                              col_menuModulos,
+                                              Menu.Value = "Terminal de Passageiros" And SubMenu.Value = "Inspeção" Or IsBlank(Menu.Value) And SubMenu.Value = "Inspeção"
+                                          ),
+                                          Titulo,
+                                          SortOrder.Ascending
+                                      )
+                                    TemplateSize: =110
+                                    Width: =Parent.Width - 10
+                                    X: =10
+                                    Y: =40
+                                  Children:
+                                    - Container84_27:
+                                        Control: GroupContainer@1.5.0
+                                        Variant: ManualLayout
+                                        Group: Group5_3
+                                        Properties:
+                                          BorderColor: '=If(ThisItem.Status.Value = "Em desenvolvimento", thmVermelho,  thmPrimaria) '
+                                          BorderThickness: =1
+                                          DropShadow: =DropShadow.None
+                                          Height: =80
+                                          RadiusBottomLeft: =10
+                                          RadiusBottomRight: =10
+                                          RadiusTopLeft: =10
+                                          RadiusTopRight: =10
+                                          Width: =100
+                                          X: =10
+                                          Y: =10
+                                        Children:
+                                          - Label2_134:
+                                              Control: Label@2.5.1
+                                              Properties:
+                                                Align: =Align.Center
+                                                AutoHeight: =true
+                                                FontWeight: =FontWeight.Semibold
+                                                Height: =30
+                                                OnSelect: =
+                                                PaddingBottom: =0
+                                                PaddingLeft: =3
+                                                PaddingRight: =3
+                                                PaddingTop: =0
+                                                Size: =8
+                                                Text: =ThisItem.Titulo
+                                                VerticalAlign: =VerticalAlign.Top
+                                                Width: =Parent.Width
+                                                Y: =52
+                                          - Image1_38:
+                                              Control: Image@2.2.3
+                                              Group: Group1_24
+                                              Properties:
+                                                Height: =40
+                                                Image: =ThisItem.Logo.Small
+                                                OnSelect: =
+                                                PaddingBottom: =5
+                                                PaddingLeft: =5
+                                                PaddingRight: =5
+                                                PaddingTop: =5
+                                                RadiusBottomLeft: =100
+                                                RadiusBottomRight: =100
+                                                RadiusTopLeft: =100
+                                                RadiusTopRight: =100
+                                                Width: =40
+                                                X: =30
+                                                Y: =5
+                                          - Circle1_26:
+                                              Control: Circle@2.3.0
+                                              Group: Group1_24
+                                              Properties:
+                                                Fill: =RGBA(0, 0, 0, 0.1)
+                                                Height: =40
+                                                Width: =40
+                                                X: =30
+                                                Y: =5
+                                          - Button3_149:
+                                              Control: Classic/Button@2.2.0
+                                              Properties:
+                                                BorderColor: =thmTransparente
+                                                BorderStyle: =BorderStyle.None
+                                                Color: =thmTransparente
+                                                DisabledColor: =thmTransparente
+                                                DisabledFill: =thmTransparente
+                                                Fill: =thmTransparente
+                                                Height: =80
+                                                HoverColor: =thmTransparente
+                                                HoverFill: =RGBA(0, 0, 0, 0.1)
+                                                OnSelect: |-
+                                                  =Set(
+                                                      varUltimaAtividade,
+                                                      Now()
+                                                  );
+                                                  If(
+                                                      ThisItem.Status.Value <> "Em desenvolvimento",
+                                                      Switch(
+                                                          ThisItem.Identificador,
+                                                          "INSP-TPS",
+                                                          Launch(
+                                                              If(
+                                                                  Host.OSType = "Windows",
+                                                                  "https://apps.powerapps.com/play/providers/Microsoft.PowerApps/apps/cca968cd-f5f6-4c5d-9e06-60371be130be?hideNavBar=true",
+                                                                  "/providers/Microsoft.PowerApps/apps/cca968cd-f5f6-4c5d-9e06-60371be130be"
+                                                              ),
+                                                              {
+                                                                  LOGADO: "z0x9c8v7b6n5" & Text(
+                                                                      Now(),
+                                                                      "ddmmyyyy"
+                                                                  ) & Rand() * 100,
+                                                                  USUARIO: varIdUser,
+                                                                  HUB: varHUB
+                                                              },
+                                                              LaunchTarget.Replace
+                                                          ),
+                                                          "CHK-LIMP",
+                                                          Launch(
+                                                              "https://grupoccr.sharepoint.com/:l:/s/ContratodeLimpeza/JAB9wONFvr1MSLErGu2iwMHnAQRQiGuq1lmW2Le1SXKmGPo?nav=MDYyMzc1ODMtNTE4Yi00OWVmLWJjMWMtYjE3ODEwODk3Mzc0",
+                                                              {},
+                                                              LaunchTarget.New
+                                                          ),
+                                                          Set(
+                                                              var_tituloModulo,
+                                                              ThisItem.Titulo
+                                                          );
+                                                          Navigate(
+                                                              LookUp(
+                                                                  col_NavTelas,
+                                                                  Id = ThisItem.ID,
+                                                                  TelaListar
+                                                              ),
+                                                              ScreenTransition.Fade
+                                                          )
+                                                      )
+                                                  )
+                                                PaddingBottom: =6
+                                                PressedColor: =thmTransparente
+                                                PressedFill: =RGBA(0, 0, 0, 0.1)
+                                                Size: =10
+                                                Text: =""
+                                                Tooltip: =ThisItem.Titulo
+                                                VerticalAlign: =VerticalAlign.Bottom
+                                                Width: =Parent.Width
+                                    - Label111_1:
+                                        Control: Label@2.5.1
+                                        Group: Group5_3
+                                        Properties:
+                                          Height: =20
+                                          PaddingLeft: =0
+                                          PaddingTop: =2
+                                          Size: =10
+                                          Text: |+
+                                            =Switch(
+                                                ThisItem.Status.Value,
+                                                "Ativo",
+                                                "✔️ ",
+                                                "Desativado",
+                                                "❌ ",
+                                                "Em desenvolvimento",
+                                                "🛠️ ",
+                                                "Em teste",
+                                                "🕑 "
+                                            )
+
+
+                                          Tooltip: =ThisItem.Status.Value
+                                          Width: =25
+                                          X: =85
+                                          Y: =38
+                                    - InfoButtonCanvas5_1:
+                                        Control: InfoButton@0.0.33
+                                        Group: Group5_3
+                                        Properties:
+                                          Content: =ThisItem.Descricao
+                                          FontSize: =16
+                                          Height: =25
+                                          Width: =25
+                                          X: =81
+                                          Y: =15
+                              - Label6_328:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    BorderColor: =thmPrimariaEscura
+                                    Color: =thmPrimaria
+                                    Fill: =thmSuperficie
+                                    Font: =Font.'Open Sans'
+                                    FontWeight: =FontWeight.Semibold
+                                    Height: =30
+                                    PaddingLeft: =20
+                                    Size: =11
+                                    Text: ="Ocorrências envolvendo:"
+                                    Width: =Parent.Width - 10
+                                    X: =10
+                                    Y: =170
+                              - Gallery30_4:
+                                  Control: Gallery@2.15.0
+                                  Variant: Horizontal
+                                  Properties:
+                                    BorderColor: =thmTransparente
+                                    Height: =120
+                                    Items: |-
+                                      =Sort(
+                                          Filter(
+                                              col_menuModulos,
+                                              Menu.Value = "Terminal de Passageiros" And SubMenu.Value = "Ocorrência" Or IsBlank(Menu.Value) And SubMenu.Value = "Ocorrência"
+                                          ),
+                                          Titulo,
+                                          SortOrder.Ascending
+                                      )
+                                    TemplateSize: =110
+                                    Width: =Parent.Width - 10
+                                    X: =10
+                                    Y: =190
+                                  Children:
+                                    - Container84_28:
+                                        Control: GroupContainer@1.5.0
+                                        Variant: ManualLayout
+                                        Group: Group5_5
+                                        Properties:
+                                          BorderColor: '=If(ThisItem.Status.Value = "Em desenvolvimento", thmVermelho,  thmPrimaria) '
+                                          BorderThickness: =1
+                                          DropShadow: =DropShadow.None
+                                          Height: =80
+                                          RadiusBottomLeft: =10
+                                          RadiusBottomRight: =10
+                                          RadiusTopLeft: =10
+                                          RadiusTopRight: =10
+                                          Width: =100
+                                          X: =10
+                                          Y: =10
+                                        Children:
+                                          - Label2_135:
+                                              Control: Label@2.5.1
+                                              Properties:
+                                                Align: =Align.Center
+                                                FontWeight: =FontWeight.Semibold
+                                                Height: =30
+                                                OnSelect: =
+                                                PaddingLeft: =3
+                                                PaddingRight: =3
+                                                PaddingTop: =0
+                                                Size: =8
+                                                Text: =ThisItem.Titulo
+                                                VerticalAlign: =VerticalAlign.Top
+                                                Width: =Parent.Width
+                                                Y: =50
+                                          - Image1_41:
+                                              Control: Image@2.2.3
+                                              Group: Group1_25
+                                              Properties:
+                                                Height: =40
+                                                Image: =ThisItem.Logo.Small
+                                                OnSelect: =
+                                                PaddingBottom: =5
+                                                PaddingLeft: =5
+                                                PaddingRight: =5
+                                                PaddingTop: =5
+                                                RadiusBottomLeft: =100
+                                                RadiusBottomRight: =100
+                                                RadiusTopLeft: =100
+                                                RadiusTopRight: =100
+                                                Width: =40
+                                                X: =30
+                                                Y: =5
+                                          - Circle1_27:
+                                              Control: Circle@2.3.0
+                                              Group: Group1_25
+                                              Properties:
+                                                Fill: =RGBA(0, 0, 0, 0.1)
+                                                Height: =40
+                                                Width: =40
+                                                X: =30
+                                                Y: =5
+                                          - Button3_152:
+                                              Control: Classic/Button@2.2.0
+                                              Properties:
+                                                BorderColor: =thmTransparente
+                                                BorderStyle: =BorderStyle.None
+                                                Color: =thmTransparente
+                                                DisabledColor: =thmTransparente
+                                                DisabledFill: =thmTransparente
+                                                Fill: =thmTransparente
+                                                Height: =80
+                                                HoverColor: =thmTransparente
+                                                HoverFill: =RGBA(0, 0, 0, 0.1)
+                                                OnSelect: |-
+                                                  =Set(varUltimaAtividade, Now());
+                                                  If(
+                                                      ThisItem.Status.Value <> "Em desenvolvimento",
+                                                      Set(
+                                                          var_tituloModulo,
+                                                          ThisItem.Titulo
+                                                      );
+                                                      Navigate(
+                                                          LookUp(
+                                                              col_NavTelas,
+                                                              Id = ThisItem.ID,
+                                                              TelaListar
+                                                          ),
+                                                          ScreenTransition.Fade
+                                                      )
+                                                  )
+                                                PaddingBottom: =6
+                                                PressedColor: =thmTransparente
+                                                PressedFill: =RGBA(0, 0, 0, 0.1)
+                                                Size: =10
+                                                Text: =""
+                                                Tooltip: =ThisItem.Titulo
+                                                VerticalAlign: =VerticalAlign.Bottom
+                                                Width: =Parent.Width
+                                    - Label111_2:
+                                        Control: Label@2.5.1
+                                        Group: Group5_5
+                                        Properties:
+                                          Height: =20
+                                          PaddingLeft: =0
+                                          PaddingTop: =2
+                                          Size: =10
+                                          Text: |+
+                                            =Switch(
+                                                ThisItem.Status.Value,
+                                                "Ativo",
+                                                "✔️ ",
+                                                "Desativado",
+                                                "❌ ",
+                                                "Em desenvolvimento",
+                                                "🛠️ ",
+                                                "Em teste",
+                                                "🕑 "
+                                            )
+
+
+                                          Tooltip: =ThisItem.Status.Value
+                                          Width: =25
+                                          X: =85
+                                          Y: =38
+                                    - InfoButtonCanvas5_2:
+                                        Control: InfoButton@0.0.33
+                                        Group: Group5_5
+                                        Properties:
+                                          Content: =ThisItem.Descricao
+                                          FontSize: =16
+                                          Height: =25
+                                          Width: =25
+                                          X: =81
+                                          Y: =15
+                              - Label6_329:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    BorderColor: =thmPrimariaEscura
+                                    Color: =thmPrimaria
+                                    Fill: =thmSuperficie
+                                    Font: =Font.'Open Sans'
+                                    FontWeight: =FontWeight.Semibold
+                                    Height: =30
+                                    PaddingLeft: =20
+                                    Size: =11
+                                    Text: ="Diversos:"
+                                    Width: =Parent.Width - 10
+                                    X: =10
+                                    Y: =320
+                              - Gallery30_5:
+                                  Control: Gallery@2.15.0
+                                  Variant: Horizontal
+                                  Properties:
+                                    BorderColor: =thmTransparente
+                                    Height: =120
+                                    Items: |-
+                                      =Sort(
+                                          Filter(
+                                              col_menuModulos,
+                                              Menu.Value = "Terminal de Passageiros" And SubMenu.Value = "Diversos"
+                                          ),
+                                          Titulo,
+                                          SortOrder.Ascending
+                                      )
+                                    TemplateSize: =110
+                                    Width: =Parent.Width - 10
+                                    X: =10
+                                    Y: =340
+                                  Children:
+                                    - Container84_29:
+                                        Control: GroupContainer@1.5.0
+                                        Variant: ManualLayout
+                                        Group: Group30
+                                        Properties:
+                                          BorderColor: '=If(ThisItem.Status.Value = "Em desenvolvimento", thmVermelho,  thmPrimaria) '
+                                          BorderThickness: =1
+                                          DropShadow: =DropShadow.None
+                                          Height: =80
+                                          RadiusBottomLeft: =10
+                                          RadiusBottomRight: =10
+                                          RadiusTopLeft: =10
+                                          RadiusTopRight: =10
+                                          Width: =100
+                                          X: =10
+                                          Y: =10
+                                        Children:
+                                          - Label2_136:
+                                              Control: Label@2.5.1
+                                              Properties:
+                                                Align: =Align.Center
+                                                FontWeight: =FontWeight.Semibold
+                                                Height: =30
+                                                OnSelect: =
+                                                PaddingLeft: =3
+                                                PaddingRight: =3
+                                                PaddingTop: =0
+                                                Size: =7
+                                                Text: =ThisItem.Titulo
+                                                VerticalAlign: =VerticalAlign.Top
+                                                Width: =80
+                                                Y: =50
+                                          - Image1_42:
+                                              Control: Image@2.2.3
+                                              Group: Group1_26
+                                              Properties:
+                                                Height: =40
+                                                Image: =ThisItem.Logo.Small
+                                                OnSelect: =
+                                                PaddingBottom: =5
+                                                PaddingLeft: =5
+                                                PaddingRight: =5
+                                                PaddingTop: =5
+                                                RadiusBottomLeft: =100
+                                                RadiusBottomRight: =100
+                                                RadiusTopLeft: =100
+                                                RadiusTopRight: =100
+                                                Width: =40
+                                                X: =20
+                                                Y: =5
+                                          - Circle1_28:
+                                              Control: Circle@2.3.0
+                                              Group: Group1_26
+                                              Properties:
+                                                Fill: =RGBA(0, 0, 0, 0.1)
+                                                Height: =40
+                                                Width: =40
+                                                X: =20
+                                                Y: =5
+                                          - Button3_153:
+                                              Control: Classic/Button@2.2.0
+                                              Properties:
+                                                BorderColor: =thmTransparente
+                                                BorderStyle: =BorderStyle.None
+                                                Color: =thmTransparente
+                                                DisabledColor: =thmTransparente
+                                                DisabledFill: =thmTransparente
+                                                Fill: =thmTransparente
+                                                Height: =80
+                                                HoverColor: =thmTransparente
+                                                HoverFill: =RGBA(0, 0, 0, 0.1)
+                                                OnSelect: |-
+                                                  =Set(varUltimaAtividade, Now());
+                                                  If(
+                                                      ThisItem.Status.Value <> "Em desenvolvimento",
+                                                      Switch(
+                                                          true,
+                                                          ThisItem.Identificador = "CON-CHV",
+                                                          Launch(
+                                                              If(
+                                                                  Host.OSType = "Windows",
+                                                                  "https://apps.powerapps.com/play/providers/Microsoft.PowerApps/apps/eafdd09b-9788-4cfe-b303-8ebf242a7573?hideNavBar=true",
+                                                                  "/providers/Microsoft.PowerApps/apps/eafdd09b-9788-4cfe-b303-8ebf242a7573"
+                                                              ),
+                                                              {
+                                                                  LOGADO: "z0x9c8v7b6n5" & Text(
+                                                                      Now(),
+                                                                      "ddmmyyyy"
+                                                                  ) & Rand() * 100,
+                                                                  USUARIO: varIdUser,
+                                                                  HUB: varHUB
+                                                              },
+                                                              LaunchTarget.Replace
+                                                          ),
+                                                          Set(
+                                                              var_tituloModulo,
+                                                              ThisItem.Titulo
+                                                          );
+                                                          Navigate(
+                                                              LookUp(
+                                                                  col_NavTelas,
+                                                                  Id = ThisItem.ID,
+                                                                  TelaListar
+                                                              ),
+                                                              ScreenTransition.Fade
+                                                          )
+                                                      )
+                                                  )
+                                                PaddingBottom: =6
+                                                PressedColor: =thmTransparente
+                                                PressedFill: =RGBA(0, 0, 0, 0.1)
+                                                Size: =10
+                                                Text: =""
+                                                Tooltip: =ThisItem.Titulo
+                                                VerticalAlign: =VerticalAlign.Bottom
+                                                Width: =Parent.Width
+                                    - Icon30_1:
+                                        Control: Classic/Icon@2.5.0
+                                        Group: Group30
+                                        Properties:
+                                          BorderColor: =thmPrimariaEscura
+                                          Color: =thmAcao
+                                          Height: =25
+                                          Icon: =Icon.Video
+                                          OnSelect: =Launch(ThisItem.LinkTreinamento,{},LaunchTarget.New)
+                                          PaddingLeft: =5
+                                          PaddingRight: =5
+                                          Tooltip: ="Vídeo Treinamento"
+                                          Visible: =!IsBlank(ThisItem.LinkTreinamento)
+                                          Width: =25
+                                          X: =81
+                                          Y: =63
+                                    - Label111_3:
+                                        Control: Label@2.5.1
+                                        Group: Group30
+                                        Properties:
+                                          Height: =25
+                                          PaddingBottom: =3
+                                          PaddingLeft: =3
+                                          PaddingRight: =0
+                                          PaddingTop: =0
+                                          Size: =10
+                                          Text: |+
+                                            =Switch(
+                                                ThisItem.Status.Value,
+                                                "Ativo",
+                                                "✔️",
+                                                "Desativado",
+                                                "❌",
+                                                "Em desenvolvimento",
+                                                "🛠️",
+                                                "Em teste",
+                                                "🕑"
+                                            )
+
+
+                                          Tooltip: =ThisItem.Status.Value
+                                          Width: =25
+                                          X: =81
+                                          Y: =38
+                                    - InfoButtonCanvas5_3:
+                                        Control: InfoButton@0.0.33
+                                        Group: Group30
+                                        Properties:
+                                          Content: =ThisItem.Descricao
+                                          FontSize: =16
+                                          Height: =25
+                                          Width: =25
+                                          X: =81
+                                          Y: =13
+      - Timer2_3:
+          Control: Timer@2.1.0
+          Properties:
+            AutoStart: =true
+            OnTimerEnd: |+
+              =If(
+                  varSessaoAtiva &&
+                  (
+                      DateDiff(varUltimaAtividade, Now(), TimeUnit.Minutes) >= 15
+                      || varForcarExpiracao
+                  ),
+                  Set(varSessaoAtiva, false);
+                  Set(varForcarExpiracao, false);
+                  Navigate(scrSessaoExpirada, ScreenTransition.Fade)
+              )
+
+            Repeat: =true
+            Visible: =false
+            X: =20
+            Y: =80
