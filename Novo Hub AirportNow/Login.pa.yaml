@@ -17,88 +17,78 @@ Screens:
             varAuthUser,
             Blank()
         );
-        // Retorno de um modulo. O que chega na URL e um token opaco, nunca o
-        // usuario: quem ele representa esta na lista, do lado do servidor.
+        // PALIATIVO. O usuario volta na URL, do mesmo jeito que vai. O cracha
+        // LOGADO e conferido como os modulos ja fazem: os 8 digitos a partir da
+        // posicao 13 sao a data de hoje. Cracha de ontem nao entra.
+        //
+        // Quando LOGADO nao vem, so o USUARIO basta — e o ponto fraco disto, e
+        // foi uma escolha consciente para nao depender de mexer nos modulos
+        // agora. Para endurecer, troque o Or(...) por !IsBlank(Param("LOGADO")).
         Set(
-            varAgora,
-            Now()
-        );
-        Set(
-            varPasseLido,
-            If(
-                IsBlank(Param("RETORNO")),
-                Blank(),
-                LookUp(
-                    tb_sessaoHub,
-                    ses_token = Param("RETORNO") And ses_usado = 0 And ses_expira > varAgora
+            varCrachaOk,
+            Or(
+                IsBlank(Param("LOGADO")),
+                Mid(
+                    Param("LOGADO"),
+                    13,
+                    8
+                ) = Text(
+                    Now(),
+                    "ddmmyyyy"
                 )
             )
         );
         If(
-            !IsBlank(varPasseLido.ID),
-            // Queima o passe antes de abrir a sessao: se algo falhar daqui para
-            // frente, ele nao fica valendo para uma segunda tentativa.
-            Patch(
-                tb_sessaoHub,
-                varPasseLido,
-                {ses_usado: 1}
-            );
+            !IsBlank(Param("USUARIO")) And varCrachaOk,
             Set(
                 userRecord,
                 LookUp(
                     User,
-                    ID = varPasseLido.ses_usuario
+                    ID = Value(Param("USUARIO"))
                 )
             );
-            // Os mesmos Set do botao Entrar. Mantenha os dois blocos iguais:
-            // variavel nova aqui tem que entrar la tambem.
-            Set(varIdUser, userRecord.ID);
-            Set(varNomeUser, userRecord.usrNome);
-            Set(varEmailUser, userRecord.Email);
-            Set(varFuncaoUser, userRecord.Funcao);
-            Set(varBlocoUser, userRecord.Bloco);
-            Set(varAeroUser, userRecord.Aeroporto);
-            Set(
-                varRegAero,
-                LookUp(
-                    colAeros,
-                    Aeroporto = userRecord.Aeroporto
-                )
-            );
-            Set(varICAOUser, varRegAero.ICAO);
-            Set(varIATAUser, varRegAero.IATA);
-            Set(varPerfilUser, userRecord.Perfil);
-            Set(varAutUser, userRecord.Autorizacao);
-            Set(
-                varFotoUser,
-                IfError(
-                    UsuáriosdoOffice365.UserPhotoV2(userRecord.Email),
-                    Blank()
-                )
-            );
-            Set(varViewSafaty, userRecord.View_safety);
-            Set(Logado, true);
-            // Passe novo, para o proximo modulo que esta pessoa abrir.
-            Set(varPasseHub, Text(GUID()));
-            Patch(
-                tb_sessaoHub,
-                Defaults(tb_sessaoHub),
-                {
-                    ses_token: varPasseHub,
-                    ses_usuario: userRecord.ID,
-                    ses_expira: DateAdd(Now(), 12, TimeUnit.Hours),
-                    ses_usado: 0
-                }
-            );
+            // Id invalido na URL, ou usuario excluido: o LookUp volta em branco
+            // e nao se abre sessao nenhuma — cai no formulario, como deve.
             If(
-                Host.OSType = "Windows",
-                Navigate(
-                    Home,
-                    ScreenTransition.Fade
-                ),
-                Navigate(
-                    HomeMob,
-                    ScreenTransition.Fade
+                !IsBlank(userRecord.ID),
+                // Os mesmos Set do botao Entrar. Mantenha os dois blocos iguais:
+                // variavel nova aqui tem que entrar la tambem.
+                Set(varIdUser, userRecord.ID);
+                Set(varNomeUser, userRecord.usrNome);
+                Set(varEmailUser, userRecord.Email);
+                Set(varFuncaoUser, userRecord.Funcao);
+                Set(varBlocoUser, userRecord.Bloco);
+                Set(varAeroUser, userRecord.Aeroporto);
+                Set(
+                    varRegAero,
+                    LookUp(
+                        colAeros,
+                        Aeroporto = userRecord.Aeroporto
+                    )
+                );
+                Set(varICAOUser, varRegAero.ICAO);
+                Set(varIATAUser, varRegAero.IATA);
+                Set(varPerfilUser, userRecord.Perfil);
+                Set(varAutUser, userRecord.Autorizacao);
+                Set(
+                    varFotoUser,
+                    IfError(
+                        UsuáriosdoOffice365.UserPhotoV2(userRecord.Email),
+                        Blank()
+                    )
+                );
+                Set(varViewSafaty, userRecord.View_safety);
+                Set(Logado, true);
+                If(
+                    Host.OSType = "Windows",
+                    Navigate(
+                        Home,
+                        ScreenTransition.Fade
+                    ),
+                    Navigate(
+                        HomeMob,
+                        ScreenTransition.Fade
+                    )
                 )
             )
         )
@@ -691,22 +681,6 @@ Screens:
                                             Set(
                                                 Logado,
                                                 true
-                                            );
-                                            // Passe que deixa esta pessoa voltar de um modulo
-                                            // sem redigitar a senha. Uso unico, com prazo.
-                                            Set(
-                                                varPasseHub,
-                                                Text(GUID())
-                                            );
-                                            Patch(
-                                                tb_sessaoHub,
-                                                Defaults(tb_sessaoHub),
-                                                {
-                                                    ses_token: varPasseHub,
-                                                    ses_usuario: userRecord.ID,
-                                                    ses_expira: DateAdd(Now(), 12, TimeUnit.Hours),
-                                                    ses_usado: 0
-                                                }
                                             );
                                             // Navegar para a tela correspondente (Windows ou Mobile)
                                             If(
