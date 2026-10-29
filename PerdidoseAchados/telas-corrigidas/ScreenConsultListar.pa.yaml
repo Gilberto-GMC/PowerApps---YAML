@@ -600,15 +600,18 @@ Screens:
                               LayoutMaxWidth: =
                               LayoutMinHeight: =0
                               LoadingSpinner: =LoadingSpinner.None
-                              TemplateSize: =RowContainer.Height
+                              TemplateSize: =RowContainer.Height + 10
                             Children:
                             - RowContainer:
                                 Control: GroupContainer@1.5.0
                                 Variant: AutoLayout
                                 Properties:
+                                  BorderThickness: =If(ThisItem.IsSelected, 2, 1)
+                                  BorderStyle: =BorderStyle.Solid
+                                  BorderColor: =If(ThisItem.IsSelected, RGBA(14, 124, 140, 1), RGBA(203, 213, 225, 1))
                                   DropShadow: =DropShadow.Regular
-                                  Fill: =If(ThisItem.IsSelected, RGBA(0, 0, 0, 0.20), RGBA(0, 0, 0, 0.05))
-                                  Height: =If(!IsEmpty(Filter(col_itensPAconsulta, ID_fk = ThisItem.ID)), 40 + CountRows(Filter(col_itensPAconsulta, ID_fk = ThisItem.ID)) * 52 + If(ThisItem.IsSelected And ((!IsBlank(ThisItem.declarante) Or !IsBlank(ThisItem.empresa_declarante) Or !IsBlank(ThisItem.tipo_origem) Or !IsBlank(ThisItem.encontrado_em) Or !IsBlank(ThisItem.local) Or !IsBlank(ThisItem.data) Or !IsBlank(ThisItem.entregue_por) Or !IsBlank(ThisItem.usuario)) Or CountRows(Filter(col_destinacoes, ID_item in Filter(col_itensPAconsulta, ID_fk = ThisItem.ID).ID)) > 0), 56 + CountRows(Filter(col_destinacoes, ID_item in Filter(col_itensPAconsulta, ID_fk = ThisItem.ID).ID)) * 18, 0), 0)
+                                  Fill: =RGBA(255, 255, 255, 1)
+                                  Height: =If(!IsEmpty(Filter(col_itensPAconsulta, ID_fk = ThisItem.ID)), 40 + CountRows(Filter(col_itensPAconsulta, ID_fk = ThisItem.ID)) * 52 + If(ThisItem.IsSelected And (If(IsBlank(ThisItem.declarante), 0, 1) + If(IsBlank(ThisItem.empresa_declarante), 0, 1) + If(IsBlank(ThisItem.tipo_origem), 0, 1) + If(IsBlank(ThisItem.local), 0, 1) + If(IsBlank(ThisItem.encontrado_em), 0, 1)) + (If(IsBlank(ThisItem.data), 0, 1) + If(IsBlank(ThisItem.entregue_por), 0, 1) + If(IsBlank(ThisItem.usuario), 0, 1)) + CountRows(Filter(col_destinacoes, ID_item in Filter(col_itensPAconsulta, ID_fk = ThisItem.ID).ID)) > 0, 14 + If((If(IsBlank(ThisItem.declarante), 0, 1) + If(IsBlank(ThisItem.empresa_declarante), 0, 1) + If(IsBlank(ThisItem.tipo_origem), 0, 1) + If(IsBlank(ThisItem.local), 0, 1) + If(IsBlank(ThisItem.encontrado_em), 0, 1)) > 0, 16 + (If(IsBlank(ThisItem.declarante), 0, 1) + If(IsBlank(ThisItem.empresa_declarante), 0, 1) + If(IsBlank(ThisItem.tipo_origem), 0, 1) + If(IsBlank(ThisItem.local), 0, 1) + If(IsBlank(ThisItem.encontrado_em), 0, 1)) * 17, 0) + If((If(IsBlank(ThisItem.data), 0, 1) + If(IsBlank(ThisItem.entregue_por), 0, 1) + If(IsBlank(ThisItem.usuario), 0, 1)) > 0, 16 + (If(IsBlank(ThisItem.data), 0, 1) + If(IsBlank(ThisItem.entregue_por), 0, 1) + If(IsBlank(ThisItem.usuario), 0, 1)) * 17, 0) + If(CountRows(Filter(col_destinacoes, ID_item in Filter(col_itensPAconsulta, ID_fk = ThisItem.ID).ID)) > 0, 16 + CountRows(Filter(col_destinacoes, ID_item in Filter(col_itensPAconsulta, ID_fk = ThisItem.ID).ID)) * 32, 0), 0), 0)
                                   Visible: =!IsEmpty(Filter(col_itensPAconsulta, ID_fk = ThisItem.ID))
                                   LayoutAlignItems: =LayoutAlignItems.Stretch
                                   LayoutDirection: =LayoutDirection.Vertical
@@ -616,16 +619,21 @@ Screens:
                                   LayoutMaxHeight: =
                                   LayoutMaxWidth: =
                                   LayoutMinHeight: =0
-                                  RadiusBottomLeft: =0
-                                  RadiusBottomRight: =0
-                                  RadiusTopLeft: =0
-                                  RadiusTopRight: =0
+                                  RadiusBottomLeft: =4
+                                  RadiusBottomRight: =4
+                                  RadiusTopLeft: =4
+                                  RadiusTopRight: =4
                                   Width: =Parent.TemplateWidth
                                 Children:
                                   - HeaderRow:
                                       Control: GroupContainer@1.5.0
                                       Variant: AutoLayout
                                       Properties:
+                                        RadiusBottomRight: =0
+                                        RadiusBottomLeft: =0
+                                        RadiusTopRight: =4
+                                        RadiusTopLeft: =4
+                                        Fill: =If(ThisItem.IsSelected, RGBA(224, 242, 244, 1), RGBA(241, 245, 249, 1))
                                         DropShadow: =DropShadow.None
                                         FillPortions: =0
                                         Height: =40
@@ -822,31 +830,69 @@ Screens:
                                   - HtmlTextRastreio:
                                       Control: HtmlViewer@2.1.0
                                       Properties:
-                                        Height: =If(ThisItem.IsSelected And ((!IsBlank(ThisItem.declarante) Or !IsBlank(ThisItem.empresa_declarante) Or !IsBlank(ThisItem.tipo_origem) Or !IsBlank(ThisItem.encontrado_em) Or !IsBlank(ThisItem.local) Or !IsBlank(ThisItem.data) Or !IsBlank(ThisItem.entregue_por) Or !IsBlank(ThisItem.usuario)) Or CountRows(Filter(col_destinacoes, ID_item in Filter(col_itensPAconsulta, ID_fk = ThisItem.ID).ID)) > 0), 56 + CountRows(Filter(col_destinacoes, ID_item in Filter(col_itensPAconsulta, ID_fk = ThisItem.ID).ID)) * 18, 0)
+                                        Height: =If(ThisItem.IsSelected And (If(IsBlank(ThisItem.declarante), 0, 1) + If(IsBlank(ThisItem.empresa_declarante), 0, 1) + If(IsBlank(ThisItem.tipo_origem), 0, 1) + If(IsBlank(ThisItem.local), 0, 1) + If(IsBlank(ThisItem.encontrado_em), 0, 1)) + (If(IsBlank(ThisItem.data), 0, 1) + If(IsBlank(ThisItem.entregue_por), 0, 1) + If(IsBlank(ThisItem.usuario), 0, 1)) + CountRows(Filter(col_destinacoes, ID_item in Filter(col_itensPAconsulta, ID_fk = ThisItem.ID).ID)) > 0, 14 + If((If(IsBlank(ThisItem.declarante), 0, 1) + If(IsBlank(ThisItem.empresa_declarante), 0, 1) + If(IsBlank(ThisItem.tipo_origem), 0, 1) + If(IsBlank(ThisItem.local), 0, 1) + If(IsBlank(ThisItem.encontrado_em), 0, 1)) > 0, 16 + (If(IsBlank(ThisItem.declarante), 0, 1) + If(IsBlank(ThisItem.empresa_declarante), 0, 1) + If(IsBlank(ThisItem.tipo_origem), 0, 1) + If(IsBlank(ThisItem.local), 0, 1) + If(IsBlank(ThisItem.encontrado_em), 0, 1)) * 17, 0) + If((If(IsBlank(ThisItem.data), 0, 1) + If(IsBlank(ThisItem.entregue_por), 0, 1) + If(IsBlank(ThisItem.usuario), 0, 1)) > 0, 16 + (If(IsBlank(ThisItem.data), 0, 1) + If(IsBlank(ThisItem.entregue_por), 0, 1) + If(IsBlank(ThisItem.usuario), 0, 1)) * 17, 0) + If(CountRows(Filter(col_destinacoes, ID_item in Filter(col_itensPAconsulta, ID_fk = ThisItem.ID).ID)) > 0, 16 + CountRows(Filter(col_destinacoes, ID_item in Filter(col_itensPAconsulta, ID_fk = ThisItem.ID).ID)) * 32, 0), 0)
                                         HtmlText: |-
-                                          ="<div style='font-family:Open Sans,Segoe UI,sans-serif;font-size:11px;color:#1E293B;line-height:1.6;border-top:1px solid #E2E8F0;padding-top:3px'>" &
-                                              "<b>Achado:</b> " & If(IsBlank(ThisItem.declarante), "—", ThisItem.declarante) & " &nbsp;|&nbsp; " & If(IsBlank(ThisItem.empresa_declarante), "—", ThisItem.empresa_declarante) & " &nbsp;|&nbsp; " & If(IsBlank(ThisItem.tipo_origem), "—", ThisItem.tipo_origem) &
-                                              " &nbsp;|&nbsp; " & If(IsBlank(ThisItem.local), "—", ThisItem.local) & " &nbsp;|&nbsp; " & If(IsBlank(ThisItem.encontrado_em), "—", Text(ThisItem.encontrado_em, DateTimeFormat.ShortDateTime)) &
-                                              "<br><b>Entrega à ASUR:</b> " & If(IsBlank(ThisItem.data), "—", Text(ThisItem.data, DateTimeFormat.ShortDateTime)) & " &nbsp;|&nbsp; por " & If(IsBlank(ThisItem.entregue_por), "—", ThisItem.entregue_por) &
-                                              " &nbsp;|&nbsp; recebido por " & If(IsBlank(ThisItem.usuario), "—", ThisItem.usuario) &
-                                          If(
-                                              CountRows(Filter(col_destinacoes, ID_item in Filter(col_itensPAconsulta, ID_fk = ThisItem.ID).ID)) = 0,
-                                              "",
-                                              "<br><b>Destinação final:</b>" & Concat(
-                                                  Filter(col_destinacoes, ID_item in Filter(col_itensPAconsulta, ID_fk = ThisItem.ID).ID),
-                                                  "<br>&nbsp;&nbsp;&nbsp;item " & ID_item & " — " & modalidade &
-                                                  " &nbsp;|&nbsp; " & If(IsBlank(destinado_em), "—", Text(destinado_em, DateTimeFormat.ShortDate)) &
-                                                  " &nbsp;|&nbsp; " & If(IsBlank(destinado_por), "—", destinado_por) &
-                                                  If(IsBlank(destinatario), "", " &nbsp;&rarr;&nbsp; " & destinatario) &
-                                                  If(IsBlank(certificado_num), "", " &nbsp;|&nbsp; CDF " & certificado_num)
-                                              )
-                                          ) &
-                                          "</div>"
+                                          =With(
+                                              {it: ThisItem},
+                                              "<div style='font-family:Open Sans,Segoe UI,sans-serif;color:#1E293B;background:#F8FAFC;border-top:1px solid #E2E8F0;border-left:3px solid #0E7C8C;padding:6px 10px'>" &
+                                              If(
+                                                  (If(IsBlank(it.declarante), 0, 1) + If(IsBlank(it.empresa_declarante), 0, 1) + If(IsBlank(it.tipo_origem), 0, 1) + If(IsBlank(it.local), 0, 1) + If(IsBlank(it.encontrado_em), 0, 1)) = 0,
+                                                  "",
+                                                  "<div style='font-size:10px;font-weight:700;color:#0E7C8C;letter-spacing:0.6px;margin:5px 0 1px 0'>ACHADO</div><table style='border-collapse:collapse;width:100%;font-size:12px'>" &
+                                                  Concat(
+                                                      Filter(
+                                                          Table(
+                                                              {rot: "Declarante", val: Coalesce(it.declarante, "")},
+                                                              {rot: "Empresa", val: Coalesce(it.empresa_declarante, "")},
+                                                              {rot: "Tipo de origem", val: Coalesce(it.tipo_origem, "")},
+                                                              {rot: "Local", val: Coalesce(it.local, "")},
+                                                              {rot: "Data e hora", val: Text(it.encontrado_em, DateTimeFormat.ShortDateTime)}
+                                                          ),
+                                                          val <> ""
+                                                      ),
+                                                      "<tr><td style='color:#64748B;width:130px;vertical-align:top;padding:1px 0'>" & rot & "</td><td style='color:#1E293B;font-weight:600;padding:1px 0'>" & val & "</td></tr>"
+                                                  ) &
+                                                  "</table>"
+                                              ) &
+                                              If(
+                                                  (If(IsBlank(it.data), 0, 1) + If(IsBlank(it.entregue_por), 0, 1) + If(IsBlank(it.usuario), 0, 1)) = 0,
+                                                  "",
+                                                  "<div style='font-size:10px;font-weight:700;color:#0E7C8C;letter-spacing:0.6px;margin:5px 0 1px 0'>ENTREGA À ASUR</div><table style='border-collapse:collapse;width:100%;font-size:12px'>" &
+                                                  Concat(
+                                                      Filter(
+                                                          Table(
+                                                              {rot: "Data e hora", val: Text(it.data, DateTimeFormat.ShortDateTime)},
+                                                              {rot: "Entregue por", val: Coalesce(it.entregue_por, "")},
+                                                              {rot: "Recebido por", val: Coalesce(it.usuario, "")}
+                                                          ),
+                                                          val <> ""
+                                                      ),
+                                                      "<tr><td style='color:#64748B;width:130px;vertical-align:top;padding:1px 0'>" & rot & "</td><td style='color:#1E293B;font-weight:600;padding:1px 0'>" & val & "</td></tr>"
+                                                  ) &
+                                                  "</table>"
+                                              ) &
+                                              If(
+                                                  CountRows(Filter(col_destinacoes, ID_item in Filter(col_itensPAconsulta, ID_fk = it.ID).ID)) = 0,
+                                                  "",
+                                                  "<div style='font-size:10px;font-weight:700;color:#0E7C8C;letter-spacing:0.6px;margin:5px 0 1px 0'>DESTINAÇÃO FINAL</div>" &
+                                                  Concat(
+                                                      Filter(col_destinacoes, ID_item in Filter(col_itensPAconsulta, ID_fk = it.ID).ID),
+                                                      "<div style='padding:1px 0'><b>Item " & ID_item & " &mdash; " & modalidade & "</b>" &
+                                                      "<div style='color:#64748B;font-weight:400;font-size:11px;padding-left:10px'>" &
+                                                      If(IsBlank(destinado_em), "", Text(destinado_em, DateTimeFormat.ShortDate)) &
+                                                      If(IsBlank(destinado_por), "", " &middot; por " & destinado_por) &
+                                                      If(IsBlank(destinatario), "", " &middot; destinatário: " & destinatario) &
+                                                      If(IsBlank(certificado_num), "", " &middot; CDF " & certificado_num) &
+                                                      "</div></div>"
+                                                  )
+                                              ) &
+                                              "</div>"
+                                          )
                                         OnSelect: =Select(Gallery2_1)
                                         PaddingLeft: =12
                                         PaddingRight: =12
                                         Size: =11
-                                        Visible: =ThisItem.IsSelected And ((!IsBlank(ThisItem.declarante) Or !IsBlank(ThisItem.empresa_declarante) Or !IsBlank(ThisItem.tipo_origem) Or !IsBlank(ThisItem.encontrado_em) Or !IsBlank(ThisItem.local) Or !IsBlank(ThisItem.data) Or !IsBlank(ThisItem.entregue_por) Or !IsBlank(ThisItem.usuario)) Or CountRows(Filter(col_destinacoes, ID_item in Filter(col_itensPAconsulta, ID_fk = ThisItem.ID).ID)) > 0)
+                                        Visible: =ThisItem.IsSelected And (If(IsBlank(ThisItem.declarante), 0, 1) + If(IsBlank(ThisItem.empresa_declarante), 0, 1) + If(IsBlank(ThisItem.tipo_origem), 0, 1) + If(IsBlank(ThisItem.local), 0, 1) + If(IsBlank(ThisItem.encontrado_em), 0, 1)) + (If(IsBlank(ThisItem.data), 0, 1) + If(IsBlank(ThisItem.entregue_por), 0, 1) + If(IsBlank(ThisItem.usuario), 0, 1)) + CountRows(Filter(col_destinacoes, ID_item in Filter(col_itensPAconsulta, ID_fk = ThisItem.ID).ID)) > 0
                                         AlignInContainer: =AlignInContainer.Stretch
                                         FillPortions: =0
       - ContainerVisibleImagem_2:
