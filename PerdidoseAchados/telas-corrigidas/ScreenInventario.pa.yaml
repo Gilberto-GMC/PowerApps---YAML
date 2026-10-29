@@ -150,6 +150,7 @@ Screens:
                               LayoutMaxHeight: =
                               LayoutMaxWidth: =
                               Size: =15
+                              Visible: =If(IsBlank(TabListDestinar.Selected.Value), true, TabListDestinar.Selected.Value = "DESTINAR")
                               Text: ="Itens disponíveis para destinar após 90 dias"
                               Width: =300
                         - SearchContainer2_7:
@@ -499,14 +500,8 @@ Screens:
                                               colInventarioItensBase,
                                               arquivar = 0
                                                   And (
-                                                      (
-                                                          TabListDestinar.Selected.Value = "AGUARDANDO APROVAÇÃO"
-                                                          And status = stDestAprovacao
-                                                      )
-                                                      Or (
-                                                          TabListDestinar.Selected.Value = "AGUARDANDO DESTINAÇÃO"
-                                                          And status = stDestDestinacao
-                                                      )
+                                                      status = stDestAprovacao
+                                                      Or status = stDestDestinacao
                                                   )
                                                   And (
                                                       IsBlank(ComboboxCanvasCat_6.Selected.Value)
@@ -763,6 +758,7 @@ Screens:
                               LayoutMaxHeight: =
                               LayoutMaxWidth: =
                               Size: =12
+                              Visible: =TabListDestinar.Selected.Value <> "DESTINAR"
                               Text: ="Em processo de destinação"
                               Width: =300
                         - TableItensDestinado:
@@ -784,10 +780,10 @@ Screens:
                                   Control: GroupContainer@1.5.0
                                   Variant: AutoLayout
                                   Properties:
-                                    Visible: =CountRows(Filter(col_itensDestinados, ID_fk = ThisItem.ID)) > 0
+                                    Visible: =CountRows(Filter(col_itensDestinados, ID_fk = ThisItem.ID And status = If(TabListDestinar.Selected.Value = "AGUARDANDO DESTINAÇÃO", stDestDestinacao, stDestAprovacao))) > 0
                                     DropShadow: =DropShadow.Regular
                                     Fill: =If(ThisItem.IsSelected, RGBA(0, 0, 0, 0.20), RGBA(0, 0, 0, 0.05))
-                                    Height: =If(CountRows(Filter(col_itensDestinados, ID_fk = ThisItem.ID)) = 0, 0, CountRows(Filter(col_itensDestinados, ID_fk = ThisItem.ID)) * 50 + 11)
+                                    Height: =If(CountRows(Filter(col_itensDestinados, ID_fk = ThisItem.ID And status = If(TabListDestinar.Selected.Value = "AGUARDANDO DESTINAÇÃO", stDestDestinacao, stDestAprovacao))) = 0, 0, CountRows(Filter(col_itensDestinados, ID_fk = ThisItem.ID And status = If(TabListDestinar.Selected.Value = "AGUARDANDO DESTINAÇÃO", stDestDestinacao, stDestAprovacao))) * 50 + 11)
                                     LayoutAlignItems: =LayoutAlignItems.Stretch
                                     LayoutDirection: =LayoutDirection.Vertical
                                     LayoutGap: =0
@@ -805,7 +801,7 @@ Screens:
                                             =SortByColumns(
                                                 Filter(
                                                     col_itensDestinados,
-                                                    ID_fk = ThisItem.ID
+                                                    ID_fk = ThisItem.ID And status = If(TabListDestinar.Selected.Value = "AGUARDANDO DESTINAÇÃO", stDestDestinacao, stDestAprovacao)
                                                 ),
                                                 "recebido",
                                                 SortOrder.Descending
@@ -814,7 +810,7 @@ Screens:
                                           AlignInContainer: =AlignInContainer.End
                                           FillPortions: =0
                                           Width: =Parent.Width - 30
-                                          Height: =CountRows(Filter(col_itensDestinados, ID_fk = ThisItem.ID)) * 50
+                                          Height: =CountRows(Filter(col_itensDestinados, ID_fk = ThisItem.ID And status = If(TabListDestinar.Selected.Value = "AGUARDANDO DESTINAÇÃO", stDestDestinacao, stDestAprovacao))) * 50
                                         Children:
                                           - ItemRowDestinado:
                                               Control: GroupContainer@1.5.0
@@ -994,7 +990,7 @@ Screens:
                               LayoutMaxHeight: =
                               LayoutMaxWidth: =
                               PaddingRight: =20
-                              Text: =CountRows(Filter(col_perdidosDestinados As P, !IsEmpty(Filter(col_itensDestinados, ID_fk = P.ID))))&" Registros"
+                              Text: =CountRows(Filter(col_perdidosDestinados As P, !IsEmpty(Filter(col_itensDestinados, ID_fk = P.ID And status = If(TabListDestinar.Selected.Value = "AGUARDANDO DESTINAÇÃO", stDestDestinacao, stDestAprovacao)))))&" Registros"
                               VerticalAlign: =VerticalAlign.Middle
                               Weight: ='TextCanvas.Weight'.Semibold
                               Width: =200
